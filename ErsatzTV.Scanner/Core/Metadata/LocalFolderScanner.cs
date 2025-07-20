@@ -49,6 +49,11 @@ public abstract class LocalFolderScanner
         .Map(s => $"{Path.DirectorySeparatorChar}{s}{Path.DirectorySeparatorChar}")
         .ToImmutableHashSet(StringComparer.OrdinalIgnoreCase);
 
+    public static readonly ImmutableHashSet<string> RemoteStreamExtensions = new[]
+    {
+        "yml"
+    }.ToImmutableHashSet(StringComparer.OrdinalIgnoreCase);
+
     private readonly IClient _client;
     private readonly IFFmpegPngService _ffmpegPngService;
 

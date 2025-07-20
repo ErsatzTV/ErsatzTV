@@ -81,6 +81,8 @@ public class PreviewBlockPlayoutHandler(
                 .Include(mi => (mi as Song).MediaVersions)
                 .Include(mi => (mi as Image).ImageMetadata)
                 .Include(mi => (mi as Image).MediaVersions)
+                .Include(mi => (mi as RemoteStream).RemoteStreamMetadata)
+                .Include(mi => (mi as RemoteStream).MediaVersions)
                 .SelectOneAsync(mi => mi.Id, mi => mi.Id == playoutItem.MediaItemId);
 
             foreach (MediaItem mediaItem in maybeMediaItem)

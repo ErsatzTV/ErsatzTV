@@ -86,6 +86,11 @@
                         {
                             <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#images")">@_data.ImageCards.Count Images</MudLink>
                         }
+
+                        @if (_data?.RemoteStreamCards.Count > 0)
+                        {
+                            <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#remote_streams")">@_data.RemoteStreamCards.Count Remote Streams</MudLink>
+                        }
                     </div>
                     @if (SupportsCustomOrdering())
                     {
@@ -329,6 +334,31 @@
                     }
                 </MudStack>
             }
+
+            @if (_data?.RemoteStreamCards.Count > 0)
+            {
+                <MudText GutterBottom="true"
+                         Typo="Typo.h4"
+                         Style="scroll-margin-top: 160px"
+                         UserAttributes="@(new Dictionary<string, object> { { "id", "remote_streams" } })">
+                    Remote Streams
+                </MudText>
+                <MudDivider Class="mb-6"/>
+
+                <MudStack Row="true" Wrap="Wrap.Wrap" Class="mb-10">
+                    @foreach (RemoteStreamCardViewModel card in _data.RemoteStreamCards.OrderBy(e => e.SortTitle))
+                    {
+                        <MediaCard Data="@card"
+                                   Href=""
+                                   ArtworkKind="ArtworkKind.Thumbnail"
+                                   DeleteClicked="@RemoveRemoteStreamFromCollection"
+                                   SelectColor="@Color.Error"
+                                   SelectClicked="@(e => SelectClicked(card, e))"
+                                   IsSelected="@IsSelected(card)"
+                                   IsSelectMode="@IsSelectMode()"/>
+                    }
+                </MudStack>
+            }
         </MudContainer>
     </div>
 </MudForm>
@@ -519,6 +549,19 @@
             };
 
             await RemoveItemsWithConfirmation("image", $"{image.Title}", request);
+        }
+    }
+
+    private async Task RemoveRemoteStreamFromCollection(MediaCardViewModel vm)
+    {
+        if (vm is RemoteStreamCardViewModel remoteStream)
+        {
+            var request = new RemoveItemsFromCollection(Id)
+            {
+                MediaItemIds = [remoteStream.RemoteStreamId]
+            };
+
+            await RemoveItemsWithConfirmation("remote stream", $"{remoteStream.Title}", request);
         }
     }
 

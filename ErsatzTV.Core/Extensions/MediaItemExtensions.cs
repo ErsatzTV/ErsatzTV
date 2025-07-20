@@ -32,6 +32,7 @@ public static class MediaItemExtensions
             OtherVideo ov => ov.MediaVersions.Head(),
             Song s => s.MediaVersions.Head(),
             Image i => i.MediaVersions.Head(),
+            RemoteStream rs => rs.MediaVersions.Head(),
             _ => throw new ArgumentOutOfRangeException(nameof(mediaItem))
         };
 

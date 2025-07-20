@@ -13,6 +13,7 @@ using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Repositories.Caching;
 using ErsatzTV.Core.Interfaces.Search;
+using ErsatzTV.Core.Interfaces.Streaming;
 using ErsatzTV.Core.Jellyfin;
 using ErsatzTV.Core.Metadata;
 using ErsatzTV.Core.Plex;
@@ -29,6 +30,7 @@ using ErsatzTV.Infrastructure.Plex;
 using ErsatzTV.Infrastructure.Runtime;
 using ErsatzTV.Infrastructure.Search;
 using ErsatzTV.Infrastructure.Sqlite.Data;
+using ErsatzTV.Infrastructure.Streaming;
 using ErsatzTV.Scanner.Core.Emby;
 using ErsatzTV.Scanner.Core.FFmpeg;
 using ErsatzTV.Scanner.Core.Interfaces.FFmpeg;
@@ -79,8 +81,12 @@ public class Program
         }
     }
 
-    private static IHostBuilder CreateHostBuilder(string[] args) =>
-        Host.CreateDefaultBuilder(args)
+    private static IHostBuilder CreateHostBuilder(string[] args)
+    {
+        Settings.UiPort = SystemEnvironment.UiPort;
+        Settings.StreamingPort = SystemEnvironment.StreamingPort;
+
+        return Host.CreateDefaultBuilder(args)
             .ConfigureServices((context, services) =>
             {
                 string databaseProvider = context.Configuration.GetValue("provider", Provider.Sqlite.Name) ??
@@ -173,6 +179,7 @@ public class Program
                 services.AddScoped<IOtherVideoRepository, OtherVideoRepository>();
                 services.AddScoped<ISongRepository, SongRepository>();
                 services.AddScoped<IImageRepository, ImageRepository>();
+                services.AddScoped<IRemoteStreamRepository, RemoteStreamRepository>();
                 services.AddScoped<ILibraryRepository, LibraryRepository>();
                 services.AddScoped<ISearchRepository, SearchRepository>();
                 services.AddScoped<ICachingSearchRepository, CachingSearchRepository>();
@@ -188,6 +195,7 @@ public class Program
                 services.AddScoped<IOtherVideoFolderScanner, OtherVideoFolderScanner>();
                 services.AddScoped<ISongFolderScanner, SongFolderScanner>();
                 services.AddScoped<IImageFolderScanner, ImageFolderScanner>();
+                services.AddScoped<IRemoteStreamFolderScanner, RemoteStreamFolderScanner>();
                 services.AddScoped<IEpisodeNfoReader, EpisodeNfoReader>();
                 services.AddScoped<IMovieNfoReader, MovieNfoReader>();
                 services.AddScoped<IArtistNfoReader, ArtistNfoReader>();
@@ -245,6 +253,7 @@ public class Program
                 services.AddHostedService<Worker>();
             })
             .UseSerilog();
+    }
 
     private class BugsnagNoopClient : IClient
     {

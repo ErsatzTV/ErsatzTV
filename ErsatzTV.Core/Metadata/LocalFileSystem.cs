@@ -5,17 +5,8 @@ using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Core.Metadata;
 
-public class LocalFileSystem : ILocalFileSystem
+public class LocalFileSystem(IClient client, ILogger<LocalFileSystem> logger) : ILocalFileSystem
 {
-    private readonly IClient _client;
-    private readonly ILogger<LocalFileSystem> _logger;
-
-    public LocalFileSystem(IClient client, ILogger<LocalFileSystem> logger)
-    {
-        _client = client;
-        _logger = logger;
-    }
-
     public Unit EnsureFolderExists(string folder)
     {
         try
@@ -27,7 +18,7 @@ public class LocalFileSystem : ILocalFileSystem
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Failed to ensure folder exists at {Folder}", folder);
+            logger.LogWarning(ex, "Failed to ensure folder exists at {Folder}", folder);
         }
 
         return Unit.Default;
@@ -58,12 +49,12 @@ public class LocalFileSystem : ILocalFileSystem
             }
             catch (UnauthorizedAccessException)
             {
-                _logger.LogWarning("Unauthorized access exception listing subdirectories of folder {Folder}", folder);
+                logger.LogWarning("Unauthorized access exception listing subdirectories of folder {Folder}", folder);
             }
             catch (Exception ex)
             {
                 // do nothing
-                _client.Notify(ex);
+                client.Notify(ex);
             }
         }
 
@@ -81,12 +72,12 @@ public class LocalFileSystem : ILocalFileSystem
             }
             catch (UnauthorizedAccessException)
             {
-                _logger.LogWarning("Unauthorized access exception listing files in folder {Folder}", folder);
+                logger.LogWarning("Unauthorized access exception listing files in folder {Folder}", folder);
             }
             catch (Exception ex)
             {
                 // do nothing
-                _client.Notify(ex);
+                client.Notify(ex);
             }
         }
 
@@ -104,12 +95,12 @@ public class LocalFileSystem : ILocalFileSystem
             }
             catch (UnauthorizedAccessException)
             {
-                _logger.LogWarning("Unauthorized access exception listing files in folder {Folder}", folder);
+                logger.LogWarning("Unauthorized access exception listing files in folder {Folder}", folder);
             }
             catch (Exception ex)
             {
                 // do nothing
-                _client.Notify(ex);
+                client.Notify(ex);
             }
         }
 
@@ -138,7 +129,7 @@ public class LocalFileSystem : ILocalFileSystem
         }
         catch (Exception ex)
         {
-            _client.Notify(ex);
+            client.Notify(ex);
             return BaseError.New(ex.ToString());
         }
     }
@@ -159,7 +150,7 @@ public class LocalFileSystem : ILocalFileSystem
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Failed to empty folder at {Folder}", folder);
+            logger.LogWarning(ex, "Failed to empty folder at {Folder}", folder);
         }
 
         return Unit.Default;

@@ -89,6 +89,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
     public const string OtherVideoType = "other_video";
     public const string SongType = "song";
     public const string ImageType = "image";
+    public const string RemoteStreamType = "remote_stream";
     private readonly string _cleanShutdownPath;
 
     private readonly List<CultureInfo> _cultureInfos;
@@ -186,6 +187,9 @@ public sealed class LuceneSearchIndex : ISearchIndex
                     break;
                 case Image image:
                     await UpdateImage(searchRepository, image);
+                    break;
+                case RemoteStream remoteStream:
+                    await UpdateRemoteStream(searchRepository, remoteStream);
                     break;
             }
         }
@@ -356,6 +360,9 @@ public sealed class LuceneSearchIndex : ISearchIndex
                 break;
             case Image image:
                 await UpdateImage(searchRepository, image);
+                break;
+            case RemoteStream remoteStream:
+                await UpdateRemoteStream(searchRepository, remoteStream);
                 break;
         }
     }
@@ -1420,6 +1427,79 @@ public sealed class LuceneSearchIndex : ISearchIndex
         }
     }
 
+    private async Task UpdateRemoteStream(ISearchRepository searchRepository, RemoteStream remoteStream)
+    {
+        Option<RemoteStreamMetadata> maybeMetadata = remoteStream.RemoteStreamMetadata.HeadOrNone();
+        if (maybeMetadata.IsSome)
+        {
+            RemoteStreamMetadata metadata = maybeMetadata.ValueUnsafe();
+
+            try
+            {
+                var doc = new Document
+                {
+                    new StringField(IdField, remoteStream.Id.ToString(CultureInfo.InvariantCulture), Field.Store.YES),
+                    new StringField(TypeField, RemoteStreamType, Field.Store.YES),
+                    new TextField(TitleField, metadata.Title, Field.Store.NO),
+                    new StringField(SortTitleField, metadata.SortTitle.ToLowerInvariant(), Field.Store.NO),
+                    new TextField(LibraryNameField, remoteStream.LibraryPath.Library.Name, Field.Store.NO),
+                    new StringField(
+                        LibraryIdField,
+                        remoteStream.LibraryPath.Library.Id.ToString(CultureInfo.InvariantCulture),
+                        Field.Store.NO),
+                    new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO),
+                    new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES),
+                    new StringField(StateField, remoteStream.State.ToString(), Field.Store.NO),
+                    new TextField(MetadataKindField, metadata.MetadataKind.ToString(), Field.Store.NO)
+                };
+
+                IEnumerable<int> libraryFolderIds = remoteStream.MediaVersions
+                    .SelectMany(mv => mv.MediaFiles)
+                    .SelectMany(mf => Optional(mf.LibraryFolderId));
+
+                foreach (int libraryFolderId in libraryFolderIds)
+                {
+                    doc.Add(
+                        new StringField(
+                            LibraryFolderIdField,
+                            libraryFolderId.ToString(CultureInfo.InvariantCulture),
+                            Field.Store.NO));
+                }
+
+                await AddLanguages(searchRepository, doc, remoteStream.MediaVersions);
+
+                AddStatistics(doc, remoteStream.MediaVersions);
+                AddCollections(doc, remoteStream.Collections);
+
+                doc.Add(
+                    new StringField(
+                        AddedDateField,
+                        metadata.DateAdded.ToString("yyyyMMdd", CultureInfo.InvariantCulture),
+                        Field.Store.NO));
+
+                foreach (Tag tag in metadata.Tags)
+                {
+                    doc.Add(new TextField(TagField, tag.Name, Field.Store.NO));
+                    doc.Add(new StringField(TagFullField, tag.Name, Field.Store.NO));
+                }
+
+                foreach (Genre genre in metadata.Genres)
+                {
+                    doc.Add(new TextField(GenreField, genre.Name, Field.Store.NO));
+                }
+
+                AddMetadataGuids(metadata, doc);
+
+                _writer.UpdateDocument(new Term(IdField, remoteStream.Id.ToString(CultureInfo.InvariantCulture)), doc);
+            }
+            catch (Exception ex)
+            {
+                metadata.RemoteStream = null;
+                _logger.LogWarning(ex, "Error indexing remote stream with metadata {@Metadata}", metadata);
+            }
+        }
+    }
+
     private static SearchItem ProjectToSearchItem(Document doc) => new(
         doc.Get(TypeField, CultureInfo.InvariantCulture),
         Convert.ToInt32(doc.Get(IdField, CultureInfo.InvariantCulture), CultureInfo.InvariantCulture));
@@ -1500,6 +1580,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
                 .ToLowerInvariant(),
             SongMetadata sm => $"{Title(sm)}_{sm.Year}_{sm.Song.State}".ToLowerInvariant(),
             ImageMetadata im => $"{Title(im)}_{im.Year}_{im.Image.State}".ToLowerInvariant(),
+            RemoteStreamMetadata rsm => $"{Title(rsm)}_{rsm.Year}_{rsm.RemoteStream.State}".ToLowerInvariant(),
             MovieMetadata mm => $"{Title(mm)}_{mm.Year}_{mm.Movie.State}".ToLowerInvariant(),
             ArtistMetadata am => $"{Title(am)}_{am.Year}_{am.Artist.State}".ToLowerInvariant(),
             MusicVideoMetadata mvm => $"{Title(mvm)}_{mvm.Year}_{mvm.MusicVideo.State}".ToLowerInvariant(),

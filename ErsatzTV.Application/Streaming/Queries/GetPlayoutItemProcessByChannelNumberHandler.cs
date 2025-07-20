@@ -162,6 +162,15 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
             .Include(i => i.MediaItem)
             .ThenInclude(mi => (mi as Image).ImageMetadata)
             .Include(i => i.Watermark)
+            .Include(i => i.MediaItem)
+            .ThenInclude(mi => (mi as RemoteStream).MediaVersions)
+            .ThenInclude(mv => mv.MediaFiles)
+            .Include(i => i.MediaItem)
+            .ThenInclude(mi => (mi as RemoteStream).MediaVersions)
+            .ThenInclude(mv => mv.Streams)
+            .Include(i => i.MediaItem)
+            .ThenInclude(mi => (mi as RemoteStream).RemoteStreamMetadata)
+            .Include(i => i.Watermark)
             .ForChannelAndTime(channel.Id, now)
             .Map(o => o.ToEither<BaseError>(new UnableToLocatePlayoutItem()))
             .BindT(item => ValidatePlayoutItemPath(dbContext, item));
@@ -313,7 +322,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 playoutItemWithPath.PlayoutItem.SubtitleMode ?? channel.SubtitleMode,
                 start,
                 finish,
-                request.StartAtZero ? start : now,
+                effectiveNow,
                 playoutItemWatermark,
                 maybeGlobalWatermark,
                 channel.FFmpegProfile.VaapiDisplay,
@@ -594,6 +603,13 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
         // check filesystem first
         if (_localFileSystem.FileExists(path))
         {
+            if (playoutItem.MediaItem is RemoteStream remoteStream)
+            {
+                path = !string.IsNullOrWhiteSpace(remoteStream.Url)
+                    ? remoteStream.Url
+                    : $"http://localhost:{Settings.StreamingPort}/ffmpeg/remote-stream/{remoteStream.Id}";
+            }
+
             return new PlayoutItemWithPath(playoutItem, path);
         }
 

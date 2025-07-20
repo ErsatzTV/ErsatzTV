@@ -12,6 +12,7 @@ using ErsatzTV.Core.Interfaces.Jellyfin;
 using ErsatzTV.Core.Interfaces.Locking;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Plex;
+using ErsatzTV.Core.Interfaces.Streaming;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
@@ -32,11 +33,20 @@ public class PrepareTroubleshootingPlaybackHandler(
 {
     public async Task<Either<BaseError, Command>> Handle(PrepareTroubleshootingPlayback request, CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
-        Validation<BaseError, Tuple<MediaItem, string, string, FFmpegProfile>> validation = await Validate(dbContext, request);
-        return await validation.Match(
-            tuple => GetProcess(dbContext, request, tuple.Item1, tuple.Item2, tuple.Item3, tuple.Item4),
-            error => Task.FromResult<Either<BaseError, Command>>(error.Join()));
+        try
+        {
+            await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+            Validation<BaseError, Tuple<MediaItem, string, string, FFmpegProfile>> validation = await Validate(dbContext, request);
+            return await validation.Match(
+                tuple => GetProcess(dbContext, request, tuple.Item1, tuple.Item2, tuple.Item3, tuple.Item4),
+                error => Task.FromResult<Either<BaseError, Command>>(error.Join()));
+        }
+        catch (Exception ex)
+        {
+            entityLocker.UnlockTroubleshootingPlayback();
+            logger.LogError(ex, "Error while preparing troubleshooting playback");
+            return BaseError.New(ex.Message);
+        }
     }
 
     private async Task<Either<BaseError, Command>> GetProcess(
@@ -78,6 +88,10 @@ public class PrepareTroubleshootingPlaybackHandler(
         DateTimeOffset now = DateTimeOffset.Now;
 
         var duration = TimeSpan.FromSeconds(Math.Min(version.Duration.TotalSeconds, 30));
+        if (duration <= TimeSpan.Zero)
+        {
+            duration = TimeSpan.FromSeconds(30);
+        }
 
         Command process = await ffmpegProcessService.ForPlayoutItem(
             ffmpegPath,
@@ -182,6 +196,11 @@ public class PrepareTroubleshootingPlaybackHandler(
             .Include(mi => (mi as Image).MediaVersions)
             .ThenInclude(mv => mv.Streams)
             .Include(mi => (mi as Image).ImageMetadata)
+            .Include(mi => (mi as RemoteStream).MediaVersions)
+            .ThenInclude(mv => mv.MediaFiles)
+            .Include(mi => (mi as RemoteStream).MediaVersions)
+            .ThenInclude(mv => mv.Streams)
+            .Include(mi => (mi as RemoteStream).RemoteStreamMetadata)
             .SelectOneAsync(mi => mi.Id, mi => mi.Id == request.MediaItemId)
             .Map(o => o.ToValidation<BaseError>(new UnableToLocatePlayoutItem()));
     }
@@ -213,6 +232,13 @@ public class PrepareTroubleshootingPlaybackHandler(
         // check filesystem first
         if (localFileSystem.FileExists(path))
         {
+            if (mediaItem is RemoteStream remoteStream)
+            {
+                path = !string.IsNullOrWhiteSpace(remoteStream.Url)
+                    ? remoteStream.Url
+                    : $"http://localhost:{Settings.StreamingPort}/ffmpeg/remote-stream/{remoteStream.Id}";
+            }
+
             return path;
         }
 

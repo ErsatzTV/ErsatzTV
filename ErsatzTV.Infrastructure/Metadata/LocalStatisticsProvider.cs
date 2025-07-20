@@ -51,7 +51,7 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
     {
         try
         {
-            string filePath = mediaItem.GetHeadVersion().MediaFiles.Head().Path;
+            string filePath = await PathForMediaItem(mediaItem);
             return await RefreshStatistics(ffmpegPath, ffprobePath, mediaItem, filePath);
         }
         catch (Exception ex)
@@ -126,7 +126,7 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
                 async ffprobe =>
                 {
                     MediaVersion version = ProjectToMediaVersion(mediaItemPath, ffprobe);
-                    if (mediaItem is not Image && version.Duration.TotalSeconds < 1)
+                    if (mediaItem is not Image and not RemoteStream && version.Duration.TotalSeconds < 1)
                     {
                         await AnalyzeDuration(ffmpegPath, mediaItemPath, version);
                     }
@@ -158,14 +158,16 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
     private static async Task<Either<BaseError, FFprobe>> GetProbeOutput(string ffprobePath, string filePath)
     {
         string[] arguments =
-        {
+        [
             "-hide_banner",
             "-print_format", "json",
             "-show_format",
             "-show_streams",
             "-show_chapters",
             "-i", filePath
-        };
+        ];
+
+        //_logger.LogDebug("ffprobe arguments {FFProbeArguments}", arguments);
 
         BufferedCommandResult probe = await Cli.Wrap(ffprobePath)
             .WithArguments(arguments)
@@ -477,6 +479,20 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
             "progressive" => VideoScanKind.Progressive,
             _ => VideoScanKind.Unknown
         };
+
+    private static Task<string> PathForMediaItem(MediaItem mediaItem)
+    {
+        string path = mediaItem.GetHeadVersion().MediaFiles.Head().Path;
+
+        if (mediaItem is RemoteStream remoteStream)
+        {
+            path = !string.IsNullOrWhiteSpace(remoteStream.Url)
+                ? remoteStream.Url
+                : $"http://localhost:{Settings.StreamingPort}/ffmpeg/remote-stream/{remoteStream.Id}";
+        }
+
+        return Task.FromResult(path);
+    }
 
     // ReSharper disable InconsistentNaming
     public record FFprobe(FFprobeFormat format, List<FFprobeStreamData> streams, List<FFprobeChapter> chapters);

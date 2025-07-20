@@ -56,6 +56,8 @@ public class TvContext : DbContext
     public DbSet<Image> Images { get; set; }
     public DbSet<ImageMetadata> ImageMetadata { get; set; }
     public DbSet<ImageFolderDuration> ImageFolderDurations { get; set; }
+    public DbSet<RemoteStream> RemoteStreams { get; set; }
+    public DbSet<RemoteStreamMetadata> RemoteStreamMetadata { get; set; }
     public DbSet<Show> Shows { get; set; }
     public DbSet<ShowMetadata> ShowMetadata { get; set; }
     public DbSet<Season> Seasons { get; set; }

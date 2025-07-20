@@ -48,7 +48,23 @@
                         <MudTd DataLabel="Server Name">@context.MediaSourceName</MudTd>
                     }
                     <MudTd DataLabel="Library Name">@context.Name</MudTd>
-                    <MudTd DataLabel="Media Kind">@context.MediaKind</MudTd>
+                    <MudTd DataLabel="Media Kind">
+                        @switch (context.MediaKind)
+                        {
+                            case LibraryMediaKind.MusicVideos:
+                                @:Music Videos
+                                break;
+                            case LibraryMediaKind.OtherVideos:
+                                @:Other Videos
+                                break;
+                            case LibraryMediaKind.RemoteStreams:
+                                @:Remote Streams
+                                break;
+                            default:
+                                @(context.MediaKind)
+                                break;
+                        }
+                    </MudTd>
                     <MudTd>
                         <div style="align-items: center; display: flex;">
                             @if (Locker.IsLibraryLocked(context.Id))

@@ -85,6 +85,11 @@
                     {
                         <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#images")" Style="margin-bottom: auto; margin-top: auto">@_images.Count Images</MudLink>
                     }
+
+                    @if (_remoteStreams?.Cards.Count > 0)
+                    {
+                        <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#remote_streams")" Style="margin-bottom: auto; margin-top: auto">@_remoteStreams.Count Remote Streams</MudLink>
+                    }
                     <div class="flex-grow-1 d-none d-md-flex"></div>
                     <div>
                         <MudButton Variant="@Variant.Filled"
@@ -340,7 +345,7 @@
             {
                 <div class="mb-4" style="align-items: baseline; display: flex; flex-direction: row;">
                     <MudText Typo="Typo.h4" UserAttributes="@(new Dictionary<string, object> { { "id", "images" } })">
-                        Songs
+                        Images
                     </MudText>
                     @if (_images.Count > 50)
                     {
@@ -351,6 +356,34 @@
 
                 <MudStack Row="true" Wrap="Wrap.Wrap" Class="mb-10">
                     @foreach (ImageCardViewModel card in _images.Cards.OrderBy(s => s.SortTitle))
+                    {
+                        <MediaCard Data="@card"
+                                   Href=""
+                                   ArtworkKind="ArtworkKind.Thumbnail"
+                                   DeleteClicked="@DeleteItemFromDatabase"
+                                   SelectColor="@Color.Error"
+                                   SelectClicked="@(e => SelectClicked(card, e))"
+                                   IsSelected="@IsSelected(card)"
+                                   IsSelectMode="@IsSelectMode()"/>
+                    }
+                </MudStack>
+            }
+
+            @if (_remoteStreams?.Cards.Count > 0)
+            {
+                <div class="mb-4" style="align-items: baseline; display: flex; flex-direction: row;">
+                    <MudText Typo="Typo.h4" UserAttributes="@(new Dictionary<string, object> { { "id", "remote_streams" } })">
+                        Remote Streams
+                    </MudText>
+                    @if (_remoteStreams.Count > 50)
+                    {
+                        <MudLink Href="@GetRemoteStreamsLink()" Class="ml-4">See All >></MudLink>
+                    }
+                </div>
+                <MudDivider Class="mb-6"/>
+
+                <MudStack Row="true" Wrap="Wrap.Wrap" Class="mb-10">
+                    @foreach (RemoteStreamCardViewModel card in _remoteStreams.Cards.OrderBy(s => s.SortTitle))
                     {
                         <MediaCard Data="@card"
                                    Href=""
@@ -379,6 +412,7 @@
     private OtherVideoCardResultsViewModel _otherVideos;
     private SongCardResultsViewModel _songs;
     private ImageCardResultsViewModel _images;
+    private RemoteStreamCardResultsViewModel _remoteStreams;
     private ArtistCardResultsViewModel _artists;
 
     private PersistingComponentStateSubscription _persistingSubscription;
@@ -412,6 +446,7 @@
         ApplicationState.PersistAsJson("_otherVideos", _otherVideos);
         ApplicationState.PersistAsJson("_songs", _songs);
         ApplicationState.PersistAsJson("_images", _images);
+        ApplicationState.PersistAsJson("_remoteStreams", _remoteStreams);
         ApplicationState.PersistAsJson("_artists", _artists);
 
         return Task.CompletedTask;
@@ -468,6 +503,11 @@
                 _images = await Mediator.Send(new QuerySearchIndexImages($"type:image AND ({_query})", 1, 50), _cts.Token);
             }
 
+            if (!ApplicationState.TryTakeFromJson("_remoteStreams", out _remoteStreams))
+            {
+                _remoteStreams = await Mediator.Send(new QuerySearchIndexRemoteStreams($"type:remote_stream AND ({_query})", 1, 50), _cts.Token);
+            }
+
             if (!ApplicationState.TryTakeFromJson("_artists", out _artists))
             {
                 _artists = await Mediator.Send(new QuerySearchIndexArtists($"type:artist AND ({_query})", 1, 50), _cts.Token);
@@ -491,6 +531,7 @@
                 .Append(_otherVideos.Cards.OrderBy(ov => ov.SortTitle))
                 .Append(_songs.Cards.OrderBy(ov => ov.SortTitle))
                 .Append(_images.Cards.OrderBy(i => i.SortTitle))
+                .Append(_remoteStreams.Cards.OrderBy(rs => rs.SortTitle))
                 .ToList();
         }
 
@@ -605,6 +646,18 @@
         return uri;
     }
 
+    private string GetRemoteStreamsLink()
+    {
+        var uri = "media/remote/streams/page/1";
+        if (!string.IsNullOrWhiteSpace(_query))
+        {
+            (string key, string value) = _query.EncodeQuery();
+            uri = $"{uri}?{key}={value}";
+        }
+
+        return uri;
+    }
+
     private Task DeleteFromDatabase() => DeleteItemsFromDatabase(
         SelectedItems.OfType<MovieCardViewModel>().Map(m => m.MovieId).ToList(),
         SelectedItems.OfType<TelevisionShowCardViewModel>().Map(s => s.TelevisionShowId).ToList(),
@@ -614,7 +667,8 @@
         SelectedItems.OfType<MusicVideoCardViewModel>().Map(mv => mv.MusicVideoId).ToList(),
         SelectedItems.OfType<OtherVideoCardViewModel>().Map(ov => ov.OtherVideoId).ToList(),
         SelectedItems.OfType<SongCardViewModel>().Map(s => s.SongId).ToList(),
-        SelectedItems.OfType<ImageCardViewModel>().Map(i => i.ImageId).ToList());
+        SelectedItems.OfType<ImageCardViewModel>().Map(i => i.ImageId).ToList(),
+        SelectedItems.OfType<RemoteStreamCardViewModel>().Map(i => i.RemoteStreamId).ToList());
 
     private async Task DeleteItemsFromDatabase(
         List<int> movieIds,
@@ -626,6 +680,7 @@
         List<int> otherVideoIds,
         List<int> songIds,
         List<int> imageIds,
+        List<int> remoteStreamIds,
         string entityName = "selected items")
     {
         int count = movieIds.Count + showIds.Count + seasonIds.Count + episodeIds.Count + artistIds.Count +
@@ -648,6 +703,7 @@
                     .Append(otherVideoIds)
                     .Append(songIds)
                     .Append(imageIds)
+                    .Append(remoteStreamIds)
                     .ToList());
 
             Either<BaseError, Unit> addResult = await Mediator.Send(request, _cts.Token);
@@ -708,6 +764,10 @@
             case ImageCardViewModel image:
                 request = new DeleteItemsFromDatabase([image.ImageId]);
                 await DeleteItemsWithConfirmation("image", $"{image.Title} ({image.Subtitle})", request);
+                break;
+            case RemoteStreamCardViewModel remoteStream:
+                request = new DeleteItemsFromDatabase([remoteStream.RemoteStreamId]);
+                await DeleteItemsWithConfirmation("remote stream", $"{remoteStream.Title} ({remoteStream.Subtitle})", request);
                 break;
         }
     }

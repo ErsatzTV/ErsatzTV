@@ -40,6 +40,7 @@ public class FakeMediaCollectionRepository : IMediaCollectionRepository
     public Task<List<OtherVideo>> GetOtherVideo(int id) => throw new NotSupportedException();
     public Task<List<Song>> GetSong(int id) => throw new NotSupportedException();
     public Task<List<Image>> GetImage(int id) => throw new NotSupportedException();
+    public Task<List<RemoteStream>> GetRemoteStream(int id) => throw new NotSupportedException();
 
     public Task<List<CollectionWithItems>> GetMultiCollectionCollections(int id) =>
         throw new NotSupportedException();

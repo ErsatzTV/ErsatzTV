@@ -50,6 +50,9 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Property<int?>("OtherVideoMetadataId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("RemoteStreamMetadataId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Role")
                         .HasColumnType("TEXT");
 
@@ -78,6 +81,8 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.HasIndex("MusicVideoMetadataId");
 
                     b.HasIndex("OtherVideoMetadataId");
+
+                    b.HasIndex("RemoteStreamMetadataId");
 
                     b.HasIndex("SeasonMetadataId");
 
@@ -188,6 +193,9 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Property<string>("Path")
                         .HasColumnType("TEXT");
 
+                    b.Property<int?>("RemoteStreamMetadataId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int?>("SeasonMetadataId")
                         .HasColumnType("INTEGER");
 
@@ -215,6 +223,8 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.HasIndex("MusicVideoMetadataId");
 
                     b.HasIndex("OtherVideoMetadataId");
+
+                    b.HasIndex("RemoteStreamMetadataId");
 
                     b.HasIndex("SeasonMetadataId");
 
@@ -740,6 +750,9 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Property<int?>("OtherVideoMetadataId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("RemoteStreamMetadataId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int?>("SeasonMetadataId")
                         .HasColumnType("INTEGER");
 
@@ -762,6 +775,8 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.HasIndex("MusicVideoMetadataId");
 
                     b.HasIndex("OtherVideoMetadataId");
+
+                    b.HasIndex("RemoteStreamMetadataId");
 
                     b.HasIndex("SeasonMetadataId");
 
@@ -1201,6 +1216,9 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Property<string>("RFrameRate")
                         .HasColumnType("TEXT");
 
+                    b.Property<int?>("RemoteStreamId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("SampleAspectRatio")
                         .HasColumnType("TEXT");
 
@@ -1224,6 +1242,8 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.HasIndex("MusicVideoId");
 
                     b.HasIndex("OtherVideoId");
+
+                    b.HasIndex("RemoteStreamId");
 
                     b.HasIndex("SongId");
 
@@ -1257,6 +1277,9 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Property<int?>("OtherVideoMetadataId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("RemoteStreamMetadataId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int?>("SeasonMetadataId")
                         .HasColumnType("INTEGER");
 
@@ -1279,6 +1302,8 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.HasIndex("MusicVideoMetadataId");
 
                     b.HasIndex("OtherVideoMetadataId");
+
+                    b.HasIndex("RemoteStreamMetadataId");
 
                     b.HasIndex("SeasonMetadataId");
 
@@ -2066,6 +2091,46 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.UseTptMappingStrategy();
                 });
 
+            modelBuilder.Entity("ErsatzTV.Core.Domain.RemoteStreamMetadata", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("DateAdded")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("DateUpdated")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("MetadataKind")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("OriginalTitle")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ReleaseDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("RemoteStreamId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("SortTitle")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Title")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("Year")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RemoteStreamId");
+
+                    b.ToTable("RemoteStreamMetadata", (string)null);
+                });
+
             modelBuilder.Entity("ErsatzTV.Core.Domain.Resolution", b =>
                 {
                     b.Property<int>("Id")
@@ -2721,6 +2786,9 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Property<int?>("OtherVideoMetadataId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("RemoteStreamMetadataId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int?>("SeasonMetadataId")
                         .HasColumnType("INTEGER");
 
@@ -2743,6 +2811,8 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.HasIndex("MusicVideoMetadataId");
 
                     b.HasIndex("OtherVideoMetadataId");
+
+                    b.HasIndex("RemoteStreamMetadataId");
 
                     b.HasIndex("SeasonMetadataId");
 
@@ -2822,6 +2892,9 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Property<string>("Path")
                         .HasColumnType("TEXT");
 
+                    b.Property<int?>("RemoteStreamMetadataId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<bool>("SDH")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER")
@@ -2858,6 +2931,8 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.HasIndex("MusicVideoMetadataId");
 
                     b.HasIndex("OtherVideoMetadataId");
+
+                    b.HasIndex("RemoteStreamMetadataId");
 
                     b.HasIndex("SeasonMetadataId");
 
@@ -2901,6 +2976,9 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Property<int?>("OtherVideoMetadataId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("RemoteStreamMetadataId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int?>("SeasonMetadataId")
                         .HasColumnType("INTEGER");
 
@@ -2923,6 +3001,8 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.HasIndex("MusicVideoMetadataId");
 
                     b.HasIndex("OtherVideoMetadataId");
+
+                    b.HasIndex("RemoteStreamMetadataId");
 
                     b.HasIndex("SeasonMetadataId");
 
@@ -3225,6 +3305,25 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.HasBaseType("ErsatzTV.Core.Domain.MediaItem");
 
                     b.ToTable("OtherVideo", (string)null);
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.RemoteStream", b =>
+                {
+                    b.HasBaseType("ErsatzTV.Core.Domain.MediaItem");
+
+                    b.Property<TimeSpan?>("Duration")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FallbackQuery")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Script")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Url")
+                        .HasColumnType("TEXT");
+
+                    b.ToTable("RemoteStream", (string)null);
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.Season", b =>
@@ -3569,6 +3668,11 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                         .HasForeignKey("OtherVideoMetadataId")
                         .OnDelete(DeleteBehavior.Cascade);
 
+                    b.HasOne("ErsatzTV.Core.Domain.RemoteStreamMetadata", null)
+                        .WithMany("Actors")
+                        .HasForeignKey("RemoteStreamMetadataId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
                     b.HasOne("ErsatzTV.Core.Domain.SeasonMetadata", null)
                         .WithMany("Actors")
                         .HasForeignKey("SeasonMetadataId")
@@ -3633,6 +3737,11 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.HasOne("ErsatzTV.Core.Domain.OtherVideoMetadata", null)
                         .WithMany("Artwork")
                         .HasForeignKey("OtherVideoMetadataId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("ErsatzTV.Core.Domain.RemoteStreamMetadata", null)
+                        .WithMany("Artwork")
+                        .HasForeignKey("RemoteStreamMetadataId")
                         .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("ErsatzTV.Core.Domain.SeasonMetadata", null)
@@ -3825,6 +3934,11 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                         .HasForeignKey("OtherVideoMetadataId")
                         .OnDelete(DeleteBehavior.Cascade);
 
+                    b.HasOne("ErsatzTV.Core.Domain.RemoteStreamMetadata", null)
+                        .WithMany("Genres")
+                        .HasForeignKey("RemoteStreamMetadataId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
                     b.HasOne("ErsatzTV.Core.Domain.SeasonMetadata", null)
                         .WithMany("Genres")
                         .HasForeignKey("SeasonMetadataId")
@@ -4002,6 +4116,11 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                         .HasForeignKey("OtherVideoId")
                         .OnDelete(DeleteBehavior.Cascade);
 
+                    b.HasOne("ErsatzTV.Core.Domain.RemoteStream", null)
+                        .WithMany("MediaVersions")
+                        .HasForeignKey("RemoteStreamId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
                     b.HasOne("ErsatzTV.Core.Domain.Song", null)
                         .WithMany("MediaVersions")
                         .HasForeignKey("SongId")
@@ -4038,6 +4157,11 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.HasOne("ErsatzTV.Core.Domain.OtherVideoMetadata", null)
                         .WithMany("Guids")
                         .HasForeignKey("OtherVideoMetadataId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("ErsatzTV.Core.Domain.RemoteStreamMetadata", null)
+                        .WithMany("Guids")
+                        .HasForeignKey("RemoteStreamMetadataId")
                         .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("ErsatzTV.Core.Domain.SeasonMetadata", null)
@@ -4536,6 +4660,17 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Navigation("Watermark");
                 });
 
+            modelBuilder.Entity("ErsatzTV.Core.Domain.RemoteStreamMetadata", b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.RemoteStream", "RemoteStream")
+                        .WithMany("RemoteStreamMetadata")
+                        .HasForeignKey("RemoteStreamId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("RemoteStream");
+                });
+
             modelBuilder.Entity("ErsatzTV.Core.Domain.Scheduling.Block", b =>
                 {
                     b.HasOne("ErsatzTV.Core.Domain.Scheduling.BlockGroup", "BlockGroup")
@@ -4825,6 +4960,11 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                         .HasForeignKey("OtherVideoMetadataId")
                         .OnDelete(DeleteBehavior.Cascade);
 
+                    b.HasOne("ErsatzTV.Core.Domain.RemoteStreamMetadata", null)
+                        .WithMany("Studios")
+                        .HasForeignKey("RemoteStreamMetadataId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
                     b.HasOne("ErsatzTV.Core.Domain.SeasonMetadata", null)
                         .WithMany("Studios")
                         .HasForeignKey("SeasonMetadataId")
@@ -4881,6 +5021,11 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                         .HasForeignKey("OtherVideoMetadataId")
                         .OnDelete(DeleteBehavior.Cascade);
 
+                    b.HasOne("ErsatzTV.Core.Domain.RemoteStreamMetadata", null)
+                        .WithMany("Subtitles")
+                        .HasForeignKey("RemoteStreamMetadataId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
                     b.HasOne("ErsatzTV.Core.Domain.SeasonMetadata", null)
                         .WithMany("Subtitles")
                         .HasForeignKey("SeasonMetadataId")
@@ -4927,6 +5072,11 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.HasOne("ErsatzTV.Core.Domain.OtherVideoMetadata", null)
                         .WithMany("Tags")
                         .HasForeignKey("OtherVideoMetadataId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("ErsatzTV.Core.Domain.RemoteStreamMetadata", null)
+                        .WithMany("Tags")
+                        .HasForeignKey("RemoteStreamMetadataId")
                         .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("ErsatzTV.Core.Domain.SeasonMetadata", null)
@@ -5129,6 +5279,15 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.HasOne("ErsatzTV.Core.Domain.MediaItem", null)
                         .WithOne()
                         .HasForeignKey("ErsatzTV.Core.Domain.OtherVideo", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.RemoteStream", b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.MediaItem", null)
+                        .WithOne()
+                        .HasForeignKey("ErsatzTV.Core.Domain.RemoteStream", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
@@ -5576,6 +5735,23 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Navigation("ProgramScheduleAlternates");
                 });
 
+            modelBuilder.Entity("ErsatzTV.Core.Domain.RemoteStreamMetadata", b =>
+                {
+                    b.Navigation("Actors");
+
+                    b.Navigation("Artwork");
+
+                    b.Navigation("Genres");
+
+                    b.Navigation("Guids");
+
+                    b.Navigation("Studios");
+
+                    b.Navigation("Subtitles");
+
+                    b.Navigation("Tags");
+                });
+
             modelBuilder.Entity("ErsatzTV.Core.Domain.Scheduling.Block", b =>
                 {
                     b.Navigation("Items");
@@ -5740,6 +5916,13 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Navigation("MediaVersions");
 
                     b.Navigation("OtherVideoMetadata");
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.RemoteStream", b =>
+                {
+                    b.Navigation("MediaVersions");
+
+                    b.Navigation("RemoteStreamMetadata");
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.Season", b =>

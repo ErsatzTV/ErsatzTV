@@ -95,6 +95,11 @@
                     {
                         <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#images")" Style="margin-bottom: auto; margin-top: auto">@_images.Count Images</MudLink>
                     }
+
+                    @if (_remoteStreams?.Count > 0)
+                    {
+                        <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#remote_streams")" Style="margin-bottom: auto; margin-top: auto">@_remoteStreams.Count Remote Streams</MudLink>
+                    }
                     <div class="flex-grow-1 d-none d-md-flex"></div>
                     <div>
                         <MudTooltip Text="Add All To Collection">
@@ -376,6 +381,33 @@
                     }
                 </MudStack>
             }
+
+            @if (_remoteStreams?.Count > 0)
+            {
+                <div class="mb-4" style="align-items: baseline; display: flex; flex-direction: row;">
+                    <MudText Typo="Typo.h4" UserAttributes="@(new Dictionary<string, object> { { "id", "remote_streams" } })">
+                        Remote Streams
+                    </MudText>
+                    @if (_remoteStreams.Count > 50)
+                    {
+                        <MudLink Href="@GetRemoteStreamsLink()" Class="ml-4">See All >></MudLink>
+                    }
+                </div>
+                <MudDivider Class="mb-6"/>
+
+                <MudStack Row="true" Wrap="Wrap.Wrap" Class="mb-10">
+                    @foreach (RemoteStreamCardViewModel card in _remoteStreams.Cards.OrderBy(s => s.SortTitle))
+                    {
+                        <MediaCard Data="@card"
+                                   Href=""
+                                   ArtworkKind="ArtworkKind.Thumbnail"
+                                   AddToCollectionClicked="@AddToCollection"
+                                   SelectClicked="@(e => SelectClicked(card, e))"
+                                   IsSelected="@IsSelected(card)"
+                                   IsSelectMode="@IsSelectMode()"/>
+                    }
+                </MudStack>
+            }
         </MudContainer>
     </div>
 </MudForm>
@@ -390,6 +422,7 @@
     private OtherVideoCardResultsViewModel _otherVideos;
     private SongCardResultsViewModel _songs;
     private ImageCardResultsViewModel _images;
+    private RemoteStreamCardResultsViewModel _remoteStreams;
     private ArtistCardResultsViewModel _artists;
     private PersistingComponentStateSubscription _persistingSubscription;
 
@@ -472,6 +505,15 @@
                 _images = restoredImages;
             }
 
+            if (!ApplicationState.TryTakeFromJson("_remoteStreams", out RemoteStreamCardResultsViewModel restoredRemoteStreams))
+            {
+                _remoteStreams = await Mediator.Send(new QuerySearchIndexRemoteStreams($"type:remote_stream AND ({_query})", 1, 50), CancellationToken);
+            }
+            else
+            {
+                _remoteStreams = restoredRemoteStreams;
+            }
+
             if (!ApplicationState.TryTakeFromJson("_artists", out ArtistCardResultsViewModel restoredArtists))
             {
                 _artists = await Mediator.Send(new QuerySearchIndexArtists($"type:artist AND ({_query})", 1, 50), CancellationToken);
@@ -492,6 +534,8 @@
         ApplicationState.PersistAsJson("_musicVideos", _musicVideos);
         ApplicationState.PersistAsJson("_otherVideos", _otherVideos);
         ApplicationState.PersistAsJson("_songs", _songs);
+        ApplicationState.PersistAsJson("_images", _images);
+        ApplicationState.PersistAsJson("_remoteStreams", _remoteStreams);
         ApplicationState.PersistAsJson("_artists", _artists);
 
         return Task.CompletedTask;
@@ -514,7 +558,8 @@
                 .Append(_artists.Cards.OrderBy(a => a.SortTitle))
                 .Append(_musicVideos.Cards.OrderBy(mv => mv.SortTitle))
                 .Append(_otherVideos.Cards.OrderBy(ov => ov.SortTitle))
-                .Append(_songs.Cards.OrderBy(ov => ov.SortTitle))
+                .Append(_images.Cards.OrderBy(ov => ov.SortTitle))
+                .Append(_remoteStreams.Cards.OrderBy(ov => ov.SortTitle))
                 .ToList();
         }
 
@@ -711,6 +756,27 @@
                     Right: _ => Snackbar.Add($"Added {image.Title} to collection {collection.Name}", Severity.Success));
             }
         }
+
+        if (card is RemoteStreamCardViewModel remoteStream)
+        {
+            var parameters = new DialogParameters { { "EntityType", "remote stream" }, { "EntityName", remoteStream.Title } };
+            var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+            IDialogReference dialog = await Dialog.ShowAsync<AddToCollectionDialog>("Add To Collection", parameters, options);
+            DialogResult result = await dialog.Result;
+            if (result is { Canceled: false, Data: MediaCollectionViewModel collection })
+            {
+                var request = new AddMediaItemToCollection(collection.Id, remoteStream.RemoteStreamId);
+                Either<BaseError, Unit> addResult = await Mediator.Send(request, CancellationToken);
+                addResult.Match(
+                    Left: error =>
+                    {
+                        Snackbar.Add($"Unexpected error adding remote stream to collection: {error.Value}");
+                        Logger.LogError("Unexpected error adding remote stream to collection: {Error}", error.Value);
+                    },
+                    Right: _ => Snackbar.Add($"Added {remoteStream.Title} to collection {collection.Name}", Severity.Success));
+            }
+        }
     }
 
     private string GetMoviesLink()
@@ -821,6 +887,18 @@
         return uri;
     }
 
+    private string GetRemoteStreamsLink()
+    {
+        var uri = "media/remote/streams/page/1";
+        if (!string.IsNullOrWhiteSpace(_query))
+        {
+            (string key, string value) = _query.EncodeQuery();
+            uri = $"{uri}?{key}={value}";
+        }
+
+        return uri;
+    }
+
     private async Task AddAllToCollection(MouseEventArgs _)
     {
         SearchResultAllItemsViewModel results = await Mediator.Send(new QuerySearchIndexAllItems(_query), CancellationToken);
@@ -834,6 +912,7 @@
             results.OtherVideoIds,
             results.SongIds,
             results.ImageIds,
+            results.RemoteStreamIds,
             "search results");
     }
 
@@ -850,6 +929,7 @@
             results.OtherVideoIds,
             results.SongIds,
             results.ImageIds,
+            results.RemoteStreamIds,
             "search results");
     }
 

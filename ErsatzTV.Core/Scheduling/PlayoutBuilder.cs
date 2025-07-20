@@ -860,6 +860,9 @@ public class PlayoutBuilder : IPlayoutBuilder
                     Song s => await s.MediaVersions.Map(v => v.Duration).HeadOrNone()
                         .IfNoneAsync(TimeSpan.Zero) == TimeSpan.Zero,
                     Image => false,
+                    RemoteStream rs => await rs.MediaVersions.Map(v => v.Duration).HeadOrNone()
+                                           .IfNoneAsync(TimeSpan.Zero) == TimeSpan.Zero
+                                       && (!rs.Duration.HasValue || rs.Duration.Value == TimeSpan.Zero),
                     _ => true
                 };
 
@@ -1194,7 +1197,11 @@ public class PlayoutBuilder : IPlayoutBuilder
             case Image i:
                 return i.ImageMetadata.HeadOrNone().Match(
                     sm => sm.Title ?? string.Empty,
-                    () => "[unknown song]");
+                    () => "[unknown image]");
+            case RemoteStream rs:
+                return rs.RemoteStreamMetadata.HeadOrNone().Match(
+                    sm => sm.Title ?? string.Empty,
+                    () => "[unknown remote stream]");
             default:
                 return string.Empty;
         }
