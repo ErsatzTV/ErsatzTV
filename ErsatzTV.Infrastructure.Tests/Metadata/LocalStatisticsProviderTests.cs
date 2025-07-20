@@ -37,9 +37,10 @@ public class LocalStatisticsProviderTests
                     string.Empty,
                     string.Empty,
                     string.Empty,
+                    string.Empty,
                     string.Empty)),
-            new List<LocalStatisticsProvider.FFprobeStreamData>(),
-            new List<LocalStatisticsProvider.FFprobeChapter>());
+            [],
+            []);
 
         MediaVersion result = provider.ProjectToMediaVersion("test", input);
 
