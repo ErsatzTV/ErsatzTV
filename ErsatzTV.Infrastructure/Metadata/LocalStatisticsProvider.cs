@@ -51,7 +51,7 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
     {
         try
         {
-            string filePath = mediaItem.GetHeadVersion().MediaFiles.Head().Path;
+            string filePath = await PathForMediaItem(mediaItem);
             return await RefreshStatistics(ffmpegPath, ffprobePath, mediaItem, filePath);
         }
         catch (Exception ex)
@@ -126,7 +126,7 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
                 async ffprobe =>
                 {
                     MediaVersion version = ProjectToMediaVersion(mediaItemPath, ffprobe);
-                    if (mediaItem is not Image && version.Duration.TotalSeconds < 1)
+                    if (mediaItem is not Image and not RemoteStream && version.Duration.TotalSeconds < 1)
                     {
                         await AnalyzeDuration(ffmpegPath, mediaItemPath, version);
                     }
@@ -477,6 +477,19 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
             "progressive" => VideoScanKind.Progressive,
             _ => VideoScanKind.Unknown
         };
+
+    private async Task<string> PathForMediaItem(MediaItem mediaItem)
+    {
+        string path = mediaItem.GetHeadVersion().MediaFiles.Head().Path;
+
+        if (mediaItem is RemoteStream)
+        {
+            string allText = await _localFileSystem.ReadAllText(path);
+            path = allText.Trim();
+        }
+
+        return path;
+    }
 
     // ReSharper disable InconsistentNaming
     public record FFprobe(FFprobeFormat format, List<FFprobeStreamData> streams, List<FFprobeChapter> chapters);

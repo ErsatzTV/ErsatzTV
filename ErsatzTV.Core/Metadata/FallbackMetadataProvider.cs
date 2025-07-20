@@ -6,12 +6,9 @@ using ErsatzTV.Core.Interfaces.Metadata;
 
 namespace ErsatzTV.Core.Metadata;
 
-public partial class FallbackMetadataProvider : IFallbackMetadataProvider
+public partial class FallbackMetadataProvider(IClient client) : IFallbackMetadataProvider
 {
     private static readonly Regex SeasonPattern = SeasonNumber();
-    private readonly IClient _client;
-
-    public FallbackMetadataProvider(IClient client) => _client = client;
 
     public Option<int> GetSeasonNumberForFolder(string folder)
     {
@@ -173,6 +170,25 @@ public partial class FallbackMetadataProvider : IFallbackMetadataProvider
         return GetImageMetadata(path, metadata);
     }
 
+    public Option<RemoteStreamMetadata> GetFallbackMetadata(RemoteStream remoteStream)
+    {
+        string path = remoteStream.MediaVersions.Head().MediaFiles.Head().Path;
+        string fileName = Path.GetFileNameWithoutExtension(path);
+        var metadata = new RemoteStreamMetadata
+        {
+            MetadataKind = MetadataKind.Fallback,
+            Title = fileName ?? path,
+            RemoteStream = remoteStream,
+            Genres = [],
+            Tags = [],
+            Studios = [],
+            Actors = [],
+            Guids = []
+        };
+
+        return GetRemoteStreamMetadata(path, metadata);
+    }
+
     [GeneratedRegex(@"s(?:eason)?\s?(\d+)(?![e\d])", RegexOptions.IgnoreCase)]
     private static partial Regex SeasonNumber();
 
@@ -235,7 +251,7 @@ public partial class FallbackMetadataProvider : IFallbackMetadataProvider
         }
         catch (Exception ex)
         {
-            _client.Notify(ex);
+            client.Notify(ex);
         }
 
         return result;
@@ -258,7 +274,7 @@ public partial class FallbackMetadataProvider : IFallbackMetadataProvider
         }
         catch (Exception ex)
         {
-            _client.Notify(ex);
+            client.Notify(ex);
         }
 
         return metadata;
@@ -284,7 +300,7 @@ public partial class FallbackMetadataProvider : IFallbackMetadataProvider
         }
         catch (Exception ex)
         {
-            _client.Notify(ex);
+            client.Notify(ex);
             return None;
         }
     }
@@ -322,7 +338,7 @@ public partial class FallbackMetadataProvider : IFallbackMetadataProvider
         }
         catch (Exception ex)
         {
-            _client.Notify(ex);
+            client.Notify(ex);
             return None;
         }
     }
@@ -360,7 +376,45 @@ public partial class FallbackMetadataProvider : IFallbackMetadataProvider
         }
         catch (Exception ex)
         {
-            _client.Notify(ex);
+            client.Notify(ex);
+            return None;
+        }
+    }
+
+    private Option<RemoteStreamMetadata> GetRemoteStreamMetadata(string path, RemoteStreamMetadata metadata)
+    {
+        try
+        {
+            string folder = Path.GetDirectoryName(path);
+            if (folder == null)
+            {
+                return None;
+            }
+
+            string libraryPath = metadata.RemoteStream.LibraryPath.Path;
+            string parent = Optional(Directory.GetParent(libraryPath)).Match(
+                di => di.FullName,
+                () => libraryPath);
+
+            string diff = Path.GetRelativePath(parent, folder);
+
+            var tags = diff.Split(Path.DirectorySeparatorChar)
+                .Map(t => new Tag { Name = t })
+                .ToList();
+
+            metadata.Artwork = [];
+            metadata.Actors = [];
+            metadata.Genres = [];
+            metadata.Tags = tags;
+            metadata.Studios = [];
+            metadata.DateUpdated = DateTime.UtcNow;
+            metadata.OriginalTitle = Path.GetRelativePath(libraryPath, path);
+
+            return metadata;
+        }
+        catch (Exception ex)
+        {
+            client.Notify(ex);
             return None;
         }
     }
@@ -398,7 +452,7 @@ public partial class FallbackMetadataProvider : IFallbackMetadataProvider
         }
         catch (Exception ex)
         {
-            _client.Notify(ex);
+            client.Notify(ex);
             return None;
         }
     }
@@ -420,7 +474,7 @@ public partial class FallbackMetadataProvider : IFallbackMetadataProvider
         }
         catch (Exception ex)
         {
-            _client.Notify(ex);
+            client.Notify(ex);
         }
 
         return metadata;

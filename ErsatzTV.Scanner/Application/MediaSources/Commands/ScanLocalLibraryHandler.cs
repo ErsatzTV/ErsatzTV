@@ -13,6 +13,7 @@ public class ScanLocalLibraryHandler : IRequestHandler<ScanLocalLibrary, Either<
 {
     private readonly IConfigElementRepository _configElementRepository;
     private readonly IImageFolderScanner _imageFolderScanner;
+    private readonly IRemoteStreamFolderScanner _remoteStreamFolderScanner;
     private readonly ILibraryRepository _libraryRepository;
     private readonly ILogger<ScanLocalLibraryHandler> _logger;
     private readonly IMediator _mediator;
@@ -31,6 +32,7 @@ public class ScanLocalLibraryHandler : IRequestHandler<ScanLocalLibrary, Either<
         IOtherVideoFolderScanner otherVideoFolderScanner,
         ISongFolderScanner songFolderScanner,
         IImageFolderScanner imageFolderScanner,
+        IRemoteStreamFolderScanner remoteStreamFolderScanner,
         IMediator mediator,
         ILogger<ScanLocalLibraryHandler> logger)
     {
@@ -42,6 +44,7 @@ public class ScanLocalLibraryHandler : IRequestHandler<ScanLocalLibrary, Either<
         _otherVideoFolderScanner = otherVideoFolderScanner;
         _songFolderScanner = songFolderScanner;
         _imageFolderScanner = imageFolderScanner;
+        _remoteStreamFolderScanner = remoteStreamFolderScanner;
         _mediator = mediator;
         _logger = logger;
     }
@@ -118,6 +121,14 @@ public class ScanLocalLibraryHandler : IRequestHandler<ScanLocalLibrary, Either<
                             cancellationToken),
                     LibraryMediaKind.Images =>
                         await _imageFolderScanner.ScanFolder(
+                            libraryPath,
+                            ffprobePath,
+                            ffprobePath,
+                            progressMin,
+                            progressMax,
+                            cancellationToken),
+                    LibraryMediaKind.RemoteStreams =>
+                        await _remoteStreamFolderScanner.ScanFolder(
                             libraryPath,
                             ffprobePath,
                             ffprobePath,

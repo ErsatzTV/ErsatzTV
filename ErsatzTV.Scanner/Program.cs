@@ -173,6 +173,7 @@ public class Program
                 services.AddScoped<IOtherVideoRepository, OtherVideoRepository>();
                 services.AddScoped<ISongRepository, SongRepository>();
                 services.AddScoped<IImageRepository, ImageRepository>();
+                services.AddScoped<IRemoteStreamRepository, RemoteStreamRepository>();
                 services.AddScoped<ILibraryRepository, LibraryRepository>();
                 services.AddScoped<ISearchRepository, SearchRepository>();
                 services.AddScoped<ICachingSearchRepository, CachingSearchRepository>();
@@ -188,6 +189,7 @@ public class Program
                 services.AddScoped<IOtherVideoFolderScanner, OtherVideoFolderScanner>();
                 services.AddScoped<ISongFolderScanner, SongFolderScanner>();
                 services.AddScoped<IImageFolderScanner, ImageFolderScanner>();
+                services.AddScoped<IRemoteStreamFolderScanner, RemoteStreamFolderScanner>();
                 services.AddScoped<IEpisodeNfoReader, EpisodeNfoReader>();
                 services.AddScoped<IMovieNfoReader, MovieNfoReader>();
                 services.AddScoped<IArtistNfoReader, ArtistNfoReader>();
