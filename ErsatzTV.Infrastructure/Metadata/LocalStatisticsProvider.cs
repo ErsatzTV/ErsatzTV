@@ -167,7 +167,7 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
             "-i", filePath
         ];
 
-        //_logger.LogDebug("ffprobe arguments {FFProbeArguments}", arguments);
+        //_logger.LogDebug("ffprobe arguments {FFProbeArguments}", arguments.ToList());
 
         BufferedCommandResult probe = await Cli.Wrap(ffprobePath)
             .WithArguments(arguments)
@@ -335,7 +335,10 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
                         version.Streams.Add(stream);
                     }
 
-                    FFprobeStreamData videoStream = json.streams?.FirstOrDefault(s => s.codec_type == "video");
+                    FFprobeStreamData videoStream = json.streams?
+                        .Where(s => s.codec_type == "video")
+                        .OrderByDescending(s => ParseBitRate(s.bit_rate))
+                        .FirstOrDefault();
                     if (videoStream != null)
                     {
                         version.SampleAspectRatio = string.IsNullOrWhiteSpace(videoStream.sample_aspect_ratio)
@@ -494,6 +497,16 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
         return Task.FromResult(path);
     }
 
+    private static long ParseBitRate(string bitRate)
+    {
+        if (long.TryParse(bitRate, out long result))
+        {
+            return result;
+        }
+
+        return 0;
+    }
+
     // ReSharper disable InconsistentNaming
     public record FFprobe(FFprobeFormat format, List<FFprobeStreamData> streams, List<FFprobeChapter> chapters);
 
@@ -520,6 +533,7 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
         string color_primaries,
         string field_order,
         string r_frame_rate,
+        string bit_rate,
         string bits_per_raw_sample,
         FFprobeDisposition disposition,
         FFprobeTags tags);
