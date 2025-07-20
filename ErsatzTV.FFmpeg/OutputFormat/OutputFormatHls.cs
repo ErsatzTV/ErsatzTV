@@ -58,14 +58,6 @@ public class OutputFormatHls : IPipelineStep
                 _segmentTemplate
             ];
 
-            if (_isTroubleshooting)
-            {
-                result.AddRange(
-                [
-                    "-hls_playlist_type", "vod"
-                ]);
-            }
-
             string pdt = _isTroubleshooting ? string.Empty : "program_date_time+omit_endlist+";
 
             if (_isFirstTranscode)

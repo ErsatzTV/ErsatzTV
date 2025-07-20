@@ -295,6 +295,16 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 audioPath = string.Empty;
             }
 
+            bool hlsRealtime = request.HlsRealtime;
+            if (playoutItemWithPath.PlayoutItem.MediaItem is RemoteStream remoteStream)
+            {
+                // duration implies live input which we cannot burst
+                if (remoteStream.Duration.HasValue)
+                {
+                    hlsRealtime = true;
+                }
+            }
+
             bool saveReports = await dbContext.ConfigElements
                 .GetValue<bool>(ConfigElementKey.FFmpegSaveReports)
                 .Map(result => result.IfNone(false));
@@ -329,7 +339,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 channel.FFmpegProfile.VaapiDriver,
                 channel.FFmpegProfile.VaapiDevice,
                 Optional(channel.FFmpegProfile.QsvExtraHardwareFrames),
-                request.HlsRealtime,
+                hlsRealtime,
                 playoutItemWithPath.PlayoutItem.FillerKind,
                 inPoint,
                 outPoint,
