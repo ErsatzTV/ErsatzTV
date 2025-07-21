@@ -28,7 +28,7 @@ public class OutputFormatHls : IPipelineStep
         _segmentTemplate = segmentTemplate;
         _playlistPath = playlistPath;
         _isFirstTranscode = isFirstTranscode;
-        _oneSecondGop = false; //oneSecondGop;
+        _oneSecondGop = oneSecondGop;
         _isTroubleshooting = isTroubleshooting;
     }
 

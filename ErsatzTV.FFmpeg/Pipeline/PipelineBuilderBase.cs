@@ -327,6 +327,9 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
                 {
                     foreach (string segmentTemplate in ffmpegState.HlsSegmentTemplate)
                     {
+                        //bool oneSecondGop = ffmpegState.EncoderHardwareAccelerationMode is HardwareAccelerationMode.Qsv;
+                        var oneSecondGop = false;
+
                         pipelineSteps.Add(
                             new OutputFormatHls(
                                 desiredState,
@@ -334,7 +337,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
                                 segmentTemplate,
                                 playlistPath,
                                 ffmpegState.PtsOffset == 0,
-                                ffmpegState.EncoderHardwareAccelerationMode is HardwareAccelerationMode.Qsv,
+                                oneSecondGop,
                                 ffmpegState.IsTroubleshooting));
                     }
                 }
