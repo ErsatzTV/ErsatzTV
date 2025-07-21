@@ -412,16 +412,21 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         SetAudioPad(audioInputFile, pipelineSteps);
     }
 
-    private void SetAudioPad(AudioInputFile audioInputFile, List<IPipelineStep> pipelineSteps)
+    private static void SetAudioPad(AudioInputFile audioInputFile, List<IPipelineStep> pipelineSteps)
     {
         if (pipelineSteps.All(ps => ps is not EncoderCopyAudio))
         {
-            _audioInputFile.Iter(f => f.FilterSteps.Add(new AudioFirstPtsFilter(0)));
+            audioInputFile.FilterSteps.Add(new AudioFirstPtsFilter(0));
         }
 
         foreach (TimeSpan _ in audioInputFile.DesiredState.AudioDuration)
         {
-            _audioInputFile.Iter(f => f.FilterSteps.Add(new AudioPadFilter()));
+            audioInputFile.FilterSteps.Add(new AudioPadFilter());
+        }
+
+        if (pipelineSteps.All(ps => ps is not EncoderCopyAudio))
+        {
+            audioInputFile.FilterSteps.Add(new AudioSetPtsFilter());
         }
     }
 
