@@ -3,6 +3,7 @@ using ErsatzTV.FFmpeg.Decoder;
 using ErsatzTV.FFmpeg.Decoder.Qsv;
 using ErsatzTV.FFmpeg.Encoder;
 using ErsatzTV.FFmpeg.Encoder.Qsv;
+using ErsatzTV.FFmpeg.Environment;
 using ErsatzTV.FFmpeg.Filter;
 using ErsatzTV.FFmpeg.Filter.Qsv;
 using ErsatzTV.FFmpeg.Format;
@@ -75,7 +76,7 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
         }
 
         bool isHevcOrH264 = videoStream.Codec is /*VideoFormat.Hevc or*/ VideoFormat.H264;
-        bool is10Bit = videoStream.BitDepth == 10;
+        bool is10Bit = videoStream.PixelFormat.Map(pf => pf.BitDepth).IfNone(8) == 10;
 
         // 10-bit hevc/h264 qsv decoders have issues, so use software
         if (decodeCapability == FFmpegCapability.Hardware && isHevcOrH264 && is10Bit)
@@ -88,6 +89,9 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
         {
             decodeCapability = FFmpegCapability.Software;
         }
+
+        // give a bogus value so no cuda devices are visible to ffmpeg
+        pipelineSteps.Add(new CudaVisibleDevicesVariable("999"));
 
         pipelineSteps.Add(new QsvHardwareAccelerationOption(ffmpegState.VaapiDevice, decodeCapability));
 
@@ -279,8 +283,7 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
             IPixelFormat formatForDownload = pixelFormat;
 
             bool usesVppQsv =
-                videoInputFile.FilterSteps.Any(f =>
-                    f is QsvFormatFilter or ScaleQsvFilter or DeinterlaceQsvFilter or TonemapQsvFilter);
+                videoInputFile.FilterSteps.Any(f => f is QsvFormatFilter or ScaleQsvFilter or DeinterlaceQsvFilter or TonemapQsvFilter);
 
             // if we have no filters, check whether we need to convert pixel format
             // since qsv doesn't seem to like doing that at the encoder
@@ -336,15 +339,18 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
                 // force p010/nv12 if we're still in hardware
                 if (currentState.FrameDataLocation == FrameDataLocation.Hardware)
                 {
-                    if (currentState.BitDepth is 10 && formatForDownload is not PixelFormatYuv420P10Le)
+                    foreach (int bitDepth in currentState.PixelFormat.Map(pf => pf.BitDepth))
                     {
-                        formatForDownload = new PixelFormatYuv420P10Le();
-                        currentState = currentState with { PixelFormat = Some(formatForDownload) };
-                    }
-                    else if (currentState.BitDepth is 8 && formatForDownload is not PixelFormatNv12)
-                    {
-                        formatForDownload = new PixelFormatNv12(formatForDownload.Name);
-                        currentState = currentState with { PixelFormat = Some(formatForDownload) };
+                        if (bitDepth is 10 && formatForDownload is not PixelFormatYuv420P10Le)
+                        {
+                            formatForDownload = new PixelFormatYuv420P10Le();
+                            currentState = currentState with { PixelFormat = Some(formatForDownload) };
+                        }
+                        else if (bitDepth is 8 && formatForDownload is not PixelFormatNv12)
+                        {
+                            formatForDownload = new PixelFormatNv12(formatForDownload.Name);
+                            currentState = currentState with { PixelFormat = Some(formatForDownload) };
+                        }
                     }
                 }
 
@@ -586,8 +592,8 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
 
         // auto_scale filter seems to muck up 10-bit software decode => hardware scale, so use software scale in that case
         useSoftwareFilter = useSoftwareFilter ||
-                            ffmpegState is { DecoderHardwareAccelerationMode: HardwareAccelerationMode.None } &&
-                            OperatingSystem.IsWindows() && currentState.BitDepth == 10;
+                            (ffmpegState is { DecoderHardwareAccelerationMode: HardwareAccelerationMode.None } &&
+                             OperatingSystem.IsWindows() && currentState.BitDepth == 10);
 
         if (currentState.ScaledSize != desiredState.ScaledSize && useSoftwareFilter)
         {

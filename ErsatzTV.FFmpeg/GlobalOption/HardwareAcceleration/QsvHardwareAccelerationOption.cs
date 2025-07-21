@@ -16,9 +16,7 @@ public class QsvHardwareAccelerationOption(Option<string> device, FFmpegCapabili
     {
         get
         {
-            string[] initDevices = OperatingSystem.IsWindows()
-                ? new[] { "-init_hw_device", "d3d11va=hw:,vendor=0x8086", "-filter_hw_device", "hw" }
-                : new[] { "-init_hw_device", "qsv=hw", "-filter_hw_device", "hw" };
+            string[] initDevices = ["-init_hw_device", "qsv=hw", "-filter_hw_device", "hw"];
 
             var result = new List<string>
             {
