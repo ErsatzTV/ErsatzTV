@@ -15,7 +15,7 @@ public class StreamSeekInputOption : IInputOption
     public string[] OutputOptions => Array.Empty<string>();
     public FrameState NextState(FrameState currentState) => currentState;
 
-    public bool AppliesTo(AudioInputFile audioInputFile) => true;
+    public bool AppliesTo(AudioInputFile audioInputFile) => audioInputFile is not NullAudioInputFile;
 
     // don't seek into a still image
     public bool AppliesTo(VideoInputFile videoInputFile) => videoInputFile.VideoStreams.All(s => !s.StillImage);
