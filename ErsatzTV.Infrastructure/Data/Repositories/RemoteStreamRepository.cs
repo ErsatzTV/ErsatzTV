@@ -125,7 +125,8 @@ public class RemoteStreamRepository(
                 .SetProperty(rs => rs.Url, remoteStream.Url)
                 .SetProperty(rs => rs.Script, remoteStream.Script)
                 .SetProperty(rs => rs.Duration, remoteStream.Duration)
-                .SetProperty(rs => rs.FallbackQuery, remoteStream.FallbackQuery));
+                .SetProperty(rs => rs.FallbackQuery, remoteStream.FallbackQuery)
+                .SetProperty(rs => rs.IsLive, remoteStream.IsLive));
     }
 
     private async Task<Either<BaseError, MediaItemScanResult<RemoteStream>>> AddRemoteStream(

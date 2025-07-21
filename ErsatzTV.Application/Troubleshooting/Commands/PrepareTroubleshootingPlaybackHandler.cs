@@ -93,15 +93,8 @@ public class PrepareTroubleshootingPlaybackHandler(
             duration = TimeSpan.FromSeconds(30);
         }
 
-        var hlsRealtime = false;
-        if (mediaItem is RemoteStream remoteStream)
-        {
-            // duration implies live input which we cannot burst
-            if (remoteStream.Duration.HasValue)
-            {
-                hlsRealtime = true;
-            }
-        }
+        // we cannot burst live input
+        bool hlsRealtime = mediaItem is RemoteStream { IsLive: true };
 
         Command process = await ffmpegProcessService.ForPlayoutItem(
             ffmpegPath,
