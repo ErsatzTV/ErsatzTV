@@ -128,6 +128,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - `Playlist Item Size`: will play all media items from the current playlist item before continuing to the next schedule item
   - `Multi-Episode Group Size`: will play all media items from the current multi-part episode group, or one ungrouped media item
 - Change watermark width and margins to allow decimals
+- Move `Add To Collection` button to overflow menu on all media cards, and add `Show Media Info` to overflow menu
+  - This allows showing media info for all media kinds
 
 ### Fixed
 - Fix QSV acceleration in docker with older Intel devices

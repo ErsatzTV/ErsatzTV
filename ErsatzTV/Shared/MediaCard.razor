@@ -1,6 +1,9 @@
 ﻿@using ErsatzTV.Application.MediaCards
+@using ErsatzTV.Application.MediaItems
 @using static Prelude
 @inject NavigationManager NavigationManager
+@inject IDialogService Dialog
+@inject IMediator Mediator
 
 <div class="@((ContainerClass ?? "media-card-container mr-6") + " pb-3")" id="@($"item_{Data.MediaItemId}")">
     @if (SelectClicked.HasDelegate || !string.IsNullOrWhiteSpace(Href))
@@ -35,32 +38,53 @@
                     <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Warning"/>
                 </div>
             }
-            <div class="media-card-overlay" style="">
-                <MudButton Style="height: 100%; width: 100%"
-                           OnClick="OnOverlayClick">
-                </MudButton>
+            <MudElement HtmlTag="div" Class="@_overlayClass" Style="">
+                <MudButton Style="height: 100%; width: 100%" OnClick="@OnOverlayClick" />
                 @if (SelectClicked.HasDelegate)
                 {
                     <MudIconButton Color="@SelectColor"
                                    Icon="@(IsSelected ? Icons.Material.Filled.CheckBox : Icons.Material.Filled.CheckBoxOutlineBlank)"
                                    Style="left: 0; position: absolute; top: 0;"
+                                   Class="media-card-select-checkbox"
                                    OnClick="@(e => SelectClicked.InvokeAsync(e))"/>
                 }
-                @if (AddToCollectionClicked.HasDelegate && !IsSelectMode)
+                @if (!IsSelectMode)
                 {
-                    <MudIconButton Color="Color.Tertiary"
-                                   Icon="@Icons.Material.Filled.PlaylistAdd"
-                                   Style="bottom: 0; left: 0; position: absolute;"
-                                   OnClick="@(() => AddToCollectionClicked.InvokeAsync(Data))"/>
+                    @if (AddToCollectionClicked.HasDelegate || AddToPlaylistClicked.HasDelegate || Data.HasMediaInfo)
+                    {
+                        <MudMenu Icon="@Icons.Material.Filled.MoreVert"
+                                 Style="bottom: 0; left: 0; position: absolute;"
+                                 OpenChanged="@OnMenuOpenChanged">
+                            @if (AddToCollectionClicked.HasDelegate)
+                            {
+                                <MudMenuItem Icon="@Icons.Material.Filled.Add"
+                                             Label="Add To Collection"
+                                             OnClick="@(() => AddToCollectionClicked.InvokeAsync(Data))"/>
+                            }
+                            @if (AddToPlaylistClicked.HasDelegate)
+                            {
+                                <MudMenuItem Icon="@Icons.Material.Filled.PlaylistAdd"
+                                             Label="Add To Playlist"
+                                             OnClick="@(() => AddToPlaylistClicked.InvokeAsync(Data))"/>
+                            }
+                            @if (Data.HasMediaInfo)
+                            {
+                                <MudMenuItem Icon="@Icons.Material.Filled.Info"
+                                             Label="Show Media Info"
+                                             OnClick="@ShowMediaInfo"/>
+                            }
+                        </MudMenu>
+                    }
+
+                    @if (DeleteClicked.HasDelegate)
+                    {
+                        <MudIconButton Color="Color.Error"
+                                       Icon="@Icons.Material.Filled.Delete"
+                                       Style="bottom: 0; position: absolute; right: 0;"
+                                       OnClick="@(() => DeleteClicked.InvokeAsync(Data))"/>
+                    }
                 }
-                @if (DeleteClicked.HasDelegate && !IsSelectMode)
-                {
-                    <MudIconButton Color="Color.Error"
-                                   Icon="@Icons.Material.Filled.Delete"
-                                   Style="bottom: 0; position: absolute; right: 0;"
-                                   OnClick="@(() => DeleteClicked.InvokeAsync(Data))"/>
-                }
-            </div>
+            </MudElement>
         </div>
     }
     else
@@ -118,6 +142,9 @@
     public EventCallback<MediaCardViewModel> AddToCollectionClicked { get; set; }
 
     [Parameter]
+    public EventCallback<MediaCardViewModel> AddToPlaylistClicked { get; set; }
+
+    [Parameter]
     public EventCallback<MouseEventArgs> SelectClicked { get; set; }
 
     [Parameter]
@@ -131,6 +158,8 @@
 
     [Parameter]
     public bool IsRemoteArtwork { get; set; }
+
+    private string _overlayClass = "media-card-overlay";
 
     private string GetPlaceholder(string sortTitle)
     {
@@ -170,6 +199,34 @@
         else
         {
             NavigationManager.NavigateTo(Href);
+        }
+    }
+
+    private void OnMenuOpenChanged(bool open)
+    {
+        _overlayClass = open
+            ? "media-card-overlay media-card-overlay-menu-open"
+            : "media-card-overlay";
+
+        StateHasChanged();
+    }
+
+    private async Task ShowMediaInfo()
+    {
+        Either<BaseError, MediaItemInfo> maybeInfo = await Mediator.Send(new GetMediaItemInfo(Data.MediaItemId));
+
+        // foreach (BaseError error in maybeInfo.LeftToSeq())
+        // {
+        //     Snackbar.Add("Unexpected error loading media info");
+        //     Logger.LogError("Unexpected error loading media info: {Error}", error.Value);
+        // }
+
+        foreach (MediaItemInfo info in maybeInfo.RightToSeq())
+        {
+            var parameters = new DialogParameters { { "MediaItemInfo", info } };
+            var options = new DialogOptions { CloseButton = true, CloseOnEscapeKey = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
+            IDialogReference dialog = await Dialog.ShowAsync<MediaItemInfoDialog>(Data.Title, parameters, options);
+            DialogResult _ = await dialog.Result;
         }
     }
 

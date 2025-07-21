@@ -8,4 +8,5 @@ public record MediaCardViewModel(
     string Subtitle,
     string SortTitle,
     string Poster,
-    MediaItemState State);
+    MediaItemState State,
+    bool HasMediaInfo);

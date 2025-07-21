@@ -17,4 +17,5 @@ public record TelevisionSeasonCardViewModel(
     Subtitle,
     SortTitle,
     Poster,
-    State);
+    State,
+    HasMediaInfo: false);

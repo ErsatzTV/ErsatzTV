@@ -14,4 +14,5 @@ public record ArtistCardViewModel(
     Subtitle,
     SortTitle,
     Poster,
-    State);
+    State,
+    HasMediaInfo: false);

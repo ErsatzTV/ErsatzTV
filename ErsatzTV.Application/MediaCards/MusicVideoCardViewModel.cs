@@ -18,7 +18,8 @@ public record MusicVideoCardViewModel(
     Subtitle,
     SortTitle,
     Poster,
-    State)
+    State,
+    HasMediaInfo: true)
 {
     public int CustomIndex { get; set; }
 }
