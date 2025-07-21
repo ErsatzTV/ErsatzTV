@@ -107,11 +107,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - Remote Stream library items consist of YAML (`.yml`) files with the following fields
       - `url`: the URL of the content that can be played directly by ffmpeg
       - `script`: the process name and arguments for a command that will output content to stdout
-      - `duration`: when the content is "live" and does not have duration metadata, this must be provided to allow scheduling
       - `is_live`: *required* property that indicates whether the remote stream contains live content
-        - When this is set to `true`, ETV cannot work ahead on transcoding this item, which is a necessary tradeoff for supporting live content
-        - When this is set to `false`, ETV will treat the stream as VOD and attempt to work ahead on transcoding like any other local item
-          - This *will* cause errors when the content is actually live, so it's important to configure this correctly
+          - When this is set to `true`, ETV cannot work ahead on transcoding this item, which is a necessary tradeoff for supporting live content
+          - When this is set to `false`, ETV will treat the stream as VOD and attempt to work ahead on transcoding like any other local item
+              - This *will* cause errors when the content is actually live, so it's important to configure this correctly
+      - `duration`: when the content is live and does not have duration metadata, this must be provided to allow scheduling
     - The remote stream definition (YAML file) may provide either a `url` or a `script`
       - If both are provided, `url` will be used
 

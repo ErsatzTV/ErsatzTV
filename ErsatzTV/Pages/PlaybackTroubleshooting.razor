@@ -64,6 +64,12 @@
                     }
                 </MudSelect>
             </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Start From Beginning</MudText>
+                </div>
+                <MudCheckBox @bind-Value="_startFromBeginning" Dense="true" Disabled="@(string.Equals(_info?.Kind, "RemoteStream", StringComparison.OrdinalIgnoreCase))" />
+            </MudStack>
             <MudText Typo="Typo.h5" Class="mt-10 mb-2">Preview</MudText>
             <MudDivider Class="mb-6"/>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
@@ -72,7 +78,7 @@
                            Color="Color.Primary"
                            StartIcon="@Icons.Material.Filled.PlayCircle"
                            Disabled="@(Locker.IsTroubleshootingPlaybackLocked() || _mediaItemId is null)"
-                           OnClick="PreviewChannel">
+                           OnClick="@PreviewChannel">
                     Play
                 </MudButton>
             </MudStack>
@@ -105,6 +111,7 @@
     private MediaItemInfo _info;
     private int _ffmpegProfileId;
     private int? _watermarkId;
+    private bool _startFromBeginning;
     private bool _hasPlayed;
 
     public void Dispose()
@@ -136,7 +143,7 @@
     {
         var uri = new UriBuilder(NavigationManager.ToAbsoluteUri(NavigationManager.Uri));
         uri.Path = uri.Path.Replace("/system/troubleshooting/playback", "/api/troubleshoot/playback.m3u8");
-        uri.Query = $"?mediaItem={_mediaItemId}&ffmpegProfile={_ffmpegProfileId}&watermark={_watermarkId ?? 0}";
+        uri.Query = $"?mediaItem={_mediaItemId}&ffmpegProfile={_ffmpegProfileId}&watermark={_watermarkId ?? 0}&startFromBeginning={_startFromBeginning}";
         await JsRuntime.InvokeVoidAsync("previewChannel", uri.ToString());
 
         await Task.Delay(TimeSpan.FromSeconds(1));
@@ -155,6 +162,7 @@
             foreach (MediaItemInfo info in maybeInfo.RightToSeq())
             {
                 _info = info;
+                _startFromBeginning = string.Equals(info.Kind, "RemoteStream", StringComparison.OrdinalIgnoreCase);
             }
 
             if (maybeInfo.IsLeft)
@@ -168,7 +176,7 @@
 
     private async Task DownloadResults()
     {
-        await JsRuntime.InvokeVoidAsync("window.open", $"api/troubleshoot/playback/archive?mediaItem={_mediaItemId ?? 0}&ffmpegProfile={_ffmpegProfileId}&watermark={_watermarkId ?? 0}");
+        await JsRuntime.InvokeVoidAsync("window.open", $"api/troubleshoot/playback/archive?mediaItem={_mediaItemId ?? 0}&ffmpegProfile={_ffmpegProfileId}&watermark={_watermarkId ?? 0}&startFromBeginning={_startFromBeginning}");
     }
 
     private void HandleTroubleshootingCompleted(PlaybackTroubleshootingCompletedNotification result)

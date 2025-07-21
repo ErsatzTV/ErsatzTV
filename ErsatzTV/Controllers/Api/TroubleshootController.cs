@@ -26,10 +26,12 @@ public class TroubleshootController(
         int ffmpegProfile,
         [FromQuery]
         int watermark,
+        [FromQuery]
+        bool startFromBeginning,
         CancellationToken cancellationToken)
     {
         Either<BaseError, Command> result = await mediator.Send(
-            new PrepareTroubleshootingPlayback(mediaItem, ffmpegProfile, watermark),
+            new PrepareTroubleshootingPlayback(mediaItem, ffmpegProfile, watermark, startFromBeginning),
             cancellationToken);
 
         return await result.MatchAsync<IActionResult>(
@@ -83,10 +85,12 @@ public class TroubleshootController(
         int ffmpegProfile,
         [FromQuery]
         int watermark,
+        [FromQuery]
+        bool startFromBeginning,
         CancellationToken cancellationToken)
     {
         Option<string> maybeArchivePath = await mediator.Send(
-            new ArchiveTroubleshootingResults(mediaItem, ffmpegProfile, watermark),
+            new ArchiveTroubleshootingResults(mediaItem, ffmpegProfile, watermark, startFromBeginning),
             cancellationToken);
 
         foreach (string archivePath in maybeArchivePath)
