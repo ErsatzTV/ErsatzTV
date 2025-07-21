@@ -101,7 +101,10 @@ public class PrepareTroubleshootingPlaybackHandler(
         if (!hlsRealtime && !request.StartFromBeginning)
         {
             inPoint = TimeSpan.FromSeconds(version.Duration.TotalSeconds / 2.0);
-            duration = TimeSpan.FromSeconds(duration.TotalSeconds / 2.0);
+            if (inPoint.TotalSeconds < 30)
+            {
+                duration = inPoint;
+            }
             outPoint = inPoint + duration;
         }
 

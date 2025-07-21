@@ -248,6 +248,8 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
             context,
             pipelineSteps);
 
+        pixelFormatFilterSteps.Add(new VideoSetPtsFilter());
+
         return new FilterChain(
             videoInputFile.FilterSteps,
             watermarkInputFile.Map(wm => wm.FilterSteps).IfNone(new List<IPipelineFilterStep>()),

@@ -148,10 +148,12 @@ public class SoftwarePipelineBuilder : PipelineBuilderBase
             currentState,
             pipelineSteps);
 
+        pixelFormatFilterSteps.Add(new VideoSetPtsFilter());
+
         return new FilterChain(
             videoInputFile.FilterSteps,
-            watermarkInputFile.Map(wm => wm.FilterSteps).IfNone(new List<IPipelineFilterStep>()),
-            subtitleInputFile.Map(st => st.FilterSteps).IfNone(new List<IPipelineFilterStep>()),
+            watermarkInputFile.Map(wm => wm.FilterSteps).IfNone([]),
+            subtitleInputFile.Map(st => st.FilterSteps).IfNone([]),
             watermarkOverlayFilterSteps,
             subtitleOverlayFilterSteps,
             pixelFormatFilterSteps);

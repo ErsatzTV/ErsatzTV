@@ -8,11 +8,5 @@ public record FilterChain(
     List<IPipelineFilterStep> SubtitleOverlayFilterSteps,
     List<IPipelineFilterStep> PixelFormatFilterSteps)
 {
-    public static readonly FilterChain Empty = new(
-        new List<IPipelineFilterStep>(),
-        new List<IPipelineFilterStep>(),
-        new List<IPipelineFilterStep>(),
-        new List<IPipelineFilterStep>(),
-        new List<IPipelineFilterStep>(),
-        new List<IPipelineFilterStep>());
+    public static readonly FilterChain Empty = new([], [], [], [], [], []);
 }

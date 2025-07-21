@@ -159,6 +159,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix block playout EPG generation to use `XMLTV Time Zone` setting
 - Fix adding "official" Trakt lists
 - Fix searching for `collection` names with spaces or other special characters, e.g. `collection:"Movies - Action"`
+- Fix QSV transcoding errors when scaling
+- Fix QSV frame freezing in browser
 
 ## [25.2.0] - 2025-06-24
 ### Added
