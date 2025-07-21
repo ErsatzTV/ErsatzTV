@@ -14,7 +14,8 @@ public record OtherVideoCardViewModel(
     Subtitle,
     SortTitle,
     Poster,
-    State)
+    State,
+    HasMediaInfo: true)
 {
     public int CustomIndex { get; set; }
 }

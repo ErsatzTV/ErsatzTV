@@ -14,4 +14,5 @@ public record MediaCollectionViewModel(
     string.Empty,
     Name,
     string.Empty,
-    State);
+    State,
+    HasMediaInfo: false);

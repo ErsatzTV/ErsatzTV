@@ -31,15 +31,6 @@
 
 .media-card-poster-placeholder { font-weight: bold; }
 
-.media-card-menu {
-    bottom: 0;
-    display: none;
-    position: absolute;
-    right: 0;
-}
-
-.media-card:hover .media-card-menu { display: block; }
-
 .media-card-overlay {
     background: rgba(0, 0, 0, 0.4);
     border-radius: 4px;
@@ -53,6 +44,10 @@
 }
 
 .media-card-overlay:hover { opacity: 1; }
+
+.media-card-overlay:not(:hover) button.media-card-select-checkbox { opacity: 0; }
+
+.media-card-overlay-menu-open { opacity: 1; }
 
 .search-bar .mud-input { height: 42px; }
 

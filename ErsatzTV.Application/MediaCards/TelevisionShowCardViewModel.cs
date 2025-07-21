@@ -14,4 +14,5 @@ public record TelevisionShowCardViewModel(
     Subtitle,
     SortTitle,
     Poster,
-    State);
+    State,
+    HasMediaInfo: false);

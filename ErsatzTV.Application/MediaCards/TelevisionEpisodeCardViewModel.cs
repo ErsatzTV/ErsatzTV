@@ -24,4 +24,5 @@ public record TelevisionEpisodeCardViewModel(
     $"Episode {Episode}",
     SortTitle,
     Poster,
-    State);
+    State,
+    HasMediaInfo: true);
