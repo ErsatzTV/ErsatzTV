@@ -214,13 +214,6 @@
     private async Task ShowMediaInfo()
     {
         Either<BaseError, MediaItemInfo> maybeInfo = await Mediator.Send(new GetMediaItemInfo(Data.MediaItemId));
-
-        // foreach (BaseError error in maybeInfo.LeftToSeq())
-        // {
-        //     Snackbar.Add("Unexpected error loading media info");
-        //     Logger.LogError("Unexpected error loading media info: {Error}", error.Value);
-        // }
-
         foreach (MediaItemInfo info in maybeInfo.RightToSeq())
         {
             var parameters = new DialogParameters { { "MediaItemInfo", info } };
