@@ -3480,6 +3480,9 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<string>("FallbackQuery")
                         .HasColumnType("longtext");
 
+                    b.Property<bool>("IsLive")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<string>("Script")
                         .HasColumnType("longtext");
 

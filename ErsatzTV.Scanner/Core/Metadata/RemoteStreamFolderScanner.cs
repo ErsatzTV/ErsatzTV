@@ -279,8 +279,18 @@ public class RemoteStreamFolderScanner : LocalFolderScanner, IRemoteStreamFolder
             string path = remoteStream.GetHeadVersion().MediaFiles.Head().Path;
             string yaml = await File.ReadAllTextAsync(path, cancellationToken);
             YamlRemoteStreamDefinition definition = deserializer.Deserialize<YamlRemoteStreamDefinition>(yaml);
+            if (!definition.IsLive.HasValue)
+            {
+                return BaseError.New($"Remote stream definition is missing required `is_live` property");
+            }
 
             bool updated = false;
+            if (remoteStream.IsLive != definition.IsLive.Value)
+            {
+                remoteStream.IsLive = definition.IsLive.Value;
+                updated = true;
+            }
+
             if (remoteStream.Url != definition.Url)
             {
                 remoteStream.Url = definition.Url;
