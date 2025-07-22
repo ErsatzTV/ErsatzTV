@@ -204,6 +204,10 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         SetSceneDetect(videoStream, ffmpegState, desiredState, pipelineSteps);
         SetFFReport(ffmpegState, pipelineSteps);
         SetStreamSeek(ffmpegState, videoInputFile, context, pipelineSteps);
+        if (ffmpegState.IsTroubleshooting)
+        {
+            SetTimeLimit(ffmpegState, pipelineSteps);
+        }
 
         (FilterChain filterChain, ffmpegState) = BuildVideoPipeline(
             videoInputFile,
@@ -828,6 +832,9 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
             }
         }
     }
+
+    private static void SetTimeLimit(FFmpegState ffmpegState, List<IPipelineStep> pipelineSteps) =>
+        pipelineSteps.AddRange(ffmpegState.Finish.Map(finish => new TimeLimitOutputOption(finish)));
 
     private sealed record FilterChainAndState(FilterChain FilterChain, FFmpegState FFmpegState);
 }

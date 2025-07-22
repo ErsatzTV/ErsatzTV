@@ -651,7 +651,7 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
             foreach (IPixelFormat pixelFormat in desiredState.PixelFormat)
             {
                 if (ffmpegState.DecoderHardwareAccelerationMode == HardwareAccelerationMode.Vaapi
-                    && ffmpegState.VaapiDriver == "ihd"
+                    && ffmpegState.VaapiDriver == "iHD"
                     && _ffmpegCapabilities.HasFilter(FFmpegKnownFilter.TonemapOpenCL))
                 {
                     var filter = new TonemapVaapiFilter(ffmpegState);
