@@ -397,7 +397,7 @@ public class HlsSessionWorker : IHlsSessionWorker
                 }
             }
 
-            long ptsOffset = await GetPtsOffset(_channelNumber, cancellationToken);
+            double ptsOffset = await GetPtsOffset(_channelNumber, cancellationToken);
             // _logger.LogInformation("PTS offset: {PtsOffset}", ptsOffset);
 
             _logger.LogDebug("HLS session state: {State}", _state);
@@ -620,12 +620,12 @@ public class HlsSessionWorker : IHlsSessionWorker
         }
     }
 
-    private async Task<long> GetPtsOffset(string channelNumber, CancellationToken cancellationToken)
+    private async Task<double> GetPtsOffset(string channelNumber, CancellationToken cancellationToken)
     {
         await _slim.WaitAsync(cancellationToken);
         try
         {
-            long result = 0;
+            double result = 0;
 
             // if we haven't yet written any segments, start at zero
             if (!_hasWrittenSegments)
@@ -633,8 +633,8 @@ public class HlsSessionWorker : IHlsSessionWorker
                 return result;
             }
 
-            Either<BaseError, PtsAndDuration> queryResult = await _mediator.Send(
-                new GetLastPtsDuration(channelNumber),
+            Either<BaseError, PtsTime> queryResult = await _mediator.Send(
+                new GetLastPtsTime(channelNumber),
                 cancellationToken);
 
             foreach (BaseError error in queryResult.LeftToSeq())
@@ -642,9 +642,9 @@ public class HlsSessionWorker : IHlsSessionWorker
                 _logger.LogWarning("Unable to determine last pts offset - {Error}", error.ToString());
             }
 
-            foreach ((long pts, long duration) in queryResult.RightToSeq())
+            foreach (PtsTime pts in queryResult.RightToSeq())
             {
-                result = pts + duration + 1;
+                result = pts.Value + 0.01;
             }
 
             return result;

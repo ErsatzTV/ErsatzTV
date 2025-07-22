@@ -8,4 +8,4 @@ public record FFmpegProcessRequest(
     DateTimeOffset Now,
     bool StartAtZero,
     bool HlsRealtime,
-    long PtsOffset) : IRequest<Either<BaseError, PlayoutItemProcessModel>>;
+    double PtsOffset) : IRequest<Either<BaseError, PlayoutItemProcessModel>>;
