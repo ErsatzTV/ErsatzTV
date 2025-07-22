@@ -26,7 +26,7 @@ public class TonemapFilter : BaseFilter
             {
                 foreach (IPixelFormat pixelFormat in _currentState.PixelFormat)
                 {
-                    if (pixelFormat is PixelFormatCuda)
+                    if (pixelFormat is PixelFormatCuda or PixelFormatVaapi)
                     {
                         foreach (IPixelFormat pf in AvailablePixelFormats.ForPixelFormat(pixelFormat.Name, null))
                         {
