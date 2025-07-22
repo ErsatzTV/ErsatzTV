@@ -169,7 +169,6 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
             new NoStatsOption(),
             new LoglevelErrorOption(),
             new StandardFormatFlags(),
-            new NoDemuxDecodeDelayOutputOption(),
             outputOption,
             new ClosedGopOutputOption()
         };
@@ -205,7 +204,6 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         SetSceneDetect(videoStream, ffmpegState, desiredState, pipelineSteps);
         SetFFReport(ffmpegState, pipelineSteps);
         SetStreamSeek(ffmpegState, videoInputFile, context, pipelineSteps);
-        SetTimeLimit(ffmpegState, pipelineSteps);
 
         (FilterChain filterChain, ffmpegState) = BuildVideoPipeline(
             videoInputFile,
@@ -420,16 +418,13 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         if (pipelineSteps.All(ps => ps is not EncoderCopyAudio))
         {
             audioInputFile.FilterSteps.Add(new AudioFirstPtsFilter(0));
-        }
-
-        foreach (TimeSpan _ in audioInputFile.DesiredState.AudioDuration)
-        {
-            audioInputFile.FilterSteps.Add(new AudioPadFilter());
-        }
-
-        if (pipelineSteps.All(ps => ps is not EncoderCopyAudio))
-        {
             audioInputFile.FilterSteps.Add(new AudioSetPtsFilter());
+        }
+
+        foreach (TimeSpan audioDuration in audioInputFile.DesiredState.AudioDuration)
+        {
+            audioInputFile.FilterSteps.Add(new AudioPadFilter(audioDuration));
+            pipelineSteps.Add(new ShortestOutputOption());
         }
     }
 
@@ -535,6 +530,8 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
             SetVideoBufferSizeOutput(desiredState, pipelineSteps);
         }
 
+
+
         FilterChain filterChain = SetVideoFilters(
             videoInputFile,
             videoStream,
@@ -636,10 +633,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
 
         if (ffmpegState.PtsOffset > 0)
         {
-            foreach (int videoTrackTimeScale in desiredState.VideoTrackTimeScale)
-            {
-                pipelineSteps.Add(new OutputTsOffsetOption(ffmpegState.PtsOffset, videoTrackTimeScale));
-            }
+            pipelineSteps.Add(new OutputTsOffsetOption(ffmpegState.PtsOffset));
         }
     }
 
@@ -834,9 +828,6 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
             }
         }
     }
-
-    private static void SetTimeLimit(FFmpegState ffmpegState, List<IPipelineStep> pipelineSteps) =>
-        pipelineSteps.AddRange(ffmpegState.Finish.Map(finish => new TimeLimitOutputOption(finish)));
 
     private sealed record FilterChainAndState(FilterChain FilterChain, FFmpegState FFmpegState);
 }

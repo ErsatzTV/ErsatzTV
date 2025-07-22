@@ -161,6 +161,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix searching for `collection` names with spaces or other special characters, e.g. `collection:"Movies - Action"`
 - Fix QSV transcoding errors when scaling
 - Fix QSV frame freezing in browser
+- Fix some stream continuity issues, and some cases where audio sync is lost at transition
 
 ## [25.2.0] - 2025-06-24
 ### Added

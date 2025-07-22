@@ -90,20 +90,22 @@ public class OutputFormatHls : IPipelineStep
 
         foreach (string rFrameRate in _mediaFrameRate)
         {
-            if (!int.TryParse(rFrameRate, out int fr))
+            if (double.TryParse(rFrameRate, out double value))
+            {
+                frameRate = (int)Math.Round(value);
+            }
+            else if (!int.TryParse(rFrameRate, out int fr))
             {
                 string[] split = (rFrameRate ?? string.Empty).Split("/");
                 if (int.TryParse(split[0], out int left) && int.TryParse(split[1], out int right))
                 {
-                    fr = (int)Math.Round(left / (double)right);
+                    frameRate = (int)Math.Round(left / (double)right);
                 }
                 else
                 {
-                    fr = 24;
+                    frameRate = 24;
                 }
             }
-
-            frameRate = fr;
         }
 
         return frameRate;

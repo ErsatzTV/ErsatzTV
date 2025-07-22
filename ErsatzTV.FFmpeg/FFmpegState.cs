@@ -19,7 +19,7 @@ public record FFmpegState(
     OutputFormatKind OutputFormat,
     Option<string> HlsPlaylistPath,
     Option<string> HlsSegmentTemplate,
-    long PtsOffset,
+    double PtsOffset,
     Option<int> ThreadCount,
     Option<int> MaybeQsvExtraHardwareFrames,
     bool IsSongWithProgress,
