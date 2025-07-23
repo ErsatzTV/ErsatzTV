@@ -119,6 +119,12 @@ public class TvContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
+        // mysql-specific configuration
+        if ((Database.ProviderName ?? string.Empty).Contains("MySql", StringComparison.InvariantCultureIgnoreCase))
+        {
+            modelBuilder.Entity<MediaFile>().Property(mf => mf.Path).HasColumnType("longtext");
+        }
+
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(TvContext).Assembly);
     }
 }
