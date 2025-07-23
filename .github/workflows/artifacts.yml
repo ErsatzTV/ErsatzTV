@@ -151,10 +151,10 @@ jobs:
           - os: ubuntu-latest
             kind: linux
             target: linux-musl-x64
-          - os: ubuntu-latest
+          - os: ubuntu-24.04-arm
             kind: linux
             target: linux-arm
-          - os: ubuntu-latest
+          - os: ubuntu-24.04-arm
             kind: linux
             target: linux-arm64
           - os: windows-latest
