@@ -79,6 +79,7 @@ jobs:
           context: .
           file: ./docker/${{ matrix.path }}Dockerfile
           push: true
+          provenance: false
           platforms: ${{ matrix.platform }}
           build-args: |
             INFO_VERSION=${{ inputs.info_version }}-docker${{ matrix.suffix }}
@@ -106,26 +107,23 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Create and push manifest (base version)
+      - name: Create and push manifests
         run: |
           docker manifest create jasongdove/ersatztv:${{ inputs.base_version }} \
             jasongdove/ersatztv:${{ inputs.base_version }}-amd64 \
             jasongdove/ersatztv:${{ inputs.base_version }}-arm64 \
             jasongdove/ersatztv:${{ inputs.base_version }}-arm
           docker manifest push jasongdove/ersatztv:${{ inputs.base_version }}
-          docker manifest create ghcr.io/ersatztv/ersatztv:${{ inputs.base_version }} \
-            ghcr.io/ersatztv/ersatztv:${{ inputs.base_version }}-amd64 \
-            ghcr.io/ersatztv/ersatztv:${{ inputs.base_version }}-arm64 \
-            ghcr.io/ersatztv/ersatztv:${{ inputs.base_version }}-arm
-          docker manifest push ghcr.io/ersatztv/ersatztv:${{ inputs.base_version }}
-
-      - name: Create and push manifest (tag version)
-        run: |
           docker manifest create jasongdove/ersatztv:${{ inputs.tag_version }} \
             jasongdove/ersatztv:${{ inputs.tag_version }}-amd64 \
             jasongdove/ersatztv:${{ inputs.tag_version }}-arm64 \
             jasongdove/ersatztv:${{ inputs.tag_version }}-arm
           docker manifest push jasongdove/ersatztv:${{ inputs.tag_version }}
+          docker manifest create ghcr.io/ersatztv/ersatztv:${{ inputs.base_version }} \
+            ghcr.io/ersatztv/ersatztv:${{ inputs.base_version }}-amd64 \
+            ghcr.io/ersatztv/ersatztv:${{ inputs.base_version }}-arm64 \
+            ghcr.io/ersatztv/ersatztv:${{ inputs.base_version }}-arm
+          docker manifest push ghcr.io/ersatztv/ersatztv:${{ inputs.base_version }}
           docker manifest create ghcr.io/ersatztv/ersatztv:${{ inputs.tag_version }} \
             ghcr.io/ersatztv/ersatztv:${{ inputs.tag_version }}-amd64 \
             ghcr.io/ersatztv/ersatztv:${{ inputs.tag_version }}-arm64 \
