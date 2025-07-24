@@ -37,6 +37,9 @@ public class ElasticSearchItem : MinimalElasticSearchItem
     [JsonPropertyName(LuceneSearchIndex.SubLanguageTagField)]
     public List<string> SubLanguageTag { get; set; }
 
+    [JsonPropertyName(LuceneSearchIndex.ChaptersField)]
+    public int Chapters { get; set; }
+
     [JsonPropertyName(LuceneSearchIndex.MinutesField)]
     public int Minutes { get; set; }
 

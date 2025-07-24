@@ -49,7 +49,7 @@ public class ElasticSearchIndex : ISearchIndex
         return exists.IsValidResponse;
     }
 
-    public int Version => 47;
+    public int Version => 48;
 
     public async Task<bool> Initialize(
         ILocalFileSystem localFileSystem,
@@ -926,6 +926,7 @@ public class ElasticSearchIndex : ISearchIndex
     {
         foreach (MediaVersion version in mediaVersions.HeadOrNone())
         {
+            doc.Chapters = (version.Chapters ?? []).Count;
             doc.Minutes = (int)Math.Ceiling(version.Duration.TotalMinutes);
             doc.Seconds = (int)Math.Ceiling(version.Duration.TotalSeconds);
 
