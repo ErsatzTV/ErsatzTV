@@ -114,6 +114,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
       - `duration`: when the content is live and does not have duration metadata, this must be provided to allow scheduling
     - The remote stream definition (YAML file) may provide either a `url` or a `script`
       - If both are provided, `url` will be used
+- Include number of chapters in search index as `chapters`
 
 ### Changed
 - Allow `Other Video` libraries and `Image` libraries to use the same folders

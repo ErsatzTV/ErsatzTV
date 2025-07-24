@@ -14,6 +14,7 @@ public class CustomMultiFieldQueryParser : MultiFieldQueryParser
 {
     private static readonly List<string> NumericFields =
     [
+        LuceneSearchIndex.ChaptersField,
         LuceneSearchIndex.MinutesField,
         LuceneSearchIndex.SecondsField,
         LuceneSearchIndex.HeightField,

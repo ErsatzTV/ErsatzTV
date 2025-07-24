@@ -79,6 +79,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
     internal const string AddedDateField = "added_date";
     internal const string ReleaseDateField = "release_date";
     internal const string VideoBitDepthField = "video_bit_depth";
+    internal const string ChaptersField = "chapters";
 
     public const string MovieType = "movie";
     public const string ShowType = "show";
@@ -118,7 +119,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
         return Task.FromResult(directoryExists && fileExists);
     }
 
-    public int Version => 48;
+    public int Version => 49;
 
     public async Task<bool> Initialize(
         ILocalFileSystem localFileSystem,
@@ -1508,6 +1509,8 @@ public sealed class LuceneSearchIndex : ISearchIndex
     {
         foreach (MediaVersion version in mediaVersions)
         {
+            doc.Add(new Int32Field(ChaptersField, (version.Chapters ?? []).Count, Field.Store.NO));
+
             doc.Add(new Int32Field(MinutesField, (int)Math.Ceiling(version.Duration.TotalMinutes), Field.Store.NO));
             doc.Add(new Int32Field(SecondsField, (int)Math.Ceiling(version.Duration.TotalSeconds), Field.Store.NO));
 
