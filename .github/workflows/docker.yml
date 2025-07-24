@@ -1,4 +1,4 @@
-﻿name: Build & Publish to Docker Hub
+name: Build & Publish to Docker Hub
 on:
   workflow_call:
     inputs:
@@ -27,21 +27,24 @@ jobs:
     strategy:
       matrix:
         include:
-          - name: base
+          - name: amd64
             os: ubuntu-latest
             path: ''
-            suffix: ''
+            suffix: '-amd64'
             qemu: false
+            platform: 'linux/amd64'
           - name: arm32v7
             os: ubuntu-latest
             path: 'arm32v7/'
             suffix: '-arm'
             qemu: true
+            platform: 'linux/arm/v7'
           - name: arm64
             os: ubuntu-24.04-arm
             path: 'arm64/'
             suffix: '-arm64'
             qemu: true
+            platform: 'linux/arm64'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -76,23 +79,7 @@ jobs:
           context: .
           file: ./docker/${{ matrix.path }}Dockerfile
           push: true
-          build-args: |
-            INFO_VERSION=${{ inputs.info_version }}-docker
-          tags: |
-            jasongdove/ersatztv:${{ inputs.base_version }}
-            jasongdove/ersatztv:${{ inputs.tag_version }}
-            ghcr.io/ersatztv/ersatztv:${{ inputs.base_version }}
-            ghcr.io/ersatztv/ersatztv:${{ inputs.tag_version }}
-        if: ${{ matrix.name != 'arm64' && matrix.name != 'arm32v7' }}
-
-      - name: Build and push
-        uses: docker/build-push-action@v5
-        with:
-          builder: ${{ steps.docker-buildx.outputs.name }}
-          context: .
-          file: ./docker/${{ matrix.path }}Dockerfile
-          push: true
-          platforms: 'linux/arm64'
+          platforms: ${{ matrix.platform }}
           build-args: |
             INFO_VERSION=${{ inputs.info_version }}-docker${{ matrix.suffix }}
           tags: |
@@ -100,21 +87,47 @@ jobs:
             jasongdove/ersatztv:${{ inputs.tag_version }}${{ matrix.suffix }}
             ghcr.io/ersatztv/ersatztv:${{ inputs.base_version }}${{ matrix.suffix }}
             ghcr.io/ersatztv/ersatztv:${{ inputs.tag_version }}${{ matrix.suffix }}
-        if: ${{ matrix.name == 'arm64' }}
 
-      - name: Build and push
-        uses: docker/build-push-action@v5
+  merge_manifests:
+    name: Merge Manifests
+    runs-on: ubuntu-latest
+    needs: build_and_push
+    steps:
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
         with:
-          builder: ${{ steps.docker-buildx.outputs.name }}
-          context: .
-          file: ./docker/${{ matrix.path }}Dockerfile
-          push: true
-          platforms: 'linux/arm/v7'
-          build-args: |
-            INFO_VERSION=${{ inputs.info_version }}-docker${{ matrix.suffix }}
-          tags: |
-            jasongdove/ersatztv:${{ inputs.base_version }}${{ matrix.suffix }}
-            jasongdove/ersatztv:${{ inputs.tag_version }}${{ matrix.suffix }}
-            ghcr.io/ersatztv/ersatztv:${{ inputs.base_version }}${{ matrix.suffix }}
-            ghcr.io/ersatztv/ersatztv:${{ inputs.tag_version }}${{ matrix.suffix }}
-        if: ${{ matrix.name == 'arm32v7' }}
+          username: ${{ secrets.docker_hub_username }}
+          password: ${{ secrets.docker_hub_access_token }}
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create and push manifest (base version)
+        run: |
+          docker manifest create jasongdove/ersatztv:${{ inputs.base_version }} \
+            jasongdove/ersatztv:${{ inputs.base_version }}-amd64 \
+            jasongdove/ersatztv:${{ inputs.base_version }}-arm64 \
+            jasongdove/ersatztv:${{ inputs.base_version }}-arm
+          docker manifest push jasongdove/ersatztv:${{ inputs.base_version }}
+          docker manifest create ghcr.io/ersatztv/ersatztv:${{ inputs.base_version }} \
+            ghcr.io/ersatztv/ersatztv:${{ inputs.base_version }}-amd64 \
+            ghcr.io/ersatztv/ersatztv:${{ inputs.base_version }}-arm64 \
+            ghcr.io/ersatztv/ersatztv:${{ inputs.base_version }}-arm
+          docker manifest push ghcr.io/ersatztv/ersatztv:${{ inputs.base_version }}
+
+      - name: Create and push manifest (tag version)
+        run: |
+          docker manifest create jasongdove/ersatztv:${{ inputs.tag_version }} \
+            jasongdove/ersatztv:${{ inputs.tag_version }}-amd64 \
+            jasongdove/ersatztv:${{ inputs.tag_version }}-arm64 \
+            jasongdove/ersatztv:${{ inputs.tag_version }}-arm
+          docker manifest push jasongdove/ersatztv:${{ inputs.tag_version }}
+          docker manifest create ghcr.io/ersatztv/ersatztv:${{ inputs.tag_version }} \
+            ghcr.io/ersatztv/ersatztv:${{ inputs.tag_version }}-amd64 \
+            ghcr.io/ersatztv/ersatztv:${{ inputs.tag_version }}-arm64 \
+            ghcr.io/ersatztv/ersatztv:${{ inputs.tag_version }}-arm
+          docker manifest push ghcr.io/ersatztv/ersatztv:${{ inputs.tag_version }}
