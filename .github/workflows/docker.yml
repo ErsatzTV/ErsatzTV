@@ -33,7 +33,7 @@ jobs:
             suffix: ''
             qemu: false
           - name: arm32v7
-            os: ubuntu-24.04-arm
+            os: ubuntu-latest
             path: 'arm32v7/'
             suffix: '-arm'
             qemu: true
