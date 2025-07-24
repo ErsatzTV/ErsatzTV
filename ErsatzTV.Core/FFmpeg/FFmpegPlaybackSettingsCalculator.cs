@@ -21,7 +21,9 @@
 using System.Globalization;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.FFmpeg;
+using ErsatzTV.FFmpeg;
 using ErsatzTV.FFmpeg.Format;
+using MediaStream = ErsatzTV.Core.Domain.MediaStream;
 
 namespace ErsatzTV.Core.FFmpeg;
 
@@ -50,6 +52,7 @@ public static class FFmpegPlaybackSettingsCalculator
         TimeSpan inPoint,
         TimeSpan outPoint,
         bool hlsRealtime,
+        StreamInputKind streamInputKind,
         Option<int> targetFramerate)
     {
         var result = new FFmpegPlaybackSettings
@@ -68,7 +71,7 @@ public static class FFmpegPlaybackSettingsCalculator
             ThreadCount = ffmpegProfile.ThreadCount
         };
 
-        if (now != start || inPoint != TimeSpan.Zero)
+        if ((now != start || inPoint != TimeSpan.Zero) && streamInputKind is not StreamInputKind.Live)
         {
             result.StreamSeek = now - start + inPoint;
         }

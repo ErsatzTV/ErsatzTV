@@ -12,7 +12,7 @@ using ErsatzTV.Core.Interfaces.Jellyfin;
 using ErsatzTV.Core.Interfaces.Locking;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Plex;
-using ErsatzTV.Core.Interfaces.Streaming;
+using ErsatzTV.FFmpeg;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
@@ -138,6 +138,7 @@ public class PrepareTroubleshootingPlaybackHandler(
             ffmpegProfile.VaapiDevice,
             Option<int>.None,
             hlsRealtime,
+            mediaItem is RemoteStream { IsLive: true } ? StreamInputKind.Live : StreamInputKind.Vod,
             FillerKind.None,
             inPoint,
             outPoint,

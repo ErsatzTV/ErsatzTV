@@ -33,6 +33,7 @@ public interface IFFmpegProcessService
         string vaapiDevice,
         Option<int> qsvExtraHardwareFrames,
         bool hlsRealtime,
+        StreamInputKind streamInputKind,
         FillerKind fillerKind,
         TimeSpan inPoint,
         TimeSpan outPoint,

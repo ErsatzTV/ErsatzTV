@@ -67,6 +67,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         string vaapiDevice,
         Option<int> qsvExtraHardwareFrames,
         bool hlsRealtime,
+        StreamInputKind streamInputKind,
         FillerKind fillerKind,
         TimeSpan inPoint,
         TimeSpan outPoint,
@@ -78,6 +79,9 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
     {
         MediaStream videoStream = await _ffmpegStreamSelector.SelectVideoStream(videoVersion);
 
+        // we cannot burst live input
+        hlsRealtime = hlsRealtime || streamInputKind is StreamInputKind.Live;
+
         FFmpegPlaybackSettings playbackSettings = FFmpegPlaybackSettingsCalculator.CalculateSettings(
             channel.StreamingMode,
             channel.FFmpegProfile,
@@ -88,6 +92,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             inPoint,
             outPoint,
             hlsRealtime,
+            streamInputKind,
             targetFramerate);
 
         List<Subtitle> allSubtitles = await getSubtitles(playbackSettings);
@@ -218,7 +223,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             videoPath != audioPath, // still image when paths are different
             videoVersion.VideoScanKind == VideoScanKind.Progressive ? ScanKind.Progressive : ScanKind.Interlaced);
 
-        var videoInputFile = new VideoInputFile(videoPath, new List<VideoStream> { ffmpegVideoStream });
+        var videoInputFile = new VideoInputFile(videoPath, new List<VideoStream> { ffmpegVideoStream }, streamInputKind);
 
         Option<AudioInputFile> audioInputFile = maybeAudioStream.Map(audioStream =>
         {

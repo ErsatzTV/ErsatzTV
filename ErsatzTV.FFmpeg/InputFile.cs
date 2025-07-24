@@ -6,8 +6,8 @@ namespace ErsatzTV.FFmpeg;
 
 public abstract record InputFile(string Path, IList<MediaStream> Streams)
 {
-    public List<IInputOption> InputOptions { get; } = new();
-    public List<IPipelineFilterStep> FilterSteps { get; } = new();
+    public List<IInputOption> InputOptions { get; } = [];
+    public List<IPipelineFilterStep> FilterSteps { get; } = [];
 }
 
 public record ConcatInputFile(string Url, FrameSize Resolution) : InputFile(
@@ -61,7 +61,7 @@ public record NullAudioInputFile : AudioInputFile
     public void Deconstruct(out AudioState DesiredState) => DesiredState = this.DesiredState;
 }
 
-public record VideoInputFile(string Path, IList<VideoStream> VideoStreams) : InputFile(
+public record VideoInputFile(string Path, IList<VideoStream> VideoStreams, StreamInputKind StreamInputKind = StreamInputKind.Vod) : InputFile(
     Path,
     VideoStreams.Cast<MediaStream>().ToList())
 {
