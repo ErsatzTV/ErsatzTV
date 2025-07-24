@@ -134,6 +134,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Change watermark width and margins to allow decimals
 - Move `Add To Collection` button to overflow menu on all media cards, and add `Show Media Info` to overflow menu
   - This allows showing media info for all media kinds
+- Unify on a multi-platform base docker tag (`latest` and `develop`)
+  - `amd64`, `arm64`, `arm/v7` platforms are now all supported in the base docker tag
+  - Other docker platform tags are deprecated and will receive no new updates after the next release
+  - A health check has been added to notify users (on `-arm` or `-arm64` tags) of this change
 
 ### Fixed
 - Fix QSV acceleration in docker with older Intel devices

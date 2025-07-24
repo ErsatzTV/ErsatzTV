@@ -14,10 +14,10 @@ public class UnifiedDockerHealthCheck : BaseHealthCheck, IUnifiedDockerHealthChe
 
     public Task<HealthCheckResult> Check(CancellationToken cancellationToken)
     {
-        if (InfoVersion.Contains("docker-vaapi") || InfoVersion.Contains("docker-nvidia"))
+        if (InfoVersion.Contains("docker-vaapi") || InfoVersion.Contains("docker-nvidia") || InfoVersion.Contains("docker-arm"))
         {
             return WarningResult(
-                    "VAAPI and NVIDIA docker tag suffixes are deprecated; please remove `-vaapi` or `-nvidia` and pull the default image.",
+                    "VAAPI and NVIDIA, and ARM docker tag suffixes are deprecated; please remove `-vaapi`, `-nvidia`, `-arm64` or `-arm` and pull the default image.",
                     "docker tag is deprecated")
                 .AsTask();
         }
