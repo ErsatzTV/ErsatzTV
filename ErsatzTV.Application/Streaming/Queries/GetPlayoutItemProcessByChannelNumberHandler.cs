@@ -16,6 +16,7 @@ using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Streaming;
 using ErsatzTV.Core.Scheduling;
+using ErsatzTV.FFmpeg;
 using ErsatzTV.FFmpeg.State;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
@@ -295,9 +296,6 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 audioPath = string.Empty;
             }
 
-            // we cannot burst live input
-            bool hlsRealtime = request.HlsRealtime || playoutItemWithPath.PlayoutItem.MediaItem is RemoteStream { IsLive: true };
-
             bool saveReports = await dbContext.ConfigElements
                 .GetValue<bool>(ConfigElementKey.FFmpegSaveReports)
                 .Map(result => result.IfNone(false));
@@ -308,6 +306,15 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
             TimeSpan outPoint = playoutItemWithPath.PlayoutItem.OutPoint;
             DateTimeOffset effectiveNow = request.StartAtZero ? start : now;
             TimeSpan duration = finish - effectiveNow;
+
+            _logger.LogDebug(
+                "S: {Start}, F: {Finish}, In: {InPoint}, Out: {OutPoint}, EffNow: {EffectiveNow}, Dur: {Duration}",
+                start,
+                finish,
+                inPoint,
+                outPoint,
+                effectiveNow,
+                duration);
 
             Command process = await _ffmpegProcessService.ForPlayoutItem(
                 ffmpegPath,
@@ -332,7 +339,8 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 channel.FFmpegProfile.VaapiDriver,
                 channel.FFmpegProfile.VaapiDevice,
                 Optional(channel.FFmpegProfile.QsvExtraHardwareFrames),
-                hlsRealtime,
+                hlsRealtime: request.HlsRealtime,
+                playoutItemWithPath.PlayoutItem.MediaItem is RemoteStream { IsLive: true } ? StreamInputKind.Live : StreamInputKind.Vod,
                 playoutItemWithPath.PlayoutItem.FillerKind,
                 inPoint,
                 outPoint,

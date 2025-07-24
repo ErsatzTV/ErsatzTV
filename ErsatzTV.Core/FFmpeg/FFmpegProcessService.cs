@@ -7,9 +7,11 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Images;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
+using ErsatzTV.FFmpeg;
 using ErsatzTV.FFmpeg.State;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
+using MediaStream = ErsatzTV.Core.Domain.MediaStream;
 
 namespace ErsatzTV.Core.FFmpeg;
 
@@ -101,6 +103,7 @@ public class FFmpegProcessService
                 TimeSpan.Zero,
                 TimeSpan.Zero,
                 false,
+                StreamInputKind.Vod,
                 Option<int>.None);
 
             scalePlaybackSettings.AudioChannels = Option<int>.None;
@@ -318,15 +321,14 @@ public class FFmpegProcessService
 
             BufferedCommandResult result = await Cli.Wrap(ffprobePath)
                 .WithArguments(
-                    new[]
-                    {
-                        "-loglevel", "error",
-                        "-select_streams", "v:0",
-                        "-count_frames",
-                        "-show_entries", "stream=nb_read_frames",
-                        "-print_format", "csv",
-                        path
-                    })
+                [
+                    "-loglevel", "error",
+                    "-select_streams", "v:0",
+                    "-count_frames",
+                    "-show_entries", "stream=nb_read_frames",
+                    "-print_format", "csv",
+                    path
+                ])
                 .WithValidation(CommandResultValidation.None)
                 .ExecuteBufferedAsync(Encoding.UTF8);
 

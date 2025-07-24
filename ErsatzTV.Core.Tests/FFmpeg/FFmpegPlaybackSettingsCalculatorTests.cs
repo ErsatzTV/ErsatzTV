@@ -1,8 +1,10 @@
 ﻿using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.FFmpeg;
+using ErsatzTV.FFmpeg;
 using NUnit.Framework;
 using Shouldly;
+using MediaStream = ErsatzTV.Core.Domain.MediaStream;
 
 namespace ErsatzTV.Core.Tests.FFmpeg;
 
@@ -29,6 +31,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 TimeSpan.Zero,
                 TimeSpan.Zero,
                 false,
+                StreamInputKind.Vod,
                 None);
 
             actual.FormatFlags.ShouldNotContain("+genpts");
@@ -53,6 +56,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 TimeSpan.Zero,
                 TimeSpan.Zero,
                 false,
+                StreamInputKind.Vod,
                 None);
 
             actual.ThreadCount.ShouldBe(7);
@@ -73,6 +77,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 TimeSpan.Zero,
                 TimeSpan.Zero,
                 false,
+                StreamInputKind.Vod,
                 None);
 
             actual.ThreadCount.ShouldBe(7);
@@ -93,6 +98,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 TimeSpan.Zero,
                 TimeSpan.Zero,
                 false,
+                StreamInputKind.Vod,
                 None);
 
             string[] expected = { "+genpts", "+discardcorrupt", "+igndts" };
@@ -115,6 +121,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 TimeSpan.Zero,
                 TimeSpan.Zero,
                 false,
+                StreamInputKind.Vod,
                 None);
 
             string[] expected = { "+genpts", "+discardcorrupt", "+igndts" };
@@ -137,6 +144,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 TimeSpan.Zero,
                 TimeSpan.Zero,
                 false,
+                StreamInputKind.Vod,
                 None);
 
             actual.RealtimeOutput.ShouldBeTrue();
@@ -157,6 +165,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 TimeSpan.Zero,
                 TimeSpan.Zero,
                 false,
+                StreamInputKind.Vod,
                 None);
 
             actual.RealtimeOutput.ShouldBeTrue();
@@ -179,6 +188,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 TimeSpan.Zero,
                 TimeSpan.Zero,
                 false,
+                StreamInputKind.Vod,
                 None);
 
             actual.StreamSeek.IsSome.ShouldBeTrue();
@@ -202,6 +212,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 TimeSpan.Zero,
                 TimeSpan.Zero,
                 false,
+                StreamInputKind.Vod,
                 None);
 
             actual.StreamSeek.IsSome.ShouldBeTrue();
@@ -229,6 +240,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 TimeSpan.Zero,
                 TimeSpan.Zero,
                 false,
+                StreamInputKind.Vod,
                 None);
 
             actual.ScaledSize.IsNone.ShouldBeTrue();
@@ -255,6 +267,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 TimeSpan.Zero,
                 TimeSpan.Zero,
                 false,
+                StreamInputKind.Vod,
                 None);
 
             actual.ScaledSize.IsNone.ShouldBeTrue();
@@ -281,6 +294,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 TimeSpan.Zero,
                 TimeSpan.Zero,
                 false,
+                StreamInputKind.Vod,
                 None);
 
             actual.ScaledSize.IsNone.ShouldBeTrue();
@@ -308,6 +322,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 TimeSpan.Zero,
                 TimeSpan.Zero,
                 false,
+                StreamInputKind.Vod,
                 None);
 
             actual.ScaledSize.IsNone.ShouldBeTrue();
@@ -334,6 +349,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 TimeSpan.Zero,
                 TimeSpan.Zero,
                 false,
+                StreamInputKind.Vod,
                 None);
 
             IDisplaySize scaledSize = actual.ScaledSize.IfNone(new MediaVersion { Width = 0, Height = 0 });
@@ -363,6 +379,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 TimeSpan.Zero,
                 TimeSpan.Zero,
                 false,
+                StreamInputKind.Vod,
                 None);
 
             IDisplaySize scaledSize = actual.ScaledSize.IfNone(new MediaVersion { Width = 0, Height = 0 });
@@ -392,6 +409,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 TimeSpan.Zero,
                 TimeSpan.Zero,
                 false,
+                StreamInputKind.Vod,
                 None);
 
             IDisplaySize scaledSize = actual.ScaledSize.IfNone(new MediaVersion { Width = 0, Height = 0 });
@@ -421,6 +439,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 TimeSpan.Zero,
                 TimeSpan.Zero,
                 false,
+                StreamInputKind.Vod,
                 None);
 
             actual.ScaledSize.IsNone.ShouldBeTrue();
@@ -450,6 +469,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 TimeSpan.Zero,
                 TimeSpan.Zero,
                 false,
+                StreamInputKind.Vod,
                 None);
 
             actual.ScaledSize.IsNone.ShouldBeTrue();
@@ -481,6 +501,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 TimeSpan.Zero,
                 TimeSpan.Zero,
                 false,
+                StreamInputKind.Vod,
                 None);
 
             actual.ScaledSize.IsNone.ShouldBeTrue();
@@ -511,6 +532,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 TimeSpan.Zero,
                 TimeSpan.Zero,
                 false,
+                StreamInputKind.Vod,
                 None);
 
             actual.ScaledSize.IsNone.ShouldBeTrue();
@@ -541,6 +563,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 TimeSpan.Zero,
                 TimeSpan.Zero,
                 false,
+                StreamInputKind.Vod,
                 None);
 
             actual.ScaledSize.IsNone.ShouldBeTrue();
@@ -570,6 +593,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 TimeSpan.Zero,
                 TimeSpan.Zero,
                 false,
+                StreamInputKind.Vod,
                 None);
 
             actual.ScaledSize.IsNone.ShouldBeTrue();
@@ -600,6 +624,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 TimeSpan.Zero,
                 TimeSpan.Zero,
                 false,
+                StreamInputKind.Vod,
                 None);
 
             actual.ScaledSize.IsNone.ShouldBeTrue();
@@ -629,6 +654,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 TimeSpan.Zero,
                 TimeSpan.Zero,
                 false,
+                StreamInputKind.Vod,
                 None);
 
             actual.ScaledSize.IsNone.ShouldBeTrue();
@@ -659,6 +685,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 TimeSpan.Zero,
                 TimeSpan.Zero,
                 false,
+                StreamInputKind.Vod,
                 None);
 
             actual.ScaledSize.IsNone.ShouldBeTrue();
@@ -684,6 +711,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 TimeSpan.Zero,
                 TimeSpan.Zero,
                 false,
+                StreamInputKind.Vod,
                 None);
 
             actual.AudioFormat.ShouldBe(FFmpegProfileAudioFormat.Aac);
@@ -707,6 +735,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 TimeSpan.Zero,
                 TimeSpan.Zero,
                 false,
+                StreamInputKind.Vod,
                 None);
 
             actual.AudioFormat.ShouldBe(FFmpegProfileAudioFormat.Aac);
@@ -730,6 +759,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 TimeSpan.Zero,
                 TimeSpan.Zero,
                 false,
+                StreamInputKind.Vod,
                 None);
 
             actual.AudioFormat.ShouldBe(FFmpegProfileAudioFormat.Copy);
@@ -754,6 +784,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 TimeSpan.Zero,
                 TimeSpan.Zero,
                 false,
+                StreamInputKind.Vod,
                 None);
 
             actual.AudioBitrate.IfNone(0).ShouldBe(2424);
@@ -778,6 +809,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 TimeSpan.Zero,
                 TimeSpan.Zero,
                 false,
+                StreamInputKind.Vod,
                 None);
 
             actual.AudioBufferSize.IfNone(0).ShouldBe(2424);
@@ -802,6 +834,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 TimeSpan.Zero,
                 TimeSpan.Zero,
                 false,
+                StreamInputKind.Vod,
                 None);
 
             actual.AudioChannels.IfNone(0).ShouldBe(6);
@@ -826,6 +859,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 TimeSpan.Zero,
                 TimeSpan.Zero,
                 false,
+                StreamInputKind.Vod,
                 None);
 
             actual.AudioSampleRate.IfNone(0).ShouldBe(48);
@@ -849,6 +883,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 TimeSpan.Zero,
                 TimeSpan.Zero,
                 false,
+                StreamInputKind.Vod,
                 None);
 
             actual.AudioChannels.IfNone(0).ShouldBe(6);
@@ -872,6 +907,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 TimeSpan.Zero,
                 TimeSpan.Zero,
                 false,
+                StreamInputKind.Vod,
                 None);
 
             actual.AudioSampleRate.IfNone(0).ShouldBe(48);
@@ -901,6 +937,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 TimeSpan.Zero,
                 TimeSpan.FromMinutes(2),
                 false,
+                StreamInputKind.Vod,
                 None);
 
             actual.AudioDuration.IfNone(TimeSpan.MinValue).ShouldBe(TimeSpan.FromMinutes(2));
@@ -924,6 +961,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 TimeSpan.Zero,
                 TimeSpan.Zero,
                 false,
+                StreamInputKind.Vod,
                 None);
 
             actual.NormalizeLoudnessMode.ShouldBe(NormalizeLoudnessMode.LoudNorm);
@@ -949,6 +987,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 TimeSpan.Zero,
                 TimeSpan.Zero,
                 false,
+                StreamInputKind.Vod,
                 None);
 
             actual.HardwareAcceleration.ShouldBe(HardwareAccelerationKind.Qsv);
