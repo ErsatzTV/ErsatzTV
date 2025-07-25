@@ -20,8 +20,8 @@ on:
       docker_hub_access_token:
         required: true
 jobs:
-  build_and_push:
-    name: Build & Publish
+  build_images:
+    name: Build ${{ matrix.name }} image
     runs-on: ${{ matrix.os }}
     if: contains(github.event.head_commit.message, '[no build]') == false
     strategy:
@@ -31,19 +31,16 @@ jobs:
             os: ubuntu-latest
             path: ''
             suffix: '-amd64'
-            qemu: false
             platform: 'linux/amd64'
           - name: arm32v7
             os: ubuntu-latest
             path: 'arm32v7/'
             suffix: '-arm'
-            qemu: true
             platform: 'linux/arm/v7'
           - name: arm64
             os: ubuntu-24.04-arm
             path: 'arm64/'
             suffix: '-arm64'
-            qemu: true
             platform: 'linux/arm64'
     steps:
       - name: Checkout
@@ -52,12 +49,11 @@ jobs:
           fetch-depth: 0
 
       - name: Set up QEMU
+        if: ${{ matrix.name == 'arm32v7' }}
         uses: docker/setup-qemu-action@v3
-        if: ${{ matrix.qemu == true }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-        id: docker-buildx
 
       - name: Login to DockerHub
         uses: docker/login-action@v3
@@ -72,10 +68,10 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push
+      - name: Build and push by digest
+        id: build
         uses: docker/build-push-action@v5
         with:
-          builder: ${{ steps.docker-buildx.outputs.name }}
           context: .
           file: ./docker/${{ matrix.path }}Dockerfile
           push: true
@@ -83,16 +79,23 @@ jobs:
           platforms: ${{ matrix.platform }}
           build-args: |
             INFO_VERSION=${{ inputs.info_version }}-docker${{ matrix.suffix }}
-          tags: |
-            jasongdove/ersatztv:${{ inputs.base_version }}${{ matrix.suffix }}
-            jasongdove/ersatztv:${{ inputs.tag_version }}${{ matrix.suffix }}
-            ghcr.io/ersatztv/ersatztv:${{ inputs.base_version }}${{ matrix.suffix }}
-            ghcr.io/ersatztv/ersatztv:${{ inputs.tag_version }}${{ matrix.suffix }}
+          outputs: |
+            type=image,name=jasongdove/ersatztv,name-canonical=true,push-by-digest=true
+            type=image,name=ghcr.io/ersatztv/ersatztv,name-canonical=true,push-by-digest=true
+
+      - name: Save digest to artifact
+        run: echo ${{ steps.build.outputs.digest }} > digest.txt
+
+      - name: Upload digest artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: digest-${{ matrix.name }}
+          path: digest.txt
 
   merge_manifests:
     name: Merge Manifests
     runs-on: ubuntu-latest
-    needs: build_and_push
+    needs: build_images
     steps:
       - name: Login to DockerHub
         uses: docker/login-action@v3
@@ -107,25 +110,32 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Download all digest artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: digests/
+
+      - name: Read digests from artifacts
+        id: digests
+        run: |
+          AMD64_DIGEST=$(cat digests/digest-amd64/digest.txt)
+          ARM32V7_DIGEST=$(cat digests/digest-arm32v7/digest.txt)
+          ARM64_DIGEST=$(cat digests/digest-arm64/digest.txt)
+
+          DOCKER_HUB_DIGESTS="${AMD64_DIGEST} ${ARM64_DIGEST} ${ARM32V7_DIGEST}"
+          GHCR_DIGESTS="ghcr.io/ersatztv/ersatztv@${AMD64_DIGEST##*@} ghcr.io/ersatztv/ersatztv@${ARM64_DIGEST##*@} ghcr.io/ersatztv/ersatztv@${ARM32V7_DIGEST##*@}"
+
+          echo "docker_hub_digests=${DOCKER_HUB_DIGESTS}" >> $GITHUB_OUTPUT
+          echo "ghcr_digests=${GHCR_DIGESTS}" >> $GITHUB_OUTPUT
+
       - name: Create and push manifests
         run: |
-          docker manifest create jasongdove/ersatztv:${{ inputs.base_version }} \
-            jasongdove/ersatztv:${{ inputs.base_version }}-amd64 \
-            jasongdove/ersatztv:${{ inputs.base_version }}-arm64 \
-            jasongdove/ersatztv:${{ inputs.base_version }}-arm
+          docker manifest create jasongdove/ersatztv:${{ inputs.base_version }} ${{ steps.digests.outputs.docker_hub_digests }}
           docker manifest push jasongdove/ersatztv:${{ inputs.base_version }}
-          docker manifest create jasongdove/ersatztv:${{ inputs.tag_version }} \
-            jasongdove/ersatztv:${{ inputs.tag_version }}-amd64 \
-            jasongdove/ersatztv:${{ inputs.tag_version }}-arm64 \
-            jasongdove/ersatztv:${{ inputs.tag_version }}-arm
+          docker manifest create jasongdove/ersatztv:${{ inputs.tag_version }} ${{ steps.digests.outputs.docker_hub_digests }}
           docker manifest push jasongdove/ersatztv:${{ inputs.tag_version }}
-          docker manifest create ghcr.io/ersatztv/ersatztv:${{ inputs.base_version }} \
-            ghcr.io/ersatztv/ersatztv:${{ inputs.base_version }}-amd64 \
-            ghcr.io/ersatztv/ersatztv:${{ inputs.base_version }}-arm64 \
-            ghcr.io/ersatztv/ersatztv:${{ inputs.base_version }}-arm
+
+          docker manifest create ghcr.io/ersatztv/ersatztv:${{ inputs.base_version }} ${{ steps.digests.outputs.ghcr_digests }}
           docker manifest push ghcr.io/ersatztv/ersatztv:${{ inputs.base_version }}
-          docker manifest create ghcr.io/ersatztv/ersatztv:${{ inputs.tag_version }} \
-            ghcr.io/ersatztv/ersatztv:${{ inputs.tag_version }}-amd64 \
-            ghcr.io/ersatztv/ersatztv:${{ inputs.tag_version }}-arm64 \
-            ghcr.io/ersatztv/ersatztv:${{ inputs.tag_version }}-arm
+          docker manifest create ghcr.io/ersatztv/ersatztv:${{ inputs.tag_version }} ${{ steps.digests.outputs.ghcr_digests }}
           docker manifest push ghcr.io/ersatztv/ersatztv:${{ inputs.tag_version }}
