@@ -204,7 +204,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         SetSceneDetect(videoStream, ffmpegState, desiredState, pipelineSteps);
         SetFFReport(ffmpegState, pipelineSteps);
         SetStreamSeek(ffmpegState, videoInputFile, context, pipelineSteps);
-        if (ffmpegState.IsTroubleshooting || videoInputFile.StreamInputKind is StreamInputKind.Live)
+        if (ffmpegState.IsTroubleshooting || desiredState.InfiniteLoop || videoInputFile.StreamInputKind is StreamInputKind.Live)
         {
             SetTimeLimit(ffmpegState, pipelineSteps);
         }
@@ -425,7 +425,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
             audioInputFile.FilterSteps.Add(new AudioSetPtsFilter());
         }
 
-        foreach (TimeSpan audioDuration in audioInputFile.DesiredState.AudioDuration)
+        foreach (TimeSpan audioDuration in audioInputFile.DesiredState.AudioDuration.Filter(d => d > TimeSpan.Zero))
         {
             audioInputFile.FilterSteps.Add(new AudioPadFilter(audioDuration));
             pipelineSteps.Add(new ShortestOutputOption());

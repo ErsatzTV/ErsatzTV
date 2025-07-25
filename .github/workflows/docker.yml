@@ -118,12 +118,12 @@ jobs:
       - name: Read digests from artifacts
         id: digests
         run: |
-          AMD64_DIGEST=$(cat digests/digest-amd64/digest.txt)
-          ARM32V7_DIGEST=$(cat digests/digest-arm32v7/digest.txt)
-          ARM64_DIGEST=$(cat digests/digest-arm64/digest.txt)
+          AMD64_HASH=$(cat digests/digest-amd64/digest.txt)
+          ARM32V7_HASH=$(cat digests/digest-arm32v7/digest.txt)
+          ARM64_HASH=$(cat digests/digest-arm64/digest.txt)
 
-          DOCKER_HUB_DIGESTS="${AMD64_DIGEST} ${ARM64_DIGEST} ${ARM32V7_DIGEST}"
-          GHCR_DIGESTS="ghcr.io/ersatztv/ersatztv@${AMD64_DIGEST##*@} ghcr.io/ersatztv/ersatztv@${ARM64_DIGEST##*@} ghcr.io/ersatztv/ersatztv@${ARM32V7_DIGEST##*@}"
+          DOCKER_HUB_DIGESTS="jasongdove/ersatztv@${AMD64_HASH} jasongdove/ersatztv@${ARM64_HASH} jasongdove/ersatztv@${ARM32V7_HASH}"
+          GHCR_DIGESTS="ghcr.io/ersatztv/ersatztv@${AMD64_HASH} ghcr.io/ersatztv/ersatztv@${ARM64_HASH} ghcr.io/ersatztv/ersatztv@${ARM32V7_HASH}"
 
           echo "docker_hub_digests=${DOCKER_HUB_DIGESTS}" >> $GITHUB_OUTPUT
           echo "ghcr_digests=${GHCR_DIGESTS}" >> $GITHUB_OUTPUT
