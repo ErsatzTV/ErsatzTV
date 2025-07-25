@@ -4,10 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [25.3.1] - 2025-07-24
 ### Fixed
 - Fix fallback filler playback
 
-## [25.2.0] - 2025-07-24
+## [25.3.0] - 2025-07-24
 ### Added
 - Add new channel stream (audio and subtitle) selector system
   - Channel editor has a new field `Stream Selector Mode`
@@ -2422,7 +2424,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/ErsatzTV/ErsatzTV/compare/v25.3.0...HEAD
+[Unreleased]: https://github.com/ErsatzTV/ErsatzTV/compare/v25.3.1...HEAD
+[25.3.1]: https://github.com/ErsatzTV/ErsatzTV/compare/v25.3.0...v25.3.1
 [25.3.0]: https://github.com/ErsatzTV/ErsatzTV/compare/v25.2.0...v25.3.0
 [25.2.0]: https://github.com/ErsatzTV/ErsatzTV/compare/v25.1.0...v25.2.0
 [25.1.0]: https://github.com/ErsatzTV/ErsatzTV/compare/v0.8.8-beta...v25.1.0
