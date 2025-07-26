@@ -17,6 +17,7 @@ public class TvContext : DbContext
 
     public static string LastInsertedRowId { get; set; } = "last_insert_rowid()";
     public static string CaseInsensitiveCollation { get; set; } = "NOCASE";
+    public static bool IsSqlite { get; set; }
 
     public IDbConnection Connection => Database.GetDbConnection();
 

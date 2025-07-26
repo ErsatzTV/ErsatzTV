@@ -1,5 +1,7 @@
-﻿using ErsatzTV.Core;
+﻿using Dapper;
+using ErsatzTV.Core;
 using ErsatzTV.Infrastructure.Data;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Services.RunOnce;
@@ -28,11 +30,39 @@ public class DatabaseMigratorService : BackgroundService
 
         using IServiceScope scope = _serviceScopeFactory.CreateScope();
         await using TvContext dbContext = scope.ServiceProvider.GetRequiredService<TvContext>();
+
+        await dbContext.Database.MigrateAsync("Add_MediaFilePathHash", stoppingToken);
+
+        // this can't be part of a migration, so we have to stop here and run some sql
+        await PopulatePathHashes(dbContext);
+
+        // then continue migrating
         await dbContext.Database.MigrateAsync(stoppingToken);
+
         await DbInitializer.Initialize(dbContext, stoppingToken);
 
         _systemStartup.DatabaseIsReady();
 
         _logger.LogInformation("Done applying database migrations");
+    }
+
+    private static async Task PopulatePathHashes(TvContext dbContext)
+    {
+        if (await dbContext.Connection.ExecuteScalarAsync<int>(
+                "SELECT COUNT(*) FROM `MediaFile` WHERE `PathHash` IS NULL OR `PathHash` = ''") == 0)
+        {
+            return;
+        }
+
+        if (dbContext.Connection is SqliteConnection sqliteConnection)
+        {
+            sqliteConnection.CreateFunction("HASH_SHA256", (string text) => PathUtils.GetPathHash(text));
+            await dbContext.Connection.ExecuteAsync("UPDATE `MediaFile` SET `PathHash` = HASH_SHA256(`Path`);");
+        }
+        else
+        {
+            // mysql
+            await dbContext.Connection.ExecuteAsync("UPDATE `MediaFile` SET `PathHash` = sha2(`Path`, 256);");
+        }
     }
 }

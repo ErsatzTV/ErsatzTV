@@ -362,6 +362,8 @@ public class Startup
             {
                 if (databaseProvider == Provider.Sqlite.Name)
                 {
+                    TvContext.IsSqlite = true;
+
                     options.UseSqlite(
                         sqliteConnectionString,
                         o =>
@@ -373,6 +375,8 @@ public class Startup
 
                 if (databaseProvider == Provider.MySql.Name)
                 {
+                    TvContext.IsSqlite = false;
+
                     options.UseMySql(
                         mySqlConnectionString,
                         ServerVersion.AutoDetect(mySqlConnectionString),

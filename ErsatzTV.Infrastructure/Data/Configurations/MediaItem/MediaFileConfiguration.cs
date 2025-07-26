@@ -10,8 +10,11 @@ public class MediaFileConfiguration : IEntityTypeConfiguration<MediaFile>
     {
         builder.ToTable("MediaFile");
 
-        builder.HasIndex(f => f.Path)
+        builder.HasIndex(f => f.PathHash)
             .IsUnique();
+
+        builder.Property(f => f.PathHash)
+            .IsRequired();
 
         builder.HasOne(f => f.LibraryFolder)
             .WithMany(f => f.MediaFiles)

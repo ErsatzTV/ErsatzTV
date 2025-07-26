@@ -1113,13 +1113,17 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<string>("Path")
                         .HasColumnType("longtext");
 
+                    b.Property<string>("PathHash")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("LibraryFolderId");
 
                     b.HasIndex("MediaVersionId");
 
-                    b.HasIndex("Path")
+                    b.HasIndex("PathHash")
                         .IsUnique();
 
                     b.ToTable("MediaFile", (string)null);

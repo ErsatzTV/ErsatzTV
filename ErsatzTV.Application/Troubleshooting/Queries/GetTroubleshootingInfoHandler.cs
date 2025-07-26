@@ -136,7 +136,9 @@ public class GetTroubleshootingInfoHandler : IRequestHandler<GetTroubleshootingI
             {
                 if (key.StartsWith("ETV_", StringComparison.OrdinalIgnoreCase)
                     || key.StartsWith("DOTNET_", StringComparison.OrdinalIgnoreCase)
-                    || key.StartsWith("ASPNETCORE_", StringComparison.OrdinalIgnoreCase))
+                    || key.StartsWith("ASPNETCORE_", StringComparison.OrdinalIgnoreCase)
+                    || key.Equals("PROVIDER", StringComparison.OrdinalIgnoreCase)
+                    || key.StartsWith("ELASTICSEARCH", StringComparison.OrdinalIgnoreCase))
                 {
                     environment[key] = value;
                 }

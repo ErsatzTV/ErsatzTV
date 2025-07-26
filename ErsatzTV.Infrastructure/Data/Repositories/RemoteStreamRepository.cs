@@ -149,7 +149,7 @@ public class RemoteStreamRepository(
                 [
                     new MediaVersion
                     {
-                        MediaFiles = [new MediaFile { Path = path, LibraryFolderId = libraryFolderId }],
+                        MediaFiles = [new MediaFile { Path = path, PathHash = PathUtils.GetPathHash(path), LibraryFolderId = libraryFolderId }],
                         Streams = []
                     }
                 ],

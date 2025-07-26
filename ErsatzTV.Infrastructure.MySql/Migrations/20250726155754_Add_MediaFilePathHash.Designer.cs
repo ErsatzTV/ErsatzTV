@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ErsatzTV.Infrastructure.MySql.Migrations
 {
     [DbContext(typeof(TvContext))]
-    [Migration("20250723030616_Update_MediaFilePath")]
-    partial class Update_MediaFilePath
+    [Migration("20250726155754_Add_MediaFilePathHash")]
+    partial class Add_MediaFilePathHash
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -1116,14 +1116,14 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<string>("Path")
                         .HasColumnType("longtext");
 
+                    b.Property<string>("PathHash")
+                        .HasColumnType("longtext");
+
                     b.HasKey("Id");
 
                     b.HasIndex("LibraryFolderId");
 
                     b.HasIndex("MediaVersionId");
-
-                    b.HasIndex("Path")
-                        .IsUnique();
 
                     b.ToTable("MediaFile", (string)null);
 
