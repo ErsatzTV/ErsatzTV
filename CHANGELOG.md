@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 ### Fixed
 - Fix app startup with MySql/MariaDB
+- YAML playout: fix `pad_to_next` always running over time
 
 ### Changed
 - Always tell ffmpeg to stop encoding with a specific duration
