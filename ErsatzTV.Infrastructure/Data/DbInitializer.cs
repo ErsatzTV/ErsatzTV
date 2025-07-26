@@ -9,7 +9,10 @@ public static class DbInitializer
 {
     public static async Task<Unit> Initialize(TvContext context, CancellationToken cancellationToken)
     {
-        await context.Connection.ExecuteAsync("PRAGMA journal_mode=WAL", cancellationToken);
+        if (TvContext.IsSqlite)
+        {
+            await context.Connection.ExecuteAsync("PRAGMA journal_mode=WAL", cancellationToken);
+        }
 
         if (!context.LanguageCodes.Any())
         {

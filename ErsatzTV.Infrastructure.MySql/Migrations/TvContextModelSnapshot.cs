@@ -819,7 +819,7 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
 
                     b.HasIndex("SongMetadataId");
 
-                    b.ToTable("Genre");
+                    b.ToTable("Genre", (string)null);
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.ImageFolderDuration", b =>
@@ -1111,7 +1111,7 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Path")
-                        .HasColumnType("longtext");
+                        .HasColumnType("varchar(255)");
 
                     b.HasKey("Id");
 
@@ -1399,7 +1399,7 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
 
                     b.HasIndex("ArtistMetadataId");
 
-                    b.ToTable("Mood");
+                    b.ToTable("Mood", (string)null);
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.MovieMetadata", b =>
@@ -1511,7 +1511,7 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
 
                     b.HasIndex("SmartCollectionId");
 
-                    b.ToTable("MultiCollectionSmartItem");
+                    b.ToTable("MultiCollectionSmartItem", (string)null);
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.MusicVideoArtist", b =>
@@ -1532,7 +1532,7 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
 
                     b.HasIndex("MusicVideoMetadataId");
 
-                    b.ToTable("MusicVideoArtist");
+                    b.ToTable("MusicVideoArtist", (string)null);
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.MusicVideoMetadata", b =>
@@ -2986,7 +2986,7 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
 
                     b.HasIndex("ArtistMetadataId");
 
-                    b.ToTable("Style");
+                    b.ToTable("Style", (string)null);
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.Subtitle", b =>
@@ -3161,7 +3161,7 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
 
                     b.HasIndex("SongMetadataId");
 
-                    b.ToTable("Tag");
+                    b.ToTable("Tag", (string)null);
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.TraktList", b =>
@@ -3329,7 +3329,7 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
 
                     b.HasIndex("EmbyLibraryId");
 
-                    b.ToTable("EmbyPathInfo");
+                    b.ToTable("EmbyPathInfo", (string)null);
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Jellyfin.JellyfinPathInfo", b =>
@@ -3353,7 +3353,7 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
 
                     b.HasIndex("JellyfinLibraryId");
 
-                    b.ToTable("JellyfinPathInfo");
+                    b.ToTable("JellyfinPathInfo", (string)null);
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.EmbyLibrary", b =>

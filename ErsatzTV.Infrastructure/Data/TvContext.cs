@@ -17,6 +17,7 @@ public class TvContext : DbContext
 
     public static string LastInsertedRowId { get; set; } = "last_insert_rowid()";
     public static string CaseInsensitiveCollation { get; set; } = "NOCASE";
+    public static bool IsSqlite { get; set; }
 
     public IDbConnection Connection => Database.GetDbConnection();
 
@@ -122,7 +123,7 @@ public class TvContext : DbContext
         // mysql-specific configuration
         if ((Database.ProviderName ?? string.Empty).Contains("MySql", StringComparison.InvariantCultureIgnoreCase))
         {
-            modelBuilder.Entity<MediaFile>().Property(mf => mf.Path).HasColumnType("longtext");
+            modelBuilder.Entity<MediaFile>().Property(mf => mf.Path).HasColumnType("varchar(8192)");
         }
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(TvContext).Assembly);
