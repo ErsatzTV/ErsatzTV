@@ -204,10 +204,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         SetSceneDetect(videoStream, ffmpegState, desiredState, pipelineSteps);
         SetFFReport(ffmpegState, pipelineSteps);
         SetStreamSeek(ffmpegState, videoInputFile, context, pipelineSteps);
-        if (ffmpegState.IsTroubleshooting || desiredState.InfiniteLoop || videoInputFile.StreamInputKind is StreamInputKind.Live)
-        {
-            SetTimeLimit(ffmpegState, pipelineSteps);
-        }
+        SetTimeLimit(ffmpegState, pipelineSteps);
 
         (FilterChain filterChain, ffmpegState) = BuildVideoPipeline(
             videoInputFile,

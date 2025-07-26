@@ -7,6 +7,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - Fix app startup with MySql/MariaDB
 
+### Changed
+- Always tell ffmpeg to stop encoding with a specific duration
+  - This was removed to try to improve transitions with ffmpeg 7.x, but has been causing issues with other content
+
 ## [25.3.1] - 2025-07-24
 ### Fixed
 - Fix fallback filler playback
