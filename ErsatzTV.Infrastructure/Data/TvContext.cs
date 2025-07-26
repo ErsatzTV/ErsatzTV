@@ -123,7 +123,7 @@ public class TvContext : DbContext
         // mysql-specific configuration
         if ((Database.ProviderName ?? string.Empty).Contains("MySql", StringComparison.InvariantCultureIgnoreCase))
         {
-            modelBuilder.Entity<MediaFile>().Property(mf => mf.Path).HasColumnType("varchar(8192)");
+            modelBuilder.Entity<MediaFile>().Property(mf => mf.Path).HasColumnType("longtext");
         }
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(TvContext).Assembly);
