@@ -59,7 +59,7 @@ public class YamlPlayoutPadToNextHandler(EnumeratorCache enumeratorCache) : Yaml
                 padToNext.Content,
                 padToNext.Fallback,
                 targetTime,
-                false,
+                stopBeforeEnd: true,
                 padToNext.DiscardAttempts,
                 padToNext.Trim,
                 true,
