@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Added
+- Add `Troubleshoot Playback` to overflow menu on all media cards
+  - This should eliminate the need to lookup media ids for content
+
 ### Fixed
 - Fix app startup with MySql/MariaDB
 - YAML playout: fix `pad_to_next` always running over time
