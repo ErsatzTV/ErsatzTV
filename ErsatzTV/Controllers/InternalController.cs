@@ -190,27 +190,65 @@ public class InternalController : ControllerBase
     }
 
     [HttpGet("/media/subtitle/{id:int}")]
-    public async Task<IActionResult> GetSubtitle(int id)
+    public async Task<IActionResult> GetSubtitle(int id, [FromQuery] long? seekToMs)
     {
-        Either<BaseError, string> path = await _mediator.Send(new GetSubtitlePathById(id));
-        return path.Match<IActionResult>(
-            Left: _ => new NotFoundResult(),
-            Right: r =>
+        Either<BaseError, string> maybePath = await _mediator.Send(new GetSubtitlePathById(id));
+
+        foreach (string path in maybePath.RightToSeq())
+        {
+            string mimeType = Path.GetExtension(path).ToLowerInvariant() switch
             {
-                if (r.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+                "ass" or "ssa" => "text/x-ssa",
+                "vtt" => "text/vtt",
+                _ => "application/x-subrip"
+            };
+
+            if (seekToMs is > 0)
+            {
+                Either<BaseError, SeekTextSubtitleProcess> maybeProcess = await _mediator.Send(
+                    new GetSeekTextSubtitleProcess(path, TimeSpan.FromMilliseconds(seekToMs.Value)));
+                foreach (SeekTextSubtitleProcess processModel in maybeProcess.RightToSeq())
                 {
-                    return new RedirectResult(r);
+                    Command command = processModel.Process;
+
+                    _logger.LogDebug("ffmpeg text subtitle arguments {FFmpegArguments}", command.Arguments);
+
+                    var process = new FFmpegProcess
+                    {
+                        StartInfo = new ProcessStartInfo
+                        {
+                            FileName = command.TargetFilePath,
+                            Arguments = command.Arguments,
+                            RedirectStandardOutput = true,
+                            RedirectStandardError = false,
+                            UseShellExecute = false,
+                            CreateNoWindow = true
+                        }
+                    };
+
+                    HttpContext.Response.RegisterForDispose(process);
+
+                    foreach ((string key, string value) in command.EnvironmentVariables)
+                    {
+                        process.StartInfo.Environment[key] = value;
+                    }
+
+                    process.Start();
+                    return new FileStreamResult(process.StandardOutput.BaseStream, mimeType);
                 }
 
-                string mimeType = Path.GetExtension(r).ToLowerInvariant() switch
-                {
-                    "ass" or "ssa" => "text/x-ssa",
-                    "vtt" => "text/vtt",
-                    _ => "application/x-subrip"
-                };
+                return new NotFoundResult();
+            }
 
-                return new PhysicalFileResult(r, mimeType);
-            });
+            if (path.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+            {
+                return new RedirectResult(path);
+            }
+
+            return new PhysicalFileResult(path, mimeType);
+        }
+
+        return new NotFoundResult();
     }
 
     private async Task<IActionResult> GetSegmenterV2Stream(string channelNumber)

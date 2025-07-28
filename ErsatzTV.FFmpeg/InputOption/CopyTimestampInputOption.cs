@@ -7,7 +7,7 @@ public class CopyTimestampInputOption : IInputOption
     public EnvironmentVariable[] EnvironmentVariables => Array.Empty<EnvironmentVariable>();
     public string[] GlobalOptions => Array.Empty<string>();
 
-    public string[] InputOptions(InputFile inputFile) => new[] { "-copyts" };
+    public string[] InputOptions(InputFile inputFile) => []; //new[] { "-copyts" };
 
     public string[] FilterOptions => Array.Empty<string>();
     public string[] OutputOptions => Array.Empty<string>();

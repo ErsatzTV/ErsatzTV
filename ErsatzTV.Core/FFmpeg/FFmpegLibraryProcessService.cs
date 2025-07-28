@@ -141,6 +141,11 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             {
                 // proxy to avoid dealing with escaping
                 subtitle.Path = $"http://localhost:{Settings.StreamingPort}/media/subtitle/{subtitle.Id}";
+
+                foreach (TimeSpan seek in playbackSettings.StreamSeek)
+                {
+                    subtitle.Path += $"?seekToMs={(int)seek.TotalMilliseconds}";
+                }
             }
         }
 
@@ -919,6 +924,45 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             verticalMarginPercent,
             watermarkWidthPercent,
             cancellationToken);
+
+    public async Task<Command> SeekTextSubtitle(string ffmpegPath, string inputFile, TimeSpan seek)
+    {
+        var videoInputFile = new VideoInputFile(
+            inputFile,
+            new List<VideoStream>
+            {
+                new(
+                    0,
+                    string.Empty,
+                    string.Empty,
+                    None,
+                    ColorParams.Default,
+                    FrameSize.Unknown,
+                    string.Empty,
+                    string.Empty,
+                    None,
+                    true,
+                    ScanKind.Progressive)
+            });
+
+        IPipelineBuilder pipelineBuilder = await _pipelineBuilderFactory.GetBuilder(
+            HardwareAccelerationMode.None,
+            videoInputFile,
+            None,
+            None,
+            None,
+            Option<ConcatInputFile>.None,
+            Option<string>.None,
+            None,
+            None,
+            FileSystemLayout.FFmpegReportsFolder,
+            FileSystemLayout.FontsCacheFolder,
+            ffmpegPath);
+
+        FFmpegPipeline pipeline = pipelineBuilder.Seek(inputFile, seek);
+
+        return GetCommand(ffmpegPath, videoInputFile, None, None, None, pipeline, false);
+    }
 
     private static Option<WatermarkInputFile> GetWatermarkInputFile(
         Option<WatermarkOptions> watermarkOptions,

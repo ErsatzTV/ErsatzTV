@@ -542,8 +542,6 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
         {
             if (context.HasSubtitleText)
             {
-                videoInputFile.AddOption(new CopyTimestampInputOption());
-
                 if (videoInputFile.FilterSteps.Count == 0 && videoInputFile.InputOptions.OfType<CuvidDecoder>().Any())
                 {
                     // change the hw accel output to software so the explicit download isn't needed
