@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix app startup with MySql/MariaDB
 - YAML playout: fix `pad_to_next` always running over time
 - Fix playback with text subtitles when seeking into content, i.e. when first joining a channel
+- Fix playback with `.ass` and `.ssa` text subtitles
 
 ### Changed
 - Always tell ffmpeg to stop encoding with a specific duration
