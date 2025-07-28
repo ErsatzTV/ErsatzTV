@@ -35,7 +35,7 @@ public class DatabaseMigratorService : BackgroundService
             .GetPendingMigrationsAsync(stoppingToken)
             .Map(l => l.ToList());
 
-        if (pendingMigrations.Contains("Add_MediaFilePathHash", StringComparer.OrdinalIgnoreCase))
+        if (pendingMigrations.Any(m => m.Contains("Add_MediaFilePathHash", StringComparison.OrdinalIgnoreCase)))
         {
             await dbContext.Database.MigrateAsync("Add_MediaFilePathHash", stoppingToken);
         }
