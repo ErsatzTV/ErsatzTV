@@ -81,6 +81,8 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
         DateTimeOffset now = request.Now;
 
         Either<BaseError, PlayoutItemWithPath> maybePlayoutItem = await dbContext.PlayoutItems
+            .AsNoTracking()
+
             // get playout deco
             .Include(i => i.Playout)
             .ThenInclude(p => p.Deco)

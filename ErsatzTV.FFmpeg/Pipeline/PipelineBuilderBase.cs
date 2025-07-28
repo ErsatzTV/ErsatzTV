@@ -227,7 +227,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
 
         SetSceneDetect(videoStream, ffmpegState, desiredState, pipelineSteps);
         SetFFReport(ffmpegState, pipelineSteps);
-        SetStreamSeek(ffmpegState, videoInputFile, context, pipelineSteps);
+        SetStreamSeek(ffmpegState, videoInputFile);
         SetTimeLimit(ffmpegState, pipelineSteps);
 
         (FilterChain filterChain, ffmpegState) = BuildVideoPipeline(
@@ -834,23 +834,13 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         }
     }
 
-    private void SetStreamSeek(
-        FFmpegState ffmpegState,
-        VideoInputFile videoInputFile,
-        PipelineContext context,
-        List<IPipelineStep> pipelineSteps)
+    private void SetStreamSeek(FFmpegState ffmpegState, VideoInputFile videoInputFile)
     {
         foreach (TimeSpan desiredStart in ffmpegState.Start.Filter(s => s > TimeSpan.Zero))
         {
             var option = new StreamSeekInputOption(desiredStart);
             _audioInputFile.Iter(a => a.AddOption(option));
             videoInputFile.AddOption(option);
-
-            // need to seek text subtitle files
-            // if (context.HasSubtitleText)
-            // {
-            //     pipelineSteps.Add(new StreamSeekFilterOption(desiredStart));
-            // }
         }
     }
 

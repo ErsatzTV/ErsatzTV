@@ -27,11 +27,13 @@ public class TroubleshootController(
         [FromQuery]
         int watermark,
         [FromQuery]
+        int? subtitleId,
+        [FromQuery]
         bool startFromBeginning,
         CancellationToken cancellationToken)
     {
         Either<BaseError, Command> result = await mediator.Send(
-            new PrepareTroubleshootingPlayback(mediaItem, ffmpegProfile, watermark, startFromBeginning),
+            new PrepareTroubleshootingPlayback(mediaItem, ffmpegProfile, watermark, subtitleId, startFromBeginning),
             cancellationToken);
 
         return await result.MatchAsync<IActionResult>(
