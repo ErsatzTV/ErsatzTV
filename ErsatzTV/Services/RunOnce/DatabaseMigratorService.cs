@@ -40,14 +40,18 @@ public class DatabaseMigratorService : BackgroundService
             await dbContext.Database.MigrateAsync("Add_MediaFilePathHash", stoppingToken);
         }
 
-        // this can't be part of a migration, so we have to stop here and run some sql
-        await PopulatePathHashes(dbContext);
+        List<string> appliedMigrations = await dbContext.Database
+            .GetAppliedMigrationsAsync(stoppingToken)
+            .Map(l => l.ToList());
+
+        if (appliedMigrations.Count > 0)
+        {
+            // this can't be part of a migration, so we have to stop here and run some sql
+            await PopulatePathHashes(dbContext);
+        }
 
         // then continue migrating
-        if (pendingMigrations.Count > 0)
-        {
-            await dbContext.Database.MigrateAsync(stoppingToken);
-        }
+        await dbContext.Database.MigrateAsync(stoppingToken);
 
         await DbInitializer.Initialize(dbContext, stoppingToken);
 
