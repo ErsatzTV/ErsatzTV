@@ -180,7 +180,7 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
         bool isHdrTonemap = videoStream.ColorParams.IsHdr;
         currentState = SetTonemap(videoInputFile, videoStream, ffmpegState, desiredState, currentState);
 
-        currentState = SetPad(videoInputFile, desiredState, currentState, isHdrTonemap);
+        currentState = SetPad(videoInputFile, ffmpegState, desiredState, currentState, isHdrTonemap);
         // _logger.LogDebug("After pad: {PixelFormat}", currentState.PixelFormat);
 
         currentState = SetCrop(videoInputFile, desiredState, currentState);
@@ -532,14 +532,21 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
 
     private static FrameState SetPad(
         VideoInputFile videoInputFile,
+        FFmpegState ffmpegState,
         FrameState desiredState,
         FrameState currentState,
         bool isHdrTonemap)
     {
         if (desiredState.CroppedSize.IsNone && currentState.PaddedSize != desiredState.PaddedSize)
         {
-            // pad_vaapi seems to pad with green when input is HDR, so use software pad here
-            if (isHdrTonemap)
+            // pad_vaapi seems to pad with green when input is HDR
+            // also green with 10-bit content and i965
+            // so use software pad in these cases
+            bool is10Bit965 = currentState.BitDepth == 10 && ffmpegState.VaapiDriver
+                .IfNone(string.Empty)
+                .Contains("i965", StringComparison.OrdinalIgnoreCase);
+
+            if (isHdrTonemap || is10Bit965)
             {
                 var padStep = new PadFilter(currentState, desiredState.PaddedSize);
                 currentState = padStep.NextState(currentState);
