@@ -7,6 +7,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 - Add `Troubleshoot Playback` to overflow menu on all media cards
   - This should eliminate the need to lookup media ids for content
+- Add subtitle selection to playback troubleshooting. This is limited to:
+  - Sidecar text subtitles (e.g. `srt` files)
+  - Embedded image subtitles
+  - Embedded text subtitles that have already been extracted by ETV
 
 ### Fixed
 - Fix app startup with MySql/MariaDB

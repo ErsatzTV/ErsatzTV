@@ -1,4 +1,5 @@
-﻿using CliWrap;
+﻿using System.Collections.Immutable;
+using CliWrap;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Interfaces.FFmpeg;
@@ -129,10 +130,15 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
 
             maybeSubtitle =
                 await _ffmpegStreamSelector.SelectSubtitleStream(
-                    allSubtitles,
+                    allSubtitles.ToImmutableList(),
                     channel,
                     preferredSubtitleLanguage,
                     subtitleMode);
+        }
+
+        if (channel.StreamSelectorMode is ChannelStreamSelectorMode.Troubleshooting && maybeSubtitle.IsNone)
+        {
+            maybeSubtitle = allSubtitles.HeadOrNone();
         }
 
         foreach (Subtitle subtitle in maybeSubtitle)

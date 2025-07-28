@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.Metadata;
@@ -172,7 +173,7 @@ public class FFmpegStreamSelectorTests
                 Substitute.For<ILogger<FFmpegStreamSelector>>());
 
             Option<Subtitle> selectedStream = await selector.SelectSubtitleStream(
-                subtitles,
+                subtitles.ToImmutableList(),
                 channel,
                 "heb",
                 ChannelSubtitleMode.Any);

@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text;
 using Bugsnag;
@@ -1075,7 +1076,7 @@ public class TranscodingTests
                 .AsTask();
 
         public Task<Option<ErsatzTV.Core.Domain.Subtitle>> SelectSubtitleStream(
-            List<ErsatzTV.Core.Domain.Subtitle> subtitles,
+            ImmutableList<ErsatzTV.Core.Domain.Subtitle> subtitles,
             Channel channel,
             string preferredSubtitleLanguage,
             ChannelSubtitleMode subtitleMode) =>
