@@ -76,8 +76,8 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
     {
         IPipelineStep outputFormat = Path.GetExtension(inputFile).ToLowerInvariant() switch
         {
-            "ass" or "ssa" => new OutputFormatAss(),
-            "vtt" => new OutputFormatWebVtt(),
+            ".ass" or ".ssa" => new OutputFormatAss(),
+            ".vtt" => new OutputFormatWebVtt(),
             _ => new OutputFormatSrt()
         };
 

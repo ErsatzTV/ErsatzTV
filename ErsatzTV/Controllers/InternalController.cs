@@ -198,8 +198,8 @@ public class InternalController : ControllerBase
         {
             string mimeType = Path.GetExtension(path).ToLowerInvariant() switch
             {
-                "ass" or "ssa" => "text/x-ssa",
-                "vtt" => "text/vtt",
+                ".ass" or ".ssa" => "text/x-ssa",
+                ".vtt" => "text/vtt",
                 _ => "application/x-subrip"
             };
 
