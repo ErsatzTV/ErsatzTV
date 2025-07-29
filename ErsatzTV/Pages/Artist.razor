@@ -19,13 +19,13 @@
         <img src="@($"artwork/fanart/{_artist.FanArt}")" alt="fan art"/>
     }
 </MudContainer>
-<MudContainer MaxWidth="MaxWidth.Large" Style="margin-top: 100px">
+<MudContainer MaxWidth="MaxWidth.Large" Style="margin-top: 100px" Class="z-10">
     <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Spacing="6">
         @if (!string.IsNullOrWhiteSpace(_artist.Thumbnail))
         {
-            <MudImage Elevation="2" Src="@($"artwork/thumbnails/{_artist.Thumbnail}")" Class="rounded-lg" Style="height: 220px; width: 220px; margin-left: auto; margin-right: auto;" />
+            <MudImage Elevation="2" Src="@($"artwork/thumbnails/{_artist.Thumbnail}")" Class="rounded-lg z-10" Style="height: 220px; width: 220px; margin-left: auto; margin-right: auto;" />
         }
-        <div style="display: flex; flex-direction: column; height: 100%">
+        <div style="display: flex; flex-direction: column; height: 100%" class="z-10">
             <MudStack Row="false">
                 <MudHidden Invert="true" Breakpoint="Breakpoint.SmAndDown">
                     <MudText Typo="Typo.h4" Class="media-item-title">@_artist?.Name</MudText>

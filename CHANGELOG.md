@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Sidecar text subtitles (e.g. `srt` files)
   - Embedded image subtitles
   - Embedded text subtitles that have already been extracted by ETV
+- Add light mode and light/dark mode toggle to app bar
 
 ### Fixed
 - Fix app startup with MySql/MariaDB
