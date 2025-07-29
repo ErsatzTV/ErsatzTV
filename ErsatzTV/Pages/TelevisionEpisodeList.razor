@@ -27,13 +27,13 @@
         }
     }
 </MudContainer>
-<MudContainer MaxWidth="MaxWidth.Large" Style="margin-top: 100px">
+<MudContainer MaxWidth="MaxWidth.Large" Style="margin-top: 100px" Class="z-10">
     <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Spacing="6">
         @if (!string.IsNullOrWhiteSpace(_season?.Poster))
         {
-            <MudImage Src="@GetPosterUrl(_season.Poster)" Elevation="2" Class="rounded-lg" Style="max-height: 325px; margin-left: auto; margin-right: auto"/>
+            <MudImage Src="@GetPosterUrl(_season.Poster)" Elevation="2" Class="rounded-lg z-10" Style="max-height: 325px; margin-left: auto; margin-right: auto"/>
         }
-        <MudStack Row="false" Style="flex: 1">
+        <MudStack Row="false" Style="flex: 1" Class="z-10">
             <MudStack Row="false">
                 <MudLink Href="@($"media/tv/shows/{_season?.ShowId}")">
                     <MudHidden Invert="true" Breakpoint="Breakpoint.SmAndDown">

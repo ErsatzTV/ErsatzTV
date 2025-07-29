@@ -1,5 +1,6 @@
 @inherits LayoutComponentBase
 @using System.Reflection
+@using ErsatzTV.Application.Configuration
 @using ErsatzTV.Application.Search
 @using ErsatzTV.Core.Health
 @using ErsatzTV.Core.Interfaces.Search
@@ -13,12 +14,12 @@
 @inject ICourier Courier
 @inject IHealthCheckService HealthCheckService;
 
-<MudThemeProvider Theme="ErsatzTvTheme"/>
+<MudThemeProvider Theme="ErsatzTvTheme" IsDarkMode="_isDarkMode"/>
 <MudDialogProvider BackdropClick="false"/>
 <MudSnackbarProvider/>
 <MudPopoverProvider/>
 
-<MudLayout @onclick="@(() => _isOpen = false)" Class="d-flex d-flex-column" Style="height: 100vh">
+<MudLayout @onclick="@(() => _isOpen = false)" Class="@(_isDarkMode ? "d-flex d-flex-column ersatztv-dark" : "d-flex d-flex-column ersatztv-light")" Style="height: 100vh">
     <MudAppBar Elevation="1" Class="app-bar">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@ToggleDrawer"/>
         <div style="min-width: 240px" class="ml-3 d-none d-md-flex">
@@ -92,6 +93,7 @@
             <MudTooltip Text="GitHub">
                 <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Primary" Href="https://github.com/ErsatzTV/ErsatzTV" Target="_blank"/>
             </MudTooltip>
+            <MudIconButton Icon="@(DarkLightModeButtonIcon)" Color="Color.Primary" OnClick="@DarkModeToggle" />
             <AuthorizeView>
                 <form action="/account/logout" method="post">
                     <MudTooltip Text="Logout">
@@ -225,6 +227,7 @@
     private List<SearchTargetViewModel> _searchTargets;
     private int _errors;
     private int _warnings;
+    private bool _isDarkMode = true;
 
     protected override void OnInitialized()
     {
@@ -242,6 +245,18 @@
         await HandleHealthCheckSummary(HealthCheckService.GetHealthCheckSummary(), CancellationToken.None);
     }
 
+    private async Task DarkModeToggle()
+    {
+        _isDarkMode = !_isDarkMode;
+        await Mediator.Send(new SaveConfigElementByKey(ConfigElementKey.PagesIsDarkMode, _isDarkMode.ToString()));
+    }
+
+    public string DarkLightModeButtonIcon => _isDarkMode switch
+    {
+        true => Icons.Material.Rounded.DarkMode,
+        false => Icons.Material.Outlined.LightMode,
+    };
+
     public void Dispose()
     {
         SystemStartup.OnDatabaseReady -= OnStartupProgress;
@@ -257,7 +272,7 @@
 
     private static MudTheme ErsatzTvTheme => new()
     {
-        PaletteLight = new PaletteLight
+        PaletteDark = new PaletteDark
         {
             ActionDefault = "rgba(255,255,255, 0.80)",
             Primary = "#009000",
@@ -269,7 +284,8 @@
             DrawerText = "rgba(255,255,255, 0.80)",
             Divider = "rgba(255,255,255, 0.40)",
             Background = "#272727",
-            TextPrimary = "rgba(255,255,255, 0.80)",
+            BackgroundGray = "#272727",
+            TextPrimary = "rgba(255,255,255, 0.90)",
             TextSecondary = "rgba(255,255,255, 0.80)",
             TextDisabled = "rgba(255,255,255, 0.40)",
             ActionDisabled = "rgba(255,255,255, 0.40)",
@@ -278,6 +294,28 @@
             Info = "#00c0c0",
             Tertiary = "#00c000",
             White = Colors.Shades.White
+        },
+
+        PaletteLight = new PaletteLight
+        {
+            ActionDefault = "#546E7A",
+            Primary = "#546E7A",
+            Secondary = "#EC407A",
+            AppbarBackground = "#ECEFF1",
+            AppbarText = "#424242",
+            DrawerBackground = "#FFFFFF",
+            DrawerText = "#424242",
+            Surface = "#FFFFFF",
+            Background = "#F5F5F5",
+            TextPrimary = "#212121",
+            TextSecondary = "rgba(0,0,0, 0.7)",
+            TextDisabled = "rgba(0,0,0, 0.5)",
+            ActionDisabled = "rgba(0,0,0, 0.3)",
+            Divider = "rgba(0,0,0, 0.12)",
+            TableHover = "rgba(0,0,0, 0.02)",
+            TableLines = "rgba(0,0,0,0.08)",
+            Info = "#00c0c0",
+            Tertiary = "#00c000"
         }
     };
 
@@ -318,6 +356,10 @@
         {
             _searchTargets = await Mediator.Send(new QuerySearchTargets(), _cts.Token);
         }
+
+        _isDarkMode = await Mediator.Send(new GetConfigElementByKey(ConfigElementKey.PagesIsDarkMode), _cts.Token)
+            .MapT(result => !bool.TryParse(result.Value, out bool value) || value)
+            .IfNoneAsync(true);
     }
 
     protected async void OnSearchTargetsChanged(object sender, EventArgs e) => _searchTargets = await Mediator.Send(new QuerySearchTargets(), _cts.Token);
