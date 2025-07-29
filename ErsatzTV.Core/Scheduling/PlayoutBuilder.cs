@@ -451,6 +451,13 @@ public class PlayoutBuilder : IPlayoutBuilder
             playout.ProgramScheduleAlternates,
             playoutStart);
 
+        if (activeSchedule.Items.Count == 0)
+        {
+            // empty schedule results in empty day
+            playout.Anchor = new PlayoutAnchor { NextStart = playoutFinish.UtcDateTime };
+            return playout;
+        }
+
         // on demand channels do NOT use alternate schedules
         if (playout.Channel.ProgressMode is ChannelProgressMode.OnDemand)
         {
@@ -772,6 +779,36 @@ public class PlayoutBuilder : IPlayoutBuilder
             {
                 playout.Anchor.DurationFinish = durationFinish.UtcDateTime;
             }
+        }
+
+        ProgramSchedule activeScheduleAtAnchor = PlayoutScheduleSelector.GetProgramScheduleFor(
+            playout.ProgramSchedule,
+            playout.ProgramScheduleAlternates,
+            playoutBuilderState.CurrentTime);
+
+        // if we ended in a different alternate schedule, fix the anchor data
+        if (playoutBuilderState.CurrentTime > playoutFinish && activeScheduleAtAnchor.Id != activeSchedule.Id && activeScheduleAtAnchor.Items.Count > 0)
+        {
+            PlayoutBuilderState cleanState = playoutBuilderState with
+            {
+                InFlood = false,
+                InDurationFiller = false,
+                MultipleRemaining = Option<int>.None,
+                DurationFinish = Option<DateTimeOffset>.None
+            };
+
+            DateTimeOffset nextStart = PlayoutModeSchedulerBase<ProgramScheduleItem>
+                .GetStartTimeAfter(cleanState, activeScheduleAtAnchor.Items.Head());
+
+            _logger.LogWarning(
+                "Playout build went beyond midnight ({Time}) into a different alternate schedule; this may cause issues with start times on the next day",
+                playoutBuilderState.CurrentTime);
+
+            playout.Anchor.NextStart = nextStart.UtcDateTime;
+            playout.Anchor.InFlood = false;
+            playout.Anchor.InDurationFiller = false;
+            playout.Anchor.MultipleRemaining = null;
+            playout.Anchor.DurationFinish = null;
         }
 
         // build program schedule anchors
