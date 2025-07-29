@@ -18,6 +18,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix playback with text subtitles when seeking into content, i.e. when first joining a channel
 - Fix playback with `.ass` and `.ssa` text subtitles
 - Fix green padding with 10-bit source content and i965 VAAPI driver
+- Fix building playouts with empty schedules
+- Fix schedule start time calculation when daily playout build goes beyond midnight and into a different alternate schedule
 
 ### Changed
 - Always tell ffmpeg to stop encoding with a specific duration
