@@ -3,6 +3,7 @@ using System;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ErsatzTV.Infrastructure.Sqlite.Migrations
 {
     [DbContext(typeof(TvContext))]
-    partial class TvContextModelSnapshot : ModelSnapshot
+    [Migration("20250730003013_Add_FillerPresetUseChaptersAsMediaItems")]
+    partial class Add_FillerPresetUseChaptersAsMediaItems
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.7");
@@ -707,9 +710,6 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Property<int?>("PadToNearestMinute")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int?>("PlaylistId")
-                        .HasColumnType("INTEGER");
-
                     b.Property<int?>("SmartCollectionId")
                         .HasColumnType("INTEGER");
 
@@ -723,8 +723,6 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.HasIndex("MediaItemId");
 
                     b.HasIndex("MultiCollectionId");
-
-                    b.HasIndex("PlaylistId");
 
                     b.HasIndex("SmartCollectionId");
 
@@ -3903,11 +3901,6 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                         .HasForeignKey("MultiCollectionId")
                         .OnDelete(DeleteBehavior.Cascade);
 
-                    b.HasOne("ErsatzTV.Core.Domain.Playlist", "Playlist")
-                        .WithMany()
-                        .HasForeignKey("PlaylistId")
-                        .OnDelete(DeleteBehavior.Cascade);
-
                     b.HasOne("ErsatzTV.Core.Domain.SmartCollection", "SmartCollection")
                         .WithMany()
                         .HasForeignKey("SmartCollectionId")
@@ -3918,8 +3911,6 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Navigation("MediaItem");
 
                     b.Navigation("MultiCollection");
-
-                    b.Navigation("Playlist");
 
                     b.Navigation("SmartCollection");
                 });
@@ -4361,9 +4352,6 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                         {
                             b1.Property<int>("PlayoutId")
                                 .HasColumnType("INTEGER");
-
-                            b1.Property<string>("Context")
-                                .HasColumnType("TEXT");
 
                             b1.Property<DateTime?>("DurationFinish")
                                 .HasColumnType("TEXT");

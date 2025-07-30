@@ -22,4 +22,5 @@ public class FillerPreset
     public int? PlaylistId { get; set; }
     public Playlist Playlist { get; set; }
     public string Expression { get; set; }
+    public bool UseChaptersAsMediaItems { get; set; }
 }

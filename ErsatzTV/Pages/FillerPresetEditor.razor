@@ -211,6 +211,14 @@
             }
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                 <div class="d-flex">
+                    <MudText>Use Chapters As Media Items</MudText>
+                </div>
+                <MudCheckBox @bind-Value="@_model.UseChaptersAsMediaItems" For="@(() => _model.UseChaptersAsMediaItems)" Dense="true">
+                    <MudText Typo="Typo.caption" Style="font-weight: normal">Schedule individual chapters instead of entire files</MudText>
+                </MudCheckBox>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
                     <MudText>Expression</MudText>
                 </div>
                 <MudTextField @bind-Value="_model.Expression"
@@ -313,6 +321,7 @@
                     ? _televisionShows.Append(_televisionSeasons).Append(_artists).ToList().Find(vm => vm.MediaItemId == fillerPreset.MediaItemId.Value)
                     : null;
                 _model.Expression = fillerPreset.Expression;
+                _model.UseChaptersAsMediaItems = fillerPreset.UseChaptersAsMediaItems;
                 _model.Playlist = fillerPreset.Playlist;
             });
         }

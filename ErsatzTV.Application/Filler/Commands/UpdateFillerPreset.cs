@@ -19,5 +19,6 @@ public record UpdateFillerPreset(
     int? MultiCollectionId,
     int? SmartCollectionId,
     int? PlaylistId,
-    string Expression
+    string Expression,
+    bool UseChaptersAsMediaItems
 ) : IRequest<Either<BaseError, Unit>>;

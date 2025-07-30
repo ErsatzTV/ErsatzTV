@@ -746,6 +746,9 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<int?>("SmartCollectionId")
                         .HasColumnType("int");
 
+                    b.Property<bool>("UseChaptersAsMediaItems")
+                        .HasColumnType("tinyint(1)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CollectionId");
