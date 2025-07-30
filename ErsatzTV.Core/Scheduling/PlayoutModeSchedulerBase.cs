@@ -746,7 +746,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
 
         return result;
     }
-    
+
     private List<PlayoutItem> AddDurationFiller(
         PlayoutBuilderState playoutBuilderState,
         IMediaCollectionEnumerator enumerator,
@@ -757,50 +757,17 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
         CancellationToken cancellationToken)
     {
         var result = new List<PlayoutItem>();
-        var candidatePlayoutItems = new List<PlayoutItem>();
 
-        // First pass: Collect all possible playout items from available media
-        var processedMediaItemIds = new System.Collections.Generic.HashSet<int>();
-
-        while (enumerator.Current.IsSome)
+        TimeSpan remainingToFill = duration;
+        while (enumerator.Current.IsSome && remainingToFill > TimeSpan.Zero &&
+               remainingToFill >= enumerator.MinimumDuration)
         {
-            bool foundNewItem = false;
-
             foreach (MediaItem mediaItem in enumerator.Current)
             {
-                // Skip if we've already processed this media item
-                if (processedMediaItemIds.Contains(mediaItem.Id))
-                    continue;
-
-                processedMediaItemIds.Add(mediaItem.Id);
-                foundNewItem = true;
-
                 TimeSpan itemDuration = DurationForMediaItem(mediaItem);
-                List<MediaChapter> itemChapters = ChaptersForMediaItem(mediaItem);
 
-                if (itemChapters.Count > 1)
+                if (remainingToFill - itemDuration >= TimeSpan.Zero)
                 {
-                    // Add each chapter as a separate candidate
-                    foreach (MediaChapter chapter in itemChapters)
-                    {
-                        TimeSpan chapterDuration = chapter.EndTime - chapter.StartTime;
-                        var playoutItem = new PlayoutItem
-                        {
-                            MediaItemId = mediaItem.Id,
-                            Start = new DateTime(2020, 2, 1, 0, 0, 0, DateTimeKind.Utc),
-                            Finish = new DateTime(2020, 2, 1, 0, 0, 0, DateTimeKind.Utc) + chapterDuration,
-                            InPoint = chapter.StartTime,
-                            OutPoint = chapter.EndTime,
-                            GuideGroup = playoutBuilderState.NextGuideGroup,
-                            FillerKind = fillerKind,
-                            DisableWatermarks = !allowWatermarks
-                        };
-                        candidatePlayoutItems.Add(playoutItem);
-                    }
-                }
-                else
-                {
-                    // Add the full media item as a candidate
                     var playoutItem = new PlayoutItem
                     {
                         MediaItemId = mediaItem.Id,
@@ -812,43 +779,22 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                         FillerKind = fillerKind,
                         DisableWatermarks = !allowWatermarks
                     };
-                    candidatePlayoutItems.Add(playoutItem);
+
+                    remainingToFill -= itemDuration;
+                    result.Add(playoutItem);
+                    enumerator.MoveNext();
                 }
-            }
-
-            // If we didn't find any new items, we've seen all items - break the loop
-            if (!foundNewItem)
-                break;
-
-            enumerator.MoveNext();
-        }
-
-        // Shuffle all candidate playout items
-        var random = new Random();
-        candidatePlayoutItems = candidatePlayoutItems.OrderBy(x => random.Next()).ToList();
-
-        // Second pass: Add shuffled items until duration is filled
-        TimeSpan remainingToFill = duration;
-        foreach (var playoutItem in candidatePlayoutItems)
-        {
-            if (remainingToFill <= TimeSpan.Zero)
-                break;
-
-            TimeSpan itemDuration = playoutItem.Finish - playoutItem.Start;
-
-            if (remainingToFill >= itemDuration)
-            {
-                remainingToFill -= itemDuration;
-                result.Add(playoutItem);
-            }
-            else
-            {
-                if (log)
+                else
                 {
-                    Logger.LogDebug(
-                        "Filler item is too long {FillerDuration:g} to fill {GapDuration:g}; skipping to next filler item",
-                        itemDuration,
-                        remainingToFill);
+                    if (log)
+                    {
+                        Logger.LogDebug(
+                            "Filler item is too long {FillerDuration:g} to fill {GapDuration:g}; skipping to next filler item",
+                            itemDuration,
+                            remainingToFill);
+                    }
+
+                    enumerator.MoveNext();
                 }
             }
         }
