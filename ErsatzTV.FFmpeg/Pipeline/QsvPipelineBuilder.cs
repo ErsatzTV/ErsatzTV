@@ -508,8 +508,6 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
         {
             if (context.HasSubtitleText)
             {
-                videoInputFile.AddOption(new CopyTimestampInputOption());
-
                 var downloadFilter = new HardwareDownloadFilter(currentState);
                 currentState = downloadFilter.NextState(currentState);
                 videoInputFile.FilterSteps.Add(downloadFilter);

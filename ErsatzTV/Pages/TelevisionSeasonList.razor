@@ -26,10 +26,10 @@
         }
     }
 </MudContainer>
-<MudContainer MaxWidth="MaxWidth.Large" Style="margin-top: 100px">
+<MudContainer MaxWidth="MaxWidth.Large" Style="margin-top: 100px" Class="z-10">
     <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Spacing="6">
-        <MudImage Src="@GetPosterUrl(_show.Poster)" Elevation="2" Class="rounded-lg" Style="max-height: 325px; margin-left: auto; margin-right: auto" />
-        <MudStack Row="false" Style="flex: 1">
+        <MudImage Src="@GetPosterUrl(_show.Poster)" Elevation="2" Class="rounded-lg z-10" Style="max-height: 325px; margin-left: auto; margin-right: auto" />
+        <MudStack Row="false" Style="flex: 1" Class="z-10">
             <MudStack Row="false">
                 <MudHidden Invert="true" Breakpoint="Breakpoint.SmAndDown">
                     <MudText Typo="Typo.h4" Class="media-item-title">@_show?.Title</MudText>

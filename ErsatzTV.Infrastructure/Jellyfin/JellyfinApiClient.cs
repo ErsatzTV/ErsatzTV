@@ -347,14 +347,15 @@ public class JellyfinApiClient : IJellyfinApiClient
                 Name = "Main",
                 Duration = duration,
                 DateAdded = item.DateCreated.UtcDateTime,
-                MediaFiles = new List<MediaFile>
-                {
-                    new()
+                MediaFiles =
+                [
+                    new MediaFile
                     {
-                        Path = path
+                        Path = path,
+                        PathHash = PathUtils.GetPathHash(path)
                     }
-                },
-                Streams = new List<MediaStream>(),
+                ],
+                Streams = [],
                 Chapters = ProjectToModel(Optional(item.Chapters).Flatten(), duration)
             };
 
@@ -364,9 +365,9 @@ public class JellyfinApiClient : IJellyfinApiClient
             {
                 ItemId = item.Id,
                 Etag = item.Etag,
-                MediaVersions = new List<MediaVersion> { version },
-                MovieMetadata = new List<MovieMetadata> { metadata },
-                TraktListItems = new List<TraktListItem>()
+                MediaVersions = [version],
+                MovieMetadata = [metadata],
+                TraktListItems = []
             };
 
             return movie;
@@ -723,14 +724,15 @@ public class JellyfinApiClient : IJellyfinApiClient
                 Name = "Main",
                 Duration = duration,
                 DateAdded = item.DateCreated.UtcDateTime,
-                MediaFiles = new List<MediaFile>
-                {
-                    new()
+                MediaFiles =
+                [
+                    new MediaFile
                     {
-                        Path = path
+                        Path = path,
+                        PathHash = PathUtils.GetPathHash(path)
                     }
-                },
-                Streams = new List<MediaStream>(),
+                ],
+                Streams = [],
                 Chapters = ProjectToModel(Optional(item.Chapters).Flatten(), duration)
             };
 
@@ -740,9 +742,9 @@ public class JellyfinApiClient : IJellyfinApiClient
             {
                 ItemId = item.Id,
                 Etag = item.Etag,
-                MediaVersions = new List<MediaVersion> { version },
-                EpisodeMetadata = new List<EpisodeMetadata> { metadata },
-                TraktListItems = new List<TraktListItem>()
+                MediaVersions = [version],
+                EpisodeMetadata = [metadata],
+                TraktListItems = []
             };
 
             return episode;

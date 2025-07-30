@@ -7,5 +7,6 @@ public record PrepareTroubleshootingPlayback(
     int MediaItemId,
     int FFmpegProfileId,
     int WatermarkId,
+    int? SubtitleId,
     bool StartFromBeginning)
     : IRequest<Either<BaseError, Command>>;

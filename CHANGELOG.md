@@ -4,9 +4,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Added
+- Add `Troubleshoot Playback` to overflow menu on all media cards
+  - This should eliminate the need to lookup media ids for content
+- Add subtitle selection to playback troubleshooting. This is limited to:
+  - Sidecar text subtitles (e.g. `srt` files)
+  - Embedded image subtitles
+  - Embedded text subtitles that have already been extracted by ETV
+- Add light mode and light/dark mode toggle to app bar
+
 ### Fixed
 - Fix app startup with MySql/MariaDB
 - YAML playout: fix `pad_to_next` always running over time
+- Fix playback with text subtitles when seeking into content, i.e. when first joining a channel
+- Fix playback with `.ass` and `.ssa` text subtitles
+- Fix green padding with 10-bit source content and i965 VAAPI driver
+- Fix building playouts with empty schedules
+- Fix schedule start time calculation when daily playout build goes beyond midnight and into a different alternate schedule
 
 ### Changed
 - Always tell ffmpeg to stop encoding with a specific duration

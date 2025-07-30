@@ -31,10 +31,24 @@ public class DatabaseMigratorService : BackgroundService
         using IServiceScope scope = _serviceScopeFactory.CreateScope();
         await using TvContext dbContext = scope.ServiceProvider.GetRequiredService<TvContext>();
 
-        await dbContext.Database.MigrateAsync("Add_MediaFilePathHash", stoppingToken);
+        List<string> pendingMigrations = await dbContext.Database
+            .GetPendingMigrationsAsync(stoppingToken)
+            .Map(l => l.ToList());
 
-        // this can't be part of a migration, so we have to stop here and run some sql
-        await PopulatePathHashes(dbContext);
+        if (pendingMigrations.Any(m => m.Contains("Add_MediaFilePathHash", StringComparison.OrdinalIgnoreCase)))
+        {
+            await dbContext.Database.MigrateAsync("Add_MediaFilePathHash", stoppingToken);
+        }
+
+        List<string> appliedMigrations = await dbContext.Database
+            .GetAppliedMigrationsAsync(stoppingToken)
+            .Map(l => l.ToList());
+
+        if (appliedMigrations.Count > 0)
+        {
+            // this can't be part of a migration, so we have to stop here and run some sql
+            await PopulatePathHashes(dbContext);
+        }
 
         // then continue migrating
         await dbContext.Database.MigrateAsync(stoppingToken);

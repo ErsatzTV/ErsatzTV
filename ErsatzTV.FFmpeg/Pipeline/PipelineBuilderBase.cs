@@ -65,9 +65,33 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         IPipelineFilterStep scaleStep = new ScaleImageFilter(scaledSize);
         _videoInputFile.Iter(f => f.FilterSteps.Add(scaleStep));
 
-        pipelineSteps.Add(new VideoFilter(new[] { scaleStep }));
+        pipelineSteps.Add(new VideoFilter([scaleStep]));
         pipelineSteps.Add(scaleStep);
         pipelineSteps.Add(new FileNameOutputOption(outputFile));
+
+        return new FFmpegPipeline(pipelineSteps, false);
+    }
+
+    public FFmpegPipeline Seek(string inputFile, TimeSpan seek)
+    {
+        IPipelineStep outputFormat = Path.GetExtension(inputFile).ToLowerInvariant() switch
+        {
+            ".ass" or ".ssa" => new OutputFormatAss(),
+            ".vtt" => new OutputFormatWebVtt(),
+            _ => new OutputFormatSrt()
+        };
+
+        var pipelineSteps = new List<IPipelineStep>
+        {
+            new NoStandardInputOption(),
+            new HideBannerOption(),
+            new NoStatsOption(),
+            new LoglevelErrorOption(),
+            new StreamSeekFilterOption(seek),
+            new EncoderCopySubtitle(),
+            outputFormat,
+            new PipeProtocol(),
+        };
 
         return new FFmpegPipeline(pipelineSteps, false);
     }
@@ -203,7 +227,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
 
         SetSceneDetect(videoStream, ffmpegState, desiredState, pipelineSteps);
         SetFFReport(ffmpegState, pipelineSteps);
-        SetStreamSeek(ffmpegState, videoInputFile, context, pipelineSteps);
+        SetStreamSeek(ffmpegState, videoInputFile);
         SetTimeLimit(ffmpegState, pipelineSteps);
 
         (FilterChain filterChain, ffmpegState) = BuildVideoPipeline(
@@ -810,23 +834,13 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         }
     }
 
-    private void SetStreamSeek(
-        FFmpegState ffmpegState,
-        VideoInputFile videoInputFile,
-        PipelineContext context,
-        List<IPipelineStep> pipelineSteps)
+    private void SetStreamSeek(FFmpegState ffmpegState, VideoInputFile videoInputFile)
     {
         foreach (TimeSpan desiredStart in ffmpegState.Start.Filter(s => s > TimeSpan.Zero))
         {
             var option = new StreamSeekInputOption(desiredStart);
             _audioInputFile.Iter(a => a.AddOption(option));
             videoInputFile.AddOption(option);
-
-            // need to seek text subtitle files
-            if (context.HasSubtitleText)
-            {
-                pipelineSteps.Add(new StreamSeekFilterOption(desiredStart));
-            }
         }
     }
 

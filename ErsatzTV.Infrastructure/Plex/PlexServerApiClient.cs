@@ -571,16 +571,17 @@ public class PlexServerApiClient : IPlexServerApiClient
             // specifically omit sample aspect ratio
             DateAdded = dateAdded,
             DateUpdated = lastWriteTime,
-            MediaFiles = new List<MediaFile>
-            {
+            MediaFiles =
+            [
                 new PlexMediaFile
                 {
                     PlexId = part.Id,
                     Key = part.Key,
-                    Path = part.File
+                    Path = part.File,
+                    PathHash = PathUtils.GetPathHash(part.File)
                 }
-            },
-            Streams = new List<MediaStream>()
+            ],
+            Streams = []
         };
 
         MovieMetadata metadata = ProjectToMovieMetadata(version, response, mediaSourceId);
@@ -589,9 +590,9 @@ public class PlexServerApiClient : IPlexServerApiClient
         {
             Etag = _plexEtag.ForMovie(response),
             Key = response.Key,
-            MovieMetadata = new List<MovieMetadata> { metadata },
-            MediaVersions = new List<MediaVersion> { version },
-            TraktListItems = new List<TraktListItem>()
+            MovieMetadata = [metadata],
+            MediaVersions = [version],
+            TraktListItems = []
         };
 
         return movie;
@@ -1009,17 +1010,18 @@ public class PlexServerApiClient : IPlexServerApiClient
             Height = media.Height,
             DateAdded = dateAdded,
             DateUpdated = lastWriteTime,
-            MediaFiles = new List<MediaFile>
-            {
+            MediaFiles =
+            [
                 new PlexMediaFile
                 {
                     PlexId = part.Id,
                     Key = part.Key,
-                    Path = part.File
+                    Path = part.File,
+                    PathHash = PathUtils.GetPathHash(part.File)
                 }
-            },
+            ],
             // specifically omit stream details
-            Streams = new List<MediaStream>()
+            Streams = []
         };
 
         EpisodeMetadata metadata = ProjectToEpisodeMetadata(version, response, mediaSourceId);
@@ -1028,9 +1030,9 @@ public class PlexServerApiClient : IPlexServerApiClient
         {
             Key = response.Key,
             Etag = _plexEtag.ForEpisode(response),
-            EpisodeMetadata = new List<EpisodeMetadata> { metadata },
-            MediaVersions = new List<MediaVersion> { version },
-            TraktListItems = new List<TraktListItem>()
+            EpisodeMetadata = [metadata],
+            MediaVersions = [version],
+            TraktListItems = []
         };
 
         return episode;
@@ -1156,16 +1158,17 @@ public class PlexServerApiClient : IPlexServerApiClient
             // specifically omit sample aspect ratio
             DateAdded = dateAdded,
             DateUpdated = lastWriteTime,
-            MediaFiles = new List<MediaFile>
-            {
+            MediaFiles =
+            [
                 new PlexMediaFile
                 {
                     PlexId = part.Id,
                     Key = part.Key,
-                    Path = part.File
+                    Path = part.File,
+                    PathHash = PathUtils.GetPathHash(part.File)
                 }
-            },
-            Streams = new List<MediaStream>()
+            ],
+            Streams = []
         };
 
         OtherVideoMetadata metadata = ProjectToOtherVideoMetadata(version, response, mediaSourceId, library);
@@ -1174,9 +1177,9 @@ public class PlexServerApiClient : IPlexServerApiClient
         {
             Etag = _plexEtag.ForMovie(response),
             Key = response.Key,
-            OtherVideoMetadata = new List<OtherVideoMetadata> { metadata },
-            MediaVersions = new List<MediaVersion> { version },
-            TraktListItems = new List<TraktListItem>()
+            OtherVideoMetadata = [metadata],
+            MediaVersions = [version],
+            TraktListItems = []
         };
 
         return otherVideo;

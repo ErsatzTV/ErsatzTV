@@ -90,4 +90,6 @@ public interface IFFmpegProcessService
         int verticalMarginPercent,
         int watermarkWidthPercent,
         CancellationToken cancellationToken);
+
+    Task<Command> SeekTextSubtitle(string ffmpegPath, string inputFile, TimeSpan seek);
 }

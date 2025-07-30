@@ -270,8 +270,6 @@ public class SoftwarePipelineBuilder : PipelineBuilderBase
         {
             if (context.HasSubtitleText)
             {
-                videoInputFile.AddOption(new CopyTimestampInputOption());
-
                 var subtitlesFilter = new SubtitlesFilter(fontsFolder, subtitle);
                 videoInputFile.FilterSteps.Add(subtitlesFilter);
             }

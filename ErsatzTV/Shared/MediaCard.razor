@@ -72,6 +72,10 @@
                                 <MudMenuItem Icon="@Icons.Material.Filled.Info"
                                              Label="Show Media Info"
                                              OnClick="@ShowMediaInfo"/>
+
+                                <MudMenuItem Icon="@Icons.Material.Filled.Troubleshoot"
+                                             Label="Troubleshoot Playback"
+                                             OnClick="@TroubleshootPlayback"/>
                             }
                         </MudMenu>
                     }
@@ -221,6 +225,11 @@
             IDialogReference dialog = await Dialog.ShowAsync<MediaItemInfoDialog>(Data.Title, parameters, options);
             DialogResult _ = await dialog.Result;
         }
+    }
+
+    private void TroubleshootPlayback()
+    {
+        NavigationManager.NavigateTo($"system/troubleshooting/playback?mediaItem={Data.MediaItemId}");
     }
 
 }

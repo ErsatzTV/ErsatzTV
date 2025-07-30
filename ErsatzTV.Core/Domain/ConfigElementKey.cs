@@ -28,6 +28,7 @@ public class ConfigElementKey
     public static ConfigElementKey SearchIndexVersion => new("search_index.version");
     public static ConfigElementKey HDHRTunerCount => new("hdhr.tuner_count");
     public static ConfigElementKey HDHRUUID => new("hdhr.uuid");
+    public static ConfigElementKey PagesIsDarkMode => new("pages.is_dark_mode");
     public static ConfigElementKey ChannelsPageSize => new("pages.channels.page_size");
     public static ConfigElementKey CollectionsPageSize => new("pages.collections.page_size");
     public static ConfigElementKey MultiCollectionsPageSize => new("pages.multi_collections.page_size");

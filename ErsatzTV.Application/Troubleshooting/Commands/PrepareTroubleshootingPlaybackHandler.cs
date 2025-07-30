@@ -67,7 +67,7 @@ public class PrepareTroubleshootingPlaybackHandler(
         localFileSystem.EnsureFolderExists(FileSystemLayout.TranscodeTroubleshootingFolder);
         localFileSystem.EmptyFolder(FileSystemLayout.TranscodeTroubleshootingFolder);
 
-        ChannelSubtitleMode subtitleMode = ChannelSubtitleMode.None;
+        const ChannelSubtitleMode SUBTITLE_MODE = ChannelSubtitleMode.Any;
 
         MediaVersion version = mediaItem.GetHeadVersion();
 
@@ -117,17 +117,18 @@ public class PrepareTroubleshootingPlaybackHandler(
                 Number = ".troubleshooting",
                 FFmpegProfile = ffmpegProfile,
                 StreamingMode = StreamingMode.HttpLiveStreamingSegmenter,
-                SubtitleMode = subtitleMode
+                StreamSelectorMode = ChannelStreamSelectorMode.Troubleshooting,
+                SubtitleMode = SUBTITLE_MODE
             },
             version,
             new MediaItemAudioVersion(mediaItem, version),
             mediaPath,
             mediaPath,
-            _ => Task.FromResult(new List<Subtitle>()),
+            _ => GetSelectedSubtitle(mediaItem, request),
             string.Empty,
             string.Empty,
             string.Empty,
-            subtitleMode,
+            SUBTITLE_MODE,
             now,
             now + duration,
             now,
@@ -151,6 +152,46 @@ public class PrepareTroubleshootingPlaybackHandler(
         return process;
     }
 
+    private static async Task<List<Subtitle>> GetSelectedSubtitle(MediaItem mediaItem, PrepareTroubleshootingPlayback request)
+    {
+        if (request.SubtitleId is not null)
+        {
+            List<Subtitle> allSubtitles = mediaItem switch
+            {
+                Episode episode => await Optional(episode.EpisodeMetadata).Flatten().HeadOrNone()
+                    .Map(mm => mm.Subtitles ?? [])
+                    .IfNoneAsync([]),
+                Movie movie => await Optional(movie.MovieMetadata).Flatten().HeadOrNone()
+                    .Map(mm => mm.Subtitles ?? [])
+                    .IfNoneAsync([]),
+                OtherVideo otherVideo => await Optional(otherVideo.OtherVideoMetadata).Flatten().HeadOrNone()
+                    .Map(mm => mm.Subtitles ?? [])
+                    .IfNoneAsync([]),
+                _ => []
+            };
+
+            bool isMediaServer = mediaItem is PlexMovie or PlexEpisode or
+                JellyfinMovie or JellyfinEpisode or EmbyMovie or EmbyEpisode;
+
+            if (isMediaServer)
+            {
+                // closed captions are currently unsupported
+                allSubtitles.RemoveAll(s => s.Codec == "eia_608");
+            }
+
+            allSubtitles.RemoveAll(s => s.Id != request.SubtitleId.Value);
+
+            foreach (Subtitle subtitle in allSubtitles)
+            {
+                // pretend subtitle is forced
+                subtitle.Forced = true;
+                return [subtitle];
+            }
+        }
+
+        return [];
+    }
+
     private static async Task<Validation<BaseError, Tuple<MediaItem, string, string, FFmpegProfile>>> Validate(
         TvContext dbContext,
         PrepareTroubleshootingPlayback request) =>
@@ -166,6 +207,7 @@ public class PrepareTroubleshootingPlaybackHandler(
         PrepareTroubleshootingPlayback request)
     {
         return await dbContext.MediaItems
+            .AsNoTracking()
             .Include(mi => (mi as Episode).EpisodeMetadata)
             .ThenInclude(em => em.Subtitles)
             .Include(mi => (mi as Episode).MediaVersions)

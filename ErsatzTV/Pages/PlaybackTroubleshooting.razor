@@ -1,6 +1,8 @@
 @page "/system/troubleshooting/playback"
 @using ErsatzTV.Application.FFmpegProfiles
 @using ErsatzTV.Application.MediaItems
+@using ErsatzTV.Application.Troubleshooting
+@using ErsatzTV.Application.Troubleshooting.Queries
 @using ErsatzTV.Application.Watermarks
 @using ErsatzTV.Core.Notifications
 @using MediatR.Courier
@@ -31,7 +33,7 @@
                 <div class="d-flex">
                     <MudText>Media Item ID</MudText>
                 </div>
-                <MudTextField T="int?" Value="_mediaItemId" ValueChanged="@(async x => await OnMediaItemIdChanged(x))" />
+                <MudTextField T="int?" Value="MediaItemId" ValueChanged="@(async x => await OnMediaItemIdChanged(x))" />
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                 <div class="d-flex">
@@ -66,6 +68,18 @@
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                 <div class="d-flex">
+                    <MudText>Subtitle</MudText>
+                </div>
+                <MudSelect @bind-Value="_subtitleId" For="@(() => _subtitleId)" Clearable="true">
+                    <MudSelectItem T="int?" Value="@((int?)null)">(none)</MudSelectItem>
+                    @foreach (SubtitleViewModel subtitleStream in _subtitleStreams)
+                    {
+                        <MudSelectItem T="int?" Value="@subtitleStream.Id">@($"{subtitleStream.Id}: {subtitleStream.Language} - {subtitleStream.Title} ({subtitleStream.Codec})")</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
                     <MudText>Start From Beginning</MudText>
                 </div>
                 <MudCheckBox @bind-Value="_startFromBeginning" Dense="true" Disabled="@(string.Equals(_info?.Kind, "RemoteStream", StringComparison.OrdinalIgnoreCase))" />
@@ -77,7 +91,7 @@
                 <MudButton Variant="Variant.Filled"
                            Color="Color.Primary"
                            StartIcon="@Icons.Material.Filled.PlayCircle"
-                           Disabled="@(Locker.IsTroubleshootingPlaybackLocked() || _mediaItemId is null)"
+                           Disabled="@(Locker.IsTroubleshootingPlaybackLocked() || MediaItemId is null)"
                            OnClick="@PreviewChannel">
                     Play
                 </MudButton>
@@ -107,12 +121,16 @@
 
     private List<FFmpegProfileViewModel> _ffmpegProfiles = [];
     private List<WatermarkViewModel> _watermarks = [];
-    private int? _mediaItemId;
+    private List<SubtitleViewModel> _subtitleStreams = [];
     private MediaItemInfo _info;
     private int _ffmpegProfileId;
     private int? _watermarkId;
+    private int? _subtitleId;
     private bool _startFromBeginning;
     private bool _hasPlayed;
+
+    [SupplyParameterFromQuery(Name = "mediaItem")]
+    public int? MediaItemId { get; set; }
 
     public void Dispose()
     {
@@ -135,6 +153,11 @@
         }
 
         _watermarks = await Mediator.Send(new GetAllWatermarks(), _cts.Token);
+
+        if (MediaItemId is not null)
+        {
+            await OnMediaItemIdChanged(MediaItemId);
+        }
     }
 
     private void LockChanged(object sender, EventArgs e) => InvokeAsync(StateHasChanged);
@@ -143,7 +166,11 @@
     {
         var uri = new UriBuilder(NavigationManager.ToAbsoluteUri(NavigationManager.Uri));
         uri.Path = uri.Path.Replace("/system/troubleshooting/playback", "/api/troubleshoot/playback.m3u8");
-        uri.Query = $"?mediaItem={_mediaItemId}&ffmpegProfile={_ffmpegProfileId}&watermark={_watermarkId ?? 0}&startFromBeginning={_startFromBeginning}";
+        uri.Query = $"?mediaItem={MediaItemId}&ffmpegProfile={_ffmpegProfileId}&watermark={_watermarkId ?? 0}&startFromBeginning={_startFromBeginning}";
+        if (_subtitleId is not null)
+        {
+            uri.Query += $"&subtitleId={_subtitleId.Value}";
+        }
         await JsRuntime.InvokeVoidAsync("previewChannel", uri.ToString());
 
         await Task.Delay(TimeSpan.FromSeconds(1));
@@ -153,7 +180,7 @@
 
     private async Task OnMediaItemIdChanged(int? mediaItemId)
     {
-        _mediaItemId = mediaItemId;
+        MediaItemId = mediaItemId;
         _hasPlayed = false;
 
         foreach (int id in Optional(mediaItemId))
@@ -163,11 +190,15 @@
             {
                 _info = info;
                 _startFromBeginning = string.Equals(info.Kind, "RemoteStream", StringComparison.OrdinalIgnoreCase);
+
+                _subtitleId = null;
+                _subtitleStreams.Clear();
+                _subtitleStreams.AddRange(await Mediator.Send(new GetTroubleshootingSubtitles(id)));
             }
 
             if (maybeInfo.IsLeft)
             {
-                _mediaItemId = null;
+                MediaItemId = null;
             }
         }
 
@@ -176,7 +207,7 @@
 
     private async Task DownloadResults()
     {
-        await JsRuntime.InvokeVoidAsync("window.open", $"api/troubleshoot/playback/archive?mediaItem={_mediaItemId ?? 0}&ffmpegProfile={_ffmpegProfileId}&watermark={_watermarkId ?? 0}&startFromBeginning={_startFromBeginning}");
+        await JsRuntime.InvokeVoidAsync("window.open", $"api/troubleshoot/playback/archive?mediaItem={MediaItemId ?? 0}&ffmpegProfile={_ffmpegProfileId}&watermark={_watermarkId ?? 0}&startFromBeginning={_startFromBeginning}");
     }
 
     private void HandleTroubleshootingCompleted(PlaybackTroubleshootingCompletedNotification result)
