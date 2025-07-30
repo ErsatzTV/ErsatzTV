@@ -118,6 +118,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                 MediaItem mediaItem = enumerator.Current.ValueUnsafe();
 
                 TimeSpan itemDuration = DurationForMediaItem(mediaItem);
+                TimeSpan inPoint = InPointForMediaItem(mediaItem);
 
                 if (nextState.CurrentTime + itemDuration > nextItemStart)
                 {
@@ -131,14 +132,15 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
 
                 var playoutItem = new PlayoutItem
                 {
-                    MediaItemId = mediaItem.Id,
+                    MediaItemId = IdForMediaItem(mediaItem),
                     Start = nextState.CurrentTime.UtcDateTime,
                     Finish = nextState.CurrentTime.UtcDateTime + itemDuration,
-                    InPoint = TimeSpan.Zero,
-                    OutPoint = itemDuration,
+                    InPoint = inPoint,
+                    OutPoint = inPoint + itemDuration,
                     FillerKind = FillerKind.Tail,
                     GuideGroup = nextState.NextGuideGroup,
-                    DisableWatermarks = !scheduleItem.TailFiller.AllowWatermarks
+                    DisableWatermarks = !scheduleItem.TailFiller.AllowWatermarks,
+                    ChapterTitle = ChapterTitleForMediaItem(mediaItem)
                 };
 
                 newItems.Add(playoutItem);
@@ -217,6 +219,27 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
 
         return version.Duration;
     }
+
+    private static TimeSpan InPointForMediaItem(MediaItem mediaItem) =>
+        mediaItem switch
+        {
+            ChapterMediaItem c => c.MediaVersion.InPoint,
+            _ => TimeSpan.Zero
+        };
+
+    private static int IdForMediaItem(MediaItem mediaItem) =>
+        mediaItem switch
+        {
+            ChapterMediaItem c => c.MediaItemId,
+            _ => mediaItem.Id
+        };
+
+    private static string ChapterTitleForMediaItem(MediaItem mediaItem) =>
+        mediaItem switch
+        {
+            ChapterMediaItem c => c.MediaVersion.Title,
+            _ => null
+        };
 
     protected static List<MediaChapter> ChaptersForMediaItem(MediaItem mediaItem)
     {
@@ -726,17 +749,19 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
             foreach (MediaItem mediaItem in enumerator.Current)
             {
                 TimeSpan itemDuration = DurationForMediaItem(mediaItem);
+                TimeSpan inPoint = InPointForMediaItem(mediaItem);
 
                 var playoutItem = new PlayoutItem
                 {
-                    MediaItemId = mediaItem.Id,
+                    MediaItemId = IdForMediaItem(mediaItem),
                     Start = new DateTime(2020, 2, 1, 0, 0, 0, DateTimeKind.Utc),
                     Finish = new DateTime(2020, 2, 1, 0, 0, 0, DateTimeKind.Utc) + itemDuration,
-                    InPoint = TimeSpan.Zero,
-                    OutPoint = itemDuration,
+                    InPoint = inPoint,
+                    OutPoint = inPoint + itemDuration,
                     GuideGroup = playoutBuilderState.NextGuideGroup,
                     FillerKind = fillerKind,
-                    DisableWatermarks = !allowWatermarks
+                    DisableWatermarks = !allowWatermarks,
+                    ChapterTitle = ChapterTitleForMediaItem(mediaItem)
                 };
 
                 result.Add(playoutItem);
@@ -765,19 +790,22 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
             foreach (MediaItem mediaItem in enumerator.Current)
             {
                 TimeSpan itemDuration = DurationForMediaItem(mediaItem);
+                TimeSpan inPoint = InPointForMediaItem(mediaItem);
 
                 if (remainingToFill - itemDuration >= TimeSpan.Zero)
                 {
+
                     var playoutItem = new PlayoutItem
                     {
-                        MediaItemId = mediaItem.Id,
+                        MediaItemId = IdForMediaItem(mediaItem),
                         Start = new DateTime(2020, 2, 1, 0, 0, 0, DateTimeKind.Utc),
                         Finish = new DateTime(2020, 2, 1, 0, 0, 0, DateTimeKind.Utc) + itemDuration,
-                        InPoint = TimeSpan.Zero,
-                        OutPoint = itemDuration,
+                        InPoint = inPoint,
+                        OutPoint = inPoint + itemDuration,
                         GuideGroup = playoutBuilderState.NextGuideGroup,
                         FillerKind = fillerKind,
-                        DisableWatermarks = !allowWatermarks
+                        DisableWatermarks = !allowWatermarks,
+                        ChapterTitle = ChapterTitleForMediaItem(mediaItem)
                     };
 
                     remainingToFill -= itemDuration;

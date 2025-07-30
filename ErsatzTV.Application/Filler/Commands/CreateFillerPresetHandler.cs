@@ -39,7 +39,7 @@ public class CreateFillerPresetHandler : IRequestHandler<CreateFillerPreset, Eit
                 SmartCollectionId = request.SmartCollectionId,
                 PlaylistId = request.PlaylistId,
                 Expression = request.FillerKind is FillerKind.MidRoll ? request.Expression : null,
-                UseChaptersAsMediaItems = request.UseChaptersAsMediaItems
+                UseChaptersAsMediaItems = request.FillerKind is not FillerKind.Fallback && request.UseChaptersAsMediaItems
             };
 
             await dbContext.FillerPresets.AddAsync(fillerPreset, cancellationToken);

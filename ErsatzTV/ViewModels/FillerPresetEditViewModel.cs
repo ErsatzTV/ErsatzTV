@@ -35,6 +35,11 @@ public class FillerPresetEditViewModel
             {
                 Expression = string.Empty;
             }
+
+            if (_fillerKind is FillerKind.Fallback)
+            {
+                UseChaptersAsMediaItems = false;
+            }
         }
     }
 
