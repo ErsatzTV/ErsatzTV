@@ -33,6 +33,7 @@ public static class MediaItemExtensions
             Song s => s.MediaVersions.Head(),
             Image i => i.MediaVersions.Head(),
             RemoteStream rs => rs.MediaVersions.Head(),
+            ChapterMediaItem c => c.MediaVersion,
             _ => throw new ArgumentOutOfRangeException(nameof(mediaItem))
         };
 

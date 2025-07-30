@@ -887,7 +887,33 @@ public class PlayoutBuilder : IPlayoutBuilder
 
         foreach (FillerPreset _ in fillerPreset.Where(p => p.UseChaptersAsMediaItems))
         {
-            // TODO: return list of fake items split on chapters
+            var fakeResults = new List<MediaItem>();
+            var uniqueId = 1;
+
+            foreach (MediaItem mediaItem in result)
+            {
+                MediaVersion version = mediaItem.GetHeadVersion();
+                var allChapters = Optional(version.Chapters).Flatten().OrderBy(c => c.StartTime).ToList();
+                if (allChapters.Count > 0)
+                {
+                    foreach (MediaChapter chapter in allChapters)
+                    {
+                        var chapterVersion = new ChapterMediaVersion(chapter);
+                        var chapterItem = new ChapterMediaItem(uniqueId++, mediaItem, chapterVersion);
+                        fakeResults.Add(chapterItem);
+                    }
+                }
+                else
+                {
+                    // still use a fake item here so we don't have id conflicts
+                    var chapterVersion = new ChapterMediaVersion(
+                        new MediaChapter { StartTime = TimeSpan.Zero, EndTime = version.Duration });
+                    var chapterItem = new ChapterMediaItem(uniqueId++, mediaItem, chapterVersion);
+                    fakeResults.Add(chapterItem);
+                }
+            }
+
+            return fakeResults;
         }
 
         return result;
@@ -920,6 +946,7 @@ public class PlayoutBuilder : IPlayoutBuilder
                     RemoteStream rs => await rs.MediaVersions.Map(v => v.Duration).HeadOrNone()
                                            .IfNoneAsync(TimeSpan.Zero) == TimeSpan.Zero
                                        && (!rs.Duration.HasValue || rs.Duration.Value == TimeSpan.Zero),
+                    ChapterMediaItem c => c.MediaVersion.Duration == TimeSpan.Zero,
                     _ => true
                 };
 
