@@ -17,4 +17,5 @@ public record FillerPresetViewModel(
     int? MediaItemId,
     int? MultiCollectionId,
     int? SmartCollectionId,
-    string Expression);
+    string Expression,
+    bool UseChaptersAsMediaItems);

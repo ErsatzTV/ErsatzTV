@@ -20,4 +20,5 @@ public class FillerPreset
     public int? SmartCollectionId { get; set; }
     public SmartCollection SmartCollection { get; set; }
     public string Expression { get; set; }
+    public bool UseChaptersAsMediaItems { get; set; }
 }

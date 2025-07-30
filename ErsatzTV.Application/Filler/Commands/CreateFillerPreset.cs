@@ -17,5 +17,6 @@ public record CreateFillerPreset(
     int? MediaItemId,
     int? MultiCollectionId,
     int? SmartCollectionId,
-    string Expression
+    string Expression,
+    bool UseChaptersAsMediaItems
 ) : IRequest<Either<BaseError, Unit>>;

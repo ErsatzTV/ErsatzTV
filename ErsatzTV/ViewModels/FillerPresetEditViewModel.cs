@@ -88,6 +88,8 @@ public class FillerPresetEditViewModel
 
     public string Expression { get; set; }
 
+    public bool UseChaptersAsMediaItems { get; set; }
+
     public IRequest<Either<BaseError, Unit>> ToEdit() =>
         new UpdateFillerPreset(
             Id,
@@ -103,7 +105,8 @@ public class FillerPresetEditViewModel
             MediaItem?.MediaItemId,
             MultiCollection?.Id,
             SmartCollection?.Id,
-            Expression);
+            Expression,
+            UseChaptersAsMediaItems);
 
     public IRequest<Either<BaseError, Unit>> ToUpdate() =>
         new CreateFillerPreset(
@@ -119,7 +122,8 @@ public class FillerPresetEditViewModel
             MediaItem?.MediaItemId,
             MultiCollection?.Id,
             SmartCollection?.Id,
-            Expression);
+            Expression,
+            UseChaptersAsMediaItems);
 
     private static TimeSpan FixDuration(TimeSpan duration) =>
         duration > TimeSpan.FromDays(1) ? duration.Subtract(TimeSpan.FromDays(1)) : duration;
