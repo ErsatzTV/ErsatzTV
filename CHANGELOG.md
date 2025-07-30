@@ -40,6 +40,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Detect supported VideoToolbox hardware decoders and encoders
   - Software decoders/encoders will automatically be used when hardware versions are unavailable
 - Add VideoToolbox Capabilities to Troubleshooting page
+- Add `Use Chapters As Media Items` option to filler preset
+  - This option allows scheduling individual chapters as filler
+  - The chapters are shuffled or otherwise sorted together just like normal filler would be
 
 ### Fixed
 - Fix app startup with MySql/MariaDB
