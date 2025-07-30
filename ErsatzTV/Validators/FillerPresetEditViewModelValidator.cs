@@ -25,6 +25,9 @@ public class FillerPresetEditViewModelValidator : AbstractValidator<FillerPreset
         When(
             fp => fp.FillerMode == FillerMode.Pad,
             () => RuleFor(fp => fp.PadToNearestMinute).NotNull());
+        When(
+            fp => fp.FillerKind is FillerKind.Fallback,
+            () => RuleFor(fp => fp.UseChaptersAsMediaItems).NotEqual(true));
 
         When(
             fp => fp.CollectionType == ProgramScheduleItemCollectionType.Collection,

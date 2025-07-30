@@ -12,6 +12,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Embedded image subtitles
   - Embedded text subtitles that have already been extracted by ETV
 - Add light mode and light/dark mode toggle to app bar
+- Add `Use Chapters As Media Items` option to filler preset
+  - This option allows scheduling individual chapters as filler
+  - The chapters are shuffled or otherwise sorted together just like normal filler would be
 
 ### Fixed
 - Fix app startup with MySql/MariaDB

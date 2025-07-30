@@ -19,5 +19,6 @@ internal static class Mapper
             fillerPreset.MediaItemId,
             fillerPreset.MultiCollectionId,
             fillerPreset.SmartCollectionId,
-            fillerPreset.Expression);
+            fillerPreset.Expression,
+            fillerPreset.UseChaptersAsMediaItems);
 }
