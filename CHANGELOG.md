@@ -21,7 +21,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix green padding with 10-bit source content and i965 VAAPI driver
 - Fix building playouts with empty schedules
 - Fix schedule start time calculation when daily playout build goes beyond midnight and into a different alternate schedule
-- Fix compatibility with older NVIDIA devices in unified docker image
+- Fix compatibility with older NVIDIA devices (compute capability 3.0+) in unified docker image
 
 ### Changed
 - Always tell ffmpeg to stop encoding with a specific duration
