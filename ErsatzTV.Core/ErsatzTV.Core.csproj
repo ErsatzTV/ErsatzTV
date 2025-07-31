@@ -9,7 +9,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Bugsnag" Version="4.0.0" />
+        <PackageReference Include="Bugsnag" Version="4.1.0" />
         <PackageReference Include="Destructurama.Attributed" Version="5.1.0" />
         <PackageReference Include="Flurl" Version="4.0.0" />
         <PackageReference Include="LanguageExt.Core" Version="4.4.9" />
