@@ -7,6 +7,7 @@ using ErsatzTV.Core.Interfaces.Scheduling;
 using ErsatzTV.Core.Scheduling.YamlScheduling.Handlers;
 using ErsatzTV.Core.Scheduling.YamlScheduling.Models;
 using ErsatzTV.Core.Search;
+using LanguageExt.UnsafeValueAccess;
 using Microsoft.Extensions.Logging;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
@@ -18,6 +19,7 @@ public class YamlPlayoutBuilder(
     IConfigElementRepository configElementRepository,
     IMediaCollectionRepository mediaCollectionRepository,
     IChannelRepository channelRepository,
+    IYamlScheduleValidator yamlScheduleValidator,
     ILogger<YamlPlayoutBuilder> logger)
     : IYamlPlayoutBuilder
 {
@@ -29,7 +31,15 @@ public class YamlPlayoutBuilder(
             return playout;
         }
 
-        YamlPlayoutDefinition playoutDefinition = await LoadYamlDefinition(playout, cancellationToken);
+        Option<YamlPlayoutDefinition> maybePlayoutDefinition = await LoadYamlDefinition(playout, cancellationToken);
+        if (maybePlayoutDefinition.IsNone)
+        {
+            logger.LogWarning("YAML playout file {File} is invalid; aborting.", playout.TemplateFile);
+            return playout;
+        }
+
+        // using ValueUnsafe to avoid nesting
+        YamlPlayoutDefinition playoutDefinition = maybePlayoutDefinition.ValueUnsafe();
 
         DateTimeOffset start = DateTimeOffset.Now;
 
@@ -356,11 +366,15 @@ public class YamlPlayoutBuilder(
         return Optional(handler);
     }
 
-    private async Task<YamlPlayoutDefinition> LoadYamlDefinition(Playout playout, CancellationToken cancellationToken)
+    private async Task<Option<YamlPlayoutDefinition>> LoadYamlDefinition(Playout playout, CancellationToken cancellationToken)
     {
         try
         {
             string yaml = await File.ReadAllTextAsync(playout.TemplateFile, cancellationToken);
+            if (await yamlScheduleValidator.ValidateSchedule(yaml) == false)
+            {
+                return Option<YamlPlayoutDefinition>.None;
+            }
 
             IDeserializer deserializer = new DeserializerBuilder()
                 .WithNamingConvention(CamelCaseNamingConvention.Instance)
