@@ -22,6 +22,8 @@ public class PlaylistEnumerator : IMediaCollectionEnumerator
 
     public int CountForRandom => _allMediaItemIds.Count;
 
+    public int CountForFiller => _sortedEnumerators.Select((t, i) => _playAll[i] ? t.Count : 1).Sum();
+
     public ImmutableList<PlaylistEnumeratorCollectionKey> ChildEnumerators { get; private set; }
 
     public bool CurrentEnumeratorPlayAll => _playAll[EnumeratorIndex];

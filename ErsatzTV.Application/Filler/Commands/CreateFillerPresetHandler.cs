@@ -37,6 +37,7 @@ public class CreateFillerPresetHandler : IRequestHandler<CreateFillerPreset, Eit
                 MediaItemId = request.MediaItemId,
                 MultiCollectionId = request.MultiCollectionId,
                 SmartCollectionId = request.SmartCollectionId,
+                PlaylistId = request.PlaylistId,
                 Expression = request.FillerKind is FillerKind.MidRoll ? request.Expression : null
             };
 

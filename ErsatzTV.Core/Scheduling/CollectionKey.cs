@@ -310,6 +310,11 @@ public class CollectionKey : Record<CollectionKey>
                 CollectionType = filler.CollectionType,
                 SmartCollectionId = filler.SmartCollectionId
             },
+            ProgramScheduleItemCollectionType.Playlist => new CollectionKey
+            {
+                CollectionType = filler.CollectionType,
+                PlaylistId = filler.PlaylistId
+            },
             _ => throw new ArgumentOutOfRangeException(nameof(filler))
         };
 }

@@ -16,7 +16,7 @@
 
 <MudForm Model="@_model" @ref="@_form" Validation="@(_validator.ValidateValue)" ValidationDelay="0" Style="max-height: 100%">
     <MudPaper Square="true" Style="display: flex; height: 64px; min-height: 64px; width: 100%; z-index: 100; align-items: center">
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-6" OnClick="HandleSubmitAsync" StartIcon="@(IsEdit ? Icons.Material.Filled.Save : Icons.Material.Filled.Add)">@(IsEdit ? "Save Filler Preset" : "Add Filler Preset")</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-6" OnClick="@HandleSubmitAsync" StartIcon="@(IsEdit ? Icons.Material.Filled.Save : Icons.Material.Filled.Add)">@(IsEdit ? "Save Filler Preset" : "Add Filler Preset")</MudButton>
     </MudPaper>
     <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
         <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
@@ -45,7 +45,7 @@
                     <MudText>Mode</MudText>
                 </div>
                 <MudSelect @bind-Value="_model.FillerMode" For="@(() => _model.FillerMode)"
-                           Disabled="@(_model.FillerKind is FillerKind.Fallback or FillerKind.Tail)">
+                           Disabled="@(_model.FillerKind is FillerKind.Fallback or FillerKind.Tail || _model.CollectionType is ProgramScheduleItemCollectionType.Playlist)">
                     <MudSelectItem Value="@(FillerMode.Duration)">Duration</MudSelectItem>
                     <MudSelectItem Value="@(FillerMode.Count)">Count</MudSelectItem>
                     <MudSelectItem Value="@(FillerMode.Pad)">Pad</MudSelectItem>
@@ -92,6 +92,10 @@
                     <MudSelectItem Value="ProgramScheduleItemCollectionType.Artist">Artist</MudSelectItem>
                     <MudSelectItem Value="ProgramScheduleItemCollectionType.MultiCollection">Multi Collection</MudSelectItem>
                     <MudSelectItem Value="ProgramScheduleItemCollectionType.SmartCollection">Smart Collection</MudSelectItem>
+                    @if (_model.FillerKind is not FillerKind.Fallback and not FillerKind.Tail)
+                    {
+                        <MudSelectItem Value="ProgramScheduleItemCollectionType.Playlist">Playlist</MudSelectItem>
+                    }
                 </MudSelect>
             </MudStack>
             @if (_model.CollectionType == ProgramScheduleItemCollectionType.Collection)
@@ -178,6 +182,33 @@
                     </MudSelect>
                 </MudStack>
             }
+            @if (_model.CollectionType == ProgramScheduleItemCollectionType.Playlist)
+            {
+                <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                    <div class="d-flex">
+                        <MudText>Playlist Group</MudText>
+                    </div>
+                    <MudSelect T="PlaylistGroupViewModel"
+                               Value="@_selectedPlaylistGroup"
+                               ValueChanged="@(vm => UpdatePlaylistGroupItems(vm))">
+                        @foreach (PlaylistGroupViewModel playlistGroup in _playlistGroups)
+                        {
+                            <MudSelectItem Value="@playlistGroup">@playlistGroup.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudStack>
+                <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                    <div class="d-flex">
+                        <MudText>Playlist</MudText>
+                    </div>
+                    <MudSelect T="PlaylistViewModel" @bind-value="_model.Playlist">
+                        @foreach (PlaylistViewModel playlist in _playlists)
+                        {
+                            <MudSelectItem Value="@playlist">@playlist.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudStack>
+            }
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                 <div class="d-flex">
                     <MudText>Expression</MudText>
@@ -221,12 +252,16 @@
     private readonly FillerPresetEditViewModelValidator _validator = new();
     private MudForm _form;
 
-    private List<MediaCollectionViewModel> _mediaCollections = [];
-    private List<MultiCollectionViewModel> _multiCollections = [];
-    private List<SmartCollectionViewModel> _smartCollections = [];
-    private List<NamedMediaItemViewModel> _televisionShows = [];
-    private List<NamedMediaItemViewModel> _televisionSeasons = [];
-    private List<NamedMediaItemViewModel> _artists = [];
+    private readonly List<MediaCollectionViewModel> _mediaCollections = [];
+    private readonly List<MultiCollectionViewModel> _multiCollections = [];
+    private readonly List<SmartCollectionViewModel> _smartCollections = [];
+    private readonly List<NamedMediaItemViewModel> _televisionShows = [];
+    private readonly List<NamedMediaItemViewModel> _televisionSeasons = [];
+    private readonly List<NamedMediaItemViewModel> _artists = [];
+    private readonly List<PlaylistGroupViewModel> _playlistGroups = [];
+    private readonly List<PlaylistViewModel> _playlists = [];
+
+    private PlaylistGroupViewModel _selectedPlaylistGroup;
 
     public void Dispose()
     {
@@ -236,18 +271,20 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        _mediaCollections = await Mediator.Send(new GetAllCollections(), _cts.Token)
-            .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
-        _multiCollections = await Mediator.Send(new GetAllMultiCollections(), _cts.Token)
-            .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
-        _smartCollections = await Mediator.Send(new GetAllSmartCollections(), _cts.Token)
-            .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
-        _televisionShows = await Mediator.Send(new GetAllTelevisionShows(), _cts.Token)
-            .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
-        _televisionSeasons = await Mediator.Send(new GetAllTelevisionSeasons(), _cts.Token)
-            .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
-        _artists = await Mediator.Send(new GetAllArtists(), _cts.Token)
-            .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
+        _mediaCollections.AddRange(await Mediator.Send(new GetAllCollections(), _cts.Token)
+            .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList()));
+        _multiCollections.AddRange(await Mediator.Send(new GetAllMultiCollections(), _cts.Token)
+            .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList()));
+        _smartCollections.AddRange(await Mediator.Send(new GetAllSmartCollections(), _cts.Token)
+            .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList()));
+        _televisionShows.AddRange(await Mediator.Send(new GetAllTelevisionShows(), _cts.Token)
+            .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList()));
+        _televisionSeasons.AddRange(await Mediator.Send(new GetAllTelevisionSeasons(), _cts.Token)
+            .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList()));
+        _artists.AddRange(await Mediator.Send(new GetAllArtists(), _cts.Token)
+            .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList()));
+
+        _playlistGroups.AddRange(await Mediator.Send(new GetAllPlaylistGroups(), _cts.Token));
 
         if (IsEdit)
         {
@@ -276,6 +313,7 @@
                     ? _televisionShows.Append(_televisionSeasons).Append(_artists).ToList().Find(vm => vm.MediaItemId == fillerPreset.MediaItemId.Value)
                     : null;
                 _model.Expression = fillerPreset.Expression;
+                _model.Playlist = fillerPreset.Playlist;
             });
         }
         else
@@ -284,9 +322,26 @@
             _model.FillerKind = FillerKind.PreRoll;
             _model.FillerMode = FillerMode.Duration;
         }
+
+        foreach (int playlistGroupId in Optional(_model.Playlist?.PlaylistGroupId))
+        {
+            foreach (PlaylistGroupViewModel group in Optional(_playlistGroups.Find(g => g.Id == playlistGroupId)))
+            {
+                _selectedPlaylistGroup = group;
+                await UpdatePlaylistGroupItems(group);
+            }
+        }
     }
 
     private bool IsEdit => Id != 0;
+
+    private async Task UpdatePlaylistGroupItems(PlaylistGroupViewModel playlistGroup)
+    {
+        _selectedPlaylistGroup = playlistGroup;
+
+        _playlists.Clear();
+        _playlists.AddRange(await Mediator.Send(new GetPlaylistsByPlaylistGroupId(playlistGroup.Id), _cts.Token));
+    }
 
     private async Task HandleSubmitAsync()
     {

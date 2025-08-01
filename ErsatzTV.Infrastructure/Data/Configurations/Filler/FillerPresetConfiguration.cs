@@ -33,5 +33,11 @@ public class FillerPresetConfiguration : IEntityTypeConfiguration<FillerPreset>
             .HasForeignKey(i => i.SmartCollectionId)
             .OnDelete(DeleteBehavior.Cascade)
             .IsRequired(false);
+
+        builder.HasOne(i => i.Playlist)
+            .WithMany()
+            .HasForeignKey(i => i.PlaylistId)
+            .OnDelete(DeleteBehavior.Cascade)
+            .IsRequired(false);
     }
 }

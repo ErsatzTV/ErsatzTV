@@ -303,8 +303,50 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                     MultiCollectionId = midRollFiller.MultiCollectionId,
                     MultiCollection = midRollFiller.MultiCollection,
                     SmartCollectionId = midRollFiller.SmartCollectionId,
-                    SmartCollection = midRollFiller.SmartCollection
+                    SmartCollection = midRollFiller.SmartCollection,
+                    PlaylistId = midRollFiller.PlaylistId,
+                    Playlist = midRollFiller.Playlist
                 };
+
+                allFiller.Add(clone);
+            }
+        }
+
+        // convert playlist filler
+        if (allFiller.Any(f => f.CollectionType is ProgramScheduleItemCollectionType.Playlist))
+        {
+            var toRemove = allFiller.Filter(f => f.CollectionType is ProgramScheduleItemCollectionType.Playlist).ToList();
+            allFiller.RemoveAll(toRemove.Contains);
+
+            foreach (FillerPreset playlistFiller in toRemove)
+            {
+                var clone = new FillerPreset
+                {
+                    FillerKind = playlistFiller.FillerKind,
+                    FillerMode = playlistFiller.FillerMode,
+                    Duration = playlistFiller.Duration,
+                    Count = playlistFiller.Count,
+                    PadToNearestMinute = playlistFiller.PadToNearestMinute,
+                    AllowWatermarks = playlistFiller.AllowWatermarks,
+                    CollectionType = playlistFiller.CollectionType,
+                    CollectionId = playlistFiller.CollectionId,
+                    Collection = playlistFiller.Collection,
+                    MediaItemId = playlistFiller.MediaItemId,
+                    MediaItem = playlistFiller.MediaItem,
+                    MultiCollectionId = playlistFiller.MultiCollectionId,
+                    MultiCollection = playlistFiller.MultiCollection,
+                    SmartCollectionId = playlistFiller.SmartCollectionId,
+                    SmartCollection = playlistFiller.SmartCollection,
+                    PlaylistId = playlistFiller.PlaylistId,
+                    Playlist = playlistFiller.Playlist
+                };
+
+                // if filler count is 2, we need to schedule 2 * (number of items in one full playlist iteration)
+                var fillerEnumerator = enumerators[CollectionKey.ForFillerPreset(playlistFiller)];
+                if (fillerEnumerator is PlaylistEnumerator playlistEnumerator)
+                {
+                    clone.Count *= playlistEnumerator.CountForFiller;
+                }
 
                 allFiller.Add(clone);
             }

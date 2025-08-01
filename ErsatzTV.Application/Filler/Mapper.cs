@@ -19,5 +19,8 @@ internal static class Mapper
             fillerPreset.MediaItemId,
             fillerPreset.MultiCollectionId,
             fillerPreset.SmartCollectionId,
+            fillerPreset.Playlist is not null
+                ? MediaCollections.Mapper.ProjectToViewModel(fillerPreset.Playlist)
+                : null,
             fillerPreset.Expression);
 }
