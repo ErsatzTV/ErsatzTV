@@ -15,6 +15,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - YAML playout: add `pre_roll` instruction to enable and disable a pre-roll sequence
   - With value of `true` and `sequence` property, will enable automatic pre-roll for all content in the playout to the sequence with the provided key
   - With value of `false`, will disable automatic pre-roll in the playout
+- Add YAML playout validation (using JSON Schema)
+  - `content` is fully validated
+  - `sequence` is not validated yet
+  - `reset` is not validated yet
+  - `playout` is not validated yet
 
 ### Fixed
 - Fix app startup with MySql/MariaDB
