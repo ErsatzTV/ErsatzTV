@@ -229,6 +229,13 @@ public class YamlPlayoutDurationHandler(EnumeratorCache enumeratorCache) : YamlP
                     done = true;
                 }
             }
+
+            foreach (string postRollSequence in context.GetPostRollSequence())
+            {
+                context.PushFillerKind(FillerKind.PostRoll);
+                await executeSequence(postRollSequence);
+                context.PopFillerKind();
+            }
         }
 
         if (!stopBeforeEnd)

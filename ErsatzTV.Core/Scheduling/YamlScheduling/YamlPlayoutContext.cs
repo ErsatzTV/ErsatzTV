@@ -13,12 +13,13 @@ public class YamlPlayoutContext(Playout playout, YamlPlayoutDefinition definitio
     };
 
     private readonly System.Collections.Generic.HashSet<int> _visitedInstructions = [];
+    private readonly Stack<FillerKind> _fillerKind = new();
     private int _guideGroup = guideGroup;
     private bool _guideGroupLocked;
     private int _instructionIndex;
     private Option<int> _channelWatermarkId;
     private Option<string> _preRollSequence;
-    private Stack<FillerKind> _fillerKind = new();
+    private Option<string> _postRollSequence;
 
     public Playout Playout { get; } = playout;
 
@@ -103,6 +104,18 @@ public class YamlPlayoutContext(Playout playout, YamlPlayoutDefinition definitio
     }
 
     public Option<string> GetPreRollSequence() => _preRollSequence;
+
+    public void SetPostRollSequence(string sequence)
+    {
+        _postRollSequence = sequence;
+    }
+
+    public void ClearPostRollSequence()
+    {
+        _postRollSequence = Option<string>.None;
+    }
+
+    public Option<string> GetPostRollSequence() => _postRollSequence;
 
     public void PushFillerKind(FillerKind fillerKind)
     {

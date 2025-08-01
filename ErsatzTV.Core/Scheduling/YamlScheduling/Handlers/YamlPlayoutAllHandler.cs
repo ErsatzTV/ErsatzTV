@@ -91,6 +91,13 @@ public class YamlPlayoutAllHandler(EnumeratorCache enumeratorCache) : YamlPlayou
                     context.CurrentTime += itemDuration;
                     enumerator.MoveNext();
                 }
+
+                foreach (string postRollSequence in context.GetPostRollSequence())
+                {
+                    context.PushFillerKind(FillerKind.PostRoll);
+                    await executeSequence(postRollSequence);
+                    context.PopFillerKind();
+                }
             }
 
             return true;

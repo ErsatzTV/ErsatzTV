@@ -40,6 +40,7 @@
                 { "$ref": "#/$defs/scheduling/sequenceInstruction" },
                 { "$ref": "#/$defs/control/epgGroupInstruction" },
                 { "$ref": "#/$defs/control/preRollInstruction"},
+                { "$ref": "#/$defs/control/postRollInstruction"},
                 { "$ref": "#/$defs/control/repeatInstruction" },
                 { "$ref": "#/$defs/control/shuffleSequenceInstruction" },
                 { "$ref": "#/$defs/control/skipItemsInstruction" },
@@ -79,6 +80,7 @@
           { "$ref": "#/$defs/scheduling/sequenceInstruction" },
           { "$ref": "#/$defs/control/epgGroupInstruction" },
           { "$ref": "#/$defs/control/preRollInstruction"},
+          { "$ref": "#/$defs/control/postRollInstruction"},
           { "$ref": "#/$defs/control/repeatInstruction" },
           { "$ref": "#/$defs/control/shuffleSequenceInstruction" },
           { "$ref": "#/$defs/control/skipItemsInstruction" },
@@ -296,6 +298,15 @@
           "sequence": { "type": "string" }
         },
         "required": [ "pre_roll" ],
+        "additionalProperties": false
+      },
+      "postRollInstruction": {
+        "type": "object",
+        "properties": {
+          "post_roll": { "type": "boolean" },
+          "sequence": { "type": "string" }
+        },
+        "required": [ "post_roll" ],
         "additionalProperties": false
       },
       "repeatInstruction": {
