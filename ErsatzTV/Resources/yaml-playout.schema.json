@@ -10,137 +10,349 @@
       "type": "array",
       "items": {
         "oneOf": [
-          { "$ref": "#/$defs/showContent" },
-          { "$ref": "#/$defs/searchContent" },
-          { "$ref": "#/$defs/collectionContent" },
-          { "$ref": "#/$defs/multiCollectionContent" },
-          { "$ref": "#/$defs/smartCollectionContent" },
-          { "$ref": "#/$defs/playlistContent" },
-          { "$ref": "#/$defs/marathonContent" }
+          { "$ref": "#/$defs/content/showContent" },
+          { "$ref": "#/$defs/content/searchContent" },
+          { "$ref": "#/$defs/content/collectionContent" },
+          { "$ref": "#/$defs/content/multiCollectionContent" },
+          { "$ref": "#/$defs/content/smartCollectionContent" },
+          { "$ref": "#/$defs/content/playlistContent" },
+          { "$ref": "#/$defs/content/marathonContent" }
         ]
       },
       "minItems": 1
     },
     "sequence": {
       "description": "Sequence definitions",
-      "type": "array"
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": { "type": "string" },
+          "items": {
+            "type": "array",
+            "items": {
+              "oneOf": [
+                { "$ref": "#/$defs/scheduling/allInstruction" },
+                { "$ref": "#/$defs/scheduling/countInstruction" },
+                { "$ref": "#/$defs/scheduling/durationInstruction" },
+                { "$ref": "#/$defs/scheduling/padToNextInstruction" },
+                { "$ref": "#/$defs/scheduling/padUntilInstruction" },
+                { "$ref": "#/$defs/scheduling/sequenceInstruction" },
+                { "$ref": "#/$defs/control/epgGroupInstruction" },
+                { "$ref": "#/$defs/control/preRollInstruction"},
+                { "$ref": "#/$defs/control/repeatInstruction" },
+                { "$ref": "#/$defs/control/shuffleSequenceInstruction" },
+                { "$ref": "#/$defs/control/skipItemsInstruction" },
+                { "$ref": "#/$defs/control/skipToItemInstruction" },
+                { "$ref": "#/$defs/control/waitUntilInstruction" },
+                { "$ref": "#/$defs/control/watermarkInstruction" }
+              ]
+            },
+            "minItems": 1
+          }
+        },
+        "required": [ "key" ],
+        "additionalProperties": false
+      }
     },
     "reset": {
       "description": "Reset instructions",
-      "type": "array"
+      "type": "array",
+      "items": {
+        "oneOf": [
+          { "$ref": "#/$defs/control/skipItemsInstruction" },
+          { "$ref": "#/$defs/control/skipToItemInstruction" },
+          { "$ref": "#/$defs/control/waitUntilInstruction" }
+        ]
+      }
     },
     "playout": {
       "description": "Playout instructions",
       "type": "array",
+      "items": {
+        "oneOf": [
+          { "$ref": "#/$defs/scheduling/allInstruction" },
+          { "$ref": "#/$defs/scheduling/countInstruction" },
+          { "$ref": "#/$defs/scheduling/durationInstruction" },
+          { "$ref": "#/$defs/scheduling/padToNextInstruction" },
+          { "$ref": "#/$defs/scheduling/padUntilInstruction" },
+          { "$ref": "#/$defs/scheduling/sequenceInstruction" },
+          { "$ref": "#/$defs/control/epgGroupInstruction" },
+          { "$ref": "#/$defs/control/preRollInstruction"},
+          { "$ref": "#/$defs/control/repeatInstruction" },
+          { "$ref": "#/$defs/control/shuffleSequenceInstruction" },
+          { "$ref": "#/$defs/control/skipItemsInstruction" },
+          { "$ref": "#/$defs/control/skipToItemInstruction" },
+          { "$ref": "#/$defs/control/waitUntilInstruction" },
+          { "$ref": "#/$defs/control/watermarkInstruction" }
+        ]
+      },
       "minItems": 1
     }
   },
   "required": [ "content", "playout" ],
   "additionalProperties": false,
   "$defs": {
-    "showContent": {
-      "type": "object",
-      "properties": {
-        "show": { "type": "null" },
-        "key": { "type": "string" },
-        "guids": {
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "type": "object",
-            "properties": {
-              "source": { "type": "string" },
-              "value": { "type": "string" }
-            },
-            "required": [ "source", "value" ],
-            "additionalProperties": false
-          }
+    "enums": {
+      "filler_kind": { "enum": [ "none", "preroll", "postroll", "midroll" ] }
+    },
+    "content": {
+      "showContent": {
+        "type": "object",
+        "properties": {
+          "show": { "type": "null" },
+          "key": { "type": "string" },
+          "guids": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "properties": {
+                "source": { "type": "string" },
+                "value": { "type": "string" }
+              },
+              "required": [ "source", "value" ],
+              "additionalProperties": false
+            }
+          },
+          "order": { "enum": [ "chronological", "shuffle" ] }
         },
-        "order": { "enum": [ "chronological", "shuffle" ] }
+        "required": [ "show", "key", "guids", "order" ],
+        "additionalProperties": false
       },
-      "required": [ "show", "key", "guids", "order" ],
-      "additionalProperties": false
-    },
-    "searchContent": {
-      "type": "object",
-      "properties": {
-        "search": { "type": "null" },
-        "key": { "type": "string" },
-        "query": { "type": "string" },
-        "order": { "enum": [ "chronological", "shuffle" ] }
-      },
-      "required": [ "search", "key", "query", "order" ],
-      "additionalProperties": false
-    },
-    "collectionContent": {
-      "type": "object",
-      "properties": {
-        "collection": { "type": "string" },
-        "key": { "type": "string" },
-        "order": { "enum": [ "chronological", "shuffle" ] }
-      },
-      "required": [ "collection", "key", "order" ],
-      "additionalProperties": false
-    },
-    "multiCollectionContent": {
-      "type": "object",
-      "properties": {
-        "multi_collection": { "type": "string" },
-        "key": { "type": "string" },
-        "order": { "enum": [ "chronological", "shuffle" ] }
-      },
-      "required": [ "multi_collection", "key", "order" ],
-      "additionalProperties": false
-    },
-    "smartCollectionContent": {
-      "type": "object",
-      "properties": {
-        "smart_collection": { "type": "string" },
-        "key": { "type": "string" },
-        "order": { "enum": [ "chronological", "shuffle" ] }
-      },
-      "required": [ "smart_collection", "key", "order" ],
-      "additionalProperties": false
-    },
-    "playlistContent": {
-      "type": "object",
-      "properties": {
-        "playlist": { "type": "string" },
-        "playlist_group": { "type": "string" },
-        "key": { "type": "string" }
-      },
-      "required": [ "playlist", "playlist_group", "key" ],
-      "additionalProperties": false
-    },
-    "marathonContent": {
-      "type": "object",
-      "properties": {
-        "marathon": { "type": "null" },
-        "key": { "type": "string" },
-        "guids": {
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "type": "object",
-            "properties": {
-              "source": { "type": "string" },
-              "value": { "type": "string" }
-            },
-            "required": [ "source", "value" ],
-            "additionalProperties": false
-          }
+      "searchContent": {
+        "type": "object",
+        "properties": {
+          "search": { "type": "null" },
+          "key": { "type": "string" },
+          "query": { "type": "string" },
+          "order": { "enum": [ "chronological", "shuffle" ] }
         },
-        "searches": {
-          "type": "array",
-          "items": { "type": "string" }
-        },
-        "group_by": { "enum": [ "show", "season", "artist", "album" ] },
-        "item_order": { "enum": [ "chronological", "shuffle" ] },
-        "play_all_items": { "type":  "boolean" },
-        "shuffle_groups": { "type":  "boolean" }
+        "required": [ "search", "key", "query", "order" ],
+        "additionalProperties": false
       },
-      "required": [ "marathon", "key" ],
-      "additionalProperties": false
+      "collectionContent": {
+        "type": "object",
+        "properties": {
+          "collection": { "type": "string" },
+          "key": { "type": "string" },
+          "order": { "enum": [ "chronological", "shuffle" ] }
+        },
+        "required": [ "collection", "key", "order" ],
+        "additionalProperties": false
+      },
+      "multiCollectionContent": {
+        "type": "object",
+        "properties": {
+          "multi_collection": { "type": "string" },
+          "key": { "type": "string" },
+          "order": { "enum": [ "chronological", "shuffle" ] }
+        },
+        "required": [ "multi_collection", "key", "order" ],
+        "additionalProperties": false
+      },
+      "smartCollectionContent": {
+        "type": "object",
+        "properties": {
+          "smart_collection": { "type": "string" },
+          "key": { "type": "string" },
+          "order": { "enum": [ "chronological", "shuffle" ] }
+        },
+        "required": [ "smart_collection", "key", "order" ],
+        "additionalProperties": false
+      },
+      "playlistContent": {
+        "type": "object",
+        "properties": {
+          "playlist": { "type": "string" },
+          "playlist_group": { "type": "string" },
+          "key": { "type": "string" }
+        },
+        "required": [ "playlist", "playlist_group", "key" ],
+        "additionalProperties": false
+      },
+      "marathonContent": {
+        "type": "object",
+        "properties": {
+          "marathon": { "type": "null" },
+          "key": { "type": "string" },
+          "guids": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "properties": {
+                "source": { "type": "string" },
+                "value": { "type": "string" }
+              },
+              "required": [ "source", "value" ],
+              "additionalProperties": false
+            }
+          },
+          "searches": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "group_by": { "enum": [ "show", "season", "artist", "album" ] },
+          "item_order": { "enum": [ "chronological", "shuffle" ] },
+          "play_all_items": { "type": "boolean" },
+          "shuffle_groups": { "type": "boolean" }
+        },
+        "required": [ "marathon", "key" ],
+        "additionalProperties": false
+      }
+    },
+    "scheduling": {
+      "allInstruction": {
+        "type": "object",
+        "properties": {
+          "all": { "type": "null" },
+          "content": { "type": "string" },
+          "custom_title": { "type": "string" },
+          "filler_kind": { "$ref": "#/$defs/enums/filler_kind" }
+        },
+        "required": [ "all", "content" ],
+        "additionalProperties": false
+      },
+      "countInstruction": {
+        "type": "object",
+        "properties": {
+          "count": { "type": "integer" },
+          "content": { "type": "string" },
+          "custom_title": { "type": "string" },
+          "filler_kind": { "$ref": "#/$defs/enums/filler_kind" }
+        },
+        "required": [ "count", "content" ],
+        "additionalProperties": false
+      },
+      "durationInstruction": {
+        "type": "object",
+        "properties": {
+          "duration": { "type": "string" },
+          "content": { "type": "string" },
+          "trim": { "type": "boolean" },
+          "fallback": { "type": "string" },
+          "discard_attempts": { "type": "integer" },
+          "offline_tail": { "type": "boolean" },
+          "stop_before_end": { "type": "boolean" },
+          "filler_kind": { "$ref": "#/$defs/enums/filler_kind" }
+        },
+        "required": [ "duration", "content" ],
+        "additionalProperties": false
+      },
+      "padToNextInstruction": {
+        "type": "object",
+        "properties": {
+          "pad_to_next": { "type": "integer" },
+          "content": { "type": "string" },
+          "trim": { "type": "boolean" },
+          "fallback": { "type": "string" },
+          "discard_attempts": { "type": "integer" },
+          "filler_kind": { "$ref": "#/$defs/enums/filler_kind" }
+        },
+        "required": [ "pad_to_next", "content" ],
+        "additionalProperties": false
+      },
+      "padUntilInstruction": {
+        "type": "object",
+        "properties": {
+          "pad_until": { "type": "string" },
+          "content": { "type": "string" },
+          "tomorrow": { "type": "string" },
+          "offline_tail": { "type": "boolean" },
+          "trim": { "type": "boolean" },
+          "fallback": { "type": "string" },
+          "discard_attempts": { "type": "integer" },
+          "stop_before_end": { "type": "boolean" },
+          "filler_kind": { "$ref": "#/$defs/enums/filler_kind" }
+        },
+        "required": [ "pad_until", "content" ],
+        "additionalProperties": false
+      },
+      "sequenceInstruction": {
+        "type": "object",
+        "properties": {
+          "sequence": { "type": "string" },
+          "repeat": { "type": "integer" }
+        },
+        "required": [ "sequence" ],
+        "additionalProperties": false
+      }
+    },
+    "control": {
+      "epgGroupInstruction": {
+        "type": "object",
+        "properties": {
+          "epg_group": { "type": "boolean" },
+          "advance": { "type": "boolean" }
+        },
+        "required": [ "epg_group" ],
+        "additionalProperties": false
+      },
+      "preRollInstruction": {
+        "type": "object",
+        "properties": {
+          "pre_roll": { "type": "boolean" },
+          "sequence": { "type": "string" }
+        },
+        "required": [ "pre_roll" ],
+        "additionalProperties": false
+      },
+      "repeatInstruction": {
+        "type": "object",
+        "properties": {
+          "repeat": { "type": "boolean" }
+        },
+        "required": [ "repeat" ],
+        "additionalProperties": false
+      },
+      "shuffleSequenceInstruction": {
+        "type": "object",
+        "properties": {
+          "shuffle_sequence": { "type": "string" }
+        },
+        "required": [ "shuffle_sequence" ],
+        "additionalProperties": false
+      },
+      "skipItemsInstruction": {
+        "type": "object",
+        "properties": {
+          "skip_items": { "type": "integer" },
+          "content": { "type": "string" }
+        },
+        "required": [ "skip_items", "content" ],
+        "additionalProperties": false
+      },
+      "skipToItemInstruction": {
+        "type": "object",
+        "properties": {
+          "skip_to_item": { "type": "null" },
+          "content": { "type": "string" },
+          "season": { "type": "integer" },
+          "episode": { "type": "integer" }
+        },
+        "required": [ "skip_to_item", "content", "season", "episode" ],
+        "additionalProperties": false
+      },
+      "waitUntilInstruction": {
+        "type": "object",
+        "properties": {
+          "wait_until": { "type": "string" },
+          "tomorrow": { "type": "boolean" },
+          "rewind_on_reset": { "type": "boolean" }
+        },
+        "required": [ "wait_until" ],
+        "additionalProperties": false
+      },
+      "watermarkInstruction": {
+        "type": "object",
+        "properties": {
+          "watermark": { "type": "boolean" },
+          "name": { "type": "string" }
+        },
+        "required": [ "watermark" ],
+        "additionalProperties": false
+      }
     }
   }
 }
