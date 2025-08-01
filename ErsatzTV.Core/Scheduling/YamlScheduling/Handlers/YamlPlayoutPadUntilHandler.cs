@@ -11,6 +11,7 @@ public class YamlPlayoutPadUntilHandler(EnumeratorCache enumeratorCache) : YamlP
         YamlPlayoutContext context,
         YamlPlayoutInstruction instruction,
         PlayoutBuildMode mode,
+        Func<string, Task> executeSequence,
         ILogger<YamlPlayoutBuilder> logger,
         CancellationToken cancellationToken)
     {
@@ -73,7 +74,7 @@ public class YamlPlayoutPadUntilHandler(EnumeratorCache enumeratorCache) : YamlP
 
         foreach (IMediaCollectionEnumerator enumerator in maybeEnumerator)
         {
-            context.CurrentTime = Schedule(
+            context.CurrentTime = await Schedule(
                 context,
                 padUntil.Content,
                 padUntil.Fallback,
@@ -82,11 +83,12 @@ public class YamlPlayoutPadUntilHandler(EnumeratorCache enumeratorCache) : YamlP
                 padUntil.DiscardAttempts,
                 padUntil.Trim,
                 padUntil.OfflineTail,
-                GetFillerKind(padUntil),
+                GetFillerKind(padUntil, context),
                 padUntil.CustomTitle,
                 padUntil.DisableWatermarks,
                 enumerator,
                 fallbackEnumerator,
+                executeSequence,
                 logger);
 
             return true;

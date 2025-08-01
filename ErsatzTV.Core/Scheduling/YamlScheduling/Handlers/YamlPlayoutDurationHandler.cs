@@ -14,6 +14,7 @@ public class YamlPlayoutDurationHandler(EnumeratorCache enumeratorCache) : YamlP
         YamlPlayoutContext context,
         YamlPlayoutInstruction instruction,
         PlayoutBuildMode mode,
+        Func<string, Task> executeSequence,
         ILogger<YamlPlayoutBuilder> logger,
         CancellationToken cancellationToken)
     {
@@ -50,7 +51,7 @@ public class YamlPlayoutDurationHandler(EnumeratorCache enumeratorCache) : YamlP
 
         foreach (IMediaCollectionEnumerator enumerator in maybeEnumerator)
         {
-            context.CurrentTime = Schedule(
+            context.CurrentTime = await Schedule(
                 context,
                 instruction.Content,
                 duration.Fallback,
@@ -59,11 +60,12 @@ public class YamlPlayoutDurationHandler(EnumeratorCache enumeratorCache) : YamlP
                 duration.DiscardAttempts,
                 duration.Trim,
                 duration.OfflineTail,
-                GetFillerKind(duration),
+                GetFillerKind(duration, context),
                 duration.CustomTitle,
                 duration.DisableWatermarks,
                 enumerator,
                 fallbackEnumerator,
+                executeSequence,
                 logger);
 
             return true;
@@ -72,7 +74,7 @@ public class YamlPlayoutDurationHandler(EnumeratorCache enumeratorCache) : YamlP
         return false;
     }
 
-    protected static DateTimeOffset Schedule(
+    protected static async Task<DateTimeOffset> Schedule(
         YamlPlayoutContext context,
         string contentKey,
         string fallbackContentKey,
@@ -86,12 +88,26 @@ public class YamlPlayoutDurationHandler(EnumeratorCache enumeratorCache) : YamlP
         bool disableWatermarks,
         IMediaCollectionEnumerator enumerator,
         Option<IMediaCollectionEnumerator> fallbackEnumerator,
+        Func<string, Task> executeSequence,
         ILogger<YamlPlayoutBuilder> logger)
     {
         var done = false;
         TimeSpan remainingToFill = targetTime - context.CurrentTime;
         while (!done && enumerator.Current.IsSome && remainingToFill > TimeSpan.Zero)
         {
+            foreach (string preRollSequence in context.GetPreRollSequence())
+            {
+                context.PushFillerKind(FillerKind.PreRoll);
+                await executeSequence(preRollSequence);
+                context.PopFillerKind();
+
+                remainingToFill = targetTime - context.CurrentTime;
+                if (remainingToFill <= TimeSpan.Zero)
+                {
+                    break;
+                }
+            }
+
             foreach (MediaItem mediaItem in enumerator.Current)
             {
                 TimeSpan itemDuration = DurationForMediaItem(mediaItem);

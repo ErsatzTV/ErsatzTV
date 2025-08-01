@@ -1,0 +1,146 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ersatztv.org/yaml-playout.schema.json",
+  "title": "YAML Playout",
+  "description": "An ErsatzTV YAML playout definition",
+  "type": "object",
+  "properties": {
+    "content": {
+      "description": "Content definitions",
+      "type": "array",
+      "items": {
+        "oneOf": [
+          { "$ref": "#/$defs/showContent" },
+          { "$ref": "#/$defs/searchContent" },
+          { "$ref": "#/$defs/collectionContent" },
+          { "$ref": "#/$defs/multiCollectionContent" },
+          { "$ref": "#/$defs/smartCollectionContent" },
+          { "$ref": "#/$defs/playlistContent" },
+          { "$ref": "#/$defs/marathonContent" }
+        ]
+      },
+      "minItems": 1
+    },
+    "sequence": {
+      "description": "Sequence definitions",
+      "type": "array"
+    },
+    "reset": {
+      "description": "Reset instructions",
+      "type": "array"
+    },
+    "playout": {
+      "description": "Playout instructions",
+      "type": "array",
+      "minItems": 1
+    }
+  },
+  "required": [ "content", "playout" ],
+  "additionalProperties": false,
+  "$defs": {
+    "showContent": {
+      "type": "object",
+      "properties": {
+        "show": { "type": "null" },
+        "key": { "type": "string" },
+        "guids": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "properties": {
+              "source": { "type": "string" },
+              "value": { "type": "string" }
+            },
+            "required": [ "source", "value" ],
+            "additionalProperties": false
+          }
+        },
+        "order": { "enum": [ "chronological", "shuffle" ] }
+      },
+      "required": [ "show", "key", "guids", "order" ],
+      "additionalProperties": false
+    },
+    "searchContent": {
+      "type": "object",
+      "properties": {
+        "search": { "type": "null" },
+        "key": { "type": "string" },
+        "query": { "type": "string" },
+        "order": { "enum": [ "chronological", "shuffle" ] }
+      },
+      "required": [ "search", "key", "query", "order" ],
+      "additionalProperties": false
+    },
+    "collectionContent": {
+      "type": "object",
+      "properties": {
+        "collection": { "type": "string" },
+        "key": { "type": "string" },
+        "order": { "enum": [ "chronological", "shuffle" ] }
+      },
+      "required": [ "collection", "key", "order" ],
+      "additionalProperties": false
+    },
+    "multiCollectionContent": {
+      "type": "object",
+      "properties": {
+        "multi_collection": { "type": "string" },
+        "key": { "type": "string" },
+        "order": { "enum": [ "chronological", "shuffle" ] }
+      },
+      "required": [ "multi_collection", "key", "order" ],
+      "additionalProperties": false
+    },
+    "smartCollectionContent": {
+      "type": "object",
+      "properties": {
+        "smart_collection": { "type": "string" },
+        "key": { "type": "string" },
+        "order": { "enum": [ "chronological", "shuffle" ] }
+      },
+      "required": [ "smart_collection", "key", "order" ],
+      "additionalProperties": false
+    },
+    "playlistContent": {
+      "type": "object",
+      "properties": {
+        "playlist": { "type": "string" },
+        "playlist_group": { "type": "string" },
+        "key": { "type": "string" }
+      },
+      "required": [ "playlist", "playlist_group", "key" ],
+      "additionalProperties": false
+    },
+    "marathonContent": {
+      "type": "object",
+      "properties": {
+        "marathon": { "type": "null" },
+        "key": { "type": "string" },
+        "guids": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "properties": {
+              "source": { "type": "string" },
+              "value": { "type": "string" }
+            },
+            "required": [ "source", "value" ],
+            "additionalProperties": false
+          }
+        },
+        "searches": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "group_by": { "enum": [ "show", "season", "artist", "album" ] },
+        "item_order": { "enum": [ "chronological", "shuffle" ] },
+        "play_all_items": { "type":  "boolean" },
+        "shuffle_groups": { "type":  "boolean" }
+      },
+      "required": [ "marathon", "key" ],
+      "additionalProperties": false
+    }
+  }
+}

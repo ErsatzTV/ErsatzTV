@@ -16,6 +16,7 @@ public abstract class YamlPlayoutContentHandler(EnumeratorCache enumeratorCache)
         YamlPlayoutContext context,
         YamlPlayoutInstruction instruction,
         PlayoutBuildMode mode,
+        Func<string, Task> executeSequence,
         ILogger<YamlPlayoutBuilder> logger,
         CancellationToken cancellationToken);
 
@@ -147,15 +148,19 @@ public abstract class YamlPlayoutContentHandler(EnumeratorCache enumeratorCache)
         return version.Duration;
     }
 
-    protected static FillerKind GetFillerKind(YamlPlayoutInstruction instruction)
+    protected static FillerKind GetFillerKind(YamlPlayoutInstruction instruction, YamlPlayoutContext context)
     {
-        if (string.IsNullOrWhiteSpace(instruction.FillerKind))
+        if (!string.IsNullOrWhiteSpace(instruction.FillerKind) &&
+            Enum.TryParse(instruction.FillerKind, true, out FillerKind result))
         {
-            return FillerKind.None;
+            return result;
         }
 
-        return Enum.TryParse(instruction.FillerKind, true, out FillerKind result)
-            ? result
-            : FillerKind.None;
+        foreach (FillerKind fillerKind in context.GetFillerKind())
+        {
+            return fillerKind;
+        }
+
+        return FillerKind.None;
     }
 }

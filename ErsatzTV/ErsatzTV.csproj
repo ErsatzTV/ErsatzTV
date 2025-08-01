@@ -81,6 +81,7 @@
         <EmbeddedResource Include="Resources\Templates\_musicVideo.sbntxt" />
         <EmbeddedResource Include="Resources\Templates\_otherVideo.sbntxt" />
         <EmbeddedResource Include="Resources\Templates\_song.sbntxt" />
+        <EmbeddedResource Include="Resources\yaml-playout.schema.json" />
     </ItemGroup>
 
     <ItemGroup>

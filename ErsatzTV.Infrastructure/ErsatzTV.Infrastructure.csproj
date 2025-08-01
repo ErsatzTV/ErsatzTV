@@ -28,6 +28,7 @@
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
+        <PackageReference Include="Newtonsoft.Json.Schema" Version="4.0.1" />
         <PackageReference Include="Refit" Version="8.0.0" />
         <PackageReference Include="Refit.Newtonsoft.Json" Version="8.0.0" />
         <PackageReference Include="Refit.Xml" Version="8.0.0" />

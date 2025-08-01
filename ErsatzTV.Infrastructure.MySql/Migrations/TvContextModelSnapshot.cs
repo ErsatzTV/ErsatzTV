@@ -4510,6 +4510,9 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                             b1.Property<int>("PlayoutId")
                                 .HasColumnType("int");
 
+                            b1.Property<string>("Context")
+                                .HasColumnType("longtext");
+
                             b1.Property<DateTime?>("DurationFinish")
                                 .HasColumnType("datetime(6)");
 

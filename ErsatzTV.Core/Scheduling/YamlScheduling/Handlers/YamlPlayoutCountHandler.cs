@@ -1,4 +1,5 @@
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Domain.Scheduling;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using ErsatzTV.Core.Scheduling.YamlScheduling.Models;
@@ -13,6 +14,7 @@ public class YamlPlayoutCountHandler(EnumeratorCache enumeratorCache) : YamlPlay
         YamlPlayoutContext context,
         YamlPlayoutInstruction instruction,
         PlayoutBuildMode mode,
+        Func<string, Task> executeSequence,
         ILogger<YamlPlayoutBuilder> logger,
         CancellationToken cancellationToken)
     {
@@ -55,6 +57,13 @@ public class YamlPlayoutCountHandler(EnumeratorCache enumeratorCache) : YamlPlay
 
             for (var i = 0; i < countValue; i++)
             {
+                foreach (string preRollSequence in context.GetPreRollSequence())
+                {
+                    context.PushFillerKind(FillerKind.PreRoll);
+                    await executeSequence(preRollSequence);
+                    context.PopFillerKind();
+                }
+
                 foreach (MediaItem mediaItem in enumerator.Current)
                 {
                     TimeSpan itemDuration = DurationForMediaItem(mediaItem);
@@ -67,7 +76,7 @@ public class YamlPlayoutCountHandler(EnumeratorCache enumeratorCache) : YamlPlay
                         Finish = context.CurrentTime.UtcDateTime + itemDuration,
                         InPoint = TimeSpan.Zero,
                         OutPoint = itemDuration,
-                        FillerKind = GetFillerKind(count),
+                        FillerKind = GetFillerKind(count, context),
                         CustomTitle = string.IsNullOrWhiteSpace(count.CustomTitle) ? null : count.CustomTitle,
                         DisableWatermarks = count.DisableWatermarks,
                         //PreferredAudioLanguageCode = scheduleItem.PreferredAudioLanguageCode,

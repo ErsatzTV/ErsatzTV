@@ -10,6 +10,7 @@ public class YamlPlayoutPadToNextHandler(EnumeratorCache enumeratorCache) : Yaml
         YamlPlayoutContext context,
         YamlPlayoutInstruction instruction,
         PlayoutBuildMode mode,
+        Func<string, Task> executeSequence,
         ILogger<YamlPlayoutBuilder> logger,
         CancellationToken cancellationToken)
     {
@@ -54,7 +55,7 @@ public class YamlPlayoutPadToNextHandler(EnumeratorCache enumeratorCache) : Yaml
 
         foreach (IMediaCollectionEnumerator enumerator in maybeEnumerator)
         {
-            context.CurrentTime = Schedule(
+            context.CurrentTime = await Schedule(
                 context,
                 padToNext.Content,
                 padToNext.Fallback,
@@ -63,11 +64,12 @@ public class YamlPlayoutPadToNextHandler(EnumeratorCache enumeratorCache) : Yaml
                 padToNext.DiscardAttempts,
                 padToNext.Trim,
                 true,
-                GetFillerKind(padToNext),
+                GetFillerKind(padToNext, context),
                 padToNext.CustomTitle,
                 padToNext.DisableWatermarks,
                 enumerator,
                 fallbackEnumerator,
+                executeSequence,
                 logger);
 
             return true;
