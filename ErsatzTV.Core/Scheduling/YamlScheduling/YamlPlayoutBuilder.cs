@@ -344,6 +344,7 @@ public class YamlPlayoutBuilder(
             YamlPlayoutWatermarkInstruction => new YamlPlayoutWatermarkHandler(channelRepository),
             YamlPlayoutShuffleSequenceInstruction => new YamlPlayoutShuffleSequenceHandler(),
             YamlPreRollInstruction => new YamlPlayoutPreRollHandler(),
+            YamlPostRollInstruction => new YamlPlayoutPostRollHandler(),
 
             YamlPlayoutSkipItemsInstruction => new YamlPlayoutSkipItemsHandler(enumeratorCache),
             YamlPlayoutSkipToItemInstruction => new YamlPlayoutSkipToItemHandler(enumeratorCache),
@@ -403,6 +404,7 @@ public class YamlPlayoutBuilder(
                         { "pad_to_next", typeof(YamlPlayoutPadToNextInstruction) },
                         { "pad_until", typeof(YamlPlayoutPadUntilInstruction) },
                         { "pre_roll", typeof(YamlPreRollInstruction) },
+                        { "post_roll", typeof(YamlPostRollInstruction) },
                         { "repeat", typeof(YamlPlayoutRepeatInstruction) },
                         { "sequence", typeof(YamlPlayoutSequenceInstruction) },
                         { "shuffle_sequence", typeof(YamlPlayoutShuffleSequenceInstruction) },

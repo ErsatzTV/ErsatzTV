@@ -116,6 +116,13 @@ public class YamlPlayoutCountHandler(EnumeratorCache enumeratorCache) : YamlPlay
                     context.CurrentTime += itemDuration;
                     enumerator.MoveNext();
                 }
+
+                foreach (string postRollSequence in context.GetPostRollSequence())
+                {
+                    context.PushFillerKind(FillerKind.PostRoll);
+                    await executeSequence(postRollSequence);
+                    context.PopFillerKind();
+                }
             }
 
             return true;
