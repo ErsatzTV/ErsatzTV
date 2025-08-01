@@ -20,6 +20,7 @@ public class YamlPlayoutContext(Playout playout, YamlPlayoutDefinition definitio
     private Option<int> _channelWatermarkId;
     private Option<string> _preRollSequence;
     private Option<string> _postRollSequence;
+    private Option<string> _midRollSequence;
 
     public Playout Playout { get; } = playout;
 
@@ -116,6 +117,18 @@ public class YamlPlayoutContext(Playout playout, YamlPlayoutDefinition definitio
     }
 
     public Option<string> GetPostRollSequence() => _postRollSequence;
+
+    public void SetMidRollSequence(string sequence)
+    {
+        _midRollSequence = sequence;
+    }
+
+    public void ClearMidRollSequence()
+    {
+        _midRollSequence = Option<string>.None;
+    }
+
+    public Option<string> GetMidRollSequence() => _midRollSequence;
 
     public void PushFillerKind(FillerKind fillerKind)
     {

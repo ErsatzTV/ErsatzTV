@@ -41,6 +41,7 @@
                 { "$ref": "#/$defs/control/epgGroupInstruction" },
                 { "$ref": "#/$defs/control/preRollInstruction"},
                 { "$ref": "#/$defs/control/postRollInstruction"},
+                { "$ref": "#/$defs/control/midRollInstruction"},
                 { "$ref": "#/$defs/control/repeatInstruction" },
                 { "$ref": "#/$defs/control/shuffleSequenceInstruction" },
                 { "$ref": "#/$defs/control/skipItemsInstruction" },
@@ -81,6 +82,7 @@
           { "$ref": "#/$defs/control/epgGroupInstruction" },
           { "$ref": "#/$defs/control/preRollInstruction"},
           { "$ref": "#/$defs/control/postRollInstruction"},
+          { "$ref": "#/$defs/control/midRollInstruction"},
           { "$ref": "#/$defs/control/repeatInstruction" },
           { "$ref": "#/$defs/control/shuffleSequenceInstruction" },
           { "$ref": "#/$defs/control/skipItemsInstruction" },
@@ -307,6 +309,16 @@
           "sequence": { "type": "string" }
         },
         "required": [ "post_roll" ],
+        "additionalProperties": false
+      },
+      "midRollInstruction": {
+        "type": "object",
+        "properties": {
+          "mid_roll": { "type": "boolean" },
+          "sequence": { "type": "string" },
+          "expression": { "type": "string" }
+        },
+        "required": [ "mid_roll" ],
         "additionalProperties": false
       },
       "repeatInstruction": {
