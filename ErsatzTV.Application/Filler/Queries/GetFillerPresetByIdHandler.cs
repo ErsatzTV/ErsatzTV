@@ -5,19 +5,17 @@ using static ErsatzTV.Application.Filler.Mapper;
 
 namespace ErsatzTV.Application.Filler;
 
-public class GetFillerPresetByIdHandler : IRequestHandler<GetFillerPresetById, Option<FillerPresetViewModel>>
+public class GetFillerPresetByIdHandler(IDbContextFactory<TvContext> dbContextFactory)
+    : IRequestHandler<GetFillerPresetById, Option<FillerPresetViewModel>>
 {
-    private readonly IDbContextFactory<TvContext> _dbContextFactory;
-
-    public GetFillerPresetByIdHandler(IDbContextFactory<TvContext> dbContextFactory) =>
-        _dbContextFactory = dbContextFactory;
-
     public async Task<Option<FillerPresetViewModel>> Handle(
         GetFillerPresetById request,
         CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await dbContext.FillerPresets
+            .AsNoTracking()
+            .Include(i => i.Playlist)
             .SelectOneAsync(c => c.Id, c => c.Id == request.Id)
             .MapT(ProjectToViewModel);
     }

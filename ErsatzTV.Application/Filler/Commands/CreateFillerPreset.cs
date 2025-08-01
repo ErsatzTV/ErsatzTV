@@ -17,5 +17,6 @@ public record CreateFillerPreset(
     int? MediaItemId,
     int? MultiCollectionId,
     int? SmartCollectionId,
+    int? PlaylistId,
     string Expression
 ) : IRequest<Either<BaseError, Unit>>;

@@ -78,6 +78,10 @@ public class FillerPresetEditViewModel
             }
 
             _collectionType = value;
+            if (_collectionType is ProgramScheduleItemCollectionType.Playlist)
+            {
+                _fillerMode = FillerMode.Count;
+            }
         }
     }
 
@@ -85,6 +89,7 @@ public class FillerPresetEditViewModel
     public NamedMediaItemViewModel MediaItem { get; set; }
     public MultiCollectionViewModel MultiCollection { get; set; }
     public SmartCollectionViewModel SmartCollection { get; set; }
+    public PlaylistViewModel Playlist { get; set; }
 
     public string Expression { get; set; }
 
@@ -103,6 +108,7 @@ public class FillerPresetEditViewModel
             MediaItem?.MediaItemId,
             MultiCollection?.Id,
             SmartCollection?.Id,
+            Playlist?.Id,
             Expression);
 
     public IRequest<Either<BaseError, Unit>> ToUpdate() =>
@@ -119,6 +125,7 @@ public class FillerPresetEditViewModel
             MediaItem?.MediaItemId,
             MultiCollection?.Id,
             SmartCollection?.Id,
+            Playlist?.Id,
             Expression);
 
     private static TimeSpan FixDuration(TimeSpan duration) =>

@@ -19,5 +19,7 @@ public class FillerPreset
     public MultiCollection MultiCollection { get; set; }
     public int? SmartCollectionId { get; set; }
     public SmartCollection SmartCollection { get; set; }
+    public int? PlaylistId { get; set; }
+    public Playlist Playlist { get; set; }
     public string Expression { get; set; }
 }
