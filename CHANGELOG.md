@@ -12,6 +12,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Embedded image subtitles
   - Embedded text subtitles that have already been extracted by ETV
 - Add light mode and light/dark mode toggle to app bar
+- YAML playout: add `pre_roll` instruction to enable and disable a pre-roll sequence
+  - With value of `true` and `sequence` property, will enable automatic pre-roll for all content in the playout to the sequence with the provided key
+  - With value of `false`, will disable automatic pre-roll in the playout
 
 ### Fixed
 - Fix app startup with MySql/MariaDB

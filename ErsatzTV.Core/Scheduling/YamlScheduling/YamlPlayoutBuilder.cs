@@ -62,12 +62,7 @@ public class YamlPlayoutBuilder(
         {
             foreach (PlayoutAnchor prevAnchor in Optional(playout.Anchor))
             {
-                // TODO: does this matter?
-                //context.GuideGroup = prevAnchor.NextGuideGroup;
-
-                context.CurrentTime = new DateTimeOffset(prevAnchor.NextStart.ToLocalTime(), start.Offset);
-
-                context.InstructionIndex = prevAnchor.NextInstructionIndex;
+                context.Reset(prevAnchor, start);
             }
         }
         else
@@ -125,7 +120,13 @@ public class YamlPlayoutBuilder(
                     }
                     else
                     {
-                        await handler.Handle(context, instruction, mode, logger, cancellationToken);
+                        await handler.Handle(
+                            context,
+                            instruction,
+                            mode,
+                            _ => Task.CompletedTask,
+                            logger,
+                            cancellationToken);
                     }
                 }
             }
@@ -167,10 +168,20 @@ public class YamlPlayoutBuilder(
 
             foreach (IYamlPlayoutHandler handler in maybeHandler)
             {
-                if (!await handler.Handle(context, instruction, mode, logger, cancellationToken))
+                if (!await handler.Handle(context, instruction, mode, ExecuteSequenceLocal, logger, cancellationToken))
                 {
                     logger.LogInformation("YAML playout instruction handler failed");
                 }
+
+                continue;
+
+                async Task ExecuteSequenceLocal(string sequence) => await ExecuteSequence(
+                    handlers,
+                    enumeratorCache,
+                    mode,
+                    context,
+                    sequence,
+                    cancellationToken);
             }
 
             if (!instruction.ChangesIndex)
@@ -191,8 +202,7 @@ public class YamlPlayoutBuilder(
         var anchor = new PlayoutAnchor
         {
             NextStart = maxTime,
-            NextInstructionIndex = context.InstructionIndex,
-            NextGuideGroup = context.PeekNextGuideGroup()
+            Context = context.Serialize()
         };
 
         context.AdvanceGuideGroup();
@@ -205,6 +215,37 @@ public class YamlPlayoutBuilder(
         playout.Anchor = anchor;
 
         return playout;
+    }
+
+    private async Task ExecuteSequence(
+        Dictionary<YamlPlayoutInstruction, IYamlPlayoutHandler> handlers,
+        EnumeratorCache enumeratorCache,
+        PlayoutBuildMode mode,
+        YamlPlayoutContext context,
+        string sequence,
+        CancellationToken cancellationToken)
+    {
+        var sequenceInstructions = context.Definition.Sequence
+            .Filter(s => s.Key == sequence)
+            .HeadOrNone()
+            .Map(s => s.Items)
+            .Flatten()
+            .ToList();
+
+        foreach (YamlPlayoutInstruction instruction in sequenceInstructions)
+        {
+            //logger.LogDebug("Current playout instruction: {Instruction}", instruction.GetType().Name);
+
+            Option<IYamlPlayoutHandler> maybeHandler = GetHandlerForInstruction(handlers, enumeratorCache, instruction);
+
+            foreach (IYamlPlayoutHandler handler in maybeHandler)
+            {
+                if (!await handler.Handle(context, instruction, mode, _ => Task.CompletedTask, logger, cancellationToken))
+                {
+                    logger.LogInformation("YAML playout instruction handler failed");
+                }
+            }
+        }
     }
 
     private static bool DetectCycle(YamlPlayoutDefinition definition)
@@ -292,6 +333,7 @@ public class YamlPlayoutBuilder(
             YamlPlayoutEpgGroupInstruction => new YamlPlayoutEpgGroupHandler(),
             YamlPlayoutWatermarkInstruction => new YamlPlayoutWatermarkHandler(channelRepository),
             YamlPlayoutShuffleSequenceInstruction => new YamlPlayoutShuffleSequenceHandler(),
+            YamlPreRollInstruction => new YamlPlayoutPreRollHandler(),
 
             YamlPlayoutSkipItemsInstruction => new YamlPlayoutSkipItemsHandler(enumeratorCache),
             YamlPlayoutSkipToItemInstruction => new YamlPlayoutSkipToItemHandler(enumeratorCache),
@@ -346,6 +388,7 @@ public class YamlPlayoutBuilder(
                         { "watermark", typeof(YamlPlayoutWatermarkInstruction) },
                         { "pad_to_next", typeof(YamlPlayoutPadToNextInstruction) },
                         { "pad_until", typeof(YamlPlayoutPadUntilInstruction) },
+                        { "pre_roll", typeof(YamlPreRollInstruction) },
                         { "repeat", typeof(YamlPlayoutRepeatInstruction) },
                         { "sequence", typeof(YamlPlayoutSequenceInstruction) },
                         { "shuffle_sequence", typeof(YamlPlayoutShuffleSequenceInstruction) },

@@ -11,6 +11,7 @@ public class YamlPlayoutWaitUntilHandler : IYamlPlayoutHandler
         YamlPlayoutContext context,
         YamlPlayoutInstruction instruction,
         PlayoutBuildMode mode,
+        Func<string, Task> executeSequence,
         ILogger<YamlPlayoutBuilder> logger,
         CancellationToken cancellationToken)
     {

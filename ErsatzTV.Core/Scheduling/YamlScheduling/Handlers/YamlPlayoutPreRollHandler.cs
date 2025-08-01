@@ -3,10 +3,8 @@ using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Core.Scheduling.YamlScheduling.Handlers;
 
-public class YamlPlayoutRepeatHandler : IYamlPlayoutHandler
+public class YamlPlayoutPreRollHandler : IYamlPlayoutHandler
 {
-    private int _itemsSinceLastRepeat;
-
     public bool Reset => false;
 
     public Task<bool> Handle(
@@ -17,19 +15,20 @@ public class YamlPlayoutRepeatHandler : IYamlPlayoutHandler
         ILogger<YamlPlayoutBuilder> logger,
         CancellationToken cancellationToken)
     {
-        if (instruction is not YamlPlayoutRepeatInstruction)
+        if (instruction is not YamlPreRollInstruction preRoll)
         {
             return Task.FromResult(false);
         }
 
-        if (context.VisitedAll && _itemsSinceLastRepeat == context.Playout.Items.Count)
+        if (preRoll.PreRoll && !string.IsNullOrWhiteSpace(preRoll.Sequence))
         {
-            logger.LogWarning("Repeat encountered without adding any playout items; aborting");
-            throw new InvalidOperationException("YAML playout loop detected");
+            context.SetPreRollSequence(preRoll.Sequence);
+        }
+        else
+        {
+            context.ClearPreRollSequence();
         }
 
-        _itemsSinceLastRepeat = context.Playout.Items.Count;
-        context.InstructionIndex = 0;
         return Task.FromResult(true);
     }
 }

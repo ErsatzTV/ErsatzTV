@@ -13,6 +13,7 @@ public class YamlPlayoutSkipToItemHandler(EnumeratorCache enumeratorCache) : IYa
         YamlPlayoutContext context,
         YamlPlayoutInstruction instruction,
         PlayoutBuildMode mode,
+        Func<string, Task> executeSequence,
         ILogger<YamlPlayoutBuilder> logger,
         CancellationToken cancellationToken)
     {
