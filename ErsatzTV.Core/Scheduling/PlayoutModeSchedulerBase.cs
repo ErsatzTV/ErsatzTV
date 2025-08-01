@@ -403,7 +403,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
             foreach (FillerPreset filler in allFiller.Filter(f =>
                          f.FillerKind == FillerKind.MidRoll && f.FillerMode != FillerMode.Pad))
             {
-                List<MediaChapter> filteredChapters = FillerExpression.FilterChapters(filler, effectiveChapters, playoutItem);
+                List<MediaChapter> filteredChapters = FillerExpression.FilterChapters(filler.Expression, effectiveChapters, playoutItem);
                 if (filteredChapters.Count <= 1)
                 {
                     result.Add(playoutItem);
@@ -529,7 +529,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
             var totalDuration = TimeSpan.FromTicks(result.Sum(pi => (pi.Finish - pi.Start).Ticks));
 
             List<MediaChapter> filteredChapters =
-                FillerExpression.FilterChapters(padFiller, effectiveChapters, playoutItem);
+                FillerExpression.FilterChapters(padFiller.Expression, effectiveChapters, playoutItem);
 
             FillerKind fillerKind = padFiller.FillerKind;
             if (filteredChapters.Count <= 1 && effectiveChapters.Count > 1)

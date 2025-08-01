@@ -27,8 +27,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Add `Playlist` collection type to filler presets
   - This will force filler mode `Count`
   - Whenever the filler is used, it will schedule `Count` times full time through the playlist
-    - If the playlist has 3 items and none configured to play all, it will schedule 3 items when `Count = 1`
-    - If the playlist has 3 items and none configured to play all, it will schedule 6 items when `Count = 2`
+    - If the playlist has 3 items and none set to play all, it will schedule 3 items when `Count = 1`
+    - If the playlist has 3 items and none set to play all, it will schedule 6 items when `Count = 2`
   - Using the same playlist in the same schedule for anything other than filler may cause undesired behavior
 
 ### Fixed

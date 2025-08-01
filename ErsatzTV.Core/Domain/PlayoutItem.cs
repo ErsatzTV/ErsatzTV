@@ -54,7 +54,17 @@ public class PlayoutItem
             Playout = Playout,
             InPoint = chapter.StartTime,
             OutPoint = chapter.EndTime,
-            ChapterTitle = chapter.Title
+            ChapterTitle = chapter.Title,
+            Watermark = Watermark,
+            WatermarkId = WatermarkId,
+            DisableWatermarks = DisableWatermarks,
+            PreferredAudioLanguageCode = PreferredAudioLanguageCode,
+            PreferredAudioTitle = PreferredAudioTitle,
+            PreferredSubtitleLanguageCode = PreferredSubtitleLanguageCode,
+            SubtitleMode = SubtitleMode,
+            BlockKey = BlockKey,
+            CollectionKey = CollectionKey,
+            CollectionEtag = CollectionEtag
         };
 
     public string GetDisplayDuration()
