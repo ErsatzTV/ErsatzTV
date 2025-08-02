@@ -6,11 +6,15 @@ public record FFmpegKnownEncoder
 
     public string Name { get; }
 
+    public static readonly FFmpegKnownEncoder H264VideoToolbox = new("h264_videotoolbox");
+    public static readonly FFmpegKnownEncoder HevcVideoToolbox = new("hevc_videotoolbox");
+
     // only list the encoders that we actually check for
     public static IList<string> AllEncoders =>
-        new[]
-        {
-            "h264_amf",
-            "hevc_amf"
-        };
+    [
+        "h264_amf",
+        "hevc_amf",
+        "h264_videotoolbox",
+        "hevc_videotoolbox"
+    ];
 }

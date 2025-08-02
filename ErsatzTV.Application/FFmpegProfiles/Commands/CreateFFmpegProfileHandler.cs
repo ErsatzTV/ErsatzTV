@@ -56,7 +56,12 @@ public class CreateFFmpegProfileHandler :
             VideoProfile = request.VideoProfile,
             VideoPreset = request.VideoPreset,
             AllowBFrames = request.AllowBFrames,
-            BitDepth = request.BitDepth,
+
+            // mpeg2video only supports 8-bit content
+            BitDepth = request.VideoFormat is FFmpegProfileVideoFormat.Mpeg2Video
+                ? FFmpegProfileBitDepth.EightBit
+                : request.BitDepth,
+
             VideoBitrate = request.VideoBitrate,
             VideoBufferSize = request.VideoBufferSize,
             TonemapAlgorithm = request.TonemapAlgorithm,

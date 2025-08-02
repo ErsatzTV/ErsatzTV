@@ -1,4 +1,5 @@
 ﻿using ErsatzTV.Core.Domain;
+using ErsatzTV.FFmpeg.Format;
 using ErsatzTV.ViewModels;
 using FluentValidation;
 using FluentValidation.Results;
@@ -7,37 +8,37 @@ namespace ErsatzTV.Validators;
 
 public class FFmpegProfileEditViewModelValidator : AbstractValidator<FFmpegProfileEditViewModel>
 {
-    private static readonly List<FFmpegProfileVideoFormat> QsvFormats = new()
-    {
+    private static readonly List<FFmpegProfileVideoFormat> QsvFormats =
+    [
         FFmpegProfileVideoFormat.H264,
         FFmpegProfileVideoFormat.Hevc,
         FFmpegProfileVideoFormat.Mpeg2Video
-    };
+    ];
 
-    private static readonly List<FFmpegProfileVideoFormat> NvencFormats = new()
-    {
+    private static readonly List<FFmpegProfileVideoFormat> NvencFormats =
+    [
         FFmpegProfileVideoFormat.H264,
         FFmpegProfileVideoFormat.Hevc
-    };
+    ];
 
-    private static readonly List<FFmpegProfileVideoFormat> VaapiFormats = new()
-    {
+    private static readonly List<FFmpegProfileVideoFormat> VaapiFormats =
+    [
         FFmpegProfileVideoFormat.H264,
         FFmpegProfileVideoFormat.Hevc,
         FFmpegProfileVideoFormat.Mpeg2Video
-    };
+    ];
 
-    private static readonly List<FFmpegProfileVideoFormat> VideoToolboxFormats = new()
-    {
+    private static readonly List<FFmpegProfileVideoFormat> VideoToolboxFormats =
+    [
         FFmpegProfileVideoFormat.H264,
         FFmpegProfileVideoFormat.Hevc
-    };
+    ];
 
-    private static readonly List<FFmpegProfileVideoFormat> AmfFormats = new()
-    {
+    private static readonly List<FFmpegProfileVideoFormat> AmfFormats =
+    [
         FFmpegProfileVideoFormat.H264,
         FFmpegProfileVideoFormat.Hevc
-    };
+    ];
 
     public FFmpegProfileEditViewModelValidator()
     {
@@ -97,6 +98,18 @@ public class FFmpegProfileEditViewModelValidator : AbstractValidator<FFmpegProfi
             () => RuleFor(x => x.BitDepth)
                 .Must(bd => bd is FFmpegProfileBitDepth.EightBit)
                 .WithMessage("Mpeg2Video does not support 10-bit content"));
+
+        When(
+            x => x.VideoFormat == FFmpegProfileVideoFormat.H264 && x.BitDepth == FFmpegProfileBitDepth.TenBit,
+            () => RuleFor(x => x.VideoProfile)
+                .Must(vp => vp == VideoProfile.High10)
+                .WithMessage("VideoProfile must be high10 with 10-bit h264"));
+
+        When(
+            x => x.VideoFormat == FFmpegProfileVideoFormat.H264 && x.BitDepth == FFmpegProfileBitDepth.EightBit,
+            () => RuleFor(x => x.VideoProfile)
+                .Must(vp => vp != VideoProfile.High10)
+                .WithMessage("VideoProfile cannot be high10 with 8-bit h264"));
     }
 
     public Func<object, string, Task<IEnumerable<string>>> ValidateValue => async (model, propertyName) =>

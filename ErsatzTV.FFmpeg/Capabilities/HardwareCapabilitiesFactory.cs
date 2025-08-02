@@ -7,6 +7,7 @@ using CliWrap;
 using CliWrap.Buffered;
 using ErsatzTV.FFmpeg.Capabilities.Qsv;
 using ErsatzTV.FFmpeg.Capabilities.Vaapi;
+using ErsatzTV.FFmpeg.Capabilities.VideoToolbox;
 using ErsatzTV.FFmpeg.GlobalOption.HardwareAcceleration;
 using ErsatzTV.FFmpeg.Runtime;
 using Hardware.Info;
@@ -106,6 +107,7 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
             HardwareAccelerationMode.Nvenc => await GetNvidiaCapabilities(ffmpegPath, ffmpegCapabilities),
             HardwareAccelerationMode.Qsv => await GetQsvCapabilities(ffmpegPath, vaapiDevice),
             HardwareAccelerationMode.Vaapi => await GetVaapiCapabilities(vaapiDisplay, vaapiDriver, vaapiDevice),
+            HardwareAccelerationMode.VideoToolbox => new VideoToolboxHardwareCapabilities(ffmpegCapabilities, _logger),
             HardwareAccelerationMode.Amf => new AmfHardwareCapabilities(),
             _ => new DefaultHardwareCapabilities()
         };
@@ -113,6 +115,11 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
 
     public async Task<string> GetNvidiaOutput(string ffmpegPath)
     {
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+        {
+            return string.Empty;
+        }
+
         string[] arguments =
         {
             "-f", "lavfi",
@@ -136,6 +143,11 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
 
     public async Task<QsvOutput> GetQsvOutput(string ffmpegPath, Option<string> qsvDevice)
     {
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+        {
+            return new QsvOutput(0, string.Empty);
+        }
+
         var option = new QsvHardwareAccelerationOption(qsvDevice, FFmpegCapability.Software);
         var arguments = option.GlobalOptions.ToList();
 
@@ -155,6 +167,11 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
 
     public async Task<Option<string>> GetVaapiOutput(string display, Option<string> vaapiDriver, string vaapiDevice)
     {
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+        {
+            return Option<string>.None;
+        }
+
         BufferedCommandResult whichResult = await Cli.Wrap("which")
             .WithArguments("vainfo")
             .WithValidation(CommandResultValidation.None)
@@ -242,6 +259,11 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
         }
 
         return [];
+    }
+
+    public List<string> GetVideoToolboxEncoders()
+    {
+        return VideoToolboxUtil.GetAvailableEncoders();
     }
 
     private async Task<IReadOnlySet<string>> GetFFmpegCapabilities(

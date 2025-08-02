@@ -1139,6 +1139,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         {
             (VideoFormat.H264, VideoProfile.Main) => VideoProfile.Main,
             (VideoFormat.H264, VideoProfile.High) => VideoProfile.High,
+            (VideoFormat.H264, VideoProfile.High10) => VideoProfile.High10,
             _ => Option<string>.None
         };
 

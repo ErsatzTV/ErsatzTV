@@ -1,6 +1,8 @@
 using System.Collections;
+using System.Globalization;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text;
 using ErsatzTV.Application.FFmpegProfiles;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.FFmpeg;
@@ -72,8 +74,9 @@ public class GetTroubleshootingInfoHandler : IRequestHandler<GetTroubleshootingI
             .ToListAsync(cancellationToken);
 
         string nvidiaCapabilities = null;
-        string qsvCapabilities = null;
-        string vaapiCapabilities = null;
+        StringBuilder qsvCapabilities = new();
+        StringBuilder vaapiCapabilities = new();
+        StringBuilder videoToolboxCapabilities = new();
         Option<ConfigElement> maybeFFmpegPath =
             await _configElementRepository.GetConfigElement(ConfigElementKey.FFmpegPath);
         if (maybeFFmpegPath.IsNone)
@@ -99,10 +102,11 @@ public class GetTroubleshootingInfoHandler : IRequestHandler<GetTroubleshootingI
                 foreach (string qsvDevice in vaapiDevices)
                 {
                     QsvOutput output = await _hardwareCapabilitiesFactory.GetQsvOutput(ffmpegPath.Value, qsvDevice);
-                    qsvCapabilities += $"Checking device {qsvDevice}{Environment.NewLine}";
-                    qsvCapabilities += $"Exit Code: {output.ExitCode}{Environment.NewLine}{Environment.NewLine}";
-                    qsvCapabilities += output.Output;
-                    qsvCapabilities += Environment.NewLine + Environment.NewLine;
+                    qsvCapabilities.AppendLine(CultureInfo.InvariantCulture, $"Checking device {qsvDevice}");
+                    qsvCapabilities.AppendLine(CultureInfo.InvariantCulture, $"Exit Code: {output.ExitCode}");
+                    qsvCapabilities.AppendLine();
+                    qsvCapabilities.AppendLine(output.Output);
+                    qsvCapabilities.AppendLine();
                 }
 
                 if (_runtimeInfo.IsOSPlatform(OSPlatform.Linux))
@@ -119,12 +123,27 @@ public class GetTroubleshootingInfoHandler : IRequestHandler<GetTroubleshootingI
                                      Optional(GetDriverName(activeDriver)),
                                      vaapiDevice))
                         {
-                            vaapiCapabilities +=
-                                $"Checking display [{display}] driver [{activeDriver}] device [{vaapiDevice}]{Environment.NewLine}{Environment.NewLine}";
-                            vaapiCapabilities += output;
-                            vaapiCapabilities += Environment.NewLine + Environment.NewLine;
+                            vaapiCapabilities.AppendLine(
+                                CultureInfo.InvariantCulture,
+                                $"Checking display [{display}] driver [{activeDriver}] device [{vaapiDevice}]{Environment.NewLine}");
+                            vaapiCapabilities.AppendLine();
+                            vaapiCapabilities.AppendLine(output);
+                            vaapiCapabilities.AppendLine();
                         }
                     }
+                }
+
+                if (_runtimeInfo.IsOSPlatform(OSPlatform.OSX))
+                {
+                    var encoders = _hardwareCapabilitiesFactory.GetVideoToolboxEncoders();
+                    videoToolboxCapabilities.AppendLine("VideoToolbox Encoders: ");
+                    videoToolboxCapabilities.AppendLine();
+                    foreach (var encoder in encoders)
+                    {
+                        videoToolboxCapabilities.AppendLine(CultureInfo.InvariantCulture, $"\t{encoder}");
+                    }
+                    videoToolboxCapabilities.AppendLine();
+                    videoToolboxCapabilities.AppendLine();
                 }
             }
         }
@@ -159,8 +178,9 @@ public class GetTroubleshootingInfoHandler : IRequestHandler<GetTroubleshootingI
             channels,
             channelWatermarks,
             nvidiaCapabilities,
-            qsvCapabilities,
-            vaapiCapabilities);
+            qsvCapabilities.ToString(),
+            vaapiCapabilities.ToString(),
+            videoToolboxCapabilities.ToString());
     }
 
     // lifted from GetFFmpegSettingsHandler

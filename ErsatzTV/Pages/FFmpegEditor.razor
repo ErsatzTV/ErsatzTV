@@ -77,10 +77,11 @@
             </div>
             <MudSelect @bind-Value="_model.VideoProfile"
                        For="@(() => _model.VideoProfile)"
-                       Disabled="@(_model.VideoFormat != FFmpegProfileVideoFormat.H264 || _model.HardwareAcceleration != HardwareAccelerationKind.Nvenc && _model.HardwareAcceleration != HardwareAccelerationKind.Qsv && _model.HardwareAcceleration != HardwareAccelerationKind.None)"
+                       Disabled="@(_model.VideoFormat != FFmpegProfileVideoFormat.H264 || _model.HardwareAcceleration != HardwareAccelerationKind.Nvenc && _model.HardwareAcceleration != HardwareAccelerationKind.Qsv && _model.HardwareAcceleration != HardwareAccelerationKind.VideoToolbox && _model.HardwareAcceleration != HardwareAccelerationKind.None)"
                        Clearable="true">
                 <MudSelectItem Value="@VideoProfile.Main">main</MudSelectItem>
                 <MudSelectItem Value="@VideoProfile.High">high</MudSelectItem>
+                <MudSelectItem Value="@VideoProfile.High10">high10</MudSelectItem>
             </MudSelect>
         </MudStack>
         <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">

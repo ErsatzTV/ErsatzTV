@@ -6,6 +6,7 @@
         <Nullable>enable</Nullable>
         <AnalysisLevel>latest-Recommended</AnalysisLevel>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
 
     <ItemGroup>
