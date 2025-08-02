@@ -1,14 +1,13 @@
 using ErsatzTV.Core.Domain;
-using ErsatzTV.Core.Domain.Filler;
 using NCalc;
 
 namespace ErsatzTV.Core.Scheduling;
 
 public static class FillerExpression
 {
-    public static List<MediaChapter> FilterChapters(FillerPreset fillerPreset, List<MediaChapter> effectiveChapters, PlayoutItem playoutItem)
+    public static List<MediaChapter> FilterChapters(string fillerExpression, List<MediaChapter> effectiveChapters, PlayoutItem playoutItem)
     {
-        if (effectiveChapters.Count == 0 || fillerPreset is null || string.IsNullOrWhiteSpace(fillerPreset.Expression))
+        if (effectiveChapters.Count == 0 || string.IsNullOrWhiteSpace(fillerExpression))
         {
             return effectiveChapters;
         }
@@ -27,7 +26,7 @@ public static class FillerExpression
         for (var index = 0; index < chapterPoints.Count; index++)
         {
             TimeSpan chapterPoint = chapterPoints[index];
-            var expression = new Expression(fillerPreset.Expression);
+            var expression = new Expression(fillerExpression);
             int chapterNum = index + 1;
             double sinceLastFiller = chapterPoint.TotalSeconds - lastFiller;
             int matchedPoints = matches;

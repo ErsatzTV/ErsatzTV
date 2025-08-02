@@ -18,6 +18,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - YAML playout: add `post_roll` instruction to enable and disable a post-roll sequence
   - With value of `true` and `sequence` property, will enable automatic post-roll for all content in the playout to the sequence with the provided key
   - With value of `false`, will disable automatic post-roll in the playout
+- YAML playout: add `mid_roll` instruction to enable and disable a mid-roll sequence
+    - With value of `true` and `sequence` property, will enable automatic mid-roll for (`count` and `all`) content in the playout to the sequence with the provided key
+    - With value of `false`, will disable automatic post-roll in the playout
+    - `expression` can be used to influence which chapters are selected for mid roll (same as in filler preset)
 - Add YAML playout validation (using JSON Schema)
   - Invalid YAML playout definitions will fail to build and will log validation failures as warnings
   - `content` is fully validated
@@ -27,8 +31,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Add `Playlist` collection type to filler presets
   - This will force filler mode `Count`
   - Whenever the filler is used, it will schedule `Count` times full time through the playlist
-    - If the playlist has 3 items and none configured to play all, it will schedule 3 items when `Count = 1`
-    - If the playlist has 3 items and none configured to play all, it will schedule 6 items when `Count = 2`
+    - If the playlist has 3 items and none set to play all, it will schedule 3 items when `Count = 1`
+    - If the playlist has 3 items and none set to play all, it will schedule 6 items when `Count = 2`
   - Using the same playlist in the same schedule for anything other than filler may cause undesired behavior
 
 ### Fixed

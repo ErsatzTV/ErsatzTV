@@ -96,7 +96,7 @@ public class YamlPlayoutCountHandler(EnumeratorCache enumeratorCache) : YamlPlay
                         playoutItem.WatermarkId = watermarkId;
                     }
 
-                    context.Playout.Items.Add(playoutItem);
+                    await AddItemAndMidRoll(context, playoutItem, executeSequence);
                     context.AdvanceGuideGroup();
 
                     // create history record

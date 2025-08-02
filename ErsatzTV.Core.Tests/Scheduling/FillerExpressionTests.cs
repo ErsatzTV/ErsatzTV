@@ -34,7 +34,7 @@ public class FillerExpressionTests
             Expression = "(point > 5 * 60) and (last_mid_filler > 5 * 60) and (matched_points < 2)"
         };
 
-        List<MediaChapter> result = FillerExpression.FilterChapters(fillerPreset, chapters, playoutItem);
+        List<MediaChapter> result = FillerExpression.FilterChapters(fillerPreset.Expression, chapters, playoutItem);
 
         result.Count.ShouldBe(3);
         result[0].EndTime.ShouldBe(TimeSpan.FromMinutes(10));
@@ -67,7 +67,7 @@ public class FillerExpressionTests
             Expression = "(total_progress >= 0.2 and matched_points = 0) or (total_progress >= 0.6 and matched_points = 1)"
         };
 
-        List<MediaChapter> result = FillerExpression.FilterChapters(fillerPreset, chapters, playoutItem);
+        List<MediaChapter> result = FillerExpression.FilterChapters(fillerPreset.Expression, chapters, playoutItem);
 
         result.Count.ShouldBe(3);
         result[0].EndTime.ShouldBe(TimeSpan.FromMinutes(10));
