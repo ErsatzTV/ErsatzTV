@@ -73,9 +73,8 @@ jobs:
         shell: bash
         run: |
           sed -i '' '/Scanner/d' ErsatzTV/ErsatzTV.csproj
-          dotnet publish ErsatzTV.Scanner/ErsatzTV.Scanner.csproj --framework net9.0 --runtime "${{ matrix.target }}" -c Release -o publish -p:RestoreEnablePackagePruning=true -p:InformationalVersion="${{ inputs.release_version }}-${{ matrix.target }}" -p:EnableCompressionInSingleFile=false -p:DebugType=Embedded -p:PublishSingleFile=true --self-contained true &
-          dotnet publish ErsatzTV/ErsatzTV.csproj --framework net9.0 --runtime "${{ matrix.target }}" -c Release -o publish -p:RestoreEnablePackagePruning=true -p:InformationalVersion="${{ inputs.release_version }}-${{ matrix.target }}" -p:EnableCompressionInSingleFile=false -p:DebugType=Embedded -p:PublishSingleFile=true --self-contained true &
-          wait
+          dotnet publish ErsatzTV.Scanner/ErsatzTV.Scanner.csproj --framework net9.0 --runtime "${{ matrix.target }}" -c Release -o publish -p:RestoreEnablePackagePruning=true -p:InformationalVersion="${{ inputs.release_version }}-${{ matrix.target }}" -p:EnableCompressionInSingleFile=false -p:DebugType=Embedded -p:PublishSingleFile=true --self-contained true
+          dotnet publish ErsatzTV/ErsatzTV.csproj --framework net9.0 --runtime "${{ matrix.target }}" -c Release -o publish -p:RestoreEnablePackagePruning=true -p:InformationalVersion="${{ inputs.release_version }}-${{ matrix.target }}" -p:EnableCompressionInSingleFile=false -p:DebugType=Embedded -p:PublishSingleFile=true --self-contained true
 
       - name: Bundle
         shell: bash
@@ -195,7 +194,7 @@ jobs:
 
           # Build everything
           sed -i '/Scanner/d' ErsatzTV/ErsatzTV.csproj
-          dotnet publish ErsatzTV.Scanner/ErsatzTV.Scanner.csproj --framework net9.0 --runtime "${{ matrix.target }}" -c Release -o "scanner" -p:RestoreEnablePackagePruning=true -p:InformationalVersion="${{ inputs.release_version }}-${{ matrix.target }}" -p:EnableCompressionInSingleFile=true -p:DebugType=Embedded -p:PublishSingleFile=true --self-contained true &
+          dotnet publish ErsatzTV.Scanner/ErsatzTV.Scanner.csproj --framework net9.0 --runtime "${{ matrix.target }}" -c Release -o "scanner" -p:RestoreEnablePackagePruning=true -p:InformationalVersion="${{ inputs.release_version }}-${{ matrix.target }}" -p:EnableCompressionInSingleFile=true -p:DebugType=Embedded -p:PublishSingleFile=true --self-contained true
           dotnet publish ErsatzTV/ErsatzTV.csproj --framework net9.0 --runtime "${{ matrix.target }}" -c Release -o "main" -p:RestoreEnablePackagePruning=true -p:InformationalVersion="${{ inputs.release_version }}-${{ matrix.target }}" -p:EnableCompressionInSingleFile=true -p:DebugType=Embedded -p:PublishSingleFile=true --self-contained true &
 
           # Build Windows launcher

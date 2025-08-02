@@ -114,7 +114,6 @@ public class YamlPlayoutCountHandler(EnumeratorCache enumeratorCache) : YamlPlay
                         context.Playout.PlayoutHistory.Add(history);
                     }
 
-                    context.CurrentTime += itemDuration;
                     enumerator.MoveNext();
                 }
 
