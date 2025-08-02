@@ -163,4 +163,56 @@ public abstract class YamlPlayoutContentHandler(EnumeratorCache enumeratorCache)
 
         return FillerKind.None;
     }
+
+    protected static List<MediaChapter> ChaptersForMediaItem(MediaItem mediaItem)
+    {
+        MediaVersion version = mediaItem.GetHeadVersion();
+        return Optional(version.Chapters).Flatten().OrderBy(c => c.StartTime).ToList();
+    }
+
+    protected static async Task AddItemAndMidRoll(YamlPlayoutContext context, PlayoutItem playoutItem,
+        Func<string, Task> executeSequence)
+    {
+        List<MediaChapter> itemChapters = ChaptersForMediaItem(playoutItem.MediaItem);
+        Option<YamlPlayoutContext.MidRollSequence> maybeMidRollSequence = context.GetMidRollSequence();
+        if (itemChapters.Count < 2 || maybeMidRollSequence.IsNone)
+        {
+            context.Playout.Items.Add(playoutItem);
+        }
+        else
+        {
+            foreach (var midRollSequence in maybeMidRollSequence)
+            {
+                var filteredChapters = FillerExpression.FilterChapters(
+                    midRollSequence.Expression,
+                    itemChapters,
+                    playoutItem);
+
+                if (filteredChapters.Count < 2)
+                {
+                    context.Playout.Items.Add(playoutItem);
+                }
+                else
+                {
+                    for (var j = 0; j < filteredChapters.Count; j++)
+                    {
+                        var nextItem = playoutItem.ForChapter(filteredChapters[j]);
+
+                        nextItem.Start = context.CurrentTime.UtcDateTime;
+                        nextItem.Finish = context.CurrentTime.UtcDateTime + (nextItem.OutPoint - nextItem.InPoint);
+                        context.Playout.Items.Add(nextItem);
+
+                        context.CurrentTime += nextItem.OutPoint - nextItem.InPoint;
+
+                        if (j < filteredChapters.Count - 1)
+                        {
+                            context.PushFillerKind(FillerKind.MidRoll);
+                            await executeSequence(midRollSequence.Sequence);
+                            context.PopFillerKind();
+                        }
+                    }
+                }
+            }
+        }
+    }
 }

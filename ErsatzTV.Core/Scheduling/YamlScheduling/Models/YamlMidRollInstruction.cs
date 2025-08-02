@@ -9,5 +9,5 @@ public class YamlMidRollInstruction : YamlPlayoutInstruction
 
     public string Sequence { get; set; }
 
-    public string Expression { get; set; }
+    public string Expression { get; set; } = "true";
 }
