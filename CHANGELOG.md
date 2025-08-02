@@ -34,6 +34,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - If the playlist has 3 items and none set to play all, it will schedule 3 items when `Count = 1`
     - If the playlist has 3 items and none set to play all, it will schedule 6 items when `Count = 2`
   - Using the same playlist in the same schedule for anything other than filler may cause undesired behavior
+- Detect supported VideoToolbox hardware encoders
+  - Software encoders will automatically be used when hardware encoders are unavailable
+- Add VideoToolbox Capabilities to Troubleshooting page
 
 ### Fixed
 - Fix app startup with MySql/MariaDB
