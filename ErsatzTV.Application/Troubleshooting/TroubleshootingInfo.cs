@@ -16,4 +16,5 @@ public record TroubleshootingInfo(
     List<ChannelWatermark> Watermarks,
     string NvidiaCapabilities,
     string QsvCapabilities,
-    string VaapiCapabilities);
+    string VaapiCapabilities,
+    string VideoToolboxCapabilities);
