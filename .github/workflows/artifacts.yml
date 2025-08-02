@@ -29,7 +29,6 @@ jobs:
   build_and_upload_mac:
     name: Mac Build & Upload
     runs-on: ${{ matrix.os }}
-    if: contains(github.event.head_commit.message, '[no build]') == false
     strategy:
       matrix:
         include:
@@ -126,22 +125,20 @@ jobs:
           token: ${{ secrets.gh_token }}
           tag: ${{ inputs.release_tag }}
           fail-if-no-assets: false
-          assets: |
-            *${{ matrix.target }}.dmg
+          assets: "*${{ matrix.target }}.dmg"
 
       - name: Publish
         uses: softprops/action-gh-release@v1
         with:
           prerelease: false
           tag_name: ${{ inputs.release_tag }}
-          files: |
-            ${{ env.RELEASE_NAME }}.dmg
+          files: "${{ env.RELEASE_NAME }}.dmg"
         env:
           GITHUB_TOKEN: ${{ secrets.gh_token }}
-  build_and_upload:
-    name: Build & Upload
+
+  build_and_upload_linux:
+    name: Build & Upload Linux
     runs-on: ${{ matrix.os }}
-    if: contains(github.event.head_commit.message, '[no build]') == false
     strategy:
       matrix:
         include:
@@ -157,9 +154,6 @@ jobs:
           - os: ubuntu-24.04-arm
             kind: linux
             target: linux-arm64
-          - os: ubuntu-latest
-            kind: windows
-            target: win-x64
     steps:
       - name: Get the sources
         uses: actions/checkout@v4
@@ -171,33 +165,11 @@ jobs:
         with:
           dotnet-version: 9.0.203
 
-      - name: Set up MinGW
-        if: ${{ matrix.target == 'win-x64' }}
-        uses: egor-tensin/setup-mingw@v2
-        with:
-          platform: x64
-
-      - name: Setup Windows Cross-Compile Tools
-        if: ${{ matrix.target == 'win-x64' }}
-        run: |
-          rustup target add x86_64-pc-windows-gnu
-          mkdir -p .cargo
-          echo '[target.x86_64-pc-windows-gnu]' >> .cargo/config.toml
-          echo 'linker = "x86_64-w64-mingw32-gcc"' >> .cargo/config.toml
-
       - name: Clean
         run: dotnet clean --configuration Release && dotnet nuget locals all --clear
 
       - name: Install dependencies
         run: dotnet restore -r "${{ matrix.target }}"
-
-      - uses: suisei-cn/actions-download-file@v1.3.0
-        if: ${{ matrix.kind == 'windows' }}
-        id: downloadffmpeg
-        name: Download ffmpeg
-        with:
-          url: "https://github.com/ErsatzTV/ErsatzTV-ffmpeg/releases/download/7.1.1/ffmpeg-n7.1.1-56-gc2184b65d2-win64-gpl-7.1.zip"
-          target: ffmpeg/
 
       - name: Build
         shell: bash
@@ -209,34 +181,11 @@ jobs:
           # Build everything
           sed -i '/Scanner/d' ErsatzTV/ErsatzTV.csproj
           dotnet publish ErsatzTV.Scanner/ErsatzTV.Scanner.csproj --framework net9.0 --runtime "${{ matrix.target }}" -c Release -o "scanner" -p:RestoreEnablePackagePruning=true -p:InformationalVersion="${{ inputs.release_version }}-${{ matrix.target }}" -p:EnableCompressionInSingleFile=true -p:DebugType=Embedded -p:PublishSingleFile=true --self-contained true
-          dotnet publish ErsatzTV/ErsatzTV.csproj --framework net9.0 --runtime "${{ matrix.target }}" -c Release -o "main" -p:RestoreEnablePackagePruning=true -p:InformationalVersion="${{ inputs.release_version }}-${{ matrix.target }}" -p:EnableCompressionInSingleFile=true -p:DebugType=Embedded -p:PublishSingleFile=true --self-contained true &
-
-          # Build Windows launcher
-          if [ "${{ matrix.kind }}" == "windows" ]; then
-            cargo build --manifest-path=ErsatzTV-Windows/Cargo.toml --release --all-features --target x86_64-pc-windows-gnu &
-          fi
-
-          wait
-
+          dotnet publish ErsatzTV/ErsatzTV.csproj --framework net9.0 --runtime "${{ matrix.target }}" -c Release -o "main" -p:RestoreEnablePackagePruning=true -p:InformationalVersion="${{ inputs.release_version }}-${{ matrix.target }}" -p:EnableCompressionInSingleFile=true -p:DebugType=Embedded -p:PublishSingleFile=true --self-contained true
           mkdir "$release_name"
           mv scanner/* "$release_name/"
           mv main/* "$release_name/"
-
-          if [ "${{ matrix.kind }}" == "windows" ]; then
-            ls -l ErsatzTV-Windows/target/release
-            mv ErsatzTV-Windows/target/x86_64-pc-windows-gnu/release/ersatztv_windows.exe "$release_name/ErsatzTV-Windows.exe"
-
-            # Download ffmpeg
-            7z e "ffmpeg/${{ steps.downloadffmpeg.outputs.filename }}" -o"$release_name" '*.exe' -r
-            rm -f "$release_name/ffplay.exe"
-          fi
-
-          # Pack files
-          if [ "${{ matrix.kind }}" == "windows" ]; then
-            7z a -tzip "${release_name}.zip" "./${release_name}/*"
-          else
-            tar czvf "${release_name}.tar.gz" "$release_name"
-          fi
+          tar czvf "${release_name}.tar.gz" "$release_name"
 
           # Delete output directory
           rm -r "$release_name"
@@ -248,17 +197,126 @@ jobs:
           token: ${{ secrets.gh_token }}
           tag: ${{ inputs.release_tag }}
           fail-if-no-assets: false
-          assets: |
-            *${{ matrix.target }}.zip
-            *${{ matrix.target }}.tar.gz
+          assets: "*${{ matrix.target }}.tar.gz"
 
       - name: Publish
         uses: softprops/action-gh-release@v1
         with:
           prerelease: false
           tag_name: ${{ inputs.release_tag }}
-          files: |
-            ${{ env.RELEASE_NAME }}.zip
-            ${{ env.RELEASE_NAME }}.tar.gz
+          files: "${{ env.RELEASE_NAME }}.tar.gz"
+        env:
+          GITHUB_TOKEN: ${{ secrets.gh_token }}
+
+  build_dotnet_windows:
+    name: Build dotnet for Windows
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get the sources
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup dotnet
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.203
+
+      - name: Clean
+        run: dotnet clean --configuration Release && dotnet nuget locals all --clear
+
+      - name: Install dependencies
+        run: dotnet restore -r "win-x64"
+
+      - name: Build dotnet projects
+        shell: bash
+        run: |
+          sed -i '/Scanner/d' ErsatzTV/ErsatzTV.csproj
+          dotnet publish ErsatzTV.Scanner/ErsatzTV.Scanner.csproj --framework net9.0 --runtime "win-x64" -c Release -o "scanner" -p:RestoreEnablePackagePruning=true -p:InformationalVersion="${{ inputs.release_version }}-win-x64" -p:EnableCompressionInSingleFile=true -p:DebugType=Embedded -p:PublishSingleFile=true --self-contained true
+          dotnet publish ErsatzTV/ErsatzTV.csproj --framework net9.0 --runtime "win-x64" -c Release -o "main" -p:RestoreEnablePackagePruning=true -p:InformationalVersion="${{ inputs.release_version }}-win-x64" -p:EnableCompressionInSingleFile=true -p:DebugType=Embedded -p:PublishSingleFile=true --self-contained true
+          mkdir "$release_name"
+          mv scanner/* "$release_name/"
+          mv main/* "$release_name/"
+
+      - name: Upload .NET Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dotnet-windows-build
+          path: |
+            scanner/
+            main/
+          retention-days: 1
+
+  build_rust_windows:
+    name: Build rust for Windows
+    runs-on: windows-latest
+    steps:
+      - name: Get the sources
+        uses: actions/checkout@v4
+
+      - name: Build Windows Launcher
+        shell: bash
+        run: cargo build --manifest-path=ErsatzTV-Windows/Cargo.toml --release --all-features
+
+      - name: Upload Rust Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rust-windows-build
+          path: ErsatzTV-Windows/target/release/ersatztv_windows.exe
+          retention-days: 1
+
+  package_and_upload_windows:
+    name: Package & Upload Windows
+    runs-on: ubuntu-latest
+    needs: [build_dotnet_windows, build_rust_windows]
+    steps:
+      - name: Download dotnet artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dotnet-windows-build
+          path: dotnet-build
+
+      - name: Download rust artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: rust-windows-build
+          path: rust-build
+
+      - name: Download ffmpeg
+        uses: suisei-cn/actions-download-file@v1.3.0
+        id: downloadffmpeg
+        with:
+          url: "https://github.com/ErsatzTV/ErsatzTV-ffmpeg/releases/download/7.1.1/ffmpeg-n7.1.1-56-gc2184b65d2-win64-gpl-7.1.zip"
+          target: ffmpeg/
+
+      - name: Package artifacts
+        shell: bash
+        run: |
+          release_name="ErsatzTV-${{ inputs.release_version }}-win-x64"
+          echo "RELEASE_NAME=${release_name}" >> $GITHUB_ENV
+          mkdir "$release_name"
+          
+          mv dotnet-build/* "$release_name/"
+          mv rust-build/ersatztv_windows.exe "$release_name/ErsatzTV-Windows.exe"
+          7z e "ffmpeg/${{ steps.downloadffmpeg.outputs.filename }}" -o"$release_name" '*.exe' -r
+          rm -f "$release_name/ffplay.exe"
+          
+          7z a -tzip "${release_name}.zip" "./${release_name}/*"
+
+      - name: Delete old release assets
+        uses: mknejp/delete-release-assets@v1
+        if: ${{ inputs.release_tag == 'develop' }}
+        with:
+          token: ${{ secrets.gh_token }}
+          tag: ${{ inputs.release_tag }}
+          fail-if-no-assets: false
+          assets: "*win-x64.zip"
+
+      - name: Publish
+        uses: softprops/action-gh-release@v1
+        with:
+          prerelease: false
+          tag_name: ${{ inputs.release_tag }}
+          files: "${{ env.RELEASE_NAME }}.zip"
         env:
           GITHUB_TOKEN: ${{ secrets.gh_token }}
