@@ -293,7 +293,8 @@ jobs:
           echo "RELEASE_NAME=${release_name}" >> $GITHUB_ENV
           mkdir "$release_name"
           
-          mv dotnet-build/* "$release_name/"
+          mv dotnet-build/scanner/* "$release_name/"
+          mv dotnet-build/main/* "$release_name/"
           mv rust-build/ersatztv_windows.exe "$release_name/ErsatzTV-Windows.exe"
           7z e "ffmpeg/${{ steps.downloadffmpeg.outputs.filename }}" -o"$release_name" '*.exe' -r
           rm -f "$release_name/ffplay.exe"
