@@ -26,5 +26,7 @@ public interface IHardwareCapabilitiesFactory
 
     List<VideoControllerModel> GetVideoControllerList();
 
+    List<string> GetVideoToolboxDecoders();
+
     List<string> GetVideoToolboxEncoders();
 }

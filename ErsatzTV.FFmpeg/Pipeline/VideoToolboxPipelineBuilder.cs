@@ -59,7 +59,10 @@ public class VideoToolboxPipelineBuilder : SoftwarePipelineBuilder
             desiredState.VideoProfile,
             desiredState.PixelFormat);
 
-        pipelineSteps.Add(new VideoToolboxHardwareAccelerationOption());
+        if (decodeCapability is FFmpegCapability.Hardware)
+        {
+            pipelineSteps.Add(new VideoToolboxHardwareAccelerationOption());
+        }
 
         // disable hw accel if decoder/encoder isn't supported
         return ffmpegState with

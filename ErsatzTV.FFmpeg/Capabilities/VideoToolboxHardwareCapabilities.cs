@@ -9,6 +9,7 @@ namespace ErsatzTV.FFmpeg.Capabilities;
 public class VideoToolboxHardwareCapabilities : IHardwareCapabilities
 {
     private static readonly ConcurrentDictionary<string, bool> Encoders = new ();
+    private static readonly ConcurrentDictionary<string, bool> Decoders = new ();
 
     private readonly IFFmpegCapabilities _ffmpegCapabilities;
     private readonly ILogger _logger;
@@ -21,13 +22,31 @@ public class VideoToolboxHardwareCapabilities : IHardwareCapabilities
 
     public FFmpegCapability CanDecode(string videoFormat, Option<string> videoProfile, Option<IPixelFormat> maybePixelFormat, bool isHdr)
     {
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX) && Decoders.IsEmpty)
+        {
+            if (VideoToolboxUtil.IsHardwareDecoderSupported(FourCC.H264, _logger))
+            {
+                Decoders.AddOrUpdate(VideoFormat.H264, true, (_, _) => true);
+            }
+
+            if (VideoToolboxUtil.IsHardwareDecoderSupported(FourCC.Hevc, _logger))
+            {
+                Decoders.AddOrUpdate(VideoFormat.Hevc, true, (_, _) => true);
+            }
+
+            if (VideoToolboxUtil.IsHardwareDecoderSupported(FourCC.Vp9, _logger))
+            {
+                Decoders.AddOrUpdate(VideoFormat.Vp9, true, (_, _) => true);
+            }
+        }
+
         int bitDepth = maybePixelFormat.Map(pf => pf.BitDepth).IfNone(8);
         return (videoFormat, bitDepth) switch
         {
             // 10-bit h264 decoding is likely not support by any hardware
             (VideoFormat.H264, 10) => FFmpegCapability.Software,
 
-            _ => FFmpegCapability.Hardware
+            _ => Decoders.ContainsKey(videoFormat) ? FFmpegCapability.Hardware : FFmpegCapability.Software
         };
     }
 
@@ -35,7 +54,7 @@ public class VideoToolboxHardwareCapabilities : IHardwareCapabilities
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX) && Encoders.IsEmpty)
         {
-            var encoderList = VideoToolboxUtil.GetAvailableEncoders();
+            var encoderList = VideoToolboxUtil.GetAvailableEncoders(_logger);
             _logger.LogDebug("VideoToolbox reports {Count} encoders", encoderList.Count);
 
             // we only really care about h264 and hevc hardware encoders

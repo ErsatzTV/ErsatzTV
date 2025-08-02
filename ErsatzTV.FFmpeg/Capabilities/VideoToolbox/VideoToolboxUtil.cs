@@ -1,5 +1,6 @@
 using System.Runtime.InteropServices;
 using System.Text;
+using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.FFmpeg.Capabilities.VideoToolbox;
 
@@ -33,6 +34,10 @@ internal static partial class VideoToolboxUtil
 
     [LibraryImport(VideoToolbox)]
     private static partial int VTCopyVideoEncoderList(IntPtr options, out IntPtr listOfEncoders);
+
+    [LibraryImport(VideoToolbox)]
+    [return: MarshalAs(UnmanagedType.I1)]
+    private static partial bool VTIsHardwareDecodeSupported(uint codecType);
 
     [LibraryImport(LibSystem, StringMarshalling = StringMarshalling.Utf8)]
     private static partial IntPtr dlopen(string path, int mode);
@@ -95,7 +100,17 @@ internal static partial class VideoToolboxUtil
         return null;
     }
 
-    internal static List<string> GetAvailableEncoders()
+    private static uint FourCCToUInt32(string fourCC)
+    {
+        if (fourCC.Length != 4)
+        {
+            throw new ArgumentException("FourCC must be 4 characters long.", nameof(fourCC));
+        }
+
+        return ((uint)fourCC[0] << 24) | ((uint)fourCC[1] << 16) | ((uint)fourCC[2] << 8) | (uint)fourCC[3];
+    }
+
+    internal static List<string> GetAvailableEncoders(ILogger logger)
     {
         var encoderNames = new List<string>();
 
@@ -107,7 +122,7 @@ internal static partial class VideoToolboxUtil
         IntPtr kVTVideoEncoderList_EncoderName = GetCFString(VideoToolbox, "kVTVideoEncoderList_EncoderName");
         if (kVTVideoEncoderList_EncoderName == IntPtr.Zero)
         {
-            Console.Error.WriteLine("Failed to load kVTVideoEncoderList_EncoderName symbol.");
+            logger.LogWarning("Failed to load kVTVideoEncoderList_EncoderName symbol.");
             return encoderNames;
         }
 
@@ -118,7 +133,7 @@ internal static partial class VideoToolboxUtil
 
             if (status != 0 || encoderList == IntPtr.Zero)
             {
-                Console.Error.WriteLine($"VTCopyVideoEncoderList failed with status: {status}");
+                logger.LogWarning("VTCopyVideoEncoderList failed with status: {Status}", status);
                 return encoderNames;
             }
 
@@ -126,7 +141,10 @@ internal static partial class VideoToolboxUtil
             for (int i = 0; i < count; i++)
             {
                 IntPtr encoderDict = CFArrayGetValueAtIndex(encoderList, i);
-                if (encoderDict == IntPtr.Zero) continue;
+                if (encoderDict == IntPtr.Zero)
+                {
+                    continue;
+                }
 
                 IntPtr encoderNameCfString = CFDictionaryGetValue(encoderDict, kVTVideoEncoderList_EncoderName);
                 string? encoderName = CFStringToString(encoderNameCfString);
@@ -146,5 +164,19 @@ internal static partial class VideoToolboxUtil
         }
 
         return encoderNames;
+    }
+
+    internal static bool IsHardwareDecoderSupported(string codecFourCC, ILogger logger)
+    {
+        try
+        {
+            uint codecType = FourCCToUInt32(codecFourCC);
+            return VTIsHardwareDecodeSupported(codecType);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Unexpected error checking decoder support for {CodecFourCC}", codecFourCC);
+            return false;
+        }
     }
 }
