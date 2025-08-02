@@ -261,9 +261,24 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
         return [];
     }
 
+    public List<string> GetVideoToolboxDecoders()
+    {
+        var result = new List<string>();
+
+        foreach (var fourCC in FourCC.AllVideoToolbox)
+        {
+            if (VideoToolboxUtil.IsHardwareDecoderSupported(fourCC, _logger))
+            {
+                result.Add(fourCC);
+            }
+        }
+
+        return result;
+    }
+
     public List<string> GetVideoToolboxEncoders()
     {
-        return VideoToolboxUtil.GetAvailableEncoders();
+        return VideoToolboxUtil.GetAvailableEncoders(_logger);
     }
 
     private async Task<IReadOnlySet<string>> GetFFmpegCapabilities(
