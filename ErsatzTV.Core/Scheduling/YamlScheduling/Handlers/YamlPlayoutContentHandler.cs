@@ -178,6 +178,7 @@ public abstract class YamlPlayoutContentHandler(EnumeratorCache enumeratorCache)
         if (itemChapters.Count < 2 || maybeMidRollSequence.IsNone)
         {
             context.Playout.Items.Add(playoutItem);
+            context.CurrentTime += playoutItem.OutPoint - playoutItem.InPoint;
         }
         else
         {
@@ -191,6 +192,7 @@ public abstract class YamlPlayoutContentHandler(EnumeratorCache enumeratorCache)
                 if (filteredChapters.Count < 2)
                 {
                     context.Playout.Items.Add(playoutItem);
+                    context.CurrentTime += playoutItem.OutPoint - playoutItem.InPoint;
                 }
                 else
                 {
