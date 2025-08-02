@@ -48,7 +48,7 @@ public class
         p.AllowBFrames = update.AllowBFrames;
 
         // mpeg2video only supports 8-bit content
-        p.BitDepth = update.VideoFormat == FFmpegProfileVideoFormat.Mpeg2Video
+        p.BitDepth = update.VideoFormat is FFmpegProfileVideoFormat.Mpeg2Video
             ? FFmpegProfileBitDepth.EightBit
             : update.BitDepth;
 

@@ -106,6 +106,7 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
             HardwareAccelerationMode.Nvenc => await GetNvidiaCapabilities(ffmpegPath, ffmpegCapabilities),
             HardwareAccelerationMode.Qsv => await GetQsvCapabilities(ffmpegPath, vaapiDevice),
             HardwareAccelerationMode.Vaapi => await GetVaapiCapabilities(vaapiDisplay, vaapiDriver, vaapiDevice),
+            HardwareAccelerationMode.VideoToolbox => new VideoToolboxHardwareCapabilities(ffmpegCapabilities, _logger),
             HardwareAccelerationMode.Amf => new AmfHardwareCapabilities(),
             _ => new DefaultHardwareCapabilities()
         };

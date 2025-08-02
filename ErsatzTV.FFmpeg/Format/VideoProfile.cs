@@ -4,4 +4,5 @@ public static class VideoProfile
 {
     public const string Main = "main";
     public const string High = "high";
+    public const string High10 = "high10";
 }
