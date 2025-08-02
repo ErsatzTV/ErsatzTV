@@ -46,7 +46,7 @@ jobs:
           fetch-depth: 0
           submodules: true
 
-      - name: Setup .NET Core
+      - name: Setup dotnet
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 9.0.203
@@ -157,7 +157,7 @@ jobs:
           - os: ubuntu-24.04-arm
             kind: linux
             target: linux-arm64
-          - os: windows-latest
+          - os: ubuntu-latest
             kind: windows
             target: win-x64
     steps:
@@ -166,10 +166,24 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup .NET Core
+      - name: Setup dotnet
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 9.0.203
+
+      - name: Set up MinGW
+        if: ${{ matrix.target == 'win-x64' }}
+        uses: egor-tensin/setup-mingw@v2
+        with:
+          platform: x64
+
+      - name: Setup Windows Cross-Compile Tools
+        if: ${{ matrix.target == 'win-x64' }}
+        run: |
+          rustup target add x86_64-pc-windows-gnu
+          mkdir -p .cargo
+          echo '[target.x86_64-pc-windows-gnu]' >> .cargo/config.toml
+          echo 'linker = "x86_64-w64-mingw32-gcc"' >> .cargo/config.toml
 
       - name: Clean
         run: dotnet clean --configuration Release && dotnet nuget locals all --clear
@@ -199,7 +213,7 @@ jobs:
 
           # Build Windows launcher
           if [ "${{ matrix.kind }}" == "windows" ]; then
-            cargo build --manifest-path=ErsatzTV-Windows/Cargo.toml --release --all-features &
+            cargo build --manifest-path=ErsatzTV-Windows/Cargo.toml --release --all-features --target x86_64-pc-windows-gnu &
           fi
 
           wait
@@ -210,7 +224,7 @@ jobs:
 
           if [ "${{ matrix.kind }}" == "windows" ]; then
             ls -l ErsatzTV-Windows/target/release
-            mv ErsatzTV-Windows/target/release/ersatztv_windows.exe "$release_name/ErsatzTV-Windows.exe"
+            mv ErsatzTV-Windows/target/x86_64-pc-windows-gnu/release/ersatztv_windows.exe "$release_name/ErsatzTV-Windows.exe"
 
             # Download ffmpeg
             7z e "ffmpeg/${{ steps.downloadffmpeg.outputs.filename }}" -o"$release_name" '*.exe' -r
