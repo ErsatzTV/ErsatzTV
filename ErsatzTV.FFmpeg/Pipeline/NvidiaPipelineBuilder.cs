@@ -87,7 +87,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
         if (decodeCapability == FFmpegCapability.Hardware)
         {
             pipelineSteps.Add(new CudaHardwareAccelerationOption(isHdrTonemap));
-            //pipelineSteps.Add(new NoAutoScaleOutputOption());
+            pipelineSteps.Add(new NoAutoScaleOutputOption());
         }
 
         // disable hw accel if decoder/encoder isn't supported
