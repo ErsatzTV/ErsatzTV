@@ -6,7 +6,7 @@ public record GetPlayoutItemProcessByChannelNumber(
     DateTimeOffset Now,
     bool StartAtZero,
     bool HlsRealtime,
-    double PtsOffset,
+    long PtsOffset,
     Option<int> TargetFramerate) : FFmpegProcessRequest(
     ChannelNumber,
     Mode,

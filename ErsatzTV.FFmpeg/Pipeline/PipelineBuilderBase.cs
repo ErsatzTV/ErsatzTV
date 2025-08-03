@@ -193,6 +193,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
             new NoStatsOption(),
             new LoglevelErrorOption(),
             new StandardFormatFlags(),
+            new NoDemuxDecodeDelayOutputOption(),
             outputOption,
             new ClosedGopOutputOption()
         };
@@ -446,10 +447,9 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
             audioInputFile.FilterSteps.Add(new AudioSetPtsFilter());
         }
 
-        foreach (TimeSpan audioDuration in audioInputFile.DesiredState.AudioDuration.Filter(d => d > TimeSpan.Zero))
+        foreach (TimeSpan _ in audioInputFile.DesiredState.AudioDuration)
         {
-            audioInputFile.FilterSteps.Add(new AudioPadFilter(audioDuration));
-            pipelineSteps.Add(new ShortestOutputOption());
+            audioInputFile.FilterSteps.Add(new AudioPadFilter());
         }
     }
 
@@ -658,7 +658,10 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
 
         if (ffmpegState.PtsOffset > 0)
         {
-            pipelineSteps.Add(new OutputTsOffsetOption(ffmpegState.PtsOffset));
+            foreach (int videoTrackTimeScale in desiredState.VideoTrackTimeScale)
+            {
+                pipelineSteps.Add(new OutputTsOffsetOption(ffmpegState.PtsOffset, videoTrackTimeScale));
+            }
         }
     }
 

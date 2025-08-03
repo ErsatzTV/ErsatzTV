@@ -54,24 +54,20 @@ public class GetLastPtsTimeHandler : IRequestHandler<GetLastPtsTime, Either<Base
         Option<FileInfo> maybeLastSegment = GetLastSegment(parameters.ChannelNumber);
         foreach (FileInfo segment in maybeLastSegment)
         {
-            PtsTime videoPts = await GetPts(parameters, segment, "v", cancellationToken).IfNoneAsync(PtsTime.Zero);
-            PtsTime audioPts = await GetPts(parameters, segment, "a", cancellationToken).IfNoneAsync(PtsTime.Zero);
-            return videoPts.Value > audioPts.Value ? videoPts : audioPts;
+            return await GetPts(parameters, segment, cancellationToken).IfNoneAsync(PtsTime.Zero);
         }
 
         return BaseError.New($"Failed to determine last pts duration for channel {parameters.ChannelNumber}");
     }
 
-    private async Task<Option<PtsTime>> GetPts(RequestParameters parameters, FileInfo segment, string audioVideo, CancellationToken cancellationToken)
+    private async Task<Option<PtsTime>> GetPts(RequestParameters parameters, FileInfo segment, CancellationToken cancellationToken)
     {
         string[] argumentList =
         {
             "-v", "0",
-            "-select_streams", $"{audioVideo}:0",
             "-show_entries",
-            "packet=pts_time,duration_time",
+            "packet=pts,duration",
             "-of", "compact=p=0:nk=1",
-            // "-read_intervals", "999999", // read_intervals causes inconsistent behavior on windows
             segment.FullName
         };
 

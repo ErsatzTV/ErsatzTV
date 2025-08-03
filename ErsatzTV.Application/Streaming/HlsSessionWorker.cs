@@ -397,7 +397,7 @@ public class HlsSessionWorker : IHlsSessionWorker
                 }
             }
 
-            double ptsOffset = await GetPtsOffset(_channelNumber, cancellationToken);
+            long ptsOffset = await GetPtsOffset(_channelNumber, cancellationToken);
             // _logger.LogInformation("PTS offset: {PtsOffset}", ptsOffset);
 
             _logger.LogDebug("HLS session state: {State}", _state);
@@ -620,12 +620,12 @@ public class HlsSessionWorker : IHlsSessionWorker
         }
     }
 
-    private async Task<double> GetPtsOffset(string channelNumber, CancellationToken cancellationToken)
+    private async Task<long> GetPtsOffset(string channelNumber, CancellationToken cancellationToken)
     {
         await _slim.WaitAsync(cancellationToken);
         try
         {
-            double result = 0;
+            long result = 0;
 
             // if we haven't yet written any segments, start at zero
             if (!_hasWrittenSegments)
@@ -644,7 +644,7 @@ public class HlsSessionWorker : IHlsSessionWorker
 
             foreach (PtsTime pts in queryResult.RightToSeq())
             {
-                result = pts.Value + 0.01;
+                result = pts.Value;
             }
 
             return result;

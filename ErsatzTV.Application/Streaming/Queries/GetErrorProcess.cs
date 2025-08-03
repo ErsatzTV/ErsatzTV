@@ -4,7 +4,7 @@ public record GetErrorProcess(
     string ChannelNumber,
     string Mode,
     bool HlsRealtime,
-    double PtsOffset,
+    long PtsOffset,
     Option<TimeSpan> MaybeDuration,
     DateTimeOffset Until,
     string ErrorMessage) : FFmpegProcessRequest(
