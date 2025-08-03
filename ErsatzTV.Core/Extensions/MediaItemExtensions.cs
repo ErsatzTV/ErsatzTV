@@ -16,6 +16,7 @@ public static class MediaItemExtensions
             MusicVideo mv => mv.MediaVersions.HeadOrNone().Map(v => v.Duration),
             OtherVideo ov => ov.MediaVersions.HeadOrNone().Map(v => v.Duration),
             Song s => s.MediaVersions.HeadOrNone().Map(v => v.Duration),
+            ChapterMediaItem c => c.MediaVersion.Duration,
             _ => None
         };
 
