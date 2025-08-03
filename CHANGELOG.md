@@ -50,6 +50,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix building playouts with empty schedules
 - Fix schedule start time calculation when daily playout build goes beyond midnight and into a different alternate schedule
 - Fix compatibility with older NVIDIA devices (compute capability 3.0+) in unified docker image
+- Fix transitions when using NVIDIA acceleration
 
 ### Changed
 - Always tell ffmpeg to stop encoding with a specific duration
