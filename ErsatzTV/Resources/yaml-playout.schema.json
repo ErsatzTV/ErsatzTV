@@ -62,6 +62,7 @@
       "type": "array",
       "items": {
         "oneOf": [
+          { "$ref": "#/$defs/control/rewindInstruction" },
           { "$ref": "#/$defs/control/skipItemsInstruction" },
           { "$ref": "#/$defs/control/skipToItemInstruction" },
           { "$ref": "#/$defs/control/waitUntilInstruction" }
@@ -284,6 +285,14 @@
       }
     },
     "control": {
+      "rewindInstruction": {
+        "type": "object",
+        "properties": {
+          "rewind": { "type": "string" }
+        },
+        "required": [ "rewind" ],
+        "additionalProperties": false
+      },
       "epgGroupInstruction": {
         "type": "object",
         "properties": {
