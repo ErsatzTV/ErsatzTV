@@ -5,7 +5,7 @@
 namespace ErsatzTV.Infrastructure.Sqlite.Migrations
 {
     /// <inheritdoc />
-    public partial class Add_FillerPresetUseChaptersAsMediaItems : Migration
+    public partial class FillerPreset_UseChaptersAsMediaItems : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

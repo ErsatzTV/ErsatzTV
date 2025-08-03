@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ErsatzTV.Infrastructure.MySql.Migrations
 {
     [DbContext(typeof(TvContext))]
-    [Migration("20250730002946_Add_FillerPresetUseChaptersAsMediaItems")]
-    partial class Add_FillerPresetUseChaptersAsMediaItems
+    [Migration("20250803211857_FillerPreset_UseChaptersAsMediaItems")]
+    partial class FillerPreset_UseChaptersAsMediaItems
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -743,6 +743,9 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<int?>("PadToNearestMinute")
                         .HasColumnType("int");
 
+                    b.Property<int?>("PlaylistId")
+                        .HasColumnType("int");
+
                     b.Property<int?>("SmartCollectionId")
                         .HasColumnType("int");
 
@@ -756,6 +759,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.HasIndex("MediaItemId");
 
                     b.HasIndex("MultiCollectionId");
+
+                    b.HasIndex("PlaylistId");
 
                     b.HasIndex("SmartCollectionId");
 
@@ -4064,6 +4069,11 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .HasForeignKey("MultiCollectionId")
                         .OnDelete(DeleteBehavior.Cascade);
 
+                    b.HasOne("ErsatzTV.Core.Domain.Playlist", "Playlist")
+                        .WithMany()
+                        .HasForeignKey("PlaylistId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
                     b.HasOne("ErsatzTV.Core.Domain.SmartCollection", "SmartCollection")
                         .WithMany()
                         .HasForeignKey("SmartCollectionId")
@@ -4074,6 +4084,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Navigation("MediaItem");
 
                     b.Navigation("MultiCollection");
+
+                    b.Navigation("Playlist");
 
                     b.Navigation("SmartCollection");
                 });
@@ -4515,6 +4527,9 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         {
                             b1.Property<int>("PlayoutId")
                                 .HasColumnType("int");
+
+                            b1.Property<string>("Context")
+                                .HasColumnType("longtext");
 
                             b1.Property<DateTime?>("DurationFinish")
                                 .HasColumnType("datetime(6)");
