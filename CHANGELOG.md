@@ -19,9 +19,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - With value of `true` and `sequence` property, will enable automatic post-roll for all content in the playout to the sequence with the provided key
   - With value of `false`, will disable automatic post-roll in the playout
 - YAML playout: add `mid_roll` instruction to enable and disable a mid-roll sequence
-    - With value of `true` and `sequence` property, will enable automatic mid-roll for (`count` and `all`) content in the playout to the sequence with the provided key
-    - With value of `false`, will disable automatic post-roll in the playout
-    - `expression` can be used to influence which chapters are selected for mid roll (same as in filler preset)
+  - With value of `true` and `sequence` property, will enable automatic mid-roll for (`count` and `all`) content in the playout to the sequence with the provided key
+  - With value of `false`, will disable automatic post-roll in the playout
+  - `expression` can be used to influence which chapters are selected for mid roll (same as in filler preset)
+- YAML playout: add `rewind` instruction to set start of playout relative to the current time
+  - Value should be formatted as `HH:MM:SS` e.g. `00:05:30` for 5 minutes 30 seconds (before now)
+  - This is instruction is mostly useful for debugging transitions, and can only be used as a reset instruction
 - Add YAML playout validation (using JSON Schema)
   - Invalid YAML playout definitions will fail to build and will log validation failures as warnings
   - `content` is fully validated

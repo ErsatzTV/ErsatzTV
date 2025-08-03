@@ -349,6 +349,7 @@ public class YamlPlayoutBuilder(
 
             YamlPlayoutSkipItemsInstruction => new YamlPlayoutSkipItemsHandler(enumeratorCache),
             YamlPlayoutSkipToItemInstruction => new YamlPlayoutSkipToItemHandler(enumeratorCache),
+            YamlPlayoutRewindInstruction => new YamlPlayoutRewindHandler(),
 
             // content handlers
             YamlPlayoutAllInstruction => new YamlPlayoutAllHandler(enumeratorCache),
@@ -408,6 +409,7 @@ public class YamlPlayoutBuilder(
                         { "post_roll", typeof(YamlPostRollInstruction) },
                         { "mid_roll", typeof(YamlMidRollInstruction) },
                         { "repeat", typeof(YamlPlayoutRepeatInstruction) },
+                        { "rewind", typeof(YamlPlayoutRewindInstruction) },
                         { "sequence", typeof(YamlPlayoutSequenceInstruction) },
                         { "shuffle_sequence", typeof(YamlPlayoutShuffleSequenceInstruction) },
                         { "skip_items", typeof(YamlPlayoutSkipItemsInstruction) },
