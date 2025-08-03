@@ -35,6 +35,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
         var result = new Dictionary<PlaylistItem, List<MediaItem>>();
 
         Option<Playlist> maybePlaylist = await dbContext.Playlists
+            .AsNoTracking()
             .Include(p => p.Items)
             .SelectOneAsync(p => p.Id, p => p.Id == playlistId);
 
@@ -169,6 +170,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
         Option<Playlist> maybePlaylist = await dbContext.Playlists
+            .AsNoTracking()
             .SelectOneAsync(p => p.Name, p => EF.Functions.Collate(p.Name, TvContext.CaseInsensitiveCollation) == name);
 
         foreach (Playlist playlist in maybePlaylist)
@@ -315,6 +317,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         return await dbContext.Collections
+            .AsNoTracking()
             .Include(c => c.CollectionItems)
             .OrderBy(c => c.Id)
             .SingleOrDefaultAsync(c => c.Id == id)
@@ -346,6 +349,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
         Option<Collection> maybeCollection = await dbContext.Collections
+            .AsNoTracking()
             .SelectOneAsync(c => c.Name, c => EF.Functions.Collate(c.Name, TvContext.CaseInsensitiveCollation) == name);
 
         foreach (Collection collection in maybeCollection)
@@ -363,6 +367,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
         var result = new List<MediaItem>();
 
         Option<MultiCollection> maybeMultiCollection = await dbContext.MultiCollections
+            .AsNoTracking()
             .Include(mc => mc.Collections)
             .Include(mc => mc.SmartCollections)
             .SelectOneAsync(mc => mc.Id, mc => mc.Id == id);
@@ -397,6 +402,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
         Option<MultiCollection> maybeCollection = await dbContext.MultiCollections
+            .AsNoTracking()
             .SelectOneAsync(
                 mc => mc.Name,
                 mc => EF.Functions.Collate(mc.Name, TvContext.CaseInsensitiveCollation) == name);
@@ -414,6 +420,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
         Option<SmartCollection> maybeCollection = await dbContext.SmartCollections
+            .AsNoTracking()
             .SelectOneAsync(sc => sc.Id, sc => sc.Id == id);
 
         foreach (SmartCollection collection in maybeCollection)
@@ -429,6 +436,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
         Option<SmartCollection> maybeCollection = await dbContext.SmartCollections
+            .AsNoTracking()
             .SelectOneAsync(
                 sc => sc.Name,
                 sc => EF.Functions.Collate(sc.Name, TvContext.CaseInsensitiveCollation) == name);
@@ -529,6 +537,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
             }
 
             List<int> nextIds = await dbContext.ShowMetadata
+                .AsNoTracking()
                 .Filter(sm =>
                     sm.Guids.Any(g => EF.Functions.Collate(g.Guid, TvContext.CaseInsensitiveCollation) == guid))
                 .Map(sm => sm.ShowId)
@@ -556,6 +565,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
         var result = new List<CollectionWithItems>();
 
         Option<MultiCollection> maybeMultiCollection = await dbContext.MultiCollections
+            .AsNoTracking()
             .Include(mc => mc.Collections)
             .Include(mc => mc.SmartCollections)
             .Include(mc => mc.MultiCollectionItems)
@@ -643,6 +653,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
         var result = new List<MediaItem>();
 
         Option<Playlist> maybePlaylist = await dbContext.Playlists
+            .AsNoTracking()
             .Include(p => p.Items)
             .SelectOneAsync(p => p.Id, p => p.Id == id);
 
@@ -876,25 +887,32 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
         return emptyCollection.CollectionType switch
         {
-            ProgramScheduleItemCollectionType.Artist => await dbContext.Artists.Include(a => a.ArtistMetadata)
+            ProgramScheduleItemCollectionType.Artist => await dbContext.Artists
+                .AsNoTracking()
+                .Include(a => a.ArtistMetadata)
                 .SelectOneAsync(a => a.Id, a => a.Id == emptyCollection.MediaItemId.Value)
                 .MapT(a => a.ArtistMetadata.Head().Title),
             ProgramScheduleItemCollectionType.Collection => await dbContext.Collections
+                .AsNoTracking()
                 .SelectOneAsync(c => c.Id, c => c.Id == emptyCollection.CollectionId.Value)
                 .MapT(c => c.Name),
             ProgramScheduleItemCollectionType.MultiCollection => await dbContext.MultiCollections
+                .AsNoTracking()
                 .SelectOneAsync(c => c.Id, c => c.Id == emptyCollection.MultiCollectionId.Value)
                 .MapT(c => c.Name),
             ProgramScheduleItemCollectionType.SmartCollection => await dbContext.SmartCollections
+                .AsNoTracking()
                 .SelectOneAsync(c => c.Id, c => c.Id == emptyCollection.SmartCollectionId.Value)
                 .MapT(c => c.Name),
             ProgramScheduleItemCollectionType.TelevisionSeason => await dbContext.Seasons
+                .AsNoTracking()
                 .Include(s => s.SeasonMetadata)
                 .Include(s => s.Show)
                 .ThenInclude(s => s.ShowMetadata)
                 .SelectOneAsync(a => a.Id, a => a.Id == emptyCollection.MediaItemId.Value)
                 .MapT(s => $"{s.Show.ShowMetadata.Head().Title} Season {s.SeasonNumber}"),
             ProgramScheduleItemCollectionType.TelevisionShow => await dbContext.Shows.Include(s => s.ShowMetadata)
+                .AsNoTracking()
                 .SelectOneAsync(a => a.Id, a => a.Id == emptyCollection.MediaItemId.Value)
                 .MapT(s => s.ShowMetadata.Head().Title),
             // TODO: get playlist name
@@ -1049,6 +1067,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
     private static Task<List<Movie>> GetMovieItems(TvContext dbContext, IEnumerable<int> movieIds) =>
         dbContext.Movies
+            .AsNoTracking()
             .Include(m => m.MovieMetadata)
             .ThenInclude(mm => mm.Subtitles)
             .Include(m => m.MediaVersions)
@@ -1074,6 +1093,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
         TvContext dbContext,
         IEnumerable<int> musicVideoIds) =>
         dbContext.MusicVideos
+            .AsNoTracking()
             .Include(m => m.Artist)
             .ThenInclude(a => a.ArtistMetadata)
             .Include(m => m.MusicVideoMetadata)
@@ -1109,6 +1129,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
     private static Task<List<MusicVideo>> GetMusicVideoItems(TvContext dbContext, IEnumerable<int> musicVideoIds) =>
         dbContext.MusicVideos
+            .AsNoTracking()
             .Include(m => m.Artist)
             .ThenInclude(a => a.ArtistMetadata)
             .Include(m => m.MusicVideoMetadata)
@@ -1135,6 +1156,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
     private static Task<List<OtherVideo>> GetOtherVideoItems(TvContext dbContext, IEnumerable<int> otherVideoIds) =>
         dbContext.OtherVideos
+            .AsNoTracking()
             .Include(m => m.OtherVideoMetadata)
             .ThenInclude(ovm => ovm.Subtitles)
             .Include(m => m.MediaVersions)
@@ -1157,6 +1179,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
     private static Task<List<Song>> GetSongItems(TvContext dbContext, IEnumerable<int> songIds) =>
         dbContext.Songs
+            .AsNoTracking()
             .Include(m => m.SongMetadata)
             .ThenInclude(s => s.Subtitles)
             .Include(m => m.MediaVersions)
@@ -1179,6 +1202,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
     private static Task<List<Image>> GetImageItems(TvContext dbContext, IEnumerable<int> imageIds) =>
         dbContext.Images
+            .AsNoTracking()
             .Include(m => m.ImageMetadata)
             .ThenInclude(im => im.Subtitles)
             .Include(m => m.MediaVersions)
@@ -1201,6 +1225,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
     private static Task<List<RemoteStream>> GetRemoteStreamItems(TvContext dbContext, IEnumerable<int> remoteStreamIds) =>
         dbContext.RemoteStreams
+            .AsNoTracking()
             .Include(m => m.RemoteStreamMetadata)
             .ThenInclude(im => im.Subtitles)
             .Include(m => m.MediaVersions)
@@ -1227,6 +1252,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
     private static Task<List<Episode>> GetShowItemsFromEpisodeIds(TvContext dbContext, IEnumerable<int> episodeIds) =>
         dbContext.Episodes
+            .AsNoTracking()
             .Include(e => e.EpisodeMetadata)
             .ThenInclude(em => em.Subtitles)
             .Include(e => e.MediaVersions)
@@ -1265,6 +1291,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
     private static Task<List<Episode>> GetSeasonItemsFromEpisodeIds(TvContext dbContext, IEnumerable<int> episodeIds) =>
         dbContext.Episodes
+            .AsNoTracking()
             .Include(e => e.EpisodeMetadata)
             .ThenInclude(em => em.Subtitles)
             .Include(e => e.MediaVersions)
@@ -1301,6 +1328,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
     private static Task<List<Episode>> GetEpisodeItems(TvContext dbContext, IEnumerable<int> episodeIds) =>
         dbContext.Episodes
+            .AsNoTracking()
             .Include(e => e.EpisodeMetadata)
             .ThenInclude(em => em.Subtitles)
             .Include(e => e.MediaVersions)

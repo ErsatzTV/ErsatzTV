@@ -45,6 +45,7 @@ public class ConfigElementRepository : IConfigElementRepository
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         return await dbContext.ConfigElements
+            .AsNoTracking()
             .OrderBy(ce => ce.Key)
             .SingleOrDefaultAsync(ce => ce.Key == key.Key)
             .Map(Optional);

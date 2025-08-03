@@ -15,6 +15,7 @@ public class ChannelRepository : IChannelRepository
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         return await dbContext.Channels
+            .AsNoTracking()
             .Include(c => c.Artwork)
             .Include(c => c.Watermark)
             .OrderBy(c => c.Id)
@@ -26,6 +27,7 @@ public class ChannelRepository : IChannelRepository
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         return await dbContext.Channels
+            .AsNoTracking()
             .Include(c => c.FFmpegProfile)
             .ThenInclude(p => p.Resolution)
             .Include(c => c.Artwork)
@@ -39,6 +41,7 @@ public class ChannelRepository : IChannelRepository
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         return await dbContext.Channels
+            .AsNoTracking()
             .Include(c => c.FFmpegProfile)
             .Include(c => c.Artwork)
             .Include(c => c.Playouts)
@@ -50,6 +53,7 @@ public class ChannelRepository : IChannelRepository
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
         List<ChannelWatermark> maybeWatermarks = await dbContext.ChannelWatermarks
+            .AsNoTracking()
             .Where(cw => EF.Functions.Like(
                 EF.Functions.Collate(cw.Name, TvContext.CaseInsensitiveCollation),
                 $"%{name}%"))
