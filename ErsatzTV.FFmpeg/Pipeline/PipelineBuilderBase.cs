@@ -351,8 +351,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
                 {
                     foreach (string segmentTemplate in ffmpegState.HlsSegmentTemplate)
                     {
-                        //bool oneSecondGop = ffmpegState.EncoderHardwareAccelerationMode is HardwareAccelerationMode.Qsv;
-                        var oneSecondGop = false;
+                        bool oneSecondGop = ffmpegState.EncoderHardwareAccelerationMode is HardwareAccelerationMode.Qsv;
 
                         pipelineSteps.Add(
                             new OutputFormatHls(
