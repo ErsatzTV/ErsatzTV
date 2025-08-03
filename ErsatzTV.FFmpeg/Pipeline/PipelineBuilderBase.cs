@@ -442,8 +442,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
     {
         if (pipelineSteps.All(ps => ps is not EncoderCopyAudio))
         {
-            audioInputFile.FilterSteps.Add(new AudioFirstPtsFilter(0));
-            audioInputFile.FilterSteps.Add(new AudioSetPtsFilter());
+            audioInputFile.FilterSteps.Add(new AudioResampleFilter());
         }
 
         foreach (TimeSpan _ in audioInputFile.DesiredState.AudioDuration)

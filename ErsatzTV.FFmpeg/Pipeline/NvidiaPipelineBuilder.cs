@@ -120,15 +120,6 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
 
         Option<IDecoder> maybeDecoder = (ffmpegState.DecoderHardwareAccelerationMode, videoStream.Codec) switch
         {
-            (HardwareAccelerationMode.Nvenc, VideoFormat.Hevc) => new DecoderHevcCuvid(HardwareAccelerationMode.Nvenc),
-            (HardwareAccelerationMode.Nvenc, VideoFormat.H264) => new DecoderH264Cuvid(HardwareAccelerationMode.Nvenc),
-            (HardwareAccelerationMode.Nvenc, VideoFormat.Mpeg2Video) => new DecoderMpeg2Cuvid(
-                HardwareAccelerationMode.Nvenc, context.ShouldDeinterlace),
-            (HardwareAccelerationMode.Nvenc, VideoFormat.Vc1) => new DecoderVc1Cuvid(HardwareAccelerationMode.Nvenc),
-            (HardwareAccelerationMode.Nvenc, VideoFormat.Vp9) => new DecoderVp9Cuvid(HardwareAccelerationMode.Nvenc),
-            (HardwareAccelerationMode.Nvenc, VideoFormat.Mpeg4) =>
-                new DecoderMpeg4Cuvid(HardwareAccelerationMode.Nvenc),
-            (HardwareAccelerationMode.Nvenc, VideoFormat.Av1) => new DecoderAv1Cuvid(HardwareAccelerationMode.Nvenc),
             (HardwareAccelerationMode.Nvenc, _) => new DecoderImplicitCuda(),
             _ => GetSoftwareDecoder(videoStream)
         };
@@ -314,8 +305,6 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
             currentState,
             context,
             pipelineSteps);
-
-        pixelFormatFilterSteps.Add(new VideoSetPtsFilter());
 
         return new FilterChain(
             videoInputFile.FilterSteps,
