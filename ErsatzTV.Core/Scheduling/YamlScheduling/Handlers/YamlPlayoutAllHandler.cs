@@ -46,7 +46,6 @@ public class YamlPlayoutAllHandler(EnumeratorCache enumeratorCache) : YamlPlayou
                     // create a playout item
                     var playoutItem = new PlayoutItem
                     {
-                        MediaItem = mediaItem,
                         MediaItemId = mediaItem.Id,
                         Start = context.CurrentTime.UtcDateTime,
                         Finish = context.CurrentTime.UtcDateTime + itemDuration,
@@ -72,7 +71,7 @@ public class YamlPlayoutAllHandler(EnumeratorCache enumeratorCache) : YamlPlayou
                         playoutItem.WatermarkId = watermarkId;
                     }
 
-                    await AddItemAndMidRoll(context, playoutItem, executeSequence);
+                    await AddItemAndMidRoll(context, playoutItem, mediaItem, executeSequence);
                     context.AdvanceGuideGroup();
 
                     // create history record

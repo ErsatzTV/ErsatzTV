@@ -170,10 +170,13 @@ public abstract class YamlPlayoutContentHandler(EnumeratorCache enumeratorCache)
         return Optional(version.Chapters).Flatten().OrderBy(c => c.StartTime).ToList();
     }
 
-    protected static async Task AddItemAndMidRoll(YamlPlayoutContext context, PlayoutItem playoutItem,
+    protected static async Task AddItemAndMidRoll(
+        YamlPlayoutContext context,
+        PlayoutItem playoutItem,
+        MediaItem mediaItem,
         Func<string, Task> executeSequence)
     {
-        List<MediaChapter> itemChapters = ChaptersForMediaItem(playoutItem.MediaItem);
+        List<MediaChapter> itemChapters = ChaptersForMediaItem(mediaItem);
         Option<YamlPlayoutContext.MidRollSequence> maybeMidRollSequence = context.GetMidRollSequence();
         if (itemChapters.Count < 2 || maybeMidRollSequence.IsNone)
         {
