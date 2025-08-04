@@ -60,6 +60,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Always tell ffmpeg to stop encoding with a specific duration
   - This was removed to try to improve transitions with ffmpeg 7.x, but has been causing issues with other content
 - Move search debug logging to its own log category; add `Searching Minimum Log Level` to `Settings` > `Logging`
+- Classic schedules: always schedule the full `Duration` amount instead of stopping mid-duration
+  - This allows duration items to be scheduled beyond midnight
 
 ## [25.3.1] - 2025-07-24
 ### Fixed

@@ -38,7 +38,7 @@ public class PlayoutModeSchedulerDuration : PlayoutModeSchedulerBase<ProgramSche
 
         IMediaCollectionEnumerator contentEnumerator =
             collectionEnumerators[CollectionKey.ForScheduleItem(scheduleItem)];
-        while (contentEnumerator.Current.IsSome && nextState.CurrentTime < hardStop && willFinishInTime &&
+        while (contentEnumerator.Current.IsSome && willFinishInTime &&
                nextState.CurrentTime < nextState.DurationFinish.IfNone(SystemTime.MaxValueUtc))
         {
             // Logger.LogDebug(
@@ -53,7 +53,9 @@ public class PlayoutModeSchedulerDuration : PlayoutModeSchedulerBase<ProgramSche
             // find when we should start this item, based on the current time
             DateTimeOffset itemStartTime = GetStartTimeAfter(nextState, scheduleItem);
 
-            if (itemStartTime >= hardStop)
+            if (itemStartTime >= nextState.DurationFinish.IfNone(SystemTime.MaxValueUtc) ||
+                // don't start if the first item will already be after the hard stop
+                (playoutItems.Count == 0 && itemStartTime >= hardStop))
             {
                 nextState = nextState with { CurrentTime = hardStop };
                 break;

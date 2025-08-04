@@ -494,21 +494,18 @@ public class PlayoutBuilderTests
             {
                 Id = 1,
                 Name = "Flood Items",
-                MediaItems = new List<MediaItem>
-                {
+                MediaItems =
+                [
                     TestMovie(1, TimeSpan.FromHours(1), new DateTime(2020, 1, 1)),
                     TestMovie(2, TimeSpan.FromHours(1), new DateTime(2020, 2, 1))
-                }
+                ]
             };
 
             var fixedCollection = new Collection
             {
                 Id = 2,
                 Name = "Fixed Items",
-                MediaItems = new List<MediaItem>
-                {
-                    TestMovie(3, TimeSpan.FromHours(2), new DateTime(2020, 1, 1))
-                }
+                MediaItems = [TestMovie(3, TimeSpan.FromHours(2), new DateTime(2020, 1, 1))]
             };
 
             var fakeRepository = new FakeMediaCollectionRepository(
@@ -545,9 +542,9 @@ public class PlayoutBuilderTests
                     Items = items
                 },
                 Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" },
-                ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>(),
-                Items = new List<PlayoutItem>(),
-                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>(),
+                ProgramScheduleAnchors = [],
+                Items = [],
+                ProgramScheduleAlternates = [],
                 FillGroupIndices = []
             };
 
@@ -594,21 +591,18 @@ public class PlayoutBuilderTests
             {
                 Id = 1,
                 Name = "Flood Items",
-                MediaItems = new List<MediaItem>
-                {
+                MediaItems =
+                [
                     TestMovie(1, TimeSpan.FromHours(1), new DateTime(2020, 1, 1)),
                     TestMovie(2, TimeSpan.FromHours(1), new DateTime(2020, 2, 1))
-                }
+                ]
             };
 
             var fixedCollection = new Collection
             {
                 Id = 2,
                 Name = "Fixed Items",
-                MediaItems = new List<MediaItem>
-                {
-                    TestMovie(3, TimeSpan.FromHours(2), new DateTime(2020, 1, 1))
-                }
+                MediaItems = [TestMovie(3, TimeSpan.FromHours(2), new DateTime(2020, 1, 1))]
             };
 
             var fakeRepository = new FakeMediaCollectionRepository(
@@ -645,9 +639,9 @@ public class PlayoutBuilderTests
                     Items = items
                 },
                 Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" },
-                ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>(),
-                Items = new List<PlayoutItem>(),
-                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>(),
+                ProgramScheduleAnchors = [],
+                Items = [],
+                ProgramScheduleAlternates = [],
                 FillGroupIndices = []
             };
 
@@ -740,22 +734,22 @@ public class PlayoutBuilderTests
             {
                 Id = 1,
                 Name = "Flood Items",
-                MediaItems = new List<MediaItem>
-                {
+                MediaItems =
+                [
                     TestMovie(1, TimeSpan.FromHours(1), new DateTime(2020, 1, 1)),
                     TestMovie(2, TimeSpan.FromHours(1), new DateTime(2020, 2, 1))
-                }
+                ]
             };
 
             var fixedCollection = new Collection
             {
                 Id = 2,
                 Name = "Fixed Items",
-                MediaItems = new List<MediaItem>
-                {
+                MediaItems =
+                [
                     TestMovie(3, TimeSpan.FromHours(2), new DateTime(2020, 1, 1)),
                     TestMovie(4, TimeSpan.FromHours(1), new DateTime(2020, 1, 2))
-                }
+                ]
             };
 
             var fakeRepository = new FakeMediaCollectionRepository(
@@ -793,9 +787,9 @@ public class PlayoutBuilderTests
                     Items = items
                 },
                 Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" },
-                ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>(),
-                Items = new List<PlayoutItem>(),
-                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>(),
+                ProgramScheduleAnchors = [],
+                Items = [],
+                ProgramScheduleAlternates = [],
                 FillGroupIndices = []
             };
 
@@ -847,22 +841,22 @@ public class PlayoutBuilderTests
             {
                 Id = 1,
                 Name = "Flood Items",
-                MediaItems = new List<MediaItem>
-                {
+                MediaItems =
+                [
                     TestMovie(1, TimeSpan.FromMinutes(50), new DateTime(2020, 1, 1)),
                     TestMovie(2, TimeSpan.FromHours(1), new DateTime(2020, 2, 1))
-                }
+                ]
             };
 
             var fixedCollection = new Collection
             {
                 Id = 2,
                 Name = "Fixed Items",
-                MediaItems = new List<MediaItem>
-                {
+                MediaItems =
+                [
                     TestMovie(3, TimeSpan.FromHours(2), new DateTime(2020, 1, 1)),
                     TestMovie(4, TimeSpan.FromHours(1), new DateTime(2020, 1, 2))
-                }
+                ]
             };
 
             var fakeRepository = new FakeMediaCollectionRepository(
@@ -900,9 +894,9 @@ public class PlayoutBuilderTests
                     Items = items
                 },
                 Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" },
-                ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>(),
-                Items = new List<PlayoutItem>(),
-                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>(),
+                ProgramScheduleAnchors = [],
+                Items = [],
+                ProgramScheduleAlternates = [],
                 FillGroupIndices = []
             };
 
@@ -954,22 +948,22 @@ public class PlayoutBuilderTests
             {
                 Id = 1,
                 Name = "Flood Items",
-                MediaItems = new List<MediaItem>
-                {
+                MediaItems =
+                [
                     TestMovie(1, TimeSpan.FromHours(1), new DateTime(2020, 1, 1)),
                     TestMovie(2, TimeSpan.FromHours(1), new DateTime(2020, 2, 1))
-                }
+                ]
             };
 
             var fixedCollection = new Collection
             {
                 Id = 2,
                 Name = "Fixed Items",
-                MediaItems = new List<MediaItem>
-                {
+                MediaItems =
+                [
                     TestMovie(3, TimeSpan.FromHours(2), new DateTime(2020, 1, 1)),
                     TestMovie(4, TimeSpan.FromHours(1), new DateTime(2020, 1, 2))
-                }
+                ]
             };
 
             var fakeRepository = new FakeMediaCollectionRepository(
@@ -1006,9 +1000,9 @@ public class PlayoutBuilderTests
                     Items = items
                 },
                 Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" },
-                ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>(),
-                Items = new List<PlayoutItem>(),
-                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>(),
+                ProgramScheduleAnchors = [],
+                Items = [],
+                ProgramScheduleAlternates = [],
                 FillGroupIndices = []
             };
 
@@ -1059,22 +1053,22 @@ public class PlayoutBuilderTests
             {
                 Id = 1,
                 Name = "Flood Items",
-                MediaItems = new List<MediaItem>
-                {
+                MediaItems =
+                [
                     TestMovie(1, TimeSpan.FromHours(1), new DateTime(2020, 1, 1)),
                     TestMovie(2, TimeSpan.FromHours(1), new DateTime(2020, 2, 1))
-                }
+                ]
             };
 
             var fixedCollection = new Collection
             {
                 Id = 2,
                 Name = "Fixed Items",
-                MediaItems = new List<MediaItem>
-                {
+                MediaItems =
+                [
                     TestMovie(3, TimeSpan.FromHours(2), new DateTime(2020, 1, 1)),
                     TestMovie(4, TimeSpan.FromHours(1), new DateTime(2020, 1, 2))
-                }
+                ]
             };
 
             var fakeRepository = new FakeMediaCollectionRepository(
@@ -1121,9 +1115,9 @@ public class PlayoutBuilderTests
                     },
                     InFlood = true
                 },
-                ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>(),
-                Items = new List<PlayoutItem>(),
-                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>(),
+                ProgramScheduleAnchors = [],
+                Items = [],
+                ProgramScheduleAlternates = [],
                 FillGroupIndices = []
             };
 
@@ -1175,22 +1169,22 @@ public class PlayoutBuilderTests
             {
                 Id = 1,
                 Name = "Flood Items",
-                MediaItems = new List<MediaItem>
-                {
+                MediaItems =
+                [
                     TestMovie(1, TimeSpan.FromHours(1), new DateTime(2020, 1, 1)),
                     TestMovie(2, TimeSpan.FromHours(1), new DateTime(2020, 2, 1))
-                }
+                ]
             };
 
             var fixedCollection = new Collection
             {
                 Id = 2,
                 Name = "Fixed Items",
-                MediaItems = new List<MediaItem>
-                {
+                MediaItems =
+                [
                     TestMovie(3, TimeSpan.FromHours(0.75), new DateTime(2020, 1, 1)),
                     TestMovie(4, TimeSpan.FromHours(1.5), new DateTime(2020, 1, 2))
-                }
+                ]
             };
 
             var fakeRepository = new FakeMediaCollectionRepository(
@@ -1229,9 +1223,9 @@ public class PlayoutBuilderTests
                     Items = items
                 },
                 Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" },
-                ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>(),
-                Items = new List<PlayoutItem>(),
-                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>(),
+                ProgramScheduleAnchors = [],
+                Items = [],
+                ProgramScheduleAlternates = [],
                 FillGroupIndices = []
             };
 
@@ -1286,22 +1280,22 @@ public class PlayoutBuilderTests
             {
                 Id = 1,
                 Name = "Multiple Items",
-                MediaItems = new List<MediaItem>
-                {
+                MediaItems =
+                [
                     TestMovie(1, TimeSpan.FromHours(1), new DateTime(2020, 1, 1)),
                     TestMovie(2, TimeSpan.FromHours(1), new DateTime(2020, 2, 1))
-                }
+                ]
             };
 
             var dynamicCollection = new Collection
             {
                 Id = 2,
                 Name = "Dynamic Items",
-                MediaItems = new List<MediaItem>
-                {
+                MediaItems =
+                [
                     TestMovie(3, TimeSpan.FromHours(0.75), new DateTime(2020, 1, 1)),
                     TestMovie(4, TimeSpan.FromHours(1.5), new DateTime(2020, 1, 2))
-                }
+                ]
             };
 
             var fakeRepository = new FakeMediaCollectionRepository(
@@ -1341,9 +1335,9 @@ public class PlayoutBuilderTests
                     Items = items
                 },
                 Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" },
-                ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>(),
-                Items = new List<PlayoutItem>(),
-                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>(),
+                ProgramScheduleAnchors = [],
+                Items = [],
+                ProgramScheduleAlternates = [],
                 FillGroupIndices = []
             };
 
@@ -1396,20 +1390,14 @@ public class PlayoutBuilderTests
             {
                 Id = 1,
                 Name = "Multiple Items 1",
-                MediaItems = new List<MediaItem>
-                {
-                    TestMovie(1, TimeSpan.FromHours(1), new DateTime(2020, 1, 1))
-                }
+                MediaItems = [TestMovie(1, TimeSpan.FromHours(1), new DateTime(2020, 1, 1))]
             };
 
             var collectionTwo = new Collection
             {
                 Id = 2,
                 Name = "Multiple Items 2",
-                MediaItems = new List<MediaItem>
-                {
-                    TestMovie(2, TimeSpan.FromHours(1), new DateTime(2020, 1, 1))
-                }
+                MediaItems = [TestMovie(2, TimeSpan.FromHours(1), new DateTime(2020, 1, 1))]
             };
 
             var fakeRepository = new FakeMediaCollectionRepository(
@@ -1458,9 +1446,9 @@ public class PlayoutBuilderTests
                     },
                     MultipleRemaining = 2
                 },
-                ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>(),
-                Items = new List<PlayoutItem>(),
-                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>(),
+                ProgramScheduleAnchors = [],
+                Items = [],
+                ProgramScheduleAlternates = [],
                 FillGroupIndices = []
             };
 
@@ -1509,23 +1497,23 @@ public class PlayoutBuilderTests
             {
                 Id = 1,
                 Name = "Multiple Items 1",
-                MediaItems = new List<MediaItem>
-                {
+                MediaItems =
+                [
                     TestMovie(1, TimeSpan.FromHours(1), new DateTime(2020, 1, 1)),
                     TestMovie(2, TimeSpan.FromHours(1), new DateTime(2020, 1, 1)),
                     TestMovie(3, TimeSpan.FromHours(1), new DateTime(2020, 1, 1))
-                }
+                ]
             };
 
             var collectionTwo = new Collection
             {
                 Id = 2,
                 Name = "Multiple Items 2",
-                MediaItems = new List<MediaItem>
-                {
+                MediaItems =
+                [
                     TestMovie(4, TimeSpan.FromHours(1), new DateTime(2020, 1, 1)),
                     TestMovie(5, TimeSpan.FromHours(1), new DateTime(2020, 1, 1))
-                }
+                ]
             };
 
             var fakeRepository = new FakeMediaCollectionRepository(
@@ -1566,9 +1554,9 @@ public class PlayoutBuilderTests
                     Items = items
                 },
                 Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" },
-                ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>(),
-                Items = new List<PlayoutItem>(),
-                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>(),
+                ProgramScheduleAnchors = [],
+                Items = [],
+                ProgramScheduleAlternates = [],
                 FillGroupIndices = []
             };
 
@@ -1613,26 +1601,20 @@ public class PlayoutBuilderTests
         }
 
         [Test]
-        public async Task ContinuePlayout_Alternating_Duration_Should_Maintain_Duration()
+        public async Task ContinuePlayout_Alternating_Duration_Should_Complete_Duration()
         {
             var collectionOne = new Collection
             {
                 Id = 1,
                 Name = "Duration Items 1",
-                MediaItems = new List<MediaItem>
-                {
-                    TestMovie(1, TimeSpan.FromHours(1), new DateTime(2020, 1, 1))
-                }
+                MediaItems = [TestMovie(1, TimeSpan.FromHours(1), new DateTime(2020, 1, 1))]
             };
 
             var collectionTwo = new Collection
             {
                 Id = 2,
                 Name = "Duration Items 2",
-                MediaItems = new List<MediaItem>
-                {
-                    TestMovie(2, TimeSpan.FromHours(1), new DateTime(2020, 1, 1))
-                }
+                MediaItems = [TestMovie(2, TimeSpan.FromHours(1), new DateTime(2020, 1, 1))]
             };
 
             var fakeRepository = new FakeMediaCollectionRepository(
@@ -1683,9 +1665,9 @@ public class PlayoutBuilderTests
                     },
                     DurationFinish = HoursAfterMidnight(3).UtcDateTime
                 },
-                ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>(),
-                Items = new List<PlayoutItem>(),
-                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>(),
+                ProgramScheduleAnchors = [],
+                Items = [],
+                ProgramScheduleAlternates = [],
                 FillGroupIndices = []
             };
 
@@ -1710,7 +1692,7 @@ public class PlayoutBuilderTests
 
             Playout result = await builder.Build(playout, PlayoutBuildMode.Continue, start, finish, _cancellationToken);
 
-            result.Items.Count.ShouldBe(4);
+            result.Items.Count.ShouldBe(5);
 
             result.Items[0].StartOffset.TimeOfDay.ShouldBe(TimeSpan.FromHours(1));
             result.Items[0].MediaItemId.ShouldBe(1);
@@ -1721,10 +1703,12 @@ public class PlayoutBuilderTests
             result.Items[2].MediaItemId.ShouldBe(2);
             result.Items[3].StartOffset.TimeOfDay.ShouldBe(TimeSpan.FromHours(4));
             result.Items[3].MediaItemId.ShouldBe(2);
+            result.Items[4].StartOffset.TimeOfDay.ShouldBe(TimeSpan.FromHours(5));
+            result.Items[4].MediaItemId.ShouldBe(2);
 
-            result.Anchor.ScheduleItemsEnumeratorState.Index.ShouldBe(1);
-            result.Anchor.DurationFinish.ShouldBe(HoursAfterMidnight(6).UtcDateTime);
-            result.Anchor.NextStartOffset.ShouldBe(HoursAfterMidnight(5));
+            result.Anchor.ScheduleItemsEnumeratorState.Index.ShouldBe(0);
+            result.Anchor.DurationFinish.ShouldBeNull();
+            result.Anchor.NextStartOffset.ShouldBe(HoursAfterMidnight(6));
         }
 
         [Test]
@@ -1734,30 +1718,21 @@ public class PlayoutBuilderTests
             {
                 Id = 1,
                 Name = "Duration Items 1",
-                MediaItems = new List<MediaItem>
-                {
-                    TestMovie(1, TimeSpan.FromMinutes(55), new DateTime(2020, 1, 1))
-                }
+                MediaItems = [TestMovie(1, TimeSpan.FromMinutes(55), new DateTime(2020, 1, 1))]
             };
 
             var collectionTwo = new Collection
             {
                 Id = 2,
                 Name = "Duration Items 2",
-                MediaItems = new List<MediaItem>
-                {
-                    TestMovie(2, TimeSpan.FromMinutes(55), new DateTime(2020, 1, 1))
-                }
+                MediaItems = [TestMovie(2, TimeSpan.FromMinutes(55), new DateTime(2020, 1, 1))]
             };
 
             var collectionThree = new Collection
             {
                 Id = 3,
                 Name = "Filler Items",
-                MediaItems = new List<MediaItem>
-                {
-                    TestMovie(3, TimeSpan.FromMinutes(5), new DateTime(2020, 1, 1))
-                }
+                MediaItems = [TestMovie(3, TimeSpan.FromMinutes(5), new DateTime(2020, 1, 1))]
             };
 
             var fakeRepository = new FakeMediaCollectionRepository(
@@ -1811,9 +1786,9 @@ public class PlayoutBuilderTests
                     Items = items
                 },
                 Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" },
-                ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>(),
-                Items = new List<PlayoutItem>(),
-                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>(),
+                ProgramScheduleAnchors = [],
+                Items = [],
+                ProgramScheduleAlternates = [],
                 FillGroupIndices = []
             };
 
@@ -1881,20 +1856,14 @@ public class PlayoutBuilderTests
             {
                 Id = 1,
                 Name = "Duration Items 1",
-                MediaItems = new List<MediaItem>
-                {
-                    TestMovie(1, TimeSpan.FromMinutes(61), new DateTime(2020, 1, 1))
-                }
+                MediaItems = [TestMovie(1, TimeSpan.FromMinutes(61), new DateTime(2020, 1, 1))]
             };
 
             var collectionTwo = new Collection
             {
                 Id = 2,
                 Name = "Filler Items",
-                MediaItems = new List<MediaItem>
-                {
-                    TestMovie(2, TimeSpan.FromMinutes(4), new DateTime(2020, 1, 1))
-                }
+                MediaItems = [TestMovie(2, TimeSpan.FromMinutes(4), new DateTime(2020, 1, 1))]
             };
 
             var fakeRepository = new FakeMediaCollectionRepository(
@@ -1931,9 +1900,9 @@ public class PlayoutBuilderTests
                     Items = items
                 },
                 Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" },
-                ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>(),
-                Items = new List<PlayoutItem>(),
-                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>(),
+                ProgramScheduleAnchors = [],
+                Items = [],
+                ProgramScheduleAlternates = [],
                 FillGroupIndices = []
             };
 
@@ -1977,13 +1946,13 @@ public class PlayoutBuilderTests
             {
                 Id = 1,
                 Name = "Duration Items 1",
-                MediaItems = new List<MediaItem>
-                {
+                MediaItems =
+                [
                     TestMovie(1, TimeSpan.FromHours(2), new DateTime(2020, 1, 1)),
                     TestMovie(2, TimeSpan.FromHours(1), new DateTime(2020, 1, 1)),
                     TestMovie(3, TimeSpan.FromHours(2), new DateTime(2020, 1, 1)),
                     TestMovie(4, TimeSpan.FromHours(1), new DateTime(2020, 1, 1))
-                }
+                ]
             };
 
             var fakeRepository =
@@ -2011,9 +1980,9 @@ public class PlayoutBuilderTests
                     Items = items
                 },
                 Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" },
-                ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>(),
-                Items = new List<PlayoutItem>(),
-                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>(),
+                ProgramScheduleAnchors = [],
+                Items = [],
+                ProgramScheduleAlternates = [],
                 FillGroupIndices = []
             };
 
@@ -2168,12 +2137,12 @@ public class PlayoutBuilderTests
             {
                 Id = 1,
                 Name = "Duration Items 1",
-                MediaItems = new List<MediaItem>
-                {
+                MediaItems =
+                [
                     TestMovie(1, TimeSpan.FromHours(6), new DateTime(2002, 1, 1)),
                     TestMovie(2, TimeSpan.FromHours(6), new DateTime(2003, 1, 1)),
                     TestMovie(3, TimeSpan.FromHours(6), new DateTime(2004, 1, 1))
-                }
+                ]
             };
 
             var fakeRepository =
@@ -2212,9 +2181,9 @@ public class PlayoutBuilderTests
                     DurationFinish = HoursAfterMidnight(3).UtcDateTime
                 },
 
-                ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>(),
-                Items = new List<PlayoutItem>(),
-                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>(),
+                ProgramScheduleAnchors = [],
+                Items = [],
+                ProgramScheduleAlternates = [],
                 FillGroupIndices = []
             };
 
@@ -2528,11 +2497,11 @@ public class PlayoutBuilderTests
             PlayoutProgramScheduleAnchor newest = result.ProgramScheduleAnchors.OrderByDescending(a => a.AnchorDate)
                 .First();
 
-            result.ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>
-            {
+            result.ProgramScheduleAnchors =
+            [
                 oldest,
                 newest
-            };
+            ];
 
             int firstSeedValue = lastCheckpoint.EnumeratorState.Seed;
 
@@ -2657,22 +2626,22 @@ public class PlayoutBuilderTests
             {
                 Id = 1,
                 Name = "Flood Items",
-                MediaItems = new List<MediaItem>
-                {
+                MediaItems =
+                [
                     TestMovie(1, TimeSpan.FromHours(1), new DateTime(2020, 1, 1)),
                     TestMovie(2, TimeSpan.FromHours(1), new DateTime(2020, 2, 1))
-                }
+                ]
             };
 
             var fixedCollection = new Collection
             {
                 Id = 2,
                 Name = "Fixed Items",
-                MediaItems = new List<MediaItem>
-                {
+                MediaItems =
+                [
                     TestMovie(3, TimeSpan.FromHours(2), new DateTime(2020, 1, 1)),
                     TestMovie(4, TimeSpan.FromHours(1), new DateTime(2020, 1, 2))
-                }
+                ]
             };
 
             var fakeRepository = new FakeMediaCollectionRepository(
@@ -2719,9 +2688,9 @@ public class PlayoutBuilderTests
                     },
                     InFlood = true
                 },
-                ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>(),
-                Items = new List<PlayoutItem>(),
-                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>(),
+                ProgramScheduleAnchors = [],
+                Items = [],
+                ProgramScheduleAlternates = [],
                 FillGroupIndices = []
             };
 
@@ -2772,20 +2741,14 @@ public class PlayoutBuilderTests
             {
                 Id = 1,
                 Name = "Multiple Items 1",
-                MediaItems = new List<MediaItem>
-                {
-                    TestMovie(1, TimeSpan.FromHours(1), new DateTime(2020, 1, 1))
-                }
+                MediaItems = [TestMovie(1, TimeSpan.FromHours(1), new DateTime(2020, 1, 1))]
             };
 
             var collectionTwo = new Collection
             {
                 Id = 2,
                 Name = "Multiple Items 2",
-                MediaItems = new List<MediaItem>
-                {
-                    TestMovie(2, TimeSpan.FromHours(1), new DateTime(2020, 1, 1))
-                }
+                MediaItems = [TestMovie(2, TimeSpan.FromHours(1), new DateTime(2020, 1, 1))]
             };
 
             var fakeRepository = new FakeMediaCollectionRepository(
@@ -2834,9 +2797,9 @@ public class PlayoutBuilderTests
                     },
                     MultipleRemaining = 2
                 },
-                ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>(),
-                Items = new List<PlayoutItem>(),
-                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>(),
+                ProgramScheduleAnchors = [],
+                Items = [],
+                ProgramScheduleAlternates = [],
                 FillGroupIndices = []
             };
 
@@ -2879,26 +2842,20 @@ public class PlayoutBuilderTests
         }
 
         [Test]
-        public async Task Alternating_Duration_Should_Maintain_Duration()
+        public async Task Alternating_Duration_Should_Complete_Duration()
         {
             var collectionOne = new Collection
             {
                 Id = 1,
                 Name = "Duration Items 1",
-                MediaItems = new List<MediaItem>
-                {
-                    TestMovie(1, TimeSpan.FromHours(1), new DateTime(2020, 1, 1))
-                }
+                MediaItems = [TestMovie(1, TimeSpan.FromHours(1), new DateTime(2020, 1, 1))]
             };
 
             var collectionTwo = new Collection
             {
                 Id = 2,
                 Name = "Duration Items 2",
-                MediaItems = new List<MediaItem>
-                {
-                    TestMovie(2, TimeSpan.FromHours(1), new DateTime(2020, 1, 1))
-                }
+                MediaItems = [TestMovie(2, TimeSpan.FromHours(1), new DateTime(2020, 1, 1))]
             };
 
             var fakeRepository = new FakeMediaCollectionRepository(
@@ -2949,9 +2906,9 @@ public class PlayoutBuilderTests
                     },
                     DurationFinish = HoursAfterMidnight(3).UtcDateTime
                 },
-                ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>(),
-                Items = new List<PlayoutItem>(),
-                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>(),
+                ProgramScheduleAnchors = [],
+                Items = [],
+                ProgramScheduleAlternates = [],
                 FillGroupIndices = []
             };
 
@@ -2976,7 +2933,7 @@ public class PlayoutBuilderTests
 
             Playout result = await builder.Build(playout, PlayoutBuildMode.Continue, start, finish, _cancellationToken);
 
-            result.Items.Count.ShouldBe(4);
+            result.Items.Count.ShouldBe(5);
 
             result.Items[0].StartOffset.TimeOfDay.ShouldBe(TimeSpan.FromHours(1));
             result.Items[0].MediaItemId.ShouldBe(1);
@@ -2987,10 +2944,12 @@ public class PlayoutBuilderTests
             result.Items[2].MediaItemId.ShouldBe(2);
             result.Items[3].StartOffset.TimeOfDay.ShouldBe(TimeSpan.FromHours(4));
             result.Items[3].MediaItemId.ShouldBe(2);
+            result.Items[4].StartOffset.TimeOfDay.ShouldBe(TimeSpan.FromHours(5));
+            result.Items[4].MediaItemId.ShouldBe(2);
 
-            result.Anchor.ScheduleItemsEnumeratorState.Index.ShouldBe(1);
-            result.Anchor.DurationFinish.ShouldBe(HoursAfterMidnight(6).UtcDateTime);
-            result.Anchor.NextStartOffset.ShouldBe(HoursAfterMidnight(5));
+            result.Anchor.ScheduleItemsEnumeratorState.Index.ShouldBe(0);
+            result.Anchor.DurationFinish.ShouldBeNull();
+            result.Anchor.NextStartOffset.ShouldBe(HoursAfterMidnight(6));
         }
     }
 
@@ -3039,17 +2998,14 @@ public class PlayoutBuilderTests
         new()
         {
             Id = id,
-            MovieMetadata = new List<MovieMetadata> { new() { ReleaseDate = aired } },
-            MediaVersions = new List<MediaVersion>
-            {
-                new()
+            MovieMetadata = [new MovieMetadata { ReleaseDate = aired }],
+            MediaVersions =
+            [
+                new MediaVersion
                 {
-                    Duration = duration, MediaFiles = new List<MediaFile>
-                    {
-                        new() { Path = $"/fake/path/{id}" }
-                    }
+                    Duration = duration, MediaFiles = [new MediaFile { Path = $"/fake/path/{id}" }]
                 }
-            }
+            ]
         };
 
     private TestData TestDataFloodForItems(
@@ -3088,9 +3044,9 @@ public class PlayoutBuilderTests
             Id = 1,
             ProgramSchedule = new ProgramSchedule { Items = items },
             Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" },
-            Items = new List<PlayoutItem>(),
-            ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>(),
-            ProgramScheduleAlternates = new List<ProgramScheduleAlternate>(),
+            Items = [],
+            ProgramScheduleAnchors = [],
+            ProgramScheduleAlternates = [],
             FillGroupIndices = []
         };
 
@@ -3111,7 +3067,7 @@ public class PlayoutBuilderTests
         var fillerCollection = new SmartCollection
         {
             Id = 2,
-            Query = "ghjk"
+            Query = "qwerty"
         };
 
         IConfigElementRepository configRepo = configMock ?? Substitute.For<IConfigElementRepository>();
@@ -3144,9 +3100,9 @@ public class PlayoutBuilderTests
             Id = 1,
             ProgramSchedule = new ProgramSchedule { Items = items },
             Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" },
-            Items = new List<PlayoutItem>(),
-            ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>(),
-            ProgramScheduleAlternates = new List<ProgramScheduleAlternate>(),
+            Items = [],
+            ProgramScheduleAnchors = [],
+            ProgramScheduleAlternates = [],
             FillGroupIndices = []
         };
 

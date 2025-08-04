@@ -1,6 +1,7 @@
 using ErsatzTV.Core.Search;
 using ErsatzTV.Infrastructure.Search;
 using Lucene.Net.Search;
+using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NUnit.Framework;
 using Shouldly;
@@ -19,7 +20,7 @@ public class SearchQueryParserTests
         public async Task Test(string input, string expected)
         {
             ISmartCollectionCache smartCollectionCache = Substitute.For<ISmartCollectionCache>();
-            var parser = new SearchQueryParser(smartCollectionCache);
+            var parser = new SearchQueryParser(smartCollectionCache, Substitute.For<ILogger<SearchQueryParser>>());
 
             Query result = await parser.ParseQuery(input, null);
             result.ToString().ShouldBe(expected);
