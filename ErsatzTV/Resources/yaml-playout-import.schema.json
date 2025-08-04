@@ -1,17 +1,10 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://ersatztv.org/yaml-playout.schema.json",
-  "title": "YAML Playout",
-  "description": "An ErsatzTV YAML playout definition",
+  "title": "YAML Playout Import",
+  "description": "An ErsatzTV YAML playout import definition",
   "type": "object",
   "properties": {
-    "import": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "minItems": 1
-    },
     "content": {
       "description": "Content definitions",
       "type": "array",
@@ -63,48 +56,11 @@
         "required": [ "key" ],
         "additionalProperties": false
       }
-    },
-    "reset": {
-      "description": "Reset instructions",
-      "type": "array",
-      "items": {
-        "oneOf": [
-          { "$ref": "#/$defs/control/rewindInstruction" },
-          { "$ref": "#/$defs/control/skipItemsInstruction" },
-          { "$ref": "#/$defs/control/skipToItemInstruction" },
-          { "$ref": "#/$defs/control/waitUntilInstruction" }
-        ]
-      }
-    },
-    "playout": {
-      "description": "Playout instructions",
-      "type": "array",
-      "items": {
-        "oneOf": [
-          { "$ref": "#/$defs/scheduling/allInstruction" },
-          { "$ref": "#/$defs/scheduling/countInstruction" },
-          { "$ref": "#/$defs/scheduling/durationInstruction" },
-          { "$ref": "#/$defs/scheduling/padToNextInstruction" },
-          { "$ref": "#/$defs/scheduling/padUntilInstruction" },
-          { "$ref": "#/$defs/scheduling/sequenceInstruction" },
-          { "$ref": "#/$defs/control/epgGroupInstruction" },
-          { "$ref": "#/$defs/control/preRollInstruction"},
-          { "$ref": "#/$defs/control/postRollInstruction"},
-          { "$ref": "#/$defs/control/midRollInstruction"},
-          { "$ref": "#/$defs/control/repeatInstruction" },
-          { "$ref": "#/$defs/control/shuffleSequenceInstruction" },
-          { "$ref": "#/$defs/control/skipItemsInstruction" },
-          { "$ref": "#/$defs/control/skipToItemInstruction" },
-          { "$ref": "#/$defs/control/waitUntilInstruction" },
-          { "$ref": "#/$defs/control/watermarkInstruction" }
-        ]
-      },
-      "minItems": 1
     }
   },
   "oneOf": [
-    { "required": [ "content", "playout" ] },
-    { "required": [ "import", "playout" ] }
+    { "required": [ "content" ] },
+    { "required": [ "sequence" ] }
   ],
   "additionalProperties": false,
   "$defs": {

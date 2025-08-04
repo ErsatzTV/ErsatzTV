@@ -13,11 +13,12 @@ namespace ErsatzTV.Infrastructure.Scheduling;
 
 public class YamlScheduleValidator(ILogger<YamlScheduleValidator> logger) : IYamlScheduleValidator
 {
-    public async Task<bool> ValidateSchedule(string yaml)
+    public async Task<bool> ValidateSchedule(string yaml, bool isImport)
     {
         try
         {
-            string schemaFileName = Path.Combine(FileSystemLayout.ResourcesCacheFolder, "yaml-playout.schema.json");
+            string schemaFileName = Path.Combine(FileSystemLayout.ResourcesCacheFolder,
+                isImport ? "yaml-playout-import.schema.json" : "yaml-playout.schema.json");
             using StreamReader sr = File.OpenText(schemaFileName);
             await using var reader = new JsonTextReader(sr);
             var schema = JSchema.Load(reader);

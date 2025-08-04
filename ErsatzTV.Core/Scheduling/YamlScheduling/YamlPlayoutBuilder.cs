@@ -31,7 +31,8 @@ public class YamlPlayoutBuilder(
             return playout;
         }
 
-        Option<YamlPlayoutDefinition> maybePlayoutDefinition = await LoadYamlDefinition(playout, cancellationToken);
+        Option<YamlPlayoutDefinition> maybePlayoutDefinition =
+            await LoadYamlDefinition(playout.TemplateFile, isImport: false, cancellationToken);
         if (maybePlayoutDefinition.IsNone)
         {
             logger.LogWarning("YAML playout file {File} is invalid; aborting.", playout.TemplateFile);
@@ -40,6 +41,49 @@ public class YamlPlayoutBuilder(
 
         // using ValueUnsafe to avoid nesting
         YamlPlayoutDefinition playoutDefinition = maybePlayoutDefinition.ValueUnsafe();
+
+        foreach (var import in playoutDefinition.Import)
+        {
+            try
+            {
+                var path = import;
+                if (!File.Exists(import))
+                {
+                    path = Path.Combine(
+                        Path.GetDirectoryName(playout.TemplateFile) ?? string.Empty,
+                        import ?? string.Empty);
+                    if (!File.Exists(path))
+                    {
+                        logger.LogError("YAML playout import {File} does not exist.", path);
+                        return playout;
+                    }
+                }
+
+                var maybeImportedDefinition = await LoadYamlDefinition(path, isImport: true, cancellationToken);
+                foreach (var importedDefinition in maybeImportedDefinition)
+                {
+                    var contentToAdd = importedDefinition.Content
+                        .Where(c => playoutDefinition.Content.All(c2 => !string.Equals(c2.Key, c.Key, StringComparison.OrdinalIgnoreCase)));
+
+                    playoutDefinition.Content.AddRange(contentToAdd);
+
+                    var sequencesToAdd = importedDefinition.Sequence
+                        .Where(s => playoutDefinition.Sequence.All(s2 => !string.Equals(s2.Key, s.Key, StringComparison.OrdinalIgnoreCase)));
+
+                    playoutDefinition.Sequence.AddRange(sequencesToAdd);
+                }
+
+                if (maybeImportedDefinition.IsNone)
+                {
+                    logger.LogWarning("YAML playout import {File} is invalid; aborting.", import);
+                    return playout;
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Unexpected exception loading YAML playout import");
+            }
+        }
 
         DateTimeOffset start = DateTimeOffset.Now;
 
@@ -369,12 +413,15 @@ public class YamlPlayoutBuilder(
         return Optional(handler);
     }
 
-    private async Task<Option<YamlPlayoutDefinition>> LoadYamlDefinition(Playout playout, CancellationToken cancellationToken)
+    private async Task<Option<YamlPlayoutDefinition>> LoadYamlDefinition(
+        string fileName,
+        bool isImport,
+        CancellationToken cancellationToken)
     {
         try
         {
-            string yaml = await File.ReadAllTextAsync(playout.TemplateFile, cancellationToken);
-            if (await yamlScheduleValidator.ValidateSchedule(yaml) == false)
+            string yaml = await File.ReadAllTextAsync(fileName, cancellationToken);
+            if (await yamlScheduleValidator.ValidateSchedule(yaml, isImport) == false)
             {
                 return Option<YamlPlayoutDefinition>.None;
             }
