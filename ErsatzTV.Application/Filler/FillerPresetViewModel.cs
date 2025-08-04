@@ -19,4 +19,5 @@ public record FillerPresetViewModel(
     int? MultiCollectionId,
     int? SmartCollectionId,
     PlaylistViewModel Playlist,
-    string Expression);
+    string Expression,
+    bool UseChaptersAsMediaItems);

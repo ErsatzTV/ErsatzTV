@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
@@ -854,23 +855,68 @@ public class PlayoutBuilder : IPlayoutBuilder
 
     private async Task<Map<CollectionKey, List<MediaItem>>> GetCollectionMediaItems(Playout playout)
     {
-        var collectionKeys = playout.ProgramSchedule.Items
+        IEnumerable<KeyValuePair<CollectionKey, Option<FillerPreset>>> collectionKeys = GetAllCollectionKeys(playout);
+
+        IEnumerable<Task<KeyValuePair<CollectionKey, List<MediaItem>>>> tasks = collectionKeys.Select(async key =>
+        {
+            List<MediaItem> mediaItems = await FetchMediaItemsForKeyAsync(key.Key, key.Value);
+            return new KeyValuePair<CollectionKey, List<MediaItem>>(key.Key, mediaItems);
+        });
+
+        return Map.createRange(await Task.WhenAll(tasks));
+    }
+
+    private static IEnumerable<KeyValuePair<CollectionKey, Option<FillerPreset>>> GetAllCollectionKeys(Playout playout)
+    {
+        return playout.ProgramSchedule.Items
             .Append(playout.ProgramScheduleAlternates.Bind(psa => psa.ProgramSchedule.Items))
-            .DistinctBy(i => i.Id)
+            .DistinctBy(item => item.Id)
             .SelectMany(CollectionKeysForItem)
-            .Distinct()
-            .ToList();
+            .DistinctBy(kvp => kvp.Key);
+    }
 
-        IEnumerable<Tuple<CollectionKey, List<MediaItem>>> tuples = await collectionKeys.Map(async collectionKey =>
-            Tuple(
-                collectionKey,
-                await MediaItemsForCollection.Collect(
-                    _mediaCollectionRepository,
-                    _televisionRepository,
-                    _artistRepository,
-                    collectionKey))).SequenceParallel();
+    private async Task<List<MediaItem>> FetchMediaItemsForKeyAsync(
+        CollectionKey collectionKey,
+        Option<FillerPreset> fillerPreset)
+    {
+        List<MediaItem> result = await MediaItemsForCollection.Collect(
+            _mediaCollectionRepository,
+            _televisionRepository,
+            _artistRepository,
+            collectionKey);
 
-        return Map.createRange(tuples);
+        foreach (FillerPreset _ in fillerPreset.Where(p => p.UseChaptersAsMediaItems))
+        {
+            var fakeResults = new List<MediaItem>();
+            var uniqueId = 1;
+
+            foreach (MediaItem mediaItem in result)
+            {
+                MediaVersion version = mediaItem.GetHeadVersion();
+                var allChapters = Optional(version.Chapters).Flatten().OrderBy(c => c.StartTime).ToList();
+                if (allChapters.Count > 0)
+                {
+                    foreach (MediaChapter chapter in allChapters)
+                    {
+                        var chapterVersion = new ChapterMediaVersion(chapter);
+                        var chapterItem = new ChapterMediaItem(uniqueId++, mediaItem, chapterVersion);
+                        fakeResults.Add(chapterItem);
+                    }
+                }
+                else
+                {
+                    // still use a fake item here so we don't have id conflicts
+                    var chapterVersion = new ChapterMediaVersion(
+                        new MediaChapter { StartTime = TimeSpan.Zero, EndTime = version.Duration });
+                    var chapterItem = new ChapterMediaItem(uniqueId++, mediaItem, chapterVersion);
+                    fakeResults.Add(chapterItem);
+                }
+            }
+
+            return fakeResults;
+        }
+
+        return result;
     }
 
     private async Task<Option<CollectionKey>> CheckForEmptyCollections(
@@ -900,6 +946,7 @@ public class PlayoutBuilder : IPlayoutBuilder
                     RemoteStream rs => await rs.MediaVersions.Map(v => v.Duration).HeadOrNone()
                                            .IfNoneAsync(TimeSpan.Zero) == TimeSpan.Zero
                                        && (!rs.Duration.HasValue || rs.Duration.Value == TimeSpan.Zero),
+                    ChapterMediaItem c => c.MediaVersion.Duration == TimeSpan.Zero,
                     _ => true
                 };
 
@@ -1244,36 +1291,52 @@ public class PlayoutBuilder : IPlayoutBuilder
         }
     }
 
-    private static List<CollectionKey> CollectionKeysForItem(ProgramScheduleItem item)
+    private static List<KeyValuePair<CollectionKey, Option<FillerPreset>>> CollectionKeysForItem(
+        ProgramScheduleItem item)
     {
-        var result = new List<CollectionKey>
+        var result = new List<KeyValuePair<CollectionKey, Option<FillerPreset>>>
         {
-            CollectionKey.ForScheduleItem(item)
+            new(CollectionKey.ForScheduleItem(item), Option<FillerPreset>.None)
         };
 
         if (item.PreRollFiller != null)
         {
-            result.Add(CollectionKey.ForFillerPreset(item.PreRollFiller));
+            result.Add(
+                new KeyValuePair<CollectionKey, Option<FillerPreset>>(
+                    CollectionKey.ForFillerPreset(item.PreRollFiller),
+                    item.PreRollFiller));
         }
 
         if (item.MidRollFiller != null)
         {
-            result.Add(CollectionKey.ForFillerPreset(item.MidRollFiller));
+            result.Add(
+                new KeyValuePair<CollectionKey, Option<FillerPreset>>(
+                    CollectionKey.ForFillerPreset(item.MidRollFiller),
+                    item.MidRollFiller));
         }
 
         if (item.PostRollFiller != null)
         {
-            result.Add(CollectionKey.ForFillerPreset(item.PostRollFiller));
+            result.Add(
+                new KeyValuePair<CollectionKey, Option<FillerPreset>>(
+                    CollectionKey.ForFillerPreset(item.PostRollFiller),
+                    item.PostRollFiller));
         }
 
         if (item.TailFiller != null)
         {
-            result.Add(CollectionKey.ForFillerPreset(item.TailFiller));
+            result.Add(
+                new KeyValuePair<CollectionKey, Option<FillerPreset>>(
+                    CollectionKey.ForFillerPreset(item.TailFiller),
+                    item.TailFiller));
         }
 
         if (item.FallbackFiller != null)
         {
-            result.Add(CollectionKey.ForFillerPreset(item.FallbackFiller));
+            result.Add(
+                new KeyValuePair<CollectionKey, Option<FillerPreset>>(
+                    CollectionKey.ForFillerPreset(item.FallbackFiller),
+                    item.FallbackFiller));
         }
 
         return result;

@@ -16,6 +16,7 @@ public static class MediaItemExtensions
             MusicVideo mv => mv.MediaVersions.HeadOrNone().Map(v => v.Duration),
             OtherVideo ov => ov.MediaVersions.HeadOrNone().Map(v => v.Duration),
             Song s => s.MediaVersions.HeadOrNone().Map(v => v.Duration),
+            ChapterMediaItem c => c.MediaVersion.Duration,
             _ => None
         };
 
@@ -33,6 +34,7 @@ public static class MediaItemExtensions
             Song s => s.MediaVersions.Head(),
             Image i => i.MediaVersions.Head(),
             RemoteStream rs => rs.MediaVersions.Head(),
+            ChapterMediaItem c => c.MediaVersion,
             _ => throw new ArgumentOutOfRangeException(nameof(mediaItem))
         };
 

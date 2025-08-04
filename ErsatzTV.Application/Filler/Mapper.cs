@@ -22,5 +22,6 @@ internal static class Mapper
             fillerPreset.Playlist is not null
                 ? MediaCollections.Mapper.ProjectToViewModel(fillerPreset.Playlist)
                 : null,
-            fillerPreset.Expression);
+            fillerPreset.Expression,
+            fillerPreset.UseChaptersAsMediaItems);
 }
