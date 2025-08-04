@@ -22,6 +22,9 @@ public class GetLoggingSettingsHandler : IRequestHandler<GetLoggingSettings, Log
         Option<LogEventLevel> maybeSchedulingLevel =
             await _configElementRepository.GetValue<LogEventLevel>(ConfigElementKey.MinimumLogLevelScheduling);
 
+        Option<LogEventLevel> maybeSearchingLevel =
+            await _configElementRepository.GetValue<LogEventLevel>(ConfigElementKey.MinimumLogLevelSearching);
+
         Option<LogEventLevel> maybeStreamingLevel =
             await _configElementRepository.GetValue<LogEventLevel>(ConfigElementKey.MinimumLogLevelStreaming);
 
@@ -33,6 +36,7 @@ public class GetLoggingSettingsHandler : IRequestHandler<GetLoggingSettings, Log
             DefaultMinimumLogLevel = await maybeDefaultLevel.IfNoneAsync(LogEventLevel.Information),
             ScanningMinimumLogLevel = await maybeScanningLevel.IfNoneAsync(LogEventLevel.Information),
             SchedulingMinimumLogLevel = await maybeSchedulingLevel.IfNoneAsync(LogEventLevel.Information),
+            SearchingMinimumLogLevel = await maybeSearchingLevel.IfNoneAsync(LogEventLevel.Information),
             StreamingMinimumLogLevel = await maybeStreamingLevel.IfNoneAsync(LogEventLevel.Information),
             HttpMinimumLogLevel = await maybeHttpLevel.IfNoneAsync(LogEventLevel.Information)
         };

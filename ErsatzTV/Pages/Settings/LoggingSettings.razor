@@ -49,6 +49,17 @@
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                 <div class="d-flex">
+                    <MudText>Searching Minimum Log Level</MudText>
+                </div>
+                <MudSelect @bind-Value="_loggingSettings.SearchingMinimumLogLevel">
+                    <MudSelectItem Value="@LogEventLevel.Debug">Debug</MudSelectItem>
+                    <MudSelectItem Value="@LogEventLevel.Information">Information</MudSelectItem>
+                    <MudSelectItem Value="@LogEventLevel.Warning">Warning</MudSelectItem>
+                    <MudSelectItem Value="@LogEventLevel.Error">Error</MudSelectItem>
+                </MudSelect>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
                     <MudText>Streaming Minimum Log Level</MudText>
                 </div>
                 <MudSelect @bind-Value="_loggingSettings.StreamingMinimumLogLevel">
