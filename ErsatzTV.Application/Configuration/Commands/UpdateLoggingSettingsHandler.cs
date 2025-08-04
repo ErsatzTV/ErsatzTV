@@ -37,6 +37,11 @@ public class UpdateLoggingSettingsHandler : IRequestHandler<UpdateLoggingSetting
         _loggingLevelSwitches.SchedulingLevelSwitch.MinimumLevel = loggingSettings.SchedulingMinimumLogLevel;
 
         await _configElementRepository.Upsert(
+            ConfigElementKey.MinimumLogLevelSearching,
+            loggingSettings.SearchingMinimumLogLevel);
+        _loggingLevelSwitches.SearchingLevelSwitch.MinimumLevel = loggingSettings.SearchingMinimumLogLevel;
+
+        await _configElementRepository.Upsert(
             ConfigElementKey.MinimumLogLevelStreaming,
             loggingSettings.StreamingMinimumLogLevel);
         _loggingLevelSwitches.StreamingLevelSwitch.MinimumLevel = loggingSettings.StreamingMinimumLogLevel;

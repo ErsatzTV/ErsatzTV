@@ -74,6 +74,9 @@ public class Program
                 "ErsatzTV.Application.Subtitles.ExtractEmbeddedSubtitlesHandler",
                 LoggingLevelSwitches.SchedulingLevelSwitch)
 
+            // searching
+            .MinimumLevel.Override("ErsatzTV.Infrastructure.Search.SearchQueryParser", LoggingLevelSwitches.SearchingLevelSwitch)
+
             // streaming
             .MinimumLevel.Override("ErsatzTV.Application.Streaming", LoggingLevelSwitches.StreamingLevelSwitch)
             .MinimumLevel.Override("ErsatzTV.FFmpeg", LoggingLevelSwitches.StreamingLevelSwitch)
@@ -85,6 +88,7 @@ public class Program
                 LoggingLevelSwitches.StreamingLevelSwitch)
             .MinimumLevel.Override("ErsatzTV.Controllers.IptvController", LoggingLevelSwitches.StreamingLevelSwitch)
             .MinimumLevel.Override("ErsatzTV.Controllers.InternalController", LoggingLevelSwitches.StreamingLevelSwitch)
+            .MinimumLevel.Override("ErsatzTV.Controllers.TroubleshootController", LoggingLevelSwitches.StreamingLevelSwitch)
 
             // http
             .MinimumLevel.Override("Serilog.AspNetCore.RequestLoggingMiddleware", LoggingLevelSwitches.HttpLevelSwitch)

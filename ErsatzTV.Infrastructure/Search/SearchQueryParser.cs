@@ -6,12 +6,12 @@ using Lucene.Net.Analysis.Miscellaneous;
 using Lucene.Net.Analysis.Standard;
 using Lucene.Net.QueryParsers.Classic;
 using Lucene.Net.Search;
-using Serilog;
+using Microsoft.Extensions.Logging;
 using Query = Lucene.Net.Search.Query;
 
 namespace ErsatzTV.Infrastructure.Search;
 
-public partial class SearchQueryParser(ISmartCollectionCache smartCollectionCache)
+public partial class SearchQueryParser(ISmartCollectionCache smartCollectionCache, ILogger<SearchQueryParser> logger)
 {
     static SearchQueryParser() => BooleanQuery.MaxClauseCount = 1024 * 4;
 
@@ -54,7 +54,7 @@ public partial class SearchQueryParser(ISmartCollectionCache smartCollectionCach
 
         if (!string.IsNullOrWhiteSpace(smartCollectionName) && await smartCollectionCache.HasCycle(smartCollectionName))
         {
-            Log.Logger.Error("Smart collection {Name} contains a cycle; will not evaluate", smartCollectionName);
+            logger.LogError("Smart collection {Name} contains a cycle; will not evaluate", smartCollectionName);
         }
         else
         {
@@ -63,7 +63,7 @@ public partial class SearchQueryParser(ISmartCollectionCache smartCollectionCach
             {
                 if (replaceCount > 100)
                 {
-                    Log.Logger.Warning("smart_collection query is nested too deep; giving up");
+                    logger.LogWarning("smart_collection query is nested too deep; giving up");
                     break;
                 }
 
@@ -75,7 +75,7 @@ public partial class SearchQueryParser(ISmartCollectionCache smartCollectionCach
 
                 if (parsedQuery == replaceResult.Query)
                 {
-                    Log.Logger.Warning(
+                    logger.LogWarning(
                         "Failed to replace smart_collection in query; is the syntax correct? Quotes are required. Giving up...");
                     break;
                 }
@@ -97,7 +97,7 @@ public partial class SearchQueryParser(ISmartCollectionCache smartCollectionCach
         };
         Query result = ParseQuery(parsedQuery, parser);
 
-        Log.Logger.Debug("Search query parsed from [{Query}] to [{ParsedQuery}]", query, result.ToString());
+        logger.LogDebug("Search query parsed from [{Query}] to [{ParsedQuery}]", query, result.ToString());
 
         return result;
     }
@@ -113,7 +113,7 @@ public partial class SearchQueryParser(ISmartCollectionCache smartCollectionCach
                 string smartCollectionName = match.Groups[1].Value;
                 if (await smartCollectionCache.HasCycle(smartCollectionName))
                 {
-                    Log.Logger.Error(
+                    logger.LogError(
                         "Smart collection {Name} contains a cycle; will not evaluate",
                         smartCollectionName);
                     return new ReplaceResult(query, true);
@@ -130,7 +130,7 @@ public partial class SearchQueryParser(ISmartCollectionCache smartCollectionCach
         }
         catch (Exception ex)
         {
-            Log.Logger.Warning(ex, "Unexpected exception replacing smart collections in search query");
+            logger.LogWarning(ex, "Unexpected exception replacing smart collections in search query");
             return new ReplaceResult(query, true);
         }
     }
