@@ -254,9 +254,6 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("ActiveMode")
-                        .HasColumnType("int");
-
                     b.Property<string>("Categories")
                         .HasColumnType("longtext");
 

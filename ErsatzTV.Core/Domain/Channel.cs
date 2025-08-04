@@ -33,7 +33,6 @@ public class Channel
     public string MusicVideoCreditsTemplate { get; set; }
     public ChannelSongVideoMode SongVideoMode { get; set; }
     public ChannelPlayoutMode PlayoutMode { get; set; }
-    public ChannelActiveMode ActiveMode { get; set; }
     public ChannelTranscodeMode TranscodeMode { get; set; }
     public ChannelIdleBehavior IdleBehavior { get; set; }
     public bool IsEnabled { get; set; }

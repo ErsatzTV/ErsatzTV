@@ -90,16 +90,6 @@
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                 <div class="d-flex">
-                    <MudText>Active Mode</MudText>
-                </div>
-                <MudSelect @bind-Value="_model.ActiveMode" For="@(() => _model.ActiveMode)">
-                    <MudSelectItem Value="@(ChannelActiveMode.Active)">Active</MudSelectItem>
-                    <MudSelectItem Value="@(ChannelActiveMode.Hidden)">Hidden</MudSelectItem>
-                    <MudSelectItem Value="@(ChannelActiveMode.Inactive)">Inactive</MudSelectItem>
-                </MudSelect>
-            </MudStack>
-            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                <div class="d-flex">
                     <MudText>Streaming Mode</MudText>
                 </div>
                 <MudSelect @bind-Value="_model.StreamingMode" For="@(() => _model.StreamingMode)">
@@ -352,7 +342,6 @@
                     _model.MusicVideoCreditsMode = channelViewModel.MusicVideoCreditsMode;
                     _model.MusicVideoCreditsTemplate = channelViewModel.MusicVideoCreditsTemplate;
                     _model.SongVideoMode = channelViewModel.SongVideoMode;
-                    _model.ActiveMode = channelViewModel.ActiveMode;
                     _model.TranscodeMode = channelViewModel.TranscodeMode;
                     _model.IdleBehavior = channelViewModel.IdleBehavior;
                     _model.IsEnabled = channelViewModel.IsEnabled;

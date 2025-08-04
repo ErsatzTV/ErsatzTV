@@ -26,7 +26,6 @@ public record ChannelViewModel(
     ChannelMusicVideoCreditsMode MusicVideoCreditsMode,
     string MusicVideoCreditsTemplate,
     ChannelSongVideoMode SongVideoMode,
-    ChannelActiveMode ActiveMode,
     ChannelTranscodeMode TranscodeMode,
     ChannelIdleBehavior IdleBehavior,
     bool IsEnabled,

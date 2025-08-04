@@ -36,7 +36,6 @@ public class ChannelEditViewModel
     }
 
     public ChannelSongVideoMode SongVideoMode { get; set; }
-    public ChannelActiveMode ActiveMode { get; set; }
     public ChannelTranscodeMode TranscodeMode { get; set; }
     public ChannelIdleBehavior IdleBehavior { get; set; }
     public bool IsEnabled { get; set; }
@@ -66,7 +65,6 @@ public class ChannelEditViewModel
             MusicVideoCreditsMode,
             MusicVideoCreditsTemplate,
             SongVideoMode,
-            ActiveMode,
             TranscodeMode,
             IdleBehavior,
             IsEnabled,
@@ -95,7 +93,6 @@ public class ChannelEditViewModel
             MusicVideoCreditsMode,
             MusicVideoCreditsTemplate,
             SongVideoMode,
-            ActiveMode,
             TranscodeMode,
             IdleBehavior,
             IsEnabled,

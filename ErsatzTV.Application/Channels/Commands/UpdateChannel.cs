@@ -25,7 +25,6 @@ public record UpdateChannel(
     ChannelMusicVideoCreditsMode MusicVideoCreditsMode,
     string MusicVideoCreditsTemplate,
     ChannelSongVideoMode SongVideoMode,
-    ChannelActiveMode ActiveMode,
     ChannelTranscodeMode TranscodeMode,
     ChannelIdleBehavior IdleBehavior,
     bool IsEnabled,

@@ -29,7 +29,6 @@ internal static class Mapper
             channel.MusicVideoCreditsMode,
             channel.MusicVideoCreditsTemplate,
             channel.SongVideoMode,
-            channel.ActiveMode,
             channel.TranscodeMode,
             channel.IdleBehavior,
             channel.IsEnabled,

@@ -84,9 +84,7 @@ public class IptvController : ControllerBase
         string mode = null)
     {
         Option<ChannelViewModel> maybeChannel = await _mediator.Send(new GetChannelByNumber(channelNumber));
-        if (maybeChannel.IsNone ||
-            await maybeChannel.Map(c => c.ActiveMode).IfNoneAsync(ChannelActiveMode.Inactive) is ChannelActiveMode
-                .Inactive)
+        if (maybeChannel.IsNone || await maybeChannel.Map(c => c.IsEnabled).IfNoneAsync(false) == false)
         {
             return NotFound();
         }
@@ -189,9 +187,7 @@ public class IptvController : ControllerBase
         string mode = "mixed")
     {
         Option<ChannelViewModel> maybeChannel = await _mediator.Send(new GetChannelByNumber(channelNumber));
-        if (maybeChannel.IsNone ||
-            await maybeChannel.Map(c => c.ActiveMode).IfNoneAsync(ChannelActiveMode.Inactive) is ChannelActiveMode
-                .Inactive)
+        if (maybeChannel.IsNone || await maybeChannel.Map(c => c.IsEnabled).IfNoneAsync(false) == false)
         {
             return NotFound();
         }
