@@ -24,7 +24,7 @@ public class UpdateOnDemandCheckpointHandler(
 
         foreach (Playout playout in maybePlayout)
         {
-            if (playout.Channel.ProgressMode is not ChannelProgressMode.OnDemand)
+            if (playout.Channel.PlayoutMode is not ChannelPlayoutMode.OnDemand)
             {
                 return;
             }

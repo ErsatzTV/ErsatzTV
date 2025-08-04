@@ -84,7 +84,7 @@ public class PlayoutBuilder : IPlayoutBuilder
             // }
 
             // time shift on demand channel if needed
-            if (playout.Channel.ProgressMode is ChannelProgressMode.OnDemand && mode is not PlayoutBuildMode.Reset)
+            if (playout.Channel.PlayoutMode is ChannelPlayoutMode.OnDemand && mode is not PlayoutBuildMode.Reset)
             {
                 _playoutTimeShifter.TimeShift(playout, parameters.Start, false);
             }
@@ -251,7 +251,7 @@ public class PlayoutBuilder : IPlayoutBuilder
         playout.OnDemandCheckpoint = null;
 
         // don't trim start for on demand channels, we want to time shift it all forward
-        if (playout.Channel.ProgressMode is ChannelProgressMode.OnDemand)
+        if (playout.Channel.PlayoutMode is ChannelPlayoutMode.OnDemand)
         {
             TrimStart = false;
         }
@@ -265,7 +265,7 @@ public class PlayoutBuilder : IPlayoutBuilder
             cancellationToken);
 
         // time shift on demand channel if needed
-        if (playout.Channel.ProgressMode is ChannelProgressMode.OnDemand)
+        if (playout.Channel.PlayoutMode is ChannelPlayoutMode.OnDemand)
         {
             _playoutTimeShifter.TimeShift(playout, parameters.Start, false);
         }
@@ -415,7 +415,7 @@ public class PlayoutBuilder : IPlayoutBuilder
         }
 
         // on demand channels end up with slightly more than expected due to time shifting from midnight to first build
-        if (playout.Channel.ProgressMode is not ChannelProgressMode.OnDemand)
+        if (playout.Channel.PlayoutMode is not ChannelPlayoutMode.OnDemand)
         {
             // check for future items that aren't grouped inside range
             var futureItems = playout.Items.Filter(i => i.StartOffset > trimAfter).ToList();
@@ -457,7 +457,7 @@ public class PlayoutBuilder : IPlayoutBuilder
         }
 
         // on demand channels do NOT use alternate schedules
-        if (playout.Channel.ProgressMode is ChannelProgressMode.OnDemand)
+        if (playout.Channel.PlayoutMode is ChannelPlayoutMode.OnDemand)
         {
             activeSchedule = playout.ProgramSchedule;
         }

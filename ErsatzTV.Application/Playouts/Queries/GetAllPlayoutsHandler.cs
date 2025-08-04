@@ -24,7 +24,7 @@ public class GetAllPlayoutsHandler : IRequestHandler<GetAllPlayouts, List<Playou
                 p.ProgramSchedulePlayoutType,
                 p.Channel.Name,
                 p.Channel.Number,
-                p.Channel.ProgressMode,
+                p.Channel.PlayoutMode,
                 p.ProgramScheduleId == null ? string.Empty : p.ProgramSchedule.Name,
                 p.TemplateFile,
                 p.ExternalJsonFile,

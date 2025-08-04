@@ -76,7 +76,7 @@ public class CreateChannelHandler(
                 Group = request.Group,
                 Categories = request.Categories,
                 FFmpegProfileId = ffmpegProfileId,
-                ProgressMode = request.ProgressMode,
+                PlayoutMode = request.PlayoutMode,
                 StreamingMode = request.StreamingMode,
                 Artwork = artwork,
                 StreamSelectorMode = request.StreamSelectorMode,

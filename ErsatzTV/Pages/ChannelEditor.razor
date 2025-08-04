@@ -62,11 +62,11 @@
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                 <div class="d-flex">
-                    <MudText>Progress Mode</MudText>
+                    <MudText>Playout Mode</MudText>
                 </div>
-                <MudSelect @bind-Value="_model.ProgressMode" For="@(() => _model.ProgressMode)">
-                    <MudSelectItem Value="@(ChannelProgressMode.Always)">Always</MudSelectItem>
-                    <MudSelectItem Value="@(ChannelProgressMode.OnDemand)">On Demand</MudSelectItem>
+                <MudSelect @bind-Value="_model.PlayoutMode" For="@(() => _model.PlayoutMode)" HelperText="Controls the progression of the channel's playout">
+                    <MudSelectItem Value="@(ChannelPlayoutMode.Continuous)">Continuous</MudSelectItem>
+                    <MudSelectItem Value="@(ChannelPlayoutMode.OnDemand)">On Demand</MudSelectItem>
                 </MudSelect>
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
@@ -310,7 +310,7 @@
                         _model.Logo = channelViewModel.Logo;
                     }
 
-                    _model.ProgressMode = channelViewModel.ProgressMode;
+                    _model.PlayoutMode = channelViewModel.PlayoutMode;
                     _model.StreamingMode = channelViewModel.StreamingMode;
                     _model.StreamSelectorMode = channelViewModel.StreamSelectorMode;
                     _model.StreamSelector = channelViewModel.StreamSelector;

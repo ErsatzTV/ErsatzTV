@@ -65,6 +65,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Classic schedules: always schedule the full `Duration` amount instead of stopping mid-duration
   - This allows duration items to be scheduled beyond midnight
   - e.g. fixed start time 22:00 with 4 hour duration will schedule until 02:00 instead of stopping at midnight
+- Rename channel setting `Progress Mode` to `Playout Mode`
+  - This controls the progression of the channel's playout, and has nothing to do with transcoding
+  - `Always` is now called `Continuous` (playout progresses with wall clock)
+  - `On Demand` is unchanged (playout only progresses while a client is watching the channel)
 
 ## [25.3.1] - 2025-07-24
 ### Fixed

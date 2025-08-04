@@ -49,7 +49,7 @@ public class
             playout.ProgramSchedulePlayoutType,
             playout.Channel.Name,
             playout.Channel.Number,
-            playout.Channel.ProgressMode,
+            playout.Channel.PlayoutMode,
             playout.ProgramSchedule?.Name ?? string.Empty,
             playout.TemplateFile,
             playout.ExternalJsonFile,

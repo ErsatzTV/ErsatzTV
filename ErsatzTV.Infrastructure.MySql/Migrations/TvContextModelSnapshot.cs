@@ -284,6 +284,9 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<string>("Number")
                         .HasColumnType("varchar(255)");
 
+                    b.Property<int>("PlayoutMode")
+                        .HasColumnType("int");
+
                     b.Property<string>("PreferredAudioLanguageCode")
                         .HasColumnType("longtext");
 
@@ -292,9 +295,6 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
 
                     b.Property<string>("PreferredSubtitleLanguageCode")
                         .HasColumnType("longtext");
-
-                    b.Property<int>("ProgressMode")
-                        .HasColumnType("int");
 
                     b.Property<int>("SongVideoMode")
                         .HasColumnType("int");
