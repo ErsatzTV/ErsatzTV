@@ -546,8 +546,16 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
     private Option<string> LocateThumbnail(MusicVideo musicVideo)
     {
         string path = musicVideo.MediaVersions.Head().MediaFiles.Head().Path;
+
+        string directory = Path.GetDirectoryName(path) ?? string.Empty;
+        string filenameWithoutExtension = Path.GetFileNameWithoutExtension(path);
+        string extension = Path.GetExtension(path);
+
+        string thumbFilename = filenameWithoutExtension + "-thumb" + extension;
+        string thumbPath = Path.Combine(directory, thumbFilename);
+
         return ImageFileExtensions
-            .Map(ext => Path.ChangeExtension(path, ext))
+            .SelectMany(ext => new[] { Path.ChangeExtension(path, ext), Path.ChangeExtension(thumbPath, ext) })
             .Filter(f => _localFileSystem.FileExists(f))
             .HeadOrNone();
     }

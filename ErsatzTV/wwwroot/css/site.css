@@ -96,6 +96,15 @@ div.ersatztv-light {
     width: 100%;
 }
 
+.fanart-container .mud-skeleton {
+    -o-object-fit: cover;
+    height: 400px;
+    object-fit: cover;
+    position: absolute;
+    transition: opacity 5s ease;
+    width: 100%;
+}
+
 .fanart-container > .fanart-tint {
     background: linear-gradient(rgba(var(--fanart-background-rgb), 0.47) 0%, rgb(var(--fanart-background-rgb)) 100%);
     height: 400px;
