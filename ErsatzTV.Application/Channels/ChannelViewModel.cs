@@ -26,7 +26,9 @@ public record ChannelViewModel(
     ChannelMusicVideoCreditsMode MusicVideoCreditsMode,
     string MusicVideoCreditsTemplate,
     ChannelSongVideoMode SongVideoMode,
-    ChannelActiveMode ActiveMode)
+    ChannelActiveMode ActiveMode,
+    ChannelTranscodeMode TranscodeMode,
+    ChannelIdleBehavior IdleBehavior)
 {
     public string WebEncodedName => WebUtility.UrlEncode(Name);
 }

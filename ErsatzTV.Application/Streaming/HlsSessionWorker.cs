@@ -146,7 +146,7 @@ public class HlsSessionWorker : IHlsSessionWorker
         GC.SuppressFinalize(this);
     }
 
-    public async Task Run(string channelNumber, TimeSpan idleTimeout, CancellationToken incomingCancellationToken)
+    public async Task Run(string channelNumber, Option<TimeSpan> idleTimeout, CancellationToken incomingCancellationToken)
     {
         _cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(incomingCancellationToken);
 
@@ -154,10 +154,13 @@ public class HlsSessionWorker : IHlsSessionWorker
         {
             _channelNumber = channelNumber;
 
-            lock (_sync)
+            foreach (var timeout in idleTimeout)
             {
-                _timer = new Timer(idleTimeout.TotalMilliseconds) { AutoReset = false };
-                _timer.Elapsed += CancelRun;
+                lock (_sync)
+                {
+                    _timer = new Timer(timeout.TotalMilliseconds) { AutoReset = false };
+                    _timer.Elapsed += CancelRun;
+                }
             }
 
             CancellationToken cancellationToken = _cancellationTokenSource.Token;
@@ -188,10 +191,13 @@ public class HlsSessionWorker : IHlsSessionWorker
 
             while (!cancellationToken.IsCancellationRequested)
             {
-                if (DateTimeOffset.Now - _lastAccess > idleTimeout)
+                foreach (var timeout in idleTimeout)
                 {
-                    _logger.LogInformation("Stopping idle HLS session for channel {Channel}", channelNumber);
-                    return;
+                    if (DateTimeOffset.Now - _lastAccess > timeout)
+                    {
+                        _logger.LogInformation("Stopping idle HLS session for channel {Channel}", channelNumber);
+                        return;
+                    }
                 }
 
                 var transcodedBuffer = TimeSpan.FromSeconds(
@@ -216,9 +222,12 @@ public class HlsSessionWorker : IHlsSessionWorker
         }
         finally
         {
-            lock (_sync)
+            if (_timer is not null)
             {
-                _timer.Elapsed -= CancelRun;
+                lock (_sync)
+                {
+                    _timer.Elapsed -= CancelRun;
+                }
             }
 
             try
@@ -305,8 +314,11 @@ public class HlsSessionWorker : IHlsSessionWorker
         {
             if (disposing)
             {
-                _timer.Dispose();
-                _timer = null;
+                if (_timer is not null)
+                {
+                    _timer.Dispose();
+                    _timer = null;
+                }
 
                 _serviceScope.Dispose();
                 _serviceScope = null;

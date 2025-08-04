@@ -46,6 +46,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - The chapters are shuffled or otherwise sorted together just like normal filler would be
 - Add smart collection edit page to allow renaming smart collections
   - Previous edit link behavior (performing search using smart collection query) now uses magnifying glass icon
+- Add channel `Transcode Mode` setting
+  - This setting is currently disabled and only has the value `On Demand`
+- Add channel `Idle Behavior` setting to control the transcoding behavior after all clients have disconnected
+  - `Stop On Disconnect` - stops the transcoder after all clients have disconnected + the global idle timeout
+  - `Keep Running` - transcoder will run until manually stopped
 
 ### Fixed
 - Fix app startup with MySql/MariaDB

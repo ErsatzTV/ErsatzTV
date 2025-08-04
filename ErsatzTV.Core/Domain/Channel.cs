@@ -34,5 +34,7 @@ public class Channel
     public ChannelSongVideoMode SongVideoMode { get; set; }
     public ChannelPlayoutMode PlayoutMode { get; set; }
     public ChannelActiveMode ActiveMode { get; set; }
+    public ChannelTranscodeMode TranscodeMode { get; set; }
+    public ChannelIdleBehavior IdleBehavior { get; set; }
     public string WebEncodedName => WebUtility.UrlEncode(Name);
 }
