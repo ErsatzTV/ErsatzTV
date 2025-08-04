@@ -25,6 +25,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - YAML playout: add `rewind` instruction to set start of playout relative to the current time
   - Value should be formatted as `HH:MM:SS` e.g. `00:05:30` for 5 minutes 30 seconds (before now)
   - This is instruction is mostly useful for debugging transitions, and can only be used as a reset instruction
+- YAML playout: add `import` section to allow importing partial YAML definitions that include `content` and `sequence` entries
 - Add YAML playout validation (using JSON Schema)
   - Invalid YAML playout definitions will fail to build and will log validation failures as warnings
   - `content` is fully validated
