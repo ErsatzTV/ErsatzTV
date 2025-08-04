@@ -419,20 +419,17 @@ public class PlayoutBuilder : IPlayoutBuilder
         {
             // check for future items that aren't grouped inside range
             var futureItems = playout.Items.Filter(i => i.StartOffset > trimAfter).ToList();
-            foreach (PlayoutItem futureItem in futureItems)
-            {
-                if (playout.Items.All(i => i == futureItem || i.GuideGroup != futureItem.GuideGroup))
-                {
-                    _logger.LogError(
-                        "Playout item scheduled for {Time} after hard stop of {HardStop}",
-                        futureItem.StartOffset,
-                        trimAfter);
+            var futureItemCount = futureItems.Count(futureItem =>
+                playout.Items.All(i => i == futureItem || i.GuideGroup != futureItem.GuideGroup));
 
-                    // it feels hacky to have to clean up a playlist like this,
-                    // so only log the error, and leave the bad data to fail tests
-                    // playout.Items.Remove(futureItem);
-                }
-            }
+            // it feels hacky to have to clean up a playlist like this,
+            // so only log the warning, and leave the bad data to fail tests
+            // playout.Items.Remove(futureItem);
+
+            _logger.LogInformation(
+                "{Count} playout items are scheduled after hard stop of {HardStop}; this is expected if duration is used.",
+                futureItemCount,
+                trimAfter);
         }
 
         return playout;
