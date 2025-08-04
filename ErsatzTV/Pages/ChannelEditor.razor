@@ -78,6 +78,18 @@
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                 <div class="d-flex">
+                    <MudText>Is Enabled</MudText>
+                </div>
+                <MudCheckBox @bind-Value="_model.IsEnabled" Dense="true"/>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Show In EPG</MudText>
+                </div>
+                <MudCheckBox @bind-Value="_model.ShowInEpg" Dense="true"/>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
                     <MudText>Active Mode</MudText>
                 </div>
                 <MudSelect @bind-Value="_model.ActiveMode" For="@(() => _model.ActiveMode)">
@@ -343,6 +355,8 @@
                     _model.ActiveMode = channelViewModel.ActiveMode;
                     _model.TranscodeMode = channelViewModel.TranscodeMode;
                     _model.IdleBehavior = channelViewModel.IdleBehavior;
+                    _model.IsEnabled = channelViewModel.IsEnabled;
+                    _model.ShowInEpg = channelViewModel.ShowInEpg;
                 },
                 () => NavigationManager.NavigateTo("404"));
         }
@@ -359,6 +373,8 @@
             _model.Group = "ErsatzTV";
             _model.FFmpegProfileId = ffmpegSettings.DefaultFFmpegProfileId;
             _model.StreamingMode = StreamingMode.TransportStreamHybrid;
+            _model.IsEnabled = true;
+            _model.ShowInEpg = true;
         }
     }
 

@@ -28,7 +28,9 @@ public record ChannelViewModel(
     ChannelSongVideoMode SongVideoMode,
     ChannelActiveMode ActiveMode,
     ChannelTranscodeMode TranscodeMode,
-    ChannelIdleBehavior IdleBehavior)
+    ChannelIdleBehavior IdleBehavior,
+    bool IsEnabled,
+    bool ShowInEpg)
 {
     public string WebEncodedName => WebUtility.UrlEncode(Name);
 }

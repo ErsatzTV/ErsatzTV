@@ -13,6 +13,12 @@ public class ChannelConfiguration : IEntityTypeConfiguration<Channel>
         builder.HasIndex(c => c.Number)
             .IsUnique();
 
+        builder.Property(c => c.IsEnabled)
+            .HasDefaultValue(true);
+
+        builder.Property(c => c.ShowInEpg)
+            .HasDefaultValue(true);
+
         builder.HasMany(c => c.Playouts) // TODO: is this correct, or should we have one to one?
             .WithOne(p => p.Channel)
             .HasForeignKey(p => p.ChannelId)

@@ -31,7 +31,9 @@ internal static class Mapper
             channel.SongVideoMode,
             channel.ActiveMode,
             channel.TranscodeMode,
-            channel.IdleBehavior);
+            channel.IdleBehavior,
+            channel.IsEnabled,
+            channel.ShowInEpg);
 
     internal static ChannelResponseModel ProjectToResponseModel(Channel channel) =>
         new(

@@ -36,5 +36,7 @@ public class Channel
     public ChannelActiveMode ActiveMode { get; set; }
     public ChannelTranscodeMode TranscodeMode { get; set; }
     public ChannelIdleBehavior IdleBehavior { get; set; }
+    public bool IsEnabled { get; set; }
+    public bool ShowInEpg { get; set; }
     public string WebEncodedName => WebUtility.UrlEncode(Name);
 }

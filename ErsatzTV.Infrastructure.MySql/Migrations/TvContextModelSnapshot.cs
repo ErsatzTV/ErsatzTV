@@ -275,6 +275,11 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<int>("IdleBehavior")
                         .HasColumnType("int");
 
+                    b.Property<bool>("IsEnabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("tinyint(1)")
+                        .HasDefaultValue(true);
+
                     b.Property<int>("MusicVideoCreditsMode")
                         .HasColumnType("int");
 
@@ -298,6 +303,11 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
 
                     b.Property<string>("PreferredSubtitleLanguageCode")
                         .HasColumnType("longtext");
+
+                    b.Property<bool>("ShowInEpg")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("tinyint(1)")
+                        .HasDefaultValue(true);
 
                     b.Property<int>("SongVideoMode")
                         .HasColumnType("int");

@@ -90,7 +90,9 @@ public class CreateChannelHandler(
                 SongVideoMode = request.SongVideoMode,
                 ActiveMode = request.ActiveMode,
                 TranscodeMode = request.TranscodeMode,
-                IdleBehavior = request.IdleBehavior
+                IdleBehavior = request.IdleBehavior,
+                IsEnabled = request.IsEnabled,
+                ShowInEpg = request.ShowInEpg
             };
 
             foreach (int id in watermarkId)
