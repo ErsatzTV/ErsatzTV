@@ -51,6 +51,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Add channel `Idle Behavior` setting to control the transcoding behavior after all clients have disconnected
   - `Stop On Disconnect` - stops the transcoder after all clients have disconnected + the global idle timeout
   - `Keep Running` - transcoder will run until manually stopped
+- Add support for music video thumbnails that end in `-thumb`
+  - For example `Music Video.mkv` could have a corresponding thumbnail `Music Video-thumb.jpg`
 
 ### Fixed
 - Fix app startup with MySql/MariaDB
