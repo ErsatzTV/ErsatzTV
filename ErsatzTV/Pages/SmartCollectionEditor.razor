@@ -1,0 +1,71 @@
+﻿@page "/media/smart-collections/{Id:int}/edit"
+@using ErsatzTV.Application.MediaCollections
+@implements IDisposable
+@inject NavigationManager NavigationManager
+@inject ILogger<CollectionEditor> Logger
+@inject ISnackbar Snackbar
+@inject IMediator Mediator
+
+<MudForm @ref="_form" @bind-IsValid="@_success" Style="max-height: 100%">
+    <MudPaper Square="true" Style="display: flex; height: 64px; min-height: 64px; width: 100%; z-index: 100; align-items: center">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-6" OnClick="@HandleSubmitAsync" StartIcon="@Icons.Material.Filled.Save">
+            Save Smart Collection
+        </MudButton>
+    </MudPaper>
+    <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+            <MudText Typo="Typo.h5" Class="mb-2">Smart Collection</MudText>
+            <MudDivider Class="mb-6"/>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Name</MudText>
+                </div>
+                <MudTextField @bind-Value="_model.Name" For="@(() => _model.Name)" Required="true" RequiredError="Smart collection name is required!"/>
+            </MudStack>
+        </MudContainer>
+    </div>
+</MudForm>
+
+@code {
+    private readonly CancellationTokenSource _cts = new();
+
+    [Parameter]
+    public int Id { get; set; }
+
+    private readonly SmartCollectionEditViewModel _model = new();
+    private MudForm _form;
+    private bool _success;
+
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        Option<SmartCollectionViewModel> maybeSmartCollection = await Mediator.Send(new GetSmartCollectionById(Id), _cts.Token);
+        foreach (var smartCollection in maybeSmartCollection)
+        {
+            _model.Id = smartCollection.Id;
+            _model.Name = smartCollection.Name;
+            _model.Query = smartCollection.Query;
+        }
+    }
+
+    private async Task HandleSubmitAsync()
+    {
+        await _form.Validate();
+        if (_success)
+        {
+            Either<BaseError, Unit> result = await Mediator.Send(new UpdateSmartCollection(Id, _model.Name, _model.Query), _cts.Token);
+            result.Match(
+                _ => NavigationManager.NavigateTo("media/collections"),
+                error =>
+                {
+                    Snackbar.Add(error.Value, Severity.Error);
+                    Logger.LogError("Error saving smart collection: {Error}", error.Value);
+                });
+        }
+    }
+}
