@@ -46,6 +46,7 @@ public class UpdateSmartCollectionHandler : IRequestHandler<UpdateSmartCollectio
     private async Task<Unit> ApplyUpdateRequest(TvContext dbContext, SmartCollection c, UpdateSmartCollection request)
     {
         c.Query = request.Query;
+        c.Name = request.Name;
 
         // rebuild playouts
         if (await dbContext.SaveChangesAsync() > 0)

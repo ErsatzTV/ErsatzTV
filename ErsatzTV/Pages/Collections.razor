@@ -114,7 +114,7 @@
                 <ColGroup>
                     <MudHidden Breakpoint="Breakpoint.Xs">
                         <col/>
-                        <col style="width: 120px;"/>
+                        <col style="width: 180px;"/>
                     </MudHidden>
                 </ColGroup>
                 <HeaderContent>
@@ -125,12 +125,17 @@
                     <MudTd DataLabel="Name">@context.Name</MudTd>
                     <MudTd>
                         <div style="align-items: center; display: flex;">
-                            <MudTooltip Text="Edit Collection">
+                            <MudTooltip Text="Edit Smart Collection">
                                 <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                               Href="@($"/media/smart-collections/{context.Id}/edit")">
+                                </MudIconButton>
+                            </MudTooltip>
+                            <MudTooltip Text="Search Smart Collection">
+                                <MudIconButton Icon="@Icons.Material.Filled.Search"
                                                Href="@context.Query.GetRelativeSearchQuery()">
                                 </MudIconButton>
                             </MudTooltip>
-                            <MudTooltip Text="Delete Collection">
+                            <MudTooltip Text="Delete Smart Collection">
                                 <MudIconButton Icon="@Icons.Material.Filled.Delete"
                                                OnClick="@(_ => DeleteSmartCollection(context))">
                                 </MudIconButton>

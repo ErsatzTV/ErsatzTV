@@ -950,6 +950,7 @@
             {
                 var request = new UpdateSmartCollection(
                     collectionResult.Item1.Id,
+                    collectionResult.Item1.Name,
                     _query);
 
                 Either<BaseError, Unit> updateResult = await Mediator.Send(request, CancellationToken);
