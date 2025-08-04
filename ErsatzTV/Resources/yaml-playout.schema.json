@@ -250,7 +250,8 @@
           "discard_attempts": { "type": "integer" },
           "offline_tail": { "type": "boolean" },
           "stop_before_end": { "type": "boolean" },
-          "filler_kind": { "$ref": "#/$defs/enums/filler_kind" }
+          "filler_kind": { "$ref": "#/$defs/enums/filler_kind" },
+          "custom_title": { "type": "string" }
         },
         "required": [ "duration", "content" ],
         "additionalProperties": false
@@ -263,7 +264,8 @@
           "trim": { "type": "boolean" },
           "fallback": { "type": "string" },
           "discard_attempts": { "type": "integer" },
-          "filler_kind": { "$ref": "#/$defs/enums/filler_kind" }
+          "filler_kind": { "$ref": "#/$defs/enums/filler_kind" },
+          "custom_title": { "type": "string" }
         },
         "required": [ "pad_to_next", "content" ],
         "additionalProperties": false
@@ -279,7 +281,8 @@
           "fallback": { "type": "string" },
           "discard_attempts": { "type": "integer" },
           "stop_before_end": { "type": "boolean" },
-          "filler_kind": { "$ref": "#/$defs/enums/filler_kind" }
+          "filler_kind": { "$ref": "#/$defs/enums/filler_kind" },
+          "custom_title": { "type": "string" }
         },
         "required": [ "pad_until", "content" ],
         "additionalProperties": false
