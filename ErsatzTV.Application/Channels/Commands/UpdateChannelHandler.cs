@@ -46,7 +46,7 @@ public class UpdateChannelHandler(
         c.TranscodeMode = update.TranscodeMode;
         c.IdleBehavior = update.IdleBehavior;
         c.IsEnabled = update.IsEnabled;
-        c.ShowInEpg = update.ShowInEpg;
+        c.ShowInEpg = update.IsEnabled && update.ShowInEpg;
         c.Artwork ??= [];
 
         if (!string.IsNullOrWhiteSpace(update.Logo?.Path))
