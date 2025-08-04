@@ -2,7 +2,7 @@ namespace ErsatzTV.Core.Scheduling.YamlScheduling.Models;
 
 public class YamlPlayoutDefinition
 {
-    public List<string> Import { get; set; }
+    public List<string> Import { get; set; } = [];
 
     public List<YamlPlayoutContentItem> Content { get; set; } = [];
 
