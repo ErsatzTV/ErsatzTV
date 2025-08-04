@@ -7,7 +7,7 @@ public record PlayoutNameViewModel(
     ProgramSchedulePlayoutType PlayoutType,
     string ChannelName,
     string ChannelNumber,
-    ChannelProgressMode ProgressMode,
+    ChannelPlayoutMode PlayoutMode,
     string ScheduleName,
     string TemplateFile,
     string ExternalJsonFile,

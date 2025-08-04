@@ -1,7 +1,7 @@
 namespace ErsatzTV.Core.Domain;
 
-public enum ChannelProgressMode
+public enum ChannelPlayoutMode
 {
-    Always = 0,
+    Continuous = 0,
     OnDemand = 1
 }

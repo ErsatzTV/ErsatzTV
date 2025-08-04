@@ -10,7 +10,7 @@ public class PlayoutTimeShifter(IFFmpegSegmenterService segmenterService, ILogge
 {
     public void TimeShift(Playout playout, DateTimeOffset now, bool force)
     {
-        if (playout.Channel.ProgressMode is not ChannelProgressMode.OnDemand)
+        if (playout.Channel.PlayoutMode is not ChannelPlayoutMode.OnDemand)
         {
             return;
         }

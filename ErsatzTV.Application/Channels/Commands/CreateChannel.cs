@@ -15,7 +15,7 @@ public record CreateChannel(
     string StreamSelector,
     string PreferredAudioLanguageCode,
     string PreferredAudioTitle,
-    ChannelProgressMode ProgressMode,
+    ChannelPlayoutMode PlayoutMode,
     StreamingMode StreamingMode,
     int? WatermarkId,
     int? FallbackFillerId,

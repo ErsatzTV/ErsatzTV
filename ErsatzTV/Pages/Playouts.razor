@@ -113,9 +113,9 @@
                             </div>
                             @if (context.PlayoutType == ProgramSchedulePlayoutType.Flood)
                             {
-                                if (context.ProgressMode is ChannelProgressMode.OnDemand)
+                                if (context.PlayoutMode is ChannelPlayoutMode.OnDemand)
                                 {
-                                    <MudTooltip Text="Alternate Schedules are not supported with On Demand progress">
+                                    <MudTooltip Text="Alternate Schedules are not supported with On Demand playout mode">
                                         <MudIconButton Icon="@Icons.Material.Filled.EditCalendar"
                                                        Disabled="true">
                                         </MudIconButton>

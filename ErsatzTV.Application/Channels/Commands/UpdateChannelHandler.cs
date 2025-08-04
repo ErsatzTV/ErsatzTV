@@ -92,7 +92,7 @@ public class UpdateChannelHandler(
             }
         }
 
-        c.ProgressMode = update.ProgressMode;
+        c.PlayoutMode = update.PlayoutMode;
         c.StreamingMode = update.StreamingMode;
         c.WatermarkId = update.WatermarkId;
         c.FallbackFillerId = update.FallbackFillerId;
