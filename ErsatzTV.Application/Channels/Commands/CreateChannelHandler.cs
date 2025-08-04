@@ -91,7 +91,7 @@ public class CreateChannelHandler(
                 TranscodeMode = request.TranscodeMode,
                 IdleBehavior = request.IdleBehavior,
                 IsEnabled = request.IsEnabled,
-                ShowInEpg = request.ShowInEpg
+                ShowInEpg = request.IsEnabled && request.ShowInEpg
             };
 
             foreach (int id in watermarkId)

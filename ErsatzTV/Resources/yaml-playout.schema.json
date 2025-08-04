@@ -124,7 +124,7 @@
               "type": "object",
               "properties": {
                 "source": { "type": "string" },
-                "value": { "type": "string" }
+                "value": { "type": ["integer", "string"] }
               },
               "required": [ "source", "value" ],
               "additionalProperties": false
@@ -198,7 +198,7 @@
               "type": "object",
               "properties": {
                 "source": { "type": "string" },
-                "value": { "type": "string" }
+                "value": { "type": ["integer", "string"] }
               },
               "required": [ "source", "value" ],
               "additionalProperties": false

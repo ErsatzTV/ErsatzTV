@@ -24,6 +24,15 @@ public class ChannelEditViewModelValidator : AbstractValidator<ChannelEditViewMo
                     .Must(Artwork.IsExternalUrl)
                     .WithMessage("External logo url is invalid");
             });
+
+        When(
+            x => x.IsEnabled == false,
+            () =>
+            {
+                RuleFor(x => x.ShowInEpg)
+                    .Must(x => x == false)
+                    .WithMessage("Disabled channels cannot be shown in EPG");
+            });
     }
 
     public Func<object, string, Task<IEnumerable<string>>> ValidateValue => async (model, propertyName) =>

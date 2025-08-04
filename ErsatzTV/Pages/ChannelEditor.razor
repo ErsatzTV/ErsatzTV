@@ -80,13 +80,13 @@
                 <div class="d-flex">
                     <MudText>Is Enabled</MudText>
                 </div>
-                <MudCheckBox @bind-Value="_model.IsEnabled" Dense="true"/>
+                <MudCheckBox @bind-Value="_model.IsEnabled" For="@(() => _model.IsEnabled)" Dense="true"/>
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                 <div class="d-flex">
                     <MudText>Show In EPG</MudText>
                 </div>
-                <MudCheckBox @bind-Value="_model.ShowInEpg" Dense="true"/>
+                <MudCheckBox @bind-Value="_model.ShowInEpg" For="@(() => _model.ShowInEpg)" Dense="true"/>
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                 <div class="d-flex">
