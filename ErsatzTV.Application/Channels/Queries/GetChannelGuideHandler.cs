@@ -1,7 +1,6 @@
 using System.Collections.Immutable;
 using System.Text;
 using ErsatzTV.Core;
-using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Iptv;
 using ErsatzTV.Infrastructure.Data;
@@ -31,8 +30,8 @@ public class GetChannelGuideHandler : IRequestHandler<GetChannelGuide, Either<Ba
         CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        var inactiveChannelNumbers = dbContext.Channels
-            .Where(c => c.ActiveMode != ChannelActiveMode.Active)
+        var hiddenChannelNumbers = dbContext.Channels
+            .Where(c => c.ShowInEpg == false)
             .Select(c => c.Number)
             .AsEnumerable()
             .Select(n => $"{n}.xml")
@@ -68,7 +67,7 @@ public class GetChannelGuideHandler : IRequestHandler<GetChannelGuide, Either<Ba
                 continue;
             }
 
-            if (inactiveChannelNumbers.Contains(Path.GetFileName(fileName)))
+            if (hiddenChannelNumbers.Contains(Path.GetFileName(fileName)))
             {
                 continue;
             }

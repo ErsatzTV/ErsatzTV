@@ -78,13 +78,15 @@
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                 <div class="d-flex">
-                    <MudText>Active Mode</MudText>
+                    <MudText>Is Enabled</MudText>
                 </div>
-                <MudSelect @bind-Value="_model.ActiveMode" For="@(() => _model.ActiveMode)">
-                    <MudSelectItem Value="@(ChannelActiveMode.Active)">Active</MudSelectItem>
-                    <MudSelectItem Value="@(ChannelActiveMode.Hidden)">Hidden</MudSelectItem>
-                    <MudSelectItem Value="@(ChannelActiveMode.Inactive)">Inactive</MudSelectItem>
-                </MudSelect>
+                <MudCheckBox @bind-Value="_model.IsEnabled" Dense="true"/>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Show In EPG</MudText>
+                </div>
+                <MudCheckBox @bind-Value="_model.ShowInEpg" Dense="true"/>
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                 <div class="d-flex">
@@ -340,9 +342,10 @@
                     _model.MusicVideoCreditsMode = channelViewModel.MusicVideoCreditsMode;
                     _model.MusicVideoCreditsTemplate = channelViewModel.MusicVideoCreditsTemplate;
                     _model.SongVideoMode = channelViewModel.SongVideoMode;
-                    _model.ActiveMode = channelViewModel.ActiveMode;
                     _model.TranscodeMode = channelViewModel.TranscodeMode;
                     _model.IdleBehavior = channelViewModel.IdleBehavior;
+                    _model.IsEnabled = channelViewModel.IsEnabled;
+                    _model.ShowInEpg = channelViewModel.ShowInEpg;
                 },
                 () => NavigationManager.NavigateTo("404"));
         }
@@ -359,6 +362,8 @@
             _model.Group = "ErsatzTV";
             _model.FFmpegProfileId = ffmpegSettings.DefaultFFmpegProfileId;
             _model.StreamingMode = StreamingMode.TransportStreamHybrid;
+            _model.IsEnabled = true;
+            _model.ShowInEpg = true;
         }
     }
 

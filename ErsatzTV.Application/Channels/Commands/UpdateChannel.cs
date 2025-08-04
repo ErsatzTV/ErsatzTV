@@ -25,6 +25,7 @@ public record UpdateChannel(
     ChannelMusicVideoCreditsMode MusicVideoCreditsMode,
     string MusicVideoCreditsTemplate,
     ChannelSongVideoMode SongVideoMode,
-    ChannelActiveMode ActiveMode,
     ChannelTranscodeMode TranscodeMode,
-    ChannelIdleBehavior IdleBehavior) : IRequest<Either<BaseError, ChannelViewModel>>;
+    ChannelIdleBehavior IdleBehavior,
+    bool IsEnabled,
+    bool ShowInEpg) : IRequest<Either<BaseError, ChannelViewModel>>;

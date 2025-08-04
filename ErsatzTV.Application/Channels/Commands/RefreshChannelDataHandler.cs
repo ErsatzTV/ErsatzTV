@@ -52,10 +52,10 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
         string targetFile = Path.Combine(FileSystemLayout.ChannelGuideCacheFolder, $"{request.ChannelNumber}.xml");
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
-        int inactiveCount = await dbContext.Channels
-            .Where(c => c.Number == request.ChannelNumber && c.ActiveMode != ChannelActiveMode.Active)
+        int hiddenCount = await dbContext.Channels
+            .Where(c => c.Number == request.ChannelNumber && c.ShowInEpg == false)
             .CountAsync(cancellationToken);
-        if (inactiveCount > 0)
+        if (hiddenCount > 0)
         {
             File.Delete(targetFile);
             return;

@@ -118,7 +118,7 @@ public class RefreshChannelListHandler : IRequestHandler<RefreshChannelList>
         const string QUERY = @"select C.Number, C.Name, C.Categories, A.Path as ArtworkPath
                                from Channel C
                                left outer join Artwork A on C.Id = A.ChannelId and A.ArtworkKind = 2
-                               where C.Id in (select ChannelId from Playout) and C.ActiveMode = 0
+                               where C.Id in (select ChannelId from Playout) and C.IsEnabled = 1 and C.ShowInEPG = 1
                                order by CAST(C.Number as double)";
         // TODO: this needs to be fixed for sqlite/mariadb
 
