@@ -98,7 +98,7 @@ public class HlsSessionWorkerV2 : IHlsSessionWorker
         GC.SuppressFinalize(this);
     }
 
-    public async Task Run(string channelNumber, TimeSpan idleTimeout, CancellationToken incomingCancellationToken)
+    public async Task Run(string channelNumber, Option<TimeSpan> idleTimeout, CancellationToken incomingCancellationToken)
     {
         _cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(incomingCancellationToken);
 
@@ -106,10 +106,13 @@ public class HlsSessionWorkerV2 : IHlsSessionWorker
         {
             _channelNumber = channelNumber;
 
-            lock (_sync)
+            foreach (var timeout in idleTimeout)
             {
-                _timer = new Timer(idleTimeout.TotalMilliseconds) { AutoReset = false };
-                _timer.Elapsed += CancelRun;
+                lock (_sync)
+                {
+                    _timer = new Timer(timeout.TotalMilliseconds) { AutoReset = false };
+                    _timer.Elapsed += CancelRun;
+                }
             }
 
             CancellationToken cancellationToken = _cancellationTokenSource.Token;
@@ -172,9 +175,12 @@ public class HlsSessionWorkerV2 : IHlsSessionWorker
         }
         finally
         {
-            lock (_sync)
+            if (_timer is not null)
             {
-                _timer.Elapsed -= CancelRun;
+                lock (_sync)
+                {
+                    _timer.Elapsed -= CancelRun;
+                }
             }
 
             try
@@ -328,8 +334,11 @@ public class HlsSessionWorkerV2 : IHlsSessionWorker
         {
             if (disposing)
             {
-                _timer.Dispose();
-                _timer = null;
+                if (_timer is not null)
+                {
+                    _timer.Dispose();
+                    _timer = null;
+                }
 
                 _serviceScope.Dispose();
                 _serviceScope = null;

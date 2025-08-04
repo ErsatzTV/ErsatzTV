@@ -68,13 +68,21 @@ public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Eit
 
     private async Task<Unit> StartProcess(StartFFmpegSession request, CancellationToken cancellationToken)
     {
-        TimeSpan idleTimeout = await _configElementRepository
+        Option<TimeSpan> idleTimeout = await _configElementRepository
             .GetValue<int>(ConfigElementKey.FFmpegSegmenterTimeout)
             .Map(maybeTimeout => maybeTimeout.Match(i => TimeSpan.FromSeconds(i), () => TimeSpan.FromMinutes(1)));
 
         Option<int> targetFramerate = await _mediator.Send(
             new GetChannelFramerate(request.ChannelNumber),
             cancellationToken);
+
+        // disable idle timeout when configured to keep running
+        Option<ChannelViewModel> channel =
+            await _mediator.Send(new GetChannelByNumber(request.ChannelNumber), cancellationToken);
+        if (await channel.Map(c => c.IdleBehavior is ChannelIdleBehavior.KeepRunning).IfNoneAsync(false))
+        {
+            idleTimeout = Option<TimeSpan>.None;
+        }
 
         IHlsSessionWorker worker = GetSessionWorker(request, targetFramerate);
 

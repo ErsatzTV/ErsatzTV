@@ -272,6 +272,9 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .HasColumnType("longtext")
                         .HasDefaultValue("ErsatzTV");
 
+                    b.Property<int>("IdleBehavior")
+                        .HasColumnType("int");
+
                     b.Property<int>("MusicVideoCreditsMode")
                         .HasColumnType("int");
 
@@ -309,6 +312,9 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .HasColumnType("int");
 
                     b.Property<int>("SubtitleMode")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TranscodeMode")
                         .HasColumnType("int");
 
                     b.Property<Guid>("UniqueId")

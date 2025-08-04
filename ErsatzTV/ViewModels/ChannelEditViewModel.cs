@@ -37,6 +37,8 @@ public class ChannelEditViewModel
 
     public ChannelSongVideoMode SongVideoMode { get; set; }
     public ChannelActiveMode ActiveMode { get; set; }
+    public ChannelTranscodeMode TranscodeMode { get; set; }
+    public ChannelIdleBehavior IdleBehavior { get; set; }
 
     public UpdateChannel ToUpdate() =>
         new(
@@ -62,7 +64,9 @@ public class ChannelEditViewModel
             MusicVideoCreditsMode,
             MusicVideoCreditsTemplate,
             SongVideoMode,
-            ActiveMode);
+            ActiveMode,
+            TranscodeMode,
+            IdleBehavior);
 
     public CreateChannel ToCreate() =>
         new(
@@ -87,5 +91,7 @@ public class ChannelEditViewModel
             MusicVideoCreditsMode,
             MusicVideoCreditsTemplate,
             SongVideoMode,
-            ActiveMode);
+            ActiveMode,
+            TranscodeMode,
+            IdleBehavior);
 }

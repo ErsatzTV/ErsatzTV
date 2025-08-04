@@ -24,6 +24,7 @@ public class GetChannelFramerateHandler : IRequestHandler<GetChannelFramerate, O
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         FFmpegProfile ffmpegProfile = await dbContext.Channels
+            .AsNoTracking()
             .Filter(c => c.Number == request.ChannelNumber)
             .Include(c => c.FFmpegProfile)
             .Map(c => c.FFmpegProfile)
@@ -38,6 +39,7 @@ public class GetChannelFramerateHandler : IRequestHandler<GetChannelFramerate, O
         _logger.LogDebug("Checking frame rates for channel {ChannelNumber}", request.ChannelNumber);
 
         List<Playout> playouts = await dbContext.Playouts
+            .AsNoTracking()
             .Include(p => p.Items)
             .ThenInclude(pi => pi.MediaItem)
             .ThenInclude(mi => (mi as Movie).MediaVersions)
