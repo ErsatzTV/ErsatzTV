@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [25.4.0] - 2025-08-05
 ### Added
 - Add `Troubleshoot Playback` to overflow menu on all media cards
   - This should eliminate the need to lookup media ids for content
@@ -2503,7 +2505,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/ErsatzTV/ErsatzTV/compare/v25.3.1...HEAD
+[Unreleased]: https://github.com/ErsatzTV/ErsatzTV/compare/v25.4.0...HEAD
+[25.4.0]: https://github.com/ErsatzTV/ErsatzTV/compare/v25.3.1...v25.4.0
 [25.3.1]: https://github.com/ErsatzTV/ErsatzTV/compare/v25.3.0...v25.3.1
 [25.3.0]: https://github.com/ErsatzTV/ErsatzTV/compare/v25.2.0...v25.3.0
 [25.2.0]: https://github.com/ErsatzTV/ErsatzTV/compare/v25.1.0...v25.2.0
