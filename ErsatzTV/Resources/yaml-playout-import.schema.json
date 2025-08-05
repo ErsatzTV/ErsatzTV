@@ -58,7 +58,7 @@
       }
     }
   },
-  "oneOf": [
+  "anyOf": [
     { "required": [ "content" ] },
     { "required": [ "sequence" ] }
   ],
