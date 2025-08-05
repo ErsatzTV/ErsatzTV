@@ -231,7 +231,7 @@
         "properties": {
           "pad_until": { "type": "string" },
           "content": { "type": "string" },
-          "tomorrow": { "type": "string" },
+          "tomorrow": { "type": ["boolean", "string"] },
           "offline_tail": { "type": "boolean" },
           "trim": { "type": "boolean" },
           "fallback": { "type": "string" },
@@ -318,7 +318,7 @@
       "skipItemsInstruction": {
         "type": "object",
         "properties": {
-          "skip_items": { "type": "integer" },
+          "skip_items": { "type": ["integer", "string"] },
           "content": { "type": "string" }
         },
         "required": [ "skip_items", "content" ],

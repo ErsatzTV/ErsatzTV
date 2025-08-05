@@ -188,3 +188,9 @@ div.ersatztv-light {
 .selected {
     background-color: var(--selected-row-color) !important;
 }
+
+.wrap-pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
