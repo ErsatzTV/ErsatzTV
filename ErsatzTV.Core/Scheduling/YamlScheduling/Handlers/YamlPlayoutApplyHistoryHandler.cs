@@ -81,6 +81,10 @@ public class YamlPlayoutApplyHistoryHandler(EnumeratorCache enumeratorCache)
 
                         List<MediaItem> collectionItems =
                             enumeratorCache.PlaylistMediaItemsForContent(contentItem.Key, collectionKey);
+                        if (collectionItems.Count == 0)
+                        {
+                            continue;
+                        }
 
                         foreach (PlayoutHistory h in maybeApplicableHistory)
                         {
@@ -131,6 +135,10 @@ public class YamlPlayoutApplyHistoryHandler(EnumeratorCache enumeratorCache)
             else
             {
                 List<MediaItem> collectionItems = enumeratorCache.MediaItemsForContent(contentItem.Key);
+                if (collectionItems.Count == 0)
+                {
+                    continue;
+                }
 
                 // seek to the appropriate place in the collection enumerator
                 foreach (PlayoutHistory h in maybeHistory)
