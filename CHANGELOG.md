@@ -80,6 +80,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - `Active` channels will be converted to `Is Enabled` = true and `Show In EPG` = true
   - `Hidden` channels will be converted to `Is Enabled` = true and `Show In EPG` = false
   - `Inactive` channels will be converted to `Is Enabled` = false and `Show In EPG` = false
+- Reorganize troubleshooting page
 
 ## [25.3.1] - 2025-07-24
 ### Fixed
