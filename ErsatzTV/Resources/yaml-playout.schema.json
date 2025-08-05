@@ -102,9 +102,14 @@
       "minItems": 1
     }
   },
-  "anyOf": [
-    { "required": [ "content", "playout" ] },
-    { "required": [ "import", "playout" ] }
+  "allOf": [
+    {
+      "anyOf": [
+        { "required": [ "import" ] },
+        { "required": [ "content" ] }
+      ]
+    },
+    { "required": [ "playout" ] }
   ],
   "additionalProperties": false,
   "$defs": {
