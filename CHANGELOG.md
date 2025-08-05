@@ -53,6 +53,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - `Keep Running` - transcoder will run until manually stopped
 - Add support for music video thumbnails that end in `-thumb`
   - For example `Music Video.mkv` could have a corresponding thumbnail `Music Video-thumb.jpg`
+- Reorganize troubleshooting page
+  - Add `YAML Validation` tool in `Troubleshooting` > `Tools`
 
 ### Fixed
 - Fix app startup with MySql/MariaDB
@@ -80,7 +82,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - `Active` channels will be converted to `Is Enabled` = true and `Show In EPG` = true
   - `Hidden` channels will be converted to `Is Enabled` = true and `Show In EPG` = false
   - `Inactive` channels will be converted to `Is Enabled` = false and `Show In EPG` = false
-- Reorganize troubleshooting page
 
 ## [25.3.1] - 2025-07-24
 ### Fixed

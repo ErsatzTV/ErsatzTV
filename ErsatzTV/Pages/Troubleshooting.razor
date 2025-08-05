@@ -8,7 +8,7 @@
 @inject IMediator Mediator
 @inject IJSRuntime JsRuntime
 
-<MudForm>
+<MudForm Style="max-height: 100%">
     <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
         <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
             <MudText Typo="Typo.h5" Class="mb-2">Troubleshooting</MudText>
@@ -30,8 +30,7 @@
                                        StartIcon="@Icons.Material.Filled.Checklist"
                                        Href="system/troubleshooting/yaml"
                                        Class="mt-6"
-                                       Style="margin-right: auto"
-                                       Disabled="true">
+                                       Style="margin-right: auto">
                                 YAML Validation
                             </MudButton>
                         </MudStack>

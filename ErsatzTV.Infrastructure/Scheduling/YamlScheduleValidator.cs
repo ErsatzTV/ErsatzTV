@@ -44,11 +44,45 @@ public class YamlScheduleValidator(ILogger<YamlScheduleValidator> logger) : IYam
         return false;
     }
 
+    public string ToJson(string yaml)
+    {
+        using var textReader = new StringReader(yaml);
+        var yamlStream = new YamlStream();
+        yamlStream.Load(textReader);
+        var schedule = JObject.Parse(Convert(yamlStream));
+        var formatted = JsonConvert.SerializeObject(schedule, Formatting.Indented);
+        var lines = formatted.Split('\n');
+        return string.Join('\n', lines.Select((line, index) => $"{index + 1,4}: {line}"));
+    }
+
+    public async Task<IList<string>> GetValidationMessages(string yaml, bool isImport)
+    {
+        try
+        {
+            string schemaFileName = Path.Combine(FileSystemLayout.ResourcesCacheFolder,
+                isImport ? "yaml-playout-import.schema.json" : "yaml-playout.schema.json");
+            using StreamReader sr = File.OpenText(schemaFileName);
+            await using var reader = new JsonTextReader(sr);
+            var schema = JSchema.Load(reader);
+
+            using var textReader = new StringReader(yaml);
+            var yamlStream = new YamlStream();
+            yamlStream.Load(textReader);
+            var schedule = JObject.Parse(Convert(yamlStream));
+
+            return schedule.IsValid(schema, out IList<string> errorMessages) ? [] : errorMessages;
+        }
+        catch (Exception ex)
+        {
+            return [ex.Message];
+        }
+    }
+
     private static string Convert(YamlStream yamlStream)
     {
         var visitor = new YamlToJsonVisitor();
         yamlStream.Accept(visitor);
-        return visitor.JsonString;
+        return JsonConvert.SerializeObject(JsonConvert.DeserializeObject(visitor.JsonString), Formatting.Indented);
     }
 
     private sealed class YamlToJsonVisitor : IYamlVisitor

@@ -1,0 +1,124 @@
+@page "/system/troubleshooting/yaml"
+@using ErsatzTV.Core.Interfaces.Scheduling
+@implements IDisposable
+@inject IYamlScheduleValidator YamlScheduleValidator
+
+<MudForm Style="max-height: 100%">
+    <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+            <MudText Typo="Typo.h5" Class="mb-2">YAML Validation</MudText>
+            <MudDivider Class="mb-6"/>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>YAML File</MudText>
+                </div>
+                <MudTextField T="string" Value="_yamlFile" ValueChanged="@(async x => await OnYamlFileChanged(x))" />
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Schema</MudText>
+                </div>
+                <MudSelect @bind-Value="_isImport">
+                    <MudSelectItem Value="@false">Full</MudSelectItem>
+                    <MudSelectItem Value="@true">Import</MudSelectItem>
+                </MudSelect>
+            </MudStack>
+            <MudText Typo="Typo.h5" Class="mt-10 mb-2">Validate</MudText>
+            <MudDivider Class="mb-6"/>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex"></div>
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Checklist"
+                           OnClick="@ValidateYaml"
+                           Disabled="@(!_exists)">
+                    Validate
+                </MudButton>
+            </MudStack>
+            <MudTabs Class="mb-6">
+                <MudTabPanel Text="YAML">
+                    <MudPaper Class="pa-6">
+                        <div class="overflow-y-scroll" style="max-height: 500px">
+                            <pre class="wrap-pre">
+                                <code>@_yamlText</code>
+                            </pre>
+                        </div>
+                    </MudPaper>
+                </MudTabPanel>
+                <MudTabPanel Text="JSON">
+                    <MudPaper Class="pa-6">
+                        <div class="overflow-y-scroll" style="max-height: 500px">
+                            <pre class="wrap-pre">
+                                <code>@_jsonText</code>
+                            </pre>
+                        </div>
+                    </MudPaper>
+                </MudTabPanel>
+                <MudTabPanel Text="Messages"
+                             BadgeData="@(_messagesCount > 0 ? _messagesCount.ToString() : null)"
+                             BadgeIcon="@(!string.IsNullOrWhiteSpace(_yamlText) && _messagesCount == 0 ? Icons.Material.Filled.Check : null)"
+                             BadgeColor="@(!string.IsNullOrWhiteSpace(_yamlText) && _messagesCount == 0 ? Color.Success : Color.Error)">
+                    <MudPaper Class="pa-6">
+                        <div class="overflow-y-scroll" style="max-height: 500px">
+                            <pre class="wrap-pre">
+                                <code>@_messages</code>
+                            </pre>
+                        </div>
+                    </MudPaper>
+                </MudTabPanel>
+            </MudTabs>
+            <div class="mb-6">
+                <br />
+                <br />
+            </div>
+        </MudContainer>
+    </div>
+</MudForm>
+
+@code {
+    private readonly CancellationTokenSource _cts = new();
+
+    private string _yamlFile;
+    private bool _isImport;
+    private bool _exists;
+    private string _yamlText;
+    private string _jsonText;
+    private string _messages;
+    private int _messagesCount;
+
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
+
+    private async Task ValidateYaml()
+    {
+        if (_exists)
+        {
+            _yamlText = await File.ReadAllTextAsync(_yamlFile);
+            _jsonText = YamlScheduleValidator.ToJson(_yamlText);
+            var messages = await YamlScheduleValidator.GetValidationMessages(_yamlText, _isImport);
+            _messagesCount = messages.Count;
+            _messages = string.Join("\n", messages);
+
+            StateHasChanged();
+        }
+    }
+
+    private async Task OnYamlFileChanged(string yamlFile)
+    {
+        var extension = Path.GetExtension(yamlFile);
+        _exists = extension is ".yaml" or ".yml" && File.Exists(yamlFile);
+
+        await Task.Delay(100);
+
+        _yamlFile = yamlFile;
+        _yamlText = string.Empty;
+        _jsonText = string.Empty;
+        _messages = string.Empty;
+        _messagesCount = 0;
+
+        StateHasChanged();
+    }
+}
