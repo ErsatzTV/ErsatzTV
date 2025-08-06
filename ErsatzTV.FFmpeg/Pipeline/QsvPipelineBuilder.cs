@@ -172,7 +172,7 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
         }
 
         // easier to use nv12 for overlay
-        if (context.HasSubtitleOverlay || context.HasWatermark)
+        if (context.HasSubtitleOverlay || context.HasWatermark || context.HasGraphicsEngine)
         {
             IPixelFormat pixelFormat = desiredState.PixelFormat.IfNone(
                 context.Is10BitOutput ? new PixelFormatYuv420P10Le() : new PixelFormatYuv420P());
@@ -195,7 +195,7 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
 
         // need to download for any sort of overlay
         if (currentState.FrameDataLocation == FrameDataLocation.Hardware &&
-            (context.HasSubtitleOverlay || context.HasWatermark))
+            (context.HasSubtitleOverlay || context.HasWatermark || context.HasGraphicsEngine))
         {
             var hardwareDownload = new HardwareDownloadFilter(currentState);
             currentState = hardwareDownload.NextState(currentState);
@@ -220,6 +220,8 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
             desiredState,
             currentState,
             watermarkOverlayFilterSteps);
+
+        SetGraphicsEngine(graphicsEngineInput, currentState, graphicsEngineOverlayFilterSteps);
 
         // after everything else is done, apply the encoder
         if (pipelineSteps.OfType<IEncoder>().All(e => e.Kind != StreamKind.Video))
@@ -562,6 +564,29 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
         return currentState;
     }
 
+    private static void SetGraphicsEngine(
+        Option<GraphicsEngineInput> graphicsEngineInput,
+        FrameState desiredState,
+        List<IPipelineFilterStep> graphicsEngineOverlayFilterSteps)
+    {
+        foreach (var _ in graphicsEngineInput)
+        {
+            foreach (IPixelFormat desiredPixelFormat in desiredState.PixelFormat)
+            {
+                IPixelFormat pf = desiredPixelFormat;
+                if (desiredPixelFormat is PixelFormatNv12 nv12)
+                {
+                    foreach (IPixelFormat availablePixelFormat in AvailablePixelFormats.ForPixelFormat(nv12.Name, null))
+                    {
+                        pf = availablePixelFormat;
+                    }
+                }
+
+                graphicsEngineOverlayFilterSteps.Add(new OverlayGraphicsEngineFilter(pf));
+            }
+        }
+    }
+
     private static FrameState SetPad(
         VideoInputFile videoInputFile,
         VideoStream videoStream,
@@ -592,7 +617,7 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
         {
             DecoderHardwareAccelerationMode: HardwareAccelerationMode.None,
             EncoderHardwareAccelerationMode: HardwareAccelerationMode.None
-        } && context is { HasWatermark: false, HasSubtitleOverlay: false, ShouldDeinterlace: false };
+        } && context is { HasGraphicsEngine: false, HasWatermark: false, HasSubtitleOverlay: false, ShouldDeinterlace: false };
 
         // auto_scale filter seems to muck up 10-bit software decode => hardware scale, so use software scale in that case
         useSoftwareFilter = useSoftwareFilter ||
