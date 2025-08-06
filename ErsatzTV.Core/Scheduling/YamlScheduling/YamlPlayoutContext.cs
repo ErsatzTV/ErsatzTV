@@ -14,10 +14,10 @@ public class YamlPlayoutContext(Playout playout, YamlPlayoutDefinition definitio
 
     private readonly System.Collections.Generic.HashSet<int> _visitedInstructions = [];
     private readonly Stack<FillerKind> _fillerKind = new();
+    private readonly System.Collections.Generic.HashSet<int> _channelWatermarkIds = [];
     private int _guideGroup = guideGroup;
     private bool _guideGroupLocked;
     private int _instructionIndex;
-    private Option<int> _channelWatermarkId;
     private Option<string> _preRollSequence;
     private Option<string> _postRollSequence;
     private Option<MidRollSequence> _midRollSequence;
@@ -84,15 +84,20 @@ public class YamlPlayoutContext(Playout playout, YamlPlayoutDefinition definitio
 
     public void SetChannelWatermarkId(int id)
     {
-        _channelWatermarkId = id;
+        _channelWatermarkIds.Add(id);
     }
 
-    public void ClearChannelWatermarkId()
+    public void RemoveChannelWatermarkId(int id)
     {
-        _channelWatermarkId = Option<int>.None;
+        _channelWatermarkIds.Remove(id);
     }
 
-    public Option<int> GetChannelWatermarkId() => _channelWatermarkId;
+    public void ClearChannelWatermarkIds()
+    {
+        _channelWatermarkIds.Clear();
+    }
+
+    public List<int> GetChannelWatermarkIds() => _channelWatermarkIds.ToList();
 
     public void SetPreRollSequence(string sequence)
     {
@@ -142,19 +147,19 @@ public class YamlPlayoutContext(Playout playout, YamlPlayoutDefinition definitio
 
     public string Serialize()
     {
-        int? channelWatermarkId = null;
-        foreach (int id in _channelWatermarkId)
-        {
-            channelWatermarkId = id;
-        }
-
         string preRollSequence = null;
         foreach (string sequence in _preRollSequence)
         {
             preRollSequence = sequence;
         }
 
-        var state = new State(_instructionIndex, _guideGroup, _guideGroupLocked, channelWatermarkId, preRollSequence);
+        var state = new State(
+            _instructionIndex,
+            _guideGroup,
+            _guideGroupLocked,
+            _channelWatermarkIds.ToList(),
+            preRollSequence);
+
         return JsonConvert.SerializeObject(state, Formatting.None, JsonSettings);
     }
 
@@ -184,9 +189,9 @@ public class YamlPlayoutContext(Playout playout, YamlPlayoutDefinition definitio
             _guideGroupLocked = guideGroupLocked;
         }
 
-        foreach (int channelWatermarkId in Optional(state.ChannelWatermarkId))
+        foreach (int channelWatermarkId in state.ChannelWatermarkIds)
         {
-            _channelWatermarkId = channelWatermarkId;
+            _channelWatermarkIds.Add(channelWatermarkId);
         }
 
         foreach (string preRollSequence in Optional(state.PreRollSequence))
@@ -199,7 +204,7 @@ public class YamlPlayoutContext(Playout playout, YamlPlayoutDefinition definitio
         int? InstructionIndex,
         int? GuideGroup,
         bool? GuideGroupLocked,
-        int? ChannelWatermarkId,
+        List<int> ChannelWatermarkIds,
         string PreRollSequence);
 
     public record MidRollSequence(string Sequence, string Expression);
