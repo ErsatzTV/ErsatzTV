@@ -6,8 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 ### Added
 - Add *experimental* graphics engine
-  - Permanent watermarks will use new graphics engine
-  - Intermittent watermarks will still use normal overlay pipeline (for now)
+  - `Permanent` watermarks will use new graphics engine
+  - `Opacity Expression` watermarks will use new graphics engine
+  - `Intermittent` watermarks will still use normal overlay pipeline (for now)
+- Add `Opacity Expression` watermark mode
+  - This allows specifying an expression that returns an opacity between 0.0 and 1.0
+  - The expression can use:
+    - `content_seconds` - the total number of seconds the frame is into the content
+    - `stream_seconds` - the total number of seconds the frame is from when the stream started/activated
+    - `time_of_day_seconds` - the total number of seconds the frame is since midnight
 
 ## [25.4.0] - 2025-08-05
 ### Added

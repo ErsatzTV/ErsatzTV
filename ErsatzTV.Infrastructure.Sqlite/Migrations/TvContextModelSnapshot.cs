@@ -364,6 +364,9 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Property<int>("Opacity")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("OpacityExpression")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("OriginalContentType")
                         .HasColumnType("TEXT");
 

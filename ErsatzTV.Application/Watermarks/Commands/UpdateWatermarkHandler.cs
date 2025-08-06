@@ -53,6 +53,8 @@ public class UpdateWatermarkHandler : IRequestHandler<UpdateWatermark, Either<Ba
         p.DurationSeconds = update.DurationSeconds;
         p.Opacity = update.Opacity;
         p.PlaceWithinSourceContent = update.PlaceWithinSourceContent;
+        p.OpacityExpression = update.OpacityExpression;
+
         await dbContext.SaveChangesAsync();
         _searchTargets.SearchTargetsChanged();
         return new UpdateWatermarkResult(p.Id);

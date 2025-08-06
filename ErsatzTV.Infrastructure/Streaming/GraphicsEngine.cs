@@ -1,12 +1,13 @@
 using System.IO.Pipelines;
 using ErsatzTV.Core.Interfaces.Streaming;
+using Microsoft.Extensions.Logging;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 
 namespace ErsatzTV.Infrastructure.Streaming;
 
-public class GraphicsEngine : IGraphicsEngine
+public class GraphicsEngine(ILogger<GraphicsEngine> logger) : IGraphicsEngine
 {
     public async Task Run(GraphicsEngineContext context, PipeWriter pipeWriter, CancellationToken cancellationToken)
     {
@@ -36,7 +37,8 @@ public class GraphicsEngine : IGraphicsEngine
         {
             while (!cancellationToken.IsCancellationRequested && frameCount < totalFrames)
             {
-                var timestamp = TimeSpan.FromSeconds(frameCount / context.FrameRate);
+                double totalSeconds = (double)frameCount / context.FrameRate;
+                var timestamp = TimeSpan.FromSeconds(totalSeconds);
 
                 using var outputFrame = new Image<Bgra32>(
                     context.FrameSize.Width,
@@ -48,7 +50,20 @@ public class GraphicsEngine : IGraphicsEngine
                 {
                     foreach (var element in elements)
                     {
-                        element.Draw(ctx, timestamp);
+                        try
+                        {
+                            if (!element.IsFailed)
+                            {
+                                element.Draw(ctx, timestamp);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            element.IsFailed = true;
+                            logger.LogWarning(ex,
+                                "Failed to draw graphics element of type {Type}; will disable for this content",
+                                element.GetType().Name);
+                        }
                     }
                 });
 

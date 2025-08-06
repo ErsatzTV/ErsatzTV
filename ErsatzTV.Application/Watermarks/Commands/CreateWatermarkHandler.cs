@@ -55,7 +55,8 @@ public class CreateWatermarkHandler : IRequestHandler<CreateWatermark, Either<Ba
                     FrequencyMinutes = request.FrequencyMinutes,
                     DurationSeconds = request.DurationSeconds,
                     Opacity = request.Opacity,
-                    PlaceWithinSourceContent = request.PlaceWithinSourceContent
+                    PlaceWithinSourceContent = request.PlaceWithinSourceContent,
+                    OpacityExpression = request.OpacityExpression
                 };
 
                 if (request.ImageSource == ChannelWatermarkImageSource.Custom)

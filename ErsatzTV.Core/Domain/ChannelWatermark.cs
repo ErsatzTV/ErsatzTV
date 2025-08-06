@@ -19,13 +19,15 @@ public class ChannelWatermark
     public int DurationSeconds { get; set; }
     public int Opacity { get; set; }
     public bool PlaceWithinSourceContent { get; set; }
+    public string OpacityExpression { get; set; }
 }
 
 public enum ChannelWatermarkMode
 {
     None = 0,
     Permanent = 1,
-    Intermittent = 2
+    Intermittent = 2,
+    OpacityExpression = 3
 }
 
 public enum ChannelWatermarkImageSource

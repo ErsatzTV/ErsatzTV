@@ -348,8 +348,12 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         Option<GraphicsEngineInput> graphicsEngineInput = Option<GraphicsEngineInput>.None;
         Option<GraphicsEngineContext> graphicsEngineContext = Option<GraphicsEngineContext>.None;
 
-        // use graphics engine for permanent watermarks
-        foreach (var options in watermarkOptions.Where(o => o.Watermark.Map(wm => wm.Mode is ChannelWatermarkMode.Permanent).IfNone(false)))
+        // use graphics engine for permanent watermarks, or opacity expressions
+        var maybeGraphicsEngineWatermark = watermarkOptions
+            .Where(o => o.Watermark
+                .Map(wm => wm.Mode is ChannelWatermarkMode.Permanent or ChannelWatermarkMode.OpacityExpression)
+                .IfNone(false));
+        foreach (var options in maybeGraphicsEngineWatermark)
         {
             watermarkInputFile = Option<WatermarkInputFile>.None;
 
