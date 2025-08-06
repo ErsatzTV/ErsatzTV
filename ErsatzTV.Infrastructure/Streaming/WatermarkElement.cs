@@ -120,7 +120,6 @@ public class WatermarkElement : IGraphicsElement, IDisposable
 
         object expressionResult = _expression.Evaluate();
         float opacity = Convert.ToSingle(expressionResult, CultureInfo.InvariantCulture);
-        Console.WriteLine("opacity is " + opacity);
         if (opacity == 0)
         {
             return;
