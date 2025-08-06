@@ -38,7 +38,19 @@ public class WatermarkElement : IGraphicsElement, IDisposable
 
     public async Task InitializeAsync(Resolution frameSize, int frameRate, CancellationToken cancellationToken)
     {
-        _sourceImage = await Image.LoadAsync(_imagePath, cancellationToken);
+        bool isRemoteUri = Uri.TryCreate(_imagePath, UriKind.Absolute, out var uriResult)
+                           && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
+
+        if (isRemoteUri)
+        {
+            using var client = new HttpClient();
+            await using Stream imageStream = await client.GetStreamAsync(uriResult, cancellationToken);
+            _sourceImage = await Image.LoadAsync(imageStream, cancellationToken);
+        }
+        else
+        {
+            _sourceImage = await Image.LoadAsync(_imagePath!, cancellationToken);
+        }
 
         int scaledWidth = _sourceImage.Width;
         int scaledHeight = _sourceImage.Height;
