@@ -229,7 +229,8 @@
           "all": { "type": "null" },
           "content": { "type": "string" },
           "custom_title": { "type": "string" },
-          "filler_kind": { "$ref": "#/$defs/enums/filler_kind" }
+          "filler_kind": { "$ref": "#/$defs/enums/filler_kind" },
+          "disable_watermarks": { "type": "boolean" }
         },
         "required": [ "all", "content" ],
         "additionalProperties": false
@@ -240,7 +241,8 @@
           "count": { "type": "integer" },
           "content": { "type": "string" },
           "custom_title": { "type": "string" },
-          "filler_kind": { "$ref": "#/$defs/enums/filler_kind" }
+          "filler_kind": { "$ref": "#/$defs/enums/filler_kind" },
+          "disable_watermarks": { "type": "boolean" }
         },
         "required": [ "count", "content" ],
         "additionalProperties": false
@@ -256,7 +258,8 @@
           "offline_tail": { "type": "boolean" },
           "stop_before_end": { "type": "boolean" },
           "filler_kind": { "$ref": "#/$defs/enums/filler_kind" },
-          "custom_title": { "type": "string" }
+          "custom_title": { "type": "string" },
+          "disable_watermarks": { "type": "boolean" }
         },
         "required": [ "duration", "content" ],
         "additionalProperties": false
@@ -270,7 +273,8 @@
           "fallback": { "type": "string" },
           "discard_attempts": { "type": "integer" },
           "filler_kind": { "$ref": "#/$defs/enums/filler_kind" },
-          "custom_title": { "type": "string" }
+          "custom_title": { "type": "string" },
+          "disable_watermarks": { "type": "boolean" }
         },
         "required": [ "pad_to_next", "content" ],
         "additionalProperties": false
@@ -287,7 +291,8 @@
           "discard_attempts": { "type": "integer" },
           "stop_before_end": { "type": "boolean" },
           "filler_kind": { "$ref": "#/$defs/enums/filler_kind" },
-          "custom_title": { "type": "string" }
+          "custom_title": { "type": "string" },
+          "disable_watermarks": { "type": "boolean" }
         },
         "required": [ "pad_until", "content" ],
         "additionalProperties": false

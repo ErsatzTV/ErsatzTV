@@ -22,8 +22,7 @@ public class PlayoutItem
     public TimeSpan InPoint { get; set; }
     public TimeSpan OutPoint { get; set; }
     public string ChapterTitle { get; set; }
-    public ChannelWatermark Watermark { get; set; }
-    public int? WatermarkId { get; set; }
+    public List<ChannelWatermark> Watermarks { get; set; }
     public bool DisableWatermarks { get; set; }
     public string PreferredAudioLanguageCode { get; set; }
     public string PreferredAudioTitle { get; set; }
@@ -32,6 +31,7 @@ public class PlayoutItem
     public string BlockKey { get; set; }
     public string CollectionKey { get; set; }
     public string CollectionEtag { get; set; }
+    public List<PlayoutItemWatermark> PlayoutItemWatermarks { get; set; }
     public DateTimeOffset StartOffset => new DateTimeOffset(Start, TimeSpan.Zero).ToLocalTime();
     public DateTimeOffset FinishOffset => new DateTimeOffset(Finish, TimeSpan.Zero).ToLocalTime();
 
@@ -55,8 +55,7 @@ public class PlayoutItem
             InPoint = chapter.StartTime,
             OutPoint = chapter.EndTime,
             ChapterTitle = chapter.Title,
-            Watermark = Watermark,
-            WatermarkId = WatermarkId,
+            Watermarks = Watermarks,
             DisableWatermarks = DisableWatermarks,
             PreferredAudioLanguageCode = PreferredAudioLanguageCode,
             PreferredAudioTitle = PreferredAudioTitle,

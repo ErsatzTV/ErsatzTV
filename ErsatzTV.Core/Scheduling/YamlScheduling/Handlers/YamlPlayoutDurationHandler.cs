@@ -122,12 +122,18 @@ public class YamlPlayoutDurationHandler(EnumeratorCache enumeratorCache) : YamlP
                     GuideGroup = context.PeekNextGuideGroup(),
                     FillerKind = fillerKind,
                     CustomTitle = string.IsNullOrWhiteSpace(customTitle) ? null : customTitle,
-                    DisableWatermarks = disableWatermarks
+                    DisableWatermarks = disableWatermarks,
+                    PlayoutItemWatermarks = []
                 };
 
-                foreach (int watermarkId in context.GetChannelWatermarkId())
+                foreach (int watermarkId in context.GetChannelWatermarkIds())
                 {
-                    playoutItem.WatermarkId = watermarkId;
+                    playoutItem.PlayoutItemWatermarks.Add(
+                        new PlayoutItemWatermark
+                        {
+                            PlayoutItem = playoutItem,
+                            WatermarkId = watermarkId
+                        });
                 }
 
                 if (remainingToFill - itemDuration >= TimeSpan.Zero || !stopBeforeEnd)

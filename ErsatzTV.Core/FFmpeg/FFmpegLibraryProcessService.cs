@@ -62,7 +62,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         DateTimeOffset start,
         DateTimeOffset finish,
         DateTimeOffset now,
-        Option<ChannelWatermark> playoutItemWatermark,
+        List<ChannelWatermark> playoutItemWatermarks,
         Option<ChannelWatermark> globalWatermark,
         string vaapiDisplay,
         VaapiDriver vaapiDriver,
@@ -156,30 +156,6 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                 }
             }
         }
-
-        Option<WatermarkOptions> watermarkOptions = disableWatermarks
-            ? None
-            : await _ffmpegProcessService.GetWatermarkOptions(
-                ffprobePath,
-                channel,
-                playoutItemWatermark,
-                globalWatermark,
-                videoVersion,
-                None,
-                None);
-
-        Option<List<FadePoint>> maybeFadePoints = watermarkOptions
-            .Map(o => o.Watermark)
-            .Flatten()
-            .Where(wm => wm.Mode == ChannelWatermarkMode.Intermittent)
-            .Map(wm =>
-                WatermarkCalculator.CalculateFadePoints(
-                    start,
-                    inPoint,
-                    outPoint,
-                    playbackSettings.StreamSeek,
-                    wm.FrequencyMinutes,
-                    wm.DurationSeconds));
 
         string audioFormat = playbackSettings.AudioFormat switch
         {
@@ -345,31 +321,67 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                 method);
         }).Flatten();
 
-        Option<WatermarkInputFile> watermarkInputFile = GetWatermarkInputFile(watermarkOptions, maybeFadePoints);
+        Option<WatermarkInputFile> watermarkInputFile = Option<WatermarkInputFile>.None;
         Option<GraphicsEngineInput> graphicsEngineInput = Option<GraphicsEngineInput>.None;
         Option<GraphicsEngineContext> graphicsEngineContext = Option<GraphicsEngineContext>.None;
 
-        // use graphics engine for permanent watermarks, or opacity expressions
-        var maybeGraphicsEngineWatermark = watermarkOptions
-            .Where(o => o.Watermark
-                .Map(wm => wm.Mode is ChannelWatermarkMode.Permanent or ChannelWatermarkMode.OpacityExpression)
-                .IfNone(false));
-        foreach (var options in maybeGraphicsEngineWatermark)
+        // use graphics engine for all watermarks
+        if (!disableWatermarks)
         {
-            watermarkInputFile = Option<WatermarkInputFile>.None;
+            var watermarks = new Dictionary<int, WatermarkElementContext>();
 
-            graphicsEngineInput = new GraphicsEngineInput();
+            // still need channel and global watermarks
+            if (playoutItemWatermarks.Count == 0)
+            {
+                WatermarkOptions options = await _ffmpegProcessService.GetWatermarkOptions(
+                    ffprobePath,
+                    channel,
+                    Option<ChannelWatermark>.None,
+                    globalWatermark,
+                    videoVersion,
+                    None,
+                    None);
 
-            WatermarkElementContext watermark = new WatermarkElementContext(options);
+                foreach (var watermark in options.Watermark)
+                {
+                    // don't allow duplicates
+                    watermarks.TryAdd(watermark.Id, new WatermarkElementContext(options));
+                }
+            }
 
-            graphicsEngineContext = new GraphicsEngineContext(
-                [watermark],
-                channel.FFmpegProfile.Resolution,
-                await playbackSettings.FrameRate.IfNoneAsync(24),
-                ChannelStartTime: channelStartTime,
-                ContentStartTime: start,
-                await playbackSettings.StreamSeek.IfNoneAsync(TimeSpan.Zero),
-                finish - now);
+            // load all playout item watermarks
+            foreach (var playoutItemWatermark in playoutItemWatermarks)
+            {
+                WatermarkOptions options = await _ffmpegProcessService.GetWatermarkOptions(
+                    ffprobePath,
+                    channel,
+                    playoutItemWatermark,
+                    globalWatermark,
+                    videoVersion,
+                    None,
+                    None);
+
+                foreach (var watermark in options.Watermark)
+                {
+                    // don't allow duplicates
+                    watermarks.TryAdd(watermark.Id, new WatermarkElementContext(options));
+                }
+            }
+
+            // only use graphics engine when we have watermarks
+            if (watermarks.Count > 0)
+            {
+                graphicsEngineInput = new GraphicsEngineInput();
+
+                graphicsEngineContext = new GraphicsEngineContext(
+                    watermarks.Values.OfType<GraphicsElementContext>().ToList(),
+                    channel.FFmpegProfile.Resolution,
+                    await playbackSettings.FrameRate.IfNoneAsync(24),
+                    ChannelStartTime: channelStartTime,
+                    ContentStartTime: start,
+                    await playbackSettings.StreamSeek.IfNoneAsync(TimeSpan.Zero),
+                    finish - now);
+            }
         }
 
         HardwareAccelerationMode hwAccel = GetHardwareAccelerationMode(playbackSettings, fillerKind);
@@ -1012,71 +1024,6 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         FFmpegPipeline pipeline = pipelineBuilder.Seek(inputFile, seek);
 
         return GetCommand(ffmpegPath, videoInputFile, None, None, None, None, pipeline, false);
-    }
-
-    private static Option<WatermarkInputFile> GetWatermarkInputFile(
-        Option<WatermarkOptions> watermarkOptions,
-        Option<List<FadePoint>> maybeFadePoints)
-    {
-        foreach (WatermarkOptions options in watermarkOptions)
-        {
-            foreach (ChannelWatermark watermark in options.Watermark)
-            {
-                // skip watermark if intermittent and no fade points
-                if (watermark.Mode != ChannelWatermarkMode.None &&
-                    (watermark.Mode != ChannelWatermarkMode.Intermittent ||
-                     maybeFadePoints.Map(fp => fp.Count > 0).IfNone(false)))
-                {
-                    foreach (string path in options.ImagePath)
-                    {
-                        var watermarkInputFile = new WatermarkInputFile(
-                            path,
-                            new List<VideoStream>
-                            {
-                                new(
-                                    options.ImageStreamIndex.IfNone(0),
-                                    "unknown",
-                                    string.Empty,
-                                    new PixelFormatUnknown(),
-                                    ColorParams.Default,
-                                    new FrameSize(1, 1),
-                                    string.Empty,
-                                    string.Empty,
-                                    Option<string>.None,
-                                    !options.IsAnimated,
-                                    ScanKind.Progressive)
-                            },
-                            new WatermarkState(
-                                maybeFadePoints.Map(lst => lst.Map(fp =>
-                                {
-                                    return fp switch
-                                    {
-                                        FadeInPoint fip => (WatermarkFadePoint)new WatermarkFadeIn(
-                                            fip.Time,
-                                            fip.EnableStart,
-                                            fip.EnableFinish),
-                                        FadeOutPoint fop => new WatermarkFadeOut(
-                                            fop.Time,
-                                            fop.EnableStart,
-                                            fop.EnableFinish),
-                                        _ => throw new NotSupportedException() // this will never happen
-                                    };
-                                }).ToList()),
-                                watermark.Location,
-                                watermark.Size,
-                                watermark.WidthPercent,
-                                watermark.HorizontalMarginPercent,
-                                watermark.VerticalMarginPercent,
-                                watermark.Opacity,
-                                watermark.PlaceWithinSourceContent));
-
-                        return watermarkInputFile;
-                    }
-                }
-            }
-        }
-
-        return None;
     }
 
     private Command GetCommand(

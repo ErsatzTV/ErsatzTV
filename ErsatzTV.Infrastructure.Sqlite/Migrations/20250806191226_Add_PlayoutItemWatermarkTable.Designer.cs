@@ -3,6 +3,7 @@ using System;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ErsatzTV.Infrastructure.Sqlite.Migrations
 {
     [DbContext(typeof(TvContext))]
-    partial class TvContextModelSnapshot : ModelSnapshot
+    [Migration("20250806191226_Add_PlayoutItemWatermarkTable")]
+    partial class Add_PlayoutItemWatermarkTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.7");
@@ -1793,11 +1796,16 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Property<int?>("SubtitleMode")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("WatermarkId")
+                        .HasColumnType("INTEGER");
+
                     b.HasKey("Id");
 
                     b.HasIndex("MediaItemId");
 
                     b.HasIndex("PlayoutId");
+
+                    b.HasIndex("WatermarkId");
 
                     b.ToTable("PlayoutItem", (string)null);
                 });
@@ -4464,9 +4472,16 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("ErsatzTV.Core.Domain.ChannelWatermark", "Watermark")
+                        .WithMany()
+                        .HasForeignKey("WatermarkId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("MediaItem");
 
                     b.Navigation("Playout");
+
+                    b.Navigation("Watermark");
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.PlayoutItemWatermark", b =>

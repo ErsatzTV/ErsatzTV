@@ -20,6 +20,8 @@ public class ChannelWatermark
     public int Opacity { get; set; }
     public bool PlaceWithinSourceContent { get; set; }
     public string OpacityExpression { get; set; }
+    public List<PlayoutItem> PlayoutItems { get; set; }
+    public List<PlayoutItemWatermark> PlayoutItemWatermarks { get; set; }
 }
 
 public enum ChannelWatermarkMode

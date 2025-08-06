@@ -157,12 +157,17 @@ public class PlayoutModeSchedulerDuration : PlayoutModeSchedulerBase<ProgramSche
                         ? FillerKind.GuideMode
                         : FillerKind.None,
                     CustomTitle = scheduleItem.CustomTitle,
-                    WatermarkId = scheduleItem.WatermarkId,
                     PreferredAudioLanguageCode = scheduleItem.PreferredAudioLanguageCode,
                     PreferredAudioTitle = scheduleItem.PreferredAudioTitle,
                     PreferredSubtitleLanguageCode = scheduleItem.PreferredSubtitleLanguageCode,
                     SubtitleMode = scheduleItem.SubtitleMode
                 };
+
+                if (scheduleItem.WatermarkId is not null)
+                {
+                    playoutItem.Watermarks ??= [];
+                    playoutItem.Watermarks.Add(scheduleItem.Watermark);
+                }
 
                 durationUntil.Do(du => playoutItem.GuideFinish = du.UtcDateTime);
 

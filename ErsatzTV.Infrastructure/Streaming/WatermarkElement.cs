@@ -43,7 +43,22 @@ public class WatermarkElement : IGraphicsElement, IDisposable
 
     public async Task InitializeAsync(Resolution frameSize, int frameRate, CancellationToken cancellationToken)
     {
-        if (_watermark.Mode is ChannelWatermarkMode.OpacityExpression && !string.IsNullOrWhiteSpace(_watermark.OpacityExpression))
+        if (_watermark.Mode is ChannelWatermarkMode.Intermittent)
+        {
+            string expressionString = $@"
+                if(time_of_day_seconds % {_watermark.FrequencyMinutes * 60} < 1,
+                    (time_of_day_seconds % {_watermark.FrequencyMinutes * 60}),
+                    if(time_of_day_seconds % {_watermark.FrequencyMinutes * 60} < {1 + _watermark.DurationSeconds},
+                        1,
+                        if(time_of_day_seconds % {_watermark.FrequencyMinutes * 60} < {1 + _watermark.DurationSeconds + 1},
+                            1 - ((time_of_day_seconds % {_watermark.FrequencyMinutes * 60} - {1 + _watermark.DurationSeconds}) / 1),
+                            0
+                        )
+                    )
+                )";
+            _expression = new Expression(expressionString);
+        }
+        else if (_watermark.Mode is ChannelWatermarkMode.OpacityExpression && !string.IsNullOrWhiteSpace(_watermark.OpacityExpression))
         {
             _expression = new Expression(_watermark.OpacityExpression);
         }

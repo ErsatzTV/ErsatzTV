@@ -7,6 +7,8 @@ namespace ErsatzTV.Core.Scheduling.YamlScheduling.Handlers;
 
 public class YamlPlayoutWatermarkHandler(IChannelRepository channelRepository) : IYamlPlayoutHandler
 {
+    private readonly Dictionary<string, Option<ChannelWatermark>> _watermarkCache = new();
+
     public bool Reset => false;
 
     public async Task<bool> Handle(
@@ -24,17 +26,48 @@ public class YamlPlayoutWatermarkHandler(IChannelRepository channelRepository) :
 
         if (watermark.Watermark && !string.IsNullOrWhiteSpace(watermark.Name))
         {
-            Option<ChannelWatermark> maybeWatermark = await channelRepository.GetWatermarkByName(watermark.Name);
-            foreach (ChannelWatermark channelWatermark in maybeWatermark)
+            foreach (var wm in await GetChannelWatermarkByName(watermark.Name))
             {
-                context.SetChannelWatermarkId(channelWatermark.Id);
+                context.SetChannelWatermarkId(wm.Id);
             }
         }
         else
         {
-            context.ClearChannelWatermarkId();
+            if (!string.IsNullOrWhiteSpace(watermark.Name))
+            {
+                foreach (var wm in await GetChannelWatermarkByName(watermark.Name))
+                {
+                    context.RemoveChannelWatermarkId(wm.Id);
+                }
+            }
+            else
+            {
+                context.ClearChannelWatermarkIds();
+            }
         }
 
         return true;
+    }
+
+    private async Task<Option<ChannelWatermark>> GetChannelWatermarkByName(string name)
+    {
+        if (_watermarkCache.TryGetValue(name, out var cachedWatermark))
+        {
+            foreach (ChannelWatermark channelWatermark in cachedWatermark)
+            {
+                return channelWatermark;
+            }
+        }
+        else
+        {
+            Option<ChannelWatermark> maybeWatermark = await channelRepository.GetWatermarkByName(name);
+            _watermarkCache.Add(name, maybeWatermark);
+            foreach (ChannelWatermark channelWatermark in maybeWatermark)
+            {
+                return channelWatermark;
+            }
+        }
+
+        return Option<ChannelWatermark>.None;
     }
 }

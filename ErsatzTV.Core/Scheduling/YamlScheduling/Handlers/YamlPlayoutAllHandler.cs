@@ -58,17 +58,23 @@ public class YamlPlayoutAllHandler(EnumeratorCache enumeratorCache) : YamlPlayou
                         //PreferredAudioTitle = scheduleItem.PreferredAudioTitle,
                         //PreferredSubtitleLanguageCode = scheduleItem.PreferredSubtitleLanguageCode,
                         //SubtitleMode = scheduleItem.SubtitleMode
-                        GuideGroup = context.PeekNextGuideGroup()
+                        GuideGroup = context.PeekNextGuideGroup(),
                         //GuideStart = effectiveBlock.Start.UtcDateTime,
                         //GuideFinish = blockFinish.UtcDateTime,
                         //BlockKey = JsonConvert.SerializeObject(effectiveBlock.BlockKey),
                         //CollectionKey = JsonConvert.SerializeObject(collectionKey, JsonSettings),
                         //CollectionEtag = collectionEtags[collectionKey]
+                        PlayoutItemWatermarks = []
                     };
 
-                    foreach (int watermarkId in context.GetChannelWatermarkId())
+                    foreach (int watermarkId in context.GetChannelWatermarkIds())
                     {
-                        playoutItem.WatermarkId = watermarkId;
+                        playoutItem.PlayoutItemWatermarks.Add(
+                            new PlayoutItemWatermark
+                            {
+                                PlayoutItem = playoutItem,
+                                WatermarkId = watermarkId
+                            });
                     }
 
                     await AddItemAndMidRoll(context, playoutItem, mediaItem, executeSequence);

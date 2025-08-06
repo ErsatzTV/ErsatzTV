@@ -6,15 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 ### Added
 - Add *experimental* graphics engine
-  - `Permanent` watermarks will use new graphics engine
-  - `Opacity Expression` watermarks will use new graphics engine
-  - `Intermittent` watermarks will still use normal overlay pipeline (for now)
+  - All watermarks will use new graphics engine
 - Add `Opacity Expression` watermark mode
   - This allows specifying an expression that returns an opacity between 0.0 and 1.0
   - The expression can use:
     - `content_seconds` - the total number of seconds the frame is into the content
     - `channel_seconds` - the total number of seconds the frame is from when the channel started/activated
     - `time_of_day_seconds` - the total number of seconds the frame is since midnight
+
+### Changed
+- Allow multiple watermarks on a single playout item
+- YAML playout: `watermark` instruction changes:
+  - When value is `true`, will add named watermark to list of active watermarks
+  - When value is `false` and `name` is specified, will remove named watermark from list of active watermarks
+  - When value is `false` and `name` is not specified, will clear all active watermarks
 
 ## [25.4.0] - 2025-08-05
 ### Added
