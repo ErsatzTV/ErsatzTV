@@ -19,6 +19,7 @@ public record UpdateWatermark(
     int FrequencyMinutes,
     int DurationSeconds,
     int Opacity,
-    bool PlaceWithinSourceContent) : IRequest<Either<BaseError, UpdateWatermarkResult>>;
+    bool PlaceWithinSourceContent,
+    string OpacityExpression) : IRequest<Either<BaseError, UpdateWatermarkResult>>;
 
 public record UpdateWatermarkResult(int WatermarkId) : EntityIdResult(WatermarkId);

@@ -143,6 +143,7 @@ public class PrepareTroubleshootingPlaybackHandler(
             FillerKind.None,
             inPoint,
             outPoint,
+            channelStartTime: DateTimeOffset.Now,
             0,
             None,
             false,

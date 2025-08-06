@@ -73,6 +73,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         FillerKind fillerKind,
         TimeSpan inPoint,
         TimeSpan outPoint,
+        DateTimeOffset channelStartTime,
         long ptsOffset,
         Option<int> targetFramerate,
         bool disableWatermarks,
@@ -348,8 +349,12 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         Option<GraphicsEngineInput> graphicsEngineInput = Option<GraphicsEngineInput>.None;
         Option<GraphicsEngineContext> graphicsEngineContext = Option<GraphicsEngineContext>.None;
 
-        // use graphics engine for permanent watermarks
-        foreach (var options in watermarkOptions.Where(o => o.Watermark.Map(wm => wm.Mode is ChannelWatermarkMode.Permanent).IfNone(false)))
+        // use graphics engine for permanent watermarks, or opacity expressions
+        var maybeGraphicsEngineWatermark = watermarkOptions
+            .Where(o => o.Watermark
+                .Map(wm => wm.Mode is ChannelWatermarkMode.Permanent or ChannelWatermarkMode.OpacityExpression)
+                .IfNone(false));
+        foreach (var options in maybeGraphicsEngineWatermark)
         {
             watermarkInputFile = Option<WatermarkInputFile>.None;
 
@@ -361,6 +366,9 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                 [watermark],
                 channel.FFmpegProfile.Resolution,
                 await playbackSettings.FrameRate.IfNoneAsync(24),
+                ChannelStartTime: channelStartTime,
+                ContentStartTime: start,
+                await playbackSettings.StreamSeek.IfNoneAsync(TimeSpan.Zero),
                 finish - now);
         }
 

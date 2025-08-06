@@ -35,6 +35,7 @@ public class HlsSessionWorkerV2 : IHlsSessionWorker
     private HlsSessionState _state;
     private Timer _timer;
     private DateTimeOffset _transcodedUntil;
+    private DateTimeOffset _channelStart;
 
     public HlsSessionWorkerV2(
         IServiceScopeFactory serviceScopeFactory,
@@ -127,6 +128,7 @@ public class HlsSessionWorkerV2 : IHlsSessionWorker
             Touch();
             _transcodedUntil = DateTimeOffset.Now;
             PlaylistStart = _transcodedUntil;
+            _channelStart = _transcodedUntil;
 
             // time shift on-demand playout if needed
             await _mediator.Send(
@@ -307,6 +309,7 @@ public class HlsSessionWorkerV2 : IHlsSessionWorker
             _transcodedUntil,
             startAtZero,
             realtime,
+            _channelStart,
             0,
             _targetFramerate);
 

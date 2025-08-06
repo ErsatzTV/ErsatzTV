@@ -1,7 +1,9 @@
+using System.Globalization;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.Streaming;
 using ErsatzTV.FFmpeg.State;
+using NCalc;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Gif;
 using SixLabors.ImageSharp.Processing;
@@ -16,6 +18,7 @@ public class WatermarkElement : IGraphicsElement, IDisposable
     private readonly List<Image> _scaledFrames = [];
     private readonly List<double> _frameDelays = [];
 
+    private Expression _expression;
     private double _animatedDurationSeconds;
     private Image _sourceImage;
     private Point _location;
@@ -36,8 +39,20 @@ public class WatermarkElement : IGraphicsElement, IDisposable
 
     public bool IsValid => _imagePath != null && _watermark != null;
 
+    public bool IsFailed { get; set; }
+
     public async Task InitializeAsync(Resolution frameSize, int frameRate, CancellationToken cancellationToken)
     {
+        if (_watermark.Mode is ChannelWatermarkMode.OpacityExpression && !string.IsNullOrWhiteSpace(_watermark.OpacityExpression))
+        {
+            _expression = new Expression(_watermark.OpacityExpression);
+        }
+        else
+        {
+            float opacity = _watermark.Opacity / 100.0f;
+            _expression = new Expression(opacity.ToString(CultureInfo.InvariantCulture));
+        }
+
         bool isRemoteUri = Uri.TryCreate(_imagePath, UriKind.Absolute, out var uriResult)
                            && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
 
@@ -73,13 +88,12 @@ public class WatermarkElement : IGraphicsElement, IDisposable
             horizontalMargin,
             verticalMargin);
 
-        float opacity = _watermark.Opacity / 100.0f;
         _animatedDurationSeconds = 0;
 
         for (int i = 0; i < _sourceImage.Frames.Count; i++)
         {
             var frame = _sourceImage.Frames.CloneFrame(i);
-            frame.Mutate(ctx => ctx.Resize(scaledWidth, scaledHeight).Opacity(opacity));
+            frame.Mutate(ctx => ctx.Resize(scaledWidth, scaledHeight));
             _scaledFrames.Add(frame);
 
             var frameDelay = _sourceImage.Frames[i].Metadata.GetFormatMetadata(GifFormat.Instance).FrameDelay / 100.0;
@@ -88,17 +102,32 @@ public class WatermarkElement : IGraphicsElement, IDisposable
         }
     }
 
-    public void Draw(object context, TimeSpan timestamp)
+    public void Draw(
+        object context,
+        TimeSpan timeOfDay,
+        TimeSpan contentTime,
+        TimeSpan channelTime,
+        CancellationToken cancellationToken)
     {
         if (context is not IImageProcessingContext imageProcessingContext)
         {
             return;
         }
 
-        Image frameForTimestamp = GetFrameForTimestamp(timestamp);
+        _expression.Parameters["content_seconds"] = contentTime.TotalSeconds;
+        _expression.Parameters["channel_seconds"] = channelTime.TotalSeconds;
+        _expression.Parameters["time_of_day_seconds"] = timeOfDay.TotalSeconds;
 
-        // scaled frames already have opacity set
-        imageProcessingContext.DrawImage(frameForTimestamp, _location, 1f);
+        object expressionResult = _expression.Evaluate();
+        float opacity = Convert.ToSingle(expressionResult, CultureInfo.InvariantCulture);
+        Console.WriteLine("opacity is " + opacity);
+        if (opacity == 0)
+        {
+            return;
+        }
+
+        Image frameForTimestamp = GetFrameForTimestamp(contentTime);
+        imageProcessingContext.DrawImage(frameForTimestamp, _location, opacity);
     }
 
     private Image GetFrameForTimestamp(TimeSpan timestamp)

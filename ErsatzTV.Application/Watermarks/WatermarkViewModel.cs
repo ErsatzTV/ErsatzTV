@@ -18,5 +18,6 @@ public record WatermarkViewModel(
     int FrequencyMinutes,
     int DurationSeconds,
     int Opacity,
-    bool PlaceWithinSourceContent
+    bool PlaceWithinSourceContent,
+    string OpacityExpression
 );

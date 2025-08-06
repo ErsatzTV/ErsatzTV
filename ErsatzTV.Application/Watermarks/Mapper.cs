@@ -20,5 +20,6 @@ internal static class Mapper
             watermark.FrequencyMinutes,
             watermark.DurationSeconds,
             watermark.Opacity,
-            watermark.PlaceWithinSourceContent);
+            watermark.PlaceWithinSourceContent,
+            watermark.OpacityExpression);
 }

@@ -1,12 +1,13 @@
 using System.IO.Pipelines;
 using ErsatzTV.Core.Interfaces.Streaming;
+using Microsoft.Extensions.Logging;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 
 namespace ErsatzTV.Infrastructure.Streaming;
 
-public class GraphicsEngine : IGraphicsEngine
+public class GraphicsEngine(ILogger<GraphicsEngine> logger) : IGraphicsEngine
 {
     public async Task Run(GraphicsEngineContext context, PipeWriter pipeWriter, CancellationToken cancellationToken)
     {
@@ -36,7 +37,18 @@ public class GraphicsEngine : IGraphicsEngine
         {
             while (!cancellationToken.IsCancellationRequested && frameCount < totalFrames)
             {
-                var timestamp = TimeSpan.FromSeconds(frameCount / context.FrameRate);
+                // seconds since this specific stream started
+                double streamTimeSeconds = (double)frameCount / context.FrameRate;
+                var streamTime = TimeSpan.FromSeconds(streamTimeSeconds);
+
+                // `content_seconds` - the total number of seconds the frame is into the content
+                var contentTime = context.Seek + streamTime;
+
+                // `time_of_day_seconds` - the total number of seconds the frame is since midnight
+                var frameTime = context.ContentStartTime + contentTime;
+
+                // `channel_seconds` - the total number of seconds the frame is from when the channel started/activated
+                var channelTime = frameTime - context.ChannelStartTime;
 
                 using var outputFrame = new Image<Bgra32>(
                     context.FrameSize.Width,
@@ -48,7 +60,20 @@ public class GraphicsEngine : IGraphicsEngine
                 {
                     foreach (var element in elements)
                     {
-                        element.Draw(ctx, timestamp);
+                        try
+                        {
+                            if (!element.IsFailed)
+                            {
+                                element.Draw(ctx, frameTime.TimeOfDay, contentTime, channelTime, cancellationToken);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            element.IsFailed = true;
+                            logger.LogWarning(ex,
+                                "Failed to draw graphics element of type {Type}; will disable for this content",
+                                element.GetType().Name);
+                        }
                     }
                 });
 

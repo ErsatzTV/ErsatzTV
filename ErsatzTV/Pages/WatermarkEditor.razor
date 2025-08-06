@@ -14,7 +14,7 @@
 
 <MudForm Model="@_model" @ref="@_form" Validation="@(_validator.ValidateValue)" ValidationDelay="0" Style="max-height: 100%">
     <MudPaper Square="true" Style="display: flex; height: 64px; min-height: 64px; width: 100%; z-index: 100; align-items: center">
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-6" OnClick="HandleSubmitAsync" StartIcon="@(IsEdit ? Icons.Material.Filled.Save : Icons.Material.Filled.Add)">@(IsEdit ? "Save Watermark" : "Add Watermark")</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-6" OnClick="@HandleSubmitAsync" StartIcon="@(IsEdit ? Icons.Material.Filled.Save : Icons.Material.Filled.Add)">@(IsEdit ? "Save Watermark" : "Add Watermark")</MudButton>
     </MudPaper>
     <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
         <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
@@ -34,6 +34,7 @@
                     <MudSelectItem Value="@(ChannelWatermarkMode.None)">None</MudSelectItem>
                     <MudSelectItem Value="@(ChannelWatermarkMode.Permanent)">Permanent</MudSelectItem>
                     <MudSelectItem Value="@(ChannelWatermarkMode.Intermittent)">Intermittent</MudSelectItem>
+                    <MudSelectItem Value="@(ChannelWatermarkMode.OpacityExpression)">Opacity Expression</MudSelectItem>
                 </MudSelect>
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
@@ -51,7 +52,7 @@
                 <div class="d-flex">
                     <MudText>Image</MudText>
                 </div>
-                <InputFile id="watermarkFileInput" OnChange="UploadWatermark" style="display: none;"/>
+                <InputFile id="watermarkFileInput" OnChange="@UploadWatermark" style="display: none;"/>
                 <MudButton HtmlTag="label"
                            Variant="Variant.Filled"
                            Color="Color.Primary"
@@ -176,8 +177,16 @@
                               For="@(() => _model.Opacity)"
                               Adornment="Adornment.End"
                               AdornmentText="%"
-                              Disabled="@(_model.Mode == ChannelWatermarkMode.None)"
+                              Disabled="@(_model.Mode is ChannelWatermarkMode.None or ChannelWatermarkMode.OpacityExpression)"
                               Immediate="true"/>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Opacity Expression</MudText>
+                </div>
+                <MudTextField @bind-Value="_model.OpacityExpression"
+                              For="@(() => _model.OpacityExpression)"
+                              Disabled="@(_model.Mode != ChannelWatermarkMode.OpacityExpression)"/>
             </MudStack>
         </MudContainer>
     </div>
@@ -223,7 +232,8 @@
                 FrequencyMinutes = 15,
                 DurationSeconds = 15,
                 Opacity = 100,
-                PlaceWithinSourceContent = false
+                PlaceWithinSourceContent = false,
+                OpacityExpression = string.Empty
             };
         }
     }

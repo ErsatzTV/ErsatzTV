@@ -13,4 +13,5 @@ public record GetErrorProcess(
     DateTimeOffset.Now,
     true,
     HlsRealtime,
+    DateTimeOffset.Now, // unused
     PtsOffset);
