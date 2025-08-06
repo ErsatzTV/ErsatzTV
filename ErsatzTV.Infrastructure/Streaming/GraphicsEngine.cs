@@ -89,6 +89,8 @@ public class GraphicsEngine(ILogger<GraphicsEngine> logger) : IGraphicsEngine
         }
         finally
         {
+            await pipeWriter.CompleteAsync();
+
             foreach (var element in elements.OfType<IDisposable>())
             {
                 element.Dispose();

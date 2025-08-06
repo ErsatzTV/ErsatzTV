@@ -467,6 +467,7 @@ public class HlsSessionWorker : IHlsSessionWorker
                     foreach (var graphicsEngineContext in processModel.GraphicsEngineContext)
                     {
                         var pipe = new Pipe();
+                        maybePipe = pipe;
                         processWithPipe = process.WithStandardInputPipe(PipeSource.FromStream(pipe.Reader.AsStream()));
 
                         // fire and forget graphics engine task

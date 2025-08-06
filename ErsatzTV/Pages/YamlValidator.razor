@@ -97,12 +97,20 @@
         if (_exists)
         {
             _yamlText = await File.ReadAllTextAsync(_yamlFile);
-            _jsonText = YamlScheduleValidator.ToJson(_yamlText);
-            var messages = await YamlScheduleValidator.GetValidationMessages(_yamlText, _isImport);
-            _messagesCount = messages.Count;
-            _messages = string.Join("\n", messages);
+            try
+            {
+                _jsonText = YamlScheduleValidator.ToJson(_yamlText);
+                var messages = await YamlScheduleValidator.GetValidationMessages(_yamlText, _isImport);
+                _messagesCount = messages.Count;
+                _messages = string.Join("\n", messages);
 
-            StateHasChanged();
+                StateHasChanged();
+            }
+            catch (Exception e)
+            {
+                _messages = e.ToString();
+                _messagesCount = 1;
+            }
         }
     }
 

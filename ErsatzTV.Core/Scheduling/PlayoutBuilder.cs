@@ -426,10 +426,13 @@ public class PlayoutBuilder : IPlayoutBuilder
             // so only log the warning, and leave the bad data to fail tests
             // playout.Items.Remove(futureItem);
 
-            _logger.LogInformation(
-                "{Count} playout items are scheduled after hard stop of {HardStop}; this is expected if duration is used.",
-                futureItemCount,
-                trimAfter);
+            if (futureItemCount > 0)
+            {
+                _logger.LogInformation(
+                    "{Count} playout items are scheduled after hard stop of {HardStop}; this is expected if duration is used.",
+                    futureItemCount,
+                    trimAfter);
+            }
         }
 
         return playout;

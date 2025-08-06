@@ -83,12 +83,13 @@ public class YamlPlayoutCountHandler(EnumeratorCache enumeratorCache) : YamlPlay
                         //PreferredAudioTitle = scheduleItem.PreferredAudioTitle,
                         //PreferredSubtitleLanguageCode = scheduleItem.PreferredSubtitleLanguageCode,
                         //SubtitleMode = scheduleItem.SubtitleMode
-                        GuideGroup = context.PeekNextGuideGroup()
+                        GuideGroup = context.PeekNextGuideGroup(),
                         //GuideStart = effectiveBlock.Start.UtcDateTime,
                         //GuideFinish = blockFinish.UtcDateTime,
                         //BlockKey = JsonConvert.SerializeObject(effectiveBlock.BlockKey),
                         //CollectionKey = JsonConvert.SerializeObject(collectionKey, JsonSettings),
-                        //CollectionEtag = collectionEtags[collectionKey]
+                        //CollectionEtag = collectionEtags[collectionKey],
+                        PlayoutItemWatermarks = []
                     };
 
                     foreach (int watermarkId in context.GetChannelWatermarkId())
