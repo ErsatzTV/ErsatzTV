@@ -346,6 +346,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 playoutItemWithPath.PlayoutItem.FillerKind,
                 inPoint,
                 outPoint,
+                request.ChannelStartTime,
                 request.PtsOffset,
                 request.TargetFramerate,
                 disableWatermarks,

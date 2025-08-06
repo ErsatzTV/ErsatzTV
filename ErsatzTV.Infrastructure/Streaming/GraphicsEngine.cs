@@ -37,8 +37,18 @@ public class GraphicsEngine(ILogger<GraphicsEngine> logger) : IGraphicsEngine
         {
             while (!cancellationToken.IsCancellationRequested && frameCount < totalFrames)
             {
-                double totalSeconds = (double)frameCount / context.FrameRate;
-                var timestamp = TimeSpan.FromSeconds(totalSeconds);
+                // seconds since this specific stream started
+                double streamTimeSeconds = (double)frameCount / context.FrameRate;
+                var streamTime = TimeSpan.FromSeconds(streamTimeSeconds);
+
+                // `content_seconds` - the total number of seconds the frame is into the content
+                var contentTime = context.Seek + streamTime;
+
+                // `time_of_day_seconds` - the total number of seconds the frame is since midnight
+                var frameTime = context.ContentStartTime + contentTime;
+
+                // `channel_seconds` - the total number of seconds the frame is from when the channel started/activated
+                var channelTime = frameTime - context.ChannelStartTime;
 
                 using var outputFrame = new Image<Bgra32>(
                     context.FrameSize.Width,
@@ -54,7 +64,7 @@ public class GraphicsEngine(ILogger<GraphicsEngine> logger) : IGraphicsEngine
                         {
                             if (!element.IsFailed)
                             {
-                                element.Draw(ctx, timestamp);
+                                element.Draw(ctx, frameTime.TimeOfDay, contentTime, channelTime, cancellationToken);
                             }
                         }
                         catch (Exception ex)

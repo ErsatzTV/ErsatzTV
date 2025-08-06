@@ -8,6 +8,7 @@ public record GetConcatProcessByChannelNumber : FFmpegProcessRequest
         DateTimeOffset.Now,
         false,
         true,
+        DateTimeOffset.Now, // unused
         0)
     {
         Scheme = scheme;

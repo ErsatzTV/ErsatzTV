@@ -73,6 +73,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         FillerKind fillerKind,
         TimeSpan inPoint,
         TimeSpan outPoint,
+        DateTimeOffset channelStartTime,
         long ptsOffset,
         Option<int> targetFramerate,
         bool disableWatermarks,
@@ -365,6 +366,9 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                 [watermark],
                 channel.FFmpegProfile.Resolution,
                 await playbackSettings.FrameRate.IfNoneAsync(24),
+                ChannelStartTime: channelStartTime,
+                ContentStartTime: start,
+                await playbackSettings.StreamSeek.IfNoneAsync(TimeSpan.Zero),
                 finish - now);
         }
 

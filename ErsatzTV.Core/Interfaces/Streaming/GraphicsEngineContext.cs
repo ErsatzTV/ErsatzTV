@@ -7,6 +7,9 @@ public record GraphicsEngineContext(
     List<GraphicsElementContext> Elements,
     Resolution FrameSize,
     int FrameRate,
+    DateTimeOffset ChannelStartTime,
+    DateTimeOffset ContentStartTime,
+    TimeSpan Seek,
     TimeSpan Duration);
 
 public abstract record GraphicsElementContext;

@@ -13,7 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - This allows specifying an expression that returns an opacity between 0.0 and 1.0
   - The expression can use:
     - `content_seconds` - the total number of seconds the frame is into the content
-    - `stream_seconds` - the total number of seconds the frame is from when the stream started/activated
+    - `channel_seconds` - the total number of seconds the frame is from when the channel started/activated
     - `time_of_day_seconds` - the total number of seconds the frame is since midnight
 
 ## [25.4.0] - 2025-08-05

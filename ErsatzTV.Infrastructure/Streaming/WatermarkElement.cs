@@ -102,14 +102,22 @@ public class WatermarkElement : IGraphicsElement, IDisposable
         }
     }
 
-    public void Draw(object context, TimeSpan timestamp)
+    public void Draw(
+        object context,
+        TimeSpan timeOfDay,
+        TimeSpan contentTime,
+        TimeSpan channelTime,
+        CancellationToken cancellationToken)
     {
         if (context is not IImageProcessingContext imageProcessingContext)
         {
             return;
         }
 
-        _expression.Parameters["content_seconds"] = timestamp.TotalSeconds;
+        _expression.Parameters["content_seconds"] = contentTime.TotalSeconds;
+        _expression.Parameters["channel_seconds"] = channelTime.TotalSeconds;
+        _expression.Parameters["time_of_day_seconds"] = timeOfDay.TotalSeconds;
+
         object expressionResult = _expression.Evaluate();
         float opacity = Convert.ToSingle(expressionResult, CultureInfo.InvariantCulture);
         if (opacity == 0)
@@ -117,7 +125,7 @@ public class WatermarkElement : IGraphicsElement, IDisposable
             return;
         }
 
-        Image frameForTimestamp = GetFrameForTimestamp(timestamp);
+        Image frameForTimestamp = GetFrameForTimestamp(contentTime);
         imageProcessingContext.DrawImage(frameForTimestamp, _location, opacity);
     }
 

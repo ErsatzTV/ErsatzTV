@@ -32,7 +32,7 @@ public class HlsSessionWorker : IHlsSessionWorker
     private readonly ILogger<HlsSessionWorker> _logger;
     private readonly IMediator _mediator;
     private readonly SemaphoreSlim _slim = new(1, 1);
-    private readonly object _sync = new();
+    private readonly Lock _sync = new();
     private readonly Option<int> _targetFramerate;
     private CancellationTokenSource _cancellationTokenSource;
     private string _channelNumber;
@@ -44,6 +44,7 @@ public class HlsSessionWorker : IHlsSessionWorker
     private HlsSessionState _state;
     private Timer _timer;
     private DateTimeOffset _transcodedUntil;
+    private DateTimeOffset _channelStart;
 
     public HlsSessionWorker(
         IServiceScopeFactory serviceScopeFactory,
@@ -180,6 +181,7 @@ public class HlsSessionWorker : IHlsSessionWorker
             Touch();
             _transcodedUntil = DateTimeOffset.Now;
             PlaylistStart = _transcodedUntil;
+            _channelStart =  _transcodedUntil;
 
             // time shift on-demand playout if needed
             await _mediator.Send(
@@ -428,6 +430,7 @@ public class HlsSessionWorker : IHlsSessionWorker
                 now,
                 startAtZero,
                 realtime,
+                _channelStart,
                 ptsOffset,
                 _targetFramerate);
 

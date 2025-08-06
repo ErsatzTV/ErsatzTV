@@ -37,6 +37,7 @@ public interface IFFmpegProcessService
         FillerKind fillerKind,
         TimeSpan inPoint,
         TimeSpan outPoint,
+        DateTimeOffset channelStartTime,
         long ptsOffset,
         Option<int> targetFramerate,
         bool disableWatermarks,
