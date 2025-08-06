@@ -43,7 +43,7 @@ public class WatermarkElement : IGraphicsElement, IDisposable
 
     public async Task InitializeAsync(Resolution frameSize, int frameRate, CancellationToken cancellationToken)
     {
-        if (!string.IsNullOrWhiteSpace(_watermark.OpacityExpression))
+        if (_watermark.Mode is ChannelWatermarkMode.OpacityExpression && !string.IsNullOrWhiteSpace(_watermark.OpacityExpression))
         {
             _expression = new Expression(_watermark.OpacityExpression);
         }
@@ -120,6 +120,7 @@ public class WatermarkElement : IGraphicsElement, IDisposable
 
         object expressionResult = _expression.Evaluate();
         float opacity = Convert.ToSingle(expressionResult, CultureInfo.InvariantCulture);
+        Console.WriteLine("opacity is " + opacity);
         if (opacity == 0)
         {
             return;
