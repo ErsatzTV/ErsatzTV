@@ -1882,18 +1882,28 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<int?>("SubtitleMode")
                         .HasColumnType("int");
 
-                    b.Property<int?>("WatermarkId")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
                     b.HasIndex("MediaItemId");
 
                     b.HasIndex("PlayoutId");
 
+                    b.ToTable("PlayoutItem", (string)null);
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.PlayoutItemWatermark", b =>
+                {
+                    b.Property<int>("PlayoutItemId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("WatermarkId")
+                        .HasColumnType("int");
+
+                    b.HasKey("PlayoutItemId", "WatermarkId");
+
                     b.HasIndex("WatermarkId");
 
-                    b.ToTable("PlayoutItem", (string)null);
+                    b.ToTable("PlayoutItemWatermark");
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.PlayoutProgramScheduleAnchor", b =>
@@ -4617,14 +4627,26 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("ErsatzTV.Core.Domain.ChannelWatermark", "Watermark")
-                        .WithMany()
-                        .HasForeignKey("WatermarkId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.Navigation("MediaItem");
 
                     b.Navigation("Playout");
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.PlayoutItemWatermark", b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.PlayoutItem", "PlayoutItem")
+                        .WithMany("PlayoutItemWatermarks")
+                        .HasForeignKey("PlayoutItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ErsatzTV.Core.Domain.ChannelWatermark", "Watermark")
+                        .WithMany("PlayoutItemWatermarks")
+                        .HasForeignKey("WatermarkId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PlayoutItem");
 
                     b.Navigation("Watermark");
                 });
@@ -5748,6 +5770,11 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Navigation("Playouts");
                 });
 
+            modelBuilder.Entity("ErsatzTV.Core.Domain.ChannelWatermark", b =>
+                {
+                    b.Navigation("PlayoutItemWatermarks");
+                });
+
             modelBuilder.Entity("ErsatzTV.Core.Domain.Collection", b =>
                 {
                     b.Navigation("CollectionItems");
@@ -5928,6 +5955,11 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Navigation("ProgramScheduleAnchors");
 
                     b.Navigation("Templates");
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.PlayoutItem", b =>
+                {
+                    b.Navigation("PlayoutItemWatermarks");
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.ProgramSchedule", b =>

@@ -16,6 +16,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - `channel_seconds` - the total number of seconds the frame is from when the channel started/activated
     - `time_of_day_seconds` - the total number of seconds the frame is since midnight
 
+### Changed
+- Allow multiple watermarks on a single playout item
+
 ## [25.4.0] - 2025-08-05
 ### Added
 - Add `Troubleshoot Playback` to overflow menu on all media cards

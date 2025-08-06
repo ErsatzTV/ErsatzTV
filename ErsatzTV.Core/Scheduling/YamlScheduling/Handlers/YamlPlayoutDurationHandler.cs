@@ -127,7 +127,12 @@ public class YamlPlayoutDurationHandler(EnumeratorCache enumeratorCache) : YamlP
 
                 foreach (int watermarkId in context.GetChannelWatermarkId())
                 {
-                    playoutItem.WatermarkId = watermarkId;
+                    playoutItem.PlayoutItemWatermarks.Add(
+                        new PlayoutItemWatermark
+                        {
+                            PlayoutItem = playoutItem,
+                            WatermarkId = watermarkId
+                        });
                 }
 
                 if (remainingToFill - itemDuration >= TimeSpan.Zero || !stopBeforeEnd)

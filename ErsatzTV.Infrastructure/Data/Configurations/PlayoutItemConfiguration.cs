@@ -16,10 +16,17 @@ public class PlayoutItemConfiguration : IEntityTypeConfiguration<PlayoutItem>
             .HasForeignKey(pi => pi.MediaItemId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasOne(i => i.Watermark)
-            .WithMany()
-            .HasForeignKey(i => i.WatermarkId)
-            .OnDelete(DeleteBehavior.SetNull)
-            .IsRequired(false);
+        builder.HasMany(c => c.Watermarks)
+            .WithMany(m => m.PlayoutItems)
+            .UsingEntity<PlayoutItemWatermark>(
+                j => j.HasOne(ci => ci.Watermark)
+                    .WithMany(mi => mi.PlayoutItemWatermarks)
+                    .HasForeignKey(ci => ci.WatermarkId)
+                    .OnDelete(DeleteBehavior.Cascade),
+                j => j.HasOne(ci => ci.PlayoutItem)
+                    .WithMany(c => c.PlayoutItemWatermarks)
+                    .HasForeignKey(ci => ci.PlayoutItemId)
+                    .OnDelete(DeleteBehavior.Cascade),
+                j => j.HasKey(ci => new { ci.PlayoutItemId, ci.WatermarkId }));
     }
 }

@@ -26,7 +26,7 @@ public interface IFFmpegProcessService
         DateTimeOffset start,
         DateTimeOffset finish,
         DateTimeOffset now,
-        Option<ChannelWatermark> playoutItemWatermark,
+        List<ChannelWatermark> playoutItemWatermarks,
         Option<ChannelWatermark> globalWatermark,
         string vaapiDisplay,
         VaapiDriver vaapiDriver,

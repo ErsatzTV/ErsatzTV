@@ -93,7 +93,12 @@ public class YamlPlayoutCountHandler(EnumeratorCache enumeratorCache) : YamlPlay
 
                     foreach (int watermarkId in context.GetChannelWatermarkId())
                     {
-                        playoutItem.WatermarkId = watermarkId;
+                        playoutItem.PlayoutItemWatermarks.Add(
+                            new PlayoutItemWatermark
+                            {
+                                PlayoutItem = playoutItem,
+                                WatermarkId = watermarkId
+                            });
                     }
 
                     await AddItemAndMidRoll(context, playoutItem, mediaItem, executeSequence);

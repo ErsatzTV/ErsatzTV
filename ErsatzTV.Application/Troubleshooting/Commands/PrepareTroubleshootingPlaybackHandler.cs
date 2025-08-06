@@ -78,11 +78,11 @@ public class PrepareTroubleshootingPlaybackHandler(
             return BaseError.New("Media item does not exist on disk");
         }
 
-        Option<ChannelWatermark> maybeWatermark = Option<ChannelWatermark>.None;
+        List<ChannelWatermark> watermarks = [];
         if (request.WatermarkId > 0)
         {
-            maybeWatermark = await dbContext.ChannelWatermarks
-                .SelectOneAsync(cw => cw.Id, cw => cw.Id == request.WatermarkId);
+            watermarks.AddRange(await dbContext.ChannelWatermarks
+                .SelectOneAsync(cw => cw.Id, cw => cw.Id == request.WatermarkId));
         }
 
         DateTimeOffset now = DateTimeOffset.Now;
@@ -132,7 +132,7 @@ public class PrepareTroubleshootingPlaybackHandler(
             now,
             now + duration,
             now,
-            maybeWatermark,
+            watermarks,
             Option<ChannelWatermark>.None,
             ffmpegProfile.VaapiDisplay,
             ffmpegProfile.VaapiDriver,

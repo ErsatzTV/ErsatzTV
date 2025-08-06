@@ -164,7 +164,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
             .ThenInclude(mv => mv.Streams)
             .Include(i => i.MediaItem)
             .ThenInclude(mi => (mi as Image).ImageMetadata)
-            .Include(i => i.Watermark)
+            .Include(i => i.Watermarks)
             .Include(i => i.MediaItem)
             .ThenInclude(mi => (mi as RemoteStream).MediaVersions)
             .ThenInclude(mv => mv.MediaFiles)
@@ -173,7 +173,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
             .ThenInclude(mv => mv.Streams)
             .Include(i => i.MediaItem)
             .ThenInclude(mi => (mi as RemoteStream).RemoteStreamMetadata)
-            .Include(i => i.Watermark)
+            .Include(i => i.Watermarks)
             .ForChannelAndTime(channel.Id, now)
             .Map(o => o.ToEither<BaseError>(new UnableToLocatePlayoutItem()))
             .BindT(item => ValidatePlayoutItemPath(dbContext, item));
@@ -242,7 +242,9 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 .BindT(watermarkId => dbContext.ChannelWatermarks
                     .SelectOneAsync(w => w.Id, w => w.Id == watermarkId));
 
-            Option<ChannelWatermark> playoutItemWatermark = Optional(playoutItemWithPath.PlayoutItem.Watermark);
+            List<ChannelWatermark> playoutItemWatermarks = [];
+            playoutItemWatermarks.AddRange(playoutItemWithPath.PlayoutItem.Watermarks);
+
             bool disableWatermarks = playoutItemWithPath.PlayoutItem.DisableWatermarks;
             WatermarkResult watermarkResult = GetPlayoutItemWatermark(playoutItemWithPath.PlayoutItem, now);
             switch (watermarkResult)
@@ -254,7 +256,8 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                     disableWatermarks = true;
                     break;
                 case CustomWatermark watermark:
-                    playoutItemWatermark = watermark.Watermark;
+                    playoutItemWatermarks.Clear();
+                    playoutItemWatermarks.Add(watermark.Watermark);
                     break;
             }
 
@@ -263,7 +266,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 (videoPath, videoVersion) = await _songVideoGenerator.GenerateSongVideo(
                     song,
                     channel,
-                    playoutItemWatermark,
+                    playoutItemWatermarks.HeadOrNone(),
                     maybeGlobalWatermark,
                     ffmpegPath,
                     ffprobePath,
@@ -278,7 +281,8 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                     string image = is43 ? "song_progress_overlay_43.png" : "song_progress_overlay.png";
 
                     disableWatermarks = false;
-                    playoutItemWatermark = new ChannelWatermark
+                    playoutItemWatermarks.Clear();
+                    playoutItemWatermarks.Add(new ChannelWatermark
                     {
                         Mode = ChannelWatermarkMode.Permanent,
                         Size = WatermarkSize.Scaled,
@@ -289,7 +293,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                         Location = WatermarkLocation.TopLeft,
                         ImageSource = ChannelWatermarkImageSource.Resource,
                         Image = image
-                    };
+                    });
                 }
             }
 
@@ -335,7 +339,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 start,
                 finish,
                 effectiveNow,
-                playoutItemWatermark,
+                playoutItemWatermarks,
                 maybeGlobalWatermark,
                 channel.FFmpegProfile.VaapiDisplay,
                 channel.FFmpegProfile.VaapiDriver,
