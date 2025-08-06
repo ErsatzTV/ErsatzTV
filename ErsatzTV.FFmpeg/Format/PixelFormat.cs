@@ -9,4 +9,6 @@ public static class PixelFormat
     public const string YUVJ420P = "yuvj420p";
     public const string YUV444P = "yuv444p";
     public const string YUV444P10LE = "yuv444p10le";
+
+    public const string BGRA = "bgra";
 }

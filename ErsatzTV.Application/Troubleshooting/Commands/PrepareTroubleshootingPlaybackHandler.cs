@@ -108,7 +108,7 @@ public class PrepareTroubleshootingPlaybackHandler(
             outPoint = inPoint + duration;
         }
 
-        Command process = await ffmpegProcessService.ForPlayoutItem(
+        PlayoutItemResult playoutItemResult = await ffmpegProcessService.ForPlayoutItem(
             ffmpegPath,
             ffprobePath,
             true,
@@ -149,7 +149,9 @@ public class PrepareTroubleshootingPlaybackHandler(
             FileSystemLayout.TranscodeTroubleshootingFolder,
             _ => { });
 
-        return process;
+        // TODO: graphics engine?
+
+        return playoutItemResult.Process;
     }
 
     private static async Task<List<Subtitle>> GetSelectedSubtitle(MediaItem mediaItem, PrepareTroubleshootingPlayback request)

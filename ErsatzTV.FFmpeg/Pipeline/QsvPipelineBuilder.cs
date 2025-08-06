@@ -30,6 +30,7 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
         Option<WatermarkInputFile> watermarkInputFile,
         Option<SubtitleInputFile> subtitleInputFile,
         Option<ConcatInputFile> concatInputFile,
+        Option<GraphicsEngineInput> graphicsEngineInput,
         string reportsFolder,
         string fontsFolder,
         ILogger logger) : base(
@@ -40,6 +41,7 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
         watermarkInputFile,
         subtitleInputFile,
         concatInputFile,
+        graphicsEngineInput,
         reportsFolder,
         fontsFolder,
         logger)
@@ -139,6 +141,7 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
         VideoStream videoStream,
         Option<WatermarkInputFile> watermarkInputFile,
         Option<SubtitleInputFile> subtitleInputFile,
+        Option<GraphicsEngineInput> graphicsEngineInput,
         PipelineContext context,
         Option<IDecoder> maybeDecoder,
         FFmpegState ffmpegState,
@@ -148,6 +151,7 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
     {
         var watermarkOverlayFilterSteps = new List<IPipelineFilterStep>();
         var subtitleOverlayFilterSteps = new List<IPipelineFilterStep>();
+        var graphicsEngineOverlayFilterSteps = new List<IPipelineFilterStep>();
 
         FrameState currentState = desiredState with
         {
@@ -250,10 +254,12 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
 
         return new FilterChain(
             videoInputFile.FilterSteps,
-            watermarkInputFile.Map(wm => wm.FilterSteps).IfNone(new List<IPipelineFilterStep>()),
-            subtitleInputFile.Map(st => st.FilterSteps).IfNone(new List<IPipelineFilterStep>()),
+            watermarkInputFile.Map(wm => wm.FilterSteps).IfNone([]),
+            subtitleInputFile.Map(st => st.FilterSteps).IfNone([]),
+            graphicsEngineInput.Map(ge => ge.FilterSteps).IfNone([]),
             watermarkOverlayFilterSteps,
             subtitleOverlayFilterSteps,
+            graphicsEngineOverlayFilterSteps,
             pixelFormatFilterSteps);
     }
 

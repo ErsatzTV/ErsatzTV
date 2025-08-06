@@ -23,6 +23,7 @@ public class AmfPipelineBuilder : SoftwarePipelineBuilder
         Option<WatermarkInputFile> watermarkInputFile,
         Option<SubtitleInputFile> subtitleInputFile,
         Option<ConcatInputFile> concatInputFile,
+        Option<GraphicsEngineInput> graphicsEngineInput,
         string reportsFolder,
         string fontsFolder,
         ILogger logger) : base(
@@ -33,6 +34,7 @@ public class AmfPipelineBuilder : SoftwarePipelineBuilder
         watermarkInputFile,
         subtitleInputFile,
         concatInputFile,
+        graphicsEngineInput,
         reportsFolder,
         fontsFolder,
         logger)

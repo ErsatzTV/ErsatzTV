@@ -7,6 +7,7 @@ public class ComplexFilter : IPipelineStep
 {
     private readonly Option<AudioInputFile> _maybeAudioInputFile;
     private readonly Option<SubtitleInputFile> _maybeSubtitleInputFile;
+    private readonly Option<GraphicsEngineInput> _maybeGraphicsEngineInput;
     private readonly Option<VideoInputFile> _maybeVideoInputFile;
     private readonly Option<WatermarkInputFile> _maybeWatermarkInputFile;
     private readonly PipelineContext _pipelineContext;
@@ -16,6 +17,7 @@ public class ComplexFilter : IPipelineStep
         Option<AudioInputFile> maybeAudioInputFile,
         Option<WatermarkInputFile> maybeWatermarkInputFile,
         Option<SubtitleInputFile> maybeSubtitleInputFile,
+        Option<GraphicsEngineInput> maybeGraphicsEngineInput,
         PipelineContext pipelineContext,
         FilterChain filterChain)
     {
@@ -23,6 +25,7 @@ public class ComplexFilter : IPipelineStep
         _maybeAudioInputFile = maybeAudioInputFile;
         _maybeWatermarkInputFile = maybeWatermarkInputFile;
         _maybeSubtitleInputFile = maybeSubtitleInputFile;
+        _maybeGraphicsEngineInput = maybeGraphicsEngineInput;
         _pipelineContext = pipelineContext;
         FilterChain = filterChain;
 
@@ -32,12 +35,12 @@ public class ComplexFilter : IPipelineStep
     // for testing
     public FilterChain FilterChain { get; }
 
-    public EnvironmentVariable[] EnvironmentVariables => Array.Empty<EnvironmentVariable>();
-    public string[] GlobalOptions => Array.Empty<string>();
-    public string[] InputOptions(InputFile inputFile) => Array.Empty<string>();
+    public EnvironmentVariable[] EnvironmentVariables => [];
+    public string[] GlobalOptions => [];
+    public string[] InputOptions(InputFile inputFile) => [];
     public string[] FilterOptions { get; }
 
-    public string[] OutputOptions => Array.Empty<string>();
+    public string[] OutputOptions => [];
 
     public FrameState NextState(FrameState currentState) => currentState;
 
@@ -47,6 +50,7 @@ public class ComplexFilter : IPipelineStep
         var videoLabel = "0:v";
         string? watermarkLabel = null;
         string? subtitleLabel = null;
+        string? graphicsEngineLabel = null;
 
         var result = new List<string>();
 
@@ -56,6 +60,8 @@ public class ComplexFilter : IPipelineStep
         string watermarkOverlayFilterComplex = string.Empty;
         string subtitleFilterComplex = string.Empty;
         string subtitleOverlayFilterComplex = string.Empty;
+        string graphicsEngineFilterComplex = string.Empty;
+        string graphicsEngineOverlayFilterComplex = string.Empty;
         string pixelFormatFilterComplex = string.Empty;
 
         var distinctPaths = new List<string>();
@@ -86,6 +92,14 @@ public class ComplexFilter : IPipelineStep
         }
 
         foreach ((string path, _) in _maybeSubtitleInputFile)
+        {
+            if (!distinctPaths.Contains(path))
+            {
+                distinctPaths.Add(path);
+            }
+        }
+
+        foreach ((string path, _) in _maybeGraphicsEngineInput)
         {
             if (!distinctPaths.Contains(path))
             {
@@ -158,6 +172,26 @@ public class ComplexFilter : IPipelineStep
             }
         }
 
+        foreach (GraphicsEngineInput graphicsEngineInput in _maybeGraphicsEngineInput)
+        {
+            int inputIndex = distinctPaths.IndexOf(graphicsEngineInput.Path);
+            graphicsEngineLabel = $"{inputIndex}:0";
+            if (FilterChain.GraphicsEngineFilterSteps.Any(f => !string.IsNullOrWhiteSpace(f.Filter)))
+            {
+                graphicsEngineFilterComplex += $"[{inputIndex}:0]";
+                graphicsEngineFilterComplex += string.Join(
+                    ",",
+                    FilterChain.GraphicsEngineFilterSteps.Select(f => f.Filter)
+                        .Filter(s => !string.IsNullOrWhiteSpace(s)));
+                graphicsEngineLabel = "[ge]";
+                graphicsEngineFilterComplex += graphicsEngineLabel;
+            }
+            else
+            {
+                graphicsEngineLabel = $"[{graphicsEngineLabel}]";
+            }
+        }
+
         // overlay subtitle
         if (!string.IsNullOrWhiteSpace(subtitleLabel) && FilterChain.SubtitleOverlayFilterSteps.Count != 0)
         {
@@ -180,6 +214,18 @@ public class ComplexFilter : IPipelineStep
                     .Filter(s => !string.IsNullOrWhiteSpace(s)));
             videoLabel = "[vwm]";
             watermarkOverlayFilterComplex += videoLabel;
+        }
+
+        // overlay graphics engine
+        if (!string.IsNullOrWhiteSpace(graphicsEngineLabel) && FilterChain.GraphicsEngineOverlayFilterSteps.Count != 0)
+        {
+            graphicsEngineOverlayFilterComplex += $"{ProperLabel(videoLabel)}{ProperLabel(graphicsEngineLabel)}";
+            graphicsEngineOverlayFilterComplex += string.Join(
+                ",",
+                FilterChain.GraphicsEngineOverlayFilterSteps.Select(f => f.Filter)
+                    .Filter(s => !string.IsNullOrWhiteSpace(s)));
+            videoLabel = "[vge]";
+            graphicsEngineOverlayFilterComplex += videoLabel;
         }
 
         // pixel format
@@ -220,17 +266,19 @@ public class ComplexFilter : IPipelineStep
                 videoFilterComplex,
                 subtitleFilterComplex,
                 watermarkFilterComplex,
+                graphicsEngineFilterComplex,
                 subtitleOverlayFilterComplex,
                 watermarkOverlayFilterComplex,
+                graphicsEngineOverlayFilterComplex,
                 pixelFormatFilterComplex
             }.Where(s => !string.IsNullOrWhiteSpace(s)));
 
         if (!string.IsNullOrWhiteSpace(filterComplex))
         {
-            result.AddRange(new[] { "-filter_complex", filterComplex });
+            result.AddRange(["-filter_complex", filterComplex]);
         }
 
-        result.AddRange(new[] { "-map", videoLabel, "-map", audioLabel });
+        result.AddRange(["-map", videoLabel, "-map", audioLabel]);
 
         foreach (SubtitleInputFile subtitleInputFile in _maybeSubtitleInputFile.Filter(s =>
                      s.Method == SubtitleMethod.Copy ||
@@ -245,7 +293,7 @@ public class ComplexFilter : IPipelineStep
                 foreach ((int index, _, _) in subtitleInputFile.Streams)
                 {
                     subtitleLabel = $"{inputIndex}:{index}";
-                    result.AddRange(new[] { "-map", subtitleLabel });
+                    result.AddRange(["-map", subtitleLabel]);
                 }
             }
         }

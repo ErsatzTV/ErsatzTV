@@ -84,3 +84,14 @@ public record SubtitleInputFile(string Path, IList<MediaStream> SubtitleStreams,
     public bool IsImageBased => SubtitleStreams.All(s =>
         s.Codec is "hdmv_pgs_subtitle" or "dvd_subtitle" or "dvdsub" or "vobsub" or "pgssub" or "pgs");
 }
+
+public record GraphicsEngineInput() : InputFile("-", [])
+{
+    public void AddOption(IInputOption option)
+    {
+        if (option.AppliesTo(this))
+        {
+            InputOptions.Add(option);
+        }
+    }
+}

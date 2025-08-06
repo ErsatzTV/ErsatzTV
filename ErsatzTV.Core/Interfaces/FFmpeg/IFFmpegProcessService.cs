@@ -9,7 +9,7 @@ namespace ErsatzTV.Core.Interfaces.FFmpeg;
 
 public interface IFFmpegProcessService
 {
-    Task<Command> ForPlayoutItem(
+    Task<PlayoutItemResult> ForPlayoutItem(
         string ffmpegPath,
         string ffprobePath,
         bool saveReports,

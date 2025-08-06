@@ -2,6 +2,7 @@
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.FFmpeg;
+using ErsatzTV.Core.Interfaces.Streaming;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -37,6 +38,11 @@ public class GetErrorProcessHandler : FFmpegProcessHandler<GetErrorProcess>
             channel.FFmpegProfile.VaapiDevice,
             Optional(channel.FFmpegProfile.QsvExtraHardwareFrames));
 
-        return new PlayoutItemProcessModel(process, request.MaybeDuration, request.Until, true);
+        return new PlayoutItemProcessModel(
+            process,
+            Option<GraphicsEngineContext>.None,
+            request.MaybeDuration,
+            request.Until,
+            true);
     }
 }

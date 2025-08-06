@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.IO.Pipelines;
 using System.Text;
 using System.Timers;
 using Bugsnag;
@@ -13,6 +14,7 @@ using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Interfaces.Streaming;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Timer = System.Timers.Timer;
@@ -22,6 +24,7 @@ namespace ErsatzTV.Application.Streaming;
 public class HlsSessionWorker : IHlsSessionWorker
 {
     private static int _workAheadCount;
+    private readonly IGraphicsEngine _graphicsEngine;
     private readonly IClient _client;
     private readonly IConfigElementRepository _configElementRepository;
     private readonly IHlsPlaylistFilter _hlsPlaylistFilter;
@@ -44,6 +47,7 @@ public class HlsSessionWorker : IHlsSessionWorker
 
     public HlsSessionWorker(
         IServiceScopeFactory serviceScopeFactory,
+        IGraphicsEngine graphicsEngine,
         IClient client,
         IHlsPlaylistFilter hlsPlaylistFilter,
         IConfigElementRepository configElementRepository,
@@ -53,6 +57,7 @@ public class HlsSessionWorker : IHlsSessionWorker
     {
         _serviceScope = serviceScopeFactory.CreateScope();
         _mediator = _serviceScope.ServiceProvider.GetRequiredService<IMediator>();
+        _graphicsEngine = graphicsEngine;
         _client = client;
         _hlsPlaylistFilter = hlsPlaylistFilter;
         _configElementRepository = configElementRepository;
@@ -446,15 +451,32 @@ public class HlsSessionWorker : IHlsSessionWorker
             {
                 await TrimAndDelete(cancellationToken);
 
+                var maybePipe = Option<Pipe>.None;
+                var stdErrBuffer = new StringBuilder();
+
                 Command process = processModel.Process;
 
                 _logger.LogDebug("ffmpeg hls arguments {FFmpegArguments}", process.Arguments);
 
                 try
                 {
-                    BufferedCommandResult commandResult = await process
+                    var processWithPipe = process;
+                    foreach (var graphicsEngineContext in processModel.GraphicsEngineContext)
+                    {
+                        var pipe = new Pipe();
+                        processWithPipe = process.WithStandardInputPipe(PipeSource.FromStream(pipe.Reader.AsStream()));
+
+                        // fire and forget graphics engine task
+                        _ = _graphicsEngine.Run(
+                            graphicsEngineContext,
+                            pipe.Writer,
+                            cancellationToken);
+                    }
+
+                    CommandResult commandResult = await processWithPipe
+                        .WithStandardErrorPipe(PipeTarget.ToStringBuilder(stdErrBuffer))
                         .WithValidation(CommandResultValidation.None)
-                        .ExecuteBufferedAsync(Encoding.UTF8, cancellationToken);
+                        .ExecuteAsync(cancellationToken);
 
                     if (commandResult.ExitCode == 0)
                     {
@@ -468,8 +490,7 @@ public class HlsSessionWorker : IHlsSessionWorker
                     else
                     {
                         // detect the non-zero exit code and transcode the ffmpeg error message instead
-
-                        string errorMessage = commandResult.StandardError;
+                        string errorMessage = stdErrBuffer.ToString();
                         if (string.IsNullOrWhiteSpace(errorMessage))
                         {
                             errorMessage = $"Unknown FFMPEG error; exit code {commandResult.ExitCode}";
@@ -479,7 +500,7 @@ public class HlsSessionWorker : IHlsSessionWorker
                             "HLS process for channel {Channel} has terminated unsuccessfully with exit code {ExitCode}: {StandardError}",
                             _channelNumber,
                             commandResult.ExitCode,
-                            commandResult.StandardError);
+                            stdErrBuffer.ToString());
 
                         Either<BaseError, PlayoutItemProcessModel> maybeOfflineProcess = await _mediator.Send(
                             new GetErrorProcess(
@@ -522,6 +543,13 @@ public class HlsSessionWorker : IHlsSessionWorker
                 {
                     _logger.LogInformation("Terminating HLS session for channel {Channel}", _channelNumber);
                     return false;
+                }
+                finally
+                {
+                    foreach (var pipe in maybePipe)
+                    {
+                        await pipe.Writer.CompleteAsync();
+                    }
                 }
             }
         }

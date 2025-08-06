@@ -1,29 +1,30 @@
 ﻿using ErsatzTV.FFmpeg.Environment;
-using ErsatzTV.FFmpeg.InputOption;
 
-namespace ErsatzTV.FFmpeg.Format;
+namespace ErsatzTV.FFmpeg.InputOption;
 
-public class ConcatInputFormat : IInputOption
+public class RawVideoInputOption(string pixelFormat, FrameSize frameSize, int frameRate) : IInputOption
 {
     public EnvironmentVariable[] EnvironmentVariables => [];
     public string[] GlobalOptions => [];
 
     public string[] InputOptions(InputFile inputFile) =>
     [
-        "-f", "concat",
-        "-safe", "0",
-        "-protocol_whitelist", "file,http,tcp,https,tcp,tls",
-        "-probesize", "32"
+        "-f", "rawvideo",
+        "-vcodec", "rawvideo",
+        "-pix_fmt", pixelFormat,
+        "-s", $"{frameSize.Width}x{frameSize.Height}",
+        "-r", $"{frameRate}"
     ];
 
     public string[] FilterOptions => [];
     public string[] OutputOptions => [];
     public FrameState NextState(FrameState currentState) => currentState;
+
     public bool AppliesTo(AudioInputFile audioInputFile) => false;
 
     public bool AppliesTo(VideoInputFile videoInputFile) => false;
 
-    public bool AppliesTo(ConcatInputFile concatInputFile) => true;
+    public bool AppliesTo(ConcatInputFile concatInputFile) => false;
 
-    public bool AppliesTo(GraphicsEngineInput graphicsEngineInput) => false;
+    public bool AppliesTo(GraphicsEngineInput graphicsEngineInput) => true;
 }

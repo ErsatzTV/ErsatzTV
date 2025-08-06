@@ -4,13 +4,13 @@ namespace ErsatzTV.FFmpeg.InputOption;
 
 public class DoNotIgnoreLoopInputOption : IInputOption
 {
-    public EnvironmentVariable[] EnvironmentVariables => Array.Empty<EnvironmentVariable>();
-    public string[] GlobalOptions => Array.Empty<string>();
+    public EnvironmentVariable[] EnvironmentVariables => [];
+    public string[] GlobalOptions => [];
 
-    public string[] InputOptions(InputFile inputFile) => new[] { "-ignore_loop", "0" };
+    public string[] InputOptions(InputFile inputFile) => ["-ignore_loop", "0"];
 
-    public string[] FilterOptions => Array.Empty<string>();
-    public string[] OutputOptions => Array.Empty<string>();
+    public string[] FilterOptions => [];
+    public string[] OutputOptions => [];
     public FrameState NextState(FrameState currentState) => currentState;
 
     public bool AppliesTo(AudioInputFile audioInputFile) => false;
@@ -18,4 +18,6 @@ public class DoNotIgnoreLoopInputOption : IInputOption
     public bool AppliesTo(VideoInputFile videoInputFile) => videoInputFile.VideoStreams.All(s => s.StillImage == false);
 
     public bool AppliesTo(ConcatInputFile concatInputFile) => false;
+
+    public bool AppliesTo(GraphicsEngineInput graphicsEngineInput) => false;
 }

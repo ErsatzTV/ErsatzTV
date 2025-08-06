@@ -350,7 +350,7 @@ public class TranscodingTests
 
         DateTimeOffset now = DateTimeOffset.Now;
 
-        Command process = await service.ForPlayoutItem(
+        PlayoutItemResult playoutItemResult = await service.ForPlayoutItem(
             ExecutableName("ffmpeg"),
             ExecutableName("ffprobe"),
             false,
@@ -387,7 +387,7 @@ public class TranscodingTests
         // Console.WriteLine($"ffmpeg arguments {process.Arguments}");
 
         await TranscodeAndVerify(
-            process,
+            playoutItemResult.Process,
             profileResolution,
             profileBitDepth,
             profileVideoFormat,
@@ -614,7 +614,7 @@ public class TranscodingTests
 
         FFmpegLibraryProcessService service = GetService();
 
-        Command process = await service.ForPlayoutItem(
+        PlayoutItemResult playoutItemResult = await service.ForPlayoutItem(
             ExecutableName("ffmpeg"),
             ExecutableName("ffprobe"),
             false,
@@ -665,7 +665,7 @@ public class TranscodingTests
         // Console.WriteLine($"ffmpeg arguments {string.Join(" ", process.StartInfo.ArgumentList)}");
 
         await TranscodeAndVerify(
-            process,
+            playoutItemResult.Process,
             profileResolution,
             profileBitDepth,
             profileVideoFormat,
