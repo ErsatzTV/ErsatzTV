@@ -6,9 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 ### Added
 - Add *experimental* graphics engine
-  - `Permanent` watermarks will use new graphics engine
-  - `Opacity Expression` watermarks will use new graphics engine
-  - `Intermittent` watermarks will still use normal overlay pipeline (for now)
+  - All watermarks will use new graphics engine
 - Add `Opacity Expression` watermark mode
   - This allows specifying an expression that returns an opacity between 0.0 and 1.0
   - The expression can use:
