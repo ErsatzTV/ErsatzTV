@@ -19,6 +19,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
 {
     private readonly Option<AudioInputFile> _audioInputFile;
     private readonly Option<ConcatInputFile> _concatInputFile;
+    private readonly Option<GraphicsEngineInput> _graphicsEngineInput;
     private readonly IFFmpegCapabilities _ffmpegCapabilities;
     private readonly string _fontsFolder;
     private readonly HardwareAccelerationMode _hardwareAccelerationMode;
@@ -36,6 +37,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         Option<WatermarkInputFile> watermarkInputFile,
         Option<SubtitleInputFile> subtitleInputFile,
         Option<ConcatInputFile> concatInputFile,
+        Option<GraphicsEngineInput> graphicsEngineInput,
         string reportsFolder,
         string fontsFolder,
         ILogger logger)
@@ -47,6 +49,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         _watermarkInputFile = watermarkInputFile;
         _subtitleInputFile = subtitleInputFile;
         _concatInputFile = concatInputFile;
+        _graphicsEngineInput = graphicsEngineInput;
         _reportsFolder = reportsFolder;
         _fontsFolder = fontsFolder;
         _logger = logger;
@@ -209,6 +212,12 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
             concatInputFile.AddOption(new InfiniteLoopInputOption(HardwareAccelerationMode.None));
         }
 
+        foreach (GraphicsEngineInput graphicsEngineInput in _graphicsEngineInput)
+        {
+            graphicsEngineInput.AddOption(
+                new RawVideoInputOption(PixelFormat.BGRA, desiredState.PaddedSize, desiredState.FrameRate.IfNone(24)));
+        }
+
         Debug.Assert(_videoInputFile.IsSome, "Pipeline builder requires exactly one video input file");
         VideoInputFile videoInputFile = _videoInputFile.Head();
 
@@ -218,6 +227,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
 
         var context = new PipelineContext(
             _hardwareAccelerationMode,
+            _graphicsEngineInput.IsSome,
             _watermarkInputFile.IsSome,
             _subtitleInputFile.Map(s => s is { IsImageBased: true, Method: SubtitleMethod.Burn }).IfNone(false),
             _subtitleInputFile.Map(s => s is { IsImageBased: false, Method: SubtitleMethod.Burn }).IfNone(false),
@@ -285,6 +295,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
             _audioInputFile,
             _watermarkInputFile,
             _subtitleInputFile,
+            _graphicsEngineInput,
             context,
             filterChain);
 
@@ -553,13 +564,12 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
             SetVideoBufferSizeOutput(desiredState, pipelineSteps);
         }
 
-
-
         FilterChain filterChain = SetVideoFilters(
             videoInputFile,
             videoStream,
             _watermarkInputFile,
             _subtitleInputFile,
+            _graphicsEngineInput,
             context,
             maybeDecoder,
             ffmpegState,
@@ -622,6 +632,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         VideoStream videoStream,
         Option<WatermarkInputFile> watermarkInputFile,
         Option<SubtitleInputFile> subtitleInputFile,
+        Option<GraphicsEngineInput> graphicsEngineInput,
         PipelineContext context,
         Option<IDecoder> maybeDecoder,
         FFmpegState ffmpegState,

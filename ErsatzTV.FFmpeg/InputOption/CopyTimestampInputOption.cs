@@ -18,4 +18,6 @@ public class CopyTimestampInputOption : IInputOption
     public bool AppliesTo(VideoInputFile videoInputFile) => true;
 
     public bool AppliesTo(ConcatInputFile concatInputFile) => false;
+
+    public bool AppliesTo(GraphicsEngineInput graphicsEngineInput) => false;
 }

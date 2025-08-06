@@ -9,8 +9,8 @@ public class InfiniteLoopInputOption : IInputOption
     public InfiniteLoopInputOption(HardwareAccelerationMode hardwareAccelerationMode) =>
         _hardwareAccelerationMode = hardwareAccelerationMode;
 
-    public EnvironmentVariable[] EnvironmentVariables => Array.Empty<EnvironmentVariable>();
-    public string[] GlobalOptions => Array.Empty<string>();
+    public EnvironmentVariable[] EnvironmentVariables => [];
+    public string[] GlobalOptions => [];
 
     public string[] InputOptions(InputFile inputFile)
     {
@@ -24,7 +24,7 @@ public class InfiniteLoopInputOption : IInputOption
         return ["-stream_loop", "-1"];
     }
 
-    public string[] FilterOptions => Array.Empty<string>();
+    public string[] FilterOptions => [];
 
     public string[] OutputOptions =>
         _hardwareAccelerationMode is HardwareAccelerationMode.Qsv or HardwareAccelerationMode.Vaapi
@@ -35,4 +35,5 @@ public class InfiniteLoopInputOption : IInputOption
     public bool AppliesTo(AudioInputFile audioInputFile) => true;
     public bool AppliesTo(VideoInputFile videoInputFile) => true;
     public bool AppliesTo(ConcatInputFile concatInputFile) => true;
+    public bool AppliesTo(GraphicsEngineInput graphicsEngineInput) => false;
 }

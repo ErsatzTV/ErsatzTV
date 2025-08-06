@@ -318,7 +318,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 effectiveNow,
                 duration);
 
-            Command process = await _ffmpegProcessService.ForPlayoutItem(
+            PlayoutItemResult playoutItemResult = await _ffmpegProcessService.ForPlayoutItem(
                 ffmpegPath,
                 ffprobePath,
                 saveReports,
@@ -352,7 +352,12 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 Option<string>.None,
                 _ => { });
 
-            var result = new PlayoutItemProcessModel(process, duration, finish, true);
+            var result = new PlayoutItemProcessModel(
+                playoutItemResult.Process,
+                playoutItemResult.GraphicsEngineContext,
+                duration,
+                finish,
+                true);
 
             return Right<BaseError, PlayoutItemProcessModel>(result);
         }
@@ -390,7 +395,12 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                         channel.FFmpegProfile.VaapiDevice,
                         Optional(channel.FFmpegProfile.QsvExtraHardwareFrames));
 
-                    return new PlayoutItemProcessModel(offlineProcess, maybeDuration, finish, true);
+                    return new PlayoutItemProcessModel(
+                        offlineProcess,
+                        Option<GraphicsEngineContext>.None,
+                        maybeDuration,
+                        finish,
+                        true);
                 case PlayoutItemDoesNotExistOnDisk:
                     Command doesNotExistProcess = await _ffmpegProcessService.ForError(
                         ffmpegPath,
@@ -404,7 +414,12 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                         channel.FFmpegProfile.VaapiDevice,
                         Optional(channel.FFmpegProfile.QsvExtraHardwareFrames));
 
-                    return new PlayoutItemProcessModel(doesNotExistProcess, maybeDuration, finish, true);
+                    return new PlayoutItemProcessModel(
+                        doesNotExistProcess,
+                        Option<GraphicsEngineContext>.None,
+                        maybeDuration,
+                        finish,
+                        true);
                 default:
                     Command errorProcess = await _ffmpegProcessService.ForError(
                         ffmpegPath,
@@ -418,7 +433,12 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                         channel.FFmpegProfile.VaapiDevice,
                         Optional(channel.FFmpegProfile.QsvExtraHardwareFrames));
 
-                    return new PlayoutItemProcessModel(errorProcess, maybeDuration, finish, true);
+                    return new PlayoutItemProcessModel(
+                        errorProcess,
+                        Option<GraphicsEngineContext>.None,
+                        maybeDuration,
+                        finish,
+                        true);
             }
         }
 

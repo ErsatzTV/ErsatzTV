@@ -16,6 +16,7 @@ public static class CommandGenerator
         Option<AudioInputFile> maybeAudioInputFile,
         Option<WatermarkInputFile> maybeWatermarkInputFile,
         Option<ConcatInputFile> maybeConcatInputFile,
+        Option<GraphicsEngineInput> maybeGraphicsEngineInput,
         IList<IPipelineStep> pipelineSteps,
         bool isIntelVaapiOrQsv)
     {
@@ -36,7 +37,7 @@ public static class CommandGenerator
                 arguments.AddRange(step.InputOptions(videoInputFile));
             }
 
-            arguments.AddRange(new[] { "-i", videoInputFile.Path });
+            arguments.AddRange(["-i", videoInputFile.Path]);
         }
 
         foreach (AudioInputFile audioInputFile in maybeAudioInputFile)
@@ -50,22 +51,20 @@ public static class CommandGenerator
                     arguments.AddRange(step.InputOptions(audioInputFile));
                 }
 
-                arguments.AddRange(new[] { "-i", audioInputFile.Path });
+                arguments.AddRange(["-i", audioInputFile.Path]);
             }
         }
 
         foreach (WatermarkInputFile watermarkInputFile in maybeWatermarkInputFile)
         {
-            if (!includedPaths.Contains(watermarkInputFile.Path))
+            if (includedPaths.Add(watermarkInputFile.Path))
             {
-                includedPaths.Add(watermarkInputFile.Path);
-
                 foreach (IInputOption step in watermarkInputFile.InputOptions)
                 {
                     arguments.AddRange(step.InputOptions(watermarkInputFile));
                 }
 
-                arguments.AddRange(new[] { "-i", watermarkInputFile.Path });
+                arguments.AddRange(["-i", watermarkInputFile.Path]);
             }
         }
 
@@ -76,7 +75,17 @@ public static class CommandGenerator
                 arguments.AddRange(step.InputOptions(concatInputFile));
             }
 
-            arguments.AddRange(new[] { "-i", concatInputFile.Path });
+            arguments.AddRange(["-i", concatInputFile.Path]);
+        }
+
+        foreach (GraphicsEngineInput graphicsEngineInput in maybeGraphicsEngineInput)
+        {
+            foreach (IInputOption step in graphicsEngineInput.InputOptions)
+            {
+                arguments.AddRange(step.InputOptions(graphicsEngineInput));
+            }
+
+            arguments.AddRange(["-i", graphicsEngineInput.Path]);
         }
 
         foreach (IPipelineStep step in pipelineSteps)

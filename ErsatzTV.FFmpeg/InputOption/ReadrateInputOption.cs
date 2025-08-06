@@ -21,9 +21,9 @@ public class ReadrateInputOption : IInputOption
         _logger = logger;
     }
 
-    public EnvironmentVariable[] EnvironmentVariables => Array.Empty<EnvironmentVariable>();
+    public EnvironmentVariable[] EnvironmentVariables => [];
 
-    public string[] GlobalOptions => Array.Empty<string>();
+    public string[] GlobalOptions => [];
 
     public string[] InputOptions(InputFile inputFile)
     {
@@ -51,8 +51,8 @@ public class ReadrateInputOption : IInputOption
         return result.ToArray();
     }
 
-    public string[] FilterOptions => Array.Empty<string>();
-    public string[] OutputOptions => Array.Empty<string>();
+    public string[] FilterOptions => [];
+    public string[] OutputOptions => [];
     public FrameState NextState(FrameState currentState) => currentState with { Realtime = true };
 
     public bool AppliesTo(AudioInputFile audioInputFile) => audioInputFile is not NullAudioInputFile;
@@ -61,4 +61,6 @@ public class ReadrateInputOption : IInputOption
     public bool AppliesTo(VideoInputFile videoInputFile) => videoInputFile.VideoStreams.All(s => !s.StillImage);
 
     public bool AppliesTo(ConcatInputFile concatInputFile) => true;
+
+    public bool AppliesTo(GraphicsEngineInput graphicsEngineInput) => false;
 }

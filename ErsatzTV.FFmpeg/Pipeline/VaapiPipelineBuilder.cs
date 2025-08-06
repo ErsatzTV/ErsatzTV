@@ -30,6 +30,7 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
         Option<WatermarkInputFile> watermarkInputFile,
         Option<SubtitleInputFile> subtitleInputFile,
         Option<ConcatInputFile> concatInputFile,
+        Option<GraphicsEngineInput> graphicsEngineInput,
         string reportsFolder,
         string fontsFolder,
         ILogger logger) : base(
@@ -40,6 +41,7 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
         watermarkInputFile,
         subtitleInputFile,
         concatInputFile,
+        graphicsEngineInput,
         reportsFolder,
         fontsFolder,
         logger)
@@ -138,6 +140,7 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
         VideoStream videoStream,
         Option<WatermarkInputFile> watermarkInputFile,
         Option<SubtitleInputFile> subtitleInputFile,
+        Option<GraphicsEngineInput> graphicsEngineInput,
         PipelineContext context,
         Option<IDecoder> maybeDecoder,
         FFmpegState ffmpegState,
@@ -147,6 +150,7 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
     {
         var watermarkOverlayFilterSteps = new List<IPipelineFilterStep>();
         var subtitleOverlayFilterSteps = new List<IPipelineFilterStep>();
+        var graphicsEngineOverlayFilterSteps = new List<IPipelineFilterStep>();
 
         FrameState currentState = desiredState with
         {
@@ -162,7 +166,7 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
         }
 
         // easier to use nv12 for overlay
-        if (context.HasSubtitleOverlay || context.HasWatermark)
+        if (context.HasSubtitleOverlay || context.HasWatermark || context.HasGraphicsEngine)
         {
             IPixelFormat pixelFormat = desiredState.PixelFormat.IfNone(
                 context.Is10BitOutput ? new PixelFormatYuv420P10Le() : new PixelFormatYuv420P());
@@ -200,7 +204,7 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
         }
         else if (currentState.FrameDataLocation == FrameDataLocation.Hardware &&
                  (!context.HasSubtitleOverlay || forceSoftwareOverlay) &&
-                 context.HasWatermark)
+                 (context.HasWatermark || context.HasGraphicsEngine))
         {
             // download for watermark (or forced software subtitle)
             var hardwareDownload = new HardwareDownloadFilter(currentState);
@@ -225,6 +229,8 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
             desiredState,
             currentState,
             watermarkOverlayFilterSteps);
+
+        SetGraphicsEngine(graphicsEngineInput, desiredState, graphicsEngineOverlayFilterSteps);
 
         // after everything else is done, apply the encoder
         if (pipelineSteps.OfType<IEncoder>().All(e => e.Kind != StreamKind.Video))
@@ -262,10 +268,12 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
 
         return new FilterChain(
             videoInputFile.FilterSteps,
-            watermarkInputFile.Map(wm => wm.FilterSteps).IfNone(new List<IPipelineFilterStep>()),
-            subtitleInputFile.Map(st => st.FilterSteps).IfNone(new List<IPipelineFilterStep>()),
+            watermarkInputFile.Map(wm => wm.FilterSteps).IfNone([]),
+            subtitleInputFile.Map(st => st.FilterSteps).IfNone([]),
+            graphicsEngineInput.Map(ge => ge.FilterSteps).IfNone([]),
             watermarkOverlayFilterSteps,
             subtitleOverlayFilterSteps,
+            graphicsEngineOverlayFilterSteps,
             pixelFormatFilterSteps);
     }
 
@@ -526,6 +534,29 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
         }
 
         return currentState;
+    }
+
+    private static void SetGraphicsEngine(
+        Option<GraphicsEngineInput> graphicsEngineInput,
+        FrameState desiredState,
+        List<IPipelineFilterStep> graphicsEngineOverlayFilterSteps)
+    {
+        foreach (var _ in graphicsEngineInput)
+        {
+            foreach (IPixelFormat desiredPixelFormat in desiredState.PixelFormat)
+            {
+                IPixelFormat pf = desiredPixelFormat;
+                if (desiredPixelFormat is PixelFormatNv12 nv12)
+                {
+                    foreach (IPixelFormat availablePixelFormat in AvailablePixelFormats.ForPixelFormat(nv12.Name, null))
+                    {
+                        pf = availablePixelFormat;
+                    }
+                }
+
+                graphicsEngineOverlayFilterSteps.Add(new OverlayGraphicsEngineFilter(pf));
+            }
+        }
     }
 
     private static FrameState SetPad(

@@ -30,6 +30,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
         Option<WatermarkInputFile> watermarkInputFile,
         Option<SubtitleInputFile> subtitleInputFile,
         Option<ConcatInputFile> concatInputFile,
+        Option<GraphicsEngineInput> graphicsEngineInput,
         string reportsFolder,
         string fontsFolder,
         ILogger logger) : base(
@@ -40,6 +41,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
         watermarkInputFile,
         subtitleInputFile,
         concatInputFile,
+        graphicsEngineInput,
         reportsFolder,
         fontsFolder,
         logger)
@@ -138,6 +140,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
         VideoStream videoStream,
         Option<WatermarkInputFile> watermarkInputFile,
         Option<SubtitleInputFile> subtitleInputFile,
+        Option<GraphicsEngineInput> graphicsEngineInput,
         PipelineContext context,
         Option<IDecoder> maybeDecoder,
         FFmpegState ffmpegState,
@@ -147,6 +150,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
     {
         var watermarkOverlayFilterSteps = new List<IPipelineFilterStep>();
         var subtitleOverlayFilterSteps = new List<IPipelineFilterStep>();
+        var graphicsEngineOverlayFilterSteps = new List<IPipelineFilterStep>();
 
         FrameState currentState = desiredState with
         {
@@ -205,7 +209,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
         currentState = SetCrop(videoInputFile, desiredState, currentState);
         SetStillImageLoop(videoInputFile, videoStream, ffmpegState, desiredState, pipelineSteps);
 
-        if (currentState.BitDepth == 8 && context.HasSubtitleOverlay || context.HasWatermark)
+        if (currentState.BitDepth == 8 && context.HasSubtitleOverlay || context.HasWatermark || context.HasGraphicsEngine)
         {
             Option<IPixelFormat> desiredPixelFormat = Some((IPixelFormat)new PixelFormatYuv420P());
 
@@ -241,7 +245,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
         // need to upload for any sort of overlay
         if (currentState.FrameDataLocation == FrameDataLocation.Software &&
             currentState.BitDepth == 8 && context.HasSubtitleText == false
-            && (context.HasSubtitleOverlay || context.HasWatermark))
+            && (context.HasSubtitleOverlay || context.HasWatermark || context.HasGraphicsEngine))
         {
             var hardwareUpload = new HardwareUploadCudaFilter(currentState);
             currentState = hardwareUpload.NextState(currentState);
@@ -277,6 +281,8 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
             currentState,
             watermarkOverlayFilterSteps);
 
+        currentState = SetGraphicsEngine(graphicsEngineInput, currentState, graphicsEngineOverlayFilterSteps);
+
         // after everything else is done, apply the encoder
         if (pipelineSteps.OfType<IEncoder>().All(e => e.Kind != StreamKind.Video))
         {
@@ -308,10 +314,12 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
 
         return new FilterChain(
             videoInputFile.FilterSteps,
-            watermarkInputFile.Map(wm => wm.FilterSteps).IfNone(new List<IPipelineFilterStep>()),
-            subtitleInputFile.Map(st => st.FilterSteps).IfNone(new List<IPipelineFilterStep>()),
+            watermarkInputFile.Map(wm => wm.FilterSteps).IfNone([]),
+            subtitleInputFile.Map(st => st.FilterSteps).IfNone([]),
+            graphicsEngineInput.Map(ge => ge.FilterSteps).IfNone([]),
             watermarkOverlayFilterSteps,
             subtitleOverlayFilterSteps,
+            graphicsEngineOverlayFilterSteps,
             pixelFormatFilterSteps);
     }
 
@@ -357,11 +365,11 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
             {
                 _logger.LogDebug("Using software encoder");
 
-                if ((context.HasSubtitleOverlay || context.HasWatermark) &&
+                if ((context.HasSubtitleOverlay || context.HasWatermark || context.HasGraphicsEngine) &&
                     currentState.FrameDataLocation == FrameDataLocation.Hardware)
                 {
                     _logger.LogDebug(
-                        "HasSubtitleOverlay || HasWatermark && FrameDataLocation == FrameDataLocation.Hardware");
+                        "HasSubtitleOverlay || HasWatermark || HasGraphicsEngine && FrameDataLocation == FrameDataLocation.Hardware");
 
                     var hardwareDownload = new CudaHardwareDownloadFilter(currentState.PixelFormat, None);
                     currentState = hardwareDownload.NextState(currentState);
@@ -559,7 +567,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
                 currentState = subtitlesFilter.NextState(currentState);
                 videoInputFile.FilterSteps.Add(subtitlesFilter);
 
-                if (context.HasWatermark)
+                if (context.HasWatermark || context.HasGraphicsEngine)
                 {
                     var subtitleHardwareUpload = new HardwareUploadCudaFilter(currentState);
                     currentState = subtitleHardwareUpload.NextState(currentState);
@@ -637,6 +645,26 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
         return currentState;
     }
 
+    private static FrameState SetGraphicsEngine(
+        Option<GraphicsEngineInput> graphicsEngineInput,
+        FrameState currentState,
+        List<IPipelineFilterStep> graphicsEngineOverlayFilterSteps)
+    {
+        foreach (var graphicsEngine in graphicsEngineInput)
+        {
+            graphicsEngine.FilterSteps.Add(new PixelFormatFilter(new PixelFormatYuva420P()));
+
+            graphicsEngine.FilterSteps.Add(
+                new HardwareUploadCudaFilter(currentState with { FrameDataLocation = FrameDataLocation.Software }));
+
+            var graphicsEngineFilter = new OverlayGraphicsEngineCudaFilter();
+            graphicsEngineOverlayFilterSteps.Add(graphicsEngineFilter);
+            currentState = graphicsEngineFilter.NextState(currentState);
+        }
+
+        return currentState;
+    }
+
     private static FrameState SetPad(
         VideoInputFile videoInputFile,
         VideoStream videoStream,
@@ -672,7 +700,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
         bool decodedToSoftware = ffmpegState.DecoderHardwareAccelerationMode == HardwareAccelerationMode.None;
         bool softwareEncoder = ffmpegState.EncoderHardwareAccelerationMode == HardwareAccelerationMode.None;
         bool noHardwareFilters = context is
-            { HasWatermark: false, HasSubtitleOverlay: false, ShouldDeinterlace: false };
+            { HasGraphicsEngine: false, HasWatermark: false, HasSubtitleOverlay: false, ShouldDeinterlace: false };
         bool needsToPad = currentState.PaddedSize != desiredState.PaddedSize;
 
         if (decodedToSoftware && (needsToPad || noHardwareFilters && softwareEncoder))
@@ -690,6 +718,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
                 currentState with
                 {
                     PixelFormat = context is { IsHdr: false, Is10BitOutput: false } && (context.HasWatermark ||
+                        context.HasGraphicsEngine ||
                         context.HasSubtitleOverlay ||
                         context.ShouldDeinterlace ||
                         desiredState.ScaledSize != desiredState.PaddedSize ||

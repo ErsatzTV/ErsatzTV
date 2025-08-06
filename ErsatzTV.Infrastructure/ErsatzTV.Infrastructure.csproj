@@ -33,6 +33,7 @@
         <PackageReference Include="Refit.Newtonsoft.Json" Version="8.0.0" />
         <PackageReference Include="Refit.Xml" Version="8.0.0" />
         <PackageReference Include="Scriban.Signed" Version="6.2.1" />
+        <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="2.1.7" />
         <PackageReference Include="TagLibSharp" Version="2.3.0" />
 
 

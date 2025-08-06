@@ -9,6 +9,7 @@ using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Interfaces.Streaming;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -19,6 +20,7 @@ public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Eit
 {
     private readonly IClient _client;
     private readonly IConfigElementRepository _configElementRepository;
+    private readonly IGraphicsEngine _graphicsEngine;
     private readonly IFFmpegSegmenterService _ffmpegSegmenterService;
     private readonly IHlsPlaylistFilter _hlsPlaylistFilter;
     private readonly IHostApplicationLifetime _hostApplicationLifetime;
@@ -41,6 +43,7 @@ public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Eit
         ILogger<HlsSessionWorkerV2> sessionWorkerV2Logger,
         IFFmpegSegmenterService ffmpegSegmenterService,
         IConfigElementRepository configElementRepository,
+        IGraphicsEngine graphicsEngine,
         IHostApplicationLifetime hostApplicationLifetime,
         ChannelWriter<IBackgroundServiceRequest> workerChannel)
     {
@@ -54,6 +57,7 @@ public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Eit
         _sessionWorkerV2Logger = sessionWorkerV2Logger;
         _ffmpegSegmenterService = ffmpegSegmenterService;
         _configElementRepository = configElementRepository;
+        _graphicsEngine = graphicsEngine;
         _hostApplicationLifetime = hostApplicationLifetime;
         _workerChannel = workerChannel;
     }
@@ -122,6 +126,7 @@ public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Eit
                 request.Host),
             _ => new HlsSessionWorker(
                 _serviceScopeFactory,
+                _graphicsEngine,
                 _client,
                 _hlsPlaylistFilter,
                 _configElementRepository,

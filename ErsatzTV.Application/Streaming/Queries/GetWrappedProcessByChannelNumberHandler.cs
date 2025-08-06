@@ -2,6 +2,7 @@
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.FFmpeg;
+using ErsatzTV.Core.Interfaces.Streaming;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
@@ -38,6 +39,11 @@ public class GetWrappedProcessByChannelNumberHandler : FFmpegProcessHandler<GetW
             request.Host,
             request.AccessToken);
 
-        return new PlayoutItemProcessModel(process, Option<TimeSpan>.None, DateTimeOffset.MaxValue, true);
+        return new PlayoutItemProcessModel(
+            process,
+            Option<GraphicsEngineContext>.None,
+            Option<TimeSpan>.None,
+            DateTimeOffset.MaxValue,
+            true);
     }
 }

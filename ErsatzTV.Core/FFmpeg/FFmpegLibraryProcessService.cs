@@ -4,6 +4,7 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Interfaces.Streaming;
 using ErsatzTV.FFmpeg;
 using ErsatzTV.FFmpeg.Environment;
 using ErsatzTV.FFmpeg.Format;
@@ -44,7 +45,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         _logger = logger;
     }
 
-    public async Task<Command> ForPlayoutItem(
+    public async Task<PlayoutItemResult> ForPlayoutItem(
         string ffmpegPath,
         string ffprobePath,
         bool saveReports,
@@ -344,6 +345,24 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         }).Flatten();
 
         Option<WatermarkInputFile> watermarkInputFile = GetWatermarkInputFile(watermarkOptions, maybeFadePoints);
+        Option<GraphicsEngineInput> graphicsEngineInput = Option<GraphicsEngineInput>.None;
+        Option<GraphicsEngineContext> graphicsEngineContext = Option<GraphicsEngineContext>.None;
+
+        // use graphics engine for permanent watermarks
+        foreach (var options in watermarkOptions.Where(o => o.Watermark.Map(wm => wm.Mode is ChannelWatermarkMode.Permanent).IfNone(false)))
+        {
+            watermarkInputFile = Option<WatermarkInputFile>.None;
+
+            graphicsEngineInput = new GraphicsEngineInput();
+
+            WatermarkElementContext watermark = new WatermarkElementContext(options);
+
+            graphicsEngineContext = new GraphicsEngineContext(
+                [watermark],
+                channel.FFmpegProfile.Resolution,
+                await playbackSettings.FrameRate.IfNoneAsync(24),
+                finish - now);
+        }
 
         HardwareAccelerationMode hwAccel = GetHardwareAccelerationMode(playbackSettings, fillerKind);
 
@@ -451,6 +470,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             watermarkInputFile,
             subtitleInputFile,
             Option<ConcatInputFile>.None,
+            graphicsEngineInput,
             VaapiDisplayName(hwAccel, vaapiDisplay),
             VaapiDriverName(hwAccel, vaapiDriver),
             VaapiDeviceName(hwAccel, vaapiDevice),
@@ -462,7 +482,16 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
 
         pipelineAction?.Invoke(pipeline);
 
-        return GetCommand(ffmpegPath, videoInputFile, audioInputFile, watermarkInputFile, None, pipeline);
+        var command = GetCommand(
+            ffmpegPath,
+            videoInputFile,
+            audioInputFile,
+            watermarkInputFile,
+            Option<ConcatInputFile>.None,
+            graphicsEngineInput,
+            pipeline);
+
+        return new PlayoutItemResult(command, graphicsEngineContext);
     }
 
     public async Task<Command> ForError(
@@ -614,9 +643,10 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             hwAccel,
             videoInputFile,
             audioInputFile,
-            None,
+            Option<WatermarkInputFile>.None,
             subtitleInputFile,
             Option<ConcatInputFile>.None,
+            Option<GraphicsEngineInput>.None,
             VaapiDisplayName(hwAccel, vaapiDisplay),
             VaapiDriverName(hwAccel, vaapiDriver),
             VaapiDeviceName(hwAccel, vaapiDevice),
@@ -626,7 +656,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
 
         FFmpegPipeline pipeline = pipelineBuilder.Build(ffmpegState, desiredState);
 
-        return GetCommand(ffmpegPath, videoInputFile, audioInputFile, None, None, pipeline);
+        return GetCommand(ffmpegPath, videoInputFile, audioInputFile, None, None, None, pipeline);
     }
 
     public async Task<Command> ConcatChannel(
@@ -644,14 +674,15 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
 
         IPipelineBuilder pipelineBuilder = await _pipelineBuilderFactory.GetBuilder(
             HardwareAccelerationMode.None,
-            None,
-            None,
-            None,
-            None,
+            Option<VideoInputFile>.None,
+            Option<AudioInputFile>.None,
+            Option<WatermarkInputFile>.None,
+            Option<SubtitleInputFile>.None,
             concatInputFile,
+            Option<GraphicsEngineInput>.None,
             Option<string>.None,
-            None,
-            None,
+            Option<string>.None,
+            Option<string>.None,
             FileSystemLayout.FFmpegReportsFolder,
             FileSystemLayout.FontsCacheFolder,
             ffmpegPath);
@@ -660,7 +691,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             concatInputFile,
             FFmpegState.Concat(saveReports, channel.Name));
 
-        return GetCommand(ffmpegPath, None, None, None, concatInputFile, pipeline);
+        return GetCommand(ffmpegPath, None, None, None, concatInputFile, None, pipeline);
     }
 
     public async Task<Command> ConcatSegmenterChannel(
@@ -731,6 +762,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
 
         Option<SubtitleInputFile> subtitleInputFile = Option<SubtitleInputFile>.None;
         Option<WatermarkInputFile> watermarkInputFile = Option<WatermarkInputFile>.None;
+        Option<GraphicsEngineInput> graphicsEngineInput = Option<GraphicsEngineInput>.None;
 
         HardwareAccelerationMode hwAccel = GetHardwareAccelerationMode(playbackSettings, FillerKind.None);
 
@@ -805,6 +837,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             watermarkInputFile,
             subtitleInputFile,
             concatInputFile,
+            graphicsEngineInput,
             vaapiDisplay,
             vaapiDriver,
             vaapiDevice,
@@ -817,7 +850,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         // copy video input options to concat input
         concatInputFile.InputOptions.AddRange(videoInputFile.InputOptions);
 
-        return GetCommand(ffmpegPath, None, None, None, concatInputFile, pipeline);
+        return GetCommand(ffmpegPath, None, None, None, concatInputFile, None, pipeline);
     }
 
     public async Task<Command> WrapSegmenter(
@@ -840,14 +873,15 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
 
         IPipelineBuilder pipelineBuilder = await _pipelineBuilderFactory.GetBuilder(
             HardwareAccelerationMode.None,
-            None,
-            None,
-            None,
-            None,
+            Option<VideoInputFile>.None,
+            Option<AudioInputFile>.None,
+            Option<WatermarkInputFile>.None,
+            Option<SubtitleInputFile>.None,
             concatInputFile,
+            Option<GraphicsEngineInput>.None,
             Option<string>.None,
-            None,
-            None,
+            Option<string>.None,
+            Option<string>.None,
             FileSystemLayout.FFmpegReportsFolder,
             FileSystemLayout.FontsCacheFolder,
             ffmpegPath);
@@ -856,7 +890,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             concatInputFile,
             FFmpegState.Concat(saveReports, channel.Name));
 
-        return GetCommand(ffmpegPath, None, None, None, concatInputFile, pipeline);
+        return GetCommand(ffmpegPath, None, None, None, concatInputFile, None, pipeline);
     }
 
     public async Task<Command> ResizeImage(string ffmpegPath, string inputFile, string outputFile, int height)
@@ -882,20 +916,21 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         IPipelineBuilder pipelineBuilder = await _pipelineBuilderFactory.GetBuilder(
             HardwareAccelerationMode.None,
             videoInputFile,
-            None,
-            None,
-            None,
+            Option<AudioInputFile>.None,
+            Option<WatermarkInputFile>.None,
+            Option<SubtitleInputFile>.None,
             Option<ConcatInputFile>.None,
+            Option<GraphicsEngineInput>.None,
             Option<string>.None,
-            None,
-            None,
+            Option<string>.None,
+            Option<string>.None,
             FileSystemLayout.FFmpegReportsFolder,
             FileSystemLayout.FontsCacheFolder,
             ffmpegPath);
 
         FFmpegPipeline pipeline = pipelineBuilder.Resize(outputFile, new FrameSize(-1, height));
 
-        return GetCommand(ffmpegPath, videoInputFile, None, None, None, pipeline, false);
+        return GetCommand(ffmpegPath, videoInputFile, None, None, None, None, pipeline, false);
     }
 
     public Task<Either<BaseError, string>> GenerateSongImage(
@@ -954,20 +989,21 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         IPipelineBuilder pipelineBuilder = await _pipelineBuilderFactory.GetBuilder(
             HardwareAccelerationMode.None,
             videoInputFile,
-            None,
-            None,
-            None,
+            Option<AudioInputFile>.None,
+            Option<WatermarkInputFile>.None,
+            Option<SubtitleInputFile>.None,
             Option<ConcatInputFile>.None,
+            Option<GraphicsEngineInput>.None,
             Option<string>.None,
-            None,
-            None,
+            Option<string>.None,
+            Option<string>.None,
             FileSystemLayout.FFmpegReportsFolder,
             FileSystemLayout.FontsCacheFolder,
             ffmpegPath);
 
         FFmpegPipeline pipeline = pipelineBuilder.Seek(inputFile, seek);
 
-        return GetCommand(ffmpegPath, videoInputFile, None, None, None, pipeline, false);
+        return GetCommand(ffmpegPath, videoInputFile, None, None, None, None, pipeline, false);
     }
 
     private static Option<WatermarkInputFile> GetWatermarkInputFile(
@@ -1041,6 +1077,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         Option<AudioInputFile> audioInputFile,
         Option<WatermarkInputFile> watermarkInputFile,
         Option<ConcatInputFile> concatInputFile,
+        Option<GraphicsEngineInput> graphicsEngineInput,
         FFmpegPipeline pipeline,
         bool log = true)
     {
@@ -1067,6 +1104,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             audioInputFile,
             watermarkInputFile,
             concatInputFile,
+            graphicsEngineInput,
             pipeline.PipelineSteps,
             pipeline.IsIntelVaapiOrQsv);
 

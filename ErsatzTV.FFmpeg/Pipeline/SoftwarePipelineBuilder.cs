@@ -22,6 +22,7 @@ public class SoftwarePipelineBuilder : PipelineBuilderBase
         Option<WatermarkInputFile> watermarkInputFile,
         Option<SubtitleInputFile> subtitleInputFile,
         Option<ConcatInputFile> concatInputFile,
+        Option<GraphicsEngineInput> graphicsEngineInput,
         string reportsFolder,
         string fontsFolder,
         ILogger logger) : base(
@@ -32,6 +33,7 @@ public class SoftwarePipelineBuilder : PipelineBuilderBase
         watermarkInputFile,
         subtitleInputFile,
         concatInputFile,
+        graphicsEngineInput,
         reportsFolder,
         fontsFolder,
         logger) =>
@@ -76,6 +78,7 @@ public class SoftwarePipelineBuilder : PipelineBuilderBase
         VideoStream videoStream,
         Option<WatermarkInputFile> watermarkInputFile,
         Option<SubtitleInputFile> subtitleInputFile,
+        Option<GraphicsEngineInput> graphicsEngineInput,
         PipelineContext context,
         Option<IDecoder> maybeDecoder,
         FFmpegState ffmpegState,
@@ -85,6 +88,7 @@ public class SoftwarePipelineBuilder : PipelineBuilderBase
     {
         var watermarkOverlayFilterSteps = new List<IPipelineFilterStep>();
         var subtitleOverlayFilterSteps = new List<IPipelineFilterStep>();
+        var graphicsEngineOverlayFilterSteps = new List<IPipelineFilterStep>();
 
         FrameState currentState = desiredState with
         {
@@ -124,6 +128,10 @@ public class SoftwarePipelineBuilder : PipelineBuilderBase
                 desiredState,
                 currentState,
                 watermarkOverlayFilterSteps);
+            SetGraphicsEngine(
+                graphicsEngineInput,
+                desiredState,
+                graphicsEngineOverlayFilterSteps);
         }
 
         // after everything else is done, apply the encoder
@@ -152,8 +160,10 @@ public class SoftwarePipelineBuilder : PipelineBuilderBase
             videoInputFile.FilterSteps,
             watermarkInputFile.Map(wm => wm.FilterSteps).IfNone([]),
             subtitleInputFile.Map(st => st.FilterSteps).IfNone([]),
+            graphicsEngineInput.Map(ge => ge.FilterSteps).IfNone([]),
             watermarkOverlayFilterSteps,
             subtitleOverlayFilterSteps,
+            graphicsEngineOverlayFilterSteps,
             pixelFormatFilterSteps);
     }
 
@@ -296,6 +306,29 @@ public class SoftwarePipelineBuilder : PipelineBuilderBase
                     var subtitlesFilter = new OverlaySubtitleFilter(pf);
                     subtitleOverlayFilterSteps.Add(subtitlesFilter);
                 }
+            }
+        }
+    }
+
+    private static void SetGraphicsEngine(
+        Option<GraphicsEngineInput> graphicsEngineInput,
+        FrameState desiredState,
+        List<IPipelineFilterStep> graphicsEngineOverlayFilterSteps)
+    {
+        foreach (var _ in graphicsEngineInput)
+        {
+            foreach (IPixelFormat desiredPixelFormat in desiredState.PixelFormat)
+            {
+                IPixelFormat pf = desiredPixelFormat;
+                if (desiredPixelFormat is PixelFormatNv12 nv12)
+                {
+                    foreach (IPixelFormat availablePixelFormat in AvailablePixelFormats.ForPixelFormat(nv12.Name, null))
+                    {
+                        pf = availablePixelFormat;
+                    }
+                }
+
+                graphicsEngineOverlayFilterSteps.Add(new OverlayGraphicsEngineFilter(pf));
             }
         }
     }
