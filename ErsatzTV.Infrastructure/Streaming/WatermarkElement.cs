@@ -127,7 +127,9 @@ public class WatermarkElement : IGraphicsElement, IDisposable
             case "LinearFadePoints":
             {
                 if (args.Parameters.Length != 5)
+                {
                     throw new ArgumentException("LinearFadePoints() requires 5 arguments.");
+                }
 
                 double time = Convert.ToDouble(args.Parameters[0].Evaluate(), CultureInfo.CurrentCulture);
                 double start = Convert.ToDouble(args.Parameters[1].Evaluate(), CultureInfo.CurrentCulture);
@@ -141,7 +143,9 @@ public class WatermarkElement : IGraphicsElement, IDisposable
             case "LinearFadeDuration":
             {
                 if (args.Parameters.Length != 4)
+                {
                     throw new ArgumentException("LinearFadeDuration() requires 4 arguments.");
+                }
 
                 double time = Convert.ToDouble(args.Parameters[0].Evaluate(), CultureInfo.CurrentCulture);
                 double start = Convert.ToDouble(args.Parameters[1].Evaluate(), CultureInfo.CurrentCulture);
