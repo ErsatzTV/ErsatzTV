@@ -14,6 +14,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - `content_total_seconds` - the total number of seconds in the content
     - `channel_seconds` - the total number of seconds the frame is from when the channel started/activated
     - `time_of_day_seconds` - the total number of seconds the frame is since midnight
+  - The expression can also use functions:
+    - `LinearFadeDuration(time, start, fadeSeconds, peakSeconds)`
+    - `LinearFadePoints(time, start, peakStart, peakEnd, end)`
 
 ### Fix
 - Fix database operations that were slowing down playout builds
