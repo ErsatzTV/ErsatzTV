@@ -121,6 +121,7 @@ public class WatermarkElement : IGraphicsElement, IDisposable
         object context,
         TimeSpan timeOfDay,
         TimeSpan contentTime,
+        TimeSpan contentTotalTime,
         TimeSpan channelTime,
         CancellationToken cancellationToken)
     {
@@ -130,6 +131,7 @@ public class WatermarkElement : IGraphicsElement, IDisposable
         }
 
         _expression.Parameters["content_seconds"] = contentTime.TotalSeconds;
+        _expression.Parameters["content_total_seconds"] = contentTotalTime.TotalSeconds;
         _expression.Parameters["channel_seconds"] = channelTime.TotalSeconds;
         _expression.Parameters["time_of_day_seconds"] = timeOfDay.TotalSeconds;
 
