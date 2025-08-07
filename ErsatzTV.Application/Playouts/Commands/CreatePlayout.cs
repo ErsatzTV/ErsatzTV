@@ -7,7 +7,7 @@ public record CreatePlayout(int ChannelId, ProgramSchedulePlayoutType ProgramSch
     : IRequest<Either<BaseError, CreatePlayoutResponse>>;
 
 public record CreateFloodPlayout(int ChannelId, int ProgramScheduleId)
-    : CreatePlayout(ChannelId, ProgramSchedulePlayoutType.Flood);
+    : CreatePlayout(ChannelId, ProgramSchedulePlayoutType.Classic);
 
 public record CreateBlockPlayout(int ChannelId)
     : CreatePlayout(ChannelId, ProgramSchedulePlayoutType.Block);

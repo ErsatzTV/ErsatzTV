@@ -26,14 +26,15 @@ public class BlockPlayoutPreviewBuilder(
 
     protected override ILogger Logger => NullLogger.Instance;
 
-    public override async Task<Playout> Build(
+    public override async Task<PlayoutBuildResult> Build(
         Playout playout,
+        PlayoutReferenceData referenceData,
         PlayoutBuildMode mode,
         CancellationToken cancellationToken)
     {
         _randomizedCollections.Add(playout.Channel.UniqueId, []);
 
-        Playout result = await base.Build(playout, mode, cancellationToken);
+        PlayoutBuildResult result = await base.Build(playout, referenceData, mode, cancellationToken);
 
         _randomizedCollections.Remove(playout.Channel.UniqueId);
 
@@ -44,6 +45,7 @@ public class BlockPlayoutPreviewBuilder(
 
     protected override IMediaCollectionEnumerator GetEnumerator(
         Playout playout,
+        PlayoutReferenceData referenceData,
         BlockItem blockItem,
         DateTimeOffset currentTime,
         string historyKey,
@@ -51,13 +53,14 @@ public class BlockPlayoutPreviewBuilder(
     {
         IMediaCollectionEnumerator enumerator = base.GetEnumerator(
             playout,
+            referenceData,
             blockItem,
             currentTime,
             historyKey,
             collectionMediaItems);
 
         var collectionKey = CollectionKey.ForBlockItem(blockItem);
-        if (!_randomizedCollections[playout.Channel.UniqueId].Contains(collectionKey))
+        if (!_randomizedCollections[referenceData.Channel.UniqueId].Contains(collectionKey))
         {
             enumerator.ResetState(
                 new CollectionEnumeratorState
@@ -66,7 +69,7 @@ public class BlockPlayoutPreviewBuilder(
                     Index = new Random().Next(collectionMediaItems[collectionKey].Count)
                 });
 
-            _randomizedCollections[playout.Channel.UniqueId].Add(collectionKey);
+            _randomizedCollections[referenceData.Channel.UniqueId].Add(collectionKey);
         }
 
         return enumerator;

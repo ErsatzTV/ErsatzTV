@@ -114,6 +114,7 @@ public class YamlPlayoutDurationHandler(EnumeratorCache enumeratorCache) : YamlP
 
                 var playoutItem = new PlayoutItem
                 {
+                    PlayoutId = context.Playout.Id,
                     MediaItemId = mediaItem.Id,
                     Start = context.CurrentTime.UtcDateTime,
                     Finish = context.CurrentTime.UtcDateTime + itemDuration,
@@ -138,7 +139,7 @@ public class YamlPlayoutDurationHandler(EnumeratorCache enumeratorCache) : YamlP
 
                 if (remainingToFill - itemDuration >= TimeSpan.Zero || !stopBeforeEnd)
                 {
-                    context.Playout.Items.Add(playoutItem);
+                    context.AddedItems.Add(playoutItem);
                     context.AdvanceGuideGroup();
 
                     // create history record
@@ -152,7 +153,7 @@ public class YamlPlayoutDurationHandler(EnumeratorCache enumeratorCache) : YamlP
 
                     foreach (PlayoutHistory history in maybeHistory)
                     {
-                        context.Playout.PlayoutHistory.Add(history);
+                        context.AddedHistory.Add(history);
                     }
 
                     remainingToFill -= itemDuration;
@@ -172,7 +173,7 @@ public class YamlPlayoutDurationHandler(EnumeratorCache enumeratorCache) : YamlP
                     playoutItem.Finish = targetTime.UtcDateTime;
                     playoutItem.OutPoint = playoutItem.Finish - playoutItem.Start;
 
-                    context.Playout.Items.Add(playoutItem);
+                    context.AddedItems.Add(playoutItem);
                     context.AdvanceGuideGroup();
 
                     // create history record
@@ -186,7 +187,7 @@ public class YamlPlayoutDurationHandler(EnumeratorCache enumeratorCache) : YamlP
 
                     foreach (PlayoutHistory history in maybeHistory)
                     {
-                        context.Playout.PlayoutHistory.Add(history);
+                        context.AddedHistory.Add(history);
                     }
 
                     remainingToFill = TimeSpan.Zero;
@@ -209,7 +210,7 @@ public class YamlPlayoutDurationHandler(EnumeratorCache enumeratorCache) : YamlP
                             playoutItem.Finish = targetTime.UtcDateTime;
                             playoutItem.FillerKind = FillerKind.Fallback;
 
-                            context.Playout.Items.Add(playoutItem);
+                            context.AddedItems.Add(playoutItem);
 
                             // create history record
                             List<PlayoutHistory> maybeHistory = GetHistoryForItem(
@@ -222,7 +223,7 @@ public class YamlPlayoutDurationHandler(EnumeratorCache enumeratorCache) : YamlP
 
                             foreach (PlayoutHistory history in maybeHistory)
                             {
-                                context.Playout.PlayoutHistory.Add(history);
+                                context.AddedHistory.Add(history);
                             }
 
                             fallback.MoveNext();

@@ -741,6 +741,7 @@ public class PlayoutModeSchedulerBaseTests : SchedulerTestBase
             IScheduleItemsEnumerator enumerator = Substitute.For<IScheduleItemsEnumerator>();
 
             var state = new PlayoutBuilderState(
+                0,
                 enumerator,
                 None,
                 None,

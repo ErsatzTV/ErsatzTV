@@ -192,7 +192,7 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
         {
             switch (playout.ProgramSchedulePlayoutType)
             {
-                case ProgramSchedulePlayoutType.Flood:
+                case ProgramSchedulePlayoutType.Classic:
                 case ProgramSchedulePlayoutType.Yaml:
                     var floodSorted = playouts
                         .Collect(p => p.Items)

@@ -21,7 +21,7 @@ public class ResetAllPlayoutsHandler(
         {
             switch (playout.ProgramSchedulePlayoutType)
             {
-                case ProgramSchedulePlayoutType.Flood:
+                case ProgramSchedulePlayoutType.Classic:
                 case ProgramSchedulePlayoutType.Block:
                 case ProgramSchedulePlayoutType.Yaml:
                     if (!locker.IsPlayoutLocked(playout.Id))

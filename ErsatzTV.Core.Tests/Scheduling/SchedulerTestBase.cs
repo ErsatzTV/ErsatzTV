@@ -13,6 +13,7 @@ public abstract class SchedulerTestBase
     };
 
     protected static PlayoutBuilderState StartState(IScheduleItemsEnumerator scheduleItemsEnumerator) => new(
+        1,
         scheduleItemsEnumerator,
         None,
         None,

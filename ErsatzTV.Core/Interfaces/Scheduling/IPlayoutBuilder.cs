@@ -8,5 +8,9 @@ public interface IPlayoutBuilder
     public bool TrimStart { get; set; }
     public Playlist DebugPlaylist { get; set; }
 
-    Task<Playout> Build(Playout playout, PlayoutBuildMode mode, CancellationToken cancellationToken);
+    Task<PlayoutBuildResult> Build(
+        Playout playout,
+        PlayoutReferenceData referenceData,
+        PlayoutBuildMode mode,
+        CancellationToken cancellationToken);
 }

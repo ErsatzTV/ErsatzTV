@@ -1,5 +1,6 @@
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
+using ErsatzTV.Core.Domain.Scheduling;
 using ErsatzTV.Core.Scheduling.YamlScheduling.Models;
 using Newtonsoft.Json;
 
@@ -23,6 +24,10 @@ public class YamlPlayoutContext(Playout playout, YamlPlayoutDefinition definitio
     private Option<MidRollSequence> _midRollSequence;
 
     public Playout Playout { get; } = playout;
+
+    public List<PlayoutItem> AddedItems { get; } = [];
+
+    public List<PlayoutHistory> AddedHistory { get; } = [];
 
     public YamlPlayoutDefinition Definition { get; } = definition;
 

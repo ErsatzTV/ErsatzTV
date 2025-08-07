@@ -88,6 +88,7 @@ public class TvContext : DbContext
     public DbSet<ProgramSchedule> ProgramSchedules { get; set; }
     public DbSet<ProgramScheduleItem> ProgramScheduleItems { get; set; }
     public DbSet<Playout> Playouts { get; set; }
+    public DbSet<PlayoutHistory> PlayoutHistory { get; set; }
     public DbSet<ProgramScheduleAlternate> ProgramScheduleAlternates { get; set; }
     public DbSet<PlayoutItem> PlayoutItems { get; set; }
     public DbSet<PlayoutProgramScheduleAnchor> PlayoutProgramScheduleItemAnchors { get; set; }

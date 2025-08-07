@@ -3,6 +3,7 @@
 namespace ErsatzTV.Core.Scheduling;
 
 public record PlayoutBuilderState(
+    int PlayoutId,
     IScheduleItemsEnumerator ScheduleItemsEnumerator,
     Option<int> MultipleRemaining,
     Option<DateTimeOffset> DurationFinish,

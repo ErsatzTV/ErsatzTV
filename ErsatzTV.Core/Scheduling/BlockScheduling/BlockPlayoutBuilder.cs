@@ -27,16 +27,19 @@ public class BlockPlayoutBuilder(
 
     protected virtual ILogger Logger => logger;
 
-    public virtual async Task<Playout> Build(
+    public virtual async Task<PlayoutBuildResult> Build(
         Playout playout,
+        PlayoutReferenceData referenceData,
         PlayoutBuildMode mode,
         CancellationToken cancellationToken)
     {
+        var result = PlayoutBuildResult.Empty;
+
         Logger.LogDebug(
             "Building block playout {PlayoutId} for channel {ChannelNumber} - {ChannelName}",
             playout.Id,
-            playout.Channel.Number,
-            playout.Channel.Name);
+            referenceData.Channel.Number,
+            referenceData.Channel.Name);
 
         List<PlaybackOrder> allowedPlaybackOrders =
         [
@@ -53,38 +56,41 @@ public class BlockPlayoutBuilder(
 
         // get blocks to schedule
         List<EffectiveBlock> blocksToSchedule =
-            EffectiveBlock.GetEffectiveBlocks(playout.Templates, start, daysToBuild);
+            EffectiveBlock.GetEffectiveBlocks(referenceData.PlayoutTemplates, start, daysToBuild);
 
         // get all collection items for the playout
         Map<CollectionKey, List<MediaItem>> collectionMediaItems = await GetCollectionMediaItems(blocksToSchedule);
         if (collectionMediaItems.Values.All(v => v.Count == 0))
         {
             logger.LogWarning("There are no media items to schedule");
-            return playout;
+            return result;
         }
 
         Map<CollectionKey, string> collectionEtags = GetCollectionEtags(collectionMediaItems);
 
         Dictionary<PlayoutItem, BlockKey> itemBlockKeys =
-            BlockPlayoutChangeDetection.GetPlayoutItemToBlockKeyMap(playout);
+            BlockPlayoutChangeDetection.GetPlayoutItemToBlockKeyMap(referenceData);
 
         // remove items without a block key (shouldn't happen often, just upgrades)
-        playout.Items.RemoveAll(i => !itemBlockKeys.ContainsKey(i));
+        foreach (var item in referenceData.ExistingItems.Where(i => !itemBlockKeys.ContainsKey(i)))
+        {
+            result.ItemsToRemove.Add(item.Id);
+        }
 
         // remove old items
         // importantly, this should not remove their history
-        playout.Items.RemoveAll(i => i.FinishOffset < start);
+        result = result with { RemoveBefore = start };
 
         (List<EffectiveBlock> updatedEffectiveBlocks, List<PlayoutItem> playoutItemsToRemove) =
             BlockPlayoutChangeDetection.FindUpdatedItems(
-                playout.Items,
+                referenceData.ExistingItems,
                 itemBlockKeys,
                 blocksToSchedule,
                 collectionEtags);
 
         foreach (PlayoutItem playoutItem in playoutItemsToRemove)
         {
-            BlockPlayoutChangeDetection.RemoveItemAndHistory(playout, playoutItem);
+            result = BlockPlayoutChangeDetection.RemoveItemAndHistory(playout, playoutItem, result);
         }
 
         DateTimeOffset currentTime = start;
@@ -140,6 +146,7 @@ public class BlockPlayoutBuilder(
 
                 IMediaCollectionEnumerator enumerator = GetEnumerator(
                     playout,
+                    referenceData,
                     blockItem,
                     currentTime,
                     historyKey,
@@ -161,6 +168,7 @@ public class BlockPlayoutBuilder(
                     // create a playout item
                     var playoutItem = new PlayoutItem
                     {
+                        PlayoutId = playout.Id,
                         MediaItemId = mediaItem.Id,
                         Start = currentTime.UtcDateTime,
                         Finish = currentTime.UtcDateTime + itemDuration,
@@ -195,7 +203,7 @@ public class BlockPlayoutBuilder(
                         break;
                     }
 
-                    playout.Items.Add(playoutItem);
+                    result.AddedItems.Add(playoutItem);
 
                     // create a playout history record
                     var nextHistory = new PlayoutHistory
@@ -210,7 +218,7 @@ public class BlockPlayoutBuilder(
                     };
 
                     //logger.LogDebug("Adding history item: {When}: {History}", nextHistory.When, nextHistory.Details);
-                    playout.PlayoutHistory.Add(nextHistory);
+                    result.AddedHistory.Add(nextHistory);
 
                     currentTime += itemDuration;
                     enumerator.MoveNext();
@@ -223,9 +231,9 @@ public class BlockPlayoutBuilder(
             }
         }
 
-        CleanUpHistory(playout, start);
+        result = CleanUpHistory(referenceData, start, result);
 
-        return playout;
+        return result;
     }
 
     protected virtual async Task<int> GetDaysToBuild() =>
@@ -235,6 +243,7 @@ public class BlockPlayoutBuilder(
 
     protected virtual IMediaCollectionEnumerator GetEnumerator(
         Playout playout,
+        PlayoutReferenceData referenceData,
         BlockItem blockItem,
         DateTimeOffset currentTime,
         string historyKey,
@@ -249,27 +258,29 @@ public class BlockPlayoutBuilder(
             PlaybackOrder.Chronological => BlockPlayoutEnumerator.Chronological(
                 collectionItems,
                 currentTime,
-                playout,
+                referenceData.PlayoutHistory,
                 blockItem,
                 historyKey,
                 Logger),
             PlaybackOrder.SeasonEpisode => BlockPlayoutEnumerator.SeasonEpisode(
                 collectionItems,
                 currentTime,
-                playout,
+                referenceData.PlayoutHistory,
                 blockItem,
                 historyKey,
                 Logger),
             PlaybackOrder.Shuffle => BlockPlayoutEnumerator.Shuffle(
                 collectionItems,
                 currentTime,
-                playout,
+                playout.Seed,
+                referenceData.PlayoutHistory,
                 blockItem,
                 historyKey),
             PlaybackOrder.RandomRotation => BlockPlayoutEnumerator.RandomRotation(
                 collectionItems,
                 currentTime,
-                playout,
+                playout.Seed,
+                referenceData.PlayoutHistory,
                 blockItem,
                 historyKey),
             _ => new RandomizedMediaCollectionEnumerator(
@@ -297,10 +308,10 @@ public class BlockPlayoutBuilder(
         return $"{showTitle}s{e.Season.SeasonNumber:00}{numbersString} - {titlesString}";
     }
 
-    private static void CleanUpHistory(Playout playout, DateTimeOffset start)
+    private static PlayoutBuildResult CleanUpHistory(PlayoutReferenceData referenceData, DateTimeOffset start, PlayoutBuildResult result)
     {
         var groups = new Dictionary<string, List<PlayoutHistory>>();
-        foreach (PlayoutHistory history in playout.PlayoutHistory)
+        foreach (PlayoutHistory history in referenceData.PlayoutHistory.Append(result.AddedHistory))
         {
             var key = $"{history.BlockId}-{history.Key}";
             if (!groups.TryGetValue(key, out List<PlayoutHistory> group))
@@ -323,9 +334,18 @@ public class BlockPlayoutBuilder(
 
             foreach (PlayoutHistory delete in toDelete)
             {
-                playout.PlayoutHistory.Remove(delete);
+                if (delete.Id > 0)
+                {
+                    result.HistoryToRemove.Add(delete.Id);
+                }
+                else
+                {
+                    result.AddedHistory.Remove(delete);
+                }
             }
         }
+
+        return result;
     }
 
     private async Task<Map<CollectionKey, List<MediaItem>>> GetCollectionMediaItems(

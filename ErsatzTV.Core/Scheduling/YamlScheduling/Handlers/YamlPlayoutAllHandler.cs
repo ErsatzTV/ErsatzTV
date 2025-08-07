@@ -46,6 +46,7 @@ public class YamlPlayoutAllHandler(EnumeratorCache enumeratorCache) : YamlPlayou
                     // create a playout item
                     var playoutItem = new PlayoutItem
                     {
+                        PlayoutId = context.Playout.Id,
                         MediaItemId = mediaItem.Id,
                         Start = context.CurrentTime.UtcDateTime,
                         Finish = context.CurrentTime.UtcDateTime + itemDuration,
@@ -91,7 +92,7 @@ public class YamlPlayoutAllHandler(EnumeratorCache enumeratorCache) : YamlPlayou
 
                     foreach (PlayoutHistory history in maybeHistory)
                     {
-                        context.Playout.PlayoutHistory.Add(history);
+                        context.AddedHistory.Add(history);
                     }
 
                     enumerator.MoveNext();
