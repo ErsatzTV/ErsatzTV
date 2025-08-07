@@ -463,6 +463,8 @@ public class HlsSessionWorker : IHlsSessionWorker
 
                 try
                 {
+                    using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+
                     var processWithPipe = process;
                     foreach (var graphicsEngineContext in processModel.GraphicsEngineContext)
                     {
@@ -474,13 +476,13 @@ public class HlsSessionWorker : IHlsSessionWorker
                         _ = _graphicsEngine.Run(
                             graphicsEngineContext,
                             pipe.Writer,
-                            cancellationToken);
+                            linkedCts.Token);
                     }
 
                     CommandResult commandResult = await processWithPipe
                         .WithStandardErrorPipe(PipeTarget.ToStringBuilder(stdErrBuffer))
                         .WithValidation(CommandResultValidation.None)
-                        .ExecuteAsync(cancellationToken);
+                        .ExecuteAsync(linkedCts.Token);
 
                     if (commandResult.ExitCode == 0)
                     {
@@ -493,6 +495,8 @@ public class HlsSessionWorker : IHlsSessionWorker
                     }
                     else
                     {
+                        await linkedCts.CancelAsync();
+
                         // detect the non-zero exit code and transcode the ffmpeg error message instead
                         string errorMessage = stdErrBuffer.ToString();
                         if (string.IsNullOrWhiteSpace(errorMessage))
@@ -515,6 +519,7 @@ public class HlsSessionWorker : IHlsSessionWorker
                                 processModel.MaybeDuration,
                                 processModel.Until,
                                 errorMessage),
+                            // ReSharper disable once PossiblyMistakenUseOfCancellationToken
                             cancellationToken);
 
                         foreach (PlayoutItemProcessModel errorProcessModel in maybeOfflineProcess.RightAsEnumerable())
@@ -527,6 +532,7 @@ public class HlsSessionWorker : IHlsSessionWorker
 
                             commandResult = await errorProcess
                                 .WithValidation(CommandResultValidation.None)
+                                // ReSharper disable once PossiblyMistakenUseOfCancellationToken
                                 .ExecuteBufferedAsync(Encoding.UTF8, cancellationToken);
 
                             if (commandResult.ExitCode == 0)

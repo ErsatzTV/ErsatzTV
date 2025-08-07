@@ -1,11 +1,13 @@
+using System.IO.Pipelines;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using CliWrap;
-using CliWrap.Buffered;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Locking;
+using ErsatzTV.Core.Interfaces.Streaming;
+using ErsatzTV.Core.Interfaces.Troubleshooting;
 using ErsatzTV.Core.Notifications;
 using ErsatzTV.FFmpeg.Runtime;
 using Microsoft.Extensions.Logging;
@@ -13,9 +15,11 @@ using Microsoft.Extensions.Logging;
 namespace ErsatzTV.Application.Troubleshooting;
 
 public class StartTroubleshootingPlaybackHandler(
+    ITroubleshootingNotifier notifier,
     IMediator mediator,
     IEntityLocker entityLocker,
     IRuntimeInfo runtimeInfo,
+    IGraphicsEngine graphicsEngine,
     ILogger<StartTroubleshootingPlaybackHandler> logger)
     : IRequestHandler<StartTroubleshootingPlayback>
 {
@@ -83,17 +87,56 @@ public class StartTroubleshootingPlaybackHandler(
                     cancellationToken);
             }
 
-            logger.LogDebug("ffmpeg troubleshooting arguments {FFmpegArguments}", request.Command.Arguments);
+            logger.LogDebug("ffmpeg troubleshooting arguments {FFmpegArguments}", request.PlayoutItemResult.Process.Arguments);
 
-            BufferedCommandResult result = await request.Command
-                .WithValidation(CommandResultValidation.None)
-                .ExecuteBufferedAsync(cancellationToken);
+            var maybePipe = Option<Pipe>.None;
 
-            await mediator.Publish(
-                new PlaybackTroubleshootingCompletedNotification(result.ExitCode),
-                cancellationToken);
+            try
+            {
+                using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
-            logger.LogDebug("Troubleshooting playback completed with exit code {ExitCode}", result.ExitCode);
+                var processWithPipe = request.PlayoutItemResult.Process;
+                foreach (var graphicsEngineContext in request.PlayoutItemResult.GraphicsEngineContext)
+                {
+                    var pipe = new Pipe();
+                    maybePipe = pipe;
+                    processWithPipe = processWithPipe.WithStandardInputPipe(PipeSource.FromStream(pipe.Reader.AsStream()));
+
+                    // fire and forget graphics engine task
+                    _ = graphicsEngine.Run(
+                        graphicsEngineContext,
+                        pipe.Writer,
+                        linkedCts.Token);
+                }
+
+                CommandResult commandResult = await processWithPipe
+                    .WithStandardErrorPipe(PipeTarget.Null)
+                    .WithValidation(CommandResultValidation.None)
+                    .ExecuteAsync(linkedCts.Token);
+
+                await mediator.Publish(
+                    new PlaybackTroubleshootingCompletedNotification(commandResult.ExitCode),
+                    linkedCts.Token);
+
+                logger.LogDebug("Troubleshooting playback completed with exit code {ExitCode}", commandResult.ExitCode);
+
+                if (commandResult.ExitCode != 0)
+                {
+                    await linkedCts.CancelAsync();
+                    notifier.NotifyFailed(request.SessionId);
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+            finally
+            {
+                foreach (var pipe in maybePipe)
+                {
+                    await pipe.Writer.CompleteAsync();
+                }
+            }
         }
         finally
         {

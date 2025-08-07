@@ -1,11 +1,12 @@
 using System.Threading.Channels;
-using CliWrap;
 using ErsatzTV.Application;
 using ErsatzTV.Application.MediaItems;
 using ErsatzTV.Application.Troubleshooting;
 using ErsatzTV.Application.Troubleshooting.Queries;
 using ErsatzTV.Core;
+using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Metadata;
+using ErsatzTV.Core.Interfaces.Troubleshooting;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,6 +16,7 @@ namespace ErsatzTV.Controllers.Api;
 public class TroubleshootController(
     ChannelWriter<IFFmpegWorkerRequest> channelWriter,
     ILocalFileSystem localFileSystem,
+    ITroubleshootingNotifier notifier,
     IMediator mediator) : ControllerBase
 {
     [HttpHead("api/troubleshoot/playback.m3u8")]
@@ -32,50 +34,75 @@ public class TroubleshootController(
         bool startFromBeginning,
         CancellationToken cancellationToken)
     {
-        Either<BaseError, Command> result = await mediator.Send(
-            new PrepareTroubleshootingPlayback(mediaItem, ffmpegProfile, watermark, subtitleId, startFromBeginning),
-            cancellationToken);
+        try
+        {
+            Either<BaseError, PlayoutItemResult> result = await mediator.Send(
+                new PrepareTroubleshootingPlayback(mediaItem, ffmpegProfile, watermark, subtitleId, startFromBeginning),
+                cancellationToken);
 
-        return await result.MatchAsync<IActionResult>(
-            async command =>
+            if (result.IsLeft)
             {
-                Either<BaseError, MediaItemInfo> maybeMediaInfo = await mediator.Send(new GetMediaItemInfo(mediaItem), cancellationToken);
+                return NotFound();
+            }
+
+            foreach (var playoutItemResult in result.RightToSeq())
+            {
+                Either<BaseError, MediaItemInfo> maybeMediaInfo =
+                    await mediator.Send(new GetMediaItemInfo(mediaItem), cancellationToken);
                 foreach (MediaItemInfo mediaInfo in maybeMediaInfo.RightToSeq())
                 {
-                    TroubleshootingInfo troubleshootingInfo = await mediator.Send(
-                        new GetTroubleshootingInfo(),
-                        cancellationToken);
+                    var sessionId = Guid.NewGuid();
 
-                    // filter ffmpeg profiles
-                    troubleshootingInfo.FFmpegProfiles.RemoveAll(p => p.Id != ffmpegProfile);
-
-                    // filter watermarks
-                    troubleshootingInfo.Watermarks.RemoveAll(p => p.Id != watermark);
-
-                    await channelWriter.WriteAsync(
-                        new StartTroubleshootingPlayback(command, mediaInfo, troubleshootingInfo),
-                        cancellationToken);
-
-                    string playlistFile = Path.Combine(
-                        FileSystemLayout.TranscodeFolder,
-                        ".troubleshooting",
-                        "live.m3u8");
-
-                    while (!localFileSystem.FileExists(playlistFile))
+                    try
                     {
-                        await Task.Delay(TimeSpan.FromMilliseconds(250), cancellationToken);
-                        if (cancellationToken.IsCancellationRequested)
+                        TroubleshootingInfo troubleshootingInfo = await mediator.Send(
+                            new GetTroubleshootingInfo(),
+                            cancellationToken);
+
+                        // filter ffmpeg profiles
+                        troubleshootingInfo.FFmpegProfiles.RemoveAll(p => p.Id != ffmpegProfile);
+
+                        // filter watermarks
+                        troubleshootingInfo.Watermarks.RemoveAll(p => p.Id != watermark);
+
+                        await channelWriter.WriteAsync(
+                            new StartTroubleshootingPlayback(sessionId, playoutItemResult, mediaInfo,
+                                troubleshootingInfo),
+                            cancellationToken);
+
+                        string playlistFile = Path.Combine(
+                            FileSystemLayout.TranscodeFolder,
+                            ".troubleshooting",
+                            "live.m3u8");
+
+                        while (!localFileSystem.FileExists(playlistFile))
                         {
-                            break;
+                            await Task.Delay(TimeSpan.FromMilliseconds(250), cancellationToken);
+                            if (cancellationToken.IsCancellationRequested || notifier.IsFailed(sessionId))
+                            {
+                                break;
+                            }
                         }
+
+                        if (!notifier.IsFailed(sessionId))
+                        {
+                            return Redirect("~/iptv/session/.troubleshooting/live.m3u8");
+                        }
+
                     }
-
-                    return Redirect("~/iptv/session/.troubleshooting/live.m3u8");
+                    finally
+                    {
+                        notifier.RemoveSession(sessionId);
+                    }
                 }
+            }
+        }
+        catch (Exception)
+        {
+            // do nothing
+        }
 
-                return NotFound();
-            },
-            _ => NotFound());
+        return NotFound();
     }
 
     [HttpHead("api/troubleshoot/playback/archive")]

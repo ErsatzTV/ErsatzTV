@@ -29,9 +29,9 @@ public class PrepareTroubleshootingPlaybackHandler(
     ILocalFileSystem localFileSystem,
     IEntityLocker entityLocker,
     ILogger<PrepareTroubleshootingPlaybackHandler> logger)
-    : IRequestHandler<PrepareTroubleshootingPlayback, Either<BaseError, Command>>
+    : IRequestHandler<PrepareTroubleshootingPlayback, Either<BaseError, PlayoutItemResult>>
 {
-    public async Task<Either<BaseError, Command>> Handle(PrepareTroubleshootingPlayback request, CancellationToken cancellationToken)
+    public async Task<Either<BaseError, PlayoutItemResult>> Handle(PrepareTroubleshootingPlayback request, CancellationToken cancellationToken)
     {
         try
         {
@@ -39,7 +39,7 @@ public class PrepareTroubleshootingPlaybackHandler(
             Validation<BaseError, Tuple<MediaItem, string, string, FFmpegProfile>> validation = await Validate(dbContext, request);
             return await validation.Match(
                 tuple => GetProcess(dbContext, request, tuple.Item1, tuple.Item2, tuple.Item3, tuple.Item4),
-                error => Task.FromResult<Either<BaseError, Command>>(error.Join()));
+                error => Task.FromResult<Either<BaseError, PlayoutItemResult>>(error.Join()));
         }
         catch (Exception ex)
         {
@@ -49,7 +49,7 @@ public class PrepareTroubleshootingPlaybackHandler(
         }
     }
 
-    private async Task<Either<BaseError, Command>> GetProcess(
+    private async Task<Either<BaseError, PlayoutItemResult>> GetProcess(
         TvContext dbContext,
         PrepareTroubleshootingPlayback request,
         MediaItem mediaItem,
@@ -150,9 +150,7 @@ public class PrepareTroubleshootingPlaybackHandler(
             FileSystemLayout.TranscodeTroubleshootingFolder,
             _ => { });
 
-        // TODO: graphics engine?
-
-        return playoutItemResult.Process;
+        return playoutItemResult;
     }
 
     private static async Task<List<Subtitle>> GetSelectedSubtitle(MediaItem mediaItem, PrepareTroubleshootingPlayback request)
