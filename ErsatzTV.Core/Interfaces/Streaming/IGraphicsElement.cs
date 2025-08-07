@@ -12,6 +12,7 @@ public interface IGraphicsElement
         object context,
         TimeSpan timeOfDay,
         TimeSpan contentTime,
+        TimeSpan contentTotalTime,
         TimeSpan channelTime,
         CancellationToken cancellationToken);
 }

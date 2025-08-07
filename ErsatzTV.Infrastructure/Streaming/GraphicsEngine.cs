@@ -35,6 +35,9 @@ public class GraphicsEngine(ILogger<GraphicsEngine> logger) : IGraphicsEngine
 
         try
         {
+            // `content_total_seconds` - the total number of seconds in the content
+            var contentTotalTime = context.Seek + context.Duration;
+
             while (!cancellationToken.IsCancellationRequested && frameCount < totalFrames)
             {
                 // seconds since this specific stream started
@@ -64,7 +67,13 @@ public class GraphicsEngine(ILogger<GraphicsEngine> logger) : IGraphicsEngine
                         {
                             if (!element.IsFailed)
                             {
-                                element.Draw(ctx, frameTime.TimeOfDay, contentTime, channelTime, cancellationToken);
+                                element.Draw(
+                                    ctx,
+                                    frameTime.TimeOfDay,
+                                    contentTime,
+                                    contentTotalTime,
+                                    channelTime,
+                                    cancellationToken);
                             }
                         }
                         catch (Exception ex)
