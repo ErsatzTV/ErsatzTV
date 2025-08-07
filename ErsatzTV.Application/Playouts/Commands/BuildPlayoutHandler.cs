@@ -124,6 +124,13 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
                     .ExecuteDeleteAsync(cancellationToken);
             }
 
+            if (result.ItemsToRemove.Count > 0)
+            {
+                changeCount += await dbContext.PlayoutItems
+                    .Where(pi => result.ItemsToRemove.Contains(pi.Id))
+                    .ExecuteDeleteAsync(cancellationToken);
+            }
+
             if (result.AddedItems.Count > 0)
             {
                 changeCount += 1;
