@@ -147,6 +147,7 @@ public class BlockPlayoutBuilder(
                 IMediaCollectionEnumerator enumerator = GetEnumerator(
                     playout,
                     referenceData,
+                    result,
                     blockItem,
                     currentTime,
                     historyKey,
@@ -244,6 +245,7 @@ public class BlockPlayoutBuilder(
     protected virtual IMediaCollectionEnumerator GetEnumerator(
         Playout playout,
         PlayoutReferenceData referenceData,
+        PlayoutBuildResult result,
         BlockItem blockItem,
         DateTimeOffset currentTime,
         string historyKey,
@@ -258,14 +260,14 @@ public class BlockPlayoutBuilder(
             PlaybackOrder.Chronological => BlockPlayoutEnumerator.Chronological(
                 collectionItems,
                 currentTime,
-                referenceData.PlayoutHistory,
+                referenceData.PlayoutHistory.Append(result.AddedHistory).ToList(),
                 blockItem,
                 historyKey,
                 Logger),
             PlaybackOrder.SeasonEpisode => BlockPlayoutEnumerator.SeasonEpisode(
                 collectionItems,
                 currentTime,
-                referenceData.PlayoutHistory,
+                referenceData.PlayoutHistory.Append(result.AddedHistory).ToList(),
                 blockItem,
                 historyKey,
                 Logger),
@@ -273,14 +275,14 @@ public class BlockPlayoutBuilder(
                 collectionItems,
                 currentTime,
                 playout.Seed,
-                referenceData.PlayoutHistory,
+                referenceData.PlayoutHistory.Append(result.AddedHistory).ToList(),
                 blockItem,
                 historyKey),
             PlaybackOrder.RandomRotation => BlockPlayoutEnumerator.RandomRotation(
                 collectionItems,
                 currentTime,
                 playout.Seed,
-                referenceData.PlayoutHistory,
+                referenceData.PlayoutHistory.Append(result.AddedHistory).ToList(),
                 blockItem,
                 historyKey),
             _ => new RandomizedMediaCollectionEnumerator(

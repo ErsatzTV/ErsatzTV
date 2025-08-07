@@ -46,6 +46,7 @@ public class BlockPlayoutPreviewBuilder(
     protected override IMediaCollectionEnumerator GetEnumerator(
         Playout playout,
         PlayoutReferenceData referenceData,
+        PlayoutBuildResult result,
         BlockItem blockItem,
         DateTimeOffset currentTime,
         string historyKey,
@@ -54,6 +55,7 @@ public class BlockPlayoutPreviewBuilder(
         IMediaCollectionEnumerator enumerator = base.GetEnumerator(
             playout,
             referenceData,
+            result,
             blockItem,
             currentTime,
             historyKey,
