@@ -31,6 +31,7 @@ using ErsatzTV.Core.Interfaces.Scripting;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Interfaces.Streaming;
 using ErsatzTV.Core.Interfaces.Trakt;
+using ErsatzTV.Core.Interfaces.Troubleshooting;
 using ErsatzTV.Core.Jellyfin;
 using ErsatzTV.Core.Metadata;
 using ErsatzTV.Core.Plex;
@@ -39,6 +40,7 @@ using ErsatzTV.Core.Scheduling.BlockScheduling;
 using ErsatzTV.Core.Scheduling.YamlScheduling;
 using ErsatzTV.Core.Search;
 using ErsatzTV.Core.Trakt;
+using ErsatzTV.Core.Troubleshooting;
 using ErsatzTV.FFmpeg.Capabilities;
 using ErsatzTV.FFmpeg.Pipeline;
 using ErsatzTV.FFmpeg.Runtime;
@@ -614,6 +616,7 @@ public class Startup
         services.AddSingleton<ISearchTargets, SearchTargets>();
         services.AddSingleton<ISmartCollectionCache, SmartCollectionCache>();
         services.AddSingleton<SearchQueryParser>();
+        services.AddSingleton<ITroubleshootingNotifier, TroubleshootingNotifier>();
 
         if (SearchHelper.IsElasticSearchEnabled)
         {

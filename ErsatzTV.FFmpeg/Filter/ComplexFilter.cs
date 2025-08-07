@@ -91,7 +91,7 @@ public class ComplexFilter : IPipelineStep
             }
         }
 
-        foreach ((string path, _) in _maybeSubtitleInputFile)
+        foreach ((string path, _) in _maybeSubtitleInputFile.Filter(s => s.IsImageBased))
         {
             if (!distinctPaths.Contains(path))
             {
@@ -149,7 +149,7 @@ public class ComplexFilter : IPipelineStep
         }
 
         foreach (SubtitleInputFile subtitleInputFile in _maybeSubtitleInputFile.Filter(s =>
-                     s.Method == SubtitleMethod.Burn))
+                     s is { IsImageBased: true, Method: SubtitleMethod.Burn }))
         {
             int inputIndex = distinctPaths.IndexOf(subtitleInputFile.Path);
             foreach ((int index, _, _) in subtitleInputFile.Streams)

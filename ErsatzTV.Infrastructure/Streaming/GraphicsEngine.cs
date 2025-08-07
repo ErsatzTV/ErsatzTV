@@ -87,6 +87,10 @@ public class GraphicsEngine(ILogger<GraphicsEngine> logger) : IGraphicsEngine
                 frameCount++;
             }
         }
+        catch (Exception)
+        {
+            // do nothing; don't want to throw on a background task
+        }
         finally
         {
             await pipeWriter.CompleteAsync();

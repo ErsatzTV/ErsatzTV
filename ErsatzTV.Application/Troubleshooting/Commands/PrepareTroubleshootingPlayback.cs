@@ -1,5 +1,5 @@
-using CliWrap;
 using ErsatzTV.Core;
+using ErsatzTV.Core.Interfaces.FFmpeg;
 
 namespace ErsatzTV.Application.Troubleshooting;
 
@@ -9,4 +9,4 @@ public record PrepareTroubleshootingPlayback(
     int WatermarkId,
     int? SubtitleId,
     bool StartFromBeginning)
-    : IRequest<Either<BaseError, Command>>;
+    : IRequest<Either<BaseError, PlayoutItemResult>>;
