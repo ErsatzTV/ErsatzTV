@@ -8,10 +8,10 @@ namespace ErsatzTV.Core.Scheduling.BlockScheduling;
 
 internal static class BlockPlayoutChangeDetection
 {
-    public static Dictionary<PlayoutItem, BlockKey> GetPlayoutItemToBlockKeyMap(Playout playout)
+    public static Dictionary<PlayoutItem, BlockKey> GetPlayoutItemToBlockKeyMap(PlayoutReferenceData referenceData)
     {
         var itemBlockKeys = new Dictionary<PlayoutItem, BlockKey>();
-        foreach (PlayoutItem item in playout.Items)
+        foreach (PlayoutItem item in referenceData.ExistingItems)
         {
             if (!string.IsNullOrWhiteSpace(item.BlockKey))
             {
@@ -46,8 +46,7 @@ internal static class BlockPlayoutChangeDetection
         {
             foreach (PlayoutItem playoutItem in playoutItems)
             {
-                int blockId = itemBlockKeys[playoutItem].b;
-                if (effectiveBlock.Block.Id != blockId)
+                if (!itemBlockKeys.TryGetValue(playoutItem, out var blockKey) || effectiveBlock.Block.Id != blockKey.b)
                 {
                     continue;
                 }
@@ -127,7 +126,10 @@ internal static class BlockPlayoutChangeDetection
         // find affected playout items
         foreach (PlayoutItem item in playoutItems)
         {
-            BlockKey blockKey = itemBlockKeys[item];
+            if (!itemBlockKeys.TryGetValue(item, out BlockKey blockKey))
+            {
+                continue;
+            }
 
             bool blockKeyIsAffected = earliestEffectiveBlocks.TryGetValue(blockKey, out DateTimeOffset value) &&
                                       value <= item.StartOffset;
@@ -144,16 +146,18 @@ internal static class BlockPlayoutChangeDetection
         return Tuple(updatedBlocks.ToList(), playoutItems.Filter(i => updatedItemIds.Contains(i.Id)).ToList());
     }
 
-    public static void RemoveItemAndHistory(Playout playout, PlayoutItem playoutItem)
+    public static PlayoutBuildResult RemoveItemAndHistory(Playout playout, PlayoutItem playoutItem, PlayoutBuildResult result)
     {
-        playout.Items.Remove(playoutItem);
+        result.ItemsToRemove.Add(playoutItem.Id);
 
         Option<PlayoutHistory> historyToRemove = playout.PlayoutHistory
             .Find(h => h.When == playoutItem.Start);
 
         foreach (PlayoutHistory history in historyToRemove)
         {
-            playout.PlayoutHistory.Remove(history);
+            result.HistoryToRemove.Add(history.Id);
         }
+
+        return result;
     }
 }

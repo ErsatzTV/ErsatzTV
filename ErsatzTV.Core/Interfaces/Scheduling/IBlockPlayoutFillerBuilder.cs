@@ -5,5 +5,10 @@ namespace ErsatzTV.Core.Interfaces.Scheduling;
 
 public interface IBlockPlayoutFillerBuilder
 {
-    Task<Playout> Build(Playout playout, PlayoutBuildMode mode, CancellationToken cancellationToken);
+    Task<PlayoutBuildResult> Build(
+        Playout playout,
+        PlayoutReferenceData referenceData,
+        PlayoutBuildResult result,
+        PlayoutBuildMode mode,
+        CancellationToken cancellationToken);
 }

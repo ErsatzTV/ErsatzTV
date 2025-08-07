@@ -53,13 +53,25 @@ public class PreviewBlockPlayoutHandler(
                     MonthsOfYear = PlayoutTemplate.AllMonthsOfYear(),
                     Template = template
                 }
-            ]
+            ],
+            ProgramSchedule = new ProgramSchedule(),
+            ProgramScheduleAlternates = []
         };
 
-        await blockPlayoutBuilder.Build(playout, PlayoutBuildMode.Reset, cancellationToken);
+        var referenceData = new PlayoutReferenceData(
+            playout.Channel,
+            Option<Deco>.None,
+            playout.Items,
+            playout.Templates.ToList(),
+            playout.ProgramSchedule,
+            playout.ProgramScheduleAlternates,
+            playout.PlayoutHistory.ToList());
+
+        PlayoutBuildResult result =
+            await blockPlayoutBuilder.Build(playout, referenceData, PlayoutBuildMode.Reset, cancellationToken);
 
         // load playout item details for title
-        foreach (PlayoutItem playoutItem in playout.Items)
+        foreach (PlayoutItem playoutItem in result.AddedItems)
         {
             Option<MediaItem> maybeMediaItem = await dbContext.MediaItems
                 .AsNoTracking()

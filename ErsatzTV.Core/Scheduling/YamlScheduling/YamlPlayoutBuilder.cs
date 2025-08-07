@@ -23,12 +23,18 @@ public class YamlPlayoutBuilder(
     ILogger<YamlPlayoutBuilder> logger)
     : IYamlPlayoutBuilder
 {
-    public async Task<Playout> Build(Playout playout, PlayoutBuildMode mode, CancellationToken cancellationToken)
+    public async Task<PlayoutBuildResult> Build(
+        Playout playout,
+        PlayoutReferenceData referenceData,
+        PlayoutBuildMode mode,
+        CancellationToken cancellationToken)
     {
+        var result = PlayoutBuildResult.Empty;
+
         if (!localFileSystem.FileExists(playout.TemplateFile))
         {
             logger.LogWarning("YAML playout file {File} does not exist; aborting.", playout.TemplateFile);
-            return playout;
+            return result;
         }
 
         Option<YamlPlayoutDefinition> maybePlayoutDefinition =
@@ -36,7 +42,7 @@ public class YamlPlayoutBuilder(
         if (maybePlayoutDefinition.IsNone)
         {
             logger.LogWarning("YAML playout file {File} is invalid; aborting.", playout.TemplateFile);
-            return playout;
+            return result;
         }
 
         // using ValueUnsafe to avoid nesting
@@ -55,7 +61,7 @@ public class YamlPlayoutBuilder(
                     if (!File.Exists(path))
                     {
                         logger.LogError("YAML playout import {File} does not exist.", path);
-                        return playout;
+                        return result;
                     }
                 }
 
@@ -76,7 +82,7 @@ public class YamlPlayoutBuilder(
                 if (maybeImportedDefinition.IsNone)
                 {
                     logger.LogWarning("YAML playout import {File} is invalid; aborting.", import);
-                    return playout;
+                    return result;
                 }
             }
             catch (Exception ex)
@@ -109,7 +115,7 @@ public class YamlPlayoutBuilder(
 
         // remove old items
         // importantly, this should not remove their history
-        playout.Items.RemoveAll(i => i.FinishOffset < start);
+        result = result with { RemoveBefore = start };
 
         // load saved state
         if (mode is not PlayoutBuildMode.Reset)
@@ -127,17 +133,17 @@ public class YamlPlayoutBuilder(
             // start = start.AddHours(-2);
 
             // erase items, not history
-            playout.Items.Clear();
+            result = result with { ClearItems = true };
 
             // remove any future or "currently active" history items
             // this prevents "walking" the playout forward by repeatedly resetting
             var toRemove = new List<PlayoutHistory>();
             toRemove.AddRange(
-                playout.PlayoutHistory.Filter(h =>
+                referenceData.PlayoutHistory.Filter(h =>
                     h.When > start.UtcDateTime || h.When <= start.UtcDateTime && h.Finish >= start.UtcDateTime));
             foreach (PlayoutHistory history in toRemove)
             {
-                playout.PlayoutHistory.Remove(history);
+                result.HistoryToRemove.Add(history.Id);
             }
         }
 
@@ -151,7 +157,7 @@ public class YamlPlayoutBuilder(
         var applyHistoryHandler = new YamlPlayoutApplyHistoryHandler(enumeratorCache);
         foreach (YamlPlayoutContentItem contentItem in playoutDefinition.Content)
         {
-            await applyHistoryHandler.Handle(context, contentItem, logger, cancellationToken);
+            await applyHistoryHandler.Handle(referenceData, context, contentItem, logger, cancellationToken);
         }
 
         if (mode is PlayoutBuildMode.Reset)
@@ -189,7 +195,7 @@ public class YamlPlayoutBuilder(
         if (DetectCycle(context.Definition))
         {
             logger.LogError("YAML sequence contains a cycle; unable to build playout");
-            return playout;
+            return result;
         }
 
         var flattenCount = 0;
@@ -245,12 +251,12 @@ public class YamlPlayoutBuilder(
             }
         }
 
-        CleanUpHistory(playout, start);
+        result = CleanUpHistory(referenceData, start, result);
 
         DateTime maxTime = context.CurrentTime.UtcDateTime;
-        if (playout.Items.Count > 0)
+        if (context.AddedItems.Count > 0)
         {
-            maxTime = playout.Items.Max(i => i.Finish);
+            maxTime = context.AddedItems.Max(i => i.Finish);
         }
 
         var anchor = new PlayoutAnchor
@@ -268,7 +274,9 @@ public class YamlPlayoutBuilder(
 
         playout.Anchor = anchor;
 
-        return playout;
+        result.AddedItems.AddRange(context.AddedItems);
+
+        return result;
     }
 
     private async Task ExecuteSequence(
@@ -477,10 +485,13 @@ public class YamlPlayoutBuilder(
         }
     }
 
-    private static void CleanUpHistory(Playout playout, DateTimeOffset start)
+    private static PlayoutBuildResult CleanUpHistory(
+        PlayoutReferenceData referenceData,
+        DateTimeOffset start,
+        PlayoutBuildResult result)
     {
         var groups = new Dictionary<string, List<PlayoutHistory>>();
-        foreach (PlayoutHistory history in playout.PlayoutHistory)
+        foreach (PlayoutHistory history in referenceData.PlayoutHistory)
         {
             if (!groups.TryGetValue(history.Key, out List<PlayoutHistory> group))
             {
@@ -509,9 +520,11 @@ public class YamlPlayoutBuilder(
 
                 foreach (PlayoutHistory delete in toDelete)
                 {
-                    playout.PlayoutHistory.Remove(delete);
+                    result.HistoryToRemove.Add(delete.Id);
                 }
             }
         }
+
+        return result;
     }
 }

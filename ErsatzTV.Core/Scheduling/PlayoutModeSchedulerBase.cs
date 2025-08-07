@@ -132,6 +132,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
 
                 var playoutItem = new PlayoutItem
                 {
+                    PlayoutId = playoutBuilderState.PlayoutId,
                     MediaItemId = IdForMediaItem(mediaItem),
                     Start = nextState.CurrentTime.UtcDateTime,
                     Finish = nextState.CurrentTime.UtcDateTime + itemDuration,
@@ -177,6 +178,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
             {
                 var playoutItem = new PlayoutItem
                 {
+                    PlayoutId = playoutBuilderState.PlayoutId,
                     MediaItemId = mediaItem.Id,
                     Start = nextState.CurrentTime.UtcDateTime,
                     Finish = nextItemStart.UtcDateTime,
@@ -753,6 +755,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
 
                 var playoutItem = new PlayoutItem
                 {
+                    PlayoutId = playoutBuilderState.PlayoutId,
                     MediaItemId = IdForMediaItem(mediaItem),
                     Start = new DateTime(2020, 2, 1, 0, 0, 0, DateTimeKind.Utc),
                     Finish = new DateTime(2020, 2, 1, 0, 0, 0, DateTimeKind.Utc) + itemDuration,
@@ -797,6 +800,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
 
                     var playoutItem = new PlayoutItem
                     {
+                        PlayoutId = playoutBuilderState.PlayoutId,
                         MediaItemId = IdForMediaItem(mediaItem),
                         Start = new DateTime(2020, 2, 1, 0, 0, 0, DateTimeKind.Utc),
                         Finish = new DateTime(2020, 2, 1, 0, 0, 0, DateTimeKind.Utc) + itemDuration,
@@ -846,6 +850,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
             {
                 var result = new PlayoutItem
                 {
+                    PlayoutId = playoutBuilderState.PlayoutId,
                     MediaItemId = mediaItem.Id,
                     Start = new DateTime(2020, 2, 1, 0, 0, 0, DateTimeKind.Utc),
                     Finish = new DateTime(2020, 2, 1, 0, 0, 0, DateTimeKind.Utc) + duration,

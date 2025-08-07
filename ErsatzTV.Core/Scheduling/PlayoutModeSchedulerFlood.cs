@@ -65,6 +65,7 @@ public class PlayoutModeSchedulerFlood : PlayoutModeSchedulerBase<ProgramSchedul
 
             var playoutItem = new PlayoutItem
             {
+                PlayoutId = playoutBuilderState.PlayoutId,
                 MediaItemId = mediaItem.Id,
                 Start = itemStartTime.UtcDateTime,
                 Finish = itemStartTime.UtcDateTime + itemDuration,

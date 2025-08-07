@@ -14,6 +14,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - `channel_seconds` - the total number of seconds the frame is from when the channel started/activated
     - `time_of_day_seconds` - the total number of seconds the frame is since midnight
 
+### Fix
+- Fix database operations that were slowing down playout builds
+  - YAML playouts in particular should build significantly faster
+
 ### Changed
 - Allow multiple watermarks on a single playout item
 - YAML playout: `watermark` instruction changes:

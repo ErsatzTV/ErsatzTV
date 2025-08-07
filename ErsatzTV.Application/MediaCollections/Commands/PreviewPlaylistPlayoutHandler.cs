@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using ErsatzTV.Application.Scheduling;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Domain.Scheduling;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using ErsatzTV.Core.Scheduling;
@@ -31,20 +32,30 @@ public class PreviewPlaylistPlayoutHandler(
                 Name = "Playlist Preview"
             },
             Items = [],
-            ProgramSchedulePlayoutType = ProgramSchedulePlayoutType.Flood,
+            ProgramSchedulePlayoutType = ProgramSchedulePlayoutType.Classic,
             PlayoutHistory = [],
             ProgramSchedule = new ProgramSchedule
             {
                 Items = [MapToScheduleItem(request)]
             },
             ProgramScheduleAlternates = [],
-            FillGroupIndices = []
+            FillGroupIndices = [],
+            Templates = []
         };
+
+        var referenceData = new PlayoutReferenceData(
+            playout.Channel,
+            Option<Deco>.None,
+            playout.Items,
+            playout.Templates.ToList(),
+            new ProgramSchedule(),
+            playout.ProgramScheduleAlternates.ToList(),
+            playout.PlayoutHistory.ToList());
 
         // TODO: make an explicit method to preview, this is ugly
         playoutBuilder.TrimStart = false;
         playoutBuilder.DebugPlaylist = playout.ProgramSchedule.Items[0].Playlist;
-        await playoutBuilder.Build(playout, PlayoutBuildMode.Reset, cancellationToken);
+        var result = await playoutBuilder.Build(playout, referenceData, PlayoutBuildMode.Reset, cancellationToken);
 
         var maxItems = 0;
         Dictionary<PlaylistItem, List<MediaItem>> map =
@@ -62,10 +73,10 @@ public class PreviewPlaylistPlayoutHandler(
         }
 
         // limit preview to once through the playlist
-        playout.Items = playout.Items.Take(maxItems).ToList();
+        var onceThrough = result.AddedItems.Take(maxItems).ToList();
 
         // load playout item details for title
-        foreach (PlayoutItem playoutItem in playout.Items)
+        foreach (PlayoutItem playoutItem in onceThrough)
         {
             Option<MediaItem> maybeMediaItem = await dbContext.MediaItems
                 .AsNoTracking()
@@ -95,7 +106,7 @@ public class PreviewPlaylistPlayoutHandler(
             }
         }
 
-        return playout.Items.OrderBy(i => i.StartOffset).Map(Scheduling.Mapper.ProjectToViewModel).ToList();
+        return onceThrough.OrderBy(i => i.StartOffset).Map(Scheduling.Mapper.ProjectToViewModel).ToList();
     }
 
     private static ProgramScheduleItemFlood MapToScheduleItem(PreviewPlaylistPlayout request) =>

@@ -36,6 +36,7 @@ public class PlayoutModeSchedulerOne : PlayoutModeSchedulerBase<ProgramScheduleI
 
             var playoutItem = new PlayoutItem
             {
+                PlayoutId = playoutBuilderState.PlayoutId,
                 MediaItemId = mediaItem.Id,
                 Start = itemStartTime.UtcDateTime,
                 Finish = itemStartTime.UtcDateTime + itemDuration,

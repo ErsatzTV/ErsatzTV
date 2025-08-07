@@ -10,13 +10,13 @@ public static class BlockPlayoutEnumerator
     public static IMediaCollectionEnumerator Chronological(
         List<MediaItem> collectionItems,
         DateTimeOffset currentTime,
-        Playout playout,
+        List<PlayoutHistory> playoutHistory,
         BlockItem blockItem,
         string historyKey,
         ILogger logger)
     {
         DateTime historyTime = currentTime.UtcDateTime;
-        Option<PlayoutHistory> maybeHistory = playout.PlayoutHistory
+        Option<PlayoutHistory> maybeHistory = playoutHistory
             .Filter(h => h.BlockId == blockItem.BlockId)
             .Filter(h => h.Key == historyKey)
             .Filter(h => h.When < historyTime)
@@ -45,13 +45,13 @@ public static class BlockPlayoutEnumerator
     public static IMediaCollectionEnumerator SeasonEpisode(
         List<MediaItem> collectionItems,
         DateTimeOffset currentTime,
-        Playout playout,
+        List<PlayoutHistory> playoutHistory,
         BlockItem blockItem,
         string historyKey,
         ILogger logger)
     {
         DateTime historyTime = currentTime.UtcDateTime;
-        Option<PlayoutHistory> maybeHistory = playout.PlayoutHistory
+        Option<PlayoutHistory> maybeHistory = playoutHistory
             .Filter(h => h.BlockId == blockItem.BlockId)
             .Filter(h => h.Key == historyKey)
             .Filter(h => h.When < historyTime)
@@ -80,19 +80,20 @@ public static class BlockPlayoutEnumerator
     public static IMediaCollectionEnumerator Shuffle(
         List<MediaItem> collectionItems,
         DateTimeOffset currentTime,
-        Playout playout,
+        int playoutSeed,
+        List<PlayoutHistory> playoutHistory,
         BlockItem blockItem,
         string historyKey)
     {
         DateTime historyTime = currentTime.UtcDateTime;
-        Option<PlayoutHistory> maybeHistory = playout.PlayoutHistory
+        Option<PlayoutHistory> maybeHistory = playoutHistory
             .Filter(h => h.BlockId == blockItem.BlockId)
             .Filter(h => h.Key == historyKey)
             .Filter(h => h.When < historyTime)
             .OrderByDescending(h => h.When)
             .HeadOrNone();
 
-        var state = new CollectionEnumeratorState { Seed = playout.Seed + blockItem.BlockId, Index = 0 };
+        var state = new CollectionEnumeratorState { Seed = playoutSeed + blockItem.BlockId, Index = 0 };
         foreach (PlayoutHistory h in maybeHistory)
         {
             state.Index = h.Index + 1;
@@ -111,18 +112,19 @@ public static class BlockPlayoutEnumerator
     public static IMediaCollectionEnumerator Shuffle(
         List<MediaItem> collectionItems,
         DateTimeOffset currentTime,
-        Playout playout,
+        int playoutSeed,
+        List<PlayoutHistory> playoutHistory,
         Deco deco,
         string historyKey)
     {
         DateTime historyTime = currentTime.UtcDateTime;
-        Option<PlayoutHistory> maybeHistory = playout.PlayoutHistory
+        Option<PlayoutHistory> maybeHistory = playoutHistory
             .Filter(h => h.Key == historyKey)
             .Filter(h => h.When < historyTime)
             .OrderByDescending(h => h.When)
             .HeadOrNone();
 
-        var state = new CollectionEnumeratorState { Seed = playout.Seed + deco.Id, Index = 0 };
+        var state = new CollectionEnumeratorState { Seed = playoutSeed + deco.Id, Index = 0 };
         foreach (PlayoutHistory h in maybeHistory)
         {
             state.Index = h.Index + 1;
@@ -141,19 +143,20 @@ public static class BlockPlayoutEnumerator
     public static IMediaCollectionEnumerator RandomRotation(
         List<MediaItem> collectionItems,
         DateTimeOffset currentTime,
-        Playout playout,
+        int playoutSeed,
+        List<PlayoutHistory> playoutHistory,
         BlockItem blockItem,
         string historyKey)
     {
         DateTime historyTime = currentTime.UtcDateTime;
-        Option<PlayoutHistory> maybeHistory = playout.PlayoutHistory
+        Option<PlayoutHistory> maybeHistory = playoutHistory
             .Filter(h => h.BlockId == blockItem.BlockId)
             .Filter(h => h.Key == historyKey)
             .Filter(h => h.When < historyTime)
             .OrderByDescending(h => h.When)
             .HeadOrNone();
 
-        var state = new CollectionEnumeratorState { Seed = playout.Seed + blockItem.BlockId, Index = 0 };
+        var state = new CollectionEnumeratorState { Seed = playoutSeed + blockItem.BlockId, Index = 0 };
         foreach (PlayoutHistory h in maybeHistory)
         {
             // Make sure to only increase the index by 1 since we can only

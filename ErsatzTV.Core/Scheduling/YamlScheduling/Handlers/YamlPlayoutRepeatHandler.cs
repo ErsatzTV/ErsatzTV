@@ -22,13 +22,13 @@ public class YamlPlayoutRepeatHandler : IYamlPlayoutHandler
             return Task.FromResult(false);
         }
 
-        if (context.VisitedAll && _itemsSinceLastRepeat == context.Playout.Items.Count)
+        if (context.VisitedAll && _itemsSinceLastRepeat == context.AddedItems.Count)
         {
             logger.LogWarning("Repeat encountered without adding any playout items; aborting");
             throw new InvalidOperationException("YAML playout loop detected");
         }
 
-        _itemsSinceLastRepeat = context.Playout.Items.Count;
+        _itemsSinceLastRepeat = context.AddedItems.Count;
         context.InstructionIndex = 0;
         return Task.FromResult(true);
     }

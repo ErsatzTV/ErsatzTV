@@ -89,6 +89,7 @@ public class PlayoutModeSchedulerMultiple : PlayoutModeSchedulerBase<ProgramSche
 
             var playoutItem = new PlayoutItem
             {
+                PlayoutId = playoutBuilderState.PlayoutId,
                 MediaItemId = mediaItem.Id,
                 Start = itemStartTime.UtcDateTime,
                 Finish = itemStartTime.UtcDateTime + itemDuration,
