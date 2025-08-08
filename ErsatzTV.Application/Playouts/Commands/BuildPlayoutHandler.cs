@@ -161,8 +161,6 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
 
                 if (anyGraphicsElements)
                 {
-                    Console.WriteLine("has graphics elements!");
-
                     // copy playout item ids back to graphics elements
                     var allGraphicsElements = result.AddedItems.SelectMany(item =>
                         item.PlayoutItemGraphicsElements.Select(graphicsElement =>

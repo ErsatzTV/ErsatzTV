@@ -89,7 +89,8 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
             .ThenInclude(d => d.Watermark)
 
             // get graphics elements
-            .Include(i => i.GraphicsElements)
+            .Include(i => i.PlayoutItemGraphicsElements)
+            .ThenInclude(pige => pige.GraphicsElement)
 
             // get playout templates (and deco templates/decos)
             .Include(i => i.Playout)
@@ -344,7 +345,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 effectiveNow,
                 playoutItemWatermarks,
                 maybeGlobalWatermark,
-                playoutItemWithPath.PlayoutItem.GraphicsElements,
+                playoutItemWithPath.PlayoutItem.PlayoutItemGraphicsElements,
                 channel.FFmpegProfile.VaapiDisplay,
                 channel.FFmpegProfile.VaapiDriver,
                 channel.FFmpegProfile.VaapiDevice,

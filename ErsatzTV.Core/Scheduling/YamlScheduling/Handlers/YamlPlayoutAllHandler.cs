@@ -79,13 +79,14 @@ public class YamlPlayoutAllHandler(EnumeratorCache enumeratorCache) : YamlPlayou
                             });
                     }
 
-                    foreach (int graphicsElementId in context.GetGraphicsElementIds())
+                    foreach ((int graphicsElementId, string variablesJson) in context.GetGraphicsElements())
                     {
                         playoutItem.PlayoutItemGraphicsElements.Add(
                             new PlayoutItemGraphicsElement
                             {
                                 PlayoutItem = playoutItem,
-                                GraphicsElementId = graphicsElementId
+                                GraphicsElementId = graphicsElementId,
+                                Variables = variablesJson
                             });
                     }
 
