@@ -32,6 +32,8 @@ public class PlayoutItem
     public string CollectionKey { get; set; }
     public string CollectionEtag { get; set; }
     public List<PlayoutItemWatermark> PlayoutItemWatermarks { get; set; }
+    public List<GraphicsElement> GraphicsElements { get; set; }
+    public List<PlayoutItemGraphicsElement> PlayoutItemGraphicsElements { get; set; }
     public DateTimeOffset StartOffset => new DateTimeOffset(Start, TimeSpan.Zero).ToLocalTime();
     public DateTimeOffset FinishOffset => new DateTimeOffset(Finish, TimeSpan.Zero).ToLocalTime();
 

@@ -1,4 +1,5 @@
 using System.IO.Pipelines;
+using ErsatzTV.Core;
 using ErsatzTV.Core.Interfaces.Streaming;
 using Microsoft.Extensions.Logging;
 using SixLabors.ImageSharp;
@@ -11,18 +12,23 @@ public class GraphicsEngine(ILogger<GraphicsEngine> logger) : IGraphicsEngine
 {
     public async Task Run(GraphicsEngineContext context, PipeWriter pipeWriter, CancellationToken cancellationToken)
     {
+        GraphicsEngineFonts.LoadFonts(FileSystemLayout.FontsCacheFolder);
+
         var elements = new List<IGraphicsElement>();
         foreach (var element in context.Elements)
         {
             switch (element)
             {
                 case WatermarkElementContext watermarkElementContext:
-                    var watermark = new WatermarkElement(watermarkElementContext.Options);
+                    var watermark = new WatermarkElement(watermarkElementContext.Options, logger);
                     if (watermark.IsValid)
                     {
                         elements.Add(watermark);
                     }
 
+                    break;
+                case TextElementContext textElementContext:
+                    elements.Add(new TextElement(textElementContext.TextElement, logger));
                     break;
             }
         }

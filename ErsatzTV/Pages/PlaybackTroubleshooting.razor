@@ -1,5 +1,6 @@
 @page "/system/troubleshooting/playback"
 @using ErsatzTV.Application.FFmpegProfiles
+@using ErsatzTV.Application.Graphics
 @using ErsatzTV.Application.MediaItems
 @using ErsatzTV.Application.Troubleshooting
 @using ErsatzTV.Application.Troubleshooting.Queries
@@ -56,6 +57,18 @@
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                 <div class="d-flex">
+                    <MudText>Subtitle</MudText>
+                </div>
+                <MudSelect @bind-Value="_subtitleId" For="@(() => _subtitleId)" Clearable="true">
+                    <MudSelectItem T="int?" Value="@((int?)null)">(none)</MudSelectItem>
+                    @foreach (SubtitleViewModel subtitleStream in _subtitleStreams)
+                    {
+                        <MudSelectItem T="int?" Value="@subtitleStream.Id">@($"{subtitleStream.Id}: {subtitleStream.Language} - {subtitleStream.Title} ({subtitleStream.Codec})")</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
                     <MudText>Watermarks</MudText>
                 </div>
                 <MudSelect T="string" @bind-SelectedValues="_watermarkNames" Clearable="true" MultiSelection="true">
@@ -67,13 +80,12 @@
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                 <div class="d-flex">
-                    <MudText>Subtitle</MudText>
+                    <MudText>Graphics Elements</MudText>
                 </div>
-                <MudSelect @bind-Value="_subtitleId" For="@(() => _subtitleId)" Clearable="true">
-                    <MudSelectItem T="int?" Value="@((int?)null)">(none)</MudSelectItem>
-                    @foreach (SubtitleViewModel subtitleStream in _subtitleStreams)
+                <MudSelect T="string" @bind-SelectedValues="_graphicsElementNames" Clearable="true" MultiSelection="true">
+                    @foreach (GraphicsElementViewModel graphicsElement in _graphicsElements)
                     {
-                        <MudSelectItem T="int?" Value="@subtitleStream.Id">@($"{subtitleStream.Id}: {subtitleStream.Language} - {subtitleStream.Title} ({subtitleStream.Codec})")</MudSelectItem>
+                        <MudSelectItem T="string" Value="@graphicsElement.Name">@graphicsElement.Name</MudSelectItem>
                     }
                 </MudSelect>
             </MudStack>
@@ -121,9 +133,11 @@
     private readonly List<FFmpegProfileViewModel> _ffmpegProfiles = [];
     private readonly List<WatermarkViewModel> _watermarks = [];
     private readonly List<SubtitleViewModel> _subtitleStreams = [];
+    private readonly List<GraphicsElementViewModel> _graphicsElements = [];
     private MediaItemInfo _info;
     private int _ffmpegProfileId;
     private IEnumerable<string> _watermarkNames = new System.Collections.Generic.HashSet<string>();
+    private IEnumerable<string> _graphicsElementNames = new System.Collections.Generic.HashSet<string>();
     private int? _subtitleId;
     private bool _startFromBeginning;
     private bool _hasPlayed;
@@ -155,6 +169,9 @@
         _watermarks.Clear();
         _watermarks.AddRange(await Mediator.Send(new GetAllWatermarks(), _cts.Token));
 
+        _graphicsElements.Clear();
+        _graphicsElements.AddRange(await Mediator.Send(new GetAllGraphicsElements(), _cts.Token));
+
         if (MediaItemId is not null)
         {
             await OnMediaItemIdChanged(MediaItemId);
@@ -173,6 +190,13 @@
             foreach (var watermark in _watermarks.Where(wm => wm.Name == watermarkName))
             {
                 uri.Query += $"&watermark={watermark.Id}";
+            }
+        }
+        foreach (var graphicsElementName in _graphicsElementNames)
+        {
+            foreach (var graphicsElement in _graphicsElements.Where(ge => ge.Name == graphicsElementName))
+            {
+                uri.Query += $"&graphicsElement={graphicsElement.Id}";
             }
         }
         if (_subtitleId is not null)
@@ -216,6 +240,7 @@
     private async Task DownloadResults()
     {
         var uri = $"api/troubleshoot/playback/archive?mediaItem={MediaItemId ?? 0}&ffmpegProfile={_ffmpegProfileId}&startFromBeginning={_startFromBeginning}";
+
         foreach (var watermarkName in _watermarkNames)
         {
             foreach (var watermark in _watermarks.Where(wm => wm.Name == watermarkName))
@@ -223,6 +248,15 @@
                 uri += $"&watermark={watermark.Id}";
             }
         }
+
+        foreach (var graphicsElementName in _graphicsElementNames)
+        {
+            foreach (var graphicsElement in _graphicsElements.Where(ge => ge.Name == graphicsElementName))
+            {
+                uri += $"&graphicsElement={graphicsElement.Id}";
+            }
+        }
+
         await JsRuntime.InvokeVoidAsync("window.open", uri);
     }
 

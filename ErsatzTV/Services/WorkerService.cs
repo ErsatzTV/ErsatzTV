@@ -3,6 +3,7 @@ using System.Threading.Channels;
 using Bugsnag;
 using ErsatzTV.Application;
 using ErsatzTV.Application.Channels;
+using ErsatzTV.Application.Graphics;
 using ErsatzTV.Application.Maintenance;
 using ErsatzTV.Application.MediaCollections;
 using ErsatzTV.Application.Playouts;
@@ -102,6 +103,9 @@ public class WorkerService : BackgroundService
                             break;
                         case MatchTraktListItems matchTraktListItems:
                             await mediator.Send(matchTraktListItems, stoppingToken);
+                            break;
+                        case RefreshGraphicsElements refreshGraphicsElements:
+                            await mediator.Send(refreshGraphicsElements, stoppingToken);
                             break;
 #if !DEBUG_NO_SYNC
                         case ExtractEmbeddedSubtitles extractEmbeddedSubtitles:

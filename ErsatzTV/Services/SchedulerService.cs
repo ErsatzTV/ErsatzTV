@@ -4,6 +4,7 @@ using Bugsnag;
 using ErsatzTV.Application;
 using ErsatzTV.Application.Channels;
 using ErsatzTV.Application.Emby;
+using ErsatzTV.Application.Graphics;
 using ErsatzTV.Application.Jellyfin;
 using ErsatzTV.Application.Maintenance;
 using ErsatzTV.Application.MediaCollections;
@@ -127,6 +128,8 @@ public class SchedulerService : BackgroundService
 #endif
             await RefreshTraktLists(cancellationToken);
             await MatchTraktLists(cancellationToken);
+
+            await RefreshGraphicsElements(cancellationToken);
 
             await ReleaseMemory(cancellationToken);
         }
@@ -366,6 +369,9 @@ public class SchedulerService : BackgroundService
             }
         }
     }
+
+    private ValueTask RefreshGraphicsElements(CancellationToken cancellationToken) =>
+        _workerChannel.WriteAsync(new RefreshGraphicsElements(), cancellationToken);
 
     private ValueTask DeleteOrphanedArtwork(CancellationToken cancellationToken) =>
         _workerChannel.WriteAsync(new DeleteOrphanedArtwork(), cancellationToken);

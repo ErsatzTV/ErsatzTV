@@ -849,6 +849,25 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.ToTable("Genre");
                 });
 
+            modelBuilder.Entity("ErsatzTV.Core.Domain.GraphicsElement", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Path")
+                        .HasColumnType("longtext");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("GraphicsElement", (string)null);
+                });
+
             modelBuilder.Entity("ErsatzTV.Core.Domain.ImageFolderDuration", b =>
                 {
                     b.Property<int>("Id")
@@ -1892,6 +1911,21 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.HasIndex("PlayoutId");
 
                     b.ToTable("PlayoutItem", (string)null);
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.PlayoutItemGraphicsElement", b =>
+                {
+                    b.Property<int>("PlayoutItemId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("GraphicsElementId")
+                        .HasColumnType("int");
+
+                    b.HasKey("PlayoutItemId", "GraphicsElementId");
+
+                    b.HasIndex("GraphicsElementId");
+
+                    b.ToTable("PlayoutItemGraphicsElement");
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.PlayoutItemWatermark", b =>
@@ -4635,6 +4669,25 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Navigation("Playout");
                 });
 
+            modelBuilder.Entity("ErsatzTV.Core.Domain.PlayoutItemGraphicsElement", b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.GraphicsElement", "GraphicsElement")
+                        .WithMany("PlayoutItemGraphicsElements")
+                        .HasForeignKey("GraphicsElementId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ErsatzTV.Core.Domain.PlayoutItem", "PlayoutItem")
+                        .WithMany("PlayoutItemGraphicsElements")
+                        .HasForeignKey("PlayoutItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("GraphicsElement");
+
+                    b.Navigation("PlayoutItem");
+                });
+
             modelBuilder.Entity("ErsatzTV.Core.Domain.PlayoutItemWatermark", b =>
                 {
                     b.HasOne("ErsatzTV.Core.Domain.PlayoutItem", "PlayoutItem")
@@ -5806,6 +5859,11 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Navigation("Writers");
                 });
 
+            modelBuilder.Entity("ErsatzTV.Core.Domain.GraphicsElement", b =>
+                {
+                    b.Navigation("PlayoutItemGraphicsElements");
+                });
+
             modelBuilder.Entity("ErsatzTV.Core.Domain.ImageMetadata", b =>
                 {
                     b.Navigation("Actors");
@@ -5962,6 +6020,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.PlayoutItem", b =>
                 {
+                    b.Navigation("PlayoutItemGraphicsElements");
+
                     b.Navigation("PlayoutItemWatermarks");
                 });
 

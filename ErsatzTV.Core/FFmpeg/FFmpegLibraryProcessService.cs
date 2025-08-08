@@ -2,6 +2,7 @@
 using CliWrap;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
+using ErsatzTV.Core.Graphics;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Streaming;
@@ -64,6 +65,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         DateTimeOffset now,
         List<ChannelWatermark> playoutItemWatermarks,
         Option<ChannelWatermark> globalWatermark,
+        List<GraphicsElement> graphicsElements,
         string vaapiDisplay,
         VaapiDriver vaapiDriver,
         string vaapiDevice,
@@ -324,6 +326,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         Option<WatermarkInputFile> watermarkInputFile = Option<WatermarkInputFile>.None;
         Option<GraphicsEngineInput> graphicsEngineInput = Option<GraphicsEngineInput>.None;
         Option<GraphicsEngineContext> graphicsEngineContext = Option<GraphicsEngineContext>.None;
+        List<GraphicsElementContext> graphicsElementContexts = new List<GraphicsElementContext>();
 
         // use graphics engine for all watermarks
         if (!disableWatermarks)
@@ -368,20 +371,48 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                 }
             }
 
-            // only use graphics engine when we have watermarks
-            if (watermarks.Count > 0)
-            {
-                graphicsEngineInput = new GraphicsEngineInput();
+            graphicsElementContexts.AddRange(watermarks.Values);
+        }
 
-                graphicsEngineContext = new GraphicsEngineContext(
-                    watermarks.Values.OfType<GraphicsElementContext>().ToList(),
-                    channel.FFmpegProfile.Resolution,
-                    await playbackSettings.FrameRate.IfNoneAsync(24),
-                    ChannelStartTime: channelStartTime,
-                    ContentStartTime: start,
-                    await playbackSettings.StreamSeek.IfNoneAsync(TimeSpan.Zero),
-                    finish - now);
+        foreach (var graphicsElement in graphicsElements)
+        {
+            switch (graphicsElement.Kind)
+            {
+                case GraphicsElementKind.Text:
+                    var maybeElement = await TextGraphicsElement.FromFile(graphicsElement.Path);
+                    if (maybeElement.IsNone)
+                    {
+                        _logger.LogWarning(
+                            "Failed to load text graphics element from file {Path}; ignoring",
+                            graphicsElement.Path);
+                    }
+
+                    foreach (var element in maybeElement)
+                    {
+                        graphicsElementContexts.Add(new TextElementContext(element));
+                    }
+                    break;
+                default:
+                    _logger.LogInformation(
+                        "Ignoring unsupported graphics element kind {Kind}",
+                        nameof(graphicsElement.Kind));
+                    break;
             }
+        }
+
+        // only use graphics engine when we have elements
+        if (graphicsElementContexts.Count > 0)
+        {
+            graphicsEngineInput = new GraphicsEngineInput();
+
+            graphicsEngineContext = new GraphicsEngineContext(
+                graphicsElementContexts,
+                channel.FFmpegProfile.Resolution,
+                await playbackSettings.FrameRate.IfNoneAsync(24),
+                ChannelStartTime: channelStartTime,
+                ContentStartTime: start,
+                await playbackSettings.StreamSeek.IfNoneAsync(TimeSpan.Zero),
+                finish - now);
         }
 
         HardwareAccelerationMode hwAccel = GetHardwareAccelerationMode(playbackSettings, fillerKind);

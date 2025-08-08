@@ -336,6 +336,8 @@ public class Startup
             FileSystemLayout.MusicVideoCreditsTemplatesFolder,
             FileSystemLayout.ChannelStreamSelectorsFolder,
             FileSystemLayout.ChannelGuideTemplatesFolder,
+            FileSystemLayout.GraphicsElementsTemplatesFolder,
+            FileSystemLayout.GraphicsElementsTextTemplatesFolder,
             FileSystemLayout.ScriptsFolder,
             FileSystemLayout.MultiEpisodeShuffleTemplatesFolder,
             FileSystemLayout.AudioStreamSelectorScriptsFolder
