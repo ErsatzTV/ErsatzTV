@@ -1,10 +1,8 @@
-using System.Globalization;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.FFmpeg;
-using ErsatzTV.Core.Interfaces.Streaming;
 using ErsatzTV.FFmpeg.State;
+using Microsoft.Extensions.Logging;
 using NCalc;
-using NCalc.Handlers;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Gif;
 using SixLabors.ImageSharp.Processing;
@@ -14,18 +12,21 @@ namespace ErsatzTV.Infrastructure.Streaming;
 
 public class WatermarkElement : IGraphicsElement, IDisposable
 {
+    private readonly ILogger _logger;
     private readonly string _imagePath;
     private readonly ChannelWatermark _watermark;
     private readonly List<Image> _scaledFrames = [];
     private readonly List<double> _frameDelays = [];
 
-    private Expression _expression;
+    private Option<Expression> _maybeOpacityExpression;
+    private float _opacity;
     private double _animatedDurationSeconds;
     private Image _sourceImage;
     private Point _location;
 
-    public WatermarkElement(WatermarkOptions watermarkOptions)
+    public WatermarkElement(WatermarkOptions watermarkOptions, ILogger logger)
     {
+        _logger = logger;
         // TODO: better model coming in here?
         foreach (var imagePath in watermarkOptions.ImagePath)
         {
@@ -47,147 +48,117 @@ public class WatermarkElement : IGraphicsElement, IDisposable
 
     public async Task InitializeAsync(Resolution frameSize, int frameRate, CancellationToken cancellationToken)
     {
-        if (_watermark.Mode is ChannelWatermarkMode.Intermittent)
+        try
         {
-            string expressionString = $@"
-                if(time_of_day_seconds % {_watermark.FrequencyMinutes * 60} < 1,
-                    (time_of_day_seconds % {_watermark.FrequencyMinutes * 60}),
-                    if(time_of_day_seconds % {_watermark.FrequencyMinutes * 60} < {1 + _watermark.DurationSeconds},
-                        1,
-                        if(time_of_day_seconds % {_watermark.FrequencyMinutes * 60} < {1 + _watermark.DurationSeconds + 1},
-                            1 - ((time_of_day_seconds % {_watermark.FrequencyMinutes * 60} - {1 + _watermark.DurationSeconds}) / 1),
-                            0
+            if (_watermark.Mode is ChannelWatermarkMode.Intermittent)
+            {
+                string expressionString = $@"
+                    if(time_of_day_seconds % {_watermark.FrequencyMinutes * 60} < 1,
+                        (time_of_day_seconds % {_watermark.FrequencyMinutes * 60}),
+                        if(time_of_day_seconds % {_watermark.FrequencyMinutes * 60} < {1 + _watermark.DurationSeconds},
+                            1,
+                            if(time_of_day_seconds % {_watermark.FrequencyMinutes * 60} < {1 + _watermark.DurationSeconds + 1},
+                                1 - ((time_of_day_seconds % {_watermark.FrequencyMinutes * 60} - {1 + _watermark.DurationSeconds}) / 1),
+                                0
+                            )
                         )
-                    )
-                )";
-            _expression = new Expression(expressionString);
+                    )";
+                _maybeOpacityExpression = new Expression(expressionString);
+            }
+            else if (_watermark.Mode is ChannelWatermarkMode.OpacityExpression && !string.IsNullOrWhiteSpace(_watermark.OpacityExpression))
+            {
+                _maybeOpacityExpression = new Expression(_watermark.OpacityExpression);
+            }
+            else
+            {
+                _opacity = _watermark.Opacity / 100.0f;
+            }
+
+            foreach (var expression in _maybeOpacityExpression)
+            {
+                expression.EvaluateFunction += OpacityExpressionHelper.EvaluateFunction;
+            }
+
+            bool isRemoteUri = Uri.TryCreate(_imagePath, UriKind.Absolute, out var uriResult)
+                               && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
+
+            if (isRemoteUri)
+            {
+                using var client = new HttpClient();
+                await using Stream imageStream = await client.GetStreamAsync(uriResult, cancellationToken);
+                _sourceImage = await Image.LoadAsync(imageStream, cancellationToken);
+            }
+            else
+            {
+                _sourceImage = await Image.LoadAsync(_imagePath!, cancellationToken);
+            }
+
+            int scaledWidth = _sourceImage.Width;
+            int scaledHeight = _sourceImage.Height;
+            if (_watermark.Size == WatermarkSize.Scaled)
+            {
+                scaledWidth = (int)Math.Round(_watermark.WidthPercent / 100.0 * frameSize.Width);
+                double aspectRatio = (double)_sourceImage.Height / _sourceImage.Width;
+                scaledHeight = (int)(scaledWidth * aspectRatio);
+            }
+
+            int horizontalMargin = (int)Math.Round(_watermark.HorizontalMarginPercent / 100.0 * frameSize.Width);
+            int verticalMargin = (int)Math.Round(_watermark.VerticalMarginPercent / 100.0 * frameSize.Height);
+
+            _location = CalculatePosition(
+                _watermark.Location,
+                frameSize.Width,
+                frameSize.Height,
+                scaledWidth,
+                scaledHeight,
+                horizontalMargin,
+                verticalMargin);
+
+            _animatedDurationSeconds = 0;
+
+            for (int i = 0; i < _sourceImage.Frames.Count; i++)
+            {
+                var frame = _sourceImage.Frames.CloneFrame(i);
+                frame.Mutate(ctx => ctx.Resize(scaledWidth, scaledHeight));
+                _scaledFrames.Add(frame);
+
+                var frameDelay = _sourceImage.Frames[i].Metadata.GetFormatMetadata(GifFormat.Instance).FrameDelay / 100.0;
+                _animatedDurationSeconds += frameDelay;
+                _frameDelays.Add(frameDelay);
+            }
         }
-        else if (_watermark.Mode is ChannelWatermarkMode.OpacityExpression && !string.IsNullOrWhiteSpace(_watermark.OpacityExpression))
+        catch (Exception ex)
         {
-            _expression = new Expression(_watermark.OpacityExpression);
-        }
-        else
-        {
-            float opacity = _watermark.Opacity / 100.0f;
-            _expression = new Expression(opacity.ToString(CultureInfo.InvariantCulture));
-        }
-
-        _expression.EvaluateFunction += EvaluateFunction;
-
-        bool isRemoteUri = Uri.TryCreate(_imagePath, UriKind.Absolute, out var uriResult)
-                           && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
-
-        if (isRemoteUri)
-        {
-            using var client = new HttpClient();
-            await using Stream imageStream = await client.GetStreamAsync(uriResult, cancellationToken);
-            _sourceImage = await Image.LoadAsync(imageStream, cancellationToken);
-        }
-        else
-        {
-            _sourceImage = await Image.LoadAsync(_imagePath!, cancellationToken);
-        }
-
-        int scaledWidth = _sourceImage.Width;
-        int scaledHeight = _sourceImage.Height;
-        if (_watermark.Size == WatermarkSize.Scaled)
-        {
-            scaledWidth = (int)Math.Round(_watermark.WidthPercent / 100.0 * frameSize.Width);
-            double aspectRatio = (double)_sourceImage.Height / _sourceImage.Width;
-            scaledHeight = (int)(scaledWidth * aspectRatio);
-        }
-
-        int horizontalMargin = (int)Math.Round(_watermark.HorizontalMarginPercent / 100.0 * frameSize.Width);
-        int verticalMargin = (int)Math.Round(_watermark.VerticalMarginPercent / 100.0 * frameSize.Height);
-
-        _location = CalculatePosition(
-            _watermark.Location,
-            frameSize.Width,
-            frameSize.Height,
-            scaledWidth,
-            scaledHeight,
-            horizontalMargin,
-            verticalMargin);
-
-        _animatedDurationSeconds = 0;
-
-        for (int i = 0; i < _sourceImage.Frames.Count; i++)
-        {
-            var frame = _sourceImage.Frames.CloneFrame(i);
-            frame.Mutate(ctx => ctx.Resize(scaledWidth, scaledHeight));
-            _scaledFrames.Add(frame);
-
-            var frameDelay = _sourceImage.Frames[i].Metadata.GetFormatMetadata(GifFormat.Instance).FrameDelay / 100.0;
-            _animatedDurationSeconds += frameDelay;
-            _frameDelays.Add(frameDelay);
+            IsFailed = true;
+            _logger.LogWarning(ex, "Failed to initialize watermark element; will disable for this content");
         }
     }
 
-    private static void EvaluateFunction(string name, FunctionArgs args)
-    {
-        switch (name)
-        {
-            case "LinearFadePoints":
-            {
-                if (args.Parameters.Length != 5)
-                {
-                    throw new ArgumentException("LinearFadePoints() requires 5 arguments.");
-                }
-
-                double time = Convert.ToDouble(args.Parameters[0].Evaluate(), CultureInfo.CurrentCulture);
-                double start = Convert.ToDouble(args.Parameters[1].Evaluate(), CultureInfo.CurrentCulture);
-                double peakStart = Convert.ToDouble(args.Parameters[2].Evaluate(), CultureInfo.CurrentCulture);
-                double peakEnd = Convert.ToDouble(args.Parameters[3].Evaluate(), CultureInfo.CurrentCulture);
-                double end = Convert.ToDouble(args.Parameters[4].Evaluate(), CultureInfo.CurrentCulture);
-
-                args.Result = LinearFadePoints(time, start, peakStart, peakEnd, end);
-                break;
-            }
-            case "LinearFadeDuration":
-            {
-                if (args.Parameters.Length != 4)
-                {
-                    throw new ArgumentException("LinearFadeDuration() requires 4 arguments.");
-                }
-
-                double time = Convert.ToDouble(args.Parameters[0].Evaluate(), CultureInfo.CurrentCulture);
-                double start = Convert.ToDouble(args.Parameters[1].Evaluate(), CultureInfo.CurrentCulture);
-                double fadeSeconds = Convert.ToDouble(args.Parameters[2].Evaluate(), CultureInfo.CurrentCulture);
-                double peakSeconds = Convert.ToDouble(args.Parameters[3].Evaluate(), CultureInfo.CurrentCulture);
-
-                args.Result = LinearFadeDuration(time, start, fadeSeconds, peakSeconds);
-                break;
-            }
-        }
-    }
-
-    public void Draw(
-        object context,
+    public ValueTask<Option<PreparedElementImage>> PrepareImage(
         TimeSpan timeOfDay,
         TimeSpan contentTime,
         TimeSpan contentTotalTime,
         TimeSpan channelTime,
         CancellationToken cancellationToken)
     {
-        if (context is not IImageProcessingContext imageProcessingContext)
+        float opacity = _opacity;
+        foreach (var expression in _maybeOpacityExpression)
         {
-            return;
+            opacity = OpacityExpressionHelper.GetOpacity(
+                expression,
+                timeOfDay,
+                contentTime,
+                contentTotalTime,
+                channelTime);
         }
 
-        _expression.Parameters["content_seconds"] = contentTime.TotalSeconds;
-        _expression.Parameters["content_total_seconds"] = contentTotalTime.TotalSeconds;
-        _expression.Parameters["channel_seconds"] = channelTime.TotalSeconds;
-        _expression.Parameters["time_of_day_seconds"] = timeOfDay.TotalSeconds;
-
-        object expressionResult = _expression.Evaluate();
-        float opacity = Convert.ToSingle(expressionResult, CultureInfo.InvariantCulture);
         if (opacity == 0)
         {
-            return;
+            return ValueTask.FromResult(Option<PreparedElementImage>.None);
         }
 
         Image frameForTimestamp = GetFrameForTimestamp(contentTime);
-        imageProcessingContext.DrawImage(frameForTimestamp, _location, opacity);
+        return ValueTask.FromResult(Optional(new PreparedElementImage(frameForTimestamp, _location, opacity, false)));
     }
 
     private Image GetFrameForTimestamp(TimeSpan timestamp)
@@ -212,12 +183,12 @@ public class WatermarkElement : IGraphicsElement, IDisposable
         return _scaledFrames.Last();
     }
 
-    private static Point CalculatePosition(
+    internal static Point CalculatePosition(
         WatermarkLocation location,
         int frameWidth,
         int frameHeight,
-        int scaledWidth,
-        int scaledHeight,
+        int imageWidth,
+        int imageHeight,
         int horizontalMargin,
         int verticalMargin)
     {
@@ -225,60 +196,21 @@ public class WatermarkElement : IGraphicsElement, IDisposable
 
         return location switch
         {
-            WatermarkLocation.BottomLeft => new Point(horizontalMargin, frameHeight - scaledHeight - verticalMargin),
+            WatermarkLocation.BottomLeft => new Point(horizontalMargin, frameHeight - imageHeight - verticalMargin),
             WatermarkLocation.TopLeft => new Point(horizontalMargin, verticalMargin),
-            WatermarkLocation.TopRight => new Point(frameWidth - scaledWidth - horizontalMargin, verticalMargin),
-            WatermarkLocation.TopMiddle => new Point((frameWidth - scaledWidth) / 2, verticalMargin),
+            WatermarkLocation.TopRight => new Point(frameWidth - imageWidth - horizontalMargin, verticalMargin),
+            WatermarkLocation.TopMiddle => new Point((frameWidth - imageWidth) / 2, verticalMargin),
             WatermarkLocation.RightMiddle => new Point(
-                frameWidth - scaledWidth - horizontalMargin,
-                (frameHeight - scaledHeight) / 2),
+                frameWidth - imageWidth - horizontalMargin,
+                (frameHeight - imageHeight) / 2),
             WatermarkLocation.BottomMiddle => new Point(
-                (frameWidth - scaledWidth) / 2,
-                frameHeight - scaledHeight - verticalMargin),
-            WatermarkLocation.LeftMiddle => new Point(horizontalMargin, (frameHeight - scaledHeight) / 2),
+                (frameWidth - imageWidth) / 2,
+                frameHeight - imageHeight - verticalMargin),
+            WatermarkLocation.LeftMiddle => new Point(horizontalMargin, (frameHeight - imageHeight) / 2),
             _ => new Point(
-                frameWidth - scaledWidth - horizontalMargin,
-                frameHeight - scaledHeight - verticalMargin),
+                frameWidth - imageWidth - horizontalMargin,
+                frameHeight - imageHeight - verticalMargin),
         };
-    }
-
-    private static double LinearFadePoints(double time, double start, double peakStart, double peakEnd, double end)
-    {
-        if (time < start || time >= end)
-        {
-            return 0;
-        }
-
-        // fade in
-        if (time < peakStart)
-        {
-            return (time - start) / (peakStart - start);
-        }
-
-        // solid
-        if (time < peakEnd)
-        {
-            return 1.0;
-        }
-
-        // fade out
-        return (end - time) / (end - peakEnd);
-    }
-
-    private static double LinearFadeDuration(double time, double start, double fadeSeconds, double peakSeconds)
-    {
-        // edge case with no fade
-        if (fadeSeconds <= 0)
-        {
-            double noFadeEnd = start + peakSeconds;
-            return (time >= start && time < noFadeEnd) ? 1.0 : 0.0;
-        }
-
-        double peakStart = start + fadeSeconds;
-        double peakEnd = peakStart + peakSeconds;
-        double end = peakEnd + fadeSeconds;
-
-        return LinearFadePoints(time, start, peakStart, peakEnd, end);
     }
 
     public void Dispose()

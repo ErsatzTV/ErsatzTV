@@ -113,6 +113,7 @@ public class TvContext : DbContext
     public DbSet<TraktList> TraktLists { get; set; }
     public DbSet<FillerPreset> FillerPresets { get; set; }
     public DbSet<Subtitle> Subtitles { get; set; }
+    public DbSet<GraphicsElement> GraphicsElements { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) =>
         optionsBuilder.UseLoggerFactory(_loggerFactory);

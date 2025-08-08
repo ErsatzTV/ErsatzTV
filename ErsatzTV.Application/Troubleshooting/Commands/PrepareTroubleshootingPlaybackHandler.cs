@@ -113,6 +113,10 @@ public class PrepareTroubleshootingPlaybackHandler(
             outPoint = inPoint + duration;
         }
 
+        var graphicsElements = await dbContext.GraphicsElements
+            .Where(ge => request.GraphicsElementIds.Contains(ge.Id))
+            .ToListAsync();
+
         PlayoutItemResult playoutItemResult = await ffmpegProcessService.ForPlayoutItem(
             ffmpegPath,
             ffprobePath,
@@ -141,6 +145,7 @@ public class PrepareTroubleshootingPlaybackHandler(
             now,
             watermarks,
             Option<ChannelWatermark>.None,
+            graphicsElements,
             ffmpegProfile.VaapiDisplay,
             ffmpegProfile.VaapiDriver,
             ffmpegProfile.VaapiDevice,

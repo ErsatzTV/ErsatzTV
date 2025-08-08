@@ -28,5 +28,18 @@ public class PlayoutItemConfiguration : IEntityTypeConfiguration<PlayoutItem>
                     .HasForeignKey(ci => ci.PlayoutItemId)
                     .OnDelete(DeleteBehavior.Cascade),
                 j => j.HasKey(ci => new { ci.PlayoutItemId, ci.WatermarkId }));
+
+        builder.HasMany(c => c.GraphicsElements)
+            .WithMany(m => m.PlayoutItems)
+            .UsingEntity<PlayoutItemGraphicsElement>(
+                j => j.HasOne(ci => ci.GraphicsElement)
+                    .WithMany(mi => mi.PlayoutItemGraphicsElements)
+                    .HasForeignKey(ci => ci.GraphicsElementId)
+                    .OnDelete(DeleteBehavior.Cascade),
+                j => j.HasOne(ci => ci.PlayoutItem)
+                    .WithMany(c => c.PlayoutItemGraphicsElements)
+                    .HasForeignKey(ci => ci.PlayoutItemId)
+                    .OnDelete(DeleteBehavior.Cascade),
+                j => j.HasKey(ci => new { ci.PlayoutItemId, ci.GraphicsElementId }));
     }
 }

@@ -47,6 +47,9 @@ public static class FileSystemLayout
 
     public static readonly string ChannelGuideTemplatesFolder;
 
+    public static readonly string GraphicsElementsTemplatesFolder;
+    public static readonly string GraphicsElementsTextTemplatesFolder;
+
     public static readonly string ScriptsFolder;
 
     public static readonly string MultiEpisodeShuffleTemplatesFolder;
@@ -161,6 +164,9 @@ public static class FileSystemLayout
         MusicVideoCreditsTemplatesFolder = Path.Combine(TemplatesFolder, "music-video-credits");
 
         ChannelGuideTemplatesFolder = Path.Combine(TemplatesFolder, "channel-guide");
+
+        GraphicsElementsTemplatesFolder = Path.Combine(TemplatesFolder, "graphics-elements");
+        GraphicsElementsTextTemplatesFolder = Path.Combine(GraphicsElementsTemplatesFolder, "text");
 
         ScriptsFolder = Path.Combine(AppDataFolder, "scripts");
 
