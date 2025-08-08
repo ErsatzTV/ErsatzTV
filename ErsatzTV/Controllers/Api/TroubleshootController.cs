@@ -27,7 +27,7 @@ public class TroubleshootController(
         [FromQuery]
         int ffmpegProfile,
         [FromQuery]
-        int watermark,
+        List<int> watermark,
         [FromQuery]
         int? subtitleId,
         [FromQuery]
@@ -63,7 +63,7 @@ public class TroubleshootController(
                         troubleshootingInfo.FFmpegProfiles.RemoveAll(p => p.Id != ffmpegProfile);
 
                         // filter watermarks
-                        troubleshootingInfo.Watermarks.RemoveAll(p => p.Id != watermark);
+                        troubleshootingInfo.Watermarks.RemoveAll(p => !watermark.Contains(p.Id));
 
                         await channelWriter.WriteAsync(
                             new StartTroubleshootingPlayback(sessionId, playoutItemResult, mediaInfo,
@@ -113,7 +113,7 @@ public class TroubleshootController(
         [FromQuery]
         int ffmpegProfile,
         [FromQuery]
-        int watermark,
+        List<int> watermark,
         [FromQuery]
         bool startFromBeginning,
         CancellationToken cancellationToken)
