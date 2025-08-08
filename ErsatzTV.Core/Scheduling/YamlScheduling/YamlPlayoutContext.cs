@@ -16,6 +16,7 @@ public class YamlPlayoutContext(Playout playout, YamlPlayoutDefinition definitio
     private readonly System.Collections.Generic.HashSet<int> _visitedInstructions = [];
     private readonly Stack<FillerKind> _fillerKind = new();
     private readonly System.Collections.Generic.HashSet<int> _channelWatermarkIds = [];
+    private readonly System.Collections.Generic.HashSet<int> _graphicsElementIds = [];
     private int _guideGroup = guideGroup;
     private bool _guideGroupLocked;
     private int _instructionIndex;
@@ -87,66 +88,30 @@ public class YamlPlayoutContext(Playout playout, YamlPlayoutDefinition definitio
 
     public void UnlockGuideGroup() => _guideGroupLocked = false;
 
-    public void SetChannelWatermarkId(int id)
-    {
-        _channelWatermarkIds.Add(id);
-    }
-
-    public void RemoveChannelWatermarkId(int id)
-    {
-        _channelWatermarkIds.Remove(id);
-    }
-
-    public void ClearChannelWatermarkIds()
-    {
-        _channelWatermarkIds.Clear();
-    }
-
+    public void SetChannelWatermarkId(int id) => _channelWatermarkIds.Add(id);
+    public void RemoveChannelWatermarkId(int id) => _channelWatermarkIds.Remove(id);
+    public void ClearChannelWatermarkIds() => _channelWatermarkIds.Clear();
     public List<int> GetChannelWatermarkIds() => _channelWatermarkIds.ToList();
 
-    public void SetPreRollSequence(string sequence)
-    {
-        _preRollSequence = sequence;
-    }
+    public void SetGraphicsElementId(int id) => _graphicsElementIds.Add(id);
+    public void RemoveGraphicsElementId(int id) => _graphicsElementIds.Remove(id);
+    public void ClearGraphicsElements() => _graphicsElementIds.Clear();
+    public List<int> GetGraphicsElementIds() => _graphicsElementIds.ToList();
 
-    public void ClearPreRollSequence()
-    {
-        _preRollSequence = Option<string>.None;
-    }
-
+    public void SetPreRollSequence(string sequence) => _preRollSequence = sequence;
+    public void ClearPreRollSequence() => _preRollSequence = Option<string>.None;
     public Option<string> GetPreRollSequence() => _preRollSequence;
 
-    public void SetPostRollSequence(string sequence)
-    {
-        _postRollSequence = sequence;
-    }
-
-    public void ClearPostRollSequence()
-    {
-        _postRollSequence = Option<string>.None;
-    }
-
+    public void SetPostRollSequence(string sequence) => _postRollSequence = sequence;
+    public void ClearPostRollSequence() => _postRollSequence = Option<string>.None;
     public Option<string> GetPostRollSequence() => _postRollSequence;
 
-    public void SetMidRollSequence(MidRollSequence sequence)
-    {
-        _midRollSequence = sequence;
-    }
-
-    public void ClearMidRollSequence()
-    {
-        _midRollSequence = Option<MidRollSequence>.None;
-    }
-
+    public void SetMidRollSequence(MidRollSequence sequence) => _midRollSequence = sequence;
+    public void ClearMidRollSequence() => _midRollSequence = Option<MidRollSequence>.None;
     public Option<MidRollSequence> GetMidRollSequence() => _midRollSequence;
 
-    public void PushFillerKind(FillerKind fillerKind)
-    {
-        _fillerKind.Push(fillerKind);
-    }
-
+    public void PushFillerKind(FillerKind fillerKind) => _fillerKind.Push(fillerKind);
     public void PopFillerKind() => _fillerKind.Pop();
-
     public Option<FillerKind> GetFillerKind() =>
         _fillerKind.TryPeek(out FillerKind fillerKind) ? fillerKind : Option<FillerKind>.None;
 

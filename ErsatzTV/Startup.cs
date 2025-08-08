@@ -719,6 +719,7 @@ public class Startup
             MultiEpisodeShuffleCollectionEnumeratorFactory>();
         services.AddScoped<IChannelLogoGenerator, ChannelLogoGenerator>();
         services.AddScoped<IGraphicsEngine, GraphicsEngine>();
+        services.AddScoped<IGraphicsElementRepository, GraphicsElementRepository>();
 
         services.AddScoped<IFFmpegProcessService, FFmpegLibraryProcessService>();
         services.AddScoped<IPipelineBuilderFactory, PipelineBuilderFactory>();

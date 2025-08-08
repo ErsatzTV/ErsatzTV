@@ -136,7 +136,8 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
                 changeCount += 1;
                 var bulkConfig = new BulkConfig();
                 bool anyWatermarks = result.AddedItems.Any(i => i.PlayoutItemWatermarks is not null && i.PlayoutItemWatermarks.Count > 0);
-                if (anyWatermarks)
+                bool anyGraphicsElements = result.AddedItems.Any(i => i.PlayoutItemGraphicsElements is not null && i.PlayoutItemGraphicsElements.Count > 0);
+                if (anyWatermarks || anyGraphicsElements)
                 {
                     bulkConfig.SetOutputIdentity = true;
                 }
@@ -156,6 +157,23 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
                     ).ToList();
 
                     await dbContext.BulkInsertAsync(allWatermarks, cancellationToken: cancellationToken);
+                }
+
+                if (anyGraphicsElements)
+                {
+                    Console.WriteLine("has graphics elements!");
+
+                    // copy playout item ids back to graphics elements
+                    var allGraphicsElements = result.AddedItems.SelectMany(item =>
+                        item.PlayoutItemGraphicsElements.Select(graphicsElement =>
+                        {
+                            graphicsElement.PlayoutItemId = item.Id;
+                            graphicsElement.PlayoutItem = null;
+                            return graphicsElement;
+                        })
+                    ).ToList();
+
+                    await dbContext.BulkInsertAsync(allGraphicsElements, cancellationToken: cancellationToken);
                 }
             }
 

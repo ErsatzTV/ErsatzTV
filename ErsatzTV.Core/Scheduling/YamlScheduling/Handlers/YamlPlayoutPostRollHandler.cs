@@ -15,7 +15,7 @@ public class YamlPlayoutPostRollHandler : IYamlPlayoutHandler
         ILogger<YamlPlayoutBuilder> logger,
         CancellationToken cancellationToken)
     {
-        if (instruction is not YamlPostRollInstruction postRoll)
+        if (instruction is not YamlPlayoutPostRollInstruction postRoll)
         {
             return Task.FromResult(false);
         }
