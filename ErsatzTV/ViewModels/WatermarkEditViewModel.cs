@@ -28,6 +28,7 @@ public class WatermarkEditViewModel
         Opacity = vm.Opacity;
         PlaceWithinSourceContent = vm.PlaceWithinSourceContent;
         OpacityExpression = vm.OpacityExpression;
+        ZIndex = vm.ZIndex;
     }
 
     public int Id { get; set; }
@@ -45,6 +46,7 @@ public class WatermarkEditViewModel
     public int Opacity { get; set; }
     public bool PlaceWithinSourceContent { get; set; }
     public string OpacityExpression { get; set; }
+    public int ZIndex { get; set; }
 
     public CreateWatermark ToCreate() =>
         new(
@@ -61,7 +63,8 @@ public class WatermarkEditViewModel
             DurationSeconds,
             Opacity,
             PlaceWithinSourceContent,
-            OpacityExpression);
+            OpacityExpression,
+            ZIndex);
 
     public UpdateWatermark ToUpdate() =>
         new(
@@ -79,5 +82,6 @@ public class WatermarkEditViewModel
             DurationSeconds,
             Opacity,
             PlaceWithinSourceContent,
-            OpacityExpression);
+            OpacityExpression,
+            ZIndex);
 }

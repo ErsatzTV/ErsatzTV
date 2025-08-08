@@ -397,6 +397,9 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<double>("WidthPercent")
                         .HasColumnType("double");
 
+                    b.Property<int>("ZIndex")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.ToTable("ChannelWatermark", (string)null);

@@ -17,6 +17,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - The expression can also use functions:
     - `LinearFadeDuration(time, start, fadeSeconds, peakSeconds)`
     - `LinearFadePoints(time, start, peakStart, peakEnd, end)`
+- Add `Z-Index` to watermark editor
+  - The graphics engine will order by z-index when overlaying watermarks
 
 ### Fix
 - Fix database operations that were slowing down playout builds

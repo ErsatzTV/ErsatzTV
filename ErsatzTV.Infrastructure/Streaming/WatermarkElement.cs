@@ -35,10 +35,13 @@ public class WatermarkElement : IGraphicsElement, IDisposable
         foreach (var watermark in watermarkOptions.Watermark)
         {
             _watermark = watermark;
+            ZIndex = watermark.ZIndex;
         }
     }
 
     public bool IsValid => _imagePath != null && _watermark != null;
+
+    public int ZIndex { get; }
 
     public bool IsFailed { get; set; }
 

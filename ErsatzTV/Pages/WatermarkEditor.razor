@@ -188,6 +188,12 @@
                               For="@(() => _model.OpacityExpression)"
                               Disabled="@(_model.Mode != ChannelWatermarkMode.OpacityExpression)"/>
             </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Z-Index</MudText>
+                </div>
+                <MudTextField @bind-Value="_model.ZIndex" For="@(() => _model.ZIndex)"/>
+            </MudStack>
         </MudContainer>
     </div>
 </MudForm>
@@ -233,7 +239,8 @@
                 DurationSeconds = 15,
                 Opacity = 100,
                 PlaceWithinSourceContent = false,
-                OpacityExpression = string.Empty
+                OpacityExpression = string.Empty,
+                ZIndex = 0
             };
         }
     }
