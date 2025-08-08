@@ -1,4 +1,3 @@
-using CliWrap;
 using Dapper;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
@@ -79,10 +78,13 @@ public class PrepareTroubleshootingPlaybackHandler(
         }
 
         List<ChannelWatermark> watermarks = [];
-        if (request.WatermarkId > 0)
+        if (request.WatermarkIds.Count > 0)
         {
-            watermarks.AddRange(await dbContext.ChannelWatermarks
-                .SelectOneAsync(cw => cw.Id, cw => cw.Id == request.WatermarkId));
+            var channelWatermarks = await dbContext.ChannelWatermarks
+                .Where(w =>  request.WatermarkIds.Contains(w.Id))
+                .ToListAsync();
+
+            watermarks.AddRange(channelWatermarks);
         }
 
         DateTimeOffset now = DateTimeOffset.Now;

@@ -3,6 +3,6 @@ namespace ErsatzTV.Application.Troubleshooting;
 public record ArchiveTroubleshootingResults(
     int MediaItemId,
     int FFmpegProfileId,
-    int WatermarkId,
+    List<int> WatermarkIds,
     bool StartFromBeginning)
     : IRequest<Option<string>>;

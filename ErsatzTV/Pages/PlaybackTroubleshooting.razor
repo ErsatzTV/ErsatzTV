@@ -21,7 +21,7 @@
                    Class="ml-6"
                    StartIcon="@Icons.Material.Filled.Download"
                    Disabled="@(!_hasPlayed || Locker.IsTroubleshootingPlaybackLocked())"
-                   OnClick="DownloadResults">
+                   OnClick="@DownloadResults">
             Download Results
         </MudButton>
     </MudPaper>
@@ -56,13 +56,12 @@
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                 <div class="d-flex">
-                    <MudText>Watermark</MudText>
+                    <MudText>Watermarks</MudText>
                 </div>
-                <MudSelect @bind-Value="_watermarkId" For="@(() => _watermarkId)" Clearable="true">
-                    <MudSelectItem T="int?" Value="@((int?)null)">(none)</MudSelectItem>
+                <MudSelect T="string" @bind-SelectedValues="_watermarkNames" Clearable="true" MultiSelection="true">
                     @foreach (WatermarkViewModel watermark in _watermarks)
                     {
-                        <MudSelectItem T="int?" Value="@watermark.Id">@watermark.Name</MudSelectItem>
+                        <MudSelectItem T="string" Value="@watermark.Name">@watermark.Name</MudSelectItem>
                     }
                 </MudSelect>
             </MudStack>
@@ -119,12 +118,12 @@
 @code {
     private readonly CancellationTokenSource _cts = new();
 
-    private List<FFmpegProfileViewModel> _ffmpegProfiles = [];
-    private List<WatermarkViewModel> _watermarks = [];
-    private List<SubtitleViewModel> _subtitleStreams = [];
+    private readonly List<FFmpegProfileViewModel> _ffmpegProfiles = [];
+    private readonly List<WatermarkViewModel> _watermarks = [];
+    private readonly List<SubtitleViewModel> _subtitleStreams = [];
     private MediaItemInfo _info;
     private int _ffmpegProfileId;
-    private int? _watermarkId;
+    private IEnumerable<string> _watermarkNames = new System.Collections.Generic.HashSet<string>();
     private int? _subtitleId;
     private bool _startFromBeginning;
     private bool _hasPlayed;
@@ -146,13 +145,13 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        _ffmpegProfiles = await Mediator.Send(new GetAllFFmpegProfiles(), _cts.Token);
+        _ffmpegProfiles.AddRange(await Mediator.Send(new GetAllFFmpegProfiles(), _cts.Token));
         if (_ffmpegProfiles.Count > 0)
         {
             _ffmpegProfileId = _ffmpegProfiles.Map(f => f.Id).Head();
         }
 
-        _watermarks = await Mediator.Send(new GetAllWatermarks(), _cts.Token);
+        _watermarks.AddRange(await Mediator.Send(new GetAllWatermarks(), _cts.Token));
 
         if (MediaItemId is not null)
         {
@@ -166,7 +165,14 @@
     {
         var uri = new UriBuilder(NavigationManager.ToAbsoluteUri(NavigationManager.Uri));
         uri.Path = uri.Path.Replace("/system/troubleshooting/playback", "/api/troubleshoot/playback.m3u8");
-        uri.Query = $"?mediaItem={MediaItemId}&ffmpegProfile={_ffmpegProfileId}&watermark={_watermarkId ?? 0}&startFromBeginning={_startFromBeginning}";
+        uri.Query = $"?mediaItem={MediaItemId}&ffmpegProfile={_ffmpegProfileId}&startFromBeginning={_startFromBeginning}";
+        foreach (var watermarkName in _watermarkNames)
+        {
+            foreach (var watermark in _watermarks.Where(wm => wm.Name == watermarkName))
+            {
+                uri.Query += $"&watermark={watermark.Id}";
+            }
+        }
         if (_subtitleId is not null)
         {
             uri.Query += $"&subtitleId={_subtitleId.Value}";
@@ -207,7 +213,15 @@
 
     private async Task DownloadResults()
     {
-        await JsRuntime.InvokeVoidAsync("window.open", $"api/troubleshoot/playback/archive?mediaItem={MediaItemId ?? 0}&ffmpegProfile={_ffmpegProfileId}&watermark={_watermarkId ?? 0}&startFromBeginning={_startFromBeginning}");
+        var uri = $"api/troubleshoot/playback/archive?mediaItem={MediaItemId ?? 0}&ffmpegProfile={_ffmpegProfileId}&startFromBeginning={_startFromBeginning}";
+        foreach (var watermarkName in _watermarkNames)
+        {
+            foreach (var watermark in _watermarks.Where(wm => wm.Name == watermarkName))
+            {
+                uri += $"&watermark={watermark.Id}";
+            }
+        }
+        await JsRuntime.InvokeVoidAsync("window.open", uri);
     }
 
     private void HandleTroubleshootingCompleted(PlaybackTroubleshootingCompletedNotification result)

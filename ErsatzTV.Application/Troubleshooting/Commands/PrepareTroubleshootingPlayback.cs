@@ -6,7 +6,7 @@ namespace ErsatzTV.Application.Troubleshooting;
 public record PrepareTroubleshootingPlayback(
     int MediaItemId,
     int FFmpegProfileId,
-    int WatermarkId,
+    List<int> WatermarkIds,
     int? SubtitleId,
     bool StartFromBeginning)
     : IRequest<Either<BaseError, PlayoutItemResult>>;
