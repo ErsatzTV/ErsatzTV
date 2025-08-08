@@ -16,7 +16,7 @@ public class YamlPlayoutContext(Playout playout, YamlPlayoutDefinition definitio
     private readonly System.Collections.Generic.HashSet<int> _visitedInstructions = [];
     private readonly Stack<FillerKind> _fillerKind = new();
     private readonly System.Collections.Generic.HashSet<int> _channelWatermarkIds = [];
-    private readonly System.Collections.Generic.HashSet<int> _graphicsElementIds = [];
+    private readonly Dictionary<int, string> _graphicsElements = [];
     private int _guideGroup = guideGroup;
     private bool _guideGroupLocked;
     private int _instructionIndex;
@@ -93,10 +93,10 @@ public class YamlPlayoutContext(Playout playout, YamlPlayoutDefinition definitio
     public void ClearChannelWatermarkIds() => _channelWatermarkIds.Clear();
     public List<int> GetChannelWatermarkIds() => _channelWatermarkIds.ToList();
 
-    public void SetGraphicsElementId(int id) => _graphicsElementIds.Add(id);
-    public void RemoveGraphicsElementId(int id) => _graphicsElementIds.Remove(id);
-    public void ClearGraphicsElements() => _graphicsElementIds.Clear();
-    public List<int> GetGraphicsElementIds() => _graphicsElementIds.ToList();
+    public void SetGraphicsElement(int id, string variablesJson) => _graphicsElements.Add(id, variablesJson);
+    public void RemoveGraphicsElement(int id) => _graphicsElements.Remove(id);
+    public void ClearGraphicsElements() => _graphicsElements.Clear();
+    public IReadOnlyDictionary<int, string> GetGraphicsElements() => _graphicsElements;
 
     public void SetPreRollSequence(string sequence) => _preRollSequence = sequence;
     public void ClearPreRollSequence() => _preRollSequence = Option<string>.None;

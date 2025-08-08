@@ -145,7 +145,7 @@ public class PrepareTroubleshootingPlaybackHandler(
             now,
             watermarks,
             Option<ChannelWatermark>.None,
-            graphicsElements,
+            graphicsElements.Map(ge => new PlayoutItemGraphicsElement { GraphicsElement = ge }).ToList(),
             ffmpegProfile.VaapiDisplay,
             ffmpegProfile.VaapiDriver,
             ffmpegProfile.VaapiDevice,

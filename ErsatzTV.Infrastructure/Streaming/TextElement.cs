@@ -2,6 +2,7 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Graphics;
 using Microsoft.Extensions.Logging;
 using NCalc;
+using Scriban;
 using SixLabors.Fonts;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Drawing.Processing;
@@ -11,7 +12,7 @@ using Image=SixLabors.ImageSharp.Image;
 
 namespace ErsatzTV.Infrastructure.Streaming;
 
-public class TextElement(TextGraphicsElement textElement, ILogger logger) : IGraphicsElement, IDisposable
+public class TextElement(TextGraphicsElement textElement, Dictionary<string, string> variables, ILogger logger) : IGraphicsElement, IDisposable
 {
     private Option<Expression> _maybeOpacityExpression;
     private float _opacity;
@@ -22,7 +23,7 @@ public class TextElement(TextGraphicsElement textElement, ILogger logger) : IGra
 
     public bool IsFailed { get; set; }
 
-    public Task InitializeAsync(Resolution frameSize, int frameRate, CancellationToken cancellationToken)
+    public async Task InitializeAsync(Resolution frameSize, int frameRate, CancellationToken cancellationToken)
     {
         try
         {
@@ -38,6 +39,8 @@ public class TextElement(TextGraphicsElement textElement, ILogger logger) : IGra
             }
 
             ZIndex = textElement.ZIndex ?? 0;
+
+            string textToRender = await Template.Parse(textElement.Text).RenderAsync(variables);
 
             var font = GraphicsEngineFonts.GetFont(textElement.FontFamily, textElement.FontSize ?? 48, FontStyle.Regular);
             var fontColor = Color.White;
@@ -58,11 +61,11 @@ public class TextElement(TextGraphicsElement textElement, ILogger logger) : IGra
             //     textOptions.HorizontalAlignment = parsedAlignment;
             // }
 
-            FontRectangle textBounds = TextMeasurer.MeasureBounds(textElement.Text, textOptions);
+            FontRectangle textBounds = TextMeasurer.MeasureBounds(textToRender, textOptions);
             textOptions.Origin = new PointF(-textBounds.X, -textBounds.Y);
 
             _image = new Image<Rgba32>((int)Math.Ceiling(textBounds.Width), (int)Math.Ceiling(textBounds.Height));
-            _image.Mutate(ctx => ctx.DrawText(textOptions, textElement.Text, fontColor));
+            _image.Mutate(ctx => ctx.DrawText(textOptions, textToRender, fontColor));
 
             int horizontalMargin = (int)Math.Round((textElement.HorizontalMarginPercent ?? 0) / 100.0 * frameSize.Width);
             int verticalMargin = (int)Math.Round((textElement.VerticalMarginPercent ?? 0) / 100.0 * frameSize.Height);
@@ -81,8 +84,6 @@ public class TextElement(TextGraphicsElement textElement, ILogger logger) : IGra
             IsFailed = true;
             logger.LogWarning(ex, "Failed to initialize text element; will disable for this content");
         }
-
-        return Task.CompletedTask;
     }
 
     public ValueTask<Option<PreparedElementImage>> PrepareImage(

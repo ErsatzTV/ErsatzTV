@@ -32,7 +32,7 @@ public class YamlPlayoutGraphicsOffHandler(IGraphicsElementRepository graphicsEl
         {
             foreach (var ge in await GetGraphicsElementByPath(graphicsOff.GraphicsOff))
             {
-                context.RemoveGraphicsElementId(ge.Id);
+                context.RemoveGraphicsElement(ge.Id);
             }
         }
 

@@ -1921,6 +1921,9 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<int>("GraphicsElementId")
                         .HasColumnType("int");
 
+                    b.Property<string>("Variables")
+                        .HasColumnType("longtext");
+
                     b.HasKey("PlayoutItemId", "GraphicsElementId");
 
                     b.HasIndex("GraphicsElementId");

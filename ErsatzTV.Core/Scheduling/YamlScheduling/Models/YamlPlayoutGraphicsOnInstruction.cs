@@ -6,4 +6,6 @@ public class YamlPlayoutGraphicsOnInstruction : YamlPlayoutInstruction
 {
     [YamlMember(Alias = "graphics_on", ApplyNamingConventions = false)]
     public string GraphicsOn { get; set; }
+
+    public Dictionary<string, string> Variables { get; set; } = [];
 }

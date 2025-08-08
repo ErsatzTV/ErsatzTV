@@ -14,6 +14,7 @@ using ErsatzTV.FFmpeg.Pipeline;
 using ErsatzTV.FFmpeg.Preset;
 using ErsatzTV.FFmpeg.State;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using MediaStream = ErsatzTV.Core.Domain.MediaStream;
 
 namespace ErsatzTV.Core.FFmpeg;
@@ -65,7 +66,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         DateTimeOffset now,
         List<ChannelWatermark> playoutItemWatermarks,
         Option<ChannelWatermark> globalWatermark,
-        List<GraphicsElement> graphicsElements,
+        List<PlayoutItemGraphicsElement> graphicsElements,
         string vaapiDisplay,
         VaapiDriver vaapiDriver,
         string vaapiDevice,
@@ -326,7 +327,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         Option<WatermarkInputFile> watermarkInputFile = Option<WatermarkInputFile>.None;
         Option<GraphicsEngineInput> graphicsEngineInput = Option<GraphicsEngineInput>.None;
         Option<GraphicsEngineContext> graphicsEngineContext = Option<GraphicsEngineContext>.None;
-        List<GraphicsElementContext> graphicsElementContexts = new List<GraphicsElementContext>();
+        List<GraphicsElementContext> graphicsElementContexts = [];
 
         // use graphics engine for all watermarks
         if (!disableWatermarks)
@@ -374,28 +375,35 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             graphicsElementContexts.AddRange(watermarks.Values);
         }
 
-        foreach (var graphicsElement in graphicsElements)
+        foreach (var playoutItemGraphicsElement in graphicsElements)
         {
-            switch (graphicsElement.Kind)
+            switch (playoutItemGraphicsElement.GraphicsElement.Kind)
             {
                 case GraphicsElementKind.Text:
-                    var maybeElement = await TextGraphicsElement.FromFile(graphicsElement.Path);
+                    var maybeElement = await TextGraphicsElement.FromFile(playoutItemGraphicsElement.GraphicsElement.Path);
                     if (maybeElement.IsNone)
                     {
                         _logger.LogWarning(
                             "Failed to load text graphics element from file {Path}; ignoring",
-                            graphicsElement.Path);
+                            playoutItemGraphicsElement.GraphicsElement.Path);
                     }
 
                     foreach (var element in maybeElement)
                     {
-                        graphicsElementContexts.Add(new TextElementContext(element));
+                        var variables = new Dictionary<string, string>();
+                        if (!string.IsNullOrWhiteSpace(playoutItemGraphicsElement.Variables))
+                        {
+                            variables = JsonConvert.DeserializeObject<Dictionary<string, string>>(
+                                playoutItemGraphicsElement.Variables);
+                        }
+
+                        graphicsElementContexts.Add(new TextElementContext(element, variables));
                     }
                     break;
                 default:
                     _logger.LogInformation(
                         "Ignoring unsupported graphics element kind {Kind}",
-                        nameof(graphicsElement.Kind));
+                        nameof(playoutItemGraphicsElement.GraphicsElement.Kind));
                     break;
             }
         }

@@ -2,11 +2,17 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Scheduling.YamlScheduling.Models;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 
 namespace ErsatzTV.Core.Scheduling.YamlScheduling.Handlers;
 
 public class YamlPlayoutGraphicsOnHandler(IGraphicsElementRepository graphicsElementRepository) : IYamlPlayoutHandler
 {
+    private static readonly JsonSerializerSettings JsonSettings = new()
+    {
+        NullValueHandling = NullValueHandling.Ignore
+    };
+
     private readonly Dictionary<string, Option<GraphicsElement>> _graphicsElementCache = new();
 
     public bool Reset => false;
@@ -31,7 +37,13 @@ public class YamlPlayoutGraphicsOnHandler(IGraphicsElementRepository graphicsEle
 
         foreach (var ge in await GetGraphicsElementByPath(graphicsOn.GraphicsOn))
         {
-            context.SetGraphicsElementId(ge.Id);
+            string variables = null;
+            if (graphicsOn.Variables.Count > 0)
+            {
+                variables = JsonConvert.SerializeObject(graphicsOn.Variables, JsonSettings);
+            }
+
+            context.SetGraphicsElement(ge.Id, variables);
         }
 
         return true;

@@ -6,4 +6,5 @@ public class PlayoutItemGraphicsElement
     public PlayoutItem PlayoutItem { get; set; }
     public int? GraphicsElementId { get; set; }
     public GraphicsElement GraphicsElement { get; set; }
+    public string Variables { get; set; }
 }

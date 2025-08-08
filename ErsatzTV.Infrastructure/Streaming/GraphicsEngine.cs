@@ -28,7 +28,7 @@ public class GraphicsEngine(ILogger<GraphicsEngine> logger) : IGraphicsEngine
 
                     break;
                 case TextElementContext textElementContext:
-                    elements.Add(new TextElement(textElementContext.TextElement, logger));
+                    elements.Add(new TextElement(textElementContext.TextElement, textElementContext.Variables, logger));
                     break;
             }
         }

@@ -17,4 +17,5 @@ public abstract record GraphicsElementContext;
 
 public record WatermarkElementContext(WatermarkOptions Options) : GraphicsElementContext;
 
-public record TextElementContext(TextGraphicsElement TextElement) : GraphicsElementContext;
+public record TextElementContext(TextGraphicsElement TextElement, Dictionary<string, string> Variables)
+    : GraphicsElementContext;

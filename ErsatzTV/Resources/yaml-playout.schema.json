@@ -332,7 +332,8 @@
       "graphicsOnInstruction": {
         "type": "object",
         "properties": {
-          "graphics_on": { "type": "string" }
+          "graphics_on": { "type": "string" },
+          "variables": { "type": "object" }
         },
         "required": [ "graphics_on" ],
         "additionalProperties": false
