@@ -124,7 +124,8 @@ public class YamlPlayoutDurationHandler(EnumeratorCache enumeratorCache) : YamlP
                     FillerKind = fillerKind,
                     CustomTitle = string.IsNullOrWhiteSpace(customTitle) ? null : customTitle,
                     DisableWatermarks = disableWatermarks,
-                    PlayoutItemWatermarks = []
+                    PlayoutItemWatermarks = [],
+                    PlayoutItemGraphicsElements = []
                 };
 
                 foreach (int watermarkId in context.GetChannelWatermarkIds())
@@ -134,6 +135,16 @@ public class YamlPlayoutDurationHandler(EnumeratorCache enumeratorCache) : YamlP
                         {
                             PlayoutItem = playoutItem,
                             WatermarkId = watermarkId
+                        });
+                }
+
+                foreach (int graphicsElementId in context.GetGraphicsElementIds())
+                {
+                    playoutItem.PlayoutItemGraphicsElements.Add(
+                        new PlayoutItemGraphicsElement
+                        {
+                            PlayoutItem = playoutItem,
+                            GraphicsElementId = graphicsElementId
                         });
                 }
 

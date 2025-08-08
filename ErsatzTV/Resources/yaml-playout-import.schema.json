@@ -39,6 +39,8 @@
                 { "$ref": "#/$defs/scheduling/padUntilInstruction" },
                 { "$ref": "#/$defs/scheduling/sequenceInstruction" },
                 { "$ref": "#/$defs/control/epgGroupInstruction" },
+                { "$ref": "#/$defs/control/graphicsOnInstruction" },
+                { "$ref": "#/$defs/control/graphicsOffInstruction" },
                 { "$ref": "#/$defs/control/preRollInstruction"},
                 { "$ref": "#/$defs/control/postRollInstruction"},
                 { "$ref": "#/$defs/control/midRollInstruction"},
@@ -274,6 +276,22 @@
           "advance": { "type": "boolean" }
         },
         "required": [ "epg_group" ],
+        "additionalProperties": false
+      },
+      "graphicsOnInstruction": {
+        "type": "object",
+        "properties": {
+          "graphics_on": { "type": "string" }
+        },
+        "required": [ "graphics_on" ],
+        "additionalProperties": false
+      },
+      "graphicsOffInstruction": {
+        "type": "object",
+        "properties": {
+          "graphics_off": { "type": ["null", "string"] }
+        },
+        "required": [ "graphics_off" ],
         "additionalProperties": false
       },
       "preRollInstruction": {

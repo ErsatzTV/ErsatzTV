@@ -15,7 +15,7 @@ public class YamlPlayoutPreRollHandler : IYamlPlayoutHandler
         ILogger<YamlPlayoutBuilder> logger,
         CancellationToken cancellationToken)
     {
-        if (instruction is not YamlPreRollInstruction preRoll)
+        if (instruction is not YamlPlayoutPreRollInstruction preRoll)
         {
             return Task.FromResult(false);
         }

@@ -25,6 +25,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - Supported in playback troubleshooting
     - Displays multi-line text in a specified font, color, location, z-index
     - Supports constant opacity and opacity expression
+- YAML playout: add `graphics_on` and `graphics_off` instructions to control graphics elements
+  - `graphics_on` requires the name of a graphics element template, e.g. `text/cool_element.yml`
+  - `graphics_off` will turn off a specific element, or all elements if none are specified
 
 ### Fix
 - Fix database operations that were slowing down playout builds

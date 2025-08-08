@@ -2,7 +2,7 @@ using YamlDotNet.Serialization;
 
 namespace ErsatzTV.Core.Scheduling.YamlScheduling.Models;
 
-public class YamlMidRollInstruction : YamlPlayoutInstruction
+public class YamlPlayoutMidRollInstruction : YamlPlayoutInstruction
 {
     [YamlMember(Alias = "mid_roll", ApplyNamingConventions = false)]
     public bool MidRoll { get; set; }

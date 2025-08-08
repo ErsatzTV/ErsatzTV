@@ -90,7 +90,8 @@ public class YamlPlayoutCountHandler(EnumeratorCache enumeratorCache) : YamlPlay
                         //BlockKey = JsonConvert.SerializeObject(effectiveBlock.BlockKey),
                         //CollectionKey = JsonConvert.SerializeObject(collectionKey, JsonSettings),
                         //CollectionEtag = collectionEtags[collectionKey],
-                        PlayoutItemWatermarks = []
+                        PlayoutItemWatermarks = [],
+                        PlayoutItemGraphicsElements = []
                     };
 
                     foreach (int watermarkId in context.GetChannelWatermarkIds())
@@ -100,6 +101,16 @@ public class YamlPlayoutCountHandler(EnumeratorCache enumeratorCache) : YamlPlay
                             {
                                 PlayoutItem = playoutItem,
                                 WatermarkId = watermarkId
+                            });
+                    }
+
+                    foreach (int graphicsElementId in context.GetGraphicsElementIds())
+                    {
+                        playoutItem.PlayoutItemGraphicsElements.Add(
+                            new PlayoutItemGraphicsElement
+                            {
+                                PlayoutItem = playoutItem,
+                                GraphicsElementId = graphicsElementId
                             });
                     }
 
