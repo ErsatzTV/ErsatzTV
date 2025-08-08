@@ -230,7 +230,7 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
             currentState,
             watermarkOverlayFilterSteps);
 
-        SetGraphicsEngine(graphicsEngineInput, desiredState, graphicsEngineOverlayFilterSteps);
+        SetGraphicsEngine(graphicsEngineInput, currentState, desiredState, graphicsEngineOverlayFilterSteps);
 
         // after everything else is done, apply the encoder
         if (pipelineSteps.OfType<IEncoder>().All(e => e.Kind != StreamKind.Video))
@@ -538,10 +538,11 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
 
     private static void SetGraphicsEngine(
         Option<GraphicsEngineInput> graphicsEngineInput,
+        FrameState currentState,
         FrameState desiredState,
         List<IPipelineFilterStep> graphicsEngineOverlayFilterSteps)
     {
-        foreach (var _ in graphicsEngineInput)
+        foreach (var graphicsEngine in graphicsEngineInput)
         {
             foreach (IPixelFormat desiredPixelFormat in desiredState.PixelFormat)
             {
@@ -554,7 +555,12 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
                     }
                 }
 
-                graphicsEngineOverlayFilterSteps.Add(new OverlayGraphicsEngineFilter(pf));
+                if (currentState.FrameDataLocation is FrameDataLocation.Hardware)
+                {
+                    graphicsEngine.FilterSteps.Add(new HardwareUploadVaapiFilter(false));
+                }
+
+                graphicsEngineOverlayFilterSteps.Add(new OverlayGraphicsEngineVaapiFilter(currentState, pf));
             }
         }
     }

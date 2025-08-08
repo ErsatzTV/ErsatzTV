@@ -178,6 +178,10 @@ public class YamlPlayoutContext(Playout playout, YamlPlayoutDefinition definitio
         }
 
         State state = JsonConvert.DeserializeObject<State>(anchor.Context);
+        if (state.ChannelWatermarkIds is null)
+        {
+            state = state with { ChannelWatermarkIds = [] };
+        }
 
         foreach (int instructionIndex in Optional(state.InstructionIndex))
         {
