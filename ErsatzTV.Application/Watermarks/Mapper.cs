@@ -21,5 +21,6 @@ internal static class Mapper
             watermark.DurationSeconds,
             watermark.Opacity,
             watermark.PlaceWithinSourceContent,
-            watermark.OpacityExpression);
+            watermark.OpacityExpression,
+            watermark.ZIndex);
 }

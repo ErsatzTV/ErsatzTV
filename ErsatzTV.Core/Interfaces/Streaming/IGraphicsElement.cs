@@ -4,6 +4,8 @@ namespace ErsatzTV.Core.Interfaces.Streaming;
 
 public interface IGraphicsElement
 {
+    int ZIndex { get; }
+
     bool IsFailed { get; set; }
 
     Task InitializeAsync(Resolution frameSize, int frameRate, CancellationToken cancellationToken);

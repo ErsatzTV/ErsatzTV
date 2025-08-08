@@ -19,5 +19,5 @@ public record WatermarkViewModel(
     int DurationSeconds,
     int Opacity,
     bool PlaceWithinSourceContent,
-    string OpacityExpression
-);
+    string OpacityExpression,
+    int ZIndex);

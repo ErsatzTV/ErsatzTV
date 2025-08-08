@@ -61,7 +61,7 @@ public class GraphicsEngine(ILogger<GraphicsEngine> logger) : IGraphicsEngine
                 // draw each element
                 outputFrame.Mutate(ctx =>
                 {
-                    foreach (var element in elements)
+                    foreach (var element in elements.OrderBy(e => e.ZIndex))
                     {
                         try
                         {

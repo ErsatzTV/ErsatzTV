@@ -134,7 +134,29 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
             if (result.AddedItems.Count > 0)
             {
                 changeCount += 1;
-                await dbContext.BulkInsertAsync(result.AddedItems, cancellationToken: cancellationToken);
+                var bulkConfig = new BulkConfig();
+                bool anyWatermarks = result.AddedItems.Any(i => i.PlayoutItemWatermarks is not null && i.PlayoutItemWatermarks.Count > 0);
+                if (anyWatermarks)
+                {
+                    bulkConfig.SetOutputIdentity = true;
+                }
+
+                await dbContext.BulkInsertAsync(result.AddedItems, bulkConfig, cancellationToken: cancellationToken);
+
+                if (anyWatermarks)
+                {
+                    // copy playout item ids back to watermarks
+                    var allWatermarks = result.AddedItems.SelectMany(item =>
+                        item.PlayoutItemWatermarks.Select(watermark =>
+                        {
+                            watermark.PlayoutItemId = item.Id;
+                            watermark.PlayoutItem = null;
+                            return watermark;
+                        })
+                    ).ToList();
+
+                    await dbContext.BulkInsertAsync(allWatermarks, cancellationToken: cancellationToken);
+                }
             }
 
             if (result.HistoryToRemove.Count > 0)
