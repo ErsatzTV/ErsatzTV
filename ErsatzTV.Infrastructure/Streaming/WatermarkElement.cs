@@ -1,7 +1,6 @@
 using System.Globalization;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.FFmpeg;
-using ErsatzTV.Core.Interfaces.Streaming;
 using ErsatzTV.FFmpeg.State;
 using NCalc;
 using NCalc.Handlers;
@@ -161,19 +160,13 @@ public class WatermarkElement : IGraphicsElement, IDisposable
         }
     }
 
-    public void Draw(
-        object context,
+    public ValueTask<Option<PreparedElementImage>> PrepareImage(
         TimeSpan timeOfDay,
         TimeSpan contentTime,
         TimeSpan contentTotalTime,
         TimeSpan channelTime,
         CancellationToken cancellationToken)
     {
-        if (context is not IImageProcessingContext imageProcessingContext)
-        {
-            return;
-        }
-
         _expression.Parameters["content_seconds"] = contentTime.TotalSeconds;
         _expression.Parameters["content_total_seconds"] = contentTotalTime.TotalSeconds;
         _expression.Parameters["channel_seconds"] = channelTime.TotalSeconds;
@@ -183,11 +176,11 @@ public class WatermarkElement : IGraphicsElement, IDisposable
         float opacity = Convert.ToSingle(expressionResult, CultureInfo.InvariantCulture);
         if (opacity == 0)
         {
-            return;
+            return ValueTask.FromResult(Option<PreparedElementImage>.None);
         }
 
         Image frameForTimestamp = GetFrameForTimestamp(contentTime);
-        imageProcessingContext.DrawImage(frameForTimestamp, _location, opacity);
+        return ValueTask.FromResult(Optional(new PreparedElementImage(frameForTimestamp, _location, opacity, false)));
     }
 
     private Image GetFrameForTimestamp(TimeSpan timestamp)

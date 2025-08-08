@@ -58,30 +58,39 @@ public class GraphicsEngine(ILogger<GraphicsEngine> logger) : IGraphicsEngine
                     context.FrameSize.Height,
                     Color.Transparent);
 
+                // prepare images outside mutate to allow async image generation
+                var preparedElementImages = new List<PreparedElementImage>();
+                foreach (var element in elements.Where(e => !e.IsFailed).OrderBy(e => e.ZIndex))
+                {
+                    try
+                    {
+                        var maybePreparedImage = await element.PrepareImage(
+                            frameTime.TimeOfDay,
+                            contentTime,
+                            contentTotalTime,
+                            channelTime,
+                            cancellationToken);
+
+                        preparedElementImages.AddRange(maybePreparedImage);
+                    }
+                    catch (Exception ex)
+                    {
+                        element.IsFailed = true;
+                        logger.LogWarning(ex,
+                            "Failed to draw graphics element of type {Type}; will disable for this content",
+                            element.GetType().Name);
+                    }
+                }
+
                 // draw each element
                 outputFrame.Mutate(ctx =>
                 {
-                    foreach (var element in elements.OrderBy(e => e.ZIndex))
+                    foreach (var preparedImage in preparedElementImages)
                     {
-                        try
+                        ctx.DrawImage(preparedImage.Image, preparedImage.Point, preparedImage.Opacity);
+                        if (preparedImage.Dispose)
                         {
-                            if (!element.IsFailed)
-                            {
-                                element.Draw(
-                                    ctx,
-                                    frameTime.TimeOfDay,
-                                    contentTime,
-                                    contentTotalTime,
-                                    channelTime,
-                                    cancellationToken);
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            element.IsFailed = true;
-                            logger.LogWarning(ex,
-                                "Failed to draw graphics element of type {Type}; will disable for this content",
-                                element.GetType().Name);
+                            preparedImage.Image.Dispose();
                         }
                     }
                 });
