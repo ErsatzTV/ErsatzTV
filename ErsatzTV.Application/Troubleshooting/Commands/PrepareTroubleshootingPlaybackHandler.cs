@@ -11,6 +11,7 @@ using ErsatzTV.Core.Interfaces.Jellyfin;
 using ErsatzTV.Core.Interfaces.Locking;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Plex;
+using ErsatzTV.Core.Notifications;
 using ErsatzTV.FFmpeg;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
@@ -27,6 +28,7 @@ public class PrepareTroubleshootingPlaybackHandler(
     IFFmpegProcessService ffmpegProcessService,
     ILocalFileSystem localFileSystem,
     IEntityLocker entityLocker,
+    IMediator mediator,
     ILogger<PrepareTroubleshootingPlaybackHandler> logger)
     : IRequestHandler<PrepareTroubleshootingPlayback, Either<BaseError, PlayoutItemResult>>
 {
@@ -43,6 +45,7 @@ public class PrepareTroubleshootingPlaybackHandler(
         catch (Exception ex)
         {
             entityLocker.UnlockTroubleshootingPlayback();
+            await mediator.Publish(new PlaybackTroubleshootingCompletedNotification(-1), cancellationToken);
             logger.LogError(ex, "Error while preparing troubleshooting playback");
             return BaseError.New(ex.Message);
         }
@@ -116,6 +119,8 @@ public class PrepareTroubleshootingPlaybackHandler(
             true,
             new Channel(Guid.Empty)
             {
+                Artwork = [],
+                Name = "ETV",
                 Number = ".troubleshooting",
                 FFmpegProfile = ffmpegProfile,
                 StreamingMode = StreamingMode.HttpLiveStreamingSegmenter,

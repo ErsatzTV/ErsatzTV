@@ -145,12 +145,14 @@
 
     protected override async Task OnParametersSetAsync()
     {
+        _ffmpegProfiles.Clear();
         _ffmpegProfiles.AddRange(await Mediator.Send(new GetAllFFmpegProfiles(), _cts.Token));
         if (_ffmpegProfiles.Count > 0)
         {
             _ffmpegProfileId = _ffmpegProfiles.Map(f => f.Id).Head();
         }
 
+        _watermarks.Clear();
         _watermarks.AddRange(await Mediator.Send(new GetAllWatermarks(), _cts.Token));
 
         if (MediaItemId is not null)
