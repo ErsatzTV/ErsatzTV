@@ -50,18 +50,18 @@
                 }
             </div>
             <div style="margin-left: auto" class="d-none d-md-flex">
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveChanges" StartIcon="@Icons.Material.Filled.Save">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@SaveChanges" StartIcon="@Icons.Material.Filled.Save">
                     Save Schedule Items
                 </MudButton>
-                <MudButton Class="ml-3" Variant="Variant.Filled" Color="Color.Default" OnClick="AddScheduleItem" StartIcon="@Icons.Material.Filled.PlaylistAdd">
+                <MudButton Class="ml-3" Variant="Variant.Filled" Color="Color.Default" OnClick="@AddScheduleItem" StartIcon="@Icons.Material.Filled.PlaylistAdd">
                     Add Schedule Item
                 </MudButton>
             </div>
             <div style="align-items: center; display: flex; margin-left: auto;" class="d-md-none">
                 <div class="flex-grow-1"></div>
                 <MudMenu Icon="@Icons.Material.Filled.MoreVert">
-                    <MudMenuItem Icon="@Icons.Material.Filled.Save" Label="Save Schedule Items" OnClick="SaveChanges"/>
-                    <MudMenuItem Icon="@Icons.Material.Filled.PlaylistAdd" Label="Add Schedule Item" OnClick="AddScheduleItem"/>
+                    <MudMenuItem Icon="@Icons.Material.Filled.Save" Label="Save Schedule Items" OnClick="@SaveChanges"/>
+                    <MudMenuItem Icon="@Icons.Material.Filled.PlaylistAdd" Label="Add Schedule Item" OnClick="@AddScheduleItem"/>
                 </MudMenu>
             </div>
         </div>
@@ -565,6 +565,21 @@
                 </MudStack>
                 <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                     <div class="d-flex">
+                        <MudText>Watermarks</MudText>
+                    </div>
+                    <MudSelect T="WatermarkViewModel"
+                               @bind-SelectedValues="_selectedItem.Watermarks"
+                               ToStringFunc="@(wm => wm?.Name)"
+                               Clearable="true"
+                               MultiSelection="true">
+                        @foreach (WatermarkViewModel watermark in _watermarks)
+                        {
+                            <MudSelectItem Value="@watermark">@watermark.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudStack>
+                <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                    <div class="d-flex">
                         <MudText>Preferred Audio Language</MudText>
                     </div>
                     <MudSelect @bind-Value="_selectedItem.PreferredAudioLanguageCode"
@@ -770,11 +785,11 @@
             PostRollFiller = item.PostRollFiller,
             TailFiller = item.TailFiller,
             FallbackFiller = item.FallbackFiller,
-            Watermark = item.Watermark,
             PreferredAudioLanguageCode = item.PreferredAudioLanguageCode,
             PreferredAudioTitle = item.PreferredAudioTitle,
             PreferredSubtitleLanguageCode = item.PreferredSubtitleLanguageCode,
-            SubtitleMode = item.SubtitleMode
+            SubtitleMode = item.SubtitleMode,
+            Watermarks = item.Watermarks
         };
 
         switch (item)
@@ -839,6 +854,7 @@
             TailFiller = item.TailFiller,
             FallbackFiller = item.FallbackFiller,
             Watermark = item.Watermark,
+            Watermarks = item.Watermarks.ToList(),
             PreferredAudioLanguageCode = item.PreferredAudioLanguageCode,
             PreferredAudioTitle = item.PreferredAudioTitle,
             PreferredSubtitleLanguageCode = item.PreferredSubtitleLanguageCode,
@@ -913,6 +929,7 @@
             item.TailFiller?.Id,
             item.FallbackFiller?.Id,
             item.Watermark?.Id,
+            item.Watermarks.Map(wm => wm.Id).ToList(),
             item.PreferredAudioLanguageCode,
             item.PreferredAudioTitle,
             item.PreferredSubtitleLanguageCode,

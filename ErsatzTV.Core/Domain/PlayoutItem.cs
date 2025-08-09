@@ -65,7 +65,8 @@ public class PlayoutItem
             SubtitleMode = SubtitleMode,
             BlockKey = BlockKey,
             CollectionKey = CollectionKey,
-            CollectionEtag = CollectionEtag
+            CollectionEtag = CollectionEtag,
+            PlayoutItemWatermarks = PlayoutItemWatermarks?.ToList()
         };
 
     public string GetDisplayDuration()

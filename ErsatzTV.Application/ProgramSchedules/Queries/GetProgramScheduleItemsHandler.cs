@@ -6,19 +6,14 @@ using static ErsatzTV.Application.ProgramSchedules.Mapper;
 
 namespace ErsatzTV.Application.ProgramSchedules;
 
-public class GetProgramScheduleItemsHandler :
+public class GetProgramScheduleItemsHandler(IDbContextFactory<TvContext> dbContextFactory) :
     IRequestHandler<GetProgramScheduleItems, List<ProgramScheduleItemViewModel>>
 {
-    private readonly IDbContextFactory<TvContext> _dbContextFactory;
-
-    public GetProgramScheduleItemsHandler(IDbContextFactory<TvContext> dbContextFactory) =>
-        _dbContextFactory = dbContextFactory;
-
     public async Task<List<ProgramScheduleItemViewModel>> Handle(
         GetProgramScheduleItems request,
         CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         Option<ProgramSchedule> maybeProgramSchedule =
             await dbContext.ProgramSchedules.SelectOneAsync(ps => ps.Id, ps => ps.Id == request.Id);
@@ -50,7 +45,8 @@ public class GetProgramScheduleItemsHandler :
             .Include(i => i.PostRollFiller)
             .Include(i => i.TailFiller)
             .Include(i => i.FallbackFiller)
-            .Include(i => i.Watermark)
+            .Include(i => i.ProgramScheduleItemWatermarks)
+            .ThenInclude(i => i.Watermark)
             .ToListAsync(cancellationToken)
             .Map(programScheduleItems => programScheduleItems.Map(ProjectToViewModel)
                 .Map(psi => EnforceProperties(maybeProgramSchedule, psi)).ToList());

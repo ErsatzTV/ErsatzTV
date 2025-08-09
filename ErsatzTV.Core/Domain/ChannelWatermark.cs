@@ -22,6 +22,8 @@ public class ChannelWatermark
     public string OpacityExpression { get; set; }
     public List<PlayoutItem> PlayoutItems { get; set; }
     public List<PlayoutItemWatermark> PlayoutItemWatermarks { get; set; }
+    public List<ProgramScheduleItem> ProgramScheduleItems { get; set; }
+    public List<ProgramScheduleItemWatermark> ProgramScheduleItemWatermarks { get; set; }
     public int ZIndex { get; set; }
 }
 

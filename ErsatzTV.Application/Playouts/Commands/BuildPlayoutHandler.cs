@@ -148,7 +148,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
                 {
                     // copy playout item ids back to watermarks
                     var allWatermarks = result.AddedItems.SelectMany(item =>
-                        item.PlayoutItemWatermarks.Select(watermark =>
+                        (item.PlayoutItemWatermarks ?? []).Select(watermark =>
                         {
                             watermark.PlayoutItemId = item.Id;
                             watermark.PlayoutItem = null;
@@ -163,7 +163,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
                 {
                     // copy playout item ids back to graphics elements
                     var allGraphicsElements = result.AddedItems.SelectMany(item =>
-                        item.PlayoutItemGraphicsElements.Select(graphicsElement =>
+                        (item.PlayoutItemGraphicsElements ?? []).Select(graphicsElement =>
                         {
                             graphicsElement.PlayoutItemId = item.Id;
                             graphicsElement.PlayoutItem = null;
@@ -333,6 +333,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
             .AsNoTracking()
             .Where(ps => ps.Playouts.Any(p => p.Id == playoutId))
             .Include(ps => ps.Items)
+            .ThenInclude(psi => psi.ProgramScheduleItemWatermarks)
             .ThenInclude(psi => psi.Watermark)
             .Include(ps => ps.Items)
             .ThenInclude(psi => psi.Collection)
@@ -355,6 +356,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
             .Where(pt => pt.PlayoutId == playoutId)
             .Include(a => a.ProgramSchedule)
             .ThenInclude(ps => ps.Items)
+            .ThenInclude(psi => psi.ProgramScheduleItemWatermarks)
             .ThenInclude(psi => psi.Watermark)
             .Include(a => a.ProgramSchedule)
             .ThenInclude(ps => ps.Items)

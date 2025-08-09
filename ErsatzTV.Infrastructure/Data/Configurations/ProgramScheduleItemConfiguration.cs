@@ -70,10 +70,17 @@ public class ProgramScheduleItemConfiguration : IEntityTypeConfiguration<Program
             .OnDelete(DeleteBehavior.SetNull)
             .IsRequired(false);
 
-        builder.HasOne(i => i.Watermark)
-            .WithMany()
-            .HasForeignKey(i => i.WatermarkId)
-            .OnDelete(DeleteBehavior.SetNull)
-            .IsRequired(false);
+        builder.HasMany(c => c.Watermarks)
+            .WithMany(m => m.ProgramScheduleItems)
+            .UsingEntity<ProgramScheduleItemWatermark>(
+                j => j.HasOne(ci => ci.Watermark)
+                    .WithMany(mi => mi.ProgramScheduleItemWatermarks)
+                    .HasForeignKey(ci => ci.WatermarkId)
+                    .OnDelete(DeleteBehavior.Cascade),
+                j => j.HasOne(ci => ci.ProgramScheduleItem)
+                    .WithMany(c => c.ProgramScheduleItemWatermarks)
+                    .HasForeignKey(ci => ci.ProgramScheduleItemId)
+                    .OnDelete(DeleteBehavior.Cascade),
+                j => j.HasKey(ci => new { ci.ProgramScheduleItemId, ci.WatermarkId }));
     }
 }

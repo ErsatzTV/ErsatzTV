@@ -29,7 +29,7 @@ public abstract record ProgramScheduleItemViewModel(
     FillerPresetViewModel PostRollFiller,
     FillerPresetViewModel TailFiller,
     FillerPresetViewModel FallbackFiller,
-    WatermarkViewModel Watermark,
+    List<WatermarkViewModel> Watermarks,
     string PreferredAudioLanguageCode,
     string PreferredAudioTitle,
     string PreferredSubtitleLanguageCode,

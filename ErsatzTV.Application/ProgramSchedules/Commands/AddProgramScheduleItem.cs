@@ -31,6 +31,7 @@ public record AddProgramScheduleItem(
     int? TailFillerId,
     int? FallbackFillerId,
     int? WatermarkId,
+    List<int> WatermarkIds,
     string PreferredAudioLanguageCode,
     string PreferredAudioTitle,
     string PreferredSubtitleLanguageCode,
