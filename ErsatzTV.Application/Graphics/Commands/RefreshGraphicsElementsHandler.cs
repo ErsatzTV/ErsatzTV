@@ -30,12 +30,12 @@ public class RefreshGraphicsElementsHandler(
             dbContext.GraphicsElements.Remove(existing);
         }
 
-        // add new elements
-        var newPaths = localFileSystem.ListFiles(FileSystemLayout.GraphicsElementsTextTemplatesFolder)
+        // add new text elements
+        var newTextPaths = localFileSystem.ListFiles(FileSystemLayout.GraphicsElementsTextTemplatesFolder)
             .Where(f => allExisting.All(e => e.Path != f))
             .ToList();
 
-        foreach (var path in newPaths)
+        foreach (var path in newTextPaths)
         {
             logger.LogDebug("Adding new graphics element from file {File}", path);
 
@@ -43,6 +43,24 @@ public class RefreshGraphicsElementsHandler(
             {
                 Path = path,
                 Kind = GraphicsElementKind.Text
+            };
+
+            await dbContext.AddAsync(graphicsElement, cancellationToken);
+        }
+
+        // add new image elements
+        var newImagePaths = localFileSystem.ListFiles(FileSystemLayout.GraphicsElementsImageTemplatesFolder)
+            .Where(f => allExisting.All(e => e.Path != f))
+            .ToList();
+
+        foreach (var path in newImagePaths)
+        {
+            logger.LogDebug("Adding new graphics element from file {File}", path);
+
+            var graphicsElement = new GraphicsElement
+            {
+                Path = path,
+                Kind = GraphicsElementKind.Image
             };
 
             await dbContext.AddAsync(graphicsElement, cancellationToken);
