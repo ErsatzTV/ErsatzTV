@@ -20,3 +20,5 @@ public record WatermarkElementContext(WatermarkOptions Options) : GraphicsElemen
 
 public record TextElementContext(TextGraphicsElement TextElement, Dictionary<string, string> Variables)
     : GraphicsElementContext;
+
+public record ImageElementContext(ImageGraphicsElement ImageElement) : GraphicsElementContext;

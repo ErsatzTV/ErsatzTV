@@ -29,6 +29,9 @@ public class GraphicsEngine(ITemplateDataRepository templateDataRepository, ILog
                     }
 
                     break;
+                case ImageElementContext imageElementContext:
+                    elements.Add(new ImageElement(imageElementContext.ImageElement, logger));
+                    break;
                 case TextElementContext textElementContext:
                     var variables = new Dictionary<string, object>();
                     foreach (var variable in textElementContext.Variables)

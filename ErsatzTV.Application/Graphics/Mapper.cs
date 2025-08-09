@@ -10,6 +10,7 @@ public static class Mapper
         return graphicsElement.Kind switch
         {
             GraphicsElementKind.Text => new GraphicsElementViewModel(graphicsElement.Id, $"text/{fileName}"),
+            GraphicsElementKind.Image => new GraphicsElementViewModel(graphicsElement.Id, $"image/{fileName}"),
             _ => new GraphicsElementViewModel(graphicsElement.Id, graphicsElement.Path)
         };
     }

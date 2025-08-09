@@ -21,11 +21,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - The graphics engine will order by z-index when overlaying watermarks
 - Add *experimental* `Graphics Element` template system
   - Graphics elements are defined in YAML files inside ETV config folder / templates / graphics-elements subfolder
-  - Add `Text` graphics element type
+  - Add `text` graphics element type
     - Supported in playback troubleshooting and YAML playouts
     - Displays multi-line text in a specified font, color, location, z-index
     - Supports constant opacity and opacity expression
     - Supports variable replacement for music videos
+  - Add `image` graphics element type
+      - Supported in playback troubleshooting and YAML playouts
+      - Displays an image, similar to a watermark
+      - Supports constant opacity and opacity expression
 - YAML playout: add `graphics_on` and `graphics_off` instructions to control graphics elements
   - `graphics_on` requires the name of a graphics element template, e.g. `text/cool_element.yml`
     - The `variables` property can be used to dynamically replace text from the template
