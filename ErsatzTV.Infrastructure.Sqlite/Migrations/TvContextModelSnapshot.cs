@@ -445,6 +445,21 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.ToTable("ConfigElement", (string)null);
                 });
 
+            modelBuilder.Entity("ErsatzTV.Core.Domain.DecoWatermark", b =>
+                {
+                    b.Property<int>("DecoId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("WatermarkId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("DecoId", "WatermarkId");
+
+                    b.HasIndex("WatermarkId");
+
+                    b.ToTable("DecoWatermark");
+                });
+
             modelBuilder.Entity("ErsatzTV.Core.Domain.Director", b =>
                 {
                     b.Property<int>("Id")
@@ -3893,6 +3908,25 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Navigation("MediaItem");
                 });
 
+            modelBuilder.Entity("ErsatzTV.Core.Domain.DecoWatermark", b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.Scheduling.Deco", "Deco")
+                        .WithMany("DecoWatermarks")
+                        .HasForeignKey("DecoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ErsatzTV.Core.Domain.ChannelWatermark", "Watermark")
+                        .WithMany("DecoWatermarks")
+                        .HasForeignKey("WatermarkId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Deco");
+
+                    b.Navigation("Watermark");
+                });
+
             modelBuilder.Entity("ErsatzTV.Core.Domain.Director", b =>
                 {
                     b.HasOne("ErsatzTV.Core.Domain.EpisodeMetadata", null)
@@ -5688,6 +5722,8 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.ChannelWatermark", b =>
                 {
+                    b.Navigation("DecoWatermarks");
+
                     b.Navigation("PlayoutItemWatermarks");
 
                     b.Navigation("ProgramScheduleItemWatermarks");
@@ -5934,6 +5970,8 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.Scheduling.Deco", b =>
                 {
+                    b.Navigation("DecoWatermarks");
+
                     b.Navigation("Playouts");
                 });
 

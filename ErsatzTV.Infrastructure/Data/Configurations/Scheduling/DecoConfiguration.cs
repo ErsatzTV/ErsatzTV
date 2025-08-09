@@ -1,3 +1,4 @@
+using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Scheduling;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -48,5 +49,18 @@ public class DecoConfiguration : IEntityTypeConfiguration<Deco>
             .HasForeignKey(d => d.DeadAirFallbackSmartCollectionId)
             .OnDelete(DeleteBehavior.Cascade)
             .IsRequired(false);
+
+        builder.HasMany(c => c.Watermarks)
+            .WithMany(m => m.Decos)
+            .UsingEntity<DecoWatermark>(
+                j => j.HasOne(ci => ci.Watermark)
+                    .WithMany(mi => mi.DecoWatermarks)
+                    .HasForeignKey(ci => ci.WatermarkId)
+                    .OnDelete(DeleteBehavior.Cascade),
+                j => j.HasOne(ci => ci.Deco)
+                    .WithMany(c => c.DecoWatermarks)
+                    .HasForeignKey(ci => ci.DecoId)
+                    .OnDelete(DeleteBehavior.Cascade),
+                j => j.HasKey(ci => new { ci.DecoId, ci.WatermarkId }));
     }
 }
