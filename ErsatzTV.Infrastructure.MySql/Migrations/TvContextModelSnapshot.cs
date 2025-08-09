@@ -2274,6 +2274,21 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.UseTptMappingStrategy();
                 });
 
+            modelBuilder.Entity("ErsatzTV.Core.Domain.ProgramScheduleItemWatermark", b =>
+                {
+                    b.Property<int>("ProgramScheduleItemId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("WatermarkId")
+                        .HasColumnType("int");
+
+                    b.HasKey("ProgramScheduleItemId", "WatermarkId");
+
+                    b.HasIndex("WatermarkId");
+
+                    b.ToTable("ProgramScheduleItemWatermark");
+                });
+
             modelBuilder.Entity("ErsatzTV.Core.Domain.RemoteStreamMetadata", b =>
                 {
                     b.Property<int>("Id")
@@ -4945,6 +4960,25 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Navigation("Watermark");
                 });
 
+            modelBuilder.Entity("ErsatzTV.Core.Domain.ProgramScheduleItemWatermark", b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.ProgramScheduleItem", "ProgramScheduleItem")
+                        .WithMany("ProgramScheduleItemWatermarks")
+                        .HasForeignKey("ProgramScheduleItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ErsatzTV.Core.Domain.ChannelWatermark", "Watermark")
+                        .WithMany("ProgramScheduleItemWatermarks")
+                        .HasForeignKey("WatermarkId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ProgramScheduleItem");
+
+                    b.Navigation("Watermark");
+                });
+
             modelBuilder.Entity("ErsatzTV.Core.Domain.RemoteStreamMetadata", b =>
                 {
                     b.HasOne("ErsatzTV.Core.Domain.RemoteStream", "RemoteStream")
@@ -5832,6 +5866,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
             modelBuilder.Entity("ErsatzTV.Core.Domain.ChannelWatermark", b =>
                 {
                     b.Navigation("PlayoutItemWatermarks");
+
+                    b.Navigation("ProgramScheduleItemWatermarks");
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.Collection", b =>
@@ -6035,6 +6071,11 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Navigation("Playouts");
 
                     b.Navigation("ProgramScheduleAlternates");
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.ProgramScheduleItem", b =>
+                {
+                    b.Navigation("ProgramScheduleItemWatermarks");
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.RemoteStreamMetadata", b =>
