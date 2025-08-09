@@ -9,31 +9,23 @@ using Scriban;
 
 namespace ErsatzTV.Infrastructure.FFmpeg;
 
-public class MusicVideoCreditsGenerator : IMusicVideoCreditsGenerator
+public class MusicVideoCreditsGenerator(ITempFilePool tempFilePool, ILogger<MusicVideoCreditsGenerator> logger)
+    : IMusicVideoCreditsGenerator
 {
-    private readonly ILogger<MusicVideoCreditsGenerator> _logger;
-    private readonly ITempFilePool _tempFilePool;
-
-    public MusicVideoCreditsGenerator(ITempFilePool tempFilePool, ILogger<MusicVideoCreditsGenerator> logger)
-    {
-        _tempFilePool = tempFilePool;
-        _logger = logger;
-    }
-
     public async Task<Option<Subtitle>> GenerateCreditsSubtitle(MusicVideo musicVideo, FFmpegProfile ffmpegProfile)
     {
-        const int HORIZONTAL_MARGIN_PERCENT = 3;
-        const int VERTICAL_MARGIN_PERCENT = 5;
+        const int horizontalMarginPercent = 3;
+        const int verticalMarginPercent = 5;
 
         var fontSize = (int)Math.Round(ffmpegProfile.Resolution.Height / 20.0);
 
-        int leftMarginPercent = HORIZONTAL_MARGIN_PERCENT;
-        int rightMarginPercent = HORIZONTAL_MARGIN_PERCENT;
+        int leftMarginPercent = horizontalMarginPercent;
+        int rightMarginPercent = horizontalMarginPercent;
 
         var leftMargin = (int)Math.Round(leftMarginPercent / 100.0 * ffmpegProfile.Resolution.Width);
         var rightMargin = (int)Math.Round(rightMarginPercent / 100.0 * ffmpegProfile.Resolution.Width);
         var verticalMargin =
-            (int)Math.Round(VERTICAL_MARGIN_PERCENT / 100.0 * ffmpegProfile.Resolution.Height);
+            (int)Math.Round(verticalMarginPercent / 100.0 * ffmpegProfile.Resolution.Height);
 
         foreach (MusicVideoMetadata metadata in musicVideo.MusicVideoMetadata)
         {
@@ -60,7 +52,7 @@ public class MusicVideoCreditsGenerator : IMusicVideoCreditsGenerator
                 sb.Append(CultureInfo.InvariantCulture, $"\\N{metadata.Album}");
             }
 
-            string subtitles = await new SubtitleBuilder(_tempFilePool)
+            string subtitles = await new SubtitleBuilder(tempFilePool)
                 .WithResolution(ffmpegProfile.Resolution)
                 .WithFontName("OPTIKabel-Heavy")
                 .WithFontSize(fontSize)
@@ -127,7 +119,7 @@ public class MusicVideoCreditsGenerator : IMusicVideoCreditsGenerator
                         StreamSeek = await settings.StreamSeek.IfNoneAsync(TimeSpan.Zero)
                     });
 
-                string fileName = _tempFilePool.GetNextTempFile(TempFileCategory.Subtitle);
+                string fileName = tempFilePool.GetNextTempFile(TempFileCategory.Subtitle);
                 await File.WriteAllTextAsync(fileName, result);
                 return new Subtitle
                 {
@@ -143,7 +135,7 @@ public class MusicVideoCreditsGenerator : IMusicVideoCreditsGenerator
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error generating music video credits from template {Template}", templateFileName);
+            logger.LogError(ex, "Error generating music video credits from template {Template}", templateFileName);
         }
 
         return None;

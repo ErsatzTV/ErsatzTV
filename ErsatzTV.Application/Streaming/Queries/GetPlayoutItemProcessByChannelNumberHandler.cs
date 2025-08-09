@@ -523,7 +523,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 subtitles.AddRange(
                     await Optional(musicVideo.MusicVideoMetadata).Flatten().HeadOrNone()
                         .Map(mm => mm.Subtitles)
-                        .IfNoneAsync(new List<Subtitle>()));
+                        .IfNoneAsync([]));
                 break;
         }
 

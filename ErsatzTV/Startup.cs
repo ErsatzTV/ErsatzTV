@@ -720,6 +720,7 @@ public class Startup
         services.AddScoped<IChannelLogoGenerator, ChannelLogoGenerator>();
         services.AddScoped<IGraphicsEngine, GraphicsEngine>();
         services.AddScoped<IGraphicsElementRepository, GraphicsElementRepository>();
+        services.AddScoped<ITemplateDataRepository, TemplateDataRepository>();
 
         services.AddScoped<IFFmpegProcessService, FFmpegLibraryProcessService>();
         services.AddScoped<IPipelineBuilderFactory, PipelineBuilderFactory>();

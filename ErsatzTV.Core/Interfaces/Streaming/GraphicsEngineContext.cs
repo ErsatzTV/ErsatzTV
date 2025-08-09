@@ -5,6 +5,7 @@ using ErsatzTV.Core.Graphics;
 namespace ErsatzTV.Core.Interfaces.Streaming;
 
 public record GraphicsEngineContext(
+    MediaItem MediaItem,
     List<GraphicsElementContext> Elements,
     Resolution FrameSize,
     int FrameRate,
