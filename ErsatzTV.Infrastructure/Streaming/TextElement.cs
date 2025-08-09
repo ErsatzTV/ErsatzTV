@@ -12,7 +12,8 @@ using Image=SixLabors.ImageSharp.Image;
 
 namespace ErsatzTV.Infrastructure.Streaming;
 
-public class TextElement(TextGraphicsElement textElement, Dictionary<string, string> variables, ILogger logger) : IGraphicsElement, IDisposable
+public class TextElement(TextGraphicsElement textElement, Dictionary<string, object> variables, ILogger logger)
+    : IGraphicsElement, IDisposable
 {
     private Option<Expression> _maybeOpacityExpression;
     private float _opacity;
@@ -42,7 +43,8 @@ public class TextElement(TextGraphicsElement textElement, Dictionary<string, str
 
             string textToRender = await Template.Parse(textElement.Text).RenderAsync(variables);
 
-            var font = GraphicsEngineFonts.GetFont(textElement.FontFamily, textElement.FontSize ?? 48, FontStyle.Regular);
+            var font = GraphicsEngineFonts.GetFont(textElement.FontFamily, textElement.FontSize ?? 48,
+                FontStyle.Regular);
             var fontColor = Color.White;
             if (Color.TryParse(textElement.FontColor, out Color parsedColor) ||
                 Color.TryParseHex(textElement.FontColor, out parsedColor))
@@ -67,7 +69,8 @@ public class TextElement(TextGraphicsElement textElement, Dictionary<string, str
             _image = new Image<Rgba32>((int)Math.Ceiling(textBounds.Width), (int)Math.Ceiling(textBounds.Height));
             _image.Mutate(ctx => ctx.DrawText(textOptions, textToRender, fontColor));
 
-            int horizontalMargin = (int)Math.Round((textElement.HorizontalMarginPercent ?? 0) / 100.0 * frameSize.Width);
+            int horizontalMargin =
+                (int)Math.Round((textElement.HorizontalMarginPercent ?? 0) / 100.0 * frameSize.Width);
             int verticalMargin = (int)Math.Round((textElement.VerticalMarginPercent ?? 0) / 100.0 * frameSize.Height);
 
             _location = WatermarkElement.CalculatePosition(

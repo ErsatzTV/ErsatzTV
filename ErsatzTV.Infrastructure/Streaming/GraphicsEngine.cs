@@ -1,5 +1,7 @@
 using System.IO.Pipelines;
 using ErsatzTV.Core;
+using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Streaming;
 using Microsoft.Extensions.Logging;
 using SixLabors.ImageSharp;
@@ -8,7 +10,7 @@ using SixLabors.ImageSharp.Processing;
 
 namespace ErsatzTV.Infrastructure.Streaming;
 
-public class GraphicsEngine(ILogger<GraphicsEngine> logger) : IGraphicsEngine
+public class GraphicsEngine(ITemplateDataRepository templateDataRepository, ILogger<GraphicsEngine> logger) : IGraphicsEngine
 {
     public async Task Run(GraphicsEngineContext context, PipeWriter pipeWriter, CancellationToken cancellationToken)
     {
@@ -28,7 +30,29 @@ public class GraphicsEngine(ILogger<GraphicsEngine> logger) : IGraphicsEngine
 
                     break;
                 case TextElementContext textElementContext:
-                    elements.Add(new TextElement(textElementContext.TextElement, textElementContext.Variables, logger));
+                    var variables = new Dictionary<string, object>();
+                    foreach (var variable in textElementContext.Variables)
+                    {
+                        variables.Add(variable.Key, variable.Value);
+                    }
+
+                    if (context.MediaItem is MusicVideo musicVideo)
+                    {
+                        var maybeTemplateData = await templateDataRepository.GetMusicVideoTemplateData(
+                            context.FrameSize,
+                            context.Seek,
+                            musicVideo.Id);
+
+                        foreach (var templateData in maybeTemplateData)
+                        {
+                            foreach (var variable in templateData)
+                            {
+                                variables.Add(variable.Key, variable.Value);
+                            }
+                        }
+
+                    }
+                    elements.Add(new TextElement(textElementContext.TextElement, variables, logger));
                     break;
             }
         }

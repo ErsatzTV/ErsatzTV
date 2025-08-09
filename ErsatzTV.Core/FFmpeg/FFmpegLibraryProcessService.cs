@@ -414,6 +414,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             graphicsEngineInput = new GraphicsEngineInput();
 
             graphicsEngineContext = new GraphicsEngineContext(
+                audioVersion.MediaItem,
                 graphicsElementContexts,
                 channel.FFmpegProfile.Resolution,
                 await playbackSettings.FrameRate.IfNoneAsync(24),
