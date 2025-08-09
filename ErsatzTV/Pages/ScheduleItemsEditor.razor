@@ -50,18 +50,18 @@
                 }
             </div>
             <div style="margin-left: auto" class="d-none d-md-flex">
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveChanges" StartIcon="@Icons.Material.Filled.Save">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@SaveChanges" StartIcon="@Icons.Material.Filled.Save">
                     Save Schedule Items
                 </MudButton>
-                <MudButton Class="ml-3" Variant="Variant.Filled" Color="Color.Default" OnClick="AddScheduleItem" StartIcon="@Icons.Material.Filled.PlaylistAdd">
+                <MudButton Class="ml-3" Variant="Variant.Filled" Color="Color.Default" OnClick="@AddScheduleItem" StartIcon="@Icons.Material.Filled.PlaylistAdd">
                     Add Schedule Item
                 </MudButton>
             </div>
             <div style="align-items: center; display: flex; margin-left: auto;" class="d-md-none">
                 <div class="flex-grow-1"></div>
                 <MudMenu Icon="@Icons.Material.Filled.MoreVert">
-                    <MudMenuItem Icon="@Icons.Material.Filled.Save" Label="Save Schedule Items" OnClick="SaveChanges"/>
-                    <MudMenuItem Icon="@Icons.Material.Filled.PlaylistAdd" Label="Add Schedule Item" OnClick="AddScheduleItem"/>
+                    <MudMenuItem Icon="@Icons.Material.Filled.Save" Label="Save Schedule Items" OnClick="@SaveChanges"/>
+                    <MudMenuItem Icon="@Icons.Material.Filled.PlaylistAdd" Label="Add Schedule Item" OnClick="@AddScheduleItem"/>
                 </MudMenu>
             </div>
         </div>
@@ -785,7 +785,6 @@
             PostRollFiller = item.PostRollFiller,
             TailFiller = item.TailFiller,
             FallbackFiller = item.FallbackFiller,
-            Watermark = item.Watermark,
             PreferredAudioLanguageCode = item.PreferredAudioLanguageCode,
             PreferredAudioTitle = item.PreferredAudioTitle,
             PreferredSubtitleLanguageCode = item.PreferredSubtitleLanguageCode,

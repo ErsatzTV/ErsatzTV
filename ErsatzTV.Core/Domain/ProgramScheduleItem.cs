@@ -41,8 +41,6 @@ public abstract class ProgramScheduleItem
     public FillerPreset TailFiller { get; set; }
     public int? FallbackFillerId { get; set; }
     public FillerPreset FallbackFiller { get; set; }
-    public ChannelWatermark Watermark { get; set; }
-    public int? WatermarkId { get; set; }
     public List<ChannelWatermark> Watermarks { get; set; }
     public List<ProgramScheduleItemWatermark> ProgramScheduleItemWatermarks { get; set; }
     public string PreferredAudioLanguageCode { get; set; }

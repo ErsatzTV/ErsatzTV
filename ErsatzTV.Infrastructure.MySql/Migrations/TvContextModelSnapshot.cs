@@ -2240,9 +2240,6 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<int?>("TailFillerId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("WatermarkId")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
                     b.HasIndex("CollectionId");
@@ -2266,8 +2263,6 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.HasIndex("SmartCollectionId");
 
                     b.HasIndex("TailFillerId");
-
-                    b.HasIndex("WatermarkId");
 
                     b.ToTable("ProgramScheduleItem", (string)null);
 
@@ -4930,11 +4925,6 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .HasForeignKey("TailFillerId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("ErsatzTV.Core.Domain.ChannelWatermark", "Watermark")
-                        .WithMany()
-                        .HasForeignKey("WatermarkId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.Navigation("Collection");
 
                     b.Navigation("FallbackFiller");
@@ -4956,8 +4946,6 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Navigation("SmartCollection");
 
                     b.Navigation("TailFiller");
-
-                    b.Navigation("Watermark");
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.ProgramScheduleItemWatermark", b =>

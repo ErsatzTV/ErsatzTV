@@ -66,9 +66,6 @@ internal static class Mapper
                     duration.FallbackFiller != null
                         ? Filler.Mapper.ProjectToViewModel(duration.FallbackFiller)
                         : null,
-                    duration.Watermark != null
-                        ? Watermarks.Mapper.ProjectToViewModel(duration.Watermark)
-                        : null,
                     duration.ProgramScheduleItemWatermarks.Map(wm => Watermarks.Mapper.ProjectToViewModel(wm.Watermark)).ToList(),
                     duration.PreferredAudioLanguageCode,
                     duration.PreferredAudioTitle,
@@ -119,9 +116,6 @@ internal static class Mapper
                         : null,
                     flood.FallbackFiller != null
                         ? Filler.Mapper.ProjectToViewModel(flood.FallbackFiller)
-                        : null,
-                    flood.Watermark != null
-                        ? Watermarks.Mapper.ProjectToViewModel(flood.Watermark)
                         : null,
                     flood.ProgramScheduleItemWatermarks.Map(wm => Watermarks.Mapper.ProjectToViewModel(wm.Watermark)).ToList(),
                     flood.PreferredAudioLanguageCode,
@@ -176,9 +170,6 @@ internal static class Mapper
                     multiple.FallbackFiller != null
                         ? Filler.Mapper.ProjectToViewModel(multiple.FallbackFiller)
                         : null,
-                    multiple.Watermark != null
-                        ? Watermarks.Mapper.ProjectToViewModel(multiple.Watermark)
-                        : null,
                     multiple.ProgramScheduleItemWatermarks.Map(wm => Watermarks.Mapper.ProjectToViewModel(wm.Watermark)).ToList(),
                     multiple.PreferredAudioLanguageCode,
                     multiple.PreferredAudioTitle,
@@ -229,9 +220,6 @@ internal static class Mapper
                         : null,
                     one.FallbackFiller != null
                         ? Filler.Mapper.ProjectToViewModel(one.FallbackFiller)
-                        : null,
-                    one.Watermark != null
-                        ? Watermarks.Mapper.ProjectToViewModel(one.Watermark)
                         : null,
                     one.ProgramScheduleItemWatermarks.Map(wm => Watermarks.Mapper.ProjectToViewModel(wm.Watermark)).ToList(),
                     one.PreferredAudioLanguageCode,

@@ -104,13 +104,18 @@ public class PlayoutModeSchedulerMultiple : PlayoutModeSchedulerBase<ProgramSche
                 PreferredAudioLanguageCode = scheduleItem.PreferredAudioLanguageCode,
                 PreferredAudioTitle = scheduleItem.PreferredAudioTitle,
                 PreferredSubtitleLanguageCode = scheduleItem.PreferredSubtitleLanguageCode,
-                SubtitleMode = scheduleItem.SubtitleMode
+                SubtitleMode = scheduleItem.SubtitleMode,
+                PlayoutItemWatermarks = []
             };
 
-            if (scheduleItem.WatermarkId is not null)
+            foreach (var programScheduleItemWatermark in scheduleItem.ProgramScheduleItemWatermarks)
             {
-                playoutItem.Watermarks ??= [];
-                playoutItem.Watermarks.Add(scheduleItem.Watermark);
+                playoutItem.PlayoutItemWatermarks.Add(
+                    new PlayoutItemWatermark
+                    {
+                        PlayoutItem = playoutItem,
+                        WatermarkId = programScheduleItemWatermark.WatermarkId
+                    });
             }
 
             // LogScheduledItem(scheduleItem, mediaItem, itemStartTime);

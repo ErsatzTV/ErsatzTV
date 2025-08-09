@@ -70,12 +70,6 @@ public class ProgramScheduleItemConfiguration : IEntityTypeConfiguration<Program
             .OnDelete(DeleteBehavior.SetNull)
             .IsRequired(false);
 
-        builder.HasOne(i => i.Watermark)
-            .WithMany()
-            .HasForeignKey(i => i.WatermarkId)
-            .OnDelete(DeleteBehavior.SetNull)
-            .IsRequired(false);
-
         builder.HasMany(c => c.Watermarks)
             .WithMany(m => m.ProgramScheduleItems)
             .UsingEntity<ProgramScheduleItemWatermark>(

@@ -45,7 +45,6 @@ public class GetProgramScheduleItemsHandler(IDbContextFactory<TvContext> dbConte
             .Include(i => i.PostRollFiller)
             .Include(i => i.TailFiller)
             .Include(i => i.FallbackFiller)
-            .Include(i => i.Watermark)
             .Include(i => i.ProgramScheduleItemWatermarks)
             .ThenInclude(i => i.Watermark)
             .ToListAsync(cancellationToken)
