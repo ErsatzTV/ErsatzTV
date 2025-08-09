@@ -26,7 +26,6 @@ public class UpdateDecoHandler(IDbContextFactory<TvContext> dbContextFactory)
 
         // watermark
         existing.WatermarkMode = request.WatermarkMode;
-        existing.WatermarkId = request.WatermarkMode is DecoMode.Override ? request.WatermarkId : null;
         existing.UseWatermarkDuringFiller =
             request.WatermarkMode is DecoMode.Override && request.UseWatermarkDuringFiller;
 

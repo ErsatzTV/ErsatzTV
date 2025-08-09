@@ -28,7 +28,8 @@ public class CreateDecoHandler(IDbContextFactory<TvContext> dbContextFactory)
         await ValidateDecoName(dbContext, request).MapT(name => new Deco
         {
             DecoGroupId = request.DecoGroupId,
-            Name = name
+            Name = name,
+            DecoWatermarks = []
         });
 
     private static async Task<Validation<BaseError, string>> ValidateDecoName(

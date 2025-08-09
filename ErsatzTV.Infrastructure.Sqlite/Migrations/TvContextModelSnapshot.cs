@@ -2408,9 +2408,6 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Property<bool>("UseWatermarkDuringFiller")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int?>("WatermarkId")
-                        .HasColumnType("INTEGER");
-
                     b.Property<int>("WatermarkMode")
                         .HasColumnType("INTEGER");
 
@@ -2431,8 +2428,6 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.HasIndex("DefaultFillerMultiCollectionId");
 
                     b.HasIndex("DefaultFillerSmartCollectionId");
-
-                    b.HasIndex("WatermarkId");
 
                     b.HasIndex("DecoGroupId", "Name")
                         .IsUnique();
@@ -4941,11 +4936,6 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                         .WithMany()
                         .HasForeignKey("DefaultFillerSmartCollectionId");
 
-                    b.HasOne("ErsatzTV.Core.Domain.ChannelWatermark", "Watermark")
-                        .WithMany()
-                        .HasForeignKey("WatermarkId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.Navigation("DeadAirFallbackCollection");
 
                     b.Navigation("DeadAirFallbackMediaItem");
@@ -4963,8 +4953,6 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Navigation("DefaultFillerMultiCollection");
 
                     b.Navigation("DefaultFillerSmartCollection");
-
-                    b.Navigation("Watermark");
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.Scheduling.DecoTemplate", b =>

@@ -9,7 +9,6 @@ public record UpdateDeco(
     int DecoGroupId,
     string Name,
     DecoMode WatermarkMode,
-    int? WatermarkId,
     List<int> WatermarkIds,
     bool UseWatermarkDuringFiller,
     DecoMode DefaultFillerMode,

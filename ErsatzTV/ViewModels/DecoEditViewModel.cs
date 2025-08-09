@@ -11,7 +11,6 @@ public class DecoEditViewModel
     public int DecoGroupId { get; set; }
     public string Name { get; set; }
     public DecoMode WatermarkMode { get; set; }
-    public int? WatermarkId { get; set; }
     public IEnumerable<WatermarkViewModel> Watermarks { get; set; }
     public bool UseWatermarkDuringFiller { get; set; }
 

@@ -20,12 +20,6 @@ public class DecoConfiguration : IEntityTypeConfiguration<Deco>
             .OnDelete(DeleteBehavior.SetNull)
             .IsRequired(false);
 
-        builder.HasOne(d => d.Watermark)
-            .WithMany()
-            .HasForeignKey(d => d.WatermarkId)
-            .OnDelete(DeleteBehavior.SetNull)
-            .IsRequired(false);
-
         builder.HasOne(d => d.DeadAirFallbackCollection)
             .WithMany()
             .HasForeignKey(d => d.DeadAirFallbackCollectionId)

@@ -9,7 +9,6 @@ public record DecoViewModel(
     int DecoGroupId,
     string Name,
     DecoMode WatermarkMode,
-    int? WatermarkId,
     List<WatermarkViewModel> Watermarks,
     bool UseWatermarkDuringFiller,
     DecoMode DefaultFillerMode,
