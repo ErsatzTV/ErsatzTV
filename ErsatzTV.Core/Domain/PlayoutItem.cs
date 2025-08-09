@@ -66,7 +66,7 @@ public class PlayoutItem
             BlockKey = BlockKey,
             CollectionKey = CollectionKey,
             CollectionEtag = CollectionEtag,
-            PlayoutItemWatermarks = PlayoutItemWatermarks.ToList(),
+            PlayoutItemWatermarks = PlayoutItemWatermarks?.ToList()
         };
 
     public string GetDisplayDuration()
