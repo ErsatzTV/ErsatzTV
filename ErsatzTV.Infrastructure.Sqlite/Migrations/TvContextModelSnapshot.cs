@@ -445,6 +445,21 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.ToTable("ConfigElement", (string)null);
                 });
 
+            modelBuilder.Entity("ErsatzTV.Core.Domain.DecoWatermark", b =>
+                {
+                    b.Property<int>("DecoId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("WatermarkId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("DecoId", "WatermarkId");
+
+                    b.HasIndex("WatermarkId");
+
+                    b.ToTable("DecoWatermark");
+                });
+
             modelBuilder.Entity("ErsatzTV.Core.Domain.Director", b =>
                 {
                     b.Property<int>("Id")
@@ -2393,9 +2408,6 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Property<bool>("UseWatermarkDuringFiller")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int?>("WatermarkId")
-                        .HasColumnType("INTEGER");
-
                     b.Property<int>("WatermarkMode")
                         .HasColumnType("INTEGER");
 
@@ -2416,8 +2428,6 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.HasIndex("DefaultFillerMultiCollectionId");
 
                     b.HasIndex("DefaultFillerSmartCollectionId");
-
-                    b.HasIndex("WatermarkId");
 
                     b.HasIndex("DecoGroupId", "Name")
                         .IsUnique();
@@ -3893,6 +3903,25 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Navigation("MediaItem");
                 });
 
+            modelBuilder.Entity("ErsatzTV.Core.Domain.DecoWatermark", b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.Scheduling.Deco", "Deco")
+                        .WithMany("DecoWatermarks")
+                        .HasForeignKey("DecoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ErsatzTV.Core.Domain.ChannelWatermark", "Watermark")
+                        .WithMany("DecoWatermarks")
+                        .HasForeignKey("WatermarkId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Deco");
+
+                    b.Navigation("Watermark");
+                });
+
             modelBuilder.Entity("ErsatzTV.Core.Domain.Director", b =>
                 {
                     b.HasOne("ErsatzTV.Core.Domain.EpisodeMetadata", null)
@@ -4907,11 +4936,6 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                         .WithMany()
                         .HasForeignKey("DefaultFillerSmartCollectionId");
 
-                    b.HasOne("ErsatzTV.Core.Domain.ChannelWatermark", "Watermark")
-                        .WithMany()
-                        .HasForeignKey("WatermarkId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.Navigation("DeadAirFallbackCollection");
 
                     b.Navigation("DeadAirFallbackMediaItem");
@@ -4929,8 +4953,6 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Navigation("DefaultFillerMultiCollection");
 
                     b.Navigation("DefaultFillerSmartCollection");
-
-                    b.Navigation("Watermark");
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.Scheduling.DecoTemplate", b =>
@@ -5688,6 +5710,8 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.ChannelWatermark", b =>
                 {
+                    b.Navigation("DecoWatermarks");
+
                     b.Navigation("PlayoutItemWatermarks");
 
                     b.Navigation("ProgramScheduleItemWatermarks");
@@ -5934,6 +5958,8 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.Scheduling.Deco", b =>
                 {
+                    b.Navigation("DecoWatermarks");
+
                     b.Navigation("Playouts");
                 });
 

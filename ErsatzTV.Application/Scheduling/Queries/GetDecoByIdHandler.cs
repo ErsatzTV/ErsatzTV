@@ -11,6 +11,9 @@ public class GetDecoByIdHandler(IDbContextFactory<TvContext> dbContextFactory)
     {
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await dbContext.Decos
+            .AsNoTracking()
+            .Include(d => d.DecoWatermarks)
+            .ThenInclude(d => d.Watermark)
             .SelectOneAsync(b => b.Id, b => b.Id == request.DecoId)
             .MapT(Mapper.ProjectToViewModel);
     }

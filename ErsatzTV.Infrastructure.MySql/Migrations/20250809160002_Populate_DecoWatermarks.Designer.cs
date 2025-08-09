@@ -4,6 +4,7 @@ using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ErsatzTV.Infrastructure.MySql.Migrations
 {
     [DbContext(typeof(TvContext))]
-    partial class TvContextModelSnapshot : ModelSnapshot
+    [Migration("20250809160002_Populate_DecoWatermarks")]
+    partial class Populate_DecoWatermarks
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2527,6 +2530,9 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<bool>("UseWatermarkDuringFiller")
                         .HasColumnType("tinyint(1)");
 
+                    b.Property<int?>("WatermarkId")
+                        .HasColumnType("int");
+
                     b.Property<int>("WatermarkMode")
                         .HasColumnType("int");
 
@@ -2547,6 +2553,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.HasIndex("DefaultFillerMultiCollectionId");
 
                     b.HasIndex("DefaultFillerSmartCollectionId");
+
+                    b.HasIndex("WatermarkId");
 
                     b.HasIndex("DecoGroupId", "Name")
                         .IsUnique();
@@ -5101,6 +5109,11 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .WithMany()
                         .HasForeignKey("DefaultFillerSmartCollectionId");
 
+                    b.HasOne("ErsatzTV.Core.Domain.ChannelWatermark", "Watermark")
+                        .WithMany()
+                        .HasForeignKey("WatermarkId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("DeadAirFallbackCollection");
 
                     b.Navigation("DeadAirFallbackMediaItem");
@@ -5118,6 +5131,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Navigation("DefaultFillerMultiCollection");
 
                     b.Navigation("DefaultFillerSmartCollection");
+
+                    b.Navigation("Watermark");
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.Scheduling.DecoTemplate", b =>

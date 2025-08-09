@@ -36,9 +36,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - YAML playouts in particular should build significantly faster
 
 ### Changed
-- Allow multiple watermarks on a single playout item
 - Allow multiple watermarks in playback troubleshooting
 - Classic schedules: allow selecting multiple watermarks on schedule items
+- Block schedules: allow selecting multiple watermarks on decos
 - YAML playout: `watermark` instruction changes:
   - When value is `true`, will add named watermark to list of active watermarks
   - When value is `false` and `name` is specified, will remove named watermark from list of active watermarks

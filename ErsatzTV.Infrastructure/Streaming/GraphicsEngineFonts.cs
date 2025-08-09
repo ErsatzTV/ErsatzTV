@@ -7,28 +7,29 @@ namespace ErsatzTV.Infrastructure.Streaming;
 public static class GraphicsEngineFonts
 {
     private static readonly FontCollection CustomFontCollection = new();
-    private static readonly ConcurrentDictionary<string, FontFamily> CustomFontFamilies = new();
-
-    private static bool _fontsLoaded;
+    private static readonly ConcurrentDictionary<string, FontFamily> CustomFontFamilies
+        = new(StringComparer.OrdinalIgnoreCase);
+    private static readonly System.Collections.Generic.HashSet<string> LoadedFontFiles
+        = new(StringComparer.OrdinalIgnoreCase);
 
     public static void LoadFonts(string fontsFolder)
     {
-        if (_fontsLoaded)
+        foreach (var file in Directory.EnumerateFiles(fontsFolder, "*.*", SearchOption.AllDirectories))
         {
-            return;
-        }
-
-        foreach (var file in Directory.GetFiles(fontsFolder, "*.*", SearchOption.AllDirectories))
-        {
-            if (file.EndsWith(".ttf", StringComparison.OrdinalIgnoreCase) ||
-                file.EndsWith(".otf", StringComparison.OrdinalIgnoreCase))
+            if (!file.EndsWith(".ttf", StringComparison.OrdinalIgnoreCase) &&
+                !file.EndsWith(".otf", StringComparison.OrdinalIgnoreCase))
             {
-                var fontFamily = CustomFontCollection.Add(file, CultureInfo.CurrentCulture);
-                CustomFontFamilies.TryAdd(fontFamily.Name, fontFamily);
+                continue;
             }
-        }
 
-        _fontsLoaded = true;
+            if (!LoadedFontFiles.Add(file))
+            {
+                continue;
+            }
+
+            var fontFamily = CustomFontCollection.Add(file, CultureInfo.CurrentCulture);
+            CustomFontFamilies.TryAdd(fontFamily.Name, fontFamily);
+        }
     }
 
     public static Font GetFont(string fontFamilyName, float fontSize, FontStyle style)

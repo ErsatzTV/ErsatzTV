@@ -44,12 +44,15 @@
                 <div class="d-flex">
                     <MudText>Watermark Override</MudText>
                 </div>
-                <MudSelect Disabled="@(_deco.WatermarkMode != DecoMode.Override)" @bind-Value="_deco.WatermarkId" For="@(() => _deco.WatermarkId)"
-                           Clearable="true">
-                    <MudSelectItem T="int?" Value="@((int?)null)">(none)</MudSelectItem>
+                <MudSelect T="WatermarkViewModel"
+                           @bind-SelectedValues="_deco.Watermarks"
+                           Disabled="@(_deco.WatermarkMode != DecoMode.Override)"
+                           ToStringFunc="@(wm => wm?.Name)"
+                           Clearable="true"
+                           MultiSelection="true">
                     @foreach (WatermarkViewModel watermark in _watermarks)
                     {
-                        <MudSelectItem T="int?" Value="@watermark.Id">@watermark.Name</MudSelectItem>
+                        <MudSelectItem Value="@watermark">@watermark.Name</MudSelectItem>
                     }
                 </MudSelect>
             </MudStack>
@@ -60,7 +63,6 @@
                 <MudCheckBox T="bool"
                              Disabled="@(_deco.WatermarkMode != DecoMode.Override)"
                              @bind-Value="_deco.UseWatermarkDuringFiller"
-                             Color="Color.Primary"
                              Dense="true" />
             </MudStack>
             <MudText Typo="Typo.h5" Class="mt-10 mb-2">Default Filler</MudText>
@@ -389,7 +391,7 @@
                 Name = deco.Name,
                 DecoGroupId = deco.DecoGroupId,
                 WatermarkMode = deco.WatermarkMode,
-                WatermarkId = deco.WatermarkId,
+                Watermarks = deco.Watermarks,
                 UseWatermarkDuringFiller = deco.UseWatermarkDuringFiller,
 
                 DefaultFillerMode = deco.DefaultFillerMode,
@@ -435,7 +437,7 @@
             _deco.DecoGroupId,
             _deco.Name,
             _deco.WatermarkMode,
-            _deco.WatermarkId,
+            _deco.Watermarks.Map(wm => wm.Id).ToList(),
             _deco.UseWatermarkDuringFiller,
             _deco.DefaultFillerMode,
             _deco.DefaultFillerCollectionType,
