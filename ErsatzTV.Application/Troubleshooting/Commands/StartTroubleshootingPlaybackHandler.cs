@@ -126,6 +126,10 @@ public class StartTroubleshootingPlaybackHandler(
                     notifier.NotifyFailed(request.SessionId);
                 }
             }
+            catch (TaskCanceledException)
+            {
+                // do nothing
+            }
             catch (Exception e)
             {
                 Console.WriteLine(e);
