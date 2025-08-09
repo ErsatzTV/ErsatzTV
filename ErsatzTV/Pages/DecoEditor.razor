@@ -55,6 +55,22 @@
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                 <div class="d-flex">
+                    <MudText>Watermark Override</MudText>
+                </div>
+                <MudSelect T="WatermarkViewModel"
+                           @bind-SelectedValues="_deco.Watermarks"
+                           Disabled="@(_deco.WatermarkMode != DecoMode.Override)"
+                           ToStringFunc="@(wm => wm?.Name)"
+                           Clearable="true"
+                           MultiSelection="true">
+                    @foreach (WatermarkViewModel watermark in _watermarks)
+                    {
+                        <MudSelectItem Value="@watermark">@watermark.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
                     <MudText>Use Watermark During Filler</MudText>
                 </div>
                 <MudCheckBox T="bool"
@@ -389,6 +405,7 @@
                 DecoGroupId = deco.DecoGroupId,
                 WatermarkMode = deco.WatermarkMode,
                 WatermarkId = deco.WatermarkId,
+                Watermarks = deco.Watermarks,
                 UseWatermarkDuringFiller = deco.UseWatermarkDuringFiller,
 
                 DefaultFillerMode = deco.DefaultFillerMode,
@@ -435,6 +452,7 @@
             _deco.Name,
             _deco.WatermarkMode,
             _deco.WatermarkId,
+            _deco.Watermarks.Map(wm => wm.Id).ToList(),
             _deco.UseWatermarkDuringFiller,
             _deco.DefaultFillerMode,
             _deco.DefaultFillerCollectionType,

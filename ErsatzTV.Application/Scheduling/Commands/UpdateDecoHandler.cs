@@ -1,4 +1,5 @@
 using ErsatzTV.Core;
+using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Scheduling;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
@@ -7,16 +8,16 @@ using Microsoft.EntityFrameworkCore;
 namespace ErsatzTV.Application.Scheduling;
 
 public class UpdateDecoHandler(IDbContextFactory<TvContext> dbContextFactory)
-    : IRequestHandler<UpdateDeco, Either<BaseError, DecoViewModel>>
+    : IRequestHandler<UpdateDeco, Either<BaseError, Unit>>
 {
-    public async Task<Either<BaseError, DecoViewModel>> Handle(UpdateDeco request, CancellationToken cancellationToken)
+    public async Task<Either<BaseError, Unit>> Handle(UpdateDeco request, CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, Deco> validation = await Validate(dbContext, request);
         return await validation.Apply(ps => ApplyUpdateRequest(dbContext, ps, request));
     }
 
-    private static async Task<DecoViewModel> ApplyUpdateRequest(
+    private static async Task<Unit> ApplyUpdateRequest(
         TvContext dbContext,
         Deco existing,
         UpdateDeco request)
@@ -28,6 +29,27 @@ public class UpdateDecoHandler(IDbContextFactory<TvContext> dbContextFactory)
         existing.WatermarkId = request.WatermarkMode is DecoMode.Override ? request.WatermarkId : null;
         existing.UseWatermarkDuringFiller =
             request.WatermarkMode is DecoMode.Override && request.UseWatermarkDuringFiller;
+
+        if (request.WatermarkMode is DecoMode.Override)
+        {
+            // this is different than schedule item/playout item because we have to merge watermark ids
+            var toAdd = request.WatermarkIds.Where(id => existing.DecoWatermarks.All(wm => wm.WatermarkId != id));
+            var toRemove = existing.DecoWatermarks.Where(wm => !request.WatermarkIds.Contains(wm.WatermarkId));
+            existing.DecoWatermarks.RemoveAll(toRemove.Contains);
+            foreach (var watermarkId in toAdd)
+            {
+                existing.DecoWatermarks.Add(
+                    new DecoWatermark
+                    {
+                        DecoId = existing.Id,
+                        WatermarkId = watermarkId
+                    });
+            }
+        }
+        else
+        {
+            existing.DecoWatermarks.Clear();
+        }
 
         // default filler
         existing.DefaultFillerMode = request.DefaultFillerMode;
@@ -64,7 +86,7 @@ public class UpdateDecoHandler(IDbContextFactory<TvContext> dbContextFactory)
 
         await dbContext.SaveChangesAsync();
 
-        return Mapper.ProjectToViewModel(existing);
+        return Unit.Default;
     }
 
     private static async Task<Validation<BaseError, Deco>> Validate(TvContext dbContext, UpdateDeco request) =>
@@ -75,6 +97,7 @@ public class UpdateDecoHandler(IDbContextFactory<TvContext> dbContextFactory)
         TvContext dbContext,
         UpdateDeco request) =>
         dbContext.Decos
+            .Include(d => d.DecoWatermarks)
             .SelectOneAsync(d => d.Id, d => d.Id == request.DecoId)
             .Map(o => o.ToValidation<BaseError>("Deco does not exist"));
 
@@ -88,6 +111,7 @@ public class UpdateDecoHandler(IDbContextFactory<TvContext> dbContextFactory)
         }
 
         Option<Deco> maybeExisting = await dbContext.Decos
+            .AsNoTracking()
             .FirstOrDefaultAsync(d =>
                 d.Id != request.DecoId && d.DecoGroupId == request.DecoGroupId && d.Name == request.Name)
             .Map(Optional);

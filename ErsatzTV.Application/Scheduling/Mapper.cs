@@ -86,6 +86,7 @@ internal static class Mapper
             deco.Name,
             deco.WatermarkMode,
             deco.WatermarkId,
+            deco.DecoWatermarks.Map(wm => Watermarks.Mapper.ProjectToViewModel(wm.Watermark)).ToList(),
             deco.UseWatermarkDuringFiller,
             deco.DefaultFillerMode,
             deco.DefaultFillerCollectionType,

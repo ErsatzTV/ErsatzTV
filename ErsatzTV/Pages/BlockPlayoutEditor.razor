@@ -32,7 +32,7 @@
                 <div class="d-flex">
                     <MudText>Enable Default Deco</MudText>
                 </div>
-                <MudCheckBox @bind-Value="_enableDefaultDeco" Color="Color.Primary" Dense="true"/>
+                <MudCheckBox @bind-Value="_enableDefaultDeco" Dense="true"/>
             </MudStack>
             @if (_enableDefaultDeco)
             {
@@ -53,7 +53,9 @@
                     <div class="d-flex">
                         <MudText>Deco</MudText>
                     </div>
-                    <MudSelect @bind-Value="_defaultDeco" For="@(() => _defaultDeco)">
+                    <MudSelect @bind-Value="_defaultDeco"
+                               For="@(() => _defaultDeco)"
+                               ToStringFunc="@(d => d?.Name)">
                         @foreach (DecoViewModel deco in _decos)
                         {
                             <MudSelectItem Value="@deco">@deco.Name</MudSelectItem>

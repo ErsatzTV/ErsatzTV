@@ -10,6 +10,7 @@ public record UpdateDeco(
     string Name,
     DecoMode WatermarkMode,
     int? WatermarkId,
+    List<int> WatermarkIds,
     bool UseWatermarkDuringFiller,
     DecoMode DefaultFillerMode,
     ProgramScheduleItemCollectionType DefaultFillerCollectionType,
@@ -24,4 +25,4 @@ public record UpdateDeco(
     int? DeadAirFallbackMediaItemId,
     int? DeadAirFallbackMultiCollectionId,
     int? DeadAirFallbackSmartCollectionId)
-    : IRequest<Either<BaseError, DecoViewModel>>;
+    : IRequest<Either<BaseError, Unit>>;
