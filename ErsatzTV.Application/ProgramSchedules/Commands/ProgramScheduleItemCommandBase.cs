@@ -184,8 +184,9 @@ public abstract class ProgramScheduleItemCommandBase
     protected static ProgramScheduleItem BuildItem(
         ProgramSchedule programSchedule,
         int index,
-        IProgramScheduleItemRequest item) =>
-        item.PlayoutMode switch
+        IProgramScheduleItemRequest item)
+    {
+        ProgramScheduleItem result = item.PlayoutMode switch
         {
             PlayoutMode.Flood => new ProgramScheduleItemFlood
             {
@@ -304,6 +305,20 @@ public abstract class ProgramScheduleItemCommandBase
             },
             _ => throw new NotSupportedException($"Unsupported playout mode {item.PlayoutMode}")
         };
+
+        foreach (var watermarkId in item.WatermarkIds)
+        {
+            result.ProgramScheduleItemWatermarks ??= [];
+            result.ProgramScheduleItemWatermarks.Add(
+                new ProgramScheduleItemWatermark
+                {
+                    ProgramScheduleItem = result,
+                    WatermarkId = watermarkId
+                });
+        }
+
+        return result;
+    }
 
     private static TimeSpan? FixStartTime(TimeSpan? startTime) =>
         startTime.HasValue && startTime.Value >= TimeSpan.FromDays(1)

@@ -69,6 +69,7 @@ internal static class Mapper
                     duration.Watermark != null
                         ? Watermarks.Mapper.ProjectToViewModel(duration.Watermark)
                         : null,
+                    duration.ProgramScheduleItemWatermarks.Map(wm => Watermarks.Mapper.ProjectToViewModel(wm.Watermark)).ToList(),
                     duration.PreferredAudioLanguageCode,
                     duration.PreferredAudioTitle,
                     duration.PreferredSubtitleLanguageCode,
@@ -122,6 +123,7 @@ internal static class Mapper
                     flood.Watermark != null
                         ? Watermarks.Mapper.ProjectToViewModel(flood.Watermark)
                         : null,
+                    flood.ProgramScheduleItemWatermarks.Map(wm => Watermarks.Mapper.ProjectToViewModel(wm.Watermark)).ToList(),
                     flood.PreferredAudioLanguageCode,
                     flood.PreferredAudioTitle,
                     flood.PreferredSubtitleLanguageCode,
@@ -177,6 +179,7 @@ internal static class Mapper
                     multiple.Watermark != null
                         ? Watermarks.Mapper.ProjectToViewModel(multiple.Watermark)
                         : null,
+                    multiple.ProgramScheduleItemWatermarks.Map(wm => Watermarks.Mapper.ProjectToViewModel(wm.Watermark)).ToList(),
                     multiple.PreferredAudioLanguageCode,
                     multiple.PreferredAudioTitle,
                     multiple.PreferredSubtitleLanguageCode,
@@ -230,6 +233,7 @@ internal static class Mapper
                     one.Watermark != null
                         ? Watermarks.Mapper.ProjectToViewModel(one.Watermark)
                         : null,
+                    one.ProgramScheduleItemWatermarks.Map(wm => Watermarks.Mapper.ProjectToViewModel(wm.Watermark)).ToList(),
                     one.PreferredAudioLanguageCode,
                     one.PreferredAudioTitle,
                     one.PreferredSubtitleLanguageCode,
