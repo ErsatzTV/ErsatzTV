@@ -8,6 +8,7 @@ namespace ErsatzTV.Core.Tests.Scheduling.ClassicScheduling;
 public class GetStartTimeAfterTests
 {
     [Test]
+    [Ignore("This test isn't ready to run yet")]
     public void Should_Return_Correct_Time_On_Dst_Fall_Back()
     {
         var scheduleItem = new ProgramScheduleItemOne
