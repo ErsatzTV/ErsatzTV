@@ -22,13 +22,11 @@ public class PlayoutBuilder : IPlayoutBuilder
     private readonly ILocalFileSystem _localFileSystem;
     private readonly IMediaCollectionRepository _mediaCollectionRepository;
     private readonly IMultiEpisodeShuffleCollectionEnumeratorFactory _multiEpisodeFactory;
-    private readonly IPlayoutTimeShifter _playoutTimeShifter;
     private readonly ITelevisionRepository _televisionRepository;
     private Playlist _debugPlaylist;
     private ILogger<PlayoutBuilder> _logger;
 
     public PlayoutBuilder(
-        IPlayoutTimeShifter playoutTimeShifter,
         IConfigElementRepository configElementRepository,
         IMediaCollectionRepository mediaCollectionRepository,
         ITelevisionRepository televisionRepository,
@@ -37,7 +35,6 @@ public class PlayoutBuilder : IPlayoutBuilder
         ILocalFileSystem localFileSystem,
         ILogger<PlayoutBuilder> logger)
     {
-        _playoutTimeShifter = playoutTimeShifter;
         _configElementRepository = configElementRepository;
         _mediaCollectionRepository = mediaCollectionRepository;
         _televisionRepository = televisionRepository;
@@ -88,12 +85,6 @@ public class PlayoutBuilder : IPlayoutBuilder
             // {
             //     return await Build(playout, mode, parameters with { Start = parameters.Start.AddDays(-2) });
             // }
-
-            // time shift on demand channel if needed
-            if (referenceData.Channel.PlayoutMode is ChannelPlayoutMode.OnDemand && mode is not PlayoutBuildMode.Reset)
-            {
-                _playoutTimeShifter.TimeShift(playout, parameters.Start, false);
-            }
 
             result = await Build(playout, referenceData, result, mode, parameters, cancellationToken);
         }
@@ -285,7 +276,7 @@ public class PlayoutBuilder : IPlayoutBuilder
         // time shift on demand channel if needed
         if (referenceData.Channel.PlayoutMode is ChannelPlayoutMode.OnDemand)
         {
-            _playoutTimeShifter.TimeShift(playout, parameters.Start, false);
+            result = result with { TimeShiftTo = parameters.Start };
         }
 
         return result;

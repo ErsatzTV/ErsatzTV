@@ -565,7 +565,6 @@ public class PlayoutBuilderTests
                 Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
             ILocalFileSystem localFileSystem = Substitute.For<ILocalFileSystem>();
             var builder = new PlayoutBuilder(
-                Substitute.For<IPlayoutTimeShifter>(),
                 configRepo,
                 fakeRepository,
                 televisionRepo,
@@ -664,7 +663,6 @@ public class PlayoutBuilderTests
                 Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
             ILocalFileSystem localFileSystem = Substitute.For<ILocalFileSystem>();
             var builder = new PlayoutBuilder(
-                Substitute.For<IPlayoutTimeShifter>(),
                 configRepo,
                 fakeRepository,
                 televisionRepo,
@@ -814,7 +812,6 @@ public class PlayoutBuilderTests
                 Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
             ILocalFileSystem localFileSystem = Substitute.For<ILocalFileSystem>();
             var builder = new PlayoutBuilder(
-                Substitute.For<IPlayoutTimeShifter>(),
                 configRepo,
                 fakeRepository,
                 televisionRepo,
@@ -923,7 +920,6 @@ public class PlayoutBuilderTests
                 Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
             ILocalFileSystem localFileSystem = Substitute.For<ILocalFileSystem>();
             var builder = new PlayoutBuilder(
-                Substitute.For<IPlayoutTimeShifter>(),
                 configRepo,
                 fakeRepository,
                 televisionRepo,
@@ -1031,7 +1027,6 @@ public class PlayoutBuilderTests
                 Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
             ILocalFileSystem localFileSystem = Substitute.For<ILocalFileSystem>();
             var builder = new PlayoutBuilder(
-                Substitute.For<IPlayoutTimeShifter>(),
                 configRepo,
                 fakeRepository,
                 televisionRepo,
@@ -1148,7 +1143,6 @@ public class PlayoutBuilderTests
                 Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
             ILocalFileSystem localFileSystem = Substitute.For<ILocalFileSystem>();
             var builder = new PlayoutBuilder(
-                Substitute.For<IPlayoutTimeShifter>(),
                 configRepo,
                 fakeRepository,
                 televisionRepo,
@@ -1258,7 +1252,6 @@ public class PlayoutBuilderTests
                 Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
             ILocalFileSystem localFileSystem = Substitute.For<ILocalFileSystem>();
             var builder = new PlayoutBuilder(
-                Substitute.For<IPlayoutTimeShifter>(),
                 configRepo,
                 fakeRepository,
                 televisionRepo,
@@ -1372,7 +1365,6 @@ public class PlayoutBuilderTests
                 Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
             ILocalFileSystem localFileSystem = Substitute.For<ILocalFileSystem>();
             var builder = new PlayoutBuilder(
-                Substitute.For<IPlayoutTimeShifter>(),
                 configRepo,
                 fakeRepository,
                 televisionRepo,
@@ -1485,7 +1477,6 @@ public class PlayoutBuilderTests
                 Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
             ILocalFileSystem localFileSystem = Substitute.For<ILocalFileSystem>();
             var builder = new PlayoutBuilder(
-                Substitute.For<IPlayoutTimeShifter>(),
                 configRepo,
                 fakeRepository,
                 televisionRepo,
@@ -1595,7 +1586,6 @@ public class PlayoutBuilderTests
                 Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
             ILocalFileSystem localFileSystem = Substitute.For<ILocalFileSystem>();
             var builder = new PlayoutBuilder(
-                Substitute.For<IPlayoutTimeShifter>(),
                 configRepo,
                 fakeRepository,
                 televisionRepo,
@@ -1708,7 +1698,6 @@ public class PlayoutBuilderTests
                 Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
             ILocalFileSystem localFileSystem = Substitute.For<ILocalFileSystem>();
             var builder = new PlayoutBuilder(
-                Substitute.For<IPlayoutTimeShifter>(),
                 configRepo,
                 fakeRepository,
                 televisionRepo,
@@ -1831,7 +1820,6 @@ public class PlayoutBuilderTests
                 Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
             ILocalFileSystem localFileSystem = Substitute.For<ILocalFileSystem>();
             var builder = new PlayoutBuilder(
-                Substitute.For<IPlayoutTimeShifter>(),
                 configRepo,
                 fakeRepository,
                 televisionRepo,
@@ -1947,7 +1935,6 @@ public class PlayoutBuilderTests
                 Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
             ILocalFileSystem localFileSystem = Substitute.For<ILocalFileSystem>();
             var builder = new PlayoutBuilder(
-                Substitute.For<IPlayoutTimeShifter>(),
                 configRepo,
                 fakeRepository,
                 televisionRepo,
@@ -2029,7 +2016,6 @@ public class PlayoutBuilderTests
                 Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
             ILocalFileSystem localFileSystem = Substitute.For<ILocalFileSystem>();
             var builder = new PlayoutBuilder(
-                Substitute.For<IPlayoutTimeShifter>(),
                 configRepo,
                 fakeRepository,
                 televisionRepo,
@@ -2247,7 +2233,6 @@ public class PlayoutBuilderTests
                 Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
             ILocalFileSystem localFileSystem = Substitute.For<ILocalFileSystem>();
             var builder = new PlayoutBuilder(
-                Substitute.For<IPlayoutTimeShifter>(),
                 configRepo,
                 fakeRepository,
                 televisionRepo,
@@ -2735,7 +2720,6 @@ public class PlayoutBuilderTests
                 Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
             ILocalFileSystem localFileSystem = Substitute.For<ILocalFileSystem>();
             var builder = new PlayoutBuilder(
-                Substitute.For<IPlayoutTimeShifter>(),
                 configRepo,
                 fakeRepository,
                 televisionRepo,
@@ -2846,7 +2830,6 @@ public class PlayoutBuilderTests
                 Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
             ILocalFileSystem localFileSystem = Substitute.For<ILocalFileSystem>();
             var builder = new PlayoutBuilder(
-                Substitute.For<IPlayoutTimeShifter>(),
                 configRepo,
                 fakeRepository,
                 televisionRepo,
@@ -2957,7 +2940,6 @@ public class PlayoutBuilderTests
                 Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
             ILocalFileSystem localFileSystem = Substitute.For<ILocalFileSystem>();
             var builder = new PlayoutBuilder(
-                Substitute.For<IPlayoutTimeShifter>(),
                 configRepo,
                 fakeRepository,
                 televisionRepo,
@@ -3066,7 +3048,6 @@ public class PlayoutBuilderTests
             Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
         ILocalFileSystem localFileSystem = Substitute.For<ILocalFileSystem>();
         var builder = new PlayoutBuilder(
-            Substitute.For<IPlayoutTimeShifter>(),
             configRepo,
             collectionRepo,
             televisionRepo,
@@ -3124,7 +3105,6 @@ public class PlayoutBuilderTests
             Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
         ILocalFileSystem localFileSystem = Substitute.For<ILocalFileSystem>();
         var builder = new PlayoutBuilder(
-            Substitute.For<IPlayoutTimeShifter>(),
             configRepo,
             collectionRepo,
             televisionRepo,

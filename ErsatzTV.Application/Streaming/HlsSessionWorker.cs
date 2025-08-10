@@ -183,10 +183,17 @@ public class HlsSessionWorker : IHlsSessionWorker
             PlaylistStart = _transcodedUntil;
             _channelStart =  _transcodedUntil;
 
-            // time shift on-demand playout if needed
-            await _mediator.Send(
-                new TimeShiftOnDemandPlayout(_channelNumber, _transcodedUntil, true),
+            var maybePlayoutId = await _mediator.Send(
+                new GetPlayoutIdByChannelNumber(_channelNumber),
                 cancellationToken);
+
+            // time shift on-demand playout if needed
+            foreach (var playoutId in maybePlayoutId)
+            {
+                await _mediator.Send(
+                    new TimeShiftOnDemandPlayout(playoutId, _transcodedUntil, true),
+                    cancellationToken);
+            }
 
             bool initialWorkAhead = Volatile.Read(ref _workAheadCount) < await GetWorkAheadLimit();
             _state = initialWorkAhead ? HlsSessionState.SeekAndWorkAhead : HlsSessionState.SeekAndRealtime;
