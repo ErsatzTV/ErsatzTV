@@ -23,6 +23,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
     private readonly IClient _client;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly IEntityLocker _entityLocker;
+    private readonly IPlayoutTimeShifter _playoutTimeShifter;
     private readonly IExternalJsonPlayoutBuilder _externalJsonPlayoutBuilder;
     private readonly IFFmpegSegmenterService _ffmpegSegmenterService;
     private readonly IPlayoutBuilder _playoutBuilder;
@@ -39,6 +40,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
         IExternalJsonPlayoutBuilder externalJsonPlayoutBuilder,
         IFFmpegSegmenterService ffmpegSegmenterService,
         IEntityLocker entityLocker,
+        IPlayoutTimeShifter playoutTimeShifter,
         ChannelWriter<IBackgroundServiceRequest> workerChannel)
     {
         _client = client;
@@ -50,33 +52,60 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
         _externalJsonPlayoutBuilder = externalJsonPlayoutBuilder;
         _ffmpegSegmenterService = ffmpegSegmenterService;
         _entityLocker = entityLocker;
+        _playoutTimeShifter = playoutTimeShifter;
         _workerChannel = workerChannel;
     }
 
     public async Task<Either<BaseError, Unit>> Handle(BuildPlayout request, CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        Validation<BaseError, Playout> validation = await Validate(dbContext, request);
-        return await validation.Match(
-            playout => ApplyUpdateRequest(dbContext, request, playout, cancellationToken),
-            error => Task.FromResult<Either<BaseError, Unit>>(error.Join()));
+        try
+        {
+            await _entityLocker.LockPlayout(request.PlayoutId);
+            if (request.Mode is not PlayoutBuildMode.Reset)
+            {
+                // this needs to happen before we load the playout in this handler because it modifies items, etc
+                await _playoutTimeShifter.TimeShift(request.PlayoutId, DateTimeOffset.Now, false);
+            }
+
+            Either<BaseError, PlayoutBuildResult> result;
+
+            {
+                await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+                Validation<BaseError, Playout> validation = await Validate(dbContext, request);
+                result = await validation.Match(
+                    playout => ApplyUpdateRequest(dbContext, request, playout, cancellationToken),
+                    error => Task.FromResult<Either<BaseError, PlayoutBuildResult>>(error.Join()));
+            }
+
+            // after dbcontext is closed
+            foreach (var playoutBuildResult in result.RightToSeq())
+            {
+                foreach (var timeShiftTo in playoutBuildResult.TimeShiftTo)
+                {
+                    await _playoutTimeShifter.TimeShift(request.PlayoutId, timeShiftTo, false);
+                }
+            }
+
+            return result.Map(_ => Unit.Default);
+        }
+        finally
+        {
+            await _entityLocker.UnlockPlayout(request.PlayoutId);
+        }
     }
 
-    private async Task<Either<BaseError, Unit>> ApplyUpdateRequest(
+    private async Task<Either<BaseError, PlayoutBuildResult>> ApplyUpdateRequest(
         TvContext dbContext,
         BuildPlayout request,
         Playout playout,
         CancellationToken cancellationToken)
     {
-        string channelNumber;
         string channelName = "[unknown]";
 
         try
         {
-            await _entityLocker.LockPlayout(playout.Id);
-
             var referenceData = await GetReferenceData(dbContext, playout.Id, playout.ProgramSchedulePlayoutType);
-            channelNumber = referenceData.Channel.Number;
+            var channelNumber = referenceData.Channel.Number;
             channelName = referenceData.Channel.Name;
             var result = PlayoutBuildResult.Empty;
 
@@ -207,6 +236,8 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
             }
 
             await _workerChannel.WriteAsync(new ExtractEmbeddedSubtitles(playout.Id), cancellationToken);
+
+            return result;
         }
         catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
         {
@@ -222,12 +253,6 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
             return BaseError.New(
                 $"Unexpected error building playout for channel {channelName}: {ex.Message}");
         }
-        finally
-        {
-            await _entityLocker.UnlockPlayout(playout.Id);
-        }
-
-        return Unit.Default;
     }
 
     private static Task<Validation<BaseError, Playout>> Validate(TvContext dbContext, BuildPlayout request) =>

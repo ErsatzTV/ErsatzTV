@@ -39,7 +39,7 @@ public class CreateFloodPlayoutHandler : IRequestHandler<CreateFloodPlayout, Eit
         await _channel.WriteAsync(new BuildPlayout(playout.Id, PlayoutBuildMode.Reset));
         if (playout.Channel.PlayoutMode is ChannelPlayoutMode.OnDemand)
         {
-            await _channel.WriteAsync(new TimeShiftOnDemandPlayout(playout.Channel.Number, DateTimeOffset.Now, false));
+            await _channel.WriteAsync(new TimeShiftOnDemandPlayout(playout.Id, DateTimeOffset.Now, false));
         }
 
         await _channel.WriteAsync(new RefreshChannelList());

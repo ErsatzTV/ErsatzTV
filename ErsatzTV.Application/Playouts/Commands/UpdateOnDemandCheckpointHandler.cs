@@ -1,3 +1,4 @@
+using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Infrastructure.Data;
@@ -28,6 +29,8 @@ public class UpdateOnDemandCheckpointHandler(
             {
                 return;
             }
+
+            playout.OnDemandCheckpoint ??= SystemTime.MinValueUtc;
 
             int timeout = await (await configElementRepository.GetValue<int>(ConfigElementKey.FFmpegSegmenterTimeout))
                 .IfNoneAsync(60);

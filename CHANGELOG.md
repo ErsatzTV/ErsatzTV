@@ -38,6 +38,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fix
 - Fix database operations that were slowing down playout builds
   - YAML playouts in particular should build significantly faster
+- Fix channel playout mode `On Demand` for Block and YAML schedules
 
 ### Changed
 - Allow multiple watermarks in playback troubleshooting

@@ -29,6 +29,10 @@ public class CreateBlockPlayoutHandler(
         await dbContext.Playouts.AddAsync(playout);
         await dbContext.SaveChangesAsync();
         await channel.WriteAsync(new BuildPlayout(playout.Id, PlayoutBuildMode.Reset));
+        if (playout.Channel.PlayoutMode is ChannelPlayoutMode.OnDemand)
+        {
+            await channel.WriteAsync(new TimeShiftOnDemandPlayout(playout.Id, DateTimeOffset.Now, false));
+        }
         await channel.WriteAsync(new RefreshChannelList());
         return new CreatePlayoutResponse(playout.Id);
     }

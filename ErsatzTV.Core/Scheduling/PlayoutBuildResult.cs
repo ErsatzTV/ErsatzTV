@@ -10,8 +10,9 @@ public record PlayoutBuildResult(
     List<PlayoutItem> AddedItems,
     List<int> ItemsToRemove,
     List<PlayoutHistory> AddedHistory,
-    List<int> HistoryToRemove)
+    List<int> HistoryToRemove,
+    Option<DateTimeOffset> TimeShiftTo)
 {
     public static PlayoutBuildResult Empty =>
-        new(false, Option<DateTimeOffset>.None, Option<DateTimeOffset>.None, [], [], [], []);
+        new(false, Option<DateTimeOffset>.None, Option<DateTimeOffset>.None, [], [], [], [], Option<DateTimeOffset>.None);
 }
