@@ -367,7 +367,8 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
                     currentState,
                     videoStream,
                     format,
-                    usesVppQsv);
+                    forceInputOverrides: usesVppQsv,
+                    isQsv: true);
 
                 currentState = colorspace.NextState(currentState);
                 result.Add(colorspace);
@@ -396,16 +397,6 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
                     "Format {A} doesn't equal {B}",
                     currentState.PixelFormat.Map(f => f.FFmpegName),
                     format.FFmpegName);
-
-                // remind qsv that it uses qsv
-                if (currentState.FrameDataLocation == FrameDataLocation.Hardware &&
-                    result is [ColorspaceFilter colorspace])
-                {
-                    if (colorspace.Filter.StartsWith("setparams=", StringComparison.OrdinalIgnoreCase))
-                    {
-                        result.Insert(0, new QsvFormatFilter(new PixelFormatQsv(format.Name)));
-                    }
-                }
 
                 pipelineSteps.Add(new PixelFormatOutputOption(format));
             }
