@@ -61,7 +61,8 @@ public class GraphicsEngine(ITemplateDataRepository templateDataRepository, ILog
         }
 
         // initialize all elements
-        await Task.WhenAll(elements.Select(e => e.InitializeAsync(context.FrameSize, context.FrameRate, cancellationToken)));
+        await Task.WhenAll(elements.Select(e =>
+            e.InitializeAsync(context.SquarePixelFrameSize, context.FrameSize, context.FrameRate, cancellationToken)));
 
         long frameCount = 0;
         var totalFrames = (long)(context.Duration.TotalSeconds * context.FrameRate);

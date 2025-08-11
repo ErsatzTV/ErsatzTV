@@ -7,6 +7,7 @@ namespace ErsatzTV.Core.Interfaces.Streaming;
 public record GraphicsEngineContext(
     MediaItem MediaItem,
     List<GraphicsElementContext> Elements,
+    Resolution SquarePixelFrameSize,
     Resolution FrameSize,
     int FrameRate,
     DateTimeOffset ChannelStartTime,

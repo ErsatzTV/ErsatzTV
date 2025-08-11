@@ -46,7 +46,7 @@ public class WatermarkElement : IGraphicsElement, IDisposable
 
     public bool IsFailed { get; set; }
 
-    public async Task InitializeAsync(Resolution frameSize, int frameRate, CancellationToken cancellationToken)
+    public async Task InitializeAsync(Resolution squarePixelFrameSize, Resolution frameSize, int frameRate, CancellationToken cancellationToken)
     {
         try
         {
@@ -102,8 +102,9 @@ public class WatermarkElement : IGraphicsElement, IDisposable
                 scaledHeight = (int)(scaledWidth * aspectRatio);
             }
 
-            int horizontalMargin = (int)Math.Round(_watermark.HorizontalMarginPercent / 100.0 * frameSize.Width);
-            int verticalMargin = (int)Math.Round(_watermark.VerticalMarginPercent / 100.0 * frameSize.Height);
+            (int horizontalMargin, int verticalMargin) = _watermark.PlaceWithinSourceContent
+                ? SourceContentMargins(squarePixelFrameSize, frameSize)
+                : NormalMargins(frameSize);
 
             _location = CalculatePosition(
                 _watermark.Location,
@@ -192,8 +193,6 @@ public class WatermarkElement : IGraphicsElement, IDisposable
         int horizontalMargin,
         int verticalMargin)
     {
-        // TODO: source content margins
-
         return location switch
         {
             WatermarkLocation.BottomLeft => new Point(horizontalMargin, frameHeight - imageHeight - verticalMargin),
@@ -212,6 +211,31 @@ public class WatermarkElement : IGraphicsElement, IDisposable
                 frameHeight - imageHeight - verticalMargin),
         };
     }
+
+    private WatermarkMargins NormalMargins(Resolution frameSize)
+    {
+        double horizontalMargin = Math.Round(_watermark.HorizontalMarginPercent / 100.0 * frameSize.Width);
+        double verticalMargin = Math.Round(_watermark.VerticalMarginPercent / 100.0 * frameSize.Height);
+
+        return new WatermarkMargins((int)Math.Round(horizontalMargin), (int)Math.Round(verticalMargin));
+    }
+
+    private WatermarkMargins SourceContentMargins(Resolution squarePixelFrameSize, Resolution frameSize)
+    {
+        int horizontalPadding = frameSize.Width - squarePixelFrameSize.Width;
+        int verticalPadding = frameSize.Height - squarePixelFrameSize.Height;
+
+        double horizontalMargin = Math.Round(
+            _watermark.HorizontalMarginPercent / 100.0 * squarePixelFrameSize.Width
+            + horizontalPadding / 2.0);
+        double verticalMargin = Math.Round(
+            _watermark.VerticalMarginPercent / 100.0 * squarePixelFrameSize.Height
+            + verticalPadding / 2.0);
+
+        return new WatermarkMargins((int)Math.Round(horizontalMargin), (int)Math.Round(verticalMargin));
+    }
+
+    private sealed record WatermarkMargins(int HorizontalMargin, int VerticalMargin);
 
     public void Dispose()
     {

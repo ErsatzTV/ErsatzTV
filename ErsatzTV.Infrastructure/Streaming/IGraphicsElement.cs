@@ -8,7 +8,11 @@ public interface IGraphicsElement
 
     bool IsFailed { get; set; }
 
-    Task InitializeAsync(Resolution frameSize, int frameRate, CancellationToken cancellationToken);
+    Task InitializeAsync(
+        Resolution squarePixelFrameSize,
+        Resolution frameSize,
+        int frameRate,
+        CancellationToken cancellationToken);
 
     ValueTask<Option<PreparedElementImage>> PrepareImage(
         TimeSpan timeOfDay,

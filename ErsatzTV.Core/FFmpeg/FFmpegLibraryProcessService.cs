@@ -375,84 +375,6 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             graphicsElementContexts.AddRange(watermarks.Values);
         }
 
-        foreach (var playoutItemGraphicsElement in graphicsElements)
-        {
-            switch (playoutItemGraphicsElement.GraphicsElement.Kind)
-            {
-                case GraphicsElementKind.Text:
-                {
-                    var maybeElement =
-                        await TextGraphicsElement.FromFile(playoutItemGraphicsElement.GraphicsElement.Path);
-                    if (maybeElement.IsNone)
-                    {
-                        _logger.LogWarning(
-                            "Failed to load text graphics element from file {Path}; ignoring",
-                            playoutItemGraphicsElement.GraphicsElement.Path);
-                    }
-
-                    foreach (var element in maybeElement)
-                    {
-                        var variables = new Dictionary<string, string>();
-                        if (!string.IsNullOrWhiteSpace(playoutItemGraphicsElement.Variables))
-                        {
-                            variables = JsonConvert.DeserializeObject<Dictionary<string, string>>(
-                                playoutItemGraphicsElement.Variables);
-                        }
-
-                        graphicsElementContexts.Add(new TextElementContext(element, variables));
-                    }
-
-                    break;
-                }
-                case GraphicsElementKind.Image:
-                {
-                    var maybeElement =
-                        await ImageGraphicsElement.FromFile(playoutItemGraphicsElement.GraphicsElement.Path);
-                    if (maybeElement.IsNone)
-                    {
-                        _logger.LogWarning(
-                            "Failed to load image graphics element from file {Path}; ignoring",
-                            playoutItemGraphicsElement.GraphicsElement.Path);
-                    }
-
-                    foreach (var element in maybeElement)
-                    {
-                        // var variables = new Dictionary<string, string>();
-                        // if (!string.IsNullOrWhiteSpace(playoutItemGraphicsElement.Variables))
-                        // {
-                        //     variables = JsonConvert.DeserializeObject<Dictionary<string, string>>(
-                        //         playoutItemGraphicsElement.Variables);
-                        // }
-
-                        graphicsElementContexts.Add(new ImageElementContext(element));
-                    }
-
-                    break;
-                }
-                default:
-                    _logger.LogInformation(
-                        "Ignoring unsupported graphics element kind {Kind}",
-                        nameof(playoutItemGraphicsElement.GraphicsElement.Kind));
-                    break;
-            }
-        }
-
-        // only use graphics engine when we have elements
-        if (graphicsElementContexts.Count > 0)
-        {
-            graphicsEngineInput = new GraphicsEngineInput();
-
-            graphicsEngineContext = new GraphicsEngineContext(
-                audioVersion.MediaItem,
-                graphicsElementContexts,
-                channel.FFmpegProfile.Resolution,
-                await playbackSettings.FrameRate.IfNoneAsync(24),
-                ChannelStartTime: channelStartTime,
-                ContentStartTime: start,
-                await playbackSettings.StreamSeek.IfNoneAsync(TimeSpan.Zero),
-                finish - now);
-        }
-
         HardwareAccelerationMode hwAccel = GetHardwareAccelerationMode(playbackSettings, fillerKind);
 
         string videoFormat = GetVideoFormat(playbackSettings);
@@ -524,6 +446,85 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             playbackSettings.VideoBufferSize,
             playbackSettings.VideoTrackTimeScale,
             playbackSettings.Deinterlace);
+
+        foreach (var playoutItemGraphicsElement in graphicsElements)
+        {
+            switch (playoutItemGraphicsElement.GraphicsElement.Kind)
+            {
+                case GraphicsElementKind.Text:
+                {
+                    var maybeElement =
+                        await TextGraphicsElement.FromFile(playoutItemGraphicsElement.GraphicsElement.Path);
+                    if (maybeElement.IsNone)
+                    {
+                        _logger.LogWarning(
+                            "Failed to load text graphics element from file {Path}; ignoring",
+                            playoutItemGraphicsElement.GraphicsElement.Path);
+                    }
+
+                    foreach (var element in maybeElement)
+                    {
+                        var variables = new Dictionary<string, string>();
+                        if (!string.IsNullOrWhiteSpace(playoutItemGraphicsElement.Variables))
+                        {
+                            variables = JsonConvert.DeserializeObject<Dictionary<string, string>>(
+                                playoutItemGraphicsElement.Variables);
+                        }
+
+                        graphicsElementContexts.Add(new TextElementContext(element, variables));
+                    }
+
+                    break;
+                }
+                case GraphicsElementKind.Image:
+                {
+                    var maybeElement =
+                        await ImageGraphicsElement.FromFile(playoutItemGraphicsElement.GraphicsElement.Path);
+                    if (maybeElement.IsNone)
+                    {
+                        _logger.LogWarning(
+                            "Failed to load image graphics element from file {Path}; ignoring",
+                            playoutItemGraphicsElement.GraphicsElement.Path);
+                    }
+
+                    foreach (var element in maybeElement)
+                    {
+                        // var variables = new Dictionary<string, string>();
+                        // if (!string.IsNullOrWhiteSpace(playoutItemGraphicsElement.Variables))
+                        // {
+                        //     variables = JsonConvert.DeserializeObject<Dictionary<string, string>>(
+                        //         playoutItemGraphicsElement.Variables);
+                        // }
+
+                        graphicsElementContexts.Add(new ImageElementContext(element));
+                    }
+
+                    break;
+                }
+                default:
+                    _logger.LogInformation(
+                        "Ignoring unsupported graphics element kind {Kind}",
+                        nameof(playoutItemGraphicsElement.GraphicsElement.Kind));
+                    break;
+            }
+        }
+
+        // only use graphics engine when we have elements
+        if (graphicsElementContexts.Count > 0)
+        {
+            graphicsEngineInput = new GraphicsEngineInput();
+
+            graphicsEngineContext = new GraphicsEngineContext(
+                audioVersion.MediaItem,
+                graphicsElementContexts,
+                new Resolution { Width = desiredState.ScaledSize.Width, Height = desiredState.ScaledSize.Height },
+                channel.FFmpegProfile.Resolution,
+                await playbackSettings.FrameRate.IfNoneAsync(24),
+                ChannelStartTime: channelStartTime,
+                ContentStartTime: start,
+                await playbackSettings.StreamSeek.IfNoneAsync(TimeSpan.Zero),
+                finish - now);
+        }
 
         var ffmpegState = new FFmpegState(
             saveReports,
