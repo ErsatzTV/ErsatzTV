@@ -447,7 +447,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             playbackSettings.VideoTrackTimeScale,
             playbackSettings.Deinterlace);
 
-                foreach (var playoutItemGraphicsElement in graphicsElements)
+        foreach (var playoutItemGraphicsElement in graphicsElements)
         {
             switch (playoutItemGraphicsElement.GraphicsElement.Kind)
             {
