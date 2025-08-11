@@ -23,6 +23,7 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalMetadataProvider _localMetadataProvider;
     private readonly ILocalSubtitlesProvider _localSubtitlesProvider;
+    private readonly ILocalChaptersProvider _localChaptersProvider;
     private readonly ILogger<OtherVideoFolderScanner> _logger;
     private readonly IMediaItemRepository _mediaItemRepository;
     private readonly IMediator _mediator;
@@ -33,6 +34,7 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
         ILocalStatisticsProvider localStatisticsProvider,
         ILocalMetadataProvider localMetadataProvider,
         ILocalSubtitlesProvider localSubtitlesProvider,
+        ILocalChaptersProvider localChaptersProvider,
         IMetadataRepository metadataRepository,
         IImageCache imageCache,
         IMediator mediator,
@@ -56,6 +58,7 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
         _localFileSystem = localFileSystem;
         _localMetadataProvider = localMetadataProvider;
         _localSubtitlesProvider = localSubtitlesProvider;
+        _localChaptersProvider = localChaptersProvider;
         _mediator = mediator;
         _otherVideoRepository = otherVideoRepository;
         _libraryRepository = libraryRepository;
@@ -189,6 +192,7 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
                         .BindT(UpdateMetadata)
                         .BindT(video => UpdateThumbnail(video, cancellationToken))
                         .BindT(UpdateSubtitles)
+                        .BindT(UpdateChapters)
                         .BindT(FlagNormal);
 
                     foreach (BaseError error in maybeVideo.LeftToSeq())
@@ -330,6 +334,21 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
         try
         {
             await _localSubtitlesProvider.UpdateSubtitles(result.Item, None, true);
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _client.Notify(ex);
+            return BaseError.New(ex.ToString());
+        }
+    }
+
+    private async Task<Either<BaseError, MediaItemScanResult<OtherVideo>>> UpdateChapters(
+        MediaItemScanResult<OtherVideo> result)
+    {
+        try
+        {
+            await _localChaptersProvider.UpdateChapters(result.Item, None);
             return result;
         }
         catch (Exception ex)

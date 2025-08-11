@@ -24,6 +24,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalMetadataProvider _localMetadataProvider;
     private readonly ILocalSubtitlesProvider _localSubtitlesProvider;
+    private readonly ILocalChaptersProvider _localChaptersProvider;
     private readonly ILogger<TelevisionFolderScanner> _logger;
     private readonly IMediaItemRepository _mediaItemRepository;
     private readonly IMediator _mediator;
@@ -36,6 +37,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
         ILocalStatisticsProvider localStatisticsProvider,
         ILocalMetadataProvider localMetadataProvider,
         ILocalSubtitlesProvider localSubtitlesProvider,
+        ILocalChaptersProvider localChaptersProvider,
         IMetadataRepository metadataRepository,
         IImageCache imageCache,
         ILibraryRepository libraryRepository,
@@ -60,6 +62,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
         _televisionRepository = televisionRepository;
         _localMetadataProvider = localMetadataProvider;
         _localSubtitlesProvider = localSubtitlesProvider;
+        _localChaptersProvider = localChaptersProvider;
         _metadataRepository = metadataRepository;
         _libraryRepository = libraryRepository;
         _mediaItemRepository = mediaItemRepository;
@@ -349,6 +352,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
                 .BindT(UpdateMetadata)
                 .BindT(e => UpdateThumbnail(e, cancellationToken))
                 .BindT(UpdateSubtitles)
+                .BindT(UpdateChapters)
                 .BindT(e => FlagNormal(new MediaItemScanResult<Episode>(e)))
                 .MapT(r => r.Item);
 
@@ -578,6 +582,20 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
         try
         {
             await _localSubtitlesProvider.UpdateSubtitles(episode, None, true);
+            return episode;
+        }
+        catch (Exception ex)
+        {
+            _client.Notify(ex);
+            return BaseError.New(ex.ToString());
+        }
+    }
+
+    private async Task<Either<BaseError, Episode>> UpdateChapters(Episode episode)
+    {
+        try
+        {
+            await _localChaptersProvider.UpdateChapters(episode, None);
             return episode;
         }
         catch (Exception ex)
