@@ -1,4 +1,6 @@
 ﻿using System.Diagnostics;
+using System.IO.Pipelines;
+using System.Text;
 using CliWrap;
 using ErsatzTV.Application.Emby;
 using ErsatzTV.Application.Jellyfin;
@@ -9,6 +11,7 @@ using ErsatzTV.Application.Subtitles.Queries;
 using ErsatzTV.Core;
 using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.FFmpeg;
+using ErsatzTV.Core.Interfaces.Streaming;
 using ErsatzTV.Extensions;
 using Flurl;
 using MediatR;
@@ -21,15 +24,18 @@ namespace ErsatzTV.Controllers;
 public class InternalController : ControllerBase
 {
     private readonly IFFmpegSegmenterService _ffmpegSegmenterService;
+    private readonly IGraphicsEngine _graphicsEngine;
     private readonly ILogger<InternalController> _logger;
     private readonly IMediator _mediator;
 
     public InternalController(
         IFFmpegSegmenterService ffmpegSegmenterService,
+        IGraphicsEngine graphicsEngine,
         IMediator mediator,
         ILogger<InternalController> logger)
     {
         _ffmpegSegmenterService = ffmpegSegmenterService;
+        _graphicsEngine = graphicsEngine;
         _mediator = mediator;
         _logger = logger;
     }
@@ -298,38 +304,55 @@ public class InternalController : ControllerBase
 
         foreach (PlayoutItemProcessModel processModel in result.RightToSeq())
         {
-            Command command = processModel.Process;
+            // for process counter
+            var ffmpegProcess = new FFmpegProcess();
 
-            _logger.LogDebug("ffmpeg arguments {FFmpegArguments}", command.Arguments);
+            Command process = processModel.Process;
 
-            var process = new FFmpegProcess
-            {
-                StartInfo = new ProcessStartInfo
+            _logger.LogDebug("ffmpeg arguments {FFmpegArguments}", process.Arguments);
+
+            var cts = new CancellationTokenSource();
+            HttpContext.Response.OnCompleted(
+                async () =>
                 {
-                    FileName = command.TargetFilePath,
-                    Arguments = command.Arguments,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = false,
-                    UseShellExecute = false,
-                    CreateNoWindow = true
-                }
+                    ffmpegProcess.Dispose();
+                    await cts.CancelAsync();
+                    cts.Dispose();
+                });
+
+            using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(
+                cts.Token,
+                HttpContext.RequestAborted);
+
+            var pipe = new Pipe();
+            var stdErrBuffer = new StringBuilder();
+
+            var processWithPipe = process;
+            foreach (var graphicsEngineContext in processModel.GraphicsEngineContext)
+            {
+                var gePipe = new Pipe();
+                processWithPipe = process.WithStandardInputPipe(PipeSource.FromStream(gePipe.Reader.AsStream()));
+
+                // fire and forget graphics engine task
+                _ = _graphicsEngine.Run(
+                    graphicsEngineContext,
+                    gePipe.Writer,
+                    linkedCts.Token);
+            }
+
+            _ = processWithPipe
+                .WithStandardOutputPipe(PipeTarget.ToStream(pipe.Writer.AsStream()))
+                .WithStandardErrorPipe(PipeTarget.ToStringBuilder(stdErrBuffer))
+                .WithValidation(CommandResultValidation.None)
+                .ExecuteAsync(linkedCts.Token);
+
+            var contentType = mode switch
+            {
+                "segmenter-v2" => "video/x-matroska",
+                _ => "video/mp2t"
             };
 
-            HttpContext.Response.RegisterForDispose(process);
-
-            foreach ((string key, string value) in command.EnvironmentVariables)
-            {
-                process.StartInfo.Environment[key] = value;
-            }
-
-            var contentType = "video/mp2t";
-            if (mode.Equals("hls-direct", StringComparison.OrdinalIgnoreCase))
-            {
-                contentType = "video/mp4";
-            }
-
-            process.Start();
-            return new FileStreamResult(process.StandardOutput.BaseStream, contentType);
+            return new FileStreamResult(pipe.Reader.AsStream(), contentType);
         }
 
         // this will never happen
