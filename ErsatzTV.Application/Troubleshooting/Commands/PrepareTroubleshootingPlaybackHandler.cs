@@ -103,14 +103,23 @@ public class PrepareTroubleshootingPlaybackHandler(
 
         TimeSpan inPoint = TimeSpan.Zero;
         TimeSpan outPoint = duration;
-        if (!hlsRealtime && !request.StartFromBeginning)
+        if (!hlsRealtime)
         {
-            inPoint = TimeSpan.FromSeconds(version.Duration.TotalSeconds / 2.0);
-            if (inPoint.TotalSeconds < 30)
+            foreach (var seekSeconds in request.SeekSeconds)
             {
-                duration = inPoint;
+                inPoint = TimeSpan.FromSeconds(seekSeconds);
+                if (inPoint > version.Duration)
+                {
+                    inPoint = version.Duration - duration;
+                }
+
+                if (inPoint + duration > version.Duration)
+                {
+                    duration = version.Duration - inPoint;
+                }
+
+                outPoint = inPoint + duration;
             }
-            outPoint = inPoint + duration;
         }
 
         var graphicsElements = await dbContext.GraphicsElements

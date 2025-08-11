@@ -34,6 +34,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - `graphics_on` requires the name of a graphics element template, e.g. `text/cool_element.yml`
     - The `variables` property can be used to dynamically replace text from the template
   - `graphics_off` will turn off a specific element, or all elements if none are specified
+- Add `Seek Seconds` to playback troubleshooting to support capturing timing-related issues
 
 ### Fix
 - Fix database operations that were slowing down playout builds

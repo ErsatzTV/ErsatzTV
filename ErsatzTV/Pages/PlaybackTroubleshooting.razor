@@ -93,7 +93,16 @@
                 <div class="d-flex">
                     <MudText>Start From Beginning</MudText>
                 </div>
-                <MudCheckBox @bind-Value="_startFromBeginning" Dense="true" Disabled="@(string.Equals(_info?.Kind, "RemoteStream", StringComparison.OrdinalIgnoreCase))" />
+                <MudCheckBox T="bool"
+                             Dense="true"
+                             Disabled="@(string.Equals(_info?.Kind, "RemoteStream", StringComparison.OrdinalIgnoreCase))"
+                             ValueChanged="@(c => OnStartFromBeginningChanged(c))" />
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Seek Seconds</MudText>
+                </div>
+                <MudTextField @bind-Value="@(_seekSeconds)" Disabled="@(_startFromBeginning)" />
             </MudStack>
             <MudText Typo="Typo.h5" Class="mt-10 mb-2">Preview</MudText>
             <MudDivider Class="mb-6"/>
@@ -138,8 +147,9 @@
     private int _ffmpegProfileId;
     private IEnumerable<string> _watermarkNames = new System.Collections.Generic.HashSet<string>();
     private IEnumerable<string> _graphicsElementNames = new System.Collections.Generic.HashSet<string>();
-    private int? _subtitleId;
     private bool _startFromBeginning;
+    private int? _subtitleId;
+    private int _seekSeconds;
     private bool _hasPlayed;
 
     [SupplyParameterFromQuery(Name = "mediaItem")]
@@ -178,13 +188,19 @@
         }
     }
 
+    private void OnStartFromBeginningChanged(bool value)
+    {
+        _startFromBeginning = value;
+        _seekSeconds = value ? 0 : (int)Math.Round((_info?.Duration.TotalSeconds ?? 0) / 2.0);
+    }
+
     private void LockChanged(object sender, EventArgs e) => InvokeAsync(StateHasChanged);
 
     private async Task PreviewChannel()
     {
         var uri = new UriBuilder(NavigationManager.ToAbsoluteUri(NavigationManager.Uri));
         uri.Path = uri.Path.Replace("/system/troubleshooting/playback", "/api/troubleshoot/playback.m3u8");
-        uri.Query = $"?mediaItem={MediaItemId}&ffmpegProfile={_ffmpegProfileId}&startFromBeginning={_startFromBeginning}";
+        uri.Query = $"?mediaItem={MediaItemId}&ffmpegProfile={_ffmpegProfileId}&seekSeconds={_seekSeconds}";
         foreach (var watermarkName in _watermarkNames)
         {
             foreach (var watermark in _watermarks.Where(wm => wm.Name == watermarkName))
@@ -221,7 +237,7 @@
             foreach (MediaItemInfo info in maybeInfo.RightToSeq())
             {
                 _info = info;
-                _startFromBeginning = string.Equals(info.Kind, "RemoteStream", StringComparison.OrdinalIgnoreCase);
+                OnStartFromBeginningChanged(string.Equals(info.Kind, "RemoteStream", StringComparison.OrdinalIgnoreCase));
 
                 _subtitleId = null;
                 _subtitleStreams.Clear();
@@ -239,7 +255,7 @@
 
     private async Task DownloadResults()
     {
-        var uri = $"api/troubleshoot/playback/archive?mediaItem={MediaItemId ?? 0}&ffmpegProfile={_ffmpegProfileId}&startFromBeginning={_startFromBeginning}";
+        var uri = $"api/troubleshoot/playback/archive?mediaItem={MediaItemId ?? 0}&ffmpegProfile={_ffmpegProfileId}&seekSeconds={_seekSeconds}";
 
         foreach (var watermarkName in _watermarkNames)
         {
