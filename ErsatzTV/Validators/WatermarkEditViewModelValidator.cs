@@ -12,7 +12,7 @@ public class WatermarkEditViewModelValidator : AbstractValidator<WatermarkEditVi
     {
         RuleFor(x => x.Name).NotEmpty();
 
-        RuleFor(x => x.Image)
+        RuleFor(x => x.Image.Path)
             .NotEmpty()
             .WithMessage("Watermark image is required!")
             .When(vm => vm.ImageSource == ChannelWatermarkImageSource.Custom);

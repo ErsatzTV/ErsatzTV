@@ -42,6 +42,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix channel playout mode `On Demand` for Block and YAML schedules
 - Fix QSV transitions when remote streaming from a media server
 - Fix green output when padding with VAAPI accel and i965 driver
+- Fix watermark custom image validation
+- Fix playback when using any watermarks that were saved with invalid state (no image)
 
 ### Changed
 - Allow multiple watermarks in playback troubleshooting
