@@ -94,7 +94,7 @@
                 </div>
                 <MudSelect @bind-Value="_model.StreamingMode" For="@(() => _model.StreamingMode)">
                     <MudSelectItem Value="@(StreamingMode.TransportStreamHybrid)">MPEG-TS</MudSelectItem>
-                    @* <MudSelectItem Value="@(StreamingMode.TransportStream)">MPEG-TS (Legacy)</MudSelectItem> *@
+                    <MudSelectItem Value="@(StreamingMode.TransportStream)">MPEG-TS (Legacy)</MudSelectItem>
                     <MudSelectItem Value="@(StreamingMode.HttpLiveStreamingDirect)">HLS Direct</MudSelectItem>
                     <MudSelectItem Value="@(StreamingMode.HttpLiveStreamingSegmenter)">HLS Segmenter</MudSelectItem>
                     <MudSelectItem Value="@(StreamingMode.HttpLiveStreamingSegmenterV2)">HLS Segmenter V2</MudSelectItem>

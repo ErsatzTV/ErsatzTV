@@ -24,7 +24,7 @@ public class HlsSessionWorkerV2 : IHlsSessionWorker
     private readonly IMediator _mediator;
     private readonly string _scheme;
     private readonly SemaphoreSlim _slim = new(1, 1);
-    private readonly object _sync = new();
+    private readonly Lock _sync = new();
     private readonly Option<int> _targetFramerate;
     private CancellationTokenSource _cancellationTokenSource;
     private string _channelNumber;
