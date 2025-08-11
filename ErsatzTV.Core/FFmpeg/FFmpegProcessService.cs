@@ -190,6 +190,15 @@ public class FFmpegProcessService
                             Option<int>.None,
                             false);
                     case ChannelWatermarkImageSource.Custom:
+                        // bad form validation makes this possible
+                        if (string.IsNullOrWhiteSpace(watermark.Image))
+                        {
+                            _logger.LogWarning(
+                                "Watermark {Name} has custom image configured with no image; ignoring",
+                                watermark.Name);
+                            break;
+                        }
+
                         string customPath = _imageCache.GetPathForImage(
                             watermark.Image,
                             ArtworkKind.Watermark,
