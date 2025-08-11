@@ -340,11 +340,17 @@ public class InternalController : ControllerBase
                     linkedCts.Token);
             }
 
-            _ = processWithPipe
+            var task = processWithPipe
                 .WithStandardOutputPipe(PipeTarget.ToStream(pipe.Writer.AsStream()))
                 .WithStandardErrorPipe(PipeTarget.ToStringBuilder(stdErrBuffer))
                 .WithValidation(CommandResultValidation.None)
                 .ExecuteAsync(linkedCts.Token);
+
+            // ensure pipe writer is completed when ffmpeg exits
+            _ = task.Task.ContinueWith(
+                (_, state) => ((PipeWriter)state!).Complete(),
+                pipe.Writer,
+                TaskScheduler.Default);
 
             var contentType = mode switch
             {
