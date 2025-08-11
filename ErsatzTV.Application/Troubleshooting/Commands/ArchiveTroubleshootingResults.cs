@@ -5,5 +5,5 @@ public record ArchiveTroubleshootingResults(
     int FFmpegProfileId,
     List<int> WatermarkIds,
     List<int> GraphicsElementIds,
-    bool StartFromBeginning)
+    Option<int> SeekSeconds)
     : IRequest<Option<string>>;

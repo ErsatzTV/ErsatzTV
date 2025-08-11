@@ -33,13 +33,15 @@ public class TroubleshootController(
         [FromQuery]
         int? subtitleId,
         [FromQuery]
-        bool startFromBeginning,
+        int seekSeconds,
         CancellationToken cancellationToken)
     {
         try
         {
+            Option<int> ss = seekSeconds > 0 ? seekSeconds : Option<int>.None;
+
             Either<BaseError, PlayoutItemResult> result = await mediator.Send(
-                new PrepareTroubleshootingPlayback(mediaItem, ffmpegProfile, watermark, graphicsElement, subtitleId, startFromBeginning),
+                new PrepareTroubleshootingPlayback(mediaItem, ffmpegProfile, watermark, graphicsElement, subtitleId, ss),
                 cancellationToken);
 
             if (result.IsLeft)
@@ -119,11 +121,13 @@ public class TroubleshootController(
         [FromQuery]
         List<int> graphicsElement,
         [FromQuery]
-        bool startFromBeginning,
+        int seekSeconds,
         CancellationToken cancellationToken)
     {
+        Option<int> ss = seekSeconds > 0 ? seekSeconds : Option<int>.None;
+
         Option<string> maybeArchivePath = await mediator.Send(
-            new ArchiveTroubleshootingResults(mediaItem, ffmpegProfile, watermark, graphicsElement, startFromBeginning),
+            new ArchiveTroubleshootingResults(mediaItem, ffmpegProfile, watermark, graphicsElement, ss),
             cancellationToken);
 
         foreach (string archivePath in maybeArchivePath)

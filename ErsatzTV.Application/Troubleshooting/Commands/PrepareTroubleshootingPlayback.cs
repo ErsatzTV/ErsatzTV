@@ -9,5 +9,5 @@ public record PrepareTroubleshootingPlayback(
     List<int> WatermarkIds,
     List<int> GraphicsElementIds,
     int? SubtitleId,
-    bool StartFromBeginning)
+    Option<int> SeekSeconds)
     : IRequest<Either<BaseError, PlayoutItemResult>>;
