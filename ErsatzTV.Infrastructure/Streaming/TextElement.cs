@@ -24,7 +24,11 @@ public class TextElement(TextGraphicsElement textElement, Dictionary<string, obj
 
     public bool IsFailed { get; set; }
 
-    public async Task InitializeAsync(Resolution frameSize, int frameRate, CancellationToken cancellationToken)
+    public async Task InitializeAsync(
+        Resolution squarePixelFrameSize,
+        Resolution frameSize,
+        int frameRate,
+        CancellationToken cancellationToken)
     {
         try
         {
