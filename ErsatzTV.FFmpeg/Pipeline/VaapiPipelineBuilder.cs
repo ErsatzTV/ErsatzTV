@@ -575,13 +575,13 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
         if (desiredState.CroppedSize.IsNone && currentState.PaddedSize != desiredState.PaddedSize)
         {
             // pad_vaapi seems to pad with green when input is HDR
-            // also green with 10-bit content and i965
+            // also green with i965 driver
             // so use software pad in these cases
-            bool is10Bit965 = currentState.BitDepth == 10 && ffmpegState.VaapiDriver
+            bool is965 = ffmpegState.VaapiDriver
                 .IfNone(string.Empty)
                 .Contains("i965", StringComparison.OrdinalIgnoreCase);
 
-            if (isHdrTonemap || is10Bit965)
+            if (isHdrTonemap || is965)
             {
                 var padStep = new PadFilter(currentState, desiredState.PaddedSize);
                 currentState = padStep.NextState(currentState);
