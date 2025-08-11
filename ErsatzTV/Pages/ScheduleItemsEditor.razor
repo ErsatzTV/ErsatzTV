@@ -554,17 +554,6 @@
                 <MudDivider Class="mb-6"/>
                 <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                     <div class="d-flex">
-                        <MudText>Watermark</MudText>
-                    </div>
-                    <MudSelect @bind-Value="@_selectedItem.Watermark" For="@(() => _selectedItem.Watermark)" Clearable="true">
-                        @foreach (WatermarkViewModel watermark in _watermarks)
-                        {
-                            <MudSelectItem Value="@watermark">@watermark.Name</MudSelectItem>
-                        }
-                    </MudSelect>
-                </MudStack>
-                <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                    <div class="d-flex">
                         <MudText>Watermarks</MudText>
                     </div>
                     <MudSelect T="WatermarkViewModel"
@@ -853,7 +842,6 @@
             PostRollFiller = item.PostRollFiller,
             TailFiller = item.TailFiller,
             FallbackFiller = item.FallbackFiller,
-            Watermark = item.Watermark,
             Watermarks = item.Watermarks.ToList(),
             PreferredAudioLanguageCode = item.PreferredAudioLanguageCode,
             PreferredAudioTitle = item.PreferredAudioTitle,
@@ -928,7 +916,6 @@
             item.PostRollFiller?.Id,
             item.TailFiller?.Id,
             item.FallbackFiller?.Id,
-            item.Watermark?.Id,
             item.Watermarks.Map(wm => wm.Id).ToList(),
             item.PreferredAudioLanguageCode,
             item.PreferredAudioTitle,

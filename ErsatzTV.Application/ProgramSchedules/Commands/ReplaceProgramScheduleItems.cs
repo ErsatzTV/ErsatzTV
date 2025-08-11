@@ -30,7 +30,6 @@ public record ReplaceProgramScheduleItem(
     int? PostRollFillerId,
     int? TailFillerId,
     int? FallbackFillerId,
-    int? WatermarkId,
     List<int> WatermarkIds,
     string PreferredAudioLanguageCode,
     string PreferredAudioTitle,
