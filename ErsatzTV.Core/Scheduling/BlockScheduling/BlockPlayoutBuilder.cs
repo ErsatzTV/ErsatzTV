@@ -90,7 +90,7 @@ public class BlockPlayoutBuilder(
 
         foreach (PlayoutItem playoutItem in playoutItemsToRemove)
         {
-            result = BlockPlayoutChangeDetection.RemoveItemAndHistory(playout, playoutItem, result);
+            BlockPlayoutChangeDetection.RemoveItemAndHistory(referenceData, playoutItem, result);
         }
 
         DateTimeOffset currentTime = start;
@@ -312,39 +312,31 @@ public class BlockPlayoutBuilder(
 
     private static PlayoutBuildResult CleanUpHistory(PlayoutReferenceData referenceData, DateTimeOffset start, PlayoutBuildResult result)
     {
-        var groups = new Dictionary<string, List<PlayoutHistory>>();
-        foreach (PlayoutHistory history in referenceData.PlayoutHistory.Append(result.AddedHistory))
-        {
-            var key = $"{history.BlockId}-{history.Key}";
-            if (!groups.TryGetValue(key, out List<PlayoutHistory> group))
-            {
-                group = [];
-                groups[key] = group;
-            }
-
-            group.Add(history);
-        }
-
-        foreach ((string _, List<PlayoutHistory> group) in groups)
-        {
-            //logger.LogDebug("History key {Key} has {Count} items in group", key, group.Count);
-
-            IEnumerable<PlayoutHistory> toDelete = group
+        var allItemsToDelete = referenceData.PlayoutHistory
+            .Append(result.AddedHistory)
+            .GroupBy(h => (h.BlockId, h.Key))
+            .SelectMany(group => group
                 .Filter(h => h.When < start.UtcDateTime)
                 .OrderByDescending(h => h.When)
-                .Tail();
+                .Tail());
 
-            foreach (PlayoutHistory delete in toDelete)
+        var addedToRemove = new System.Collections.Generic.HashSet<PlayoutHistory>();
+
+        foreach (PlayoutHistory delete in allItemsToDelete)
+        {
+            if (delete.Id > 0)
             {
-                if (delete.Id > 0)
-                {
-                    result.HistoryToRemove.Add(delete.Id);
-                }
-                else
-                {
-                    result.AddedHistory.Remove(delete);
-                }
+                result.HistoryToRemove.Add(delete.Id);
             }
+            else
+            {
+                addedToRemove.Add(delete);
+            }
+        }
+
+        if (addedToRemove.Count > 0)
+        {
+            result.AddedHistory.RemoveAll(addedToRemove.Contains);
         }
 
         return result;

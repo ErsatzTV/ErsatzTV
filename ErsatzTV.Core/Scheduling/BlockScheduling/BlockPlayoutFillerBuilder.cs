@@ -27,19 +27,26 @@ public class BlockPlayoutFillerBuilder(
         PlayoutBuildMode mode,
         CancellationToken cancellationToken)
     {
-        var allItems = referenceData.ExistingItems.Append(result.AddedItems).ToList();
+        var allItems = result.AddedItems.ToList();
 
         if (mode is PlayoutBuildMode.Reset)
         {
             // remove all playout items with type filler
             // except block items that are hidden from the guide (guide mode)
-            var toRemove = allItems
-                .Where(pi => pi.FillerKind is not FillerKind.None and not FillerKind.GuideMode)
-                .ToList();
-            foreach (PlayoutItem playoutItem in toRemove)
+            foreach (var item in referenceData.ExistingItems)
             {
-                result = BlockPlayoutChangeDetection.RemoveItemAndHistory(playout, playoutItem, result);
+                if (item.FillerKind is FillerKind.None or FillerKind.GuideMode)
+                {
+                    allItems.Add(item);
+                    continue;
+                }
+
+                BlockPlayoutChangeDetection.RemoveItemAndHistory(referenceData, item, result);
             }
+        }
+        else
+        {
+            allItems.AddRange(referenceData.ExistingItems);
         }
 
         var collectionEnumerators = new Dictionary<CollectionKey, IMediaCollectionEnumerator>();

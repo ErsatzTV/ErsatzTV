@@ -228,6 +228,10 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
                 _ffmpegSegmenterService.PlayoutUpdated(referenceData.Channel.Number);
             }
 
+            await _workerChannel.WriteAsync(
+                new CheckForOverlappingPlayoutItems(request.PlayoutId),
+                cancellationToken);
+
             string fileName = Path.Combine(FileSystemLayout.ChannelGuideCacheFolder, $"{channelNumber}.xml");
             if (hasChanges || !File.Exists(fileName) ||
                 playout.ProgramSchedulePlayoutType is ProgramSchedulePlayoutType.ExternalJson)

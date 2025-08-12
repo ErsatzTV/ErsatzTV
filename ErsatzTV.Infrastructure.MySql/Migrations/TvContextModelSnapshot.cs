@@ -17,7 +17,7 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.7")
+                .HasAnnotation("ProductVersion", "9.0.8")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
@@ -1924,6 +1924,9 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.HasIndex("MediaItemId");
 
                     b.HasIndex("PlayoutId");
+
+                    b.HasIndex("Start", "Finish")
+                        .HasDatabaseName("IX_PlayoutItem_Start_Finish");
 
                     b.ToTable("PlayoutItem", (string)null);
                 });

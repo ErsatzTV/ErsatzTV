@@ -14,22 +14,22 @@
     <MudPaper Square="true" Style="display: flex; height: 64px; min-height: 64px; width: 100%; z-index: 100; align-items: center">
         <div style="display: flex; flex-direction: row; margin-bottom: auto; margin-top: auto; width: 100%; align-items: center" class="ml-6 mr-6">
             <div class="d-none d-md-flex">
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveChanges" StartIcon="@Icons.Material.Filled.Save">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@SaveChanges" StartIcon="@Icons.Material.Filled.Save">
                     Save Block
                 </MudButton>
-                <MudButton Class="ml-3" Variant="Variant.Filled" Color="Color.Default" OnClick="AddBlockItem" StartIcon="@Icons.Material.Filled.PlaylistAdd">
+                <MudButton Class="ml-3" Variant="Variant.Filled" Color="Color.Default" OnClick="@AddBlockItem" StartIcon="@Icons.Material.Filled.PlaylistAdd">
                     Add Block Item
                 </MudButton>
-                <MudButton Class="ml-3" Variant="Variant.Filled" Color="Color.Secondary" OnClick="PreviewPlayout" StartIcon="@Icons.Material.Filled.Preview">
+                <MudButton Class="ml-3" Variant="Variant.Filled" Color="Color.Secondary" OnClick="@PreviewPlayout" StartIcon="@Icons.Material.Filled.Preview">
                     Preview Block Playout
                 </MudButton>
             </div>
             <div style="align-items: center; display: flex; margin-left: auto;" class="d-md-none">
                 <div class="flex-grow-1"></div>
                 <MudMenu Icon="@Icons.Material.Filled.MoreVert">
-                    <MudMenuItem Icon="@Icons.Material.Filled.Save" Label="Save Block" OnClick="SaveChanges"/>
-                    <MudMenuItem Icon="@Icons.Material.Filled.PlaylistAdd" Label="Add Block Item" OnClick="AddBlockItem"/>
-                    <MudMenuItem Icon="@Icons.Material.Filled.Preview" Label="Preview Block Playout" OnClick="PreviewPlayout"/>
+                    <MudMenuItem Icon="@Icons.Material.Filled.Save" Label="Save Block" OnClick="@SaveChanges"/>
+                    <MudMenuItem Icon="@Icons.Material.Filled.PlaylistAdd" Label="Add Block Item" OnClick="@AddBlockItem"/>
+                    <MudMenuItem Icon="@Icons.Material.Filled.Preview" Label="Preview Block Playout" OnClick="@PreviewPlayout"/>
                 </MudMenu>
             </div>
         </div>
