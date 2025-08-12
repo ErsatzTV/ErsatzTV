@@ -4,8 +4,7 @@ namespace ErsatzTV.Core.Interfaces.Repositories;
 
 public interface ITemplateDataRepository
 {
-    public Task<Option<Dictionary<string, object>>> GetMusicVideoTemplateData(
-        Resolution resolution,
-        TimeSpan streamSeek,
-        int musicVideoId);
+    public Task<Option<Dictionary<string, object>>> GetMediaItemTemplateData(MediaItem mediaItem);
+
+    public Task<Option<Dictionary<string, object>>> GetEpgTemplateData(string channelNumber, DateTimeOffset time);
 }

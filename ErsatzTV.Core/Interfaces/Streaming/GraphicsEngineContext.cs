@@ -5,6 +5,7 @@ using ErsatzTV.Core.Graphics;
 namespace ErsatzTV.Core.Interfaces.Streaming;
 
 public record GraphicsEngineContext(
+    string ChannelNumber,
     MediaItem MediaItem,
     List<GraphicsElementContext> Elements,
     Resolution SquarePixelFrameSize,

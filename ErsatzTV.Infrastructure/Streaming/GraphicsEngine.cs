@@ -1,8 +1,8 @@
 using System.IO.Pipelines;
 using ErsatzTV.Core;
-using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Streaming;
+using ErsatzTV.Core.Metadata;
 using Microsoft.Extensions.Logging;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
@@ -15,6 +15,39 @@ public class GraphicsEngine(ITemplateDataRepository templateDataRepository, ILog
     public async Task Run(GraphicsEngineContext context, PipeWriter pipeWriter, CancellationToken cancellationToken)
     {
         GraphicsEngineFonts.LoadFonts(FileSystemLayout.FontsCacheFolder);
+
+        var templateVariables = new Dictionary<string, object>();
+
+        // init text element variables once
+        if (context.Elements.OfType<TextElementContext>().Any())
+        {
+            // common variables
+            templateVariables[MediaItemTemplateDataKey.Resolution] = context.FrameSize;
+            templateVariables[MediaItemTemplateDataKey.StreamSeek] = context.Seek;
+
+            // media item variables
+            var maybeTemplateData =
+                await templateDataRepository.GetMediaItemTemplateData(context.MediaItem);
+            foreach (var templateData in maybeTemplateData)
+            {
+                foreach (var variable in templateData)
+                {
+                    templateVariables.Add(variable.Key, variable.Value);
+                }
+            }
+
+            // epg variables
+            var startTime = context.ContentStartTime + context.Seek;
+            var maybeEpgData =
+                await templateDataRepository.GetEpgTemplateData(context.ChannelNumber, startTime);
+            foreach (var templateData in maybeEpgData)
+            {
+                foreach (var variable in templateData)
+                {
+                    templateVariables.Add(variable.Key, variable.Value);
+                }
+            }
+        }
 
         var elements = new List<IGraphicsElement>();
         foreach (var element in context.Elements)
@@ -33,28 +66,12 @@ public class GraphicsEngine(ITemplateDataRepository templateDataRepository, ILog
                     elements.Add(new ImageElement(imageElementContext.ImageElement, logger));
                     break;
                 case TextElementContext textElementContext:
-                    var variables = new Dictionary<string, object>();
+                    var variables = templateVariables.ToDictionary();
                     foreach (var variable in textElementContext.Variables)
                     {
                         variables.Add(variable.Key, variable.Value);
                     }
 
-                    if (context.MediaItem is MusicVideo musicVideo)
-                    {
-                        var maybeTemplateData = await templateDataRepository.GetMusicVideoTemplateData(
-                            context.FrameSize,
-                            context.Seek,
-                            musicVideo.Id);
-
-                        foreach (var templateData in maybeTemplateData)
-                        {
-                            foreach (var variable in templateData)
-                            {
-                                variables.Add(variable.Key, variable.Value);
-                            }
-                        }
-
-                    }
                     elements.Add(new TextElement(textElementContext.TextElement, variables, logger));
                     break;
             }
