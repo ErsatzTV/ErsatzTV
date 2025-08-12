@@ -7,12 +7,13 @@ namespace ErsatzTV.Infrastructure.Epg;
 
 public static class EpgReader
 {
-    private const string XmlTvDateFormat = "yyyyMMddHHmmss zzz";
+    public const string XmlTvDateFormat = "yyyyMMddHHmmss zzz";
 
-    public static Option<EpgProgramme> FindProgrammeAt(Stream xmlStream, DateTimeOffset targetTime)
+    public static List<EpgProgramme> FindProgrammesAt(Stream xmlStream, DateTimeOffset targetTime, int count)
     {
-        var serializer = new XmlSerializer(typeof(EpgProgramme));
+        var result = new List<EpgProgramme>();
 
+        var serializer = new XmlSerializer(typeof(EpgProgramme));
         var settings = new XmlReaderSettings
         {
             ConformanceLevel = ConformanceLevel.Fragment
@@ -20,10 +21,26 @@ public static class EpgReader
 
         using var reader = XmlReader.Create(xmlStream, settings);
 
-        while (reader.Read())
+        var foundCurrent = false;
+
+        while (reader.Read() && count > 0)
         {
             if (reader.NodeType != XmlNodeType.Element || reader.Name != "programme")
             {
+                continue;
+            }
+
+            if (foundCurrent)
+            {
+                using var subtreeReader = reader.ReadSubtree();
+                var maybeSubtreeProgramme = Optional(serializer.Deserialize(subtreeReader) as EpgProgramme);
+                result.AddRange(maybeSubtreeProgramme);
+                if (maybeSubtreeProgramme.IsNone)
+                {
+                    return result;
+                }
+
+                count--;
                 continue;
             }
 
@@ -35,17 +52,35 @@ public static class EpgReader
                 continue;
             }
 
-            if (DateTimeOffset.TryParseExact(startStr, XmlTvDateFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var start) &&
-                DateTimeOffset.TryParseExact(stopStr, XmlTvDateFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var stop))
+            if (DateTimeOffset.TryParseExact(
+                    startStr,
+                    XmlTvDateFormat,
+                    CultureInfo.InvariantCulture,
+                    DateTimeStyles.None,
+                    out var start) &&
+                DateTimeOffset.TryParseExact(
+                    stopStr,
+                    XmlTvDateFormat,
+                    CultureInfo.InvariantCulture,
+                    DateTimeStyles.None,
+                    out var stop))
             {
                 if (start <= targetTime && targetTime < stop)
                 {
                     using var subtreeReader = reader.ReadSubtree();
-                    return Optional(serializer.Deserialize(subtreeReader) as EpgProgramme);
+                    var maybeCurrentProgramme = Optional(serializer.Deserialize(subtreeReader) as EpgProgramme);
+                    result.AddRange(maybeCurrentProgramme);
+                    if (maybeCurrentProgramme.IsNone)
+                    {
+                        return result;
+                    }
+
+                    foundCurrent = true;
+                    count--;
                 }
             }
         }
 
-        return Option<EpgProgramme>.None;
+        return result;
     }
 }

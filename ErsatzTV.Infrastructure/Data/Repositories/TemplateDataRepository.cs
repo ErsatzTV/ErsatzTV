@@ -1,3 +1,4 @@
+using System.Globalization;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Extensions;
@@ -22,7 +23,10 @@ public class TemplateDataRepository(ILocalFileSystem localFileSystem, IDbContext
             _ => Option<Dictionary<string, object>>.None
         };
 
-    public async Task<Option<Dictionary<string, object>>> GetEpgTemplateData(string channelNumber, DateTimeOffset time)
+    public async Task<Option<Dictionary<string, object>>> GetEpgTemplateData(
+        string channelNumber,
+        DateTimeOffset time,
+        int count)
     {
         try
         {
@@ -30,19 +34,48 @@ public class TemplateDataRepository(ILocalFileSystem localFileSystem, IDbContext
             if (localFileSystem.FileExists(targetFile))
             {
                 await using var stream = File.OpenRead(targetFile);
-                var maybeEpgProgramme = EpgReader.FindProgrammeAt(stream, time);
-                foreach (var epgProgramme in maybeEpgProgramme)
+                var xmlProgrammes = EpgReader.FindProgrammesAt(stream, time, count);
+                var result = new List<EpgProgrammeTemplateData>();
+
+                foreach (var epgProgramme in xmlProgrammes)
                 {
-                    return new Dictionary<string, object>
+                    var data = new EpgProgrammeTemplateData
                     {
-                        [EpgTemplateDataKey.Title] = epgProgramme.Title?.Value,
-                        [EpgTemplateDataKey.SubTitle] = epgProgramme.SubTitle?.Value,
-                        [EpgTemplateDataKey.Description] = epgProgramme.Description?.Value,
-                        [EpgTemplateDataKey.Rating] = epgProgramme.Rating?.Value,
-                        [EpgTemplateDataKey.Categories] = (epgProgramme.Categories ?? []).Map(c => c.Value).ToArray(),
-                        [EpgTemplateDataKey.Date] = epgProgramme.Date?.Value
+                        Title = epgProgramme.Title?.Value,
+                        SubTitle = epgProgramme.SubTitle?.Value,
+                        Description = epgProgramme.Description?.Value,
+                        Rating = epgProgramme.Rating?.Value,
+                        Categories = (epgProgramme.Categories ?? []).Map(c => c.Value).ToArray(),
+                        Date = epgProgramme.Date?.Value
                     };
+
+                    if (DateTimeOffset.TryParseExact(
+                            epgProgramme.Start,
+                            EpgReader.XmlTvDateFormat,
+                            CultureInfo.InvariantCulture,
+                            DateTimeStyles.None,
+                            out var start))
+                    {
+                        data.Start = start.LocalDateTime;
+                    }
+
+                    if (DateTimeOffset.TryParseExact(
+                            epgProgramme.Stop,
+                            EpgReader.XmlTvDateFormat,
+                            CultureInfo.InvariantCulture,
+                            DateTimeStyles.None,
+                            out var stop))
+                    {
+                        data.Stop = stop.LocalDateTime;
+                    }
+
+                    result.Add(data);
                 }
+
+                return new Dictionary<string, object>
+                {
+                    [EpgTemplateDataKey.Epg] = result
+                };
             }
         }
         catch (Exception e)

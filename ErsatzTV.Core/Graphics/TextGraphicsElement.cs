@@ -33,6 +33,9 @@ public class TextGraphicsElement
     [YamlMember(Alias = "font_color", ApplyNamingConventions = false)]
     public string FontColor { get; set; }
 
+    [YamlMember(Alias = "epg_entries", ApplyNamingConventions = false)]
+    public int EpgEntries { get; set; }
+
     public string Text { get; set; }
 
     public static async Task<Option<TextGraphicsElement>> FromFile(string fileName)
