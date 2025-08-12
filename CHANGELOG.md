@@ -44,6 +44,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix green output when padding with VAAPI accel and i965 driver
 - Fix watermark custom image validation
 - Fix playback when using any watermarks that were saved with invalid state (no image)
+- Fix overlapping block playout items caused by `Stop scheduling block items` value `After Duration End`
+  - Existing overlapping items will not be removed, but no new overlapping items will be created
+  - Until these existing items age out, there will be warnings logged after each playout build/extension
 
 ### Changed
 - Allow multiple watermarks in playback troubleshooting
