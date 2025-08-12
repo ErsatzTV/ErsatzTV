@@ -221,13 +221,6 @@ public class BlockPlayoutBuilder(
                         break;
                     }
 
-                    logger.LogDebug("SCHEDULING Item {MediaItemId} - {Title}: Start: {Start}, Finish: {Finish}, Duration: {Duration}",
-                         mediaItem.Id,
-                         mediaItem is Episode ep ? GetTitle(ep) : string.Empty,
-                         playoutItem.Start,
-                         playoutItem.Finish,
-                         itemDuration);
-
                     result.AddedItems.Add(playoutItem);
 
                     // create a playout history record
@@ -242,7 +235,7 @@ public class BlockPlayoutBuilder(
                         Details = HistoryDetails.ForMediaItem(mediaItem)
                     };
 
-                    logger.LogDebug("Adding history item: {When}: {History}", nextHistory.When, nextHistory.Details);
+                    //logger.LogDebug("Adding history item: {When}: {History}", nextHistory.When, nextHistory.Details);
                     result.AddedHistory.Add(nextHistory);
 
                     currentTime += itemDuration;
