@@ -515,6 +515,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             graphicsEngineInput = new GraphicsEngineInput();
 
             graphicsEngineContext = new GraphicsEngineContext(
+                channel.Number,
                 audioVersion.MediaItem,
                 graphicsElementContexts,
                 new Resolution { Width = desiredState.ScaledSize.Width, Height = desiredState.ScaledSize.Height },
