@@ -26,7 +26,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - Displays multi-line text in a specified font, color, location, z-index
     - Supports constant opacity and opacity expression
     - Supports EPG and Media Item variable replacement
-      - EPG data is sourced from XMLTV
+      - EPG data is sourced from XMLTV for the current time
       - Media Item data is sourced from the currently playing media item
   - Add `image` graphics element type
       - Supported in playback troubleshooting and YAML playouts
