@@ -857,21 +857,20 @@ public class JellyfinApiClient : IJellyfinApiClient
             int height = videoStream.Height ?? 1;
 
             var isAnamorphic = false;
-            if (videoStream.IsAnamorphic.HasValue)
-            {
-                isAnamorphic = videoStream.IsAnamorphic.Value;
-            }
-            else if (!string.IsNullOrWhiteSpace(videoStream.AspectRatio) && videoStream.AspectRatio.Contains(':'))
+            if (!string.IsNullOrWhiteSpace(videoStream.AspectRatio) && videoStream.AspectRatio.Contains(':'))
             {
                 // if width/height != aspect ratio, is anamorphic
                 double resolutionRatio = width / (double)height;
 
                 string[] split = videoStream.AspectRatio.Split(":");
-                var num = double.Parse(split[0], CultureInfo.InvariantCulture);
-                var den = double.Parse(split[1], CultureInfo.InvariantCulture);
-                double aspectRatio = num / den;
+                if (double.TryParse(split[0], NumberStyles.Any, CultureInfo.InvariantCulture, out var num) &&
+                    double.TryParse(split[1], NumberStyles.Any, CultureInfo.InvariantCulture, out var den) &&
+                    den != 0)
+                {
+                    double displayRatio = num / den;
 
-                isAnamorphic = Math.Abs(resolutionRatio - aspectRatio) > 0.01d;
+                    isAnamorphic = Math.Abs(resolutionRatio - displayRatio) > 0.01d;
+                }
             }
 
             var version = new MediaVersion
