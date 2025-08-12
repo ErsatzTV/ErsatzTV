@@ -27,6 +27,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - Supports constant opacity and opacity expression
     - Supports EPG and Media Item variable replacement
       - EPG data is sourced from XMLTV for the current time
+        - EPG data can also load a configurable number of subsequent (up next) entries
       - Media Item data is sourced from the currently playing media item
   - Add `image` graphics element type
       - Supported in playback troubleshooting and YAML playouts
