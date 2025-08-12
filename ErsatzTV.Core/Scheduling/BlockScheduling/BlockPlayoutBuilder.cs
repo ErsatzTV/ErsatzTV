@@ -35,7 +35,7 @@ public class BlockPlayoutBuilder(
     {
         var result = PlayoutBuildResult.Empty;
 
-        Logger.LogDebug(
+        logger.LogDebug(
             "Building block playout {PlayoutId} for channel {ChannelNumber} - {ChannelName}",
             playout.Id,
             referenceData.Channel.Number,
@@ -93,6 +93,9 @@ public class BlockPlayoutBuilder(
             BlockPlayoutChangeDetection.RemoveItemAndHistory(referenceData, playoutItem, result);
         }
 
+        var playoutItemsToRemoveIds = playoutItemsToRemove.Select(i => i.Id).ToHashSet();
+        var baseItems = referenceData.ExistingItems.Where(i => !playoutItemsToRemoveIds.Contains(i.Id)).ToList();
+
         DateTimeOffset currentTime = start;
         if (updatedEffectiveBlocks.Count > 0)
         {
@@ -101,22 +104,36 @@ public class BlockPlayoutBuilder(
 
         foreach (EffectiveBlock effectiveBlock in updatedEffectiveBlocks)
         {
+            DateTimeOffset maxExistingFinish = baseItems
+                .Where(i => i.Start < effectiveBlock.Start.UtcDateTime)
+                .Select(i => i.FinishOffset)
+                .DefaultIfEmpty(DateTimeOffset.MinValue)
+                .Max();
+
             if (currentTime < effectiveBlock.Start)
             {
                 currentTime = effectiveBlock.Start;
-
-                Logger.LogDebug(
-                    "Will schedule block {Block} at {Start}",
-                    effectiveBlock.Block.Name,
-                    effectiveBlock.Start);
             }
-            else
+
+            if (currentTime < maxExistingFinish)
             {
-                Logger.LogDebug(
+                currentTime = maxExistingFinish;
+            }
+
+            if (currentTime > effectiveBlock.Start)
+            {
+                logger.LogDebug(
                     "Will schedule block {Block} with start {Start} at {ActualStart}",
                     effectiveBlock.Block.Name,
                     effectiveBlock.Start,
                     currentTime);
+            }
+            else
+            {
+                logger.LogDebug(
+                    "Will schedule block {Block} at {Start}",
+                    effectiveBlock.Block.Name,
+                    effectiveBlock.Start);
             }
 
             DateTimeOffset blockFinish = effectiveBlock.Start.AddMinutes(effectiveBlock.Block.Minutes);
@@ -131,7 +148,7 @@ public class BlockPlayoutBuilder(
 
                 if (currentTime >= blockFinish)
                 {
-                    Logger.LogDebug(
+                    logger.LogDebug(
                         "Current time {Time} for block {Block} is beyond block finish {Finish}; will stop with this block's items",
                         currentTime,
                         effectiveBlock.Block.Name,
@@ -157,7 +174,7 @@ public class BlockPlayoutBuilder(
 
                 foreach (MediaItem mediaItem in enumerator.Current)
                 {
-                    Logger.LogDebug(
+                    logger.LogDebug(
                         "current item: {Id} / {Title}",
                         mediaItem.Id,
                         mediaItem is Episode e ? GetTitle(e) : string.Empty);
@@ -194,7 +211,7 @@ public class BlockPlayoutBuilder(
                     if (effectiveBlock.Block.StopScheduling is BlockStopScheduling.BeforeDurationEnd
                         && playoutItem.FinishOffset > blockFinish)
                     {
-                        Logger.LogDebug(
+                        logger.LogDebug(
                             "Current time {Time} for block {Block} would go beyond block finish {Finish}; will not schedule more items",
                             currentTime,
                             effectiveBlock.Block.Name,
@@ -203,6 +220,13 @@ public class BlockPlayoutBuilder(
                         pastTime = true;
                         break;
                     }
+
+                    logger.LogDebug("SCHEDULING Item {MediaItemId} - {Title}: Start: {Start}, Finish: {Finish}, Duration: {Duration}",
+                         mediaItem.Id,
+                         mediaItem is Episode ep ? GetTitle(ep) : string.Empty,
+                         playoutItem.Start,
+                         playoutItem.Finish,
+                         itemDuration);
 
                     result.AddedItems.Add(playoutItem);
 
@@ -218,7 +242,7 @@ public class BlockPlayoutBuilder(
                         Details = HistoryDetails.ForMediaItem(mediaItem)
                     };
 
-                    //logger.LogDebug("Adding history item: {When}: {History}", nextHistory.When, nextHistory.Details);
+                    logger.LogDebug("Adding history item: {When}: {History}", nextHistory.When, nextHistory.Details);
                     result.AddedHistory.Add(nextHistory);
 
                     currentTime += itemDuration;
@@ -263,14 +287,14 @@ public class BlockPlayoutBuilder(
                 referenceData.PlayoutHistory.Append(result.AddedHistory).ToList(),
                 blockItem,
                 historyKey,
-                Logger),
+                logger),
             PlaybackOrder.SeasonEpisode => BlockPlayoutEnumerator.SeasonEpisode(
                 collectionItems,
                 currentTime,
                 referenceData.PlayoutHistory.Append(result.AddedHistory).ToList(),
                 blockItem,
                 historyKey,
-                Logger),
+                logger),
             PlaybackOrder.Shuffle => BlockPlayoutEnumerator.Shuffle(
                 collectionItems,
                 currentTime,

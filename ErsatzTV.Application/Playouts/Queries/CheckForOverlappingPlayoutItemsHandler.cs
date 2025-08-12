@@ -33,7 +33,7 @@ public class CheckForOverlappingPlayoutItemsHandler(
             foreach (var channel in maybeChannel)
             {
                 logger.LogWarning(
-                    "Playout for channel {ChannelName} has overlapping playout items; this is a bug.",
+                    "Playout for channel {ChannelName} has overlapping playout items; this may be a bug.",
                     channel.Name);
             }
         }
