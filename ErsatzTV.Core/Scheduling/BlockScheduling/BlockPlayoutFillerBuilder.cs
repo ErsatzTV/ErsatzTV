@@ -27,25 +27,40 @@ public class BlockPlayoutFillerBuilder(
         PlayoutBuildMode mode,
         CancellationToken cancellationToken)
     {
-        var allItems = referenceData.ExistingItems.Append(result.AddedItems).ToList();
+        var filteredExistingItems = referenceData.ExistingItems
+            .Where(i => !result.ItemsToRemove.Contains(i.Id))
+            .ToList();
+
+        var filteredExistingHistory = referenceData.PlayoutHistory
+            .Where(h => !result.HistoryToRemove.Contains(h.Id))
+            .ToList();
+
+        var allItems = result.AddedItems.ToList();
 
         if (mode is PlayoutBuildMode.Reset)
         {
             // remove all playout items with type filler
             // except block items that are hidden from the guide (guide mode)
-            var toRemove = allItems
-                .Where(pi => pi.FillerKind is not FillerKind.None and not FillerKind.GuideMode)
-                .ToList();
-            foreach (PlayoutItem playoutItem in toRemove)
+            foreach (var item in filteredExistingItems)
             {
-                result = BlockPlayoutChangeDetection.RemoveItemAndHistory(playout, playoutItem, result);
+                if (item.FillerKind is FillerKind.None or FillerKind.GuideMode)
+                {
+                    allItems.Add(item);
+                    continue;
+                }
+
+                BlockPlayoutChangeDetection.RemoveItemAndHistory(referenceData, item, result);
             }
+        }
+        else
+        {
+            allItems.AddRange(filteredExistingItems);
         }
 
         var collectionEnumerators = new Dictionary<CollectionKey, IMediaCollectionEnumerator>();
 
         // find all unscheduled periods
-        var queue = new Queue<PlayoutItem>(allItems);
+        var queue = new Queue<PlayoutItem>(allItems.OrderBy(i => i.Start));
         while (queue.Count > 1)
         {
             PlayoutItem one = queue.Dequeue();
@@ -83,7 +98,7 @@ public class BlockPlayoutFillerBuilder(
                         collectionItems,
                         start,
                         playout.Seed,
-                        referenceData.PlayoutHistory.Append(result.AddedHistory).ToList(),
+                        filteredExistingHistory.Append(result.AddedHistory).ToList(),
                         deco,
                         historyKey);
 

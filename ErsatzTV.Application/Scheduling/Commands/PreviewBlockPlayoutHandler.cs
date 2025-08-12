@@ -103,7 +103,7 @@ public class PreviewBlockPlayoutHandler(
             }
         }
 
-        return playout.Items.Map(Mapper.ProjectToViewModel).ToList();
+        return result.AddedItems.Map(Mapper.ProjectToViewModel).ToList();
     }
 
     private static Block MapToBlock(ReplaceBlockItems request) =>

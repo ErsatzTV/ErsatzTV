@@ -76,7 +76,10 @@ public class WorkerService : BackgroundService
                                     "Unable to build playout {PlayoutId}: {Error}",
                                     buildPlayout.PlayoutId,
                                     error.Value));
+                            break;
                         }
+                        case CheckForOverlappingPlayoutItems checkForOverlappingPlayoutItems:
+                            await mediator.Send(checkForOverlappingPlayoutItems, stoppingToken);
                             break;
                         case TimeShiftOnDemandPlayout timeShiftOnDemandPlayout:
                             await mediator.Send(timeShiftOnDemandPlayout, stoppingToken);

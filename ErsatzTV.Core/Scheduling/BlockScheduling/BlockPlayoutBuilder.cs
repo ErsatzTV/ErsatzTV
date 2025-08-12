@@ -35,7 +35,7 @@ public class BlockPlayoutBuilder(
     {
         var result = PlayoutBuildResult.Empty;
 
-        Logger.LogDebug(
+        logger.LogDebug(
             "Building block playout {PlayoutId} for channel {ChannelNumber} - {ChannelName}",
             playout.Id,
             referenceData.Channel.Number,
@@ -90,8 +90,11 @@ public class BlockPlayoutBuilder(
 
         foreach (PlayoutItem playoutItem in playoutItemsToRemove)
         {
-            result = BlockPlayoutChangeDetection.RemoveItemAndHistory(playout, playoutItem, result);
+            BlockPlayoutChangeDetection.RemoveItemAndHistory(referenceData, playoutItem, result);
         }
+
+        var playoutItemsToRemoveIds = playoutItemsToRemove.Select(i => i.Id).ToHashSet();
+        var baseItems = referenceData.ExistingItems.Where(i => !playoutItemsToRemoveIds.Contains(i.Id)).ToList();
 
         DateTimeOffset currentTime = start;
         if (updatedEffectiveBlocks.Count > 0)
@@ -101,22 +104,36 @@ public class BlockPlayoutBuilder(
 
         foreach (EffectiveBlock effectiveBlock in updatedEffectiveBlocks)
         {
+            DateTimeOffset maxExistingFinish = baseItems
+                .Where(i => i.Start < effectiveBlock.Start.UtcDateTime)
+                .Select(i => i.FinishOffset)
+                .DefaultIfEmpty(DateTimeOffset.MinValue)
+                .Max();
+
             if (currentTime < effectiveBlock.Start)
             {
                 currentTime = effectiveBlock.Start;
-
-                Logger.LogDebug(
-                    "Will schedule block {Block} at {Start}",
-                    effectiveBlock.Block.Name,
-                    effectiveBlock.Start);
             }
-            else
+
+            if (currentTime < maxExistingFinish)
             {
-                Logger.LogDebug(
+                currentTime = maxExistingFinish;
+            }
+
+            if (currentTime > effectiveBlock.Start)
+            {
+                logger.LogDebug(
                     "Will schedule block {Block} with start {Start} at {ActualStart}",
                     effectiveBlock.Block.Name,
                     effectiveBlock.Start,
                     currentTime);
+            }
+            else
+            {
+                logger.LogDebug(
+                    "Will schedule block {Block} at {Start}",
+                    effectiveBlock.Block.Name,
+                    effectiveBlock.Start);
             }
 
             DateTimeOffset blockFinish = effectiveBlock.Start.AddMinutes(effectiveBlock.Block.Minutes);
@@ -131,7 +148,7 @@ public class BlockPlayoutBuilder(
 
                 if (currentTime >= blockFinish)
                 {
-                    Logger.LogDebug(
+                    logger.LogDebug(
                         "Current time {Time} for block {Block} is beyond block finish {Finish}; will stop with this block's items",
                         currentTime,
                         effectiveBlock.Block.Name,
@@ -157,7 +174,7 @@ public class BlockPlayoutBuilder(
 
                 foreach (MediaItem mediaItem in enumerator.Current)
                 {
-                    Logger.LogDebug(
+                    logger.LogDebug(
                         "current item: {Id} / {Title}",
                         mediaItem.Id,
                         mediaItem is Episode e ? GetTitle(e) : string.Empty);
@@ -194,7 +211,7 @@ public class BlockPlayoutBuilder(
                     if (effectiveBlock.Block.StopScheduling is BlockStopScheduling.BeforeDurationEnd
                         && playoutItem.FinishOffset > blockFinish)
                     {
-                        Logger.LogDebug(
+                        logger.LogDebug(
                             "Current time {Time} for block {Block} would go beyond block finish {Finish}; will not schedule more items",
                             currentTime,
                             effectiveBlock.Block.Name,
@@ -263,14 +280,14 @@ public class BlockPlayoutBuilder(
                 referenceData.PlayoutHistory.Append(result.AddedHistory).ToList(),
                 blockItem,
                 historyKey,
-                Logger),
+                logger),
             PlaybackOrder.SeasonEpisode => BlockPlayoutEnumerator.SeasonEpisode(
                 collectionItems,
                 currentTime,
                 referenceData.PlayoutHistory.Append(result.AddedHistory).ToList(),
                 blockItem,
                 historyKey,
-                Logger),
+                logger),
             PlaybackOrder.Shuffle => BlockPlayoutEnumerator.Shuffle(
                 collectionItems,
                 currentTime,
@@ -312,39 +329,31 @@ public class BlockPlayoutBuilder(
 
     private static PlayoutBuildResult CleanUpHistory(PlayoutReferenceData referenceData, DateTimeOffset start, PlayoutBuildResult result)
     {
-        var groups = new Dictionary<string, List<PlayoutHistory>>();
-        foreach (PlayoutHistory history in referenceData.PlayoutHistory.Append(result.AddedHistory))
-        {
-            var key = $"{history.BlockId}-{history.Key}";
-            if (!groups.TryGetValue(key, out List<PlayoutHistory> group))
-            {
-                group = [];
-                groups[key] = group;
-            }
-
-            group.Add(history);
-        }
-
-        foreach ((string _, List<PlayoutHistory> group) in groups)
-        {
-            //logger.LogDebug("History key {Key} has {Count} items in group", key, group.Count);
-
-            IEnumerable<PlayoutHistory> toDelete = group
+        var allItemsToDelete = referenceData.PlayoutHistory
+            .Append(result.AddedHistory)
+            .GroupBy(h => (h.BlockId, h.Key))
+            .SelectMany(group => group
                 .Filter(h => h.When < start.UtcDateTime)
                 .OrderByDescending(h => h.When)
-                .Tail();
+                .Tail());
 
-            foreach (PlayoutHistory delete in toDelete)
+        var addedToRemove = new System.Collections.Generic.HashSet<PlayoutHistory>();
+
+        foreach (PlayoutHistory delete in allItemsToDelete)
+        {
+            if (delete.Id > 0)
             {
-                if (delete.Id > 0)
-                {
-                    result.HistoryToRemove.Add(delete.Id);
-                }
-                else
-                {
-                    result.AddedHistory.Remove(delete);
-                }
+                result.HistoryToRemove.Add(delete.Id);
             }
+            else
+            {
+                addedToRemove.Add(delete);
+            }
+        }
+
+        if (addedToRemove.Count > 0)
+        {
+            result.AddedHistory.RemoveAll(addedToRemove.Contains);
         }
 
         return result;

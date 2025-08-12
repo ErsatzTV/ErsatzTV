@@ -8,9 +8,9 @@ public record PlayoutBuildResult(
     Option<DateTimeOffset> RemoveBefore,
     Option<DateTimeOffset> RemoveAfter,
     List<PlayoutItem> AddedItems,
-    List<int> ItemsToRemove,
+    System.Collections.Generic.HashSet<int> ItemsToRemove,
     List<PlayoutHistory> AddedHistory,
-    List<int> HistoryToRemove,
+    System.Collections.Generic.HashSet<int> HistoryToRemove,
     Option<DateTimeOffset> TimeShiftTo)
 {
     public static PlayoutBuildResult Empty =>

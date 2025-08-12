@@ -146,18 +146,19 @@ internal static class BlockPlayoutChangeDetection
         return Tuple(updatedBlocks.ToList(), playoutItems.Filter(i => updatedItemIds.Contains(i.Id)).ToList());
     }
 
-    public static PlayoutBuildResult RemoveItemAndHistory(Playout playout, PlayoutItem playoutItem, PlayoutBuildResult result)
+    public static void RemoveItemAndHistory(
+        PlayoutReferenceData referenceData,
+        PlayoutItem playoutItem,
+        PlayoutBuildResult result)
     {
         result.ItemsToRemove.Add(playoutItem.Id);
 
-        Option<PlayoutHistory> historyToRemove = playout.PlayoutHistory
+        Option<PlayoutHistory> historyToRemove = referenceData.PlayoutHistory
             .Find(h => h.When == playoutItem.Start);
 
         foreach (PlayoutHistory history in historyToRemove)
         {
             result.HistoryToRemove.Add(history.Id);
         }
-
-        return result;
     }
 }

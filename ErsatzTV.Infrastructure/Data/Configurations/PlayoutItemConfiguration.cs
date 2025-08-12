@@ -11,6 +11,9 @@ public class PlayoutItemConfiguration : IEntityTypeConfiguration<PlayoutItem>
     {
         builder.ToTable("PlayoutItem");
 
+        builder.HasIndex(p => new { p.Start, p.Finish })
+            .HasDatabaseName("IX_PlayoutItem_Start_Finish");
+
         builder.HasOne(pi => pi.MediaItem)
             .WithMany()
             .HasForeignKey(pi => pi.MediaItemId)

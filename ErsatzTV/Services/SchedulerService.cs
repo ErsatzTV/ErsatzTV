@@ -164,6 +164,7 @@ public class SchedulerService : BackgroundService
             TvContext dbContext = scope.ServiceProvider.GetRequiredService<TvContext>();
 
             List<Playout> playouts = await dbContext.Playouts
+                .AsNoTracking()
                 .Filter(p => p.DailyRebuildTime != null)
                 .Include(p => p.Channel)
                 .ToListAsync(cancellationToken);
@@ -208,8 +209,10 @@ public class SchedulerService : BackgroundService
         TvContext dbContext = scope.ServiceProvider.GetRequiredService<TvContext>();
 
         List<Playout> playouts = await dbContext.Playouts
+            .AsNoTracking()
             .Include(p => p.Channel)
             .ToListAsync(cancellationToken);
+
         foreach (int playoutId in playouts.OrderBy(p => decimal.Parse(p.Channel.Number, CultureInfo.InvariantCulture))
                      .Map(p => p.Id))
         {
@@ -243,7 +246,7 @@ public class SchedulerService : BackgroundService
 
         var mediaSourceIds = new System.Collections.Generic.HashSet<int>();
 
-        foreach (PlexLibrary library in dbContext.PlexLibraries.Filter(l => l.ShouldSyncItems))
+        foreach (PlexLibrary library in dbContext.PlexLibraries.AsNoTracking().Filter(l => l.ShouldSyncItems))
         {
             mediaSourceIds.Add(library.MediaSourceId);
 
@@ -277,7 +280,7 @@ public class SchedulerService : BackgroundService
 
         var mediaSourceIds = new System.Collections.Generic.HashSet<int>();
 
-        foreach (JellyfinLibrary library in dbContext.JellyfinLibraries.Filter(l => l.ShouldSyncItems))
+        foreach (JellyfinLibrary library in dbContext.JellyfinLibraries.AsNoTracking().Filter(l => l.ShouldSyncItems))
         {
             mediaSourceIds.Add(library.MediaSourceId);
 
@@ -304,7 +307,7 @@ public class SchedulerService : BackgroundService
 
         var mediaSourceIds = new System.Collections.Generic.HashSet<int>();
 
-        foreach (EmbyLibrary library in dbContext.EmbyLibraries.Filter(l => l.ShouldSyncItems))
+        foreach (EmbyLibrary library in dbContext.EmbyLibraries.AsNoTracking().Filter(l => l.ShouldSyncItems))
         {
             mediaSourceIds.Add(library.MediaSourceId);
 
@@ -332,6 +335,7 @@ public class SchedulerService : BackgroundService
         DateTime target = DateTime.UtcNow.AddDays(-1);
 
         List<TraktList> traktLists = await dbContext.TraktLists
+            .AsNoTracking()
             .Filter(tl => tl.AutoRefresh && (tl.LastUpdate == null || tl.LastUpdate <= target))
             .ToListAsync(cancellationToken);
 
@@ -355,6 +359,7 @@ public class SchedulerService : BackgroundService
         DateTime target = DateTime.UtcNow.AddHours(-1);
 
         List<TraktList> traktLists = await dbContext.TraktLists
+            .AsNoTracking()
             .Filter(tl => tl.LastMatch == null || tl.LastMatch <= target)
             .ToListAsync(cancellationToken);
 
