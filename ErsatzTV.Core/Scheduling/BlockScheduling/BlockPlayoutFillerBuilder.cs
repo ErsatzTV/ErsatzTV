@@ -27,13 +27,21 @@ public class BlockPlayoutFillerBuilder(
         PlayoutBuildMode mode,
         CancellationToken cancellationToken)
     {
+        var filteredExistingItems = referenceData.ExistingItems
+            .Where(i => !result.ItemsToRemove.Contains(i.Id))
+            .ToList();
+
+        var filteredExistingHistory = referenceData.PlayoutHistory
+            .Where(h => !result.HistoryToRemove.Contains(h.Id))
+            .ToList();
+
         var allItems = result.AddedItems.ToList();
 
         if (mode is PlayoutBuildMode.Reset)
         {
             // remove all playout items with type filler
             // except block items that are hidden from the guide (guide mode)
-            foreach (var item in referenceData.ExistingItems)
+            foreach (var item in filteredExistingItems)
             {
                 if (item.FillerKind is FillerKind.None or FillerKind.GuideMode)
                 {
@@ -46,13 +54,13 @@ public class BlockPlayoutFillerBuilder(
         }
         else
         {
-            allItems.AddRange(referenceData.ExistingItems);
+            allItems.AddRange(filteredExistingItems);
         }
 
         var collectionEnumerators = new Dictionary<CollectionKey, IMediaCollectionEnumerator>();
 
         // find all unscheduled periods
-        var queue = new Queue<PlayoutItem>(allItems);
+        var queue = new Queue<PlayoutItem>(allItems.OrderBy(i => i.Start));
         while (queue.Count > 1)
         {
             PlayoutItem one = queue.Dequeue();
@@ -90,7 +98,7 @@ public class BlockPlayoutFillerBuilder(
                         collectionItems,
                         start,
                         playout.Seed,
-                        referenceData.PlayoutHistory.Append(result.AddedHistory).ToList(),
+                        filteredExistingHistory.Append(result.AddedHistory).ToList(),
                         deco,
                         historyKey);
 
