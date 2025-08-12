@@ -37,9 +37,10 @@ public class GraphicsEngine(ITemplateDataRepository templateDataRepository, ILog
             }
 
             // epg variables
+            int maxEpg = context.Elements.OfType<TextElementContext>().Max(c => c.TextElement.EpgEntries);
             var startTime = context.ContentStartTime + context.Seek;
             var maybeEpgData =
-                await templateDataRepository.GetEpgTemplateData(context.ChannelNumber, startTime);
+                await templateDataRepository.GetEpgTemplateData(context.ChannelNumber, startTime, maxEpg);
             foreach (var templateData in maybeEpgData)
             {
                 foreach (var variable in templateData)

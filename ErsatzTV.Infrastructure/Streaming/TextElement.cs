@@ -45,7 +45,7 @@ public class TextElement(TextGraphicsElement textElement, Dictionary<string, obj
 
             ZIndex = textElement.ZIndex ?? 0;
 
-            string textToRender = await Template.Parse(textElement.Text).RenderAsync(variables);
+            string textToRender = await Template.Parse(textElement.Text).RenderAsync(variables, memberRenamer: member => member.Name);
 
             var font = GraphicsEngineFonts.GetFont(textElement.FontFamily, textElement.FontSize ?? 48,
                 FontStyle.Regular);
