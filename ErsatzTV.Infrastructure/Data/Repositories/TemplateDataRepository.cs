@@ -56,7 +56,7 @@ public class TemplateDataRepository(ILocalFileSystem localFileSystem, IDbContext
                             DateTimeStyles.None,
                             out var start))
                     {
-                        data.Start = start.LocalDateTime;
+                        data.Start = start;
                     }
 
                     if (DateTimeOffset.TryParseExact(
@@ -66,7 +66,7 @@ public class TemplateDataRepository(ILocalFileSystem localFileSystem, IDbContext
                             DateTimeStyles.None,
                             out var stop))
                     {
-                        data.Stop = stop.LocalDateTime;
+                        data.Stop = stop;
                     }
 
                     result.Add(data);
