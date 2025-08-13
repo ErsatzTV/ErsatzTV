@@ -58,7 +58,7 @@ public class PlexNetworkScanner(
             var keepIds = new System.Collections.Generic.HashSet<int>();
             await foreach ((PlexShow item, int _) in items)
             {
-                PlexShowAddTagResult result = await plexTelevisionRepository.AddTag(item, tag);
+                PlexShowAddTagResult result = await plexTelevisionRepository.AddTag(library, item, tag);
 
                 foreach (int existing in result.Existing)
                 {

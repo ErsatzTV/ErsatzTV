@@ -7,7 +7,7 @@ public interface IPlexTelevisionRepository : IMediaServerTelevisionRepository<Pl
     PlexEpisode, PlexItemEtag>
 {
     Task<List<int>> RemoveAllTags(PlexLibrary library, PlexTag tag, System.Collections.Generic.HashSet<int> keep);
-    Task<PlexShowAddTagResult> AddTag(PlexShow show, PlexTag tag);
+    Task<PlexShowAddTagResult> AddTag(PlexLibrary library, PlexShow show, PlexTag tag);
     Task UpdateLastNetworksScan(PlexLibrary library);
 }
 
