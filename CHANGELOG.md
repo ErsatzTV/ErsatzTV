@@ -38,6 +38,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - The `variables` property can be used to dynamically replace text from the template
   - `graphics_off` will turn off a specific element, or all elements if none are specified
 - Add `Seek Seconds` to playback troubleshooting to support capturing timing-related issues
+- Custom stream selector: add `content_condition` to allow channel and time-of-day based decisions
+  - `content_condition` expression can use
+    - `channel_number`
+    - `channel_name`
+    - `time_of_day_seconds` - the start time for the current item, represented in seconds since midnight
 
 ### Fix
 - Fix database operations that were slowing down playout builds

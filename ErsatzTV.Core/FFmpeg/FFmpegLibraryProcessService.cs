@@ -110,6 +110,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         {
             StreamSelectorResult result = await _customStreamSelector.SelectStreams(
                 channel,
+                start,
                 audioVersion,
                 allSubtitles);
             maybeAudioStream = result.AudioStream;

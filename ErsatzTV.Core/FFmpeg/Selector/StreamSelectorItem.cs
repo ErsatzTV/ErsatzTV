@@ -30,4 +30,7 @@ public class StreamSelectorItem
 
     [YamlMember(Alias = "subtitle_condition", ApplyNamingConventions = false)]
     public string SubtitleCondition { get; set; }
+
+    [YamlMember(Alias = "content_condition", ApplyNamingConventions = false)]
+    public string ContentCondition { get; set; }
 }

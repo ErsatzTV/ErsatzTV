@@ -7,6 +7,7 @@ public interface ICustomStreamSelector
 {
     Task<StreamSelectorResult> SelectStreams(
         Channel channel,
+        DateTimeOffset contentStartTime,
         MediaItemAudioVersion audioVersion,
         List<Subtitle> allSubtitles);
 }
