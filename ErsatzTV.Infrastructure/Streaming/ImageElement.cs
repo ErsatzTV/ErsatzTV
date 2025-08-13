@@ -40,7 +40,7 @@ public class ImageElement(ImageGraphicsElement imageGraphicsElement, ILogger log
             }
             else
             {
-                _opacity = (imageGraphicsElement.Opacity ?? 100) / 100.0f;
+                _opacity = (imageGraphicsElement.OpacityPercent ?? 100) / 100.0f;
             }
 
             ZIndex = imageGraphicsElement.ZIndex ?? 0;

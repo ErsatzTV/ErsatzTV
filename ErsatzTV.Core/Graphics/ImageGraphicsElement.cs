@@ -8,7 +8,8 @@ public class ImageGraphicsElement
 {
     public string Image { get; set; }
 
-    public int? Opacity { get; set; }
+    [YamlMember(Alias = "opacity_percent", ApplyNamingConventions = false)]
+    public int? OpacityPercent { get; set; }
 
     [YamlMember(Alias = "opacity_expression", ApplyNamingConventions = false)]
     public string OpacityExpression { get; set; }

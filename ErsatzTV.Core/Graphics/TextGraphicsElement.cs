@@ -6,7 +6,8 @@ namespace ErsatzTV.Core.Graphics;
 
 public class TextGraphicsElement
 {
-    public int? Opacity { get; set; }
+    [YamlMember(Alias = "opacity_percent", ApplyNamingConventions = false)]
+    public int? OpacityPercent { get; set; }
 
     [YamlMember(Alias = "opacity_expression", ApplyNamingConventions = false)]
     public string OpacityExpression { get; set; }
