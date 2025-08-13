@@ -755,6 +755,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
     {
         if (playoutItem.DisableWatermarks)
         {
+            _logger.LogDebug("Watermark is disabled by playout item");
             return new DisableWatermark();
         }
 

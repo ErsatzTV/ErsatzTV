@@ -121,6 +121,10 @@ public class InternalController : ControllerBase
         string path,
         CancellationToken cancellationToken)
     {
+#if DEBUG_NO_SYNC
+        await Task.Delay(100, cancellationToken);
+        return NotFound();
+#else
         Either<BaseError, PlexConnectionParametersViewModel> connectionParameters =
             await _mediator.Send(new GetPlexConnectionParameters(plexMediaSourceId), cancellationToken);
 
@@ -131,6 +135,7 @@ public class InternalController : ControllerBase
                 Url fullPath = new Uri(r.Uri, path).SetQueryParam("X-Plex-Token", r.AuthToken);
                 return new RedirectResult(fullPath.ToString());
             });
+#endif
     }
 
     [HttpGet("/media/jellyfin/{*path}")]
