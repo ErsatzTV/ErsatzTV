@@ -3,7 +3,6 @@ using ErsatzTV.FFmpeg.Encoder;
 using ErsatzTV.FFmpeg.Encoder.Amf;
 using ErsatzTV.FFmpeg.Filter;
 using ErsatzTV.FFmpeg.Format;
-using ErsatzTV.FFmpeg.GlobalOption.HardwareAcceleration;
 using ErsatzTV.FFmpeg.OutputOption;
 using Microsoft.Extensions.Logging;
 
@@ -59,8 +58,6 @@ public class AmfPipelineBuilder : SoftwarePipelineBuilder
             desiredState.VideoFormat,
             desiredState.VideoProfile,
             desiredState.PixelFormat);
-
-        pipelineSteps.Add(new AmfHardwareAccelerationOption());
 
         // disable hw accel if decoder/encoder isn't supported
         return ffmpegState with
