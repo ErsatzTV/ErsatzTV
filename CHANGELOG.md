@@ -57,6 +57,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Until these existing items age out, there will be warnings logged after each playout build/extension
 - Fix playback of anamorphic content from Jellyfin
   - This fix requires a manual deep scan of any affected Jellyfin library
+- Fix bug where multiple Plex servers would mix their episodes
 
 ### Changed
 - Allow multiple watermarks in playback troubleshooting

@@ -210,6 +210,7 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         Option<PlexShow> maybeExisting = await dbContext.PlexShows
             .AsNoTracking()
+            .Where(ps => ps.LibraryPath.LibraryId == library.Id)
             .Include(i => i.ShowMetadata)
             .ThenInclude(sm => sm.Genres)
             .Include(i => i.ShowMetadata)
@@ -242,6 +243,7 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         Option<PlexSeason> maybeExisting = await dbContext.PlexSeasons
             .AsNoTracking()
+            .Where(ps => ps.LibraryPath.LibraryId == library.Id)
             .Include(i => i.SeasonMetadata)
             .ThenInclude(sm => sm.Artwork)
             .Include(i => i.SeasonMetadata)
@@ -270,6 +272,7 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         Option<PlexEpisode> maybeExisting = await dbContext.PlexEpisodes
             .AsNoTracking()
+            .Where(pe => pe.LibraryPath.LibraryId == library.Id)
             .Include(i => i.EpisodeMetadata)
             .ThenInclude(mm => mm.Artwork)
             .Include(i => i.EpisodeMetadata)
@@ -448,7 +451,7 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
         return result;
     }
 
-    public async Task<PlexShowAddTagResult> AddTag(PlexShow show, PlexTag tag)
+    public async Task<PlexShowAddTagResult> AddTag(PlexLibrary library, PlexShow show, PlexTag tag)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
@@ -456,8 +459,10 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
             @"SELECT PS.Id FROM Tag
             INNER JOIN ShowMetadata SM on SM.Id = Tag.ShowMetadataId
             INNER JOIN PlexShow PS on PS.Id = SM.ShowId
+            INNER JOIN MediaItem MI on PS.Id = MI.Id
+            INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id AND LP.LibraryId = @LibraryId
             WHERE PS.Key = @Key AND Tag.Name = @Tag AND Tag.ExternalTypeId = @TagType",
-            new { show.Key, tag.Tag, tag.TagType });
+            new { show.Key, tag.Tag, tag.TagType, LibraryId = library.Id });
 
         // already exists
         if (existingShowId > 0)
@@ -565,12 +570,12 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
             item.LibraryPathId = library.Paths.Head().Id;
             foreach (EpisodeMetadata metadata in item.EpisodeMetadata)
             {
-                metadata.Genres ??= new List<Genre>();
-                metadata.Tags ??= new List<Tag>();
-                metadata.Studios ??= new List<Studio>();
-                metadata.Actors ??= new List<Actor>();
-                metadata.Directors ??= new List<Director>();
-                metadata.Writers ??= new List<Writer>();
+                metadata.Genres ??= [];
+                metadata.Tags ??= [];
+                metadata.Studios ??= [];
+                metadata.Actors ??= [];
+                metadata.Directors ??= [];
+                metadata.Writers ??= [];
             }
 
             await dbContext.PlexEpisodes.AddAsync(item);

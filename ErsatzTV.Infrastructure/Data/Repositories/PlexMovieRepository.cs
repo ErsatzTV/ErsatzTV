@@ -152,6 +152,7 @@ public class PlexMovieRepository : IPlexMovieRepository
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         Option<PlexMovie> maybeExisting = await dbContext.PlexMovies
             .AsNoTracking()
+            .Where(pm => pm.LibraryPath.LibraryId == library.Id)
             .Include(i => i.MovieMetadata)
             .ThenInclude(mm => mm.Genres)
             .Include(i => i.MovieMetadata)
