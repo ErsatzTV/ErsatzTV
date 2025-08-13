@@ -2,8 +2,8 @@ namespace ErsatzTV.Core.Metadata;
 
 public class EpgProgrammeTemplateData
 {
-    public DateTime Start { get; set; }
-    public DateTime Stop { get; set; }
+    public DateTimeOffset Start { get; set; }
+    public DateTimeOffset Stop { get; set; }
     public string Title { get; set; }
     public string SubTitle { get; set; }
     public string Description { get; set; }

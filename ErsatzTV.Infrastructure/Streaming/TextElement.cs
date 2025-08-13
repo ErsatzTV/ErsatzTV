@@ -1,13 +1,16 @@
+using System.Globalization;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Graphics;
 using Microsoft.Extensions.Logging;
 using NCalc;
 using Scriban;
+using Scriban.Runtime;
 using SixLabors.Fonts;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
+using TimeZoneConverter;
 using Image=SixLabors.ImageSharp.Image;
 
 namespace ErsatzTV.Infrastructure.Streaming;
@@ -45,7 +48,41 @@ public class TextElement(TextGraphicsElement textElement, Dictionary<string, obj
 
             ZIndex = textElement.ZIndex ?? 0;
 
-            string textToRender = await Template.Parse(textElement.Text).RenderAsync(variables, memberRenamer: member => member.Name);
+            var scriptObject = new ScriptObject();
+            scriptObject.Import(variables, renamer: member => member.Name);
+
+            scriptObject.Import("convert_timezone", new Func<DateTimeOffset, string, DateTimeOffset>((dt, tzId) =>
+            {
+                try
+                {
+                    var tz = TZConvert.GetTimeZoneInfo(tzId);
+                    return TimeZoneInfo.ConvertTime(dt, tz);
+                }
+                catch (TimeZoneNotFoundException ex)
+                {
+                    logger.LogWarning(ex, "Exception finding specified time zone; resulting time will be unchanged");
+                    return dt;
+                }
+            }));
+
+            scriptObject.Import("format_datetime", new Func<DateTimeOffset, string, string, string>((dt, tzId, format) =>
+            {
+                try
+                {
+                    var tz = TZConvert.GetTimeZoneInfo(tzId);
+                    dt = TimeZoneInfo.ConvertTime(dt, tz);
+                }
+                catch (TimeZoneNotFoundException ex)
+                {
+                    logger.LogWarning(ex, "Exception finding specified time zone; resulting time will be unchanged");
+                }
+
+                return dt.ToString(format, CultureInfo.CurrentCulture);
+            }));
+
+            var context = new TemplateContext { MemberRenamer = member => member.Name };
+            context.PushGlobal(scriptObject);
+            string textToRender = await Template.Parse(textElement.Text).RenderAsync(context);
 
             var font = GraphicsEngineFonts.GetFont(textElement.FontFamily, textElement.FontSize ?? 48,
                 FontStyle.Regular);
