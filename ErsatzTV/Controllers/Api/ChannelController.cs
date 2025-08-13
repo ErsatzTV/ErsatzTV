@@ -29,4 +29,17 @@ public class ChannelController(ChannelWriter<IBackgroundServiceRequest> workerCh
 
         return new NotFoundResult();
     }
+
+    [HttpPost("/api/channels/{channelNumber}/playout/continue")]
+    public async Task<IActionResult> ContinuePlayout(string channelNumber)
+    {
+        Option<int> maybePlayoutId = await mediator.Send(new GetPlayoutIdByChannelNumber(channelNumber));
+        foreach (int playoutId in maybePlayoutId)
+        {
+            await workerChannel.WriteAsync(new BuildPlayout(playoutId, PlayoutBuildMode.Continue));
+            return new OkResult();
+        }
+
+        return new NotFoundResult();
+    }
 }

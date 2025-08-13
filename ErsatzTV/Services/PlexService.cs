@@ -100,6 +100,12 @@ public class PlexService : BackgroundService
         SynchronizePlexMediaSources request,
         CancellationToken cancellationToken)
     {
+#if DEBUG_NO_SYNC
+        _logger.LogDebug("Skipping plex media source sync");
+        await Task.Delay(10, cancellationToken);
+        _ = request;
+        return [];
+#else
         using IServiceScope scope = _serviceScopeFactory.CreateScope();
         IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
@@ -121,6 +127,7 @@ public class PlexService : BackgroundService
                     error.Value);
                 return new List<PlexMediaSource>();
             });
+#endif
     }
 
     private async Task CompletePinFlow(

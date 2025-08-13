@@ -163,44 +163,17 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
             if (result.AddedItems.Count > 0)
             {
                 changeCount += 1;
-                var bulkConfig = new BulkConfig();
                 bool anyWatermarks = result.AddedItems.Any(i => i.PlayoutItemWatermarks is not null && i.PlayoutItemWatermarks.Count > 0);
                 bool anyGraphicsElements = result.AddedItems.Any(i => i.PlayoutItemGraphicsElements is not null && i.PlayoutItemGraphicsElements.Count > 0);
                 if (anyWatermarks || anyGraphicsElements)
                 {
-                    bulkConfig.SetOutputIdentity = true;
+                    // need to use slow ef core to also insert watermarks and graphics elements properly
+                    await dbContext.AddRangeAsync(result.AddedItems, cancellationToken);
                 }
-
-                await dbContext.BulkInsertAsync(result.AddedItems, bulkConfig, cancellationToken: cancellationToken);
-
-                if (anyWatermarks)
+                else
                 {
-                    // copy playout item ids back to watermarks
-                    var allWatermarks = result.AddedItems.SelectMany(item =>
-                        (item.PlayoutItemWatermarks ?? []).Select(watermark =>
-                        {
-                            watermark.PlayoutItemId = item.Id;
-                            watermark.PlayoutItem = null;
-                            return watermark;
-                        })
-                    ).ToList();
-
-                    await dbContext.BulkInsertAsync(allWatermarks, cancellationToken: cancellationToken);
-                }
-
-                if (anyGraphicsElements)
-                {
-                    // copy playout item ids back to graphics elements
-                    var allGraphicsElements = result.AddedItems.SelectMany(item =>
-                        (item.PlayoutItemGraphicsElements ?? []).Select(graphicsElement =>
-                        {
-                            graphicsElement.PlayoutItemId = item.Id;
-                            graphicsElement.PlayoutItem = null;
-                            return graphicsElement;
-                        })
-                    ).ToList();
-
-                    await dbContext.BulkInsertAsync(allGraphicsElements, cancellationToken: cancellationToken);
+                    // no watermarks or graphics, bulk insert is ok
+                    await dbContext.BulkInsertAsync(result.AddedItems, cancellationToken: cancellationToken);
                 }
             }
 

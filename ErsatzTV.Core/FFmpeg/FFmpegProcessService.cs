@@ -199,6 +199,8 @@ public class FFmpegProcessService
                             break;
                         }
 
+                        _logger.LogDebug("Watermark will come from playout item (custom)");
+
                         string customPath = _imageCache.GetPathForImage(
                             watermark.Image,
                             ArtworkKind.Watermark,
@@ -209,6 +211,8 @@ public class FFmpegProcessService
                             None,
                             await IsAnimated(ffprobePath, customPath));
                     case ChannelWatermarkImageSource.ChannelLogo:
+                        _logger.LogDebug("Watermark will come from playout item (channel logo)");
+
                         Option<string> maybeChannelPath = channel.Artwork.Count == 0
                             ?
                             //We have to generate the logo on the fly and save it to a local temp path
@@ -240,6 +244,8 @@ public class FFmpegProcessService
                 switch (channel.Watermark.ImageSource)
                 {
                     case ChannelWatermarkImageSource.Custom:
+                        _logger.LogDebug("Watermark will come from channel (custom)");
+
                         string customPath = _imageCache.GetPathForImage(
                             channel.Watermark.Image,
                             ArtworkKind.Watermark,
@@ -250,6 +256,8 @@ public class FFmpegProcessService
                             None,
                             await IsAnimated(ffprobePath, customPath));
                     case ChannelWatermarkImageSource.ChannelLogo:
+                        _logger.LogDebug("Watermark will come from channel (channel logo)");
+
                         Option<string> maybeChannelPath = channel.Artwork.Count == 0
                             ?
                             //We have to generate the logo on the fly and save it to a local temp path
@@ -280,6 +288,8 @@ public class FFmpegProcessService
                 switch (watermark.ImageSource)
                 {
                     case ChannelWatermarkImageSource.Custom:
+                        _logger.LogDebug("Watermark will come from global (custom)");
+
                         string customPath = _imageCache.GetPathForImage(
                             watermark.Image,
                             ArtworkKind.Watermark,
@@ -290,6 +300,8 @@ public class FFmpegProcessService
                             None,
                             await IsAnimated(ffprobePath, customPath));
                     case ChannelWatermarkImageSource.ChannelLogo:
+                        _logger.LogDebug("Watermark will come from global (channel logo)");
+
                         Option<string> maybeChannelPath = channel.Artwork.Count == 0
                             ?
                             //We have to generate the logo on the fly and save it to a local temp path
