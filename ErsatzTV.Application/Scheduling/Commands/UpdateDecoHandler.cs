@@ -53,35 +53,55 @@ public class UpdateDecoHandler(IDbContextFactory<TvContext> dbContextFactory)
         // default filler
         existing.DefaultFillerMode = request.DefaultFillerMode;
         existing.DefaultFillerCollectionType = request.DefaultFillerCollectionType;
-        existing.DefaultFillerCollectionId = request.DefaultFillerMode is DecoMode.Override
-            ? request.DefaultFillerCollectionId
-            : null;
-        existing.DefaultFillerMediaItemId = request.DefaultFillerMode is DecoMode.Override
-            ? request.DefaultFillerMediaItemId
-            : null;
-        existing.DefaultFillerMultiCollectionId = request.DefaultFillerMode is DecoMode.Override
-            ? request.DefaultFillerMultiCollectionId
-            : null;
-        existing.DefaultFillerSmartCollectionId = request.DefaultFillerMode is DecoMode.Override
-            ? request.DefaultFillerSmartCollectionId
-            : null;
+        existing.DefaultFillerCollectionId = null;
+        existing.DefaultFillerMediaItemId = null;
+        existing.DefaultFillerMultiCollectionId = null;
+        existing.DefaultFillerSmartCollectionId = null;
+        if (request.DefaultFillerMode is DecoMode.Override)
+        {
+            switch (request.DefaultFillerCollectionType)
+            {
+                case ProgramScheduleItemCollectionType.Collection:
+                    existing.DefaultFillerCollectionId = request.DefaultFillerCollectionId;
+                    break;
+                case ProgramScheduleItemCollectionType.MultiCollection:
+                    existing.DefaultFillerMultiCollectionId = request.DefaultFillerMultiCollectionId;
+                    break;
+                case ProgramScheduleItemCollectionType.SmartCollection:
+                    existing.DefaultFillerSmartCollectionId = request.DefaultFillerSmartCollectionId;
+                    break;
+                default:
+                    existing.DefaultFillerMediaItemId = request.DefaultFillerMediaItemId;
+                    break;
+            }
+        }
         existing.DefaultFillerTrimToFit = request.DefaultFillerTrimToFit;
 
         // dead air fallback
         existing.DeadAirFallbackMode = request.DeadAirFallbackMode;
         existing.DeadAirFallbackCollectionType = request.DeadAirFallbackCollectionType;
-        existing.DeadAirFallbackCollectionId = request.DeadAirFallbackMode is DecoMode.Override
-            ? request.DeadAirFallbackCollectionId
-            : null;
-        existing.DeadAirFallbackMediaItemId = request.DeadAirFallbackMode is DecoMode.Override
-            ? request.DeadAirFallbackMediaItemId
-            : null;
-        existing.DeadAirFallbackMultiCollectionId = request.DeadAirFallbackMode is DecoMode.Override
-            ? request.DeadAirFallbackMultiCollectionId
-            : null;
-        existing.DeadAirFallbackSmartCollectionId = request.DeadAirFallbackMode is DecoMode.Override
-            ? request.DeadAirFallbackSmartCollectionId
-            : null;
+        existing.DeadAirFallbackCollectionId = null;
+        existing.DeadAirFallbackMediaItemId = null;
+        existing.DeadAirFallbackMultiCollectionId = null;
+        existing.DeadAirFallbackSmartCollectionId = null;
+        if (request.DeadAirFallbackMode is DecoMode.Override)
+        {
+            switch (request.DeadAirFallbackCollectionType)
+            {
+                case ProgramScheduleItemCollectionType.Collection:
+                    existing.DeadAirFallbackCollectionId = request.DeadAirFallbackCollectionId;
+                    break;
+                case ProgramScheduleItemCollectionType.MultiCollection:
+                    existing.DeadAirFallbackMultiCollectionId = request.DeadAirFallbackMultiCollectionId;
+                    break;
+                case ProgramScheduleItemCollectionType.SmartCollection:
+                    existing.DeadAirFallbackSmartCollectionId = request.DeadAirFallbackSmartCollectionId;
+                    break;
+                default:
+                    existing.DeadAirFallbackMediaItemId = request.DeadAirFallbackMediaItemId;
+                    break;
+            }
+        }
 
         await dbContext.SaveChangesAsync();
 

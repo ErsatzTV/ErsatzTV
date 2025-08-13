@@ -31,10 +31,6 @@ public class BlockPlayoutFillerBuilder(
             .Where(i => !result.ItemsToRemove.Contains(i.Id))
             .ToList();
 
-        var filteredExistingHistory = referenceData.PlayoutHistory
-            .Where(h => !result.HistoryToRemove.Contains(h.Id))
-            .ToList();
-
         var allItems = result.AddedItems.ToList();
 
         if (mode is PlayoutBuildMode.Reset)
@@ -56,6 +52,10 @@ public class BlockPlayoutFillerBuilder(
         {
             allItems.AddRange(filteredExistingItems);
         }
+
+        var filteredExistingHistory = referenceData.PlayoutHistory
+            .Where(h => !result.HistoryToRemove.Contains(h.Id))
+            .ToList();
 
         var collectionEnumerators = new Dictionary<CollectionKey, IMediaCollectionEnumerator>();
 
