@@ -40,7 +40,7 @@ public class TextElement(TextGraphicsElement textElement, Dictionary<string, obj
             }
             else
             {
-                _opacity = (textElement.Opacity ?? 100) / 100.0f;
+                _opacity = (textElement.OpacityPercent ?? 100) / 100.0f;
             }
 
             ZIndex = textElement.ZIndex ?? 0;
