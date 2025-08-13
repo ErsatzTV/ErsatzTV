@@ -1,6 +1,7 @@
 ﻿using System.Threading.Channels;
 using Bugsnag;
 using ErsatzTV.Application.Channels;
+using ErsatzTV.Application.Graphics;
 using ErsatzTV.Application.Maintenance;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
@@ -87,6 +88,8 @@ public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Eit
         {
             idleTimeout = Option<TimeSpan>.None;
         }
+
+        await _mediator.Send(new RefreshGraphicsElements(), cancellationToken);
 
         IHlsSessionWorker worker = GetSessionWorker(request, targetFramerate);
 

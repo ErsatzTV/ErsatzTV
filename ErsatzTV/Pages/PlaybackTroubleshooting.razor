@@ -179,6 +179,7 @@
         _watermarks.Clear();
         _watermarks.AddRange(await Mediator.Send(new GetAllWatermarks(), _cts.Token));
 
+        await Mediator.Send(new RefreshGraphicsElements(), _cts.Token);
         _graphicsElements.Clear();
         _graphicsElements.AddRange(await Mediator.Send(new GetAllGraphicsElements(), _cts.Token));
 
