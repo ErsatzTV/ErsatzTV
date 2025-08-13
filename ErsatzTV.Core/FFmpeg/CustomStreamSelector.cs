@@ -15,6 +15,7 @@ public class CustomStreamSelector(ILocalFileSystem localFileSystem, ILogger<Cust
 {
     public async Task<StreamSelectorResult> SelectStreams(
         Channel channel,
+        DateTimeOffset contentStartTime,
         MediaItemAudioVersion audioVersion,
         List<Subtitle> allSubtitles)
     {
@@ -38,6 +39,17 @@ public class CustomStreamSelector(ILocalFileSystem localFileSystem, ILogger<Cust
 
             foreach (StreamSelectorItem streamSelectorItem in streamSelector.Items)
             {
+                if (!string.IsNullOrWhiteSpace(streamSelectorItem.ContentCondition))
+                {
+                    if (!ContentMatchesCondition(channel, contentStartTime, streamSelectorItem.ContentCondition))
+                    {
+                        logger.LogDebug(
+                            "Content does not match selector item {@SelectorItem}",
+                            streamSelectorItem);
+                        continue;
+                    }
+                }
+
                 var candidateAudioStreams = audioStreams.ToDictionary(a => a, _ => int.MaxValue);
                 var candidateSubtitles = allSubtitles.ToDictionary(s => s, _ => int.MaxValue);
 
@@ -274,6 +286,26 @@ public class CustomStreamSelector(ILocalFileSystem localFileSystem, ILogger<Cust
                 "sdh" => subtitle.SDH,
                 "codec" => (subtitle.Codec ?? string.Empty).ToLowerInvariant(),
                 "external" => subtitle.SubtitleKind is SubtitleKind.Sidecar,
+                _ => e.Result
+            };
+        };
+
+        return expression.Evaluate() as bool? == true;
+    }
+
+    private static bool ContentMatchesCondition(
+        Channel channel,
+        DateTimeOffset contentStartTime,
+        string contentCondition)
+    {
+        var expression = new Expression(contentCondition);
+        expression.EvaluateParameter += (name, e) =>
+        {
+            e.Result = name switch
+            {
+                "channel_number" => channel.Number,
+                "channel_name" => channel.Name,
+                "time_of_day_seconds" => contentStartTime.LocalDateTime.TimeOfDay.TotalSeconds,
                 _ => e.Result
             };
         };
