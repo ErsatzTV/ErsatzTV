@@ -282,6 +282,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
         BuildPlayout buildPlayout)
     {
         var maybePlayout = await dbContext.Playouts
+            .Include(p => p.Anchor)
             .SelectOneAsync(p => p.Id, p => p.Id == buildPlayout.PlayoutId);
 
         foreach (var playout in maybePlayout)
