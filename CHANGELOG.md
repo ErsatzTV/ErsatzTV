@@ -50,6 +50,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix overlapping block playout items caused by `Stop scheduling block items` value `After Duration End`
   - Existing overlapping items will not be removed, but no new overlapping items will be created
   - Until these existing items age out, there will be warnings logged after each playout build/extension
+- Fix playback of anamorphic content from Jellyfin
+  - This fix requires a manual deep scan of any affected Jellyfin library
 
 ### Changed
 - Allow multiple watermarks in playback troubleshooting
