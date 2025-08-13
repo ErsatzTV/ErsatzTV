@@ -11,4 +11,12 @@ public interface IPlexTelevisionLibraryScanner
         PlexLibrary library,
         bool deepScan,
         CancellationToken cancellationToken);
+
+    Task<Either<BaseError, Unit>> ScanSingleShow(
+        PlexConnection connection,
+        PlexServerAuthToken token,
+        PlexLibrary library,
+        string showTitle,
+        bool deepScan,
+        CancellationToken cancellationToken);
 }

@@ -10,4 +10,12 @@ public interface IEmbyTelevisionLibraryScanner
         EmbyLibrary library,
         bool deepScan,
         CancellationToken cancellationToken);
+
+    Task<Either<BaseError, Unit>> ScanSingleShow(
+        string address,
+        string apiKey,
+        EmbyLibrary library,
+        string showTitle,
+        bool deepScan,
+        CancellationToken cancellationToken);
 }

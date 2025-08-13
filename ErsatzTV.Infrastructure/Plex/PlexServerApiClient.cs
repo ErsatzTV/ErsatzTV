@@ -425,6 +425,45 @@ public class PlexServerApiClient : IPlexServerApiClient
         }
     }
 
+    public async Task<Either<BaseError, List<PlexShow>>> SearchShowsByTitle(
+        PlexLibrary library,
+        string showTitle,
+        PlexConnection connection,
+        PlexServerAuthToken token)
+    {
+        try
+        {
+            IPlexServerApi service = RestService.For<IPlexServerApi>(
+                new HttpClient { BaseAddress = new Uri(connection.Uri) });
+
+            PlexMediaContainerResponse<PlexMediaContainerHubContent<PlexHubResponse>> searchResponse =
+                await service.Search(showTitle, library.Key, token.AuthToken);
+
+            var shows = new List<PlexShow>();
+            
+            foreach (PlexHubResponse hub in searchResponse.MediaContainer.Hub)
+            {
+                if (hub.Type != "show")
+                    continue;
+
+                foreach (PlexMetadataResponse metadata in hub.Metadata)
+                {
+                    if (string.Equals(metadata.Title, showTitle, StringComparison.OrdinalIgnoreCase))
+                    {
+                        PlexShow show = ProjectToShow(metadata, library.MediaSourceId);
+                        shows.Add(show);
+                    }
+                }
+            }
+
+            return shows;
+        }
+        catch (Exception ex)
+        {
+            return BaseError.New(ex.ToString());
+        }
+    }
+
     private static IPlexServerApi XmlServiceFor(string uri, TimeSpan? timeout = null)
     {
         var overrides = new XmlAttributeOverrides();

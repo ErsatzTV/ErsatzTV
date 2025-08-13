@@ -1,5 +1,6 @@
 ﻿using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Plex;
@@ -79,6 +80,95 @@ public class PlexTelevisionLibraryScanner :
             GetLocalPath,
             deepScan,
             cancellationToken);
+    }
+
+    public async Task<Either<BaseError, Unit>> ScanSingleShow(
+        PlexConnection connection,
+        PlexServerAuthToken token,
+        PlexLibrary library,
+        string showTitle,
+        bool deepScan,
+        CancellationToken cancellationToken)
+    {
+        List<PlexPathReplacement> pathReplacements =
+            await _mediaSourceRepository.GetPlexPathReplacements(library.MediaSourceId);
+
+        string GetLocalPath(PlexEpisode episode)
+        {
+            return _plexPathReplacementService.GetReplacementPlexPath(
+                pathReplacements,
+                episode.GetHeadVersion().MediaFiles.Head().Path,
+                false);
+        }
+
+        Either<BaseError, List<PlexShow>> searchResult = await _plexServerApiClient.SearchShowsByTitle(
+            library,
+            showTitle,
+            connection,
+            token);
+
+        return await searchResult.Match(
+            async shows =>
+            {
+                if (shows.Count == 0)
+                {
+                    _logger.LogWarning("No show found with title '{ShowTitle}' in library {LibraryName}", 
+                        showTitle, library.Name);
+                    return Right<BaseError, Unit>(Unit.Default);
+                }
+
+                if (shows.Count > 1)
+                {
+                    _logger.LogWarning("Multiple shows found with title '{ShowTitle}' in library {LibraryName}, scanning first match", 
+                        showTitle, library.Name);
+                }
+
+                PlexShow show = shows.First();
+                _logger.LogInformation("Found show '{ShowTitle}' with key {ShowKey}, starting targeted scan", 
+                    showTitle, show.Key);
+
+                return await ScanSingleShowInternal(
+                    _plexTelevisionRepository,
+                    new PlexConnectionParameters(connection, token),
+                    library,
+                    show,
+                    GetLocalPath,
+                    deepScan,
+                    cancellationToken);
+            },
+            error => Task.FromResult<Either<BaseError, Unit>>(error));
+    }
+
+    private async Task<Either<BaseError, Unit>> ScanSingleShowInternal(
+        IMediaServerTelevisionRepository<PlexLibrary, PlexShow, PlexSeason, PlexEpisode, PlexItemEtag> televisionRepository,
+        PlexConnectionParameters connectionParameters,
+        PlexLibrary library,
+        PlexShow targetShow,
+        Func<PlexEpisode, string> getLocalPath,
+        bool deepScan,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            async IAsyncEnumerable<Tuple<PlexShow, int>> GetSingleShow()
+            {
+                yield return new Tuple<PlexShow, int>(targetShow, 1);
+                await Task.CompletedTask;
+            }
+
+            return await ScanLibraryWithoutCleanup(
+                televisionRepository,
+                connectionParameters,
+                library,
+                getLocalPath,
+                GetSingleShow(),
+                deepScan,
+                cancellationToken);
+        }
+        catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
+        {
+            return new ScanCanceled();
+        }
     }
 
     // TODO: add or remove metadata?

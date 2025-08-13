@@ -168,4 +168,15 @@ public interface IPlexServerApi
             int take,
             [Query] [AliasAs("X-Plex-Token")]
             string token);
+
+    [Get("/hubs/search")]
+    [Headers("Accept: application/json")]
+    public Task<PlexMediaContainerResponse<PlexMediaContainerHubContent<PlexHubResponse>>>
+        Search(
+            [Query] [AliasAs("query")]
+            string searchTerm,
+            [Query] [AliasAs("sectionId")]
+            string sectionId,
+            [Query] [AliasAs("X-Plex-Token")]
+            string token);
 }

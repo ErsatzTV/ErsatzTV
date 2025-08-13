@@ -34,4 +34,10 @@ public interface IEmbyApiClient
         string apiKey,
         EmbyLibrary library,
         string itemId);
+
+    Task<Either<BaseError, List<EmbyShow>>> SearchShowsByTitle(
+        string address,
+        string apiKey,
+        EmbyLibrary library,
+        string showTitle);
 }

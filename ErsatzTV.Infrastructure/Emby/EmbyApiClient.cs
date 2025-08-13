@@ -893,4 +893,53 @@ public class EmbyApiClient : IEmbyApiClient
             return version;
         });
     }
+
+    public async Task<Either<BaseError, List<EmbyShow>>> SearchShowsByTitle(
+        string address,
+        string apiKey,
+        EmbyLibrary library,
+        string showTitle)
+    {
+        try
+        {
+            IEmbyApi service = RestService.For<IEmbyApi>(address);
+            EmbySearchHintsResponse searchResponse = await service.SearchHints(
+                apiKey,
+                showTitle,
+                "Series",
+                library.ItemId);
+
+            var shows = new List<EmbyShow>();
+
+            foreach (EmbySearchHintResponse hint in searchResponse.SearchHints)
+            {
+                if (hint.Type == "Series" && 
+                    string.Equals(hint.Name, showTitle, StringComparison.OrdinalIgnoreCase))
+                {
+                    EmbyLibraryItemsResponse detailResponse = await service.GetShowLibraryItems(
+                        apiKey,
+                        hint.Id,
+                        recursive: false,
+                        startIndex: 0,
+                        limit: 1);
+
+                    foreach (EmbyLibraryItemResponse item in detailResponse.Items)
+                    {
+                        Option<EmbyShow> maybeShow = ProjectToShow(item);
+                        foreach (EmbyShow show in maybeShow)
+                        {
+                            shows.Add(show);
+                        }
+                    }
+                }
+            }
+
+            return shows;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error searching Emby shows by title");
+            return BaseError.New(ex.Message);
+        }
+    }
 }

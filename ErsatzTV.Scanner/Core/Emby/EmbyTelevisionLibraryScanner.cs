@@ -1,6 +1,7 @@
 ﻿using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Emby;
+using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Emby;
 using ErsatzTV.Core.Interfaces.Metadata;
@@ -184,4 +185,94 @@ public class EmbyTelevisionLibraryScanner : MediaServerTelevisionLibraryScanner<
         MediaItemScanResult<EmbyEpisode> result,
         EpisodeMetadata fullMetadata) =>
         Task.FromResult<Either<BaseError, MediaItemScanResult<EmbyEpisode>>>(result);
+
+    public async Task<Either<BaseError, Unit>> ScanSingleShow(
+        string address,
+        string apiKey,
+        EmbyLibrary library,
+        string showTitle,
+        bool deepScan,
+        CancellationToken cancellationToken)
+    {
+        List<EmbyPathReplacement> pathReplacements =
+            await _mediaSourceRepository.GetEmbyPathReplacements(library.MediaSourceId);
+
+        string GetLocalPath(EmbyEpisode episode)
+        {
+            return _pathReplacementService.GetReplacementEmbyPath(
+                pathReplacements,
+                episode.GetHeadVersion().MediaFiles.Head().Path,
+                false);
+        }
+
+        // Search for the specific show
+        Either<BaseError, List<EmbyShow>> searchResult = await _embyApiClient.SearchShowsByTitle(
+            address,
+            apiKey,
+            library,
+            showTitle);
+
+        return await searchResult.Match(
+            async shows =>
+            {
+                if (shows.Count == 0)
+                {
+                    _logger.LogWarning("No show found with title '{ShowTitle}' in library {LibraryName}", 
+                        showTitle, library.Name);
+                    return Right<BaseError, Unit>(Unit.Default);
+                }
+
+                if (shows.Count > 1)
+                {
+                    _logger.LogWarning("Multiple shows found with title '{ShowTitle}' in library {LibraryName}, scanning first match", 
+                        showTitle, library.Name);
+                }
+
+                EmbyShow show = shows.First();
+                _logger.LogInformation("Found show '{ShowTitle}' with id {ShowId}, starting targeted scan", 
+                    showTitle, show.ItemId);
+
+                return await ScanSingleShowInternal(
+                    _televisionRepository,
+                    new EmbyConnectionParameters(address, apiKey),
+                    library,
+                    show,
+                    GetLocalPath,
+                    deepScan,
+                    cancellationToken);
+            },
+            error => Task.FromResult<Either<BaseError, Unit>>(error));
+    }
+
+    private async Task<Either<BaseError, Unit>> ScanSingleShowInternal(
+        IEmbyTelevisionRepository televisionRepository,
+        EmbyConnectionParameters connectionParameters,
+        EmbyLibrary library,
+        EmbyShow targetShow,
+        Func<EmbyEpisode, string> getLocalPath,
+        bool deepScan,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            async IAsyncEnumerable<Tuple<EmbyShow, int>> GetSingleShow()
+            {
+                yield return new Tuple<EmbyShow, int>(targetShow, 1);
+                await Task.CompletedTask;
+            }
+
+            return await ScanLibraryWithoutCleanup(
+                televisionRepository,
+                connectionParameters,
+                library,
+                getLocalPath,
+                GetSingleShow(),
+                deepScan,
+                cancellationToken);
+        }
+        catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
+        {
+            return new ScanCanceled();
+        }
+    }
 }

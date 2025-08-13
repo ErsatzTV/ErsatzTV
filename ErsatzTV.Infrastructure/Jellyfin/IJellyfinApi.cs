@@ -133,4 +133,17 @@ public interface IJellyfinApi
         [Header("X-Emby-Token")]
         string apiKey,
         string itemId);
+
+    [Get("/Search/Hints")]
+    public Task<JellyfinSearchHintsResponse> SearchHints(
+        [Header("X-Emby-Token")]
+        string apiKey,
+        [Query]
+        string searchTerm,
+        [Query]
+        string includeItemTypes = "Series",
+        [Query]
+        string parentId = null,
+        [Query]
+        int limit = 20);
 }

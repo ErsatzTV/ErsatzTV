@@ -10,4 +10,12 @@ public interface IJellyfinTelevisionLibraryScanner
         JellyfinLibrary library,
         bool deepScan,
         CancellationToken cancellationToken);
+
+    Task<Either<BaseError, Unit>> ScanSingleShow(
+        string address,
+        string apiKey,
+        JellyfinLibrary library,
+        string showTitle,
+        bool deepScan,
+        CancellationToken cancellationToken);
 }

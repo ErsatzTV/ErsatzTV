@@ -101,6 +101,27 @@ public class Worker : BackgroundService
         scanJellyfinCollectionsCommand.Arguments.Add(mediaSourceIdArgument);
         scanJellyfinCollectionsCommand.Options.Add(forceOption);
 
+        // Show-specific scanning commands
+        var showTitleArgument = new Argument<string>("show-title")
+        {
+            Description = "The title of the TV show to scan"
+        };
+
+        var scanPlexShowCommand = new Command("scan-plex-show", "Scan a specific TV show in a Plex library");
+        scanPlexShowCommand.Arguments.Add(libraryIdArgument);
+        scanPlexShowCommand.Arguments.Add(showTitleArgument);
+        scanPlexShowCommand.Options.Add(deepOption);
+
+        var scanEmbyShowCommand = new Command("scan-emby-show", "Scan a specific TV show in an Emby library");
+        scanEmbyShowCommand.Arguments.Add(libraryIdArgument);
+        scanEmbyShowCommand.Arguments.Add(showTitleArgument);
+        scanEmbyShowCommand.Options.Add(deepOption);
+
+        var scanJellyfinShowCommand = new Command("scan-jellyfin-show", "Scan a specific TV show in a Jellyfin library");
+        scanJellyfinShowCommand.Arguments.Add(libraryIdArgument);
+        scanJellyfinShowCommand.Arguments.Add(showTitleArgument);
+        scanJellyfinShowCommand.Options.Add(deepOption);
+
         scanLocalCommand.SetAction(async (parseResult, token) =>
         {
             if (IsScanningEnabled())
@@ -240,6 +261,66 @@ public class Worker : BackgroundService
             }
         });
 
+        scanPlexShowCommand.SetAction(async (parseResult, token) =>
+        {
+            if (IsScanningEnabled())
+            {
+                bool deep = parseResult.GetValue(deepOption);
+                int libraryId = parseResult.GetValue(libraryIdArgument);
+                string? showTitle = parseResult.GetValue(showTitleArgument);
+                if (string.IsNullOrWhiteSpace(showTitle))
+                {
+                    return;
+                }
+
+                using IServiceScope scope = _serviceScopeFactory.CreateScope();
+                IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+
+                var scan = new SynchronizePlexShowByTitle(libraryId, showTitle, deep);
+                await mediator.Send(scan, token);
+            }
+        });
+
+        scanEmbyShowCommand.SetAction(async (parseResult, token) =>
+        {
+            if (IsScanningEnabled())
+            {
+                bool deep = parseResult.GetValue(deepOption);
+                int libraryId = parseResult.GetValue(libraryIdArgument);
+                string? showTitle = parseResult.GetValue(showTitleArgument);
+                if (string.IsNullOrWhiteSpace(showTitle))
+                {
+                    return;
+                }
+
+                using IServiceScope scope = _serviceScopeFactory.CreateScope();
+                IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+
+                var scan = new SynchronizeEmbyShowByTitle(libraryId, showTitle, deep);
+                await mediator.Send(scan, token);
+            }
+        });
+
+        scanJellyfinShowCommand.SetAction(async (parseResult, token) =>
+        {
+            if (IsScanningEnabled())
+            {
+                bool deep = parseResult.GetValue(deepOption);
+                int libraryId = parseResult.GetValue(libraryIdArgument);
+                string? showTitle = parseResult.GetValue(showTitleArgument);
+                if (string.IsNullOrWhiteSpace(showTitle))
+                {
+                    return;
+                }
+
+                using IServiceScope scope = _serviceScopeFactory.CreateScope();
+                IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+
+                var scan = new SynchronizeJellyfinShowByTitle(libraryId, showTitle, deep);
+                await mediator.Send(scan, token);
+            }
+        });
+
         var rootCommand = new RootCommand();
         rootCommand.Subcommands.Add(scanLocalCommand);
         rootCommand.Subcommands.Add(scanPlexCommand);
@@ -249,6 +330,9 @@ public class Worker : BackgroundService
         rootCommand.Subcommands.Add(scanEmbyCollectionsCommand);
         rootCommand.Subcommands.Add(scanJellyfinCommand);
         rootCommand.Subcommands.Add(scanJellyfinCollectionsCommand);
+        rootCommand.Subcommands.Add(scanPlexShowCommand);
+        rootCommand.Subcommands.Add(scanEmbyShowCommand);
+        rootCommand.Subcommands.Add(scanJellyfinShowCommand);
 
         return rootCommand;
     }

@@ -46,4 +46,10 @@ public interface IJellyfinApiClient
         string apiKey,
         JellyfinLibrary library,
         string itemId);
+
+    Task<Either<BaseError, List<JellyfinShow>>> SearchShowsByTitle(
+        string address,
+        string apiKey,
+        JellyfinLibrary library,
+        string showTitle);
 }
