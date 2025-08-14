@@ -14,8 +14,9 @@ public class GetBlocksByBlockGroupIdHandler(IDbContextFactory<TvContext> dbConte
         List<Block> blocks = await dbContext.Blocks
             .Filter(b => b.BlockGroupId == request.BlockGroupId)
             .AsNoTracking()
+            .Include(b => b.BlockGroup)
             .ToListAsync(cancellationToken);
 
-        return blocks.Map(Mapper.ProjectToViewModel).ToList();
+        return blocks.OrderBy(b => b.Name).Map(Mapper.ProjectToViewModel).ToList();
     }
 }

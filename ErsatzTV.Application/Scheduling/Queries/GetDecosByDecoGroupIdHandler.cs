@@ -19,6 +19,6 @@ public class GetDecosByDecoGroupIdHandler(IDbContextFactory<TvContext> dbContext
             .Filter(b => b.DecoGroupId == request.DecoGroupId)
             .ToListAsync(cancellationToken);
 
-        return decos.Map(Mapper.ProjectToViewModel).ToList();
+        return decos.OrderBy(d => d.Name).Map(Mapper.ProjectToViewModel).ToList();
     }
 }

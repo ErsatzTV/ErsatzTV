@@ -11,6 +11,8 @@ public class GetBlockByIdHandler(IDbContextFactory<TvContext> dbContextFactory)
     {
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await dbContext.Blocks
+            .AsNoTracking()
+            .Include(b => b.BlockGroup)
             .SelectOneAsync(b => b.Id, b => b.Id == request.BlockId)
             .MapT(Mapper.ProjectToViewModel);
     }

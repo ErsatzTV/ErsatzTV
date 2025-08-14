@@ -4,6 +4,7 @@ namespace ErsatzTV.ViewModels;
 
 public class BlockItemsEditViewModel
 {
+    public string GroupName { get; set; }
     public string Name { get; set; }
     public int Minutes { get; set; }
     public BlockStopScheduling StopScheduling { get; set; }

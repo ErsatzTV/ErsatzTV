@@ -16,6 +16,6 @@ public class GetTemplatesByTemplateGroupIdHandler(IDbContextFactory<TvContext> d
             .AsNoTracking()
             .Filter(i => i.TemplateGroupId == request.TemplateGroupId)
             .ToListAsync(cancellationToken)
-            .Map(items => items.Map(Mapper.ProjectToViewModel).ToList());
+            .Map(items => items.OrderBy(t => t.Name).Map(Mapper.ProjectToViewModel).ToList());
     }
 }

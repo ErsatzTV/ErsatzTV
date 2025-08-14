@@ -40,7 +40,13 @@
             <MudDivider Class="mb-6"/>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                 <div class="d-flex">
-                    <MudText>Name</MudText>
+                    <MudText>Block Group Name</MudText>
+                </div>
+                <MudTextField @bind-Value="_block.GroupName" Disabled="true"/>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Block Name</MudText>
                 </div>
                 <MudTextField @bind-Value="_block.Name" For="@(() => _block.Name)"/>
             </MudStack>
@@ -335,6 +341,7 @@
         {
             _block = new BlockItemsEditViewModel
             {
+                GroupName = block.GroupName,
                 Name = block.Name,
                 Minutes = block.Minutes,
                 StopScheduling = block.StopScheduling,
