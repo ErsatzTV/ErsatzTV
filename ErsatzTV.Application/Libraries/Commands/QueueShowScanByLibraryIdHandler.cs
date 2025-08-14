@@ -1,13 +1,10 @@
 using ErsatzTV.Application.Emby;
 using ErsatzTV.Application.Jellyfin;
 using ErsatzTV.Application.Plex;
-using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
-using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Interfaces.Locking;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
-using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -37,7 +34,21 @@ public class QueueShowScanByLibraryIdHandler(
                 return false;
             }
 
-            logger.LogDebug("Queued show scan for library id {Id}, show: {ShowTitle}, deepScan: {DeepScan}", 
+            bool shouldSyncItems = library switch
+            {
+                PlexLibrary plexLibrary => plexLibrary.ShouldSyncItems,
+                JellyfinLibrary jellyfinLibrary => jellyfinLibrary.ShouldSyncItems,
+                EmbyLibrary embyLibrary => embyLibrary.ShouldSyncItems,
+                _ => true
+            };
+
+            if (!shouldSyncItems)
+            {
+                logger.LogWarning("Library sync is disabled for library id {Id}", library.Id);
+                return false;
+            }
+
+            logger.LogDebug("Queued show scan for library id {Id}, show: {ShowTitle}, deepScan: {DeepScan}",
                 library.Id, request.ShowTitle, request.DeepScan);
 
             try
