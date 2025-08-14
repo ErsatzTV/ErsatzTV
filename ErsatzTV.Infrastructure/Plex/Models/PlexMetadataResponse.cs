@@ -7,6 +7,9 @@ public class PlexMetadataResponse
     [XmlAttribute("key")]
     public string Key { get; set; }
 
+    [XmlAttribute("librarySectionKey")]
+    public string LibrarySectionKey { get; set; }
+
     [XmlAttribute("title")]
     public string Title { get; set; }
 

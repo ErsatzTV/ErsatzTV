@@ -440,13 +440,15 @@ public class PlexServerApiClient : IPlexServerApiClient
                 await service.Search(showTitle, library.Key, token.AuthToken);
 
             var shows = new List<PlexShow>();
-            
+
             foreach (PlexHubResponse hub in searchResponse.MediaContainer.Hub)
             {
                 if (hub.Type != "show")
                     continue;
 
-                foreach (PlexMetadataResponse metadata in hub.Metadata)
+                string fullKey = $"/library/sections/{library.Key}";
+
+                foreach (PlexMetadataResponse metadata in hub.Metadata.Where(m => m.LibrarySectionKey == fullKey))
                 {
                     if (string.Equals(metadata.Title, showTitle, StringComparison.OrdinalIgnoreCase))
                     {
