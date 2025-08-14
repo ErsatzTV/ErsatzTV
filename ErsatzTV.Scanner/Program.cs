@@ -187,6 +187,7 @@ public class Program
                 services.AddScoped<IFallbackMetadataProvider, FallbackMetadataProvider>();
                 services.AddScoped<ILocalStatisticsProvider, LocalStatisticsProvider>();
                 services.AddScoped<ILocalSubtitlesProvider, LocalSubtitlesProvider>();
+                services.AddScoped<ILocalChaptersProvider, LocalChaptersProvider>();
                 services.AddScoped<IImageCache, ImageCache>();
                 services.AddScoped<ILocalFileSystem, LocalFileSystem>();
                 services.AddScoped<IMovieFolderScanner, MovieFolderScanner>();

@@ -537,6 +537,47 @@ public class MetadataRepository : IMetadataRepository
         return await UpdateSubtitles(dbContext, metadata, subtitles);
     }
 
+    public async Task<bool> UpdateChapters(MediaVersion version, List<MediaChapter> chapters)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+
+        var maybeExisting = await dbContext.MediaVersions
+            .Include(mv => mv.Chapters)
+            .SelectOneAsync(mv => mv.Id, mv => mv.Id == version.Id);
+
+        foreach (MediaVersion existing in maybeExisting)
+        {
+            var chaptersToAdd = chapters
+                .Filter(s => existing.Chapters.All(es => es.ChapterId != s.ChapterId))
+                .ToList();
+            var chaptersToRemove = existing.Chapters
+                .Filter(es => chapters.All(s => s.ChapterId != es.ChapterId))
+                .ToList();
+            var chaptersToUpdate = chapters.Except(chaptersToAdd).ToList();
+
+            // add
+            existing.Chapters.AddRange(chaptersToAdd);
+
+            // remove
+            existing.Chapters.RemoveAll(chaptersToRemove.Contains);
+
+            // update
+            foreach (MediaChapter incomingChapter in chaptersToUpdate)
+            {
+                MediaChapter existingChapter = existing.Chapters
+                    .First(s => s.ChapterId == incomingChapter.ChapterId);
+
+                existingChapter.StartTime = incomingChapter.StartTime;
+                existingChapter.EndTime = incomingChapter.EndTime;
+                existingChapter.Title = incomingChapter.Title;
+            }
+
+            return await dbContext.SaveChangesAsync() > 0;
+        }
+
+        return false;
+    }
+
     public async Task<bool> RemoveGenre(Genre genre)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();

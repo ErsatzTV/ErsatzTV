@@ -43,6 +43,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - `channel_number`
     - `channel_name`
     - `time_of_day_seconds` - the start time for the current item, represented in seconds since midnight
+- Add support for external chapter files next to video files
+  - Currently supports Matroska Chapter XML format
+    - Chapter files have .xml or .chapters extension
 
 ### Fix
 - Fix database operations that were slowing down playout builds

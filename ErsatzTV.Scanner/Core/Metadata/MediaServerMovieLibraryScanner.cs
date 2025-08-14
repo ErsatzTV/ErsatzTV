@@ -8,6 +8,7 @@ using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.MediaSources;
 using ErsatzTV.Core.Metadata;
+using ErsatzTV.Scanner.Core.Interfaces.Metadata;
 using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Scanner.Core.Metadata;
@@ -19,17 +20,20 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
     where TEtag : MediaServerItemEtag
 {
     private readonly ILocalFileSystem _localFileSystem;
+    private readonly ILocalChaptersProvider _localChaptersProvider;
     private readonly ILogger _logger;
     private readonly IMediator _mediator;
     private readonly IMetadataRepository _metadataRepository;
 
     protected MediaServerMovieLibraryScanner(
         ILocalFileSystem localFileSystem,
+        ILocalChaptersProvider localChaptersProvider,
         IMetadataRepository metadataRepository,
         IMediator mediator,
         ILogger logger)
     {
         _localFileSystem = localFileSystem;
+        _localChaptersProvider = localChaptersProvider;
         _metadataRepository = metadataRepository;
         _mediator = mediator;
         _logger = logger;
@@ -118,7 +122,8 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
                         library,
                         existing,
                         incoming,
-                        deepScan));
+                        deepScan))
+                    .BindT(UpdateChapters);
             }
             else
             {
@@ -143,7 +148,8 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
                         incoming,
                         deepScan,
                         None))
-                    .BindT(UpdateSubtitles);
+                    .BindT(UpdateSubtitles)
+                    .BindT(UpdateChapters);
             }
 
             if (maybeMovie.IsLeft)
@@ -463,6 +469,30 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
             }
 
             return BaseError.New("Failed to update media server subtitles");
+        }
+        catch (Exception ex)
+        {
+            return BaseError.New(ex.ToString());
+        }
+    }
+
+    private async Task<Either<BaseError, MediaItemScanResult<TMovie>>> UpdateChapters(
+        MediaItemScanResult<TMovie> existing)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(existing.LocalPath))
+            {
+                // No local path available for external chapter file lookup
+                return existing;
+            }
+
+            if (await _localChaptersProvider.UpdateChapters(existing.Item, Some(existing.LocalPath)))
+            {
+                existing.IsUpdated = true;
+            }
+
+            return existing;
         }
         catch (Exception ex)
         {

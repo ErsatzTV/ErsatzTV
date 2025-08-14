@@ -24,6 +24,7 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalMetadataProvider _localMetadataProvider;
     private readonly ILocalSubtitlesProvider _localSubtitlesProvider;
+    private readonly ILocalChaptersProvider _localChaptersProvider;
     private readonly ILogger<MovieFolderScanner> _logger;
     private readonly IMediaItemRepository _mediaItemRepository;
     private readonly IMediator _mediator;
@@ -34,6 +35,7 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
         IMovieRepository movieRepository,
         ILocalStatisticsProvider localStatisticsProvider,
         ILocalSubtitlesProvider localSubtitlesProvider,
+        ILocalChaptersProvider localChaptersProvider,
         ILocalMetadataProvider localMetadataProvider,
         IMetadataRepository metadataRepository,
         IImageCache imageCache,
@@ -58,6 +60,7 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
         _localFileSystem = localFileSystem;
         _movieRepository = movieRepository;
         _localSubtitlesProvider = localSubtitlesProvider;
+        _localChaptersProvider = localChaptersProvider;
         _localMetadataProvider = localMetadataProvider;
         _libraryRepository = libraryRepository;
         _mediaItemRepository = mediaItemRepository;
@@ -180,6 +183,7 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
                         .BindT(movie => UpdateArtwork(movie, ArtworkKind.Poster, cancellationToken))
                         .BindT(movie => UpdateArtwork(movie, ArtworkKind.FanArt, cancellationToken))
                         .BindT(UpdateSubtitles)
+                        .BindT(UpdateChapters)
                         .BindT(FlagNormal);
 
                     foreach (BaseError error in maybeMovie.LeftToSeq())
@@ -325,6 +329,20 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
         try
         {
             await _localSubtitlesProvider.UpdateSubtitles(result.Item, None, true);
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _client.Notify(ex);
+            return BaseError.New(ex.ToString());
+        }
+    }
+
+    private async Task<Either<BaseError, MediaItemScanResult<Movie>>> UpdateChapters(MediaItemScanResult<Movie> result)
+    {
+        try
+        {
+            await _localChaptersProvider.UpdateChapters(result.Item, None);
             return result;
         }
         catch (Exception ex)

@@ -24,6 +24,7 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalMetadataProvider _localMetadataProvider;
     private readonly ILocalSubtitlesProvider _localSubtitlesProvider;
+    private readonly ILocalChaptersProvider _localChaptersProvider;
     private readonly ILogger<MusicVideoFolderScanner> _logger;
     private readonly IMediaItemRepository _mediaItemRepository;
     private readonly IMediator _mediator;
@@ -34,6 +35,7 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
         ILocalStatisticsProvider localStatisticsProvider,
         ILocalMetadataProvider localMetadataProvider,
         ILocalSubtitlesProvider localSubtitlesProvider,
+        ILocalChaptersProvider localChaptersProvider,
         IMetadataRepository metadataRepository,
         IImageCache imageCache,
         IArtistRepository artistRepository,
@@ -58,6 +60,7 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
         _localFileSystem = localFileSystem;
         _localMetadataProvider = localMetadataProvider;
         _localSubtitlesProvider = localSubtitlesProvider;
+        _localChaptersProvider = localChaptersProvider;
         _artistRepository = artistRepository;
         _musicVideoRepository = musicVideoRepository;
         _libraryRepository = libraryRepository;
@@ -380,6 +383,7 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
                     .BindT(UpdateMetadata)
                     .BindT(result => UpdateThumbnail(result, cancellationToken))
                     .BindT(UpdateSubtitles)
+                    .BindT(UpdateChapters)
                     .BindT(FlagNormal);
 
                 foreach (BaseError error in maybeMusicVideo.LeftToSeq())
@@ -534,6 +538,21 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
         try
         {
             await _localSubtitlesProvider.UpdateSubtitles(result.Item, None, true);
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _client.Notify(ex);
+            return BaseError.New(ex.ToString());
+        }
+    }
+
+    private async Task<Either<BaseError, MediaItemScanResult<MusicVideo>>> UpdateChapters(
+        MediaItemScanResult<MusicVideo> result)
+    {
+        try
+        {
+            await _localChaptersProvider.UpdateChapters(result.Item, None);
             return result;
         }
         catch (Exception ex)
