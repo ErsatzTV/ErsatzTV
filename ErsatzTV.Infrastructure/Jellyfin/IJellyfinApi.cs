@@ -58,7 +58,9 @@ public interface IJellyfinApi
         [Query]
         int startIndex = 0,
         [Query]
-        int limit = 0);
+        int limit = 0,
+        [Query]
+        string ids = null);
 
     [Get("/Items?sortOrder=Ascending&sortBy=SortName")]
     public Task<JellyfinLibraryItemsResponse> GetSeasonLibraryItems(

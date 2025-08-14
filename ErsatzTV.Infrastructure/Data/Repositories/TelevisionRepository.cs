@@ -91,7 +91,7 @@ public class TelevisionRepository : ITelevisionRepository
                 $"%{title}%"))
             .Map(sm => sm.ShowId)
             .FirstOrDefaultAsync()
-            .Map(Optional);
+            .Map(showId => showId > 0 ? Option<int>.Some(showId) : Option<int>.None);
     }
 
     public async Task<List<ShowMetadata>> GetShowsForCards(List<int> ids)

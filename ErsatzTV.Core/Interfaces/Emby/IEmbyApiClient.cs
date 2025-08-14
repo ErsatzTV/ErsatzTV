@@ -35,6 +35,12 @@ public interface IEmbyApiClient
         EmbyLibrary library,
         string itemId);
 
+    Task<Either<BaseError, Option<EmbyShow>>> GetSingleShow(
+        string address,
+        string apiKey,
+        EmbyLibrary library,
+        string showId);
+
     Task<Either<BaseError, List<EmbyShow>>> SearchShowsByTitle(
         string address,
         string apiKey,

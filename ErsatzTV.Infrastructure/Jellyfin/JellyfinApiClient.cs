@@ -201,6 +201,37 @@ public class JellyfinApiClient : IJellyfinApiClient
         }
     }
 
+    public async Task<Either<BaseError, Option<JellyfinShow>>> GetSingleShow(
+        string address,
+        string apiKey,
+        JellyfinLibrary library,
+        string showId)
+    {
+        try
+        {
+            IJellyfinApi service = RestService.For<IJellyfinApi>(address);
+            JellyfinLibraryItemsResponse itemsResponse = await service.GetShowLibraryItems(
+                apiKey,
+                parentId: library.ItemId,
+                recursive: false,
+                startIndex: 0,
+                limit: 1,
+                ids: showId);
+
+            foreach (JellyfinLibraryItemResponse item in itemsResponse.Items)
+            {
+                return ProjectToShow(item);
+            }
+
+            return BaseError.New($"Unable to locate show with id {showId}");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error searching Jellyfin shows by id");
+            return BaseError.New(ex.Message);
+        }
+    }
+
     private static async IAsyncEnumerable<Tuple<TItem, int>> GetPagedLibraryItems<TItem>(
         string address,
         Option<JellyfinLibrary> maybeLibrary,
@@ -982,7 +1013,7 @@ public class JellyfinApiClient : IJellyfinApiClient
 
             foreach (JellyfinSearchHintResponse hint in searchResponse.SearchHints)
             {
-                if (hint.Type == "Series" && 
+                if (hint.Type == "Series" &&
                     string.Equals(hint.Name, showTitle, StringComparison.OrdinalIgnoreCase))
                 {
                     JellyfinLibraryItemsResponse detailResponse = await service.GetShowLibraryItems(

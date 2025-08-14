@@ -190,6 +190,7 @@ public class EmbyTelevisionLibraryScanner : MediaServerTelevisionLibraryScanner<
         string address,
         string apiKey,
         EmbyLibrary library,
+        string showId,
         string showTitle,
         bool deepScan,
         CancellationToken cancellationToken)
@@ -206,40 +207,33 @@ public class EmbyTelevisionLibraryScanner : MediaServerTelevisionLibraryScanner<
         }
 
         // Search for the specific show
-        Either<BaseError, List<EmbyShow>> searchResult = await _embyApiClient.SearchShowsByTitle(
+        Either<BaseError, Option<EmbyShow>> searchResult = await _embyApiClient.GetSingleShow(
             address,
             apiKey,
             library,
-            showTitle);
+            showId);
 
         return await searchResult.Match(
-            async shows =>
+            async maybeShow =>
             {
-                if (shows.Count == 0)
+                foreach (var show in maybeShow)
                 {
-                    _logger.LogWarning("No show found with title '{ShowTitle}' in library {LibraryName}", 
-                        showTitle, library.Name);
-                    return Right<BaseError, Unit>(Unit.Default);
+                    _logger.LogInformation("Found show '{ShowTitle}' with id {ShowId}, starting targeted scan",
+                        showTitle, show.ItemId);
+
+                    return await ScanSingleShowInternal(
+                        _televisionRepository,
+                        new EmbyConnectionParameters(address, apiKey),
+                        library,
+                        show,
+                        GetLocalPath,
+                        deepScan,
+                        cancellationToken);
                 }
 
-                if (shows.Count > 1)
-                {
-                    _logger.LogWarning("Multiple shows found with title '{ShowTitle}' in library {LibraryName}, scanning first match", 
-                        showTitle, library.Name);
-                }
+                _logger.LogWarning("No show found with id {ShowId} in library {LibraryName}", showId, library.Name);
 
-                EmbyShow show = shows.First();
-                _logger.LogInformation("Found show '{ShowTitle}' with id {ShowId}, starting targeted scan", 
-                    showTitle, show.ItemId);
-
-                return await ScanSingleShowInternal(
-                    _televisionRepository,
-                    new EmbyConnectionParameters(address, apiKey),
-                    library,
-                    show,
-                    GetLocalPath,
-                    deepScan,
-                    cancellationToken);
+                return Right<BaseError, Unit>(Unit.Default);
             },
             error => Task.FromResult<Either<BaseError, Unit>>(error));
     }

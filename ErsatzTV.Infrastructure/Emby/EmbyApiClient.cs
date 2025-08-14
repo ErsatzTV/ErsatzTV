@@ -187,6 +187,37 @@ public class EmbyApiClient : IEmbyApiClient
         }
     }
 
+    public async Task<Either<BaseError, Option<EmbyShow>>> GetSingleShow(
+        string address,
+        string apiKey,
+        EmbyLibrary library,
+        string showId)
+    {
+        try
+        {
+            IEmbyApi service = RestService.For<IEmbyApi>(address);
+            EmbyLibraryItemsResponse itemsResponse = await service.GetShowLibraryItems(
+                apiKey,
+                parentId: library.ItemId,
+                recursive: false,
+                startIndex: 0,
+                limit: 1,
+                ids: showId);
+
+            foreach (EmbyLibraryItemResponse item in itemsResponse.Items)
+            {
+                return ProjectToShow(item);
+            }
+
+            return BaseError.New($"Unable to locate show with id {showId}");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error searching Emby shows by id");
+            return BaseError.New(ex.Message);
+        }
+    }
+
     private static async IAsyncEnumerable<Tuple<TItem, int>> GetPagedLibraryContents<TItem>(
         string address,
         Option<EmbyLibrary> maybeLibrary,
@@ -913,7 +944,7 @@ public class EmbyApiClient : IEmbyApiClient
 
             foreach (EmbySearchHintResponse hint in searchResponse.SearchHints)
             {
-                if (hint.Type == "Series" && 
+                if (hint.Type == "Series" &&
                     string.Equals(hint.Name, showTitle, StringComparison.OrdinalIgnoreCase))
                 {
                     EmbyLibraryItemsResponse detailResponse = await service.GetShowLibraryItems(

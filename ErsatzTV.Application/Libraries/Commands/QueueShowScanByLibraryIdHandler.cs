@@ -57,17 +57,17 @@ public class QueueShowScanByLibraryIdHandler(
                 {
                     case PlexLibrary:
                         var plexResult = await mediator.Send(
-                            new SynchronizePlexShowById(library.Id, request.ShowId, request.ShowTitle, request.DeepScan),
+                            new SynchronizePlexShowById(library.Id, request.ShowId, request.DeepScan),
                             cancellationToken);
                         return plexResult.IsRight;
                     case JellyfinLibrary:
                         var jellyfinResult = await mediator.Send(
-                            new SynchronizeJellyfinShowByTitle(library.Id, request.ShowTitle, request.DeepScan),
+                            new SynchronizeJellyfinShowById(library.Id, request.ShowId, request.DeepScan),
                             cancellationToken);
                         return jellyfinResult.IsRight;
                     case EmbyLibrary:
                         var embyResult = await mediator.Send(
-                            new SynchronizeEmbyShowByTitle(library.Id, request.ShowTitle, request.DeepScan),
+                            new SynchronizeEmbyShowById(library.Id, request.ShowId, request.DeepScan),
                             cancellationToken);
                         return embyResult.IsRight;
                     case LocalLibrary:

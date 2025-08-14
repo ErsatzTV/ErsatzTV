@@ -424,6 +424,27 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
         return None;
     }
 
+    public async Task<Option<JellyfinShowTitleItemIdResult>> GetShowTitleItemId(int libraryId, int showId)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+
+        Option<JellyfinShow> maybeShow = await dbContext.JellyfinShows
+            .Where(s => s.Id == showId)
+            .Where(s => s.LibraryPath.LibraryId == libraryId)
+            .Include(s => s.ShowMetadata)
+            .FirstOrDefaultAsync()
+            .Map(Optional);
+
+        foreach (var show in maybeShow)
+        {
+            return new JellyfinShowTitleItemIdResult(
+                await show.ShowMetadata.HeadOrNone().Map(sm => sm.Title).IfNoneAsync("Unknown Show"),
+                show.ItemId);
+        }
+
+        return Option<JellyfinShowTitleItemIdResult>.None;
+    }
+
     private static async Task UpdateShow(TvContext dbContext, JellyfinShow existing, JellyfinShow incoming)
     {
         // library path is used for search indexing later

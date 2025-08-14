@@ -51,7 +51,9 @@ public interface IEmbyApi
         [Query]
         int startIndex = 0,
         [Query]
-        int limit = 0);
+        int limit = 0,
+        [Query]
+        string ids = null);
 
     [Get("/Shows/{parentId}/Seasons?sortOrder=Ascending&sortBy=SortName")]
     public Task<EmbyLibraryItemsResponse> GetSeasonLibraryItems(

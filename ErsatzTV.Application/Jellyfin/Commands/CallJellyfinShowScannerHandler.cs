@@ -10,8 +10,8 @@ using System.Threading.Channels;
 
 namespace ErsatzTV.Application.Jellyfin;
 
-public class CallJellyfinShowScannerHandler : CallLibraryScannerHandler<ISynchronizeJellyfinShowByTitle>,
-    IRequestHandler<SynchronizeJellyfinShowByTitle, Either<BaseError, string>>
+public class CallJellyfinShowScannerHandler : CallLibraryScannerHandler<SynchronizeJellyfinShowById>,
+    IRequestHandler<SynchronizeJellyfinShowById, Either<BaseError, string>>
 {
     public CallJellyfinShowScannerHandler(
         IDbContextFactory<TvContext> dbContextFactory,
@@ -23,12 +23,12 @@ public class CallJellyfinShowScannerHandler : CallLibraryScannerHandler<ISynchro
     {
     }
 
-    Task<Either<BaseError, string>> IRequestHandler<SynchronizeJellyfinShowByTitle, Either<BaseError, string>>.Handle(
-        SynchronizeJellyfinShowByTitle request,
+    Task<Either<BaseError, string>> IRequestHandler<SynchronizeJellyfinShowById, Either<BaseError, string>>.Handle(
+        SynchronizeJellyfinShowById request,
         CancellationToken cancellationToken) => Handle(request, cancellationToken);
 
     private async Task<Either<BaseError, string>> Handle(
-        ISynchronizeJellyfinShowByTitle request,
+        SynchronizeJellyfinShowById request,
         CancellationToken cancellationToken)
     {
         Validation<BaseError, string> validation = await Validate(request);
@@ -47,14 +47,14 @@ public class CallJellyfinShowScannerHandler : CallLibraryScannerHandler<ISynchro
 
     private async Task<Either<BaseError, string>> PerformScan(
         string scanner,
-        ISynchronizeJellyfinShowByTitle request,
+        SynchronizeJellyfinShowById request,
         CancellationToken cancellationToken)
     {
         var arguments = new List<string>
         {
             "scan-jellyfin-show",
             request.JellyfinLibraryId.ToString(CultureInfo.InvariantCulture),
-            request.ShowTitle
+            request.ShowId.ToString(CultureInfo.InvariantCulture)
         };
 
         if (request.DeepScan)
@@ -67,7 +67,7 @@ public class CallJellyfinShowScannerHandler : CallLibraryScannerHandler<ISynchro
 
     protected override Task<DateTimeOffset> GetLastScan(
         TvContext dbContext,
-        ISynchronizeJellyfinShowByTitle request)
+        SynchronizeJellyfinShowById request)
     {
         return Task.FromResult(DateTimeOffset.MinValue);
     }
@@ -75,7 +75,7 @@ public class CallJellyfinShowScannerHandler : CallLibraryScannerHandler<ISynchro
     protected override bool ScanIsRequired(
         DateTimeOffset lastScan,
         int libraryRefreshInterval,
-        ISynchronizeJellyfinShowByTitle request)
+        SynchronizeJellyfinShowById request)
     {
         return true;
     }

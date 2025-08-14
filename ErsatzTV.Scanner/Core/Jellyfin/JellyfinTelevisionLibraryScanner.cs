@@ -189,6 +189,7 @@ public class JellyfinTelevisionLibraryScanner : MediaServerTelevisionLibraryScan
         string address,
         string apiKey,
         JellyfinLibrary library,
+        string showId,
         string showTitle,
         bool deepScan,
         CancellationToken cancellationToken)
@@ -205,40 +206,33 @@ public class JellyfinTelevisionLibraryScanner : MediaServerTelevisionLibraryScan
         }
 
         // Search for the specific show
-        Either<BaseError, List<JellyfinShow>> searchResult = await _jellyfinApiClient.SearchShowsByTitle(
+        Either<BaseError, Option<JellyfinShow>> searchResult = await _jellyfinApiClient.GetSingleShow(
             address,
             apiKey,
             library,
-            showTitle);
+            showId);
 
         return await searchResult.Match(
-            async shows =>
+            async maybeShow =>
             {
-                if (shows.Count == 0)
+                foreach (var show in maybeShow)
                 {
-                    _logger.LogWarning("No show found with title '{ShowTitle}' in library {LibraryName}", 
-                        showTitle, library.Name);
-                    return Right<BaseError, Unit>(Unit.Default);
+                    _logger.LogInformation("Found show '{ShowTitle}' with id {ShowId}, starting targeted scan",
+                        showTitle, show.ItemId);
+
+                    return await ScanSingleShowInternal(
+                        _televisionRepository,
+                        new JellyfinConnectionParameters(address, apiKey, library.MediaSourceId),
+                        library,
+                        show,
+                        GetLocalPath,
+                        deepScan,
+                        cancellationToken);
                 }
 
-                if (shows.Count > 1)
-                {
-                    _logger.LogWarning("Multiple shows found with title '{ShowTitle}' in library {LibraryName}, scanning first match", 
-                        showTitle, library.Name);
-                }
+                _logger.LogWarning("No show found with id {ShowId} in library {LibraryName}", showId, library.Name);
 
-                JellyfinShow show = shows.First();
-                _logger.LogInformation("Found show '{ShowTitle}' with id {ShowId}, starting targeted scan", 
-                    showTitle, show.ItemId);
-
-                return await ScanSingleShowInternal(
-                    _televisionRepository,
-                    new JellyfinConnectionParameters(address, apiKey, library.MediaSourceId),
-                    library,
-                    show,
-                    GetLocalPath,
-                    deepScan,
-                    cancellationToken);
+                return Right<BaseError, Unit>(Unit.Default);
             },
             error => Task.FromResult<Either<BaseError, Unit>>(error));
     }

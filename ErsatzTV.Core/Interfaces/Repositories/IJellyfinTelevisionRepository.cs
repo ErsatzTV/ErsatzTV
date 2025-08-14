@@ -7,4 +7,7 @@ public interface IJellyfinTelevisionRepository : IMediaServerTelevisionRepositor
     JellyfinSeason,
     JellyfinEpisode, JellyfinItemEtag>
 {
+    Task<Option<JellyfinShowTitleItemIdResult>> GetShowTitleItemId(int libraryId, int showId);
 }
+
+public record JellyfinShowTitleItemIdResult(string Title, string ItemId);

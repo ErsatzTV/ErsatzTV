@@ -136,9 +136,7 @@ public partial class PlexTelevisionLibraryScanner :
                         cancellationToken);
                 }
 
-                _logger.LogWarning("No show found with key {ShowKey} in library {LibraryName}",
-                    showKey,
-                    library.Name);
+                _logger.LogWarning("No show found with key {ShowKey} in library {LibraryName}", showKey, library.Name);
 
                 return Right<BaseError, Unit>(Unit.Default);
             },

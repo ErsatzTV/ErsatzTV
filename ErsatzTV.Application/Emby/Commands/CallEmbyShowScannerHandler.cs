@@ -10,8 +10,8 @@ using System.Threading.Channels;
 
 namespace ErsatzTV.Application.Emby;
 
-public class CallEmbyShowScannerHandler : CallLibraryScannerHandler<ISynchronizeEmbyShowByTitle>,
-    IRequestHandler<SynchronizeEmbyShowByTitle, Either<BaseError, string>>
+public class CallEmbyShowScannerHandler : CallLibraryScannerHandler<SynchronizeEmbyShowById>,
+    IRequestHandler<SynchronizeEmbyShowById, Either<BaseError, string>>
 {
     public CallEmbyShowScannerHandler(
         IDbContextFactory<TvContext> dbContextFactory,
@@ -23,12 +23,12 @@ public class CallEmbyShowScannerHandler : CallLibraryScannerHandler<ISynchronize
     {
     }
 
-    Task<Either<BaseError, string>> IRequestHandler<SynchronizeEmbyShowByTitle, Either<BaseError, string>>.Handle(
-        SynchronizeEmbyShowByTitle request,
+    Task<Either<BaseError, string>> IRequestHandler<SynchronizeEmbyShowById, Either<BaseError, string>>.Handle(
+        SynchronizeEmbyShowById request,
         CancellationToken cancellationToken) => Handle(request, cancellationToken);
 
     private async Task<Either<BaseError, string>> Handle(
-        ISynchronizeEmbyShowByTitle request,
+        SynchronizeEmbyShowById request,
         CancellationToken cancellationToken)
     {
         Validation<BaseError, string> validation = await Validate(request);
@@ -47,14 +47,14 @@ public class CallEmbyShowScannerHandler : CallLibraryScannerHandler<ISynchronize
 
     private async Task<Either<BaseError, string>> PerformScan(
         string scanner,
-        ISynchronizeEmbyShowByTitle request,
+        SynchronizeEmbyShowById request,
         CancellationToken cancellationToken)
     {
         var arguments = new List<string>
         {
             "scan-emby-show",
             request.EmbyLibraryId.ToString(CultureInfo.InvariantCulture),
-            request.ShowTitle
+            request.ShowId.ToString(CultureInfo.InvariantCulture)
         };
 
         if (request.DeepScan)
@@ -67,7 +67,7 @@ public class CallEmbyShowScannerHandler : CallLibraryScannerHandler<ISynchronize
 
     protected override Task<DateTimeOffset> GetLastScan(
         TvContext dbContext,
-        ISynchronizeEmbyShowByTitle request)
+        SynchronizeEmbyShowById request)
     {
         return Task.FromResult(DateTimeOffset.MinValue);
     }
@@ -75,7 +75,7 @@ public class CallEmbyShowScannerHandler : CallLibraryScannerHandler<ISynchronize
     protected override bool ScanIsRequired(
         DateTimeOffset lastScan,
         int libraryRefreshInterval,
-        ISynchronizeEmbyShowByTitle request)
+        SynchronizeEmbyShowById request)
     {
         return true;
     }

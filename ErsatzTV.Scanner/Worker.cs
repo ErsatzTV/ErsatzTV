@@ -102,11 +102,6 @@ public class Worker : BackgroundService
         scanJellyfinCollectionsCommand.Options.Add(forceOption);
 
         // Show-specific scanning commands
-        var showTitleArgument = new Argument<string>("show-title")
-        {
-            Description = "The title of the TV show to scan"
-        };
-
         var showIdArgument = new Argument<int>("show-id")
         {
             Description = "The id of the TV show to scan"
@@ -119,12 +114,12 @@ public class Worker : BackgroundService
 
         var scanEmbyShowCommand = new Command("scan-emby-show", "Scan a specific TV show in an Emby library");
         scanEmbyShowCommand.Arguments.Add(libraryIdArgument);
-        scanEmbyShowCommand.Arguments.Add(showTitleArgument);
+        scanEmbyShowCommand.Arguments.Add(showIdArgument);
         scanEmbyShowCommand.Options.Add(deepOption);
 
         var scanJellyfinShowCommand = new Command("scan-jellyfin-show", "Scan a specific TV show in a Jellyfin library");
         scanJellyfinShowCommand.Arguments.Add(libraryIdArgument);
-        scanJellyfinShowCommand.Arguments.Add(showTitleArgument);
+        scanJellyfinShowCommand.Arguments.Add(showIdArgument);
         scanJellyfinShowCommand.Options.Add(deepOption);
 
         scanLocalCommand.SetAction(async (parseResult, token) =>
@@ -288,16 +283,12 @@ public class Worker : BackgroundService
             {
                 bool deep = parseResult.GetValue(deepOption);
                 int libraryId = parseResult.GetValue(libraryIdArgument);
-                string? showTitle = parseResult.GetValue(showTitleArgument);
-                if (string.IsNullOrWhiteSpace(showTitle))
-                {
-                    return;
-                }
+                int showId = parseResult.GetValue(showIdArgument);
 
                 using IServiceScope scope = _serviceScopeFactory.CreateScope();
                 IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
-                var scan = new SynchronizeEmbyShowByTitle(libraryId, showTitle, deep);
+                var scan = new SynchronizeEmbyShowById(libraryId, showId, deep);
                 await mediator.Send(scan, token);
             }
         });
@@ -308,16 +299,12 @@ public class Worker : BackgroundService
             {
                 bool deep = parseResult.GetValue(deepOption);
                 int libraryId = parseResult.GetValue(libraryIdArgument);
-                string? showTitle = parseResult.GetValue(showTitleArgument);
-                if (string.IsNullOrWhiteSpace(showTitle))
-                {
-                    return;
-                }
+                int showId = parseResult.GetValue(showIdArgument);
 
                 using IServiceScope scope = _serviceScopeFactory.CreateScope();
                 IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
-                var scan = new SynchronizeJellyfinShowByTitle(libraryId, showTitle, deep);
+                var scan = new SynchronizeJellyfinShowById(libraryId, showId, deep);
                 await mediator.Send(scan, token);
             }
         });

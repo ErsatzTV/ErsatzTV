@@ -15,6 +15,7 @@ public interface IEmbyTelevisionLibraryScanner
         string address,
         string apiKey,
         EmbyLibrary library,
+        string showId,
         string showTitle,
         bool deepScan,
         CancellationToken cancellationToken);

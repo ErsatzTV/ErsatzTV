@@ -15,6 +15,7 @@ public interface IJellyfinTelevisionLibraryScanner
         string address,
         string apiKey,
         JellyfinLibrary library,
+        string showId,
         string showTitle,
         bool deepScan,
         CancellationToken cancellationToken);

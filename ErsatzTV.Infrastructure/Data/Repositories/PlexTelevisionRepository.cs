@@ -497,7 +497,7 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
-        var maybeShow = await dbContext.PlexShows
+        Option<PlexShow> maybeShow = await dbContext.PlexShows
             .Where(s => s.Id == showId)
             .Where(s => s.LibraryPath.LibraryId == libraryId)
             .Include(s => s.ShowMetadata)

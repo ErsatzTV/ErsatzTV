@@ -2,5 +2,5 @@ using ErsatzTV.Core;
 
 namespace ErsatzTV.Scanner.Application.Emby;
 
-public record SynchronizeEmbyShowByTitle(int EmbyLibraryId, string ShowTitle, bool DeepScan)
+public record SynchronizeEmbyShowById(int EmbyLibraryId, int ShowId, bool DeepScan)
     : IRequest<Either<BaseError, string>>;

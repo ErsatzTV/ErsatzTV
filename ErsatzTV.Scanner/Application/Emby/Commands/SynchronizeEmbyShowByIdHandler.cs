@@ -7,30 +7,30 @@ using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Scanner.Application.Emby;
 
-public class SynchronizeEmbyShowByTitleHandler : IRequestHandler<SynchronizeEmbyShowByTitle, Either<BaseError, string>>
+public class SynchronizeEmbyShowByIdHandler : IRequestHandler<SynchronizeEmbyShowById, Either<BaseError, string>>
 {
     private readonly IEmbySecretStore _embySecretStore;
     private readonly IEmbyTelevisionLibraryScanner _embyTelevisionLibraryScanner;
-    private readonly ILibraryRepository _libraryRepository;
-    private readonly ILogger<SynchronizeEmbyShowByTitleHandler> _logger;
+    private readonly ILogger<SynchronizeEmbyShowByIdHandler> _logger;
     private readonly IMediaSourceRepository _mediaSourceRepository;
+    private readonly IEmbyTelevisionRepository _embyTelevisionRepository;
 
-    public SynchronizeEmbyShowByTitleHandler(
+    public SynchronizeEmbyShowByIdHandler(
         IMediaSourceRepository mediaSourceRepository,
+        IEmbyTelevisionRepository embyTelevisionRepository,
         IEmbySecretStore embySecretStore,
         IEmbyTelevisionLibraryScanner embyTelevisionLibraryScanner,
-        ILibraryRepository libraryRepository,
-        ILogger<SynchronizeEmbyShowByTitleHandler> logger)
+        ILogger<SynchronizeEmbyShowByIdHandler> logger)
     {
         _mediaSourceRepository = mediaSourceRepository;
+        _embyTelevisionRepository = embyTelevisionRepository;
         _embySecretStore = embySecretStore;
         _embyTelevisionLibraryScanner = embyTelevisionLibraryScanner;
-        _libraryRepository = libraryRepository;
         _logger = logger;
     }
 
     public async Task<Either<BaseError, string>> Handle(
-        SynchronizeEmbyShowByTitle request,
+        SynchronizeEmbyShowById request,
         CancellationToken cancellationToken)
     {
         Validation<BaseError, RequestParameters> validation = await Validate(request);
@@ -57,6 +57,7 @@ public class SynchronizeEmbyShowByTitleHandler : IRequestHandler<SynchronizeEmby
             parameters.ConnectionParameters.ActiveConnection.Address,
             parameters.ConnectionParameters.ApiKey,
             parameters.Library,
+            parameters.ItemId,
             parameters.ShowTitle,
             parameters.DeepScan,
             cancellationToken);
@@ -69,24 +70,25 @@ public class SynchronizeEmbyShowByTitleHandler : IRequestHandler<SynchronizeEmby
         return result.Map(_ => $"Show '{parameters.ShowTitle}' in {parameters.Library.Name}");
     }
 
-    private async Task<Validation<BaseError, RequestParameters>> Validate(SynchronizeEmbyShowByTitle request) =>
-        (await ValidateConnection(request), await EmbyLibraryMustExist(request))
-        .Apply((connectionParameters, embyLibrary) =>
+    private async Task<Validation<BaseError, RequestParameters>> Validate(SynchronizeEmbyShowById request) =>
+        (await ValidateConnection(request), await EmbyLibraryMustExist(request), await EmbyShowMustExist(request))
+        .Apply((connectionParameters, embyLibrary, showTitleItemId) =>
             new RequestParameters(
                 connectionParameters,
                 embyLibrary,
-                request.ShowTitle,
+                showTitleItemId.ItemId,
+                showTitleItemId.Title,
                 request.DeepScan
             ));
 
     private Task<Validation<BaseError, ConnectionParameters>> ValidateConnection(
-        SynchronizeEmbyShowByTitle request) =>
+        SynchronizeEmbyShowById request) =>
         EmbyMediaSourceMustExist(request)
             .BindT(MediaSourceMustHaveActiveConnection)
             .BindT(MediaSourceMustHaveApiKey);
 
     private Task<Validation<BaseError, EmbyMediaSource>> EmbyMediaSourceMustExist(
-        SynchronizeEmbyShowByTitle request) =>
+        SynchronizeEmbyShowById request) =>
         _mediaSourceRepository.GetEmbyByLibraryId(request.EmbyLibraryId)
             .Map(v => v.ToValidation<BaseError>(
                 $"Emby media source for library {request.EmbyLibraryId} does not exist."));
@@ -110,13 +112,19 @@ public class SynchronizeEmbyShowByTitleHandler : IRequestHandler<SynchronizeEmby
     }
 
     private Task<Validation<BaseError, EmbyLibrary>> EmbyLibraryMustExist(
-        SynchronizeEmbyShowByTitle request) =>
+        SynchronizeEmbyShowById request) =>
         _mediaSourceRepository.GetEmbyLibrary(request.EmbyLibraryId)
             .Map(v => v.ToValidation<BaseError>($"Emby library {request.EmbyLibraryId} does not exist."));
+
+    private Task<Validation<BaseError, EmbyShowTitleItemIdResult>> EmbyShowMustExist(
+        SynchronizeEmbyShowById request) =>
+        _embyTelevisionRepository.GetShowTitleItemId(request.EmbyLibraryId, request.ShowId)
+            .Map(v => v.ToValidation<BaseError>($"Jellyfin show {request.ShowId} does not exist in library {request.EmbyLibraryId}."));
 
     private record RequestParameters(
         ConnectionParameters ConnectionParameters,
         EmbyLibrary Library,
+        string ItemId,
         string ShowTitle,
         bool DeepScan);
 
