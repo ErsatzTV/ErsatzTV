@@ -15,6 +15,6 @@ public class GetAllBlockGroupsHandler(IDbContextFactory<TvContext> dbContextFact
             .AsNoTracking()
             .ToListAsync(cancellationToken);
 
-        return blockGroups.Map(Mapper.ProjectToViewModel).ToList();
+        return blockGroups.OrderBy(bg => bg.Name).Map(Mapper.ProjectToViewModel).ToList();
     }
 }

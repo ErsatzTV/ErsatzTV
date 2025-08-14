@@ -130,6 +130,7 @@
             foreach (BlockGroupViewModel blockGroup in result.RightToSeq())
             {
                 _treeItems.Add(new TreeItemData<BlockTreeItemViewModel> { Value = new BlockTreeItemViewModel(blockGroup) });
+                _treeItems.Sort((x, y) => string.Compare(x.Value?.Text, y.Value?.Text, StringComparison.CurrentCulture));
                 _blockGroupName = null;
 
                 _blockGroups = await Mediator.Send(new GetAllBlockGroups(), _cts.Token);
@@ -155,6 +156,7 @@
                 foreach (BlockTreeItemViewModel item in _treeItems.Map(i => i.Value).Where(item => item.BlockGroupId == _selectedBlockGroup.Id))
                 {
                     item.TreeItems.Add(new TreeItemData<BlockTreeItemViewModel> { Value = new BlockTreeItemViewModel(block) });
+                    item.TreeItems.Sort((x, y) => string.Compare(x.Value?.Text, y.Value?.Text, StringComparison.CurrentCulture));
                 }
 
                 _blockName = null;
