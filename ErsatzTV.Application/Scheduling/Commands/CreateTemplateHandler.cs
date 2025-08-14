@@ -21,6 +21,7 @@ public class CreateTemplateHandler(IDbContextFactory<TvContext> dbContextFactory
     {
         await dbContext.Templates.AddAsync(template);
         await dbContext.SaveChangesAsync();
+        await dbContext.Entry(template).Reference(t => t.TemplateGroup).LoadAsync();
         return Mapper.ProjectToViewModel(template);
     }
 

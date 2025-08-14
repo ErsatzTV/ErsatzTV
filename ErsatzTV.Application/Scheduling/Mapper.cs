@@ -67,7 +67,7 @@ internal static class Mapper
         new(templateGroup.Id, templateGroup.Name, templateGroup.Templates.Count);
 
     internal static TemplateViewModel ProjectToViewModel(Template template) =>
-        new(template.Id, template.TemplateGroupId, template.Name);
+        new(template.Id, template.TemplateGroupId, template.TemplateGroup.Name, template.Name);
 
     internal static TemplateItemViewModel ProjectToViewModel(TemplateItem templateItem)
     {
