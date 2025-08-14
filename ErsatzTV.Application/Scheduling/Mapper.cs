@@ -112,7 +112,11 @@ internal static class Mapper
             return null;
         }
 
-        return new DecoTemplateViewModel(decoTemplate.Id, decoTemplate.DecoTemplateGroupId, decoTemplate.Name);
+        return new DecoTemplateViewModel(
+            decoTemplate.Id,
+            decoTemplate.DecoTemplateGroupId,
+            decoTemplate.DecoTemplateGroup.Name,
+            decoTemplate.Name);
     }
 
     internal static DecoTemplateItemViewModel ProjectToViewModel(DecoTemplateItem decoTemplateItem)

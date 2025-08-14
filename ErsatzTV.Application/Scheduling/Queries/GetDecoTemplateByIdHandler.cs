@@ -13,6 +13,8 @@ public class GetDecoTemplateByIdHandler(IDbContextFactory<TvContext> dbContextFa
     {
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await dbContext.DecoTemplates
+            .AsNoTracking()
+            .Include(dt => dt.DecoTemplateGroup)
             .SelectOneAsync(b => b.Id, b => b.Id == request.DecoTemplateId)
             .MapT(Mapper.ProjectToViewModel);
     }

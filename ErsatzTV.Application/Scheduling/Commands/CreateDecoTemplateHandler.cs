@@ -21,6 +21,7 @@ public class CreateDecoTemplateHandler(IDbContextFactory<TvContext> dbContextFac
     {
         await dbContext.DecoTemplates.AddAsync(decoTemplate);
         await dbContext.SaveChangesAsync();
+        await dbContext.Entry(decoTemplate).Reference(dt => dt.DecoTemplateGroup).LoadAsync();
         return Mapper.ProjectToViewModel(decoTemplate);
     }
 
