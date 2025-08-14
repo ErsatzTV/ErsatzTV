@@ -33,25 +33,13 @@ public partial class LocalChaptersProvider : ILocalChaptersProvider
         {
             MediaVersion version = mediaItem.GetHeadVersion();
             string mediaItemPath = await localPath.IfNoneAsync(() => version.MediaFiles.Head().Path);
-            
+
             List<MediaChapter> chapters = LocateExternalChapters(mediaItemPath);
-            
+
             if (chapters.Count > 0)
             {
                 _logger.LogDebug("Located {Count} external chapters for {Path}", chapters.Count, mediaItemPath);
-                
-                foreach (MediaChapter chapter in chapters)
-                {
-                    chapter.MediaVersionId = version.Id;
-                    chapter.MediaVersion = version;
-                }
-                
-                // Replace existing chapters with external ones
-                version.Chapters ??= new List<MediaChapter>();
-                version.Chapters.Clear();
-                version.Chapters.AddRange(chapters);
-                
-                return await _metadataRepository.UpdateStatistics(mediaItem, version);
+                return await _metadataRepository.UpdateChapters(version, chapters);
             }
 
             return false;
@@ -69,12 +57,12 @@ public partial class LocalChaptersProvider : ILocalChaptersProvider
 
         string? folder = Path.GetDirectoryName(mediaItemPath);
         string withoutExtension = Path.GetFileNameWithoutExtension(mediaItemPath);
-        
+
         foreach (string file in _localFileSystem.ListFiles(folder, $"{withoutExtension}*"))
         {
             string lowerFile = file.ToLowerInvariant();
             string fileName = Path.GetFileName(file);
-            
+
             if (!fileName.StartsWith(withoutExtension, StringComparison.OrdinalIgnoreCase))
             {
                 continue;
@@ -108,19 +96,19 @@ public partial class LocalChaptersProvider : ILocalChaptersProvider
     private List<MediaChapter> ParseChapterFile(string filePath)
     {
         var chapters = new List<MediaChapter>();
-        
+
         try
         {
             var doc = new XmlDocument();
             doc.Load(filePath);
-            
+
             // Check if this is a Matroska XML chapter file
             XmlNode? chaptersNode = doc.SelectSingleNode("//Chapters") ?? doc.SelectSingleNode("//chapters");
             if (chaptersNode != null)
             {
                 return ParseMatroskaXmlChapters(chaptersNode);
             }
-            
+
             _logger.LogWarning("Unsupported chapter file format: {Path}", filePath);
         }
         catch (XmlException ex)
@@ -134,10 +122,10 @@ public partial class LocalChaptersProvider : ILocalChaptersProvider
     private static List<MediaChapter> ParseMatroskaXmlChapters(XmlNode chaptersNode)
     {
         var chapters = new List<MediaChapter>();
-        
-        XmlNodeList? chapterAtoms = chaptersNode.SelectNodes(".//ChapterAtom") ?? 
+
+        XmlNodeList? chapterAtoms = chaptersNode.SelectNodes(".//ChapterAtom") ??
                                    chaptersNode.SelectNodes(".//chapteratom");
-        
+
         if (chapterAtoms == null)
         {
             return chapters;
@@ -152,9 +140,9 @@ public partial class LocalChaptersProvider : ILocalChaptersProvider
                 chapters.Add(chapter);
             }
         }
-        
+
         chapters.Sort((a, b) => a.StartTime.CompareTo(b.StartTime));
-        
+
         for (int i = 0; i < chapters.Count; i++)
         {
             chapters[i].ChapterId = i;
@@ -165,9 +153,9 @@ public partial class LocalChaptersProvider : ILocalChaptersProvider
 
     private static MediaChapter? ParseChapterAtom(XmlNode chapterAtom, long chapterId)
     {
-        XmlNode? startNode = chapterAtom.SelectSingleNode(".//ChapterTimeStart") ?? 
+        XmlNode? startNode = chapterAtom.SelectSingleNode(".//ChapterTimeStart") ??
                             chapterAtom.SelectSingleNode(".//chaptertimestart");
-        
+
         if (startNode?.InnerText == null)
         {
             return null;
@@ -179,20 +167,20 @@ public partial class LocalChaptersProvider : ILocalChaptersProvider
         }
 
         TimeSpan endTime = TimeSpan.Zero;
-        XmlNode? endNode = chapterAtom.SelectSingleNode(".//ChapterTimeEnd") ?? 
+        XmlNode? endNode = chapterAtom.SelectSingleNode(".//ChapterTimeEnd") ??
                           chapterAtom.SelectSingleNode(".//chaptertimeend");
-        
+
         if (endNode?.InnerText != null)
         {
             _ = TryParseMatroskaTime(endNode.InnerText, out endTime);
         }
 
         string title = string.Empty;
-        XmlNode? titleNode = chapterAtom.SelectSingleNode(".//ChapterString") ?? 
+        XmlNode? titleNode = chapterAtom.SelectSingleNode(".//ChapterString") ??
                             chapterAtom.SelectSingleNode(".//ChapString") ??
-                            chapterAtom.SelectSingleNode(".//chapterstring") ?? 
+                            chapterAtom.SelectSingleNode(".//chapterstring") ??
                             chapterAtom.SelectSingleNode(".//chapstring");
-        
+
         if (titleNode?.InnerText != null)
         {
             title = titleNode.InnerText.Trim();
@@ -210,7 +198,7 @@ public partial class LocalChaptersProvider : ILocalChaptersProvider
     private static bool TryParseMatroskaTime(string timeString, out TimeSpan timeSpan)
     {
         timeSpan = TimeSpan.Zero;
-        
+
         if (string.IsNullOrWhiteSpace(timeString))
         {
             return false;

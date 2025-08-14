@@ -48,4 +48,5 @@ public interface IMetadataRepository
     Task<bool> RemoveDirector(Director director);
     Task<bool> RemoveWriter(Writer writer);
     Task<bool> UpdateSubtitles(Domain.Metadata metadata, List<Subtitle> subtitles);
+    Task<bool> UpdateChapters(MediaVersion version, List<MediaChapter> chapters);
 }
