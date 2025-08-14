@@ -425,6 +425,67 @@ public class PlexServerApiClient : IPlexServerApiClient
         }
     }
 
+    public async Task<Either<BaseError, Option<PlexShow>>> GetSingleShow(
+        PlexLibrary library,
+        string showKey,
+        PlexConnection connection,
+        PlexServerAuthToken token)
+    {
+        try
+        {
+            IPlexServerApi service = XmlServiceFor(connection.Uri);
+            return await service.GetDirectoryMetadata(showKey, token.AuthToken)
+                .Map(Optional)
+                .MapT(response => Some(ProjectToShow(response.Metadata, library.MediaSourceId)))
+                .Map(o => o.ToEither<BaseError>($"Unable to locate show with key {showKey}"));
+        }
+        catch (Exception ex)
+        {
+            return BaseError.New(ex.ToString());
+        }
+    }
+
+    public async Task<Either<BaseError, List<PlexShow>>> SearchShowsByTitle(
+        PlexLibrary library,
+        string showTitle,
+        PlexConnection connection,
+        PlexServerAuthToken token)
+    {
+        try
+        {
+            IPlexServerApi service = RestService.For<IPlexServerApi>(
+                new HttpClient { BaseAddress = new Uri(connection.Uri) });
+
+            PlexMediaContainerResponse<PlexMediaContainerHubContent<PlexHubResponse>> searchResponse =
+                await service.Search(showTitle, library.Key, token.AuthToken);
+
+            var shows = new List<PlexShow>();
+
+            foreach (PlexHubResponse hub in searchResponse.MediaContainer.Hub)
+            {
+                if (hub.Type != "show")
+                    continue;
+
+                string fullKey = $"/library/sections/{library.Key}";
+
+                foreach (PlexMetadataResponse metadata in hub.Metadata.Where(m => m.LibrarySectionKey == fullKey))
+                {
+                    if (string.Equals(metadata.Title, showTitle, StringComparison.OrdinalIgnoreCase))
+                    {
+                        PlexShow show = ProjectToShow(metadata, library.MediaSourceId);
+                        shows.Add(show);
+                    }
+                }
+            }
+
+            return shows;
+        }
+        catch (Exception ex)
+        {
+            return BaseError.New(ex.ToString());
+        }
+    }
+
     private static IPlexServerApi XmlServiceFor(string uri, TimeSpan? timeout = null)
     {
         var overrides = new XmlAttributeOverrides();

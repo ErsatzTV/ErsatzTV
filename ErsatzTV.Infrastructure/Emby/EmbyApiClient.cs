@@ -187,6 +187,37 @@ public class EmbyApiClient : IEmbyApiClient
         }
     }
 
+    public async Task<Either<BaseError, Option<EmbyShow>>> GetSingleShow(
+        string address,
+        string apiKey,
+        EmbyLibrary library,
+        string showId)
+    {
+        try
+        {
+            IEmbyApi service = RestService.For<IEmbyApi>(address);
+            EmbyLibraryItemsResponse itemsResponse = await service.GetShowLibraryItems(
+                apiKey,
+                parentId: library.ItemId,
+                recursive: false,
+                startIndex: 0,
+                limit: 1,
+                ids: showId);
+
+            foreach (EmbyLibraryItemResponse item in itemsResponse.Items)
+            {
+                return ProjectToShow(item);
+            }
+
+            return BaseError.New($"Unable to locate show with id {showId}");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error searching Emby shows by id");
+            return BaseError.New(ex.Message);
+        }
+    }
+
     private static async IAsyncEnumerable<Tuple<TItem, int>> GetPagedLibraryContents<TItem>(
         string address,
         Option<EmbyLibrary> maybeLibrary,
@@ -892,5 +923,54 @@ public class EmbyApiClient : IEmbyApiClient
 
             return version;
         });
+    }
+
+    public async Task<Either<BaseError, List<EmbyShow>>> SearchShowsByTitle(
+        string address,
+        string apiKey,
+        EmbyLibrary library,
+        string showTitle)
+    {
+        try
+        {
+            IEmbyApi service = RestService.For<IEmbyApi>(address);
+            EmbySearchHintsResponse searchResponse = await service.SearchHints(
+                apiKey,
+                showTitle,
+                "Series",
+                library.ItemId);
+
+            var shows = new List<EmbyShow>();
+
+            foreach (EmbySearchHintResponse hint in searchResponse.SearchHints)
+            {
+                if (hint.Type == "Series" &&
+                    string.Equals(hint.Name, showTitle, StringComparison.OrdinalIgnoreCase))
+                {
+                    EmbyLibraryItemsResponse detailResponse = await service.GetShowLibraryItems(
+                        apiKey,
+                        hint.Id,
+                        recursive: false,
+                        startIndex: 0,
+                        limit: 1);
+
+                    foreach (EmbyLibraryItemResponse item in detailResponse.Items)
+                    {
+                        Option<EmbyShow> maybeShow = ProjectToShow(item);
+                        foreach (EmbyShow show in maybeShow)
+                        {
+                            shows.Add(show);
+                        }
+                    }
+                }
+            }
+
+            return shows;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error searching Emby shows by title");
+            return BaseError.New(ex.Message);
+        }
     }
 }

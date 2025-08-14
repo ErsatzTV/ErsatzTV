@@ -46,4 +46,16 @@ public interface IJellyfinApiClient
         string apiKey,
         JellyfinLibrary library,
         string itemId);
+
+    Task<Either<BaseError, Option<JellyfinShow>>> GetSingleShow(
+        string address,
+        string apiKey,
+        JellyfinLibrary library,
+        string showId);
+
+    Task<Either<BaseError, List<JellyfinShow>>> SearchShowsByTitle(
+        string address,
+        string apiKey,
+        JellyfinLibrary library,
+        string showTitle);
 }

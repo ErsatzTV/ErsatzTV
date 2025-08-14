@@ -1,10 +1,13 @@
 ﻿using System.Globalization;
 using ErsatzTV.Application.MediaCards;
+using ErsatzTV.Core.Domain;
 
 namespace ErsatzTV.Application.Television;
 
 public record TelevisionShowViewModel(
     int Id,
+    int LibraryId,
+    MediaSourceKind MediaSourceKind,
     string Title,
     string Year,
     string Plot,

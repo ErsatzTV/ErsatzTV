@@ -1,5 +1,6 @@
 ﻿@page "/media/tv/shows/{ShowId:int}"
 @using System.Globalization
+@using ErsatzTV.Application.Libraries
 @using ErsatzTV.Application.MediaCards
 @using ErsatzTV.Application.MediaCollections
 @using ErsatzTV.Application.ProgramSchedules
@@ -48,24 +49,28 @@
                 </MudCard>
             }
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="mb-6">
-                <MudButton Variant="Variant.Filled"
-                           Color="Color.Primary"
-                           StartIcon="@Icons.Material.Filled.Add"
-                           OnClick="@AddToCollection">
-                    Add To Collection
-                </MudButton>
-                <MudButton Variant="Variant.Filled"
-                           Color="Color.Primary"
-                           StartIcon="@Icons.Material.Filled.PlaylistAdd"
-                           OnClick="@AddToPlaylist">
-                    Add To Playlist
-                </MudButton>
-                <MudButton Variant="Variant.Filled"
-                           Color="Color.Primary"
-                           StartIcon="@Icons.Material.Filled.Schedule"
-                           OnClick="@AddToSchedule">
-                    Add To Schedule
-                </MudButton>
+                <MudMenu>
+                    <ActivatorContent>
+                        <MudButton StartIcon="@Icons.Material.Filled.Add" Variant="Variant.Filled" Color="Color.Primary">Add To</MudButton>
+                    </ActivatorContent>
+                    <ChildContent>
+                        <MudMenuItem Label="Collection" Icon="@Icons.Material.Filled.Add" OnClick="@AddToCollection"/>
+                        <MudMenuItem Label="Playlist" Icon="@Icons.Material.Filled.PlaylistAdd" OnClick="@AddToPlaylist"/>
+                        <MudMenuItem Label="Schedule" Icon="@Icons.Material.Filled.Schedule" OnClick="@AddToSchedule"/>
+                    </ChildContent>
+                </MudMenu>
+                @if (_show?.MediaSourceKind is MediaSourceKind.Plex or MediaSourceKind.Jellyfin or MediaSourceKind.Emby)
+                {
+                    <MudMenu>
+                        <ActivatorContent>
+                            <MudButton StartIcon="@Icons.Material.Filled.Search" Variant="Variant.Filled" Color="Color.Primary">Scan</MudButton>
+                        </ActivatorContent>
+                        <ChildContent>
+                            <MudMenuItem Label="Quick Scan" Icon="@Icons.Material.Filled.Search" OnClick="@(_ => ScanShow(false))"/>
+                            <MudMenuItem Label="Deep Scan" Icon="@Icons.Material.Filled.ManageSearch" OnClick="@(_ => ScanShow(true))"/>
+                        </ChildContent>
+                    </MudMenu>
+                }
             </MudStack>
         </MudStack>
     </MudStack>
@@ -272,7 +277,7 @@
                 addResult.Match(
                     Left: error =>
                     {
-                        Snackbar.Add($"Unexpected error adding season to collection: {error.Value}");
+                        Snackbar.Add($"Unexpected error adding season to collection: {error.Value}", Severity.Error);
                         Logger.LogError("Unexpected error adding season to collection: {Error}", error.Value);
                     },
                     Right: _ => Snackbar.Add($"Added {season.Title} to collection {collection.Name}", Severity.Success));
@@ -283,6 +288,20 @@
     private static string GetPosterUrl(string poster)
     {
         return poster.StartsWith("http://") || poster.StartsWith("https://") ? poster : $"artwork/posters/{poster}";
+    }
+
+    private async Task ScanShow(bool deepScan)
+    {
+        bool result = await Mediator.Send(new QueueShowScanByLibraryId(_show.LibraryId, _show.Id, _show.Title, deepScan));
+        if (!result)
+        {
+            Snackbar.Add($"Unable to scan show {_show.Title}", Severity.Error);
+        }
+        else
+        {
+            Snackbar.Add($"Done scanning show {_show.Title}", Severity.Success);
+            StateHasChanged();
+        }
     }
 
 }

@@ -1,5 +1,7 @@
-﻿using ErsatzTV.Core;
+﻿using System.Text.RegularExpressions;
+using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Plex;
@@ -12,10 +14,12 @@ using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Scanner.Core.Plex;
 
-public class PlexTelevisionLibraryScanner :
+public partial class PlexTelevisionLibraryScanner :
     MediaServerTelevisionLibraryScanner<PlexConnectionParameters, PlexLibrary, PlexShow, PlexSeason, PlexEpisode,
         PlexItemEtag>, IPlexTelevisionLibraryScanner
 {
+    private static readonly Regex RatingKeyPattern = RatingKey();
+
     private readonly ILogger<PlexTelevisionLibraryScanner> _logger;
     private readonly IMediaSourceRepository _mediaSourceRepository;
     private readonly IMetadataRepository _metadataRepository;
@@ -79,6 +83,96 @@ public class PlexTelevisionLibraryScanner :
             GetLocalPath,
             deepScan,
             cancellationToken);
+    }
+
+    public async Task<Either<BaseError, Unit>> ScanSingleShow(
+        PlexConnection connection,
+        PlexServerAuthToken token,
+        PlexLibrary library,
+        string showKey,
+        string showTitle,
+        bool deepScan,
+        CancellationToken cancellationToken)
+    {
+        List<PlexPathReplacement> pathReplacements =
+            await _mediaSourceRepository.GetPlexPathReplacements(library.MediaSourceId);
+
+        string GetLocalPath(PlexEpisode episode)
+        {
+            return _plexPathReplacementService.GetReplacementPlexPath(
+                pathReplacements,
+                episode.GetHeadVersion().MediaFiles.Head().Path,
+                false);
+        }
+
+        Match match = RatingKeyPattern.Match(showKey);
+        if (!match.Success)
+        {
+            return BaseError.New($"Unable to parse plex show key {showKey}");
+        }
+
+        Either<BaseError, Option<PlexShow>> showResult = await _plexServerApiClient.GetSingleShow(
+            library,
+            match.Groups[1].Value,
+            connection,
+            token);
+
+        return await showResult.Match(
+            async maybeShow =>
+            {
+                foreach (var show in maybeShow)
+                {
+                    _logger.LogInformation("Found show '{ShowTitle}' with key {ShowKey}, starting targeted scan",
+                        showTitle,
+                        show.Key);
+
+                    return await ScanSingleShowInternal(
+                        _plexTelevisionRepository,
+                        new PlexConnectionParameters(connection, token),
+                        library,
+                        show,
+                        GetLocalPath,
+                        deepScan,
+                        cancellationToken);
+                }
+
+                _logger.LogWarning("No show found with key {ShowKey} in library {LibraryName}", showKey, library.Name);
+
+                return Right<BaseError, Unit>(Unit.Default);
+            },
+            error => Task.FromResult<Either<BaseError, Unit>>(error));
+    }
+
+    private async Task<Either<BaseError, Unit>> ScanSingleShowInternal(
+        IMediaServerTelevisionRepository<PlexLibrary, PlexShow, PlexSeason, PlexEpisode, PlexItemEtag> televisionRepository,
+        PlexConnectionParameters connectionParameters,
+        PlexLibrary library,
+        PlexShow targetShow,
+        Func<PlexEpisode, string> getLocalPath,
+        bool deepScan,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            async IAsyncEnumerable<Tuple<PlexShow, int>> GetSingleShow()
+            {
+                yield return new Tuple<PlexShow, int>(targetShow, 1);
+                await Task.CompletedTask;
+            }
+
+            return await ScanLibraryWithoutCleanup(
+                televisionRepository,
+                connectionParameters,
+                library,
+                getLocalPath,
+                GetSingleShow(),
+                deepScan,
+                cancellationToken);
+        }
+        catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
+        {
+            return new ScanCanceled();
+        }
     }
 
     // TODO: add or remove metadata?
@@ -652,4 +746,7 @@ public class PlexTelevisionLibraryScanner :
 
         return false;
     }
+
+    [GeneratedRegex(@".*\/(\d+)\/.*")]
+    private static partial Regex RatingKey();
 }

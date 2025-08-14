@@ -1,5 +1,6 @@
 ﻿using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Jellyfin;
 using ErsatzTV.Core.Interfaces.Metadata;
@@ -183,4 +184,88 @@ public class JellyfinTelevisionLibraryScanner : MediaServerTelevisionLibraryScan
         MediaItemScanResult<JellyfinEpisode> result,
         EpisodeMetadata fullMetadata) =>
         Task.FromResult<Either<BaseError, MediaItemScanResult<JellyfinEpisode>>>(result);
+
+    public async Task<Either<BaseError, Unit>> ScanSingleShow(
+        string address,
+        string apiKey,
+        JellyfinLibrary library,
+        string showId,
+        string showTitle,
+        bool deepScan,
+        CancellationToken cancellationToken)
+    {
+        List<JellyfinPathReplacement> pathReplacements =
+            await _mediaSourceRepository.GetJellyfinPathReplacements(library.MediaSourceId);
+
+        string GetLocalPath(JellyfinEpisode episode)
+        {
+            return _pathReplacementService.GetReplacementJellyfinPath(
+                pathReplacements,
+                episode.GetHeadVersion().MediaFiles.Head().Path,
+                false);
+        }
+
+        // Search for the specific show
+        Either<BaseError, Option<JellyfinShow>> searchResult = await _jellyfinApiClient.GetSingleShow(
+            address,
+            apiKey,
+            library,
+            showId);
+
+        return await searchResult.Match(
+            async maybeShow =>
+            {
+                foreach (var show in maybeShow)
+                {
+                    _logger.LogInformation("Found show '{ShowTitle}' with id {ShowId}, starting targeted scan",
+                        showTitle, show.ItemId);
+
+                    return await ScanSingleShowInternal(
+                        _televisionRepository,
+                        new JellyfinConnectionParameters(address, apiKey, library.MediaSourceId),
+                        library,
+                        show,
+                        GetLocalPath,
+                        deepScan,
+                        cancellationToken);
+                }
+
+                _logger.LogWarning("No show found with id {ShowId} in library {LibraryName}", showId, library.Name);
+
+                return Right<BaseError, Unit>(Unit.Default);
+            },
+            error => Task.FromResult<Either<BaseError, Unit>>(error));
+    }
+
+    private async Task<Either<BaseError, Unit>> ScanSingleShowInternal(
+        IJellyfinTelevisionRepository televisionRepository,
+        JellyfinConnectionParameters connectionParameters,
+        JellyfinLibrary library,
+        JellyfinShow targetShow,
+        Func<JellyfinEpisode, string> getLocalPath,
+        bool deepScan,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            async IAsyncEnumerable<Tuple<JellyfinShow, int>> GetSingleShow()
+            {
+                yield return new Tuple<JellyfinShow, int>(targetShow, 1);
+                await Task.CompletedTask;
+            }
+
+            return await ScanLibraryWithoutCleanup(
+                televisionRepository,
+                connectionParameters,
+                library,
+                getLocalPath,
+                GetSingleShow(),
+                deepScan,
+                cancellationToken);
+        }
+        catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
+        {
+            return new ScanCanceled();
+        }
+    }
 }

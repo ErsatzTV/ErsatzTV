@@ -493,6 +493,27 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
             new { library.LastNetworksScan, library.Id });
     }
 
+    public async Task<Option<PlexShowTitleKeyResult>> GetShowTitleKey(int libraryId, int showId)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+
+        Option<PlexShow> maybeShow = await dbContext.PlexShows
+            .Where(s => s.Id == showId)
+            .Where(s => s.LibraryPath.LibraryId == libraryId)
+            .Include(s => s.ShowMetadata)
+            .FirstOrDefaultAsync()
+            .Map(Optional);
+
+        foreach (var show in maybeShow)
+        {
+            return new PlexShowTitleKeyResult(
+                await show.ShowMetadata.HeadOrNone().Map(sm => sm.Title).IfNoneAsync("Unknown Show"),
+                show.Key);
+        }
+
+        return Option<PlexShowTitleKeyResult>.None;
+    }
+
     private static async Task<Either<BaseError, MediaItemScanResult<PlexShow>>> AddShow(
         TvContext dbContext,
         PlexLibrary library,

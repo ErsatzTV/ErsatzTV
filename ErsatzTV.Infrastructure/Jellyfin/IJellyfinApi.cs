@@ -58,7 +58,9 @@ public interface IJellyfinApi
         [Query]
         int startIndex = 0,
         [Query]
-        int limit = 0);
+        int limit = 0,
+        [Query]
+        string ids = null);
 
     [Get("/Items?sortOrder=Ascending&sortBy=SortName")]
     public Task<JellyfinLibraryItemsResponse> GetSeasonLibraryItems(
@@ -133,4 +135,17 @@ public interface IJellyfinApi
         [Header("X-Emby-Token")]
         string apiKey,
         string itemId);
+
+    [Get("/Search/Hints")]
+    public Task<JellyfinSearchHintsResponse> SearchHints(
+        [Header("X-Emby-Token")]
+        string apiKey,
+        [Query]
+        string searchTerm,
+        [Query]
+        string includeItemTypes = "Series",
+        [Query]
+        string parentId = null,
+        [Query]
+        int limit = 20);
 }

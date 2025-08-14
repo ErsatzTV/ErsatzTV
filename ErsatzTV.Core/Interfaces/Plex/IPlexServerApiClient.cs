@@ -88,4 +88,16 @@ public interface IPlexServerApiClient
         PlexConnection connection,
         PlexServerAuthToken token,
         PlexTag tag);
+
+    Task<Either<BaseError, List<PlexShow>>> SearchShowsByTitle(
+        PlexLibrary library,
+        string showTitle,
+        PlexConnection connection,
+        PlexServerAuthToken token);
+
+    Task<Either<BaseError, Option<PlexShow>>> GetSingleShow(
+        PlexLibrary library,
+        string showKey,
+        PlexConnection connection,
+        PlexServerAuthToken token);
 }

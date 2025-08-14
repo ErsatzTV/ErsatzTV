@@ -51,7 +51,9 @@ public interface IEmbyApi
         [Query]
         int startIndex = 0,
         [Query]
-        int limit = 0);
+        int limit = 0,
+        [Query]
+        string ids = null);
 
     [Get("/Shows/{parentId}/Seasons?sortOrder=Ascending&sortBy=SortName")]
     public Task<EmbyLibraryItemsResponse> GetSeasonLibraryItems(
@@ -122,4 +124,17 @@ public interface IEmbyApi
         [Header("X-Emby-Token")]
         string apiKey,
         string itemId);
+
+    [Get("/Search/Hints")]
+    public Task<EmbySearchHintsResponse> SearchHints(
+        [Header("X-Emby-Token")]
+        string apiKey,
+        [Query]
+        string searchTerm,
+        [Query]
+        string includeItemTypes = "Series",
+        [Query]
+        string parentId = null,
+        [Query]
+        int limit = 20);
 }

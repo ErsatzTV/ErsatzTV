@@ -420,6 +420,27 @@ public class EmbyTelevisionRepository : IEmbyTelevisionRepository
         return None;
     }
 
+    public async Task<Option<EmbyShowTitleItemIdResult>> GetShowTitleItemId(int libraryId, int showId)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+
+        Option<EmbyShow> maybeShow = await dbContext.EmbyShows
+            .Where(s => s.Id == showId)
+            .Where(s => s.LibraryPath.LibraryId == libraryId)
+            .Include(s => s.ShowMetadata)
+            .FirstOrDefaultAsync()
+            .Map(Optional);
+
+        foreach (var show in maybeShow)
+        {
+            return new EmbyShowTitleItemIdResult(
+                await show.ShowMetadata.HeadOrNone().Map(sm => sm.Title).IfNoneAsync("Unknown Show"),
+                show.ItemId);
+        }
+
+        return Option<EmbyShowTitleItemIdResult>.None;
+    }
+
     private static async Task UpdateShow(TvContext dbContext, EmbyShow existing, EmbyShow incoming)
     {
         // library path is used for search indexing later
