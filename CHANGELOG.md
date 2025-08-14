@@ -67,7 +67,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - When value is `true`, will add named watermark to list of active watermarks
   - When value is `false` and `name` is specified, will remove named watermark from list of active watermarks
   - When value is `false` and `name` is not specified, will clear all active watermarks
-- Use consistent UI sorting and validation for
+- Use consistent UI sorting and validation, and fix renaming errors for
   - Block groups, blocks
   - Template groups, templates
   - Deco groups, decos

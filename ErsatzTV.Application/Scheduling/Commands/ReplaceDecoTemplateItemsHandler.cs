@@ -63,7 +63,8 @@ public class ReplaceDecoTemplateItemsHandler(IDbContextFactory<TvContext> dbCont
     private static Task<Validation<BaseError, DecoTemplate>> Validate(
         TvContext dbContext,
         ReplaceDecoTemplateItems request) =>
-        DecoTemplateMustExist(dbContext, request.DecoTemplateId);
+        DecoTemplateMustExist(dbContext, request.DecoTemplateId)
+            .BindT(decoTemplate => DecoTemplateNameMustBeValid(dbContext, decoTemplate, request));
 
     private static Task<Validation<BaseError, DecoTemplate>> DecoTemplateMustExist(
         TvContext dbContext,
@@ -72,4 +73,26 @@ public class ReplaceDecoTemplateItemsHandler(IDbContextFactory<TvContext> dbCont
             .Include(b => b.Items)
             .SelectOneAsync(b => b.Id, b => b.Id == decoTemplateId)
             .Map(o => o.ToValidation<BaseError>("[DecoTemplateId] does not exist."));
+
+    private static async Task<Validation<BaseError, DecoTemplate>> DecoTemplateNameMustBeValid(
+        TvContext dbContext,
+        DecoTemplate decoTemplate,
+        ReplaceDecoTemplateItems request)
+    {
+        if (request.Name.Length > 50)
+        {
+            return BaseError.New($"Deco template name \"{request.Name}\" is invalid");
+        }
+
+        Option<DecoTemplate> maybeExisting = await dbContext.DecoTemplates
+            .AsNoTracking()
+            .FirstOrDefaultAsync(d =>
+                d.Id != request.DecoTemplateId && d.DecoTemplateGroupId == request.DecoTemplateGroupId &&
+                d.Name == request.Name)
+            .Map(Optional);
+
+        return maybeExisting.IsSome
+            ? BaseError.New($"A deco template named \"{request.Name}\" already exists in that deco template group")
+            : Success<BaseError, DecoTemplate>(decoTemplate);
+    }
 }
