@@ -46,6 +46,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Add support for external chapter files next to video files
   - Currently supports Matroska Chapter XML format
     - Chapter files have .xml or .chapters extension
+- Add targeted (single-show) library scanning
+  - Supports quick and deep scans
+  - Can be triggered from the `Scan` button on show pages
+  - Can be triggered by API call to `/api/libraries/{library-id}/scan-show`
 
 ### Fix
 - Fix database operations that were slowing down playout builds
