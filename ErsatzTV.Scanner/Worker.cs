@@ -107,9 +107,14 @@ public class Worker : BackgroundService
             Description = "The title of the TV show to scan"
         };
 
+        var showIdArgument = new Argument<int>("show-id")
+        {
+            Description = "The id of the TV show to scan"
+        };
+
         var scanPlexShowCommand = new Command("scan-plex-show", "Scan a specific TV show in a Plex library");
         scanPlexShowCommand.Arguments.Add(libraryIdArgument);
-        scanPlexShowCommand.Arguments.Add(showTitleArgument);
+        scanPlexShowCommand.Arguments.Add(showIdArgument);
         scanPlexShowCommand.Options.Add(deepOption);
 
         var scanEmbyShowCommand = new Command("scan-emby-show", "Scan a specific TV show in an Emby library");
@@ -267,16 +272,12 @@ public class Worker : BackgroundService
             {
                 bool deep = parseResult.GetValue(deepOption);
                 int libraryId = parseResult.GetValue(libraryIdArgument);
-                string? showTitle = parseResult.GetValue(showTitleArgument);
-                if (string.IsNullOrWhiteSpace(showTitle))
-                {
-                    return;
-                }
+                int showId = parseResult.GetValue(showIdArgument);
 
                 using IServiceScope scope = _serviceScopeFactory.CreateScope();
                 IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
-                var scan = new SynchronizePlexShowByTitle(libraryId, showTitle, deep);
+                var scan = new SynchronizePlexShowById(libraryId, showId, deep);
                 await mediator.Send(scan, token);
             }
         });

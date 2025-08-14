@@ -94,4 +94,10 @@ public interface IPlexServerApiClient
         string showTitle,
         PlexConnection connection,
         PlexServerAuthToken token);
+
+    Task<Either<BaseError, Option<PlexShow>>> GetSingleShow(
+        PlexLibrary library,
+        string showKey,
+        PlexConnection connection,
+        PlexServerAuthToken token);
 }

@@ -77,8 +77,20 @@ public class TelevisionRepository : ITelevisionRepository
             .ThenInclude(a => a.Artwork)
             .Include(s => s.ShowMetadata)
             .ThenInclude(sm => sm.Guids)
-            .OrderBy(s => s.Id)
-            .SingleOrDefaultAsync()
+            .SelectOneAsync(s => s.Id, s => s.Id == showId);
+    }
+
+    public async Task<Option<int>> GetShowIdByTitle(int libraryId, string title)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.ShowMetadata
+            .AsNoTracking()
+            .Where(sm => sm.Show.LibraryPath.LibraryId == libraryId)
+            .Where(sm => EF.Functions.Like(
+                EF.Functions.Collate(sm.Title, TvContext.CaseInsensitiveCollation),
+                $"%{title}%"))
+            .Map(sm => sm.ShowId)
+            .FirstOrDefaultAsync()
             .Map(Optional);
     }
 

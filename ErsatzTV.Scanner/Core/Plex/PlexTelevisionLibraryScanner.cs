@@ -1,4 +1,5 @@
-﻿using ErsatzTV.Core;
+﻿using System.Text.RegularExpressions;
+using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Extensions;
@@ -13,10 +14,12 @@ using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Scanner.Core.Plex;
 
-public class PlexTelevisionLibraryScanner :
+public partial class PlexTelevisionLibraryScanner :
     MediaServerTelevisionLibraryScanner<PlexConnectionParameters, PlexLibrary, PlexShow, PlexSeason, PlexEpisode,
         PlexItemEtag>, IPlexTelevisionLibraryScanner
 {
+    private static readonly Regex RatingKeyPattern = RatingKey();
+
     private readonly ILogger<PlexTelevisionLibraryScanner> _logger;
     private readonly IMediaSourceRepository _mediaSourceRepository;
     private readonly IMetadataRepository _metadataRepository;
@@ -86,6 +89,7 @@ public class PlexTelevisionLibraryScanner :
         PlexConnection connection,
         PlexServerAuthToken token,
         PlexLibrary library,
+        string showKey,
         string showTitle,
         bool deepScan,
         CancellationToken cancellationToken)
@@ -101,40 +105,42 @@ public class PlexTelevisionLibraryScanner :
                 false);
         }
 
-        Either<BaseError, List<PlexShow>> searchResult = await _plexServerApiClient.SearchShowsByTitle(
+        Match match = RatingKeyPattern.Match(showKey);
+        if (!match.Success)
+        {
+            return BaseError.New($"Unable to parse plex show key {showKey}");
+        }
+
+        Either<BaseError, Option<PlexShow>> showResult = await _plexServerApiClient.GetSingleShow(
             library,
-            showTitle,
+            match.Groups[1].Value,
             connection,
             token);
 
-        return await searchResult.Match(
-            async shows =>
+        return await showResult.Match(
+            async maybeShow =>
             {
-                if (shows.Count == 0)
+                foreach (var show in maybeShow)
                 {
-                    _logger.LogWarning("No show found with title '{ShowTitle}' in library {LibraryName}", 
-                        showTitle, library.Name);
-                    return Right<BaseError, Unit>(Unit.Default);
+                    _logger.LogInformation("Found show '{ShowTitle}' with key {ShowKey}, starting targeted scan",
+                        showTitle,
+                        show.Key);
+
+                    return await ScanSingleShowInternal(
+                        _plexTelevisionRepository,
+                        new PlexConnectionParameters(connection, token),
+                        library,
+                        show,
+                        GetLocalPath,
+                        deepScan,
+                        cancellationToken);
                 }
 
-                if (shows.Count > 1)
-                {
-                    _logger.LogWarning("Multiple shows found with title '{ShowTitle}' in library {LibraryName}, scanning first match", 
-                        showTitle, library.Name);
-                }
+                _logger.LogWarning("No show found with key {ShowKey} in library {LibraryName}",
+                    showKey,
+                    library.Name);
 
-                PlexShow show = shows.First();
-                _logger.LogInformation("Found show '{ShowTitle}' with key {ShowKey}, starting targeted scan", 
-                    showTitle, show.Key);
-
-                return await ScanSingleShowInternal(
-                    _plexTelevisionRepository,
-                    new PlexConnectionParameters(connection, token),
-                    library,
-                    show,
-                    GetLocalPath,
-                    deepScan,
-                    cancellationToken);
+                return Right<BaseError, Unit>(Unit.Default);
             },
             error => Task.FromResult<Either<BaseError, Unit>>(error));
     }
@@ -742,4 +748,7 @@ public class PlexTelevisionLibraryScanner :
 
         return false;
     }
+
+    [GeneratedRegex(@".*\/(\d+)\/.*")]
+    private static partial Regex RatingKey();
 }

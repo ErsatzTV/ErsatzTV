@@ -292,7 +292,7 @@
 
     private async Task ScanShow(bool deepScan)
     {
-        bool result = await Mediator.Send(new QueueShowScanByLibraryId(_show.LibraryId, _show.Title, deepScan));
+        bool result = await Mediator.Send(new QueueShowScanByLibraryId(_show.LibraryId, _show.Id, _show.Title, deepScan));
         if (!result)
         {
             Snackbar.Add($"Unable to scan show {_show.Title}", Severity.Error);

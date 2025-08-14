@@ -7,33 +7,30 @@ using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Scanner.Application.Plex;
 
-public class SynchronizePlexShowByTitleHandler : IRequestHandler<SynchronizePlexShowByTitle, Either<BaseError, string>>
+public class SynchronizePlexShowByIdHandler : IRequestHandler<SynchronizePlexShowById, Either<BaseError, string>>
 {
-    private readonly ILibraryRepository _libraryRepository;
-    private readonly ILogger<SynchronizePlexShowByTitleHandler> _logger;
+    private readonly ILogger<SynchronizePlexShowByIdHandler> _logger;
+    private readonly IPlexTelevisionRepository _plexTelevisionRepository;
     private readonly IMediaSourceRepository _mediaSourceRepository;
-    private readonly IMediator _mediator;
     private readonly IPlexSecretStore _plexSecretStore;
     private readonly IPlexTelevisionLibraryScanner _plexTelevisionLibraryScanner;
 
-    public SynchronizePlexShowByTitleHandler(
-        IMediator mediator,
+    public SynchronizePlexShowByIdHandler(
+        IPlexTelevisionRepository plexTelevisionRepository,
         IMediaSourceRepository mediaSourceRepository,
         IPlexSecretStore plexSecretStore,
         IPlexTelevisionLibraryScanner plexTelevisionLibraryScanner,
-        ILibraryRepository libraryRepository,
-        ILogger<SynchronizePlexShowByTitleHandler> logger)
+        ILogger<SynchronizePlexShowByIdHandler> logger)
     {
-        _mediator = mediator;
+        _plexTelevisionRepository = plexTelevisionRepository;
         _mediaSourceRepository = mediaSourceRepository;
         _plexSecretStore = plexSecretStore;
         _plexTelevisionLibraryScanner = plexTelevisionLibraryScanner;
-        _libraryRepository = libraryRepository;
         _logger = logger;
     }
 
     public async Task<Either<BaseError, string>> Handle(
-        SynchronizePlexShowByTitle request,
+        SynchronizePlexShowById request,
         CancellationToken cancellationToken)
     {
         Validation<BaseError, RequestParameters> validation = await Validate(request);
@@ -60,6 +57,7 @@ public class SynchronizePlexShowByTitleHandler : IRequestHandler<SynchronizePlex
             parameters.ConnectionParameters.ActiveConnection,
             parameters.ConnectionParameters.PlexServerAuthToken,
             parameters.Library,
+            parameters.ShowKey,
             parameters.ShowTitle,
             parameters.DeepScan,
             cancellationToken);
@@ -72,24 +70,25 @@ public class SynchronizePlexShowByTitleHandler : IRequestHandler<SynchronizePlex
         return result.Map(_ => $"Show '{parameters.ShowTitle}' in {parameters.Library.Name}");
     }
 
-    private async Task<Validation<BaseError, RequestParameters>> Validate(SynchronizePlexShowByTitle request) =>
-        (await ValidateConnection(request), await PlexLibraryMustExist(request))
-        .Apply((connectionParameters, plexLibrary) =>
+    private async Task<Validation<BaseError, RequestParameters>> Validate(SynchronizePlexShowById request) =>
+        (await ValidateConnection(request), await PlexLibraryMustExist(request), await PlexShowMustExist(request))
+        .Apply((connectionParameters, plexLibrary, titleKey) =>
             new RequestParameters(
                 connectionParameters,
                 plexLibrary,
-                request.ShowTitle,
+                titleKey.Key,
+                titleKey.Title,
                 request.DeepScan
             ));
 
     private Task<Validation<BaseError, ConnectionParameters>> ValidateConnection(
-        SynchronizePlexShowByTitle request) =>
+        SynchronizePlexShowById request) =>
         PlexMediaSourceMustExist(request)
             .BindT(MediaSourceMustHaveActiveConnection)
             .BindT(MediaSourceMustHaveToken);
 
     private Task<Validation<BaseError, PlexMediaSource>> PlexMediaSourceMustExist(
-        SynchronizePlexShowByTitle request) =>
+        SynchronizePlexShowById request) =>
         _mediaSourceRepository.GetPlexByLibraryId(request.PlexLibraryId)
             .Map(v => v.ToValidation<BaseError>(
                 $"Plex media source for library {request.PlexLibraryId} does not exist."));
@@ -113,13 +112,19 @@ public class SynchronizePlexShowByTitleHandler : IRequestHandler<SynchronizePlex
     }
 
     private Task<Validation<BaseError, PlexLibrary>> PlexLibraryMustExist(
-        SynchronizePlexShowByTitle request) =>
+        SynchronizePlexShowById request) =>
         _mediaSourceRepository.GetPlexLibrary(request.PlexLibraryId)
             .Map(v => v.ToValidation<BaseError>($"Plex library {request.PlexLibraryId} does not exist."));
+
+    private Task<Validation<BaseError, PlexShowTitleKeyResult>> PlexShowMustExist(
+        SynchronizePlexShowById request) =>
+        _plexTelevisionRepository.GetShowTitleKey(request.PlexLibraryId, request.ShowId)
+            .Map(v => v.ToValidation<BaseError>($"Plex show {request.ShowId} does not exist in library {request.PlexLibraryId}."));
 
     private record RequestParameters(
         ConnectionParameters ConnectionParameters,
         PlexLibrary Library,
+        string ShowKey,
         string ShowTitle,
         bool DeepScan);
 

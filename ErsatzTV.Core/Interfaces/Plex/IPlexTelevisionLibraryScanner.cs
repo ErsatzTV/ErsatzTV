@@ -16,6 +16,7 @@ public interface IPlexTelevisionLibraryScanner
         PlexConnection connection,
         PlexServerAuthToken token,
         PlexLibrary library,
+        string showKey,
         string showTitle,
         bool deepScan,
         CancellationToken cancellationToken);

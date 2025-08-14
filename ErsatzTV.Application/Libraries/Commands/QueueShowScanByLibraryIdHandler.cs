@@ -57,7 +57,7 @@ public class QueueShowScanByLibraryIdHandler(
                 {
                     case PlexLibrary:
                         var plexResult = await mediator.Send(
-                            new SynchronizePlexShowByTitle(library.Id, request.ShowTitle, request.DeepScan),
+                            new SynchronizePlexShowById(library.Id, request.ShowId, request.ShowTitle, request.DeepScan),
                             cancellationToken);
                         return plexResult.IsRight;
                     case JellyfinLibrary:

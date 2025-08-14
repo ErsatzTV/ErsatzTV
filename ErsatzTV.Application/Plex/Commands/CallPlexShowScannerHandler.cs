@@ -10,8 +10,8 @@ using System.Threading.Channels;
 
 namespace ErsatzTV.Application.Plex;
 
-public class CallPlexShowScannerHandler : CallLibraryScannerHandler<ISynchronizePlexShowByTitle>,
-    IRequestHandler<SynchronizePlexShowByTitle, Either<BaseError, string>>
+public class CallPlexShowScannerHandler : CallLibraryScannerHandler<SynchronizePlexShowById>,
+    IRequestHandler<SynchronizePlexShowById, Either<BaseError, string>>
 {
     public CallPlexShowScannerHandler(
         IDbContextFactory<TvContext> dbContextFactory,
@@ -23,12 +23,12 @@ public class CallPlexShowScannerHandler : CallLibraryScannerHandler<ISynchronize
     {
     }
 
-    Task<Either<BaseError, string>> IRequestHandler<SynchronizePlexShowByTitle, Either<BaseError, string>>.Handle(
-        SynchronizePlexShowByTitle request,
+    Task<Either<BaseError, string>> IRequestHandler<SynchronizePlexShowById, Either<BaseError, string>>.Handle(
+        SynchronizePlexShowById request,
         CancellationToken cancellationToken) => Handle(request, cancellationToken);
 
     private async Task<Either<BaseError, string>> Handle(
-        ISynchronizePlexShowByTitle request,
+        SynchronizePlexShowById request,
         CancellationToken cancellationToken)
     {
         Validation<BaseError, string> validation = await Validate(request);
@@ -47,14 +47,14 @@ public class CallPlexShowScannerHandler : CallLibraryScannerHandler<ISynchronize
 
     private async Task<Either<BaseError, string>> PerformScan(
         string scanner,
-        ISynchronizePlexShowByTitle request,
+        SynchronizePlexShowById request,
         CancellationToken cancellationToken)
     {
         var arguments = new List<string>
         {
             "scan-plex-show",
             request.PlexLibraryId.ToString(CultureInfo.InvariantCulture),
-            request.ShowTitle
+            request.ShowId.ToString(CultureInfo.InvariantCulture)
         };
 
         if (request.DeepScan)
@@ -67,7 +67,7 @@ public class CallPlexShowScannerHandler : CallLibraryScannerHandler<ISynchronize
 
     protected override Task<DateTimeOffset> GetLastScan(
         TvContext dbContext,
-        ISynchronizePlexShowByTitle request)
+        SynchronizePlexShowById request)
     {
         return Task.FromResult(DateTimeOffset.MinValue);
     }
@@ -75,7 +75,7 @@ public class CallPlexShowScannerHandler : CallLibraryScannerHandler<ISynchronize
     protected override bool ScanIsRequired(
         DateTimeOffset lastScan,
         int libraryRefreshInterval,
-        ISynchronizePlexShowByTitle request)
+        SynchronizePlexShowById request)
     {
         return true;
     }

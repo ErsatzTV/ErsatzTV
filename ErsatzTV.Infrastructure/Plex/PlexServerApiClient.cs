@@ -425,6 +425,26 @@ public class PlexServerApiClient : IPlexServerApiClient
         }
     }
 
+    public async Task<Either<BaseError, Option<PlexShow>>> GetSingleShow(
+        PlexLibrary library,
+        string showKey,
+        PlexConnection connection,
+        PlexServerAuthToken token)
+    {
+        try
+        {
+            IPlexServerApi service = XmlServiceFor(connection.Uri);
+            return await service.GetDirectoryMetadata(showKey, token.AuthToken)
+                .Map(Optional)
+                .MapT(response => Some(ProjectToShow(response.Metadata, library.MediaSourceId)))
+                .Map(o => o.ToEither<BaseError>($"Unable to locate show with key {showKey}"));
+        }
+        catch (Exception ex)
+        {
+            return BaseError.New(ex.ToString());
+        }
+    }
+
     public async Task<Either<BaseError, List<PlexShow>>> SearchShowsByTitle(
         PlexLibrary library,
         string showTitle,
