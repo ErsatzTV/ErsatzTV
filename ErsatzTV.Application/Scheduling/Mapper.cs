@@ -83,6 +83,7 @@ internal static class Mapper
         new(
             deco.Id,
             deco.DecoGroupId,
+            deco.DecoGroup.Name,
             deco.Name,
             deco.WatermarkMode,
             deco.DecoWatermarks.Map(wm => Watermarks.Mapper.ProjectToViewModel(wm.Watermark)).ToList(),

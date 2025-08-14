@@ -7,6 +7,7 @@ namespace ErsatzTV.Application.Scheduling;
 public record DecoViewModel(
     int Id,
     int DecoGroupId,
+    string DecoGroupName,
     string Name,
     DecoMode WatermarkMode,
     List<WatermarkViewModel> Watermarks,

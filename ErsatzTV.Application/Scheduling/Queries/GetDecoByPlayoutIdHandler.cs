@@ -13,6 +13,8 @@ public class GetDecoByPlayoutIdHandler(IDbContextFactory<TvContext> dbContextFac
         return await dbContext.Playouts
             .AsNoTracking()
             .Include(p => p.Deco)
+            .ThenInclude(d => d.DecoGroup)
+            .Include(p => p.Deco)
             .ThenInclude(d => d.DecoWatermarks)
             .ThenInclude(d => d.Watermark)
             .SelectOneAsync(p => p.Id, p => p.Id == request.PlayoutId && p.DecoId != null)

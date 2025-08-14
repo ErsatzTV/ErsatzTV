@@ -24,7 +24,13 @@
             <MudDivider Class="mb-6"/>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                 <div class="d-flex">
-                    <MudText>Name</MudText>
+                    <MudText>Deco Group Name</MudText>
+                </div>
+                <MudTextField @bind-Value="_deco.GroupName" Disabled="true"/>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Deco Name</MudText>
                 </div>
                 <MudTextField @bind-Value="_deco.Name" For="@(() => _deco.Name)"/>
             </MudStack>
@@ -390,6 +396,7 @@
             {
                 Name = deco.Name,
                 DecoGroupId = deco.DecoGroupId,
+                GroupName = deco.DecoGroupName,
                 WatermarkMode = deco.WatermarkMode,
                 Watermarks = deco.Watermarks,
                 UseWatermarkDuringFiller = deco.UseWatermarkDuringFiller,

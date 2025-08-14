@@ -9,6 +9,7 @@ namespace ErsatzTV.ViewModels;
 public class DecoEditViewModel
 {
     public int DecoGroupId { get; set; }
+    public string GroupName { get; set; }
     public string Name { get; set; }
     public DecoMode WatermarkMode { get; set; }
     public IEnumerable<WatermarkViewModel> Watermarks { get; set; }
