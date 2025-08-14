@@ -19,7 +19,13 @@
             <MudDivider Class="mb-6"/>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                 <div class="d-flex">
-                    <MudText>Name</MudText>
+                    <MudText>Template Group Name</MudText>
+                </div>
+                <MudTextField @bind-Value="_template.GroupName" Disabled="true"/>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Template Name</MudText>
                 </div>
                 <MudTextField @bind-Value="_template.Name" For="@(() => _template.Name)"/>
             </MudStack>
@@ -150,7 +156,12 @@
 
         foreach (TemplateViewModel template in maybeTemplate)
         {
-            _template = new TemplateItemsEditViewModel { Name = template.Name };
+            _template = new TemplateItemsEditViewModel
+            {
+                GroupId = template.TemplateGroupId,
+                GroupName = template.GroupName,
+                Name = template.Name
+            };
         }
 
         Option<IEnumerable<TemplateItemViewModel>> maybeResults = await Mediator.Send(new GetTemplateItems(Id), _cts.Token);
@@ -271,7 +282,7 @@
     {
         var items = _template.Items.Map(item => new ReplaceTemplateItem(item.BlockId, item.Start.TimeOfDay)).ToList();
 
-        Seq<BaseError> errorMessages = await Mediator.Send(new ReplaceTemplateItems(Id, _template.Name, items), _cts.Token)
+        Seq<BaseError> errorMessages = await Mediator.Send(new ReplaceTemplateItems(_template.GroupId, Id, _template.Name, items), _cts.Token)
             .Map(e => e.LeftToSeq());
 
         errorMessages.HeadOrNone().Match(

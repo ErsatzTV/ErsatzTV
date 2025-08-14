@@ -125,6 +125,7 @@
             foreach (TemplateGroupViewModel templateGroup in result.RightToSeq())
             {
                 _treeItems.Add(new TreeItemData<TemplateTreeItemViewModel> { Value = new TemplateTreeItemViewModel(templateGroup) });
+                _treeItems.Sort((x, y) => string.Compare(x.Value?.Text, y.Value?.Text, StringComparison.CurrentCulture));
                 _templateGroupName = null;
 
                 _templateGroups = await Mediator.Send(new GetAllTemplateGroups(), _cts.Token);
@@ -150,6 +151,7 @@
                 foreach (TemplateTreeItemViewModel item in _treeItems.Map(i => i.Value).Where(item => item.TemplateGroupId == _selectedTemplateGroup.Id))
                 {
                     item.TreeItems.Add(new TreeItemData<TemplateTreeItemViewModel> { Value = new TemplateTreeItemViewModel(template) });
+                    item.TreeItems.Sort((x, y) => string.Compare(x.Value?.Text, y.Value?.Text, StringComparison.CurrentCulture));
                 }
 
                 _templateName = null;

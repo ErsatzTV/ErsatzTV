@@ -11,6 +11,8 @@ public class GetTemplateByIdHandler(IDbContextFactory<TvContext> dbContextFactor
     {
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await dbContext.Templates
+            .AsNoTracking()
+            .Include(t => t.TemplateGroup)
             .SelectOneAsync(b => b.Id, b => b.Id == request.TemplateId)
             .MapT(Mapper.ProjectToViewModel);
     }

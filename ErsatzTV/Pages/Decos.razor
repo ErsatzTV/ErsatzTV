@@ -125,6 +125,7 @@
             foreach (DecoGroupViewModel decoGroup in result.RightToSeq())
             {
                 _treeItems.Add(new TreeItemData<DecoTreeItemViewModel> { Value = new DecoTreeItemViewModel(decoGroup) });
+                _treeItems.Sort((x, y) => string.Compare(x.Value?.Text, y.Value?.Text, StringComparison.CurrentCulture));
                 _decoGroupName = null;
 
                 _decoGroups = await Mediator.Send(new GetAllDecoGroups(), _cts.Token);
@@ -150,6 +151,7 @@
                 foreach (DecoTreeItemViewModel item in _treeItems.Map(i => i.Value).Where(item => item.DecoGroupId == _selectedDecoGroup.Id))
                 {
                     item.TreeItems.Add(new TreeItemData<DecoTreeItemViewModel> { Value = new DecoTreeItemViewModel(deco) });
+                    item.TreeItems.Sort((x, y) => string.Compare(x.Value?.Text, y.Value?.Text, StringComparison.CurrentCulture));
                 }
 
                 _decoName = null;

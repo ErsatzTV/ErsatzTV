@@ -19,7 +19,13 @@
             <MudDivider Class="mb-6"/>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                 <div class="d-flex">
-                    <MudText>Name</MudText>
+                    <MudText>Deco Template Group Name</MudText>
+                </div>
+                <MudTextField @bind-Value="_decoTemplate.GroupName" Disabled="true"/>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Deco Template Name</MudText>
                 </div>
                 <MudTextField @bind-Value="_decoTemplate.Name" For="@(() => _decoTemplate.Name)"/>
             </MudStack>
@@ -178,7 +184,12 @@
 
         foreach (DecoTemplateViewModel template in maybeDecoTemplate)
         {
-            _decoTemplate = new DecoTemplateItemsEditViewModel { Name = template.Name };
+            _decoTemplate = new DecoTemplateItemsEditViewModel
+            {
+                GroupId = template.DecoTemplateGroupId,
+                GroupName = template.GroupName,
+                Name = template.Name
+            };
         }
 
         Option<IEnumerable<DecoTemplateItemViewModel>> maybeResults = await Mediator.Send(new GetDecoTemplateItems(Id), _cts.Token);
@@ -305,7 +316,7 @@
 
         var items = _decoTemplate.Items.Map(item => new ReplaceDecoTemplateItem(item.DecoId, item.Start.TimeOfDay, item.End!.Value.TimeOfDay)).ToList();
 
-        Seq<BaseError> errorMessages = await Mediator.Send(new ReplaceDecoTemplateItems(Id, _decoTemplate.Name, items), _cts.Token)
+        Seq<BaseError> errorMessages = await Mediator.Send(new ReplaceDecoTemplateItems(Id, _decoTemplate.GroupId, _decoTemplate.Name, items), _cts.Token)
             .Map(e => e.LeftToSeq());
 
         errorMessages.HeadOrNone().Match(

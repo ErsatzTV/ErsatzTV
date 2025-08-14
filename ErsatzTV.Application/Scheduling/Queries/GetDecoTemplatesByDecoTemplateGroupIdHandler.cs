@@ -15,7 +15,8 @@ public class GetDecoTemplatesByDecoTemplateGroupIdHandler(IDbContextFactory<TvCo
         return await dbContext.DecoTemplates
             .AsNoTracking()
             .Filter(i => i.DecoTemplateGroupId == request.DecoTemplateGroupId)
+            .Include(dt => dt.DecoTemplateGroup)
             .ToListAsync(cancellationToken)
-            .Map(items => items.Map(Mapper.ProjectToViewModel).ToList());
+            .Map(items => items.OrderBy(dt => dt.Name).Map(Mapper.ProjectToViewModel).ToList());
     }
 }

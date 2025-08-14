@@ -2595,9 +2595,7 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("DecoTemplateGroupId");
-
-                    b.HasIndex("Name")
+                    b.HasIndex("DecoTemplateGroupId", "Name")
                         .IsUnique();
 
                     b.ToTable("DecoTemplate", (string)null);
@@ -2775,10 +2773,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Name")
+                    b.HasIndex("TemplateGroupId", "Name")
                         .IsUnique();
-
-                    b.HasIndex("TemplateGroupId");
 
                     b.ToTable("Template", (string)null);
                 });

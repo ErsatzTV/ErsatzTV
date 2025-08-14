@@ -13,11 +13,11 @@ public class GetAllTemplateGroupsHandler(IDbContextFactory<TvContext> dbContextF
     {
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
-        List<TemplateGroup> blockGroups = await dbContext.TemplateGroups
+        List<TemplateGroup> templateGroups = await dbContext.TemplateGroups
             .AsNoTracking()
             .Include(g => g.Templates)
             .ToListAsync(cancellationToken);
 
-        return blockGroups.Map(Mapper.ProjectToViewModel).ToList();
+        return templateGroups.OrderBy(tg => tg.Name).Map(Mapper.ProjectToViewModel).ToList();
     }
 }

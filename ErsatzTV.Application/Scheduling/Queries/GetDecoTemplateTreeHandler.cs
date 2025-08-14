@@ -15,11 +15,11 @@ public class GetDecoTemplateTreeHandler(IDbContextFactory<TvContext> dbContextFa
     {
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
-        List<DecoTemplateGroup> templateGroups = await dbContext.DecoTemplateGroups
+        List<DecoTemplateGroup> decoTemplateGroups = await dbContext.DecoTemplateGroups
             .AsNoTracking()
             .Include(g => g.DecoTemplates)
             .ToListAsync(cancellationToken);
 
-        return Mapper.ProjectToViewModel(templateGroups);
+        return Mapper.ProjectToViewModel(decoTemplateGroups);
     }
 }

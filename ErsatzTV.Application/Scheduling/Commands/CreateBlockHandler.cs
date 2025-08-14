@@ -21,6 +21,7 @@ public class CreateBlockHandler(IDbContextFactory<TvContext> dbContextFactory)
     {
         await dbContext.Blocks.AddAsync(block);
         await dbContext.SaveChangesAsync();
+        await dbContext.Entry(block).Reference(b => b.BlockGroup).LoadAsync();
         return Mapper.ProjectToViewModel(block);
     }
 

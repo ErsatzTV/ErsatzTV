@@ -10,7 +10,7 @@ public class TemplateConfiguration : IEntityTypeConfiguration<Template>
     {
         builder.ToTable("Template");
 
-        builder.HasIndex(b => b.Name)
+        builder.HasIndex(d => new { d.TemplateGroupId, d.Name })
             .IsUnique();
 
         builder.HasMany(b => b.Items)

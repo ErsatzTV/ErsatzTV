@@ -13,11 +13,11 @@ public class GetAllDecoTemplateGroupsHandler(IDbContextFactory<TvContext> dbCont
     {
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
-        List<DecoTemplateGroup> blockGroups = await dbContext.DecoTemplateGroups
+        List<DecoTemplateGroup> decoTemplateGroups = await dbContext.DecoTemplateGroups
             .AsNoTracking()
             .Include(g => g.DecoTemplates)
             .ToListAsync(cancellationToken);
 
-        return blockGroups.Map(Mapper.ProjectToViewModel).ToList();
+        return decoTemplateGroups.OrderBy(dtg => dtg.Name).Map(Mapper.ProjectToViewModel).ToList();
     }
 }

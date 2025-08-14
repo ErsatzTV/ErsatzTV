@@ -1,5 +1,4 @@
 using ErsatzTV.Application.Tree;
-using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Scheduling;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -15,11 +14,11 @@ public class GetDecoTreeHandler(IDbContextFactory<TvContext> dbContextFactory)
     {
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
-        List<DecoGroup> templateGroups = await dbContext.DecoGroups
+        List<DecoGroup> deoGroups = await dbContext.DecoGroups
             .AsNoTracking()
             .Include(g => g.Decos)
             .ToListAsync(cancellationToken);
 
-        return Mapper.ProjectToViewModel(templateGroups);
+        return Mapper.ProjectToViewModel(deoGroups);
     }
 }

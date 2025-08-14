@@ -8,37 +8,37 @@ internal static class Mapper
 {
     internal static TreeViewModel ProjectToViewModel(List<DecoTemplateGroup> decoTemplateGroups) =>
         new(
-            decoTemplateGroups.Map(dtg => new TreeGroupViewModel(
+            decoTemplateGroups.OrderBy(dtg => dtg.Name).Map(dtg => new TreeGroupViewModel(
                 dtg.Id,
                 dtg.Name,
-                dtg.DecoTemplates.Map(dt => new TreeItemViewModel(dt.Id, dt.Name)).ToList())).ToList());
+                dtg.DecoTemplates.OrderBy(dt => dt.Name).Map(dt => new TreeItemViewModel(dt.Id, dt.Name)).ToList())).ToList());
 
     internal static TreeViewModel ProjectToViewModel(List<DecoGroup> decoGroups) =>
         new(
-            decoGroups.Map(dg => new TreeGroupViewModel(
+            decoGroups.OrderBy(dg => dg.Name).Map(dg => new TreeGroupViewModel(
                 dg.Id,
                 dg.Name,
-                dg.Decos.Map(d => new TreeItemViewModel(d.Id, d.Name)).ToList())).ToList());
+                dg.Decos.OrderBy(d => d.Name).Map(d => new TreeItemViewModel(d.Id, d.Name)).ToList())).ToList());
 
     internal static TreeViewModel ProjectToViewModel(List<TemplateGroup> templateGroups) =>
         new(
-            templateGroups.Map(tg => new TreeGroupViewModel(
+            templateGroups.OrderBy(tg => tg.Name).Map(tg => new TreeGroupViewModel(
                 tg.Id,
                 tg.Name,
-                tg.Templates.Map(t => new TreeItemViewModel(t.Id, t.Name)).ToList())).ToList());
+                tg.Templates.OrderBy(t => t.Name).Map(t => new TreeItemViewModel(t.Id, t.Name)).ToList())).ToList());
 
     internal static BlockTreeViewModel ProjectToViewModel(List<BlockGroup> blockGroups) =>
         new(
-            blockGroups.Map(bg => new BlockTreeBlockGroupViewModel(
+            blockGroups.OrderBy(bg => bg.Name).Map(bg => new BlockTreeBlockGroupViewModel(
                 bg.Id,
                 bg.Name,
-                bg.Blocks.Map(b => new BlockTreeBlockViewModel(b.Id, b.Name, b.Minutes)).ToList())).ToList());
+                bg.Blocks.OrderBy(b => b.Name).Map(b => new BlockTreeBlockViewModel(b.Id, b.Name, b.Minutes)).ToList())).ToList());
 
     internal static BlockGroupViewModel ProjectToViewModel(BlockGroup blockGroup) =>
         new(blockGroup.Id, blockGroup.Name);
 
     internal static BlockViewModel ProjectToViewModel(Block block) =>
-        new(block.Id, block.Name, block.Minutes, block.StopScheduling);
+        new(block.Id, block.BlockGroupId, block.BlockGroup.Name, block.Name, block.Minutes, block.StopScheduling);
 
     internal static BlockItemViewModel ProjectToViewModel(BlockItem blockItem) =>
         new(
@@ -67,7 +67,7 @@ internal static class Mapper
         new(templateGroup.Id, templateGroup.Name, templateGroup.Templates.Count);
 
     internal static TemplateViewModel ProjectToViewModel(Template template) =>
-        new(template.Id, template.TemplateGroupId, template.Name);
+        new(template.Id, template.TemplateGroupId, template.TemplateGroup.Name, template.Name);
 
     internal static TemplateItemViewModel ProjectToViewModel(TemplateItem templateItem)
     {
@@ -83,6 +83,7 @@ internal static class Mapper
         new(
             deco.Id,
             deco.DecoGroupId,
+            deco.DecoGroup.Name,
             deco.Name,
             deco.WatermarkMode,
             deco.DecoWatermarks.Map(wm => Watermarks.Mapper.ProjectToViewModel(wm.Watermark)).ToList(),
@@ -111,7 +112,11 @@ internal static class Mapper
             return null;
         }
 
-        return new DecoTemplateViewModel(decoTemplate.Id, decoTemplate.DecoTemplateGroupId, decoTemplate.Name);
+        return new DecoTemplateViewModel(
+            decoTemplate.Id,
+            decoTemplate.DecoTemplateGroupId,
+            decoTemplate.DecoTemplateGroup.Name,
+            decoTemplate.Name);
     }
 
     internal static DecoTemplateItemViewModel ProjectToViewModel(DecoTemplateItem decoTemplateItem)

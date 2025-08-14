@@ -16,6 +16,6 @@ public class GetAllDecoGroupsHandler(IDbContextFactory<TvContext> dbContextFacto
             .Include(g => g.Decos)
             .ToListAsync(cancellationToken);
 
-        return decoGroups.Map(Mapper.ProjectToViewModel).ToList();
+        return decoGroups.OrderBy(dg => dg.Name).Map(Mapper.ProjectToViewModel).ToList();
     }
 }
