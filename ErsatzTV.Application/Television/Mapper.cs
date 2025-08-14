@@ -12,9 +12,20 @@ internal static class Mapper
         Show show,
         List<string> languages,
         Option<JellyfinMediaSource> maybeJellyfin,
-        Option<EmbyMediaSource> maybeEmby) =>
-        new(
+        Option<EmbyMediaSource> maybeEmby)
+    {
+        MediaSourceKind mediaSourceKind = show.LibraryPath.Library switch
+        {
+            PlexLibrary => MediaSourceKind.Plex,
+            JellyfinLibrary => MediaSourceKind.Jellyfin,
+            EmbyLibrary => MediaSourceKind.Emby,
+            _ => MediaSourceKind.Local
+        };
+
+        return new TelevisionShowViewModel(
             show.Id,
+            show.LibraryPath.LibraryId,
+            mediaSourceKind,
             show.ShowMetadata.HeadOrNone().Map(m => m.Title ?? string.Empty).IfNone(string.Empty),
             show.ShowMetadata.HeadOrNone().Map(m => m.Year?.ToString(CultureInfo.InvariantCulture) ?? string.Empty)
                 .IfNone(string.Empty),
@@ -36,6 +47,7 @@ internal static class Mapper
                     .Map(a => MediaCards.Mapper.ProjectToViewModel(a, maybeJellyfin, maybeEmby))
                     .ToList())
                 .IfNone([]));
+    }
 
     internal static TelevisionSeasonViewModel ProjectToViewModel(
         Season season,
