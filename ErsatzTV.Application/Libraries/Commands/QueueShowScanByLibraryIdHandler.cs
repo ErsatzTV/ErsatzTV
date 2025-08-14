@@ -27,13 +27,6 @@ public class QueueShowScanByLibraryIdHandler(
 
         foreach (Library library in maybeLibrary)
         {
-            // Check if library is already being scanned - return false if locked
-            if (!locker.LockLibrary(library.Id))
-            {
-                logger.LogWarning("Library {Id} is already being scanned, cannot scan individual show", library.Id);
-                return false;
-            }
-
             bool shouldSyncItems = library switch
             {
                 PlexLibrary plexLibrary => plexLibrary.ShouldSyncItems,
@@ -45,6 +38,13 @@ public class QueueShowScanByLibraryIdHandler(
             if (!shouldSyncItems)
             {
                 logger.LogWarning("Library sync is disabled for library id {Id}", library.Id);
+                return false;
+            }
+
+            // Check if library is already being scanned - return false if locked
+            if (!locker.LockLibrary(library.Id))
+            {
+                logger.LogWarning("Library {Id} is already being scanned, cannot scan individual show", library.Id);
                 return false;
             }
 
