@@ -158,6 +158,7 @@
         {
             _template = new TemplateItemsEditViewModel
             {
+                GroupId = template.TemplateGroupId,
                 GroupName = template.GroupName,
                 Name = template.Name
             };
@@ -281,7 +282,7 @@
     {
         var items = _template.Items.Map(item => new ReplaceTemplateItem(item.BlockId, item.Start.TimeOfDay)).ToList();
 
-        Seq<BaseError> errorMessages = await Mediator.Send(new ReplaceTemplateItems(Id, _template.Name, items), _cts.Token)
+        Seq<BaseError> errorMessages = await Mediator.Send(new ReplaceTemplateItems(_template.GroupId, Id, _template.Name, items), _cts.Token)
             .Map(e => e.LeftToSeq());
 
         errorMessages.HeadOrNone().Match(

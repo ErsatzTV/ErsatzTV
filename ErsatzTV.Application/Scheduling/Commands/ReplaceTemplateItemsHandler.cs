@@ -56,7 +56,8 @@ public class ReplaceTemplateItemsHandler(IDbContextFactory<TvContext> dbContextF
 
     private static Task<Validation<BaseError, Template>> Validate(TvContext dbContext, ReplaceTemplateItems request) =>
         TemplateMustExist(dbContext, request.TemplateId)
-            .BindT(template => TemplateItemsMustBeValid(dbContext, template, request));
+            .BindT(template => TemplateItemsMustBeValid(dbContext, template, request))
+            .BindT(template => ValidateTemplateName(dbContext, template, request));
 
     private static async Task<Validation<BaseError, Template>> TemplateItemsMustBeValid(
         TvContext dbContext,
@@ -106,6 +107,27 @@ public class ReplaceTemplateItemsHandler(IDbContextFactory<TvContext> dbContextF
             .Include(b => b.Items)
             .SelectOneAsync(b => b.Id, b => b.Id == templateId)
             .Map(o => o.ToValidation<BaseError>("[TemplateId] does not exist."));
+
+    private static async Task<Validation<BaseError, Template>> ValidateTemplateName(
+        TvContext dbContext,
+        Template template,
+        ReplaceTemplateItems request)
+    {
+        if (request.Name.Length > 50)
+        {
+            return BaseError.New($"Template name \"{request.Name}\" is invalid");
+        }
+
+        Option<Template> maybeExisting = await dbContext.Templates
+            .AsNoTracking()
+            .FirstOrDefaultAsync(d =>
+                d.Id != request.TemplateId && d.TemplateGroupId == request.TemplateGroupId && d.Name == request.Name)
+            .Map(Optional);
+
+        return maybeExisting.IsSome
+            ? BaseError.New($"A template named \"{request.Name}\" already exists in that template group")
+            : Success<BaseError, Template>(template);
+    }
 
     private sealed record BlockTemplateItem(int BlockId, TimeSpan StartTime, TimeSpan EndTime);
 }
