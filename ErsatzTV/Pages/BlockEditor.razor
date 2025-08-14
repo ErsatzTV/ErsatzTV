@@ -341,6 +341,7 @@
         {
             _block = new BlockItemsEditViewModel
             {
+                GroupId = block.GroupId,
                 GroupName = block.GroupName,
                 Name = block.Name,
                 Minutes = block.Minutes,
@@ -525,7 +526,7 @@
 
         _block.Minutes = _durationHours * 60 + _durationMinutes;
 
-        return new ReplaceBlockItems(Id, _block.Name, _block.Minutes, _block.StopScheduling, items);
+        return new ReplaceBlockItems(_block.GroupId, Id, _block.Name, _block.Minutes, _block.StopScheduling, items);
     }
 
     private async Task PreviewPlayout()

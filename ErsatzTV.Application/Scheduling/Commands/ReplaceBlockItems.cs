@@ -4,6 +4,7 @@ using ErsatzTV.Core.Domain.Scheduling;
 namespace ErsatzTV.Application.Scheduling;
 
 public record ReplaceBlockItems(
+    int BlockGroupId,
     int BlockId,
     string Name,
     int Minutes,

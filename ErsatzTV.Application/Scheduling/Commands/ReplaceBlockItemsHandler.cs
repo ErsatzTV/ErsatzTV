@@ -61,6 +61,7 @@ public class ReplaceBlockItemsHandler(IDbContextFactory<TvContext> dbContextFact
     private static Task<Validation<BaseError, Block>> Validate(TvContext dbContext, ReplaceBlockItems request) =>
         BlockMustExist(dbContext, request.BlockId)
             .BindT(block => MinutesMustBeValid(request, block))
+            .BindT(block => BlockNameMustBeValid(dbContext, block, request))
             .BindT(block => CollectionTypesMustBeValid(request, block));
 
     private static Task<Validation<BaseError, Block>> BlockMustExist(TvContext dbContext, int blockId) =>
@@ -129,5 +130,26 @@ public class ReplaceBlockItemsHandler(IDbContextFactory<TvContext> dbContextFact
         }
 
         return block;
+    }
+
+    private static async Task<Validation<BaseError, Block>> BlockNameMustBeValid(
+        TvContext dbContext,
+        Block block,
+        ReplaceBlockItems request)
+    {
+        if (request.Name.Length > 50)
+        {
+            return BaseError.New($"Block name \"{request.Name}\" is invalid");
+        }
+
+        Option<Block> maybeExisting = await dbContext.Blocks
+            .AsNoTracking()
+            .FirstOrDefaultAsync(d =>
+                d.Id != request.BlockId && d.BlockGroupId == request.BlockGroupId && d.Name == request.Name)
+            .Map(Optional);
+
+        return maybeExisting.IsSome
+            ? BaseError.New($"A block named \"{request.Name}\" already exists in that block group")
+            : Success<BaseError, Block>(block);
     }
 }
