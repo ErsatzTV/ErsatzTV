@@ -13,7 +13,7 @@ public class CreateTemplateGroupHandler(IDbContextFactory<TvContext> dbContextFa
         CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
-        Validation<BaseError, TemplateGroup> validation = await Validate(request);
+        Validation<BaseError, TemplateGroup> validation = await Validate(dbContext, request);
         return await validation.Apply(profile => PersistTemplateGroup(dbContext, profile));
     }
 
@@ -26,10 +26,23 @@ public class CreateTemplateGroupHandler(IDbContextFactory<TvContext> dbContextFa
         return Mapper.ProjectToViewModel(templateGroup);
     }
 
-    private static Task<Validation<BaseError, TemplateGroup>> Validate(CreateTemplateGroup request) =>
-        Task.FromResult(ValidateName(request).Map(name => new TemplateGroup { Name = name, Templates = [] }));
+    private static Task<Validation<BaseError, TemplateGroup>> Validate(TvContext dbContext, CreateTemplateGroup request) =>
+        ValidateName(dbContext, request).MapT(name => new TemplateGroup { Name = name, Templates = [] });
 
-    private static Validation<BaseError, string> ValidateName(CreateTemplateGroup createTemplateGroup) =>
-        createTemplateGroup.NotEmpty(x => x.Name)
-            .Bind(_ => createTemplateGroup.NotLongerThan(50)(x => x.Name));
+    private static async Task<Validation<BaseError, string>> ValidateName(
+        TvContext dbContext,
+        CreateTemplateGroup createTemplateGroup)
+    {
+        Validation<BaseError, string> result1 = createTemplateGroup.NotEmpty(c => c.Name)
+            .Bind(_ => createTemplateGroup.NotLongerThan(50)(c => c.Name));
+
+        int duplicateNameCount = await dbContext.TemplateGroups
+            .CountAsync(ps => ps.Name == createTemplateGroup.Name);
+
+        var result2 = Optional(duplicateNameCount)
+            .Where(count => count == 0)
+            .ToValidation<BaseError>("Template group name must be unique");
+
+        return (result1, result2).Apply((_, _) => createTemplateGroup.Name);
+    }
 }

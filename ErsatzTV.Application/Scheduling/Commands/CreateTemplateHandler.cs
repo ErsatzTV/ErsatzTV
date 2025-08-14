@@ -13,7 +13,7 @@ public class CreateTemplateHandler(IDbContextFactory<TvContext> dbContextFactory
         CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
-        Validation<BaseError, Template> validation = await Validate(request);
+        Validation<BaseError, Template> validation = await Validate(dbContext, request);
         return await validation.Apply(profile => PersistTemplate(dbContext, profile));
     }
 
@@ -24,15 +24,28 @@ public class CreateTemplateHandler(IDbContextFactory<TvContext> dbContextFactory
         return Mapper.ProjectToViewModel(template);
     }
 
-    private static Task<Validation<BaseError, Template>> Validate(CreateTemplate request) =>
-        Task.FromResult(
-            ValidateName(request).Map(name => new Template
-            {
-                TemplateGroupId = request.TemplateGroupId,
-                Name = name
-            }));
+    private static async Task<Validation<BaseError, Template>> Validate(TvContext dbContext, CreateTemplate request) =>
+        await ValidateTemplateName(dbContext, request).MapT(name => new Template
+        {
+            TemplateGroupId = request.TemplateGroupId,
+            Name = name
+        });
 
-    private static Validation<BaseError, string> ValidateName(CreateTemplate createTemplate) =>
-        createTemplate.NotEmpty(x => x.Name)
-            .Bind(_ => createTemplate.NotLongerThan(50)(x => x.Name));
+    private static async Task<Validation<BaseError, string>> ValidateTemplateName(
+        TvContext dbContext,
+        CreateTemplate request)
+    {
+        if (request.Name.Length > 50)
+        {
+            return BaseError.New($"Template name \"{request.Name}\" is invalid");
+        }
+
+        Option<Template> maybeExisting = await dbContext.Templates
+            .FirstOrDefaultAsync(r => r.TemplateGroupId == request.TemplateGroupId && r.Name == request.Name)
+            .Map(Optional);
+
+        return maybeExisting.IsSome
+            ? BaseError.New($"A template named \"{request.Name}\" already exists in that template group")
+            : Success<BaseError, string>(request.Name);
+    }
 }

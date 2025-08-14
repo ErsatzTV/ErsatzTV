@@ -13,7 +13,7 @@ public class CreateDecoGroupHandler(IDbContextFactory<TvContext> dbContextFactor
         CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
-        Validation<BaseError, DecoGroup> validation = await Validate(request);
+        Validation<BaseError, DecoGroup> validation = await Validate(dbContext, request);
         return await validation.Apply(profile => PersistDecoGroup(dbContext, profile));
     }
 
@@ -24,10 +24,23 @@ public class CreateDecoGroupHandler(IDbContextFactory<TvContext> dbContextFactor
         return Mapper.ProjectToViewModel(decoGroup);
     }
 
-    private static Task<Validation<BaseError, DecoGroup>> Validate(CreateDecoGroup request) =>
-        Task.FromResult(ValidateName(request).Map(name => new DecoGroup { Name = name, Decos = [] }));
+    private static Task<Validation<BaseError, DecoGroup>> Validate(TvContext dbContext, CreateDecoGroup request) =>
+        ValidateName(dbContext, request).MapT(name => new DecoGroup { Name = name, Decos = [] });
 
-    private static Validation<BaseError, string> ValidateName(CreateDecoGroup createDecoGroup) =>
-        createDecoGroup.NotEmpty(x => x.Name)
-            .Bind(_ => createDecoGroup.NotLongerThan(50)(x => x.Name));
+    private static async Task<Validation<BaseError, string>> ValidateName(
+        TvContext dbContext,
+        CreateDecoGroup createDecoGroup)
+    {
+        Validation<BaseError, string> result1 = createDecoGroup.NotEmpty(c => c.Name)
+            .Bind(_ => createDecoGroup.NotLongerThan(50)(c => c.Name));
+
+        int duplicateNameCount = await dbContext.DecoGroups
+            .CountAsync(ps => ps.Name == createDecoGroup.Name);
+
+        var result2 = Optional(duplicateNameCount)
+            .Where(count => count == 0)
+            .ToValidation<BaseError>("Deco group name must be unique");
+
+        return (result1, result2).Apply((_, _) => createDecoGroup.Name);
+    }
 }

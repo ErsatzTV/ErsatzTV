@@ -10,7 +10,7 @@ public class DecoTemplateConfiguration : IEntityTypeConfiguration<DecoTemplate>
     {
         builder.ToTable("DecoTemplate");
 
-        builder.HasIndex(b => b.Name)
+        builder.HasIndex(d => new { d.DecoTemplateGroupId, d.Name })
             .IsUnique();
 
         builder.HasMany(b => b.Items)
