@@ -4,9 +4,7 @@ using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Streaming;
 using ErsatzTV.Core.Metadata;
 using Microsoft.Extensions.Logging;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Processing;
+using SkiaSharp;
 
 namespace ErsatzTV.Infrastructure.Streaming;
 
@@ -85,6 +83,12 @@ public class GraphicsEngine(ITemplateDataRepository templateDataRepository, ILog
         long frameCount = 0;
         var totalFrames = (long)(context.Duration.TotalSeconds * context.FrameRate);
 
+        using var outputBitmap = new SKBitmap(
+            context.FrameSize.Width,
+            context.FrameSize.Height,
+            SKColorType.Bgra8888,
+            SKAlphaType.Premul);
+
         try
         {
             // `content_total_seconds` - the total number of seconds in the content
@@ -105,10 +109,8 @@ public class GraphicsEngine(ITemplateDataRepository templateDataRepository, ILog
                 // `channel_seconds` - the total number of seconds the frame is from when the channel started/activated
                 var channelTime = frameTime - context.ChannelStartTime;
 
-                using var outputFrame = new Image<Bgra32>(
-                    context.FrameSize.Width,
-                    context.FrameSize.Height,
-                    Color.Transparent);
+                using var canvas = new SKCanvas(outputBitmap);
+                canvas.Clear(SKColors.Transparent);
 
                 // prepare images outside mutate to allow async image generation
                 var preparedElementImages = new List<PreparedElementImage>();
@@ -135,22 +137,26 @@ public class GraphicsEngine(ITemplateDataRepository templateDataRepository, ILog
                 }
 
                 // draw each element
-                outputFrame.Mutate(ctx =>
+                foreach (var preparedImage in preparedElementImages)
                 {
-                    foreach (var preparedImage in preparedElementImages)
+                    using var paint = new SKPaint();
+                    paint.Color = new SKColor(255, 255, 255, (byte)(preparedImage.Opacity * 255));
+                    canvas.DrawBitmap(preparedImage.Image, new SKPoint(preparedImage.Point.X, preparedImage.Point.Y), paint);
+
+                    if (preparedImage.Dispose)
                     {
-                        ctx.DrawImage(preparedImage.Image, preparedImage.Point, preparedImage.Opacity);
-                        if (preparedImage.Dispose)
-                        {
-                            preparedImage.Image.Dispose();
-                        }
+                        preparedImage.Image.Dispose();
                     }
-                });
+                }
 
                 // pipe output
                 int frameBufferSize = context.FrameSize.Width * context.FrameSize.Height * 4;
-                Memory<byte> memory = pipeWriter.GetMemory(frameBufferSize);
-                outputFrame.CopyPixelDataTo(memory.Span);
+                using (SKPixmap pixmap = outputBitmap.PeekPixels())
+                {
+                    var memory = pipeWriter.GetMemory(frameBufferSize);
+                    pixmap.GetPixelSpan().CopyTo(memory.Span);
+                }
+
                 pipeWriter.Advance(frameBufferSize);
                 await pipeWriter.FlushAsync(cancellationToken);
 

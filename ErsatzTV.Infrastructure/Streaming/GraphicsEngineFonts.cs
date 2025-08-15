@@ -1,14 +1,11 @@
 using System.Collections.Concurrent;
-using System.Globalization;
-using SixLabors.Fonts;
+using SkiaSharp;
 
 namespace ErsatzTV.Infrastructure.Streaming;
 
 public static class GraphicsEngineFonts
 {
-    private static readonly FontCollection CustomFontCollection = new();
-    private static readonly ConcurrentDictionary<string, FontFamily> CustomFontFamilies
-        = new(StringComparer.OrdinalIgnoreCase);
+    private static readonly ConcurrentDictionary<string, SKTypeface> CustomTypefaces = new(StringComparer.OrdinalIgnoreCase);
     private static readonly System.Collections.Generic.HashSet<string> LoadedFontFiles
         = new(StringComparer.OrdinalIgnoreCase);
 
@@ -27,31 +24,21 @@ public static class GraphicsEngineFonts
                 continue;
             }
 
-            var fontFamily = CustomFontCollection.Add(file, CultureInfo.CurrentCulture);
-            CustomFontFamilies.TryAdd(fontFamily.Name, fontFamily);
+            var typeface = SKTypeface.FromFile(file);
+            if (typeface != null)
+            {
+                CustomTypefaces.TryAdd(typeface.FamilyName, typeface);
+            }
         }
     }
 
-    public static Font GetFont(string fontFamilyName, float fontSize, FontStyle style)
+    public static SKTypeface GetTypeface(string fontFamilyName)
     {
-        // try custom fonts
-        if (CustomFontFamilies.TryGetValue(fontFamilyName, out var customFamily))
+        if (CustomTypefaces.TryGetValue(fontFamilyName, out var typeface))
         {
-            return customFamily.GetAvailableStyles().Contains(style)
-                ? customFamily.CreateFont(fontSize, style)
-                : customFamily.CreateFont(fontSize);
+            return typeface;
         }
 
-        // fallback to system fonts
-        if (SystemFonts.TryGet(fontFamilyName, CultureInfo.CurrentCulture, out var systemFamily))
-        {
-            return systemFamily.GetAvailableStyles().Contains(style)
-                ? systemFamily.CreateFont(fontSize, style)
-                : systemFamily.CreateFont(fontSize);
-        }
-
-        // fallback to default font
-        var fallback = SystemFonts.Families.First();
-        return fallback.CreateFont(fontSize, style);
+        return SKFontManager.Default.MatchFamily(fontFamilyName) ?? SKTypeface.Default;
     }
 }

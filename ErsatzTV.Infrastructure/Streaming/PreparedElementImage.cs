@@ -1,6 +1,5 @@
-using SixLabors.ImageSharp;
-using Image=SixLabors.ImageSharp.Image;
+using SkiaSharp;
 
 namespace ErsatzTV.Infrastructure.Streaming;
 
-public record PreparedElementImage(Image Image, Point Point, float Opacity, bool Dispose);
+public record PreparedElementImage(SKBitmap Image, SKPointI Point, float Opacity, bool Dispose);

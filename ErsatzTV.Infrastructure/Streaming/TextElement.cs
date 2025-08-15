@@ -5,13 +5,8 @@ using Microsoft.Extensions.Logging;
 using NCalc;
 using Scriban;
 using Scriban.Runtime;
-using SixLabors.Fonts;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Drawing.Processing;
-using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Processing;
+using SkiaSharp;
 using TimeZoneConverter;
-using Image=SixLabors.ImageSharp.Image;
 
 namespace ErsatzTV.Infrastructure.Streaming;
 
@@ -20,8 +15,8 @@ public class TextElement(TextGraphicsElement textElement, Dictionary<string, obj
 {
     private Option<Expression> _maybeOpacityExpression;
     private float _opacity;
-    private Image _image;
-    private Point _location;
+    private SKBitmap _image;
+    private SKPointI _location;
 
     public int ZIndex { get; private set; }
 
@@ -84,31 +79,26 @@ public class TextElement(TextGraphicsElement textElement, Dictionary<string, obj
             context.PushGlobal(scriptObject);
             string textToRender = await Template.Parse(textElement.Text).RenderAsync(context);
 
-            var font = GraphicsEngineFonts.GetFont(textElement.FontFamily, textElement.FontSize ?? 48,
-                FontStyle.Regular);
-            var fontColor = Color.White;
-            if (Color.TryParse(textElement.FontColor, out Color parsedColor) ||
-                Color.TryParseHex(textElement.FontColor, out parsedColor))
+            SKTypeface typeface = GraphicsEngineFonts.GetTypeface(textElement.FontFamily);
+            using var paint = new SKPaint();
+            paint.IsAntialias = true;
+
+            using var font = new SKFont();
+            font.Typeface = typeface;
+            font.Size = textElement.FontSize ?? 48;
+
+            paint.Color = SKColor.TryParse(textElement.FontColor, out SKColor parsedColor)
+                ? parsedColor
+                : SKColors.White;
+
+            font.MeasureText(textToRender, out SKRect textBounds, paint);
+
+            _image = new SKBitmap((int)Math.Ceiling(textBounds.Width), (int)Math.Ceiling(textBounds.Height));
+            using (var canvas = new SKCanvas(_image))
             {
-                fontColor = parsedColor;
+                canvas.Clear(SKColors.Transparent);
+                canvas.DrawText(textToRender, -textBounds.Left, -textBounds.Top, font, paint);
             }
-
-            var textOptions = new RichTextOptions(font)
-            {
-                Origin = new PointF(0, 0),
-                HorizontalAlignment = HorizontalAlignment.Left
-            };
-
-            // if (Enum.TryParse(textElement.HorizontalAlignment, out HorizontalAlignment parsedAlignment))
-            // {
-            //     textOptions.HorizontalAlignment = parsedAlignment;
-            // }
-
-            FontRectangle textBounds = TextMeasurer.MeasureBounds(textToRender, textOptions);
-            textOptions.Origin = new PointF(-textBounds.X, -textBounds.Y);
-
-            _image = new Image<Rgba32>((int)Math.Ceiling(textBounds.Width), (int)Math.Ceiling(textBounds.Height));
-            _image.Mutate(ctx => ctx.DrawText(textOptions, textToRender, fontColor));
 
             int horizontalMargin =
                 (int)Math.Round((textElement.HorizontalMarginPercent ?? 0) / 100.0 * frameSize.Width);
