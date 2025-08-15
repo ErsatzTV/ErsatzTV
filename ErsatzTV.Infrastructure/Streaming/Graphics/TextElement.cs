@@ -1,14 +1,17 @@
 using System.Globalization;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Graphics;
+using ErsatzTV.Infrastructure.Streaming.Graphics.Fonts;
 using Microsoft.Extensions.Logging;
 using NCalc;
+using Topten.RichTextKit;
 using Scriban;
 using Scriban.Runtime;
 using SkiaSharp;
 using TimeZoneConverter;
+using RichTextKit=Topten.RichTextKit;
 
-namespace ErsatzTV.Infrastructure.Streaming;
+namespace ErsatzTV.Infrastructure.Streaming.Graphics;
 
 public class TextElement(TextGraphicsElement textElement, Dictionary<string, object> variables, ILogger logger)
     : IGraphicsElement, IDisposable
@@ -79,25 +82,32 @@ public class TextElement(TextGraphicsElement textElement, Dictionary<string, obj
             context.PushGlobal(scriptObject);
             string textToRender = await Template.Parse(textElement.Text).RenderAsync(context);
 
-            SKTypeface typeface = GraphicsEngineFonts.GetTypeface(textElement.FontFamily);
-            using var paint = new SKPaint();
-            paint.IsAntialias = true;
+            var textBlock = new TextBlock { FontMapper = GraphicsEngineFonts.Mapper };
+            var style = new RichTextKit.Style
+            {
+                FontFamily = textElement.FontFamily,
+                FontSize = textElement.FontSize ?? 48,
+                // FontWeight = (textElement.FontWeight ?? 400),
+                // FontItalic = (textElement.FontStyle == FontStyle.Italic),
+                TextColor = SKColor.TryParse(textElement.FontColor, out SKColor parsedColor)
+                    ? parsedColor
+                    : SKColors.White,
+                // BackgroundColor = SKColor.TryParse(textElement.BackgroundColor, out SKColor parsedBackColor)
+                //     ? parsedBackColor
+                //     : SKColors.Transparent,
+                // Underline = (textElement.TextDecoration == TextDecoration.Underline)
+                //     ? UnderlineStyle.Solid
+                //     : UnderlineStyle.None
+                LetterSpacing = 10
+            };
 
-            using var font = new SKFont();
-            font.Typeface = typeface;
-            font.Size = textElement.FontSize ?? 48;
+            textBlock.AddText(textToRender, style);
 
-            paint.Color = SKColor.TryParse(textElement.FontColor, out SKColor parsedColor)
-                ? parsedColor
-                : SKColors.White;
-
-            font.MeasureText(textToRender, out SKRect textBounds, paint);
-
-            _image = new SKBitmap((int)Math.Ceiling(textBounds.Width), (int)Math.Ceiling(textBounds.Height));
+            _image = new SKBitmap((int)Math.Ceiling(textBlock.MeasuredWidth), (int)Math.Ceiling(textBlock.MeasuredHeight));
             using (var canvas = new SKCanvas(_image))
             {
                 canvas.Clear(SKColors.Transparent);
-                canvas.DrawText(textToRender, -textBounds.Left, -textBounds.Top, font, paint);
+                textBlock.Paint(canvas, new SKPoint(0, 0));
             }
 
             int horizontalMargin =

@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 using NCalc;
 using SkiaSharp;
 
-namespace ErsatzTV.Infrastructure.Streaming;
+namespace ErsatzTV.Infrastructure.Streaming.Graphics;
 
 public class WatermarkElement : IGraphicsElement, IDisposable
 {

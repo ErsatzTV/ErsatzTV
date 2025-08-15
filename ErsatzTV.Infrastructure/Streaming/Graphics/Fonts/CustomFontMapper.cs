@@ -1,0 +1,45 @@
+using SkiaSharp;
+using Topten.RichTextKit;
+
+namespace ErsatzTV.Infrastructure.Streaming.Graphics.Fonts;
+
+internal sealed class CustomFontMapper : FontMapper
+{
+    private readonly Dictionary<string, List<SKTypeface>> _customFonts = new();
+
+    public void LoadPrivateFont(Stream stream, string familyName)
+    {
+        var typeface = SKTypeface.FromStream(stream) ??
+                       throw new ArgumentException("Cannot load font from stream", nameof(stream));
+        var qualifiedName = familyName ?? typeface.FamilyName;
+
+        if (typeface.FontSlant != SKFontStyleSlant.Upright)
+        {
+            qualifiedName += "-Italic";
+        }
+
+        if (!_customFonts.TryGetValue(qualifiedName, out var listFonts))
+        {
+            listFonts = [];
+            _customFonts[qualifiedName] = listFonts;
+        }
+
+        listFonts.Add(typeface);
+    }
+
+    public override SKTypeface TypefaceFromStyle(IStyle style, bool ignoreFontVariants)
+    {
+        var qualifiedName = style.FontFamily;
+        if (style.FontItalic)
+        {
+            qualifiedName += "-Italic";
+        }
+
+        if (_customFonts.TryGetValue(qualifiedName, out List<SKTypeface> listFonts) && listFonts.Count != 0)
+        {
+            return listFonts.MinBy(font => Math.Abs(font.FontWeight - style.FontWeight))!;
+        }
+
+        return base.TypefaceFromStyle(style, ignoreFontVariants);
+    }
+}

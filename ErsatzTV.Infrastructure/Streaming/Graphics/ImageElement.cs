@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 using NCalc;
 using SkiaSharp;
 
-namespace ErsatzTV.Infrastructure.Streaming;
+namespace ErsatzTV.Infrastructure.Streaming.Graphics;
 
 public class ImageElement(ImageGraphicsElement imageGraphicsElement, ILogger logger) : IGraphicsElement, IDisposable
 {

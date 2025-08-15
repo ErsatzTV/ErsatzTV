@@ -3,10 +3,11 @@ using ErsatzTV.Core;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Streaming;
 using ErsatzTV.Core.Metadata;
+using ErsatzTV.Infrastructure.Streaming.Graphics.Fonts;
 using Microsoft.Extensions.Logging;
 using SkiaSharp;
 
-namespace ErsatzTV.Infrastructure.Streaming;
+namespace ErsatzTV.Infrastructure.Streaming.Graphics;
 
 public class GraphicsEngine(ITemplateDataRepository templateDataRepository, ILogger<GraphicsEngine> logger) : IGraphicsEngine
 {
