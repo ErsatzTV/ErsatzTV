@@ -34,8 +34,8 @@ public class TextGraphicsElement
 
     public List<StyleDefinition> Styles { get; set; } = [];
 
-    [YamlMember(Alias = "default_style", ApplyNamingConventions = false)]
-    public string DefaultStyle { get; set; }
+    [YamlMember(Alias = "base_style", ApplyNamingConventions = false)]
+    public string BaseStyle { get; set; }
 
     [YamlMember(Alias = "epg_entries", ApplyNamingConventions = false)]
     public int EpgEntries { get; set; }

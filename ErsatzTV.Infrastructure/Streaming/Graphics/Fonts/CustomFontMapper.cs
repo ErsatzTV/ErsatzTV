@@ -1,9 +1,10 @@
+using Microsoft.Extensions.Logging;
 using SkiaSharp;
 using Topten.RichTextKit;
 
 namespace ErsatzTV.Infrastructure.Streaming.Graphics.Fonts;
 
-internal sealed class CustomFontMapper : FontMapper
+public sealed class CustomFontMapper(ILogger<CustomFontMapper> logger) : FontMapper
 {
     private readonly Dictionary<string, List<SKTypeface>> _customFonts = new();
 
@@ -39,6 +40,8 @@ internal sealed class CustomFontMapper : FontMapper
         {
             return listFonts.MinBy(font => Math.Abs(font.FontWeight - style.FontWeight))!;
         }
+
+        logger.LogWarning("Could not find font {Name}; using default", qualifiedName);
 
         return base.TypefaceFromStyle(style, ignoreFontVariants);
     }

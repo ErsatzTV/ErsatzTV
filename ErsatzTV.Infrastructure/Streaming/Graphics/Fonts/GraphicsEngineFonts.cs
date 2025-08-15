@@ -1,13 +1,13 @@
+using Topten.RichTextKit;
+
 namespace ErsatzTV.Infrastructure.Streaming.Graphics.Fonts;
 
-public static class GraphicsEngineFonts
+public class GraphicsEngineFonts(CustomFontMapper mapper)
 {
     private static readonly System.Collections.Generic.HashSet<string> LoadedFontFiles
         = new(StringComparer.OrdinalIgnoreCase);
 
-    internal static readonly CustomFontMapper Mapper = new();
-
-    public static void LoadFonts(string fontsFolder)
+    public void LoadFonts(string fontsFolder)
     {
         foreach (var file in Directory.EnumerateFiles(fontsFolder, "*.*", SearchOption.AllDirectories))
         {
@@ -23,7 +23,9 @@ public static class GraphicsEngineFonts
             }
 
             using var stream = File.OpenRead(file);
-            Mapper.LoadPrivateFont(stream, null);
+            mapper.LoadPrivateFont(stream, null);
         }
     }
+
+    public FontMapper Mapper => mapper;
 }

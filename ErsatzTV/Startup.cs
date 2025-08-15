@@ -66,6 +66,7 @@ using ErsatzTV.Infrastructure.Search;
 using ErsatzTV.Infrastructure.Sqlite.Data;
 using ErsatzTV.Infrastructure.Streaming;
 using ErsatzTV.Infrastructure.Streaming.Graphics;
+using ErsatzTV.Infrastructure.Streaming.Graphics.Fonts;
 using ErsatzTV.Infrastructure.Streaming.Graphics.Text;
 using ErsatzTV.Infrastructure.Trakt;
 using ErsatzTV.Serialization;
@@ -622,6 +623,8 @@ public class Startup
         services.AddSingleton<ISmartCollectionCache, SmartCollectionCache>();
         services.AddSingleton<SearchQueryParser>();
         services.AddSingleton<ITroubleshootingNotifier, TroubleshootingNotifier>();
+        services.AddSingleton<CustomFontMapper>();
+        services.AddSingleton<GraphicsEngineFonts>();
 
         if (SearchHelper.IsElasticSearchEnabled)
         {

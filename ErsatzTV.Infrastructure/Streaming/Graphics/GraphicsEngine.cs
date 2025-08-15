@@ -13,13 +13,14 @@ namespace ErsatzTV.Infrastructure.Streaming.Graphics;
 
 public class GraphicsEngine(
     TemplateFunctions templateFunctions,
+    GraphicsEngineFonts graphicsEngineFonts,
     ITemplateDataRepository templateDataRepository,
     ILogger<GraphicsEngine> logger)
     : IGraphicsEngine
 {
     public async Task Run(GraphicsEngineContext context, PipeWriter pipeWriter, CancellationToken cancellationToken)
     {
-        GraphicsEngineFonts.LoadFonts(FileSystemLayout.FontsCacheFolder);
+        graphicsEngineFonts.LoadFonts(FileSystemLayout.FontsCacheFolder);
 
         var templateVariables = new Dictionary<string, object>();
 
@@ -66,11 +67,12 @@ public class GraphicsEngine(
                     {
                         elements.Add(watermark);
                     }
-
                     break;
+
                 case ImageElementContext imageElementContext:
                     elements.Add(new ImageElement(imageElementContext.ImageElement, logger));
                     break;
+
                 case TextElementContext textElementContext:
                     var variables = templateVariables.ToDictionary();
                     foreach (var variable in textElementContext.Variables)
@@ -78,7 +80,14 @@ public class GraphicsEngine(
                         variables.Add(variable.Key, variable.Value);
                     }
 
-                    elements.Add(new TextElement(templateFunctions, textElementContext.TextElement, variables, logger));
+                    var textElement = new TextElement(
+                        templateFunctions,
+                        graphicsEngineFonts,
+                        textElementContext.TextElement,
+                        variables,
+                        logger);
+
+                    elements.Add(textElement);
                     break;
             }
         }

@@ -13,7 +13,7 @@ public class StyleDefinition
     public int? FontWeight { get; set; }
 
     [YamlMember(Alias = "font_italic", ApplyNamingConventions = false)]
-    public bool FontItalic { get; set; }
+    public bool? FontItalic { get; set; }
 
     [YamlMember(Alias = "font_family", ApplyNamingConventions = false)]
     public string FontFamily { get; set; }
