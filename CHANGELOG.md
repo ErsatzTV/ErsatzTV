@@ -65,6 +65,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix playback of anamorphic content from Jellyfin
   - This fix requires a manual deep scan of any affected Jellyfin library
 - Fix bug where multiple Plex servers would mix their episodes
+- Fix incorrect media item counts after removing paths from local libraries
+- Fix song playback in playback troubleshooting
 
 ### Changed
 - Allow multiple watermarks in playback troubleshooting

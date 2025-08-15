@@ -13,6 +13,7 @@ using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Notifications;
 using ErsatzTV.FFmpeg;
+using ErsatzTV.FFmpeg.State;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
@@ -27,6 +28,7 @@ public class PrepareTroubleshootingPlaybackHandler(
     IEmbyPathReplacementService embyPathReplacementService,
     IFFmpegProcessService ffmpegProcessService,
     ILocalFileSystem localFileSystem,
+    ISongVideoGenerator songVideoGenerator,
     IEntityLocker entityLocker,
     IMediator mediator,
     ILogger<PrepareTroubleshootingPlaybackHandler> logger)
@@ -80,6 +82,17 @@ public class PrepareTroubleshootingPlaybackHandler(
             return BaseError.New("Media item does not exist on disk");
         }
 
+        var channel = new Channel(Guid.Empty)
+        {
+            Artwork = [],
+            Name = "ETV",
+            Number = ".troubleshooting",
+            FFmpegProfile = ffmpegProfile,
+            StreamingMode = StreamingMode.HttpLiveStreamingSegmenter,
+            StreamSelectorMode = ChannelStreamSelectorMode.Troubleshooting,
+            SubtitleMode = SUBTITLE_MODE
+        };
+
         List<ChannelWatermark> watermarks = [];
         if (request.WatermarkIds.Count > 0)
         {
@@ -88,6 +101,44 @@ public class PrepareTroubleshootingPlaybackHandler(
                 .ToListAsync();
 
             watermarks.AddRange(channelWatermarks);
+        }
+
+        string videoPath = mediaPath;
+        MediaVersion videoVersion = version;
+
+        if (mediaItem is Song song)
+        {
+            (videoPath, videoVersion) = await songVideoGenerator.GenerateSongVideo(
+                song,
+                channel,
+                Option<ChannelWatermark>.None,
+                Option<ChannelWatermark>.None,
+                ffmpegPath,
+                ffprobePath,
+                CancellationToken.None);
+
+            // override watermark as song_progress_overlay.png
+            if (videoVersion is BackgroundImageMediaVersion { IsSongWithProgress: true })
+            {
+                double ratio = channel.FFmpegProfile.Resolution.Width /
+                               (double)channel.FFmpegProfile.Resolution.Height;
+                bool is43 = Math.Abs(ratio - 4.0 / 3.0) < 0.01;
+                string image = is43 ? "song_progress_overlay_43.png" : "song_progress_overlay.png";
+
+                watermarks.Clear();
+                watermarks.Add(new ChannelWatermark
+                {
+                    Mode = ChannelWatermarkMode.Permanent,
+                    Size = WatermarkSize.Scaled,
+                    WidthPercent = 100,
+                    HorizontalMarginPercent = 0,
+                    VerticalMarginPercent = 0,
+                    Opacity = 100,
+                    Location = WatermarkLocation.TopLeft,
+                    ImageSource = ChannelWatermarkImageSource.Resource,
+                    Image = image
+                });
+            }
         }
 
         DateTimeOffset now = DateTimeOffset.Now;
@@ -130,19 +181,10 @@ public class PrepareTroubleshootingPlaybackHandler(
             ffmpegPath,
             ffprobePath,
             true,
-            new Channel(Guid.Empty)
-            {
-                Artwork = [],
-                Name = "ETV",
-                Number = ".troubleshooting",
-                FFmpegProfile = ffmpegProfile,
-                StreamingMode = StreamingMode.HttpLiveStreamingSegmenter,
-                StreamSelectorMode = ChannelStreamSelectorMode.Troubleshooting,
-                SubtitleMode = SUBTITLE_MODE
-            },
-            version,
+            channel,
+            videoVersion,
             new MediaItemAudioVersion(mediaItem, version),
-            mediaPath,
+            videoPath,
             mediaPath,
             _ => GetSelectedSubtitle(mediaItem, request),
             string.Empty,

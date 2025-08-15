@@ -10,7 +10,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Blurhash.ImageSharp" Version="4.0.0" />
+        <PackageReference Include="Blurhash.SkiaSharp" Version="2.0.0" />
         <PackageReference Include="CliWrap" Version="3.9.0" />
         <PackageReference Include="Dapper" Version="2.1.66" />
         <PackageReference Include="EFCore.BulkExtensions" Version="9.0.1" />
@@ -35,13 +35,8 @@
         <PackageReference Include="Refit.Xml" Version="8.0.0" />
         <PackageReference Include="RichTextKit.Stbear" Version="0.4.167.3" />
         <PackageReference Include="Scriban.Signed" Version="6.2.1" />
-        <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="2.1.7" />
         <PackageReference Include="SkiaSharp" Version="3.119.0" />
         <PackageReference Include="TagLibSharp" Version="2.3.0" />
-
-
-        <!-- transitive; upgrading for vuln -->
-        <PackageReference Include="SixLabors.ImageSharp" Version="3.1.11" />
         <PackageReference Include="TimeZoneConverter" Version="7.0.0" />
     </ItemGroup>
 
