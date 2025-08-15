@@ -48,6 +48,20 @@ public partial class TextElement(
 
             ZIndex = textElement.ZIndex ?? 0;
 
+            if (!string.IsNullOrWhiteSpace(textElement.IncludeFontsFrom))
+            {
+                if (Directory.Exists(textElement.IncludeFontsFrom))
+                {
+                    graphicsEngineFonts.LoadFonts(textElement.IncludeFontsFrom);
+                }
+                else
+                {
+                    logger.LogWarning(
+                        "include_fonts_from path {Directory} does not exist",
+                        textElement.IncludeFontsFrom);
+                }
+            }
+
             var scriptObject = new ScriptObject();
             scriptObject.Import(variables, renamer: member => member.Name);
             scriptObject.Import("convert_timezone", templateFunctions.ConvertTimeZone);

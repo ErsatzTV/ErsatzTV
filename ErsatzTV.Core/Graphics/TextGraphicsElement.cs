@@ -37,6 +37,9 @@ public class TextGraphicsElement
     [YamlMember(Alias = "base_style", ApplyNamingConventions = false)]
     public string BaseStyle { get; set; }
 
+    [YamlMember(Alias = "include_fonts_from", ApplyNamingConventions = false)]
+    public string IncludeFontsFrom { get; set; }
+
     [YamlMember(Alias = "epg_entries", ApplyNamingConventions = false)]
     public int EpgEntries { get; set; }
 
