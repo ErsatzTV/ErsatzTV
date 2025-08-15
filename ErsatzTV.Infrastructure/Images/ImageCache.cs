@@ -124,6 +124,7 @@ public class ImageCache : IImageCache
     {
         string targetFile = GetPathForImage(fileName, artworkKind, Option<int>.None);
 
+        // ReSharper disable once ConvertToUsingDeclaration
         using (var image = SKBitmap.Decode(targetFile))
         {
             // resize before calculating blur hash; it doesn't need giant images
@@ -142,8 +143,12 @@ public class ImageCache : IImageCache
                 }
 
                 var info = new SKImageInfo(width, height);
-                using SKBitmap resized = image.Resize(info, SKSamplingOptions.Default);
-                return Task.FromResult(Blurhasher.Encode(resized, x, y));
+
+                // ReSharper disable once ConvertToUsingDeclaration
+                using (SKBitmap resized = image.Resize(info, SKSamplingOptions.Default))
+                {
+                    return Task.FromResult(Blurhasher.Encode(resized, x, y));
+                }
             }
 
             return Task.FromResult(Blurhasher.Encode(image, x, y));
@@ -160,10 +165,17 @@ public class ImageCache : IImageCache
             string folder = Path.GetDirectoryName(targetFile);
             _localFileSystem.EnsureFolderExists(folder);
 
-            using SKBitmap image = Blurhasher.Decode(blurHash, targetSize.Width, targetSize.Height);
-            using SKData data = image.Encode(SKEncodedImageFormat.Png, 100);
-            using FileStream fs = File.OpenWrite(targetFile);
-            data.SaveTo(fs);
+            // ReSharper disable once ConvertToUsingDeclaration
+            using (FileStream fs = File.OpenWrite(targetFile))
+            {
+                using (SKBitmap image = Blurhasher.Decode(blurHash, targetSize.Width, targetSize.Height))
+                {
+                    using (SKData data = image.Encode(SKEncodedImageFormat.Png, 100))
+                    {
+                        data.SaveTo(fs);
+                    }
+                }
+            }
         }
 
         return Task.FromResult(targetFile);
