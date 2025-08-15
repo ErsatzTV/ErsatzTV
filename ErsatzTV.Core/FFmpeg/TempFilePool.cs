@@ -5,7 +5,7 @@ namespace ErsatzTV.Core.FFmpeg;
 public class TempFilePool : ITempFilePool
 {
     private const int ItemLimit = 10;
-    private readonly object _lock = new();
+    private readonly Lock _lock = new();
     private readonly Dictionary<TempFileCategory, int> _state = new();
 
     public string GetNextTempFile(TempFileCategory category)

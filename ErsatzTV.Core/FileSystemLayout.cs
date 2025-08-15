@@ -50,6 +50,7 @@ public static class FileSystemLayout
     public static readonly string GraphicsElementsTemplatesFolder;
     public static readonly string GraphicsElementsTextTemplatesFolder;
     public static readonly string GraphicsElementsImageTemplatesFolder;
+    public static readonly string GraphicsElementsSubtitleTemplatesFolder;
 
     public static readonly string ScriptsFolder;
 
@@ -169,6 +170,7 @@ public static class FileSystemLayout
         GraphicsElementsTemplatesFolder = Path.Combine(TemplatesFolder, "graphics-elements");
         GraphicsElementsTextTemplatesFolder = Path.Combine(GraphicsElementsTemplatesFolder, "text");
         GraphicsElementsImageTemplatesFolder = Path.Combine(GraphicsElementsTemplatesFolder, "image");
+        GraphicsElementsSubtitleTemplatesFolder = Path.Combine(GraphicsElementsTemplatesFolder, "subtitle");
 
         ScriptsFolder = Path.Combine(AppDataFolder, "scripts");
 

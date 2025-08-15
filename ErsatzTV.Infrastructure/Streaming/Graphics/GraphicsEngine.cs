@@ -1,11 +1,9 @@
 using System.IO.Pipelines;
 using ErsatzTV.Core;
+using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Streaming;
 using ErsatzTV.Core.Metadata;
-using ErsatzTV.Infrastructure.Streaming.Graphics.Fonts;
-using ErsatzTV.Infrastructure.Streaming.Graphics.Image;
-using ErsatzTV.Infrastructure.Streaming.Graphics.Text;
 using Microsoft.Extensions.Logging;
 using SkiaSharp;
 
@@ -14,6 +12,7 @@ namespace ErsatzTV.Infrastructure.Streaming.Graphics;
 public class GraphicsEngine(
     TemplateFunctions templateFunctions,
     GraphicsEngineFonts graphicsEngineFonts,
+    ITempFilePool tempFilePool,
     ITemplateDataRepository templateDataRepository,
     ILogger<GraphicsEngine> logger)
     : IGraphicsEngine
@@ -24,8 +23,8 @@ public class GraphicsEngine(
 
         var templateVariables = new Dictionary<string, object>();
 
-        // init text element variables once
-        if (context.Elements.OfType<TextElementContext>().Any())
+        // init template element variables once
+        if (context.Elements.OfType<ITemplateDataContext>().Any())
         {
             // common variables
             templateVariables[MediaItemTemplateDataKey.Resolution] = context.FrameSize;
@@ -43,7 +42,7 @@ public class GraphicsEngine(
             }
 
             // epg variables
-            int maxEpg = context.Elements.OfType<TextElementContext>().Max(c => c.TextElement.EpgEntries);
+            int maxEpg = context.Elements.OfType<ITemplateDataContext>().Max(c => c.EpgEntries);
             var startTime = context.ContentStartTime + context.Seek;
             var maybeEpgData =
                 await templateDataRepository.GetEpgTemplateData(context.ChannelNumber, startTime, maxEpg);
@@ -73,7 +72,8 @@ public class GraphicsEngine(
                     elements.Add(new ImageElement(imageElementContext.ImageElement, logger));
                     break;
 
-                case TextElementContext textElementContext:
+                case TextElementDataContext textElementContext:
+                {
                     var variables = templateVariables.ToDictionary();
                     foreach (var variable in textElementContext.Variables)
                     {
@@ -89,6 +89,26 @@ public class GraphicsEngine(
 
                     elements.Add(textElement);
                     break;
+                }
+
+                case SubtitleElementDataContext subtitleElementContext:
+                {
+                    var variables = templateVariables.ToDictionary();
+                    foreach (var variable in subtitleElementContext.Variables)
+                    {
+                        variables.Add(variable.Key, variable.Value);
+                    }
+
+                    var subtitleElement = new SubtitleElement(
+                        templateFunctions,
+                        tempFilePool,
+                        subtitleElementContext.SubtitlesElement,
+                        variables,
+                        logger);
+
+                    elements.Add(subtitleElement);
+                    break;
+                }
             }
         }
 

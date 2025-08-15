@@ -30,9 +30,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
         - EPG data can also load a configurable number of subsequent (up next) entries
       - Media Item data is sourced from the currently playing media item
   - Add `image` graphics element type
-      - Supported in playback troubleshooting and YAML playouts
-      - Displays an image, similar to a watermark
-      - Supports constant opacity and opacity expression
+    - Supported in playback troubleshooting and YAML playouts
+    - Displays an image, similar to a watermark
+    - Supports constant opacity and opacity expression
+  - Add `subtitle` graphics element type
+    - Supported in playback troubleshooting and YAML playouts
+    - Supports SRT and SSA/ASS subtitle formats
+    - Supports EPG and Media Item variable replacement
+      - EPG data is sourced from XMLTV for the current time
+        - EPG data can also load a configurable number of subsequent (up next) entries
+      - Media Item data is sourced from the currently playing media item
 - YAML playout: add `graphics_on` and `graphics_off` instructions to control graphics elements
   - `graphics_on` requires the name of a graphics element template, e.g. `text/cool_element.yml`
     - The `variables` property can be used to dynamically replace text from the template

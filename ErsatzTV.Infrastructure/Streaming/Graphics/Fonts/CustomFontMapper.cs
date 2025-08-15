@@ -2,7 +2,7 @@ using Microsoft.Extensions.Logging;
 using SkiaSharp;
 using Topten.RichTextKit;
 
-namespace ErsatzTV.Infrastructure.Streaming.Graphics.Fonts;
+namespace ErsatzTV.Infrastructure.Streaming.Graphics;
 
 public sealed class CustomFontMapper(ILogger<CustomFontMapper> logger) : FontMapper
 {

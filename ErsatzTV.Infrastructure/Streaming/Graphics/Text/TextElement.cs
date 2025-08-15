@@ -1,7 +1,6 @@
 using System.Text.RegularExpressions;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Graphics;
-using ErsatzTV.Infrastructure.Streaming.Graphics.Fonts;
 using Microsoft.Extensions.Logging;
 using NCalc;
 using Topten.RichTextKit;
@@ -10,7 +9,7 @@ using Scriban.Runtime;
 using SkiaSharp;
 using RichTextKit=Topten.RichTextKit;
 
-namespace ErsatzTV.Infrastructure.Streaming.Graphics.Text;
+namespace ErsatzTV.Infrastructure.Streaming.Graphics;
 
 public partial class TextElement(
     TemplateFunctions templateFunctions,

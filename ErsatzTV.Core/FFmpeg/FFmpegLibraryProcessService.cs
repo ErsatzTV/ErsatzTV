@@ -472,7 +472,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                                 playoutItemGraphicsElement.Variables);
                         }
 
-                        graphicsElementContexts.Add(new TextElementContext(element, variables));
+                        graphicsElementContexts.Add(new TextElementDataContext(element, variables));
                     }
 
                     break;
@@ -490,14 +490,32 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
 
                     foreach (var element in maybeElement)
                     {
-                        // var variables = new Dictionary<string, string>();
-                        // if (!string.IsNullOrWhiteSpace(playoutItemGraphicsElement.Variables))
-                        // {
-                        //     variables = JsonConvert.DeserializeObject<Dictionary<string, string>>(
-                        //         playoutItemGraphicsElement.Variables);
-                        // }
-
                         graphicsElementContexts.Add(new ImageElementContext(element));
+                    }
+
+                    break;
+                }
+                case GraphicsElementKind.Subtitle:
+                {
+                    var maybeElement =
+                        await SubtitlesGraphicsElement.FromFile(playoutItemGraphicsElement.GraphicsElement.Path);
+                    if (maybeElement.IsNone)
+                    {
+                        _logger.LogWarning(
+                            "Failed to load subtitle graphics element from file {Path}; ignoring",
+                            playoutItemGraphicsElement.GraphicsElement.Path);
+                    }
+
+                    foreach (var element in maybeElement)
+                    {
+                        var variables = new Dictionary<string, string>();
+                        if (!string.IsNullOrWhiteSpace(playoutItemGraphicsElement.Variables))
+                        {
+                            variables = JsonConvert.DeserializeObject<Dictionary<string, string>>(
+                                playoutItemGraphicsElement.Variables);
+                        }
+
+                        graphicsElementContexts.Add(new SubtitleElementDataContext(element, variables));
                     }
 
                     break;

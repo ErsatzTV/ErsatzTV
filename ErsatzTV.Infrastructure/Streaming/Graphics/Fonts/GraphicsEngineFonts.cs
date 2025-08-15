@@ -1,6 +1,6 @@
 using Topten.RichTextKit;
 
-namespace ErsatzTV.Infrastructure.Streaming.Graphics.Fonts;
+namespace ErsatzTV.Infrastructure.Streaming.Graphics;
 
 public class GraphicsEngineFonts(CustomFontMapper mapper)
 {

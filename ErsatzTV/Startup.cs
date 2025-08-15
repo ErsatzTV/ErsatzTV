@@ -66,8 +66,6 @@ using ErsatzTV.Infrastructure.Search;
 using ErsatzTV.Infrastructure.Sqlite.Data;
 using ErsatzTV.Infrastructure.Streaming;
 using ErsatzTV.Infrastructure.Streaming.Graphics;
-using ErsatzTV.Infrastructure.Streaming.Graphics.Fonts;
-using ErsatzTV.Infrastructure.Streaming.Graphics.Text;
 using ErsatzTV.Infrastructure.Trakt;
 using ErsatzTV.Serialization;
 using ErsatzTV.Services;
@@ -342,6 +340,7 @@ public class Startup
             FileSystemLayout.GraphicsElementsTemplatesFolder,
             FileSystemLayout.GraphicsElementsTextTemplatesFolder,
             FileSystemLayout.GraphicsElementsImageTemplatesFolder,
+            FileSystemLayout.GraphicsElementsSubtitleTemplatesFolder,
             FileSystemLayout.ScriptsFolder,
             FileSystemLayout.MultiEpisodeShuffleTemplatesFolder,
             FileSystemLayout.AudioStreamSelectorScriptsFolder
