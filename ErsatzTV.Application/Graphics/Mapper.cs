@@ -11,6 +11,7 @@ public static class Mapper
         {
             GraphicsElementKind.Text => new GraphicsElementViewModel(graphicsElement.Id, $"text/{fileName}"),
             GraphicsElementKind.Image => new GraphicsElementViewModel(graphicsElement.Id, $"image/{fileName}"),
+            GraphicsElementKind.Subtitle => new  GraphicsElementViewModel(graphicsElement.Id, $"subtitle/{fileName}"),
             _ => new GraphicsElementViewModel(graphicsElement.Id, graphicsElement.Path)
         };
     }

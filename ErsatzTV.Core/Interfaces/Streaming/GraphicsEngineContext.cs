@@ -20,7 +20,21 @@ public abstract record GraphicsElementContext;
 
 public record WatermarkElementContext(WatermarkOptions Options) : GraphicsElementContext;
 
-public record TextElementContext(TextGraphicsElement TextElement, Dictionary<string, string> Variables)
-    : GraphicsElementContext;
+public record TextElementDataContext(TextGraphicsElement TextElement, Dictionary<string, string> Variables)
+    : GraphicsElementContext, ITemplateDataContext
+{
+    public int EpgEntries => TextElement.EpgEntries;
+}
 
 public record ImageElementContext(ImageGraphicsElement ImageElement) : GraphicsElementContext;
+
+public record SubtitleElementDataContext(SubtitlesGraphicsElement SubtitlesElement, Dictionary<string, string> Variables)
+    : GraphicsElementContext, ITemplateDataContext
+{
+    public int EpgEntries => SubtitlesElement.EpgEntries;
+}
+
+public interface ITemplateDataContext
+{
+    int EpgEntries { get; }
+}
