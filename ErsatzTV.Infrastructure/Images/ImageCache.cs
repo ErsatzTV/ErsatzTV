@@ -1,18 +1,15 @@
-﻿using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
-using Blurhash.ImageSharp;
+using Blurhash.SkiaSharp;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Processing;
-using Image = SixLabors.ImageSharp.Image;
+using SkiaSharp;
 
 namespace ErsatzTV.Infrastructure.Images;
 
@@ -123,28 +120,37 @@ public class ImageCache : IImageCache
         return Path.Combine(baseFolder, fileName);
     }
 
-    public async Task<string> CalculateBlurHash(string fileName, ArtworkKind artworkKind, int x, int y)
+    public Task<string> CalculateBlurHash(string fileName, ArtworkKind artworkKind, int x, int y)
     {
         string targetFile = GetPathForImage(fileName, artworkKind, Option<int>.None);
 
-        // ReSharper disable once ConvertToUsingDeclaration
-        using (var image = await Image.LoadAsync<Rgba32>(targetFile))
+        using (var image = SKBitmap.Decode(targetFile))
         {
             // resize before calculating blur hash; it doesn't need giant images
-            if (image.Height > 200)
+            if (image.Height > 200 || image.Width > 200)
             {
-                image.Mutate(i => i.Resize(0, 200));
-            }
-            else if (image.Width > 200)
-            {
-                image.Mutate(i => i.Resize(200, 0));
+                int width, height;
+                if (image.Width > image.Height)
+                {
+                    width = 200;
+                    height = (int)Math.Round(image.Height * (200.0 / image.Width));
+                }
+                else
+                {
+                    height = 200;
+                    width = (int)Math.Round(image.Width * (200.0 / image.Height));
+                }
+
+                var info = new SKImageInfo(width, height);
+                using SKBitmap resized = image.Resize(info, SKSamplingOptions.Default);
+                return Task.FromResult(Blurhasher.Encode(resized, x, y));
             }
 
-            return Blurhasher.Encode(image, x, y);
+            return Task.FromResult(Blurhasher.Encode(image, x, y));
         }
     }
 
-    public async Task<string> WriteBlurHash(string blurHash, IDisplaySize targetSize)
+    public Task<string> WriteBlurHash(string blurHash, IDisplaySize targetSize)
     {
         byte[] bytes = Encoding.UTF8.GetBytes(blurHash);
         string base64 = Convert.ToBase64String(bytes).Replace("+", "_").Replace("/", "-").Replace("=", "");
@@ -154,18 +160,13 @@ public class ImageCache : IImageCache
             string folder = Path.GetDirectoryName(targetFile);
             _localFileSystem.EnsureFolderExists(folder);
 
-            // ReSharper disable once ConvertToUsingDeclaration
-            // ReSharper disable once UseAwaitUsing
-            using (FileStream fs = File.OpenWrite(targetFile))
-            {
-                using (Image<Rgb24> image = Blurhasher.Decode(blurHash, targetSize.Width, targetSize.Height))
-                {
-                    await image.SaveAsPngAsync(fs);
-                }
-            }
+            using SKBitmap image = Blurhasher.Decode(blurHash, targetSize.Width, targetSize.Height);
+            using SKData data = image.Encode(SKEncodedImageFormat.Png, 100);
+            using FileStream fs = File.OpenWrite(targetFile);
+            data.SaveTo(fs);
         }
 
-        return targetFile;
+        return Task.FromResult(targetFile);
     }
 
     [SuppressMessage("Security", "CA5351:Do Not Use Broken Cryptographic Algorithms")]
