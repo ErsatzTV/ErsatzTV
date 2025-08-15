@@ -87,25 +87,40 @@ public class ImageElement(ImageGraphicsElement imageGraphicsElement, ILogger log
 
             var scaledImageInfo = new SKImageInfo(scaledWidth, scaledHeight, SKColorType.Bgra8888, SKAlphaType.Premul);
 
-            for (var i = 0; i < _sourceCodec.FrameCount; i++)
+            if (_sourceCodec.FrameCount == 0)
             {
-                _sourceCodec.GetFrameInfo(i, out var frameInfo);
-                int frameDuration = frameInfo.Duration;
-                if (frameDuration == 0)
+                // static image
+                using var frameBitmap = SKBitmap.Decode(_sourceCodec);
+                if (frameBitmap != null)
                 {
-                    frameDuration = 100;
+                    var scaledBitmap = new SKBitmap(scaledImageInfo);
+                    frameBitmap.ScalePixels(scaledBitmap, SKSamplingOptions.Default);
+                    _scaledFrames.Add(scaledBitmap);
                 }
+            }
+            else
+            {
+                // animated image
+                for (var i = 0; i < _sourceCodec.FrameCount; i++)
+                {
+                    _sourceCodec.GetFrameInfo(i, out var frameInfo);
+                    int frameDuration = frameInfo.Duration;
+                    if (frameDuration == 0)
+                    {
+                        frameDuration = 100;
+                    }
 
-                using var frameBitmap = new SKBitmap(_sourceCodec.Info);
-                var pointer = frameBitmap.GetPixels();
-                _sourceCodec.GetPixels(_sourceCodec.Info, pointer, new SKCodecOptions(i));
+                    using var frameBitmap = new SKBitmap(_sourceCodec.Info);
+                    var pointer = frameBitmap.GetPixels();
+                    _sourceCodec.GetPixels(_sourceCodec.Info, pointer, new SKCodecOptions(i));
 
-                var scaledBitmap = new SKBitmap(scaledImageInfo);
-                frameBitmap.ScalePixels(scaledBitmap, SKSamplingOptions.Default);
-                _scaledFrames.Add(scaledBitmap);
+                    var scaledBitmap = new SKBitmap(scaledImageInfo);
+                    frameBitmap.ScalePixels(scaledBitmap, SKSamplingOptions.Default);
+                    _scaledFrames.Add(scaledBitmap);
 
-                _animatedDurationMs += frameDuration;
-                _frameDelays.Add(frameDuration);
+                    _animatedDurationMs += frameDuration;
+                    _frameDelays.Add(frameDuration);
+                }
             }
 
             if (_sourceCodec.FrameCount > 0 && _animatedDurationMs == 0)
