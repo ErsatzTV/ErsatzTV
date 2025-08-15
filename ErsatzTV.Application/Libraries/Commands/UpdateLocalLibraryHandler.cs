@@ -53,45 +53,51 @@ public class UpdateLocalLibraryHandler : LocalLibraryHandlerBase,
             .Filter(ep => incoming.Paths.All(p => NormalizePath(p.Path) != NormalizePath(ep.Path)))
             .ToList();
 
-        var toRemoveIds = toRemove.Map(lp => lp.Id).ToList();
+        var toRemoveIds = toRemove.Map(lp => lp.Id).ToHashSet();
 
-        await dbContext.Connection.ExecuteAsync(
+        int changeCount = 0;
+
+        // save item ids first; will need to remove from search index
+        List<int> itemsToRemove = await dbContext.MediaItems
+            .AsNoTracking()
+            .Filter(mi => toRemoveIds.Contains(mi.LibraryPathId))
+            .Map(mi => mi.Id)
+            .ToListAsync();
+
+        changeCount += await dbContext.Connection.ExecuteAsync(
             "DELETE FROM MediaItem WHERE LibraryPathId IN @Ids",
             new { Ids = toRemoveIds });
 
         // delete all library folders (children first)
         IOrderedQueryable<LibraryFolder> orderedFolders = dbContext.LibraryFolders
+            .AsNoTracking()
             .Filter(lf => toRemoveIds.Contains(lf.LibraryPathId))
             .OrderByDescending(lp => lp.Path.Length);
 
         foreach (LibraryFolder folder in orderedFolders)
         {
-            await dbContext.Connection.ExecuteAsync(
+            changeCount += await dbContext.Connection.ExecuteAsync(
                 "DELETE FROM LibraryFolder WHERE Id = @LibraryFolderId",
                 new { LibraryFolderId = folder.Id });
         }
 
-        await dbContext.LibraryPaths
+        changeCount += await dbContext.LibraryPaths
             .Filter(lp => toRemoveIds.Contains(lp.Id))
             .ExecuteDeleteAsync();
 
         existing.Paths.AddRange(toAdd);
 
-        if (await dbContext.SaveChangesAsync() > 0)
-        {
-            List<int> itemsToRemove = await dbContext.MediaItems
-                .AsNoTracking()
-                .Filter(mi => toRemoveIds.Contains(mi.LibraryPathId))
-                .Map(mi => mi.Id)
-                .ToListAsync();
+        changeCount += await dbContext.SaveChangesAsync();
 
+        if (changeCount > 0)
+        {
             await _searchIndex.RemoveItems(itemsToRemove);
             _searchIndex.Commit();
-        }
 
-        if ((toAdd.Count > 0 || toRemove.Count > 0) && _entityLocker.LockLibrary(existing.Id))
-        {
-            await _scannerWorkerChannel.WriteAsync(new ForceScanLocalLibrary(existing.Id));
+            if (_entityLocker.LockLibrary(existing.Id))
+            {
+                await _scannerWorkerChannel.WriteAsync(new ForceScanLocalLibrary(existing.Id));
+            }
         }
 
         return ProjectToViewModel(existing);
