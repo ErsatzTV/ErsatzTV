@@ -54,13 +54,13 @@ public class TextElement(
             string textToRender = await Template.Parse(textElement.Text).RenderAsync(context);
 
             var textBlock = new TextBlock { FontMapper = GraphicsEngineFonts.Mapper };
-            var style = new RichTextKit.Style
+            var styles = textElement.Styles.ToDictionary(s => s.Name, s => new RichTextKit.Style
             {
-                FontFamily = textElement.FontFamily,
-                FontSize = textElement.FontSize ?? 48,
-                // FontWeight = (textElement.FontWeight ?? 400),
-                // FontItalic = (textElement.FontStyle == FontStyle.Italic),
-                TextColor = SKColor.TryParse(textElement.FontColor, out SKColor parsedColor)
+                FontFamily = s.FontFamily,
+                FontSize = s.FontSize ?? 48,
+                FontWeight = s.FontWeight ?? 400,
+                FontItalic = s.FontItalic,
+                TextColor = SKColor.TryParse(s.TextColor, out SKColor parsedColor)
                     ? parsedColor
                     : SKColors.White,
                 // BackgroundColor = SKColor.TryParse(textElement.BackgroundColor, out SKColor parsedBackColor)
@@ -69,10 +69,19 @@ public class TextElement(
                 // Underline = (textElement.TextDecoration == TextDecoration.Underline)
                 //     ? UnderlineStyle.Solid
                 //     : UnderlineStyle.None
-                LetterSpacing = 10
-            };
+            });
 
-            textBlock.AddText(textToRender, style);
+            if (!styles.TryGetValue(textElement.DefaultStyle, out RichTextKit.Style defaultStyle))
+            {
+                throw new KeyNotFoundException($"Default style {textElement.DefaultStyle} not found");
+            }
+
+            foreach (var letterSpacing in Optional(defaultStyle.LetterSpacing))
+            {
+                defaultStyle.LetterSpacing = letterSpacing;
+            }
+
+            textBlock.AddText(textToRender, defaultStyle);
 
             _image = new SKBitmap((int)Math.Ceiling(textBlock.MeasuredWidth), (int)Math.Ceiling(textBlock.MeasuredHeight));
             using (var canvas = new SKCanvas(_image))
