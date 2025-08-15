@@ -3,18 +3,24 @@ using ErsatzTV.Core;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Streaming;
 using ErsatzTV.Core.Metadata;
+using ErsatzTV.Infrastructure.Streaming.Graphics.Fonts;
+using ErsatzTV.Infrastructure.Streaming.Graphics.Image;
+using ErsatzTV.Infrastructure.Streaming.Graphics.Text;
 using Microsoft.Extensions.Logging;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Processing;
+using SkiaSharp;
 
-namespace ErsatzTV.Infrastructure.Streaming;
+namespace ErsatzTV.Infrastructure.Streaming.Graphics;
 
-public class GraphicsEngine(ITemplateDataRepository templateDataRepository, ILogger<GraphicsEngine> logger) : IGraphicsEngine
+public class GraphicsEngine(
+    TemplateFunctions templateFunctions,
+    GraphicsEngineFonts graphicsEngineFonts,
+    ITemplateDataRepository templateDataRepository,
+    ILogger<GraphicsEngine> logger)
+    : IGraphicsEngine
 {
     public async Task Run(GraphicsEngineContext context, PipeWriter pipeWriter, CancellationToken cancellationToken)
     {
-        GraphicsEngineFonts.LoadFonts(FileSystemLayout.FontsCacheFolder);
+        graphicsEngineFonts.LoadFonts(FileSystemLayout.FontsCacheFolder);
 
         var templateVariables = new Dictionary<string, object>();
 
@@ -61,11 +67,12 @@ public class GraphicsEngine(ITemplateDataRepository templateDataRepository, ILog
                     {
                         elements.Add(watermark);
                     }
-
                     break;
+
                 case ImageElementContext imageElementContext:
                     elements.Add(new ImageElement(imageElementContext.ImageElement, logger));
                     break;
+
                 case TextElementContext textElementContext:
                     var variables = templateVariables.ToDictionary();
                     foreach (var variable in textElementContext.Variables)
@@ -73,7 +80,14 @@ public class GraphicsEngine(ITemplateDataRepository templateDataRepository, ILog
                         variables.Add(variable.Key, variable.Value);
                     }
 
-                    elements.Add(new TextElement(textElementContext.TextElement, variables, logger));
+                    var textElement = new TextElement(
+                        templateFunctions,
+                        graphicsEngineFonts,
+                        textElementContext.TextElement,
+                        variables,
+                        logger);
+
+                    elements.Add(textElement);
                     break;
             }
         }
@@ -84,6 +98,12 @@ public class GraphicsEngine(ITemplateDataRepository templateDataRepository, ILog
 
         long frameCount = 0;
         var totalFrames = (long)(context.Duration.TotalSeconds * context.FrameRate);
+
+        using var outputBitmap = new SKBitmap(
+            context.FrameSize.Width,
+            context.FrameSize.Height,
+            SKColorType.Bgra8888,
+            SKAlphaType.Premul);
 
         try
         {
@@ -105,10 +125,8 @@ public class GraphicsEngine(ITemplateDataRepository templateDataRepository, ILog
                 // `channel_seconds` - the total number of seconds the frame is from when the channel started/activated
                 var channelTime = frameTime - context.ChannelStartTime;
 
-                using var outputFrame = new Image<Bgra32>(
-                    context.FrameSize.Width,
-                    context.FrameSize.Height,
-                    Color.Transparent);
+                using var canvas = new SKCanvas(outputBitmap);
+                canvas.Clear(SKColors.Transparent);
 
                 // prepare images outside mutate to allow async image generation
                 var preparedElementImages = new List<PreparedElementImage>();
@@ -135,22 +153,26 @@ public class GraphicsEngine(ITemplateDataRepository templateDataRepository, ILog
                 }
 
                 // draw each element
-                outputFrame.Mutate(ctx =>
+                foreach (var preparedImage in preparedElementImages)
                 {
-                    foreach (var preparedImage in preparedElementImages)
+                    using var paint = new SKPaint();
+                    paint.Color = new SKColor(255, 255, 255, (byte)(preparedImage.Opacity * 255));
+                    canvas.DrawBitmap(preparedImage.Image, new SKPoint(preparedImage.Point.X, preparedImage.Point.Y), paint);
+
+                    if (preparedImage.Dispose)
                     {
-                        ctx.DrawImage(preparedImage.Image, preparedImage.Point, preparedImage.Opacity);
-                        if (preparedImage.Dispose)
-                        {
-                            preparedImage.Image.Dispose();
-                        }
+                        preparedImage.Image.Dispose();
                     }
-                });
+                }
 
                 // pipe output
                 int frameBufferSize = context.FrameSize.Width * context.FrameSize.Height * 4;
-                Memory<byte> memory = pipeWriter.GetMemory(frameBufferSize);
-                outputFrame.CopyPixelDataTo(memory.Span);
+                using (SKPixmap pixmap = outputBitmap.PeekPixels())
+                {
+                    var memory = pipeWriter.GetMemory(frameBufferSize);
+                    pixmap.GetPixelSpan().CopyTo(memory.Span);
+                }
+
                 pipeWriter.Advance(frameBufferSize);
                 await pipeWriter.FlushAsync(cancellationToken);
 

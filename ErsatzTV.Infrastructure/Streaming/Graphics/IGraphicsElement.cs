@@ -1,6 +1,6 @@
 using ErsatzTV.Core.Domain;
 
-namespace ErsatzTV.Infrastructure.Streaming;
+namespace ErsatzTV.Infrastructure.Streaming.Graphics;
 
 public interface IGraphicsElement
 {

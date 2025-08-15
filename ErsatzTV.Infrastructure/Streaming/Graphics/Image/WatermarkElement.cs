@@ -3,26 +3,23 @@ using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.FFmpeg.State;
 using Microsoft.Extensions.Logging;
 using NCalc;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats.Gif;
-using SixLabors.ImageSharp.Processing;
-using Image = SixLabors.ImageSharp.Image;
+using SkiaSharp;
 
-namespace ErsatzTV.Infrastructure.Streaming;
+namespace ErsatzTV.Infrastructure.Streaming.Graphics.Image;
 
-public class WatermarkElement : IGraphicsElement, IDisposable
+public class WatermarkElement : GraphicsElement, IDisposable
 {
     private readonly ILogger _logger;
     private readonly string _imagePath;
     private readonly ChannelWatermark _watermark;
-    private readonly List<Image> _scaledFrames = [];
-    private readonly List<double> _frameDelays = [];
+    private readonly List<SKBitmap> _scaledFrames = [];
+    private readonly List<int> _frameDelays = [];
 
     private Option<Expression> _maybeOpacityExpression;
     private float _opacity;
-    private double _animatedDurationSeconds;
-    private Image _sourceImage;
-    private Point _location;
+    private int _animatedDurationMs;
+    private SKCodec _sourceCodec;
+    private SKPointI _location;
 
     public WatermarkElement(WatermarkOptions watermarkOptions, ILogger logger)
     {
@@ -42,11 +39,7 @@ public class WatermarkElement : IGraphicsElement, IDisposable
 
     public bool IsValid => _imagePath != null && _watermark != null;
 
-    public int ZIndex { get; }
-
-    public bool IsFailed { get; set; }
-
-    public async Task InitializeAsync(Resolution squarePixelFrameSize, Resolution frameSize, int frameRate, CancellationToken cancellationToken)
+    public override async Task InitializeAsync(Resolution squarePixelFrameSize, Resolution frameSize, int frameRate, CancellationToken cancellationToken)
     {
         try
         {
@@ -79,26 +72,31 @@ public class WatermarkElement : IGraphicsElement, IDisposable
                 expression.EvaluateFunction += OpacityExpressionHelper.EvaluateFunction;
             }
 
+            Stream imageStream;
             bool isRemoteUri = Uri.TryCreate(_imagePath, UriKind.Absolute, out var uriResult)
                                && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
 
             if (isRemoteUri)
             {
                 using var client = new HttpClient();
-                await using Stream imageStream = await client.GetStreamAsync(uriResult, cancellationToken);
-                _sourceImage = await Image.LoadAsync(imageStream, cancellationToken);
+                imageStream = new MemoryStream(await client.GetByteArrayAsync(uriResult, cancellationToken));
             }
             else
             {
-                _sourceImage = await Image.LoadAsync(_imagePath!, cancellationToken);
+                imageStream = new FileStream(_imagePath!, FileMode.Open, FileAccess.Read);
             }
 
-            int scaledWidth = _sourceImage.Width;
-            int scaledHeight = _sourceImage.Height;
+            _sourceCodec = SKCodec.Create(imageStream);
+
+            int sourceWidth = _sourceCodec.Info.Width;
+            int sourceHeight = _sourceCodec.Info.Height;
+
+            int scaledWidth = sourceWidth;
+            int scaledHeight = sourceHeight;
             if (_watermark.Size == WatermarkSize.Scaled)
             {
                 scaledWidth = (int)Math.Round(_watermark.WidthPercent / 100.0 * frameSize.Width);
-                double aspectRatio = (double)_sourceImage.Height / _sourceImage.Width;
+                double aspectRatio = (double)sourceHeight / sourceWidth;
                 scaledHeight = (int)(scaledWidth * aspectRatio);
             }
 
@@ -106,7 +104,7 @@ public class WatermarkElement : IGraphicsElement, IDisposable
                 ? SourceContentMargins(squarePixelFrameSize, frameSize)
                 : NormalMargins(frameSize);
 
-            _location = CalculatePosition(
+            var location = CalculatePosition(
                 _watermark.Location,
                 frameSize.Width,
                 frameSize.Height,
@@ -114,18 +112,51 @@ public class WatermarkElement : IGraphicsElement, IDisposable
                 scaledHeight,
                 horizontalMargin,
                 verticalMargin);
+            _location = new SKPointI(location.X, location.Y);
 
-            _animatedDurationSeconds = 0;
+            _animatedDurationMs = 0;
 
-            for (int i = 0; i < _sourceImage.Frames.Count; i++)
+            var scaledImageInfo = new SKImageInfo(scaledWidth, scaledHeight, SKColorType.Bgra8888, SKAlphaType.Premul);
+
+            if (_sourceCodec.FrameCount == 0)
             {
-                var frame = _sourceImage.Frames.CloneFrame(i);
-                frame.Mutate(ctx => ctx.Resize(scaledWidth, scaledHeight));
-                _scaledFrames.Add(frame);
+                // static image
+                using var frameBitmap = SKBitmap.Decode(_sourceCodec);
+                if (frameBitmap != null)
+                {
+                    var scaledBitmap = new SKBitmap(scaledImageInfo);
+                    frameBitmap.ScalePixels(scaledBitmap, SKSamplingOptions.Default);
+                    _scaledFrames.Add(scaledBitmap);
+                }
+            }
+            else
+            {
+                // animated image
+                for (var i = 0; i < _sourceCodec.FrameCount; i++)
+                {
+                    _sourceCodec.GetFrameInfo(i, out var frameInfo);
+                    int frameDuration = frameInfo.Duration;
+                    if (frameDuration == 0)
+                    {
+                        frameDuration = 100;
+                    }
 
-                var frameDelay = _sourceImage.Frames[i].Metadata.GetFormatMetadata(GifFormat.Instance).FrameDelay / 100.0;
-                _animatedDurationSeconds += frameDelay;
-                _frameDelays.Add(frameDelay);
+                    using var frameBitmap = new SKBitmap(_sourceCodec.Info);
+                    var pointer = frameBitmap.GetPixels();
+                    _sourceCodec.GetPixels(_sourceCodec.Info, pointer, new SKCodecOptions(i));
+
+                    var scaledBitmap = new SKBitmap(scaledImageInfo);
+                    frameBitmap.ScalePixels(scaledBitmap, SKSamplingOptions.Default);
+                    _scaledFrames.Add(scaledBitmap);
+
+                    _animatedDurationMs += frameDuration;
+                    _frameDelays.Add(frameDuration);
+                }
+            }
+
+            if (_sourceCodec.FrameCount > 0 && _animatedDurationMs == 0)
+            {
+                _animatedDurationMs = int.MaxValue;
             }
         }
         catch (Exception ex)
@@ -135,7 +166,7 @@ public class WatermarkElement : IGraphicsElement, IDisposable
         }
     }
 
-    public ValueTask<Option<PreparedElementImage>> PrepareImage(
+    public override ValueTask<Option<PreparedElementImage>> PrepareImage(
         TimeSpan timeOfDay,
         TimeSpan contentTime,
         TimeSpan contentTotalTime,
@@ -158,58 +189,30 @@ public class WatermarkElement : IGraphicsElement, IDisposable
             return ValueTask.FromResult(Option<PreparedElementImage>.None);
         }
 
-        Image frameForTimestamp = GetFrameForTimestamp(contentTime);
+        SKBitmap frameForTimestamp = GetFrameForTimestamp(contentTime);
         return ValueTask.FromResult(Optional(new PreparedElementImage(frameForTimestamp, _location, opacity, false)));
     }
 
-    private Image GetFrameForTimestamp(TimeSpan timestamp)
+    private SKBitmap GetFrameForTimestamp(TimeSpan timestamp)
     {
         if (_scaledFrames.Count <= 1)
         {
             return _scaledFrames[0];
         }
 
-        double currentTime = timestamp.TotalSeconds % _animatedDurationSeconds;
+        long currentTimeMs = (long)timestamp.TotalMilliseconds % _animatedDurationMs;
 
-        double frameTime = 0;
-        for (int i = 0; i < _sourceImage.Frames.Count; i++)
+        long frameTime = 0;
+        for (var i = 0; i < _sourceCodec.FrameCount; i++)
         {
             frameTime += _frameDelays[i];
-            if (currentTime <= frameTime)
+            if (currentTimeMs <= frameTime)
             {
                 return _scaledFrames[i];
             }
         }
 
         return _scaledFrames.Last();
-    }
-
-    internal static Point CalculatePosition(
-        WatermarkLocation location,
-        int frameWidth,
-        int frameHeight,
-        int imageWidth,
-        int imageHeight,
-        int horizontalMargin,
-        int verticalMargin)
-    {
-        return location switch
-        {
-            WatermarkLocation.BottomLeft => new Point(horizontalMargin, frameHeight - imageHeight - verticalMargin),
-            WatermarkLocation.TopLeft => new Point(horizontalMargin, verticalMargin),
-            WatermarkLocation.TopRight => new Point(frameWidth - imageWidth - horizontalMargin, verticalMargin),
-            WatermarkLocation.TopMiddle => new Point((frameWidth - imageWidth) / 2, verticalMargin),
-            WatermarkLocation.RightMiddle => new Point(
-                frameWidth - imageWidth - horizontalMargin,
-                (frameHeight - imageHeight) / 2),
-            WatermarkLocation.BottomMiddle => new Point(
-                (frameWidth - imageWidth) / 2,
-                frameHeight - imageHeight - verticalMargin),
-            WatermarkLocation.LeftMiddle => new Point(horizontalMargin, (frameHeight - imageHeight) / 2),
-            _ => new Point(
-                frameWidth - imageWidth - horizontalMargin,
-                frameHeight - imageHeight - verticalMargin),
-        };
     }
 
     private WatermarkMargins NormalMargins(Resolution frameSize)
@@ -241,7 +244,7 @@ public class WatermarkElement : IGraphicsElement, IDisposable
     {
         GC.SuppressFinalize(this);
 
-        _sourceImage?.Dispose();
+        _sourceCodec?.Dispose();
         _scaledFrames?.ForEach(f => f.Dispose());
     }
 }

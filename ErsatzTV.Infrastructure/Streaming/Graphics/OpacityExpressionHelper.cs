@@ -2,7 +2,7 @@ using System.Globalization;
 using NCalc;
 using NCalc.Handlers;
 
-namespace ErsatzTV.Infrastructure.Streaming;
+namespace ErsatzTV.Infrastructure.Streaming.Graphics;
 
 public static class OpacityExpressionHelper
 {
