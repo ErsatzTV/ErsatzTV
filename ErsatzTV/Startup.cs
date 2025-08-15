@@ -66,6 +66,7 @@ using ErsatzTV.Infrastructure.Search;
 using ErsatzTV.Infrastructure.Sqlite.Data;
 using ErsatzTV.Infrastructure.Streaming;
 using ErsatzTV.Infrastructure.Streaming.Graphics;
+using ErsatzTV.Infrastructure.Streaming.Graphics.Text;
 using ErsatzTV.Infrastructure.Trakt;
 using ErsatzTV.Serialization;
 using ErsatzTV.Services;

@@ -4,6 +4,8 @@ using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Streaming;
 using ErsatzTV.Core.Metadata;
 using ErsatzTV.Infrastructure.Streaming.Graphics.Fonts;
+using ErsatzTV.Infrastructure.Streaming.Graphics.Image;
+using ErsatzTV.Infrastructure.Streaming.Graphics.Text;
 using Microsoft.Extensions.Logging;
 using SkiaSharp;
 

@@ -2,7 +2,7 @@ using System.Globalization;
 using Microsoft.Extensions.Logging;
 using TimeZoneConverter;
 
-namespace ErsatzTV.Infrastructure.Streaming.Graphics;
+namespace ErsatzTV.Infrastructure.Streaming.Graphics.Text;
 
 public class TemplateFunctions(ILogger<TemplateFunctions> logger)
 {

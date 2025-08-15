@@ -9,7 +9,7 @@ using Scriban.Runtime;
 using SkiaSharp;
 using RichTextKit=Topten.RichTextKit;
 
-namespace ErsatzTV.Infrastructure.Streaming.Graphics;
+namespace ErsatzTV.Infrastructure.Streaming.Graphics.Text;
 
 public class TextElement(
     TemplateFunctions templateFunctions,
