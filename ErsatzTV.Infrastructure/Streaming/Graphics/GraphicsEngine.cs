@@ -9,7 +9,11 @@ using SkiaSharp;
 
 namespace ErsatzTV.Infrastructure.Streaming.Graphics;
 
-public class GraphicsEngine(ITemplateDataRepository templateDataRepository, ILogger<GraphicsEngine> logger) : IGraphicsEngine
+public class GraphicsEngine(
+    TemplateFunctions templateFunctions,
+    ITemplateDataRepository templateDataRepository,
+    ILogger<GraphicsEngine> logger)
+    : IGraphicsEngine
 {
     public async Task Run(GraphicsEngineContext context, PipeWriter pipeWriter, CancellationToken cancellationToken)
     {
@@ -72,7 +76,7 @@ public class GraphicsEngine(ITemplateDataRepository templateDataRepository, ILog
                         variables.Add(variable.Key, variable.Value);
                     }
 
-                    elements.Add(new TextElement(textElementContext.TextElement, variables, logger));
+                    elements.Add(new TextElement(templateFunctions, textElementContext.TextElement, variables, logger));
                     break;
             }
         }

@@ -65,6 +65,7 @@ using ErsatzTV.Infrastructure.Scripting;
 using ErsatzTV.Infrastructure.Search;
 using ErsatzTV.Infrastructure.Sqlite.Data;
 using ErsatzTV.Infrastructure.Streaming;
+using ErsatzTV.Infrastructure.Streaming.Graphics;
 using ErsatzTV.Infrastructure.Trakt;
 using ErsatzTV.Serialization;
 using ErsatzTV.Services;
@@ -722,6 +723,7 @@ public class Startup
         services.AddScoped<IGraphicsEngine, GraphicsEngine>();
         services.AddScoped<IGraphicsElementRepository, GraphicsElementRepository>();
         services.AddScoped<ITemplateDataRepository, TemplateDataRepository>();
+        services.AddScoped<TemplateFunctions>();
 
         services.AddScoped<IFFmpegProcessService, FFmpegLibraryProcessService>();
         services.AddScoped<IPipelineBuilderFactory, PipelineBuilderFactory>();

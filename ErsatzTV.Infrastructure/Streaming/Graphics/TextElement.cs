@@ -1,4 +1,3 @@
-using System.Globalization;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Graphics;
 using ErsatzTV.Infrastructure.Streaming.Graphics.Fonts;
@@ -8,12 +7,15 @@ using Topten.RichTextKit;
 using Scriban;
 using Scriban.Runtime;
 using SkiaSharp;
-using TimeZoneConverter;
 using RichTextKit=Topten.RichTextKit;
 
 namespace ErsatzTV.Infrastructure.Streaming.Graphics;
 
-public class TextElement(TextGraphicsElement textElement, Dictionary<string, object> variables, ILogger logger)
+public class TextElement(
+    TemplateFunctions templateFunctions,
+    TextGraphicsElement textElement,
+    Dictionary<string, object> variables,
+    ILogger logger)
     : IGraphicsElement, IDisposable
 {
     private Option<Expression> _maybeOpacityExpression;
@@ -48,35 +50,8 @@ public class TextElement(TextGraphicsElement textElement, Dictionary<string, obj
 
             var scriptObject = new ScriptObject();
             scriptObject.Import(variables, renamer: member => member.Name);
-
-            scriptObject.Import("convert_timezone", new Func<DateTimeOffset, string, DateTimeOffset>((dt, tzId) =>
-            {
-                try
-                {
-                    var tz = TZConvert.GetTimeZoneInfo(tzId);
-                    return TimeZoneInfo.ConvertTime(dt, tz);
-                }
-                catch (TimeZoneNotFoundException ex)
-                {
-                    logger.LogWarning(ex, "Exception finding specified time zone; resulting time will be unchanged");
-                    return dt;
-                }
-            }));
-
-            scriptObject.Import("format_datetime", new Func<DateTimeOffset, string, string, string>((dt, tzId, format) =>
-            {
-                try
-                {
-                    var tz = TZConvert.GetTimeZoneInfo(tzId);
-                    dt = TimeZoneInfo.ConvertTime(dt, tz);
-                }
-                catch (TimeZoneNotFoundException ex)
-                {
-                    logger.LogWarning(ex, "Exception finding specified time zone; resulting time will be unchanged");
-                }
-
-                return dt.ToString(format, CultureInfo.CurrentCulture);
-            }));
+            scriptObject.Import("convert_timezone", templateFunctions.ConvertTimeZone);
+            scriptObject.Import("format_datetime", templateFunctions.FormatDateTime);
 
             var context = new TemplateContext { MemberRenamer = member => member.Name };
             context.PushGlobal(scriptObject);
