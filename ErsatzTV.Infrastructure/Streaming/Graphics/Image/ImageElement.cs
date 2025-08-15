@@ -6,7 +6,7 @@ using SkiaSharp;
 
 namespace ErsatzTV.Infrastructure.Streaming.Graphics.Image;
 
-public class ImageElement(ImageGraphicsElement imageGraphicsElement, ILogger logger) : IGraphicsElement, IDisposable
+public class ImageElement(ImageGraphicsElement imageGraphicsElement, ILogger logger) : GraphicsElement, IDisposable
 {
     private readonly List<SKBitmap> _scaledFrames = [];
     private readonly List<int> _frameDelays = [];
@@ -17,11 +17,7 @@ public class ImageElement(ImageGraphicsElement imageGraphicsElement, ILogger log
     private SKCodec _sourceCodec;
     private SKPointI _location;
 
-    public int ZIndex { get; private set; }
-
-    public bool IsFailed { get; set; }
-
-    public async Task InitializeAsync(
+    public override async Task InitializeAsync(
         Resolution squarePixelFrameSize,
         Resolution frameSize,
         int frameRate,
@@ -78,7 +74,7 @@ public class ImageElement(ImageGraphicsElement imageGraphicsElement, ILogger log
             int horizontalMargin = (int)Math.Round((imageGraphicsElement.HorizontalMarginPercent ?? 0) / 100.0 * frameSize.Width);
             int verticalMargin = (int)Math.Round((imageGraphicsElement.VerticalMarginPercent ?? 0) / 100.0 * frameSize.Height);
 
-            _location = WatermarkElement.CalculatePosition(
+            _location = CalculatePosition(
                 imageGraphicsElement.Location,
                 frameSize.Width,
                 frameSize.Height,
@@ -124,7 +120,7 @@ public class ImageElement(ImageGraphicsElement imageGraphicsElement, ILogger log
         }
     }
 
-    public ValueTask<Option<PreparedElementImage>> PrepareImage(
+    public override ValueTask<Option<PreparedElementImage>> PrepareImage(
         TimeSpan timeOfDay,
         TimeSpan contentTime,
         TimeSpan contentTotalTime,

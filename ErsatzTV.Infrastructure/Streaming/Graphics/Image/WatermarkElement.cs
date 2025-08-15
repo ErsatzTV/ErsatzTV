@@ -7,7 +7,7 @@ using SkiaSharp;
 
 namespace ErsatzTV.Infrastructure.Streaming.Graphics.Image;
 
-public class WatermarkElement : IGraphicsElement, IDisposable
+public class WatermarkElement : GraphicsElement, IDisposable
 {
     private readonly ILogger _logger;
     private readonly string _imagePath;
@@ -39,11 +39,7 @@ public class WatermarkElement : IGraphicsElement, IDisposable
 
     public bool IsValid => _imagePath != null && _watermark != null;
 
-    public int ZIndex { get; }
-
-    public bool IsFailed { get; set; }
-
-    public async Task InitializeAsync(Resolution squarePixelFrameSize, Resolution frameSize, int frameRate, CancellationToken cancellationToken)
+    public override async Task InitializeAsync(Resolution squarePixelFrameSize, Resolution frameSize, int frameRate, CancellationToken cancellationToken)
     {
         try
         {
@@ -155,7 +151,7 @@ public class WatermarkElement : IGraphicsElement, IDisposable
         }
     }
 
-    public ValueTask<Option<PreparedElementImage>> PrepareImage(
+    public override ValueTask<Option<PreparedElementImage>> PrepareImage(
         TimeSpan timeOfDay,
         TimeSpan contentTime,
         TimeSpan contentTotalTime,
@@ -202,34 +198,6 @@ public class WatermarkElement : IGraphicsElement, IDisposable
         }
 
         return _scaledFrames.Last();
-    }
-
-    internal static SKPointI CalculatePosition(
-        WatermarkLocation location,
-        int frameWidth,
-        int frameHeight,
-        int imageWidth,
-        int imageHeight,
-        int horizontalMargin,
-        int verticalMargin)
-    {
-        return location switch
-        {
-            WatermarkLocation.BottomLeft => new SKPointI(horizontalMargin, frameHeight - imageHeight - verticalMargin),
-            WatermarkLocation.TopLeft => new SKPointI(horizontalMargin, verticalMargin),
-            WatermarkLocation.TopRight => new SKPointI(frameWidth - imageWidth - horizontalMargin, verticalMargin),
-            WatermarkLocation.TopMiddle => new SKPointI((frameWidth - imageWidth) / 2, verticalMargin),
-            WatermarkLocation.RightMiddle => new SKPointI(
-                frameWidth - imageWidth - horizontalMargin,
-                (frameHeight - imageHeight) / 2),
-            WatermarkLocation.BottomMiddle => new SKPointI(
-                (frameWidth - imageWidth) / 2,
-                frameHeight - imageHeight - verticalMargin),
-            WatermarkLocation.LeftMiddle => new SKPointI(horizontalMargin, (frameHeight - imageHeight) / 2),
-            _ => new SKPointI(
-                frameWidth - imageWidth - horizontalMargin,
-                frameHeight - imageHeight - verticalMargin),
-        };
     }
 
     private WatermarkMargins NormalMargins(Resolution frameSize)

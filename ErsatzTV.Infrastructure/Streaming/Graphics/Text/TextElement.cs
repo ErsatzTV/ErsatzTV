@@ -16,18 +16,14 @@ public class TextElement(
     TextGraphicsElement textElement,
     Dictionary<string, object> variables,
     ILogger logger)
-    : IGraphicsElement, IDisposable
+    : GraphicsElement, IDisposable
 {
     private Option<Expression> _maybeOpacityExpression;
     private float _opacity;
     private SKBitmap _image;
     private SKPointI _location;
 
-    public int ZIndex { get; private set; }
-
-    public bool IsFailed { get; set; }
-
-    public async Task InitializeAsync(
+    public override async Task InitializeAsync(
         Resolution squarePixelFrameSize,
         Resolution frameSize,
         int frameRate,
@@ -89,7 +85,7 @@ public class TextElement(
                 (int)Math.Round((textElement.HorizontalMarginPercent ?? 0) / 100.0 * frameSize.Width);
             int verticalMargin = (int)Math.Round((textElement.VerticalMarginPercent ?? 0) / 100.0 * frameSize.Height);
 
-            _location = WatermarkElement.CalculatePosition(
+            _location = CalculatePosition(
                 textElement.Location,
                 frameSize.Width,
                 frameSize.Height,
@@ -105,7 +101,7 @@ public class TextElement(
         }
     }
 
-    public ValueTask<Option<PreparedElementImage>> PrepareImage(
+    public override ValueTask<Option<PreparedElementImage>> PrepareImage(
         TimeSpan timeOfDay,
         TimeSpan contentTime,
         TimeSpan contentTotalTime,
