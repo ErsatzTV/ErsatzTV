@@ -88,7 +88,14 @@ public abstract class PlayoutBuilderTestBase
             FillGroupIndices = []
         };
 
-        var referenceData = new PlayoutReferenceData(playout.Channel, Option<Deco>.None, [], [], playout.ProgramSchedule, [], []);
+        var referenceData = new PlayoutReferenceData(
+            playout.Channel,
+            Option<Deco>.None,
+            [],
+            [],
+            playout.ProgramSchedule,
+            [],
+            []);
 
         return new TestData(builder, playout, referenceData);
     }
@@ -194,7 +201,14 @@ public abstract class PlayoutBuilderTestBase
             FillGroupIndices = []
         };
 
-        var referenceData = new PlayoutReferenceData(playout.Channel, Option<Deco>.None, [], [], playout.ProgramSchedule, [], []);
+        var referenceData = new PlayoutReferenceData(
+            playout.Channel,
+            Option<Deco>.None,
+            [],
+            [],
+            playout.ProgramSchedule,
+            [],
+            []);
 
         return new TestData(builder, playout, referenceData);
     }

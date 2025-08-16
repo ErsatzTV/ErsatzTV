@@ -58,7 +58,11 @@ public class CustomStreamSelectorTests
                 new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = yaml }]),
                 new NullLogger<CustomStreamSelector>());
 
-            StreamSelectorResult result = await streamSelector.SelectStreams(_channel, DateTimeOffset.Now, _audioVersion, _subtitles);
+            StreamSelectorResult result = await streamSelector.SelectStreams(
+                _channel,
+                DateTimeOffset.Now,
+                _audioVersion,
+                _subtitles);
 
             result.AudioStream.IsSome.ShouldBeTrue();
 
@@ -83,7 +87,11 @@ public class CustomStreamSelectorTests
                 new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = yaml }]),
                 new NullLogger<CustomStreamSelector>());
 
-            StreamSelectorResult result = await streamSelector.SelectStreams(_channel, DateTimeOffset.Now, _audioVersion, _subtitles);
+            StreamSelectorResult result = await streamSelector.SelectStreams(
+                _channel,
+                DateTimeOffset.Now,
+                _audioVersion,
+                _subtitles);
 
             result.AudioStream.IsSome.ShouldBeTrue();
 
@@ -108,7 +116,11 @@ public class CustomStreamSelectorTests
                 new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = yaml }]),
                 new NullLogger<CustomStreamSelector>());
 
-            StreamSelectorResult result = await streamSelector.SelectStreams(_channel, DateTimeOffset.Now, _audioVersion, _subtitles);
+            StreamSelectorResult result = await streamSelector.SelectStreams(
+                _channel,
+                DateTimeOffset.Now,
+                _audioVersion,
+                _subtitles);
 
             result.AudioStream.IsSome.ShouldBeTrue();
 
@@ -139,7 +151,11 @@ public class CustomStreamSelectorTests
                 new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = yaml }]),
                 new NullLogger<CustomStreamSelector>());
 
-            StreamSelectorResult result = await streamSelector.SelectStreams(_channel, DateTimeOffset.Now, _audioVersion, _subtitles);
+            StreamSelectorResult result = await streamSelector.SelectStreams(
+                _channel,
+                DateTimeOffset.Now,
+                _audioVersion,
+                _subtitles);
 
             result.AudioStream.IsSome.ShouldBeTrue();
 
@@ -165,7 +181,11 @@ public class CustomStreamSelectorTests
                 new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = yaml }]),
                 new NullLogger<CustomStreamSelector>());
 
-            StreamSelectorResult result = await streamSelector.SelectStreams(_channel, DateTimeOffset.Now, _audioVersion, _subtitles);
+            StreamSelectorResult result = await streamSelector.SelectStreams(
+                _channel,
+                DateTimeOffset.Now,
+                _audioVersion,
+                _subtitles);
 
             result.AudioStream.IsSome.ShouldBeTrue();
 
@@ -192,7 +212,11 @@ public class CustomStreamSelectorTests
                 new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = yaml }]),
                 new NullLogger<CustomStreamSelector>());
 
-            StreamSelectorResult result = await streamSelector.SelectStreams(_channel, DateTimeOffset.Now, _audioVersion, _subtitles);
+            StreamSelectorResult result = await streamSelector.SelectStreams(
+                _channel,
+                DateTimeOffset.Now,
+                _audioVersion,
+                _subtitles);
 
             result.AudioStream.IsSome.ShouldBeTrue();
 
@@ -219,7 +243,11 @@ public class CustomStreamSelectorTests
                 new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = yaml }]),
                 new NullLogger<CustomStreamSelector>());
 
-            StreamSelectorResult result = await streamSelector.SelectStreams(_channel, DateTimeOffset.Now, _audioVersion, _subtitles);
+            StreamSelectorResult result = await streamSelector.SelectStreams(
+                _channel,
+                DateTimeOffset.Now,
+                _audioVersion,
+                _subtitles);
 
             result.Subtitle.IsSome.ShouldBeFalse();
         }
@@ -241,7 +269,11 @@ public class CustomStreamSelectorTests
                 new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = yaml }]),
                 new NullLogger<CustomStreamSelector>());
 
-            StreamSelectorResult result = await streamSelector.SelectStreams(_channel, DateTimeOffset.Now, _audioVersion, _subtitles);
+            StreamSelectorResult result = await streamSelector.SelectStreams(
+                _channel,
+                DateTimeOffset.Now,
+                _audioVersion,
+                _subtitles);
 
             result.Subtitle.IsSome.ShouldBeTrue();
 
@@ -269,7 +301,11 @@ public class CustomStreamSelectorTests
                 new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = yaml }]),
                 new NullLogger<CustomStreamSelector>());
 
-            StreamSelectorResult result = await streamSelector.SelectStreams(_channel, DateTimeOffset.Now, _audioVersion, _subtitles);
+            StreamSelectorResult result = await streamSelector.SelectStreams(
+                _channel,
+                DateTimeOffset.Now,
+                _audioVersion,
+                _subtitles);
 
             result.Subtitle.IsSome.ShouldBeTrue();
 
@@ -303,7 +339,11 @@ public class CustomStreamSelectorTests
                 new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = yaml }]),
                 new NullLogger<CustomStreamSelector>());
 
-            StreamSelectorResult result = await streamSelector.SelectStreams(_channel, DateTimeOffset.Now, _audioVersion, _subtitles);
+            StreamSelectorResult result = await streamSelector.SelectStreams(
+                _channel,
+                DateTimeOffset.Now,
+                _audioVersion,
+                _subtitles);
 
             result.Subtitle.IsSome.ShouldBeTrue();
 
@@ -334,7 +374,11 @@ public class CustomStreamSelectorTests
                 new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = yaml }]),
                 new NullLogger<CustomStreamSelector>());
 
-            StreamSelectorResult result = await streamSelector.SelectStreams(_channel, DateTimeOffset.Now, _audioVersion, _subtitles);
+            StreamSelectorResult result = await streamSelector.SelectStreams(
+                _channel,
+                DateTimeOffset.Now,
+                _audioVersion,
+                _subtitles);
 
             result.AudioStream.IsSome.ShouldBeTrue();
 
@@ -367,7 +411,11 @@ public class CustomStreamSelectorTests
                 new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = yaml }]),
                 new NullLogger<CustomStreamSelector>());
 
-            StreamSelectorResult result = await streamSelector.SelectStreams(_channel, DateTimeOffset.Now, _audioVersion, _subtitles);
+            StreamSelectorResult result = await streamSelector.SelectStreams(
+                _channel,
+                DateTimeOffset.Now,
+                _audioVersion,
+                _subtitles);
 
             result.AudioStream.IsSome.ShouldBeTrue();
 
@@ -481,7 +529,11 @@ public class CustomStreamSelectorTests
                 new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = yaml }]),
                 new NullLogger<CustomStreamSelector>());
 
-            StreamSelectorResult result = await streamSelector.SelectStreams(_channel, DateTimeOffset.Now, _audioVersion, _subtitles);
+            StreamSelectorResult result = await streamSelector.SelectStreams(
+                _channel,
+                DateTimeOffset.Now,
+                _audioVersion,
+                _subtitles);
 
             result.AudioStream.IsSome.ShouldBeTrue();
 
@@ -509,7 +561,11 @@ public class CustomStreamSelectorTests
                 new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = yaml }]),
                 new NullLogger<CustomStreamSelector>());
 
-            StreamSelectorResult result = await streamSelector.SelectStreams(_channel, DateTimeOffset.Now, _audioVersion, _subtitles);
+            StreamSelectorResult result = await streamSelector.SelectStreams(
+                _channel,
+                DateTimeOffset.Now,
+                _audioVersion,
+                _subtitles);
 
             result.AudioStream.IsSome.ShouldBeTrue();
 
@@ -539,7 +595,11 @@ public class CustomStreamSelectorTests
                 new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = yaml }]),
                 new NullLogger<CustomStreamSelector>());
 
-            StreamSelectorResult result = await streamSelector.SelectStreams(_channel, DateTimeOffset.Now, _audioVersion, _subtitles);
+            StreamSelectorResult result = await streamSelector.SelectStreams(
+                _channel,
+                DateTimeOffset.Now,
+                _audioVersion,
+                _subtitles);
 
             result.Subtitle.IsSome.ShouldBeTrue();
 
@@ -569,7 +629,11 @@ public class CustomStreamSelectorTests
                 new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = yaml }]),
                 new NullLogger<CustomStreamSelector>());
 
-            StreamSelectorResult result = await streamSelector.SelectStreams(_channel, DateTimeOffset.Now, _audioVersion, _subtitles);
+            StreamSelectorResult result = await streamSelector.SelectStreams(
+                _channel,
+                DateTimeOffset.Now,
+                _audioVersion,
+                _subtitles);
 
             result.Subtitle.IsSome.ShouldBeTrue();
 
@@ -596,7 +660,11 @@ public class CustomStreamSelectorTests
                 new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = yaml }]),
                 new NullLogger<CustomStreamSelector>());
 
-            StreamSelectorResult result = await streamSelector.SelectStreams(_channel, DateTimeOffset.Now, _audioVersion, _subtitles);
+            StreamSelectorResult result = await streamSelector.SelectStreams(
+                _channel,
+                DateTimeOffset.Now,
+                _audioVersion,
+                _subtitles);
 
             result.Subtitle.IsSome.ShouldBeTrue();
 
@@ -623,7 +691,11 @@ public class CustomStreamSelectorTests
                 new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = yaml }]),
                 new NullLogger<CustomStreamSelector>());
 
-            StreamSelectorResult result = await streamSelector.SelectStreams(_channel, DateTimeOffset.Now, _audioVersion, _subtitles);
+            StreamSelectorResult result = await streamSelector.SelectStreams(
+                _channel,
+                DateTimeOffset.Now,
+                _audioVersion,
+                _subtitles);
 
             result.Subtitle.IsSome.ShouldBeTrue();
 
@@ -650,7 +722,11 @@ public class CustomStreamSelectorTests
                 new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = yaml }]),
                 new NullLogger<CustomStreamSelector>());
 
-            StreamSelectorResult result = await streamSelector.SelectStreams(_channel, DateTimeOffset.Now, _audioVersion, _subtitles);
+            StreamSelectorResult result = await streamSelector.SelectStreams(
+                _channel,
+                DateTimeOffset.Now,
+                _audioVersion,
+                _subtitles);
 
             result.AudioStream.IsSome.ShouldBeTrue();
 
@@ -677,7 +753,11 @@ public class CustomStreamSelectorTests
                 new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = yaml }]),
                 new NullLogger<CustomStreamSelector>());
 
-            StreamSelectorResult result = await streamSelector.SelectStreams(_channel, DateTimeOffset.Now, _audioVersion, _subtitles);
+            StreamSelectorResult result = await streamSelector.SelectStreams(
+                _channel,
+                DateTimeOffset.Now,
+                _audioVersion,
+                _subtitles);
 
             result.AudioStream.IsSome.ShouldBeTrue();
 
@@ -703,7 +783,11 @@ public class CustomStreamSelectorTests
                 new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = yaml }]),
                 new NullLogger<CustomStreamSelector>());
 
-            StreamSelectorResult result = await streamSelector.SelectStreams(_channel, DateTimeOffset.Now, _audioVersion, _subtitles);
+            StreamSelectorResult result = await streamSelector.SelectStreams(
+                _channel,
+                DateTimeOffset.Now,
+                _audioVersion,
+                _subtitles);
 
             result.AudioStream.IsSome.ShouldBeTrue();
 
@@ -730,7 +814,11 @@ public class CustomStreamSelectorTests
                 new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = yaml }]),
                 new NullLogger<CustomStreamSelector>());
 
-            StreamSelectorResult result = await streamSelector.SelectStreams(_channel, DateTimeOffset.Now, _audioVersion, _subtitles);
+            StreamSelectorResult result = await streamSelector.SelectStreams(
+                _channel,
+                DateTimeOffset.Now,
+                _audioVersion,
+                _subtitles);
 
             result.Subtitle.IsSome.ShouldBeTrue();
 
@@ -758,7 +846,11 @@ public class CustomStreamSelectorTests
                 new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = yaml }]),
                 new NullLogger<CustomStreamSelector>());
 
-            StreamSelectorResult result = await streamSelector.SelectStreams(_channel, DateTimeOffset.Now, _audioVersion, _subtitles);
+            StreamSelectorResult result = await streamSelector.SelectStreams(
+                _channel,
+                DateTimeOffset.Now,
+                _audioVersion,
+                _subtitles);
 
             result.AudioStream.IsSome.ShouldBeFalse();
             result.Subtitle.IsSome.ShouldBeFalse();

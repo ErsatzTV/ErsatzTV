@@ -64,7 +64,8 @@ public class FillerExpressionTests
         var fillerPreset = new FillerPreset
         {
             FillerKind = FillerKind.MidRoll,
-            Expression = "(total_progress >= 0.2 and matched_points = 0) or (total_progress >= 0.6 and matched_points = 1)"
+            Expression =
+                "(total_progress >= 0.2 and matched_points = 0) or (total_progress >= 0.6 and matched_points = 1)"
         };
 
         List<MediaChapter> result = FillerExpression.FilterChapters(fillerPreset.Expression, chapters, playoutItem);

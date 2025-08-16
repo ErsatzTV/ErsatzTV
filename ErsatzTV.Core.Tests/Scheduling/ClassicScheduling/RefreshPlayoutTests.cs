@@ -86,7 +86,14 @@ public class RefreshPlayoutTests : PlayoutBuilderTestBase
                 Playout = playout
             });
 
-        var referenceData = new PlayoutReferenceData(playout.Channel, Option<Deco>.None, [], [], playout.ProgramSchedule, [], []);
+        var referenceData = new PlayoutReferenceData(
+            playout.Channel,
+            Option<Deco>.None,
+            [],
+            [],
+            playout.ProgramSchedule,
+            [],
+            []);
 
         IConfigElementRepository configRepo = Substitute.For<IConfigElementRepository>();
         var televisionRepo = new FakeTelevisionRepository();
@@ -106,7 +113,14 @@ public class RefreshPlayoutTests : PlayoutBuilderTestBase
         DateTimeOffset start = HoursAfterMidnight(24);
         DateTimeOffset finish = start + TimeSpan.FromDays(1);
 
-        PlayoutBuildResult result = await builder.Build(playout, referenceData, PlayoutBuildResult.Empty, PlayoutBuildMode.Refresh, start, finish, CancellationToken);
+        PlayoutBuildResult result = await builder.Build(
+            playout,
+            referenceData,
+            PlayoutBuildResult.Empty,
+            PlayoutBuildMode.Refresh,
+            start,
+            finish,
+            CancellationToken);
 
         result.AddedItems.Count.ShouldBe(4);
         result.AddedItems[0].MediaItemId.ShouldBe(2);

@@ -132,7 +132,14 @@ public class ScheduleIntegrationTests
             Playout playout = maybePlayout.ValueUnsafe();
             var referenceData = await GetReferenceData(context, PLAYOUT_ID, ProgramSchedulePlayoutType.Classic);
 
-            await builder.Build(playout, referenceData, PlayoutBuildResult.Empty, PlayoutBuildMode.Reset, start, finish, _cancellationToken);
+            await builder.Build(
+                playout,
+                referenceData,
+                PlayoutBuildResult.Empty,
+                PlayoutBuildMode.Reset,
+                start,
+                finish,
+                _cancellationToken);
 
             // TODO: would need to apply changes from build result
             await context.SaveChangesAsync(_cancellationToken);

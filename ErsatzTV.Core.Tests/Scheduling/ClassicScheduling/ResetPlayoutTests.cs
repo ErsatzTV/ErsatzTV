@@ -26,8 +26,14 @@ public class ResetPlayoutTests : PlayoutBuilderTestBase
         DateTimeOffset start = HoursAfterMidnight(0);
         DateTimeOffset finish = start + TimeSpan.FromHours(6);
 
-        PlayoutBuildResult result = await builder.Build(playout, referenceData, PlayoutBuildResult.Empty,
-            PlayoutBuildMode.Reset, start, finish, CancellationToken);
+        PlayoutBuildResult result = await builder.Build(
+            playout,
+            referenceData,
+            PlayoutBuildResult.Empty,
+            PlayoutBuildMode.Reset,
+            start,
+            finish,
+            CancellationToken);
 
         result.AddedItems.Count.ShouldBe(6);
         playout.Anchor.NextStartOffset.ShouldBe(finish);
@@ -40,8 +46,14 @@ public class ResetPlayoutTests : PlayoutBuilderTestBase
         DateTimeOffset start2 = HoursAfterMidnight(0);
         DateTimeOffset finish2 = start2 + TimeSpan.FromHours(6);
 
-        PlayoutBuildResult result2 = await builder.Build(playout, referenceData, PlayoutBuildResult.Empty,
-            PlayoutBuildMode.Reset, start2, finish2, CancellationToken);
+        PlayoutBuildResult result2 = await builder.Build(
+            playout,
+            referenceData,
+            PlayoutBuildResult.Empty,
+            PlayoutBuildMode.Reset,
+            start2,
+            finish2,
+            CancellationToken);
 
         result2.AddedItems.Count.ShouldBe(6);
         playout.Anchor.NextStartOffset.ShouldBe(finish);
