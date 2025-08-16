@@ -83,7 +83,8 @@ public class OtherVideoNfoReader : NfoReader<OtherVideoNfo>, IOtherVideoNfoReade
                                 await ReadStringContent(
                                     reader,
                                     nfo,
-                                    (movie, contentRating) => movie.ContentRating = contentRating, fileName);
+                                    (movie, contentRating) => movie.ContentRating = contentRating,
+                                    fileName);
                                 break;
                             case "premiered":
                                 await ReadDateTimeContent(

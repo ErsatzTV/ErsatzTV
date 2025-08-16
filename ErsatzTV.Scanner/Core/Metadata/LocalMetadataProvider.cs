@@ -1471,11 +1471,12 @@ public class LocalMetadataProvider : ILocalMetadataProvider
                 var tags = nfo.Tags.Map(t => new Tag { Name = t }).ToList();
                 foreach (string country in nfo.Countries)
                 {
-                    tags.Add(new Tag
-                    {
-                        Name = country,
-                        ExternalTypeId = Tag.NfoCountryTypeId
-                    });
+                    tags.Add(
+                        new Tag
+                        {
+                            Name = country,
+                            ExternalTypeId = Tag.NfoCountryTypeId
+                        });
                 }
 
                 return new MovieMetadata

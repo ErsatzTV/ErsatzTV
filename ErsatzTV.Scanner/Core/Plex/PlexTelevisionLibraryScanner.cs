@@ -122,7 +122,8 @@ public partial class PlexTelevisionLibraryScanner :
             {
                 foreach (var show in maybeShow)
                 {
-                    _logger.LogInformation("Found show '{ShowTitle}' with key {ShowKey}, starting targeted scan",
+                    _logger.LogInformation(
+                        "Found show '{ShowTitle}' with key {ShowKey}, starting targeted scan",
                         showTitle,
                         show.Key);
 
@@ -144,7 +145,8 @@ public partial class PlexTelevisionLibraryScanner :
     }
 
     private async Task<Either<BaseError, Unit>> ScanSingleShowInternal(
-        IMediaServerTelevisionRepository<PlexLibrary, PlexShow, PlexSeason, PlexEpisode, PlexItemEtag> televisionRepository,
+        IMediaServerTelevisionRepository<PlexLibrary, PlexShow, PlexSeason, PlexEpisode, PlexItemEtag>
+            televisionRepository,
         PlexConnectionParameters connectionParameters,
         PlexLibrary library,
         PlexShow targetShow,

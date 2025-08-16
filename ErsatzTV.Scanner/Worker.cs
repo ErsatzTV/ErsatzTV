@@ -117,7 +117,9 @@ public class Worker : BackgroundService
         scanEmbyShowCommand.Arguments.Add(showIdArgument);
         scanEmbyShowCommand.Options.Add(deepOption);
 
-        var scanJellyfinShowCommand = new Command("scan-jellyfin-show", "Scan a specific TV show in a Jellyfin library");
+        var scanJellyfinShowCommand = new Command(
+            "scan-jellyfin-show",
+            "Scan a specific TV show in a Jellyfin library");
         scanJellyfinShowCommand.Arguments.Add(libraryIdArgument);
         scanJellyfinShowCommand.Arguments.Add(showIdArgument);
         scanJellyfinShowCommand.Options.Add(deepOption);

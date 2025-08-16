@@ -126,7 +126,8 @@ public class RemoteStreamFolderScanner : LocalFolderScanner, IRemoteStreamFolder
                     cancellationToken);
 
                 string remoteStreamFolder = folderQueue.Dequeue();
-                Option<int> maybeParentFolder = await _libraryRepository.GetParentFolderId(libraryPath, remoteStreamFolder);
+                Option<int> maybeParentFolder =
+                    await _libraryRepository.GetParentFolderId(libraryPath, remoteStreamFolder);
 
                 foldersCompleted++;
 
@@ -155,7 +156,9 @@ public class RemoteStreamFolderScanner : LocalFolderScanner, IRemoteStreamFolder
                 {
                     if (allFiles.Any(allTrashedItems.Contains))
                     {
-                        _logger.LogDebug("Previously trashed items are now present in folder {Folder}", remoteStreamFolder);
+                        _logger.LogDebug(
+                            "Previously trashed items are now present in folder {Folder}",
+                            remoteStreamFolder);
                     }
                     else
                     {

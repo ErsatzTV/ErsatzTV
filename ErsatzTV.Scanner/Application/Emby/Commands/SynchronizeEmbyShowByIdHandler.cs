@@ -119,7 +119,8 @@ public class SynchronizeEmbyShowByIdHandler : IRequestHandler<SynchronizeEmbySho
     private Task<Validation<BaseError, EmbyShowTitleItemIdResult>> EmbyShowMustExist(
         SynchronizeEmbyShowById request) =>
         _embyTelevisionRepository.GetShowTitleItemId(request.EmbyLibraryId, request.ShowId)
-            .Map(v => v.ToValidation<BaseError>($"Jellyfin show {request.ShowId} does not exist in library {request.EmbyLibraryId}."));
+            .Map(v => v.ToValidation<BaseError>(
+                $"Jellyfin show {request.ShowId} does not exist in library {request.EmbyLibraryId}."));
 
     private record RequestParameters(
         ConnectionParameters ConnectionParameters,

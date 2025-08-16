@@ -119,7 +119,8 @@ public class SynchronizePlexShowByIdHandler : IRequestHandler<SynchronizePlexSho
     private Task<Validation<BaseError, PlexShowTitleKeyResult>> PlexShowMustExist(
         SynchronizePlexShowById request) =>
         _plexTelevisionRepository.GetShowTitleKey(request.PlexLibraryId, request.ShowId)
-            .Map(v => v.ToValidation<BaseError>($"Plex show {request.ShowId} does not exist in library {request.PlexLibraryId}."));
+            .Map(v => v.ToValidation<BaseError>(
+                $"Plex show {request.ShowId} does not exist in library {request.PlexLibraryId}."));
 
     private record RequestParameters(
         ConnectionParameters ConnectionParameters,

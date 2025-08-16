@@ -124,7 +124,7 @@ public partial class LocalChaptersProvider : ILocalChaptersProvider
         var chapters = new List<MediaChapter>();
 
         XmlNodeList? chapterAtoms = chaptersNode.SelectNodes(".//ChapterAtom") ??
-                                   chaptersNode.SelectNodes(".//chapteratom");
+                                    chaptersNode.SelectNodes(".//chapteratom");
 
         if (chapterAtoms == null)
         {
@@ -154,7 +154,7 @@ public partial class LocalChaptersProvider : ILocalChaptersProvider
     private static MediaChapter? ParseChapterAtom(XmlNode chapterAtom, long chapterId)
     {
         XmlNode? startNode = chapterAtom.SelectSingleNode(".//ChapterTimeStart") ??
-                            chapterAtom.SelectSingleNode(".//chaptertimestart");
+                             chapterAtom.SelectSingleNode(".//chaptertimestart");
 
         if (startNode?.InnerText == null)
         {
@@ -168,7 +168,7 @@ public partial class LocalChaptersProvider : ILocalChaptersProvider
 
         TimeSpan endTime = TimeSpan.Zero;
         XmlNode? endNode = chapterAtom.SelectSingleNode(".//ChapterTimeEnd") ??
-                          chapterAtom.SelectSingleNode(".//chaptertimeend");
+                           chapterAtom.SelectSingleNode(".//chaptertimeend");
 
         if (endNode?.InnerText != null)
         {
@@ -177,9 +177,9 @@ public partial class LocalChaptersProvider : ILocalChaptersProvider
 
         string title = string.Empty;
         XmlNode? titleNode = chapterAtom.SelectSingleNode(".//ChapterString") ??
-                            chapterAtom.SelectSingleNode(".//ChapString") ??
-                            chapterAtom.SelectSingleNode(".//chapterstring") ??
-                            chapterAtom.SelectSingleNode(".//chapstring");
+                             chapterAtom.SelectSingleNode(".//ChapString") ??
+                             chapterAtom.SelectSingleNode(".//chapterstring") ??
+                             chapterAtom.SelectSingleNode(".//chapstring");
 
         if (titleNode?.InnerText != null)
         {
@@ -258,6 +258,7 @@ public partial class LocalChaptersProvider : ILocalChaptersProvider
 
     [GeneratedRegex(@"^(\d{1,2}):(\d{2}):(\d{2})[\.,](\d{3})$")]
     private static partial Regex GetParseFullTimeCodeRegex();
+
     [GeneratedRegex(@"^(\d{1,2}):(\d{2}):(\d{2})$")]
     private static partial Regex GetParseTimeCodeNoMilliRegex();
 }

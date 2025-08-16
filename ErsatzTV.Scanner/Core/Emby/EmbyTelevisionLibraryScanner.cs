@@ -218,8 +218,10 @@ public class EmbyTelevisionLibraryScanner : MediaServerTelevisionLibraryScanner<
             {
                 foreach (var show in maybeShow)
                 {
-                    _logger.LogInformation("Found show '{ShowTitle}' with id {ShowId}, starting targeted scan",
-                        showTitle, show.ItemId);
+                    _logger.LogInformation(
+                        "Found show '{ShowTitle}' with id {ShowId}, starting targeted scan",
+                        showTitle,
+                        show.ItemId);
 
                     return await ScanSingleShowInternal(
                         _televisionRepository,
