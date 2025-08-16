@@ -232,6 +232,55 @@ public class JellyfinApiClient : IJellyfinApiClient
         }
     }
 
+    public async Task<Either<BaseError, List<JellyfinShow>>> SearchShowsByTitle(
+        string address,
+        string apiKey,
+        JellyfinLibrary library,
+        string showTitle)
+    {
+        try
+        {
+            IJellyfinApi service = RestService.For<IJellyfinApi>(address);
+            JellyfinSearchHintsResponse searchResponse = await service.SearchHints(
+                apiKey,
+                showTitle,
+                "Series",
+                library.ItemId);
+
+            var shows = new List<JellyfinShow>();
+
+            foreach (JellyfinSearchHintResponse hint in searchResponse.SearchHints)
+            {
+                if (hint.Type == "Series" &&
+                    string.Equals(hint.Name, showTitle, StringComparison.OrdinalIgnoreCase))
+                {
+                    JellyfinLibraryItemsResponse detailResponse = await service.GetShowLibraryItems(
+                        apiKey,
+                        hint.Id,
+                        recursive: false,
+                        startIndex: 0,
+                        limit: 1);
+
+                    foreach (JellyfinLibraryItemResponse item in detailResponse.Items)
+                    {
+                        Option<JellyfinShow> maybeShow = ProjectToShow(item);
+                        foreach (JellyfinShow show in maybeShow)
+                        {
+                            shows.Add(show);
+                        }
+                    }
+                }
+            }
+
+            return shows;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error searching Jellyfin shows by title");
+            return BaseError.New(ex.Message);
+        }
+    }
+
     private static async IAsyncEnumerable<Tuple<TItem, int>> GetPagedLibraryItems<TItem>(
         string address,
         Option<JellyfinLibrary> maybeLibrary,
@@ -894,8 +943,8 @@ public class JellyfinApiClient : IJellyfinApiClient
                 double resolutionRatio = width / (double)height;
 
                 string[] split = videoStream.AspectRatio.Split(":");
-                if (double.TryParse(split[0], NumberStyles.Any, CultureInfo.InvariantCulture, out var num) &&
-                    double.TryParse(split[1], NumberStyles.Any, CultureInfo.InvariantCulture, out var den) &&
+                if (double.TryParse(split[0], NumberStyles.Any, CultureInfo.InvariantCulture, out double num) &&
+                    double.TryParse(split[1], NumberStyles.Any, CultureInfo.InvariantCulture, out double den) &&
                     den != 0)
                 {
                     double displayRatio = num / den;
@@ -992,54 +1041,5 @@ public class JellyfinApiClient : IJellyfinApiClient
 
             return version;
         });
-    }
-
-    public async Task<Either<BaseError, List<JellyfinShow>>> SearchShowsByTitle(
-        string address,
-        string apiKey,
-        JellyfinLibrary library,
-        string showTitle)
-    {
-        try
-        {
-            IJellyfinApi service = RestService.For<IJellyfinApi>(address);
-            JellyfinSearchHintsResponse searchResponse = await service.SearchHints(
-                apiKey,
-                showTitle,
-                "Series",
-                library.ItemId);
-
-            var shows = new List<JellyfinShow>();
-
-            foreach (JellyfinSearchHintResponse hint in searchResponse.SearchHints)
-            {
-                if (hint.Type == "Series" &&
-                    string.Equals(hint.Name, showTitle, StringComparison.OrdinalIgnoreCase))
-                {
-                    JellyfinLibraryItemsResponse detailResponse = await service.GetShowLibraryItems(
-                        apiKey,
-                        hint.Id,
-                        recursive: false,
-                        startIndex: 0,
-                        limit: 1);
-
-                    foreach (JellyfinLibraryItemResponse item in detailResponse.Items)
-                    {
-                        Option<JellyfinShow> maybeShow = ProjectToShow(item);
-                        foreach (JellyfinShow show in maybeShow)
-                        {
-                            shows.Add(show);
-                        }
-                    }
-                }
-            }
-
-            return shows;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error searching Jellyfin shows by title");
-            return BaseError.New(ex.Message);
-        }
     }
 }

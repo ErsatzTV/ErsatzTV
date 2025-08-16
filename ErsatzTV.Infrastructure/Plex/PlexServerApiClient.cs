@@ -394,37 +394,6 @@ public class PlexServerApiClient : IPlexServerApiClient
         }
     }
 
-    private static async IAsyncEnumerable<Tuple<TItem, int>> GetPagedLibraryContents<TItem>(
-        PlexConnection connection,
-        Func<IPlexServerApi, Task<PlexXmlMediaContainerStatsResponse>> countItems,
-        Func<IPlexServerApi, IPlexServerApi, int, int, Task<IEnumerable<TItem>>> getItems)
-    {
-        IPlexServerApi xmlService = XmlServiceFor(connection.Uri);
-
-        int size = await countItems(xmlService).Map(r => r.TotalSize);
-        if (size == 0)
-        {
-            yield break;
-        }
-
-        const int PAGE_SIZE = 10;
-
-        IPlexServerApi jsonService = RestService.For<IPlexServerApi>(connection.Uri);
-        int pages = (size - 1) / PAGE_SIZE + 1;
-
-        for (var i = 0; i < pages; i++)
-        {
-            int skip = i * PAGE_SIZE;
-
-            Task<IEnumerable<TItem>> result = getItems(xmlService, jsonService, skip, PAGE_SIZE);
-
-            foreach (TItem item in await result)
-            {
-                yield return new Tuple<TItem, int>(item, size);
-            }
-        }
-    }
-
     public async Task<Either<BaseError, Option<PlexShow>>> GetSingleShow(
         PlexLibrary library,
         string showKey,
@@ -464,9 +433,11 @@ public class PlexServerApiClient : IPlexServerApiClient
             foreach (PlexHubResponse hub in searchResponse.MediaContainer.Hub)
             {
                 if (hub.Type != "show")
+                {
                     continue;
+                }
 
-                string fullKey = $"/library/sections/{library.Key}";
+                var fullKey = $"/library/sections/{library.Key}";
 
                 foreach (PlexMetadataResponse metadata in hub.Metadata.Where(m => m.LibrarySectionKey == fullKey))
                 {
@@ -483,6 +454,37 @@ public class PlexServerApiClient : IPlexServerApiClient
         catch (Exception ex)
         {
             return BaseError.New(ex.ToString());
+        }
+    }
+
+    private static async IAsyncEnumerable<Tuple<TItem, int>> GetPagedLibraryContents<TItem>(
+        PlexConnection connection,
+        Func<IPlexServerApi, Task<PlexXmlMediaContainerStatsResponse>> countItems,
+        Func<IPlexServerApi, IPlexServerApi, int, int, Task<IEnumerable<TItem>>> getItems)
+    {
+        IPlexServerApi xmlService = XmlServiceFor(connection.Uri);
+
+        int size = await countItems(xmlService).Map(r => r.TotalSize);
+        if (size == 0)
+        {
+            yield break;
+        }
+
+        const int PAGE_SIZE = 10;
+
+        IPlexServerApi jsonService = RestService.For<IPlexServerApi>(connection.Uri);
+        int pages = (size - 1) / PAGE_SIZE + 1;
+
+        for (var i = 0; i < pages; i++)
+        {
+            int skip = i * PAGE_SIZE;
+
+            Task<IEnumerable<TItem>> result = getItems(xmlService, jsonService, skip, PAGE_SIZE);
+
+            foreach (TItem item in await result)
+            {
+                yield return new Tuple<TItem, int>(item, size);
+            }
         }
     }
 
@@ -555,7 +557,7 @@ public class PlexServerApiClient : IPlexServerApiClient
             // skip collections in libraries that are not synchronized
             if (plexMediaSource.Libraries.OfType<PlexLibrary>().Any(l =>
                     l.Key == item.LibrarySectionId.ToString(CultureInfo.InvariantCulture) &&
-                    l.ShouldSyncItems == false))
+                    !l.ShouldSyncItems))
             {
                 return Option<PlexCollection>.None;
             }

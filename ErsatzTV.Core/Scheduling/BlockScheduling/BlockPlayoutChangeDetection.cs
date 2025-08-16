@@ -46,7 +46,8 @@ internal static class BlockPlayoutChangeDetection
         {
             foreach (PlayoutItem playoutItem in playoutItems)
             {
-                if (!itemBlockKeys.TryGetValue(playoutItem, out var blockKey) || effectiveBlock.Block.Id != blockKey.b)
+                if (!itemBlockKeys.TryGetValue(playoutItem, out BlockKey blockKey) ||
+                    effectiveBlock.Block.Id != blockKey.b)
                 {
                     continue;
                 }

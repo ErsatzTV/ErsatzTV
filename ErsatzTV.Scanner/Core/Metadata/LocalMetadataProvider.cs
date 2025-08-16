@@ -23,7 +23,6 @@ public class LocalMetadataProvider : ILocalMetadataProvider
     private readonly IEpisodeNfoReader _episodeNfoReader;
     private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
     private readonly IImageRepository _imageRepository;
-    private readonly IRemoteStreamRepository _remoteStreamRepository;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalStatisticsProvider _localStatisticsProvider;
     private readonly ILogger<LocalMetadataProvider> _logger;
@@ -34,6 +33,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
     private readonly IMusicVideoRepository _musicVideoRepository;
     private readonly IOtherVideoNfoReader _otherVideoNfoReader;
     private readonly IOtherVideoRepository _otherVideoRepository;
+    private readonly IRemoteStreamRepository _remoteStreamRepository;
     private readonly IShowNfoReader _showNfoReader;
     private readonly ISongRepository _songRepository;
     private readonly ITelevisionRepository _televisionRepository;
@@ -189,7 +189,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
                 string diff = Path.GetRelativePath(parent, folder);
 
                 var tags = diff.Split(Path.DirectorySeparatorChar)
-                    .Filter(t => metadata.Tags.Any(mt => mt.Name == t) == false)
+                    .Filter(t => metadata.Tags.All(mt => mt.Name != t))
                     .Map(t => new Tag { Name = t })
                     .ToList();
 
@@ -224,16 +224,13 @@ public class LocalMetadataProvider : ILocalMetadataProvider
         return await RefreshFallbackMetadata(image);
     }
 
-    public async Task<bool> RefreshTagMetadata(RemoteStream remoteStream)
-    {
+    public async Task<bool> RefreshTagMetadata(RemoteStream remoteStream) =>
         // Option<RemoteStreamMetadata> maybeMetadata = LoadRemoteStreamMetadata(remoteStream);
         // foreach (RemoteStreamMetadata metadata in maybeMetadata)
         // {
         //     return await ApplyMetadataUpdate(remoteStream, metadata);
         // }
-
-        return await RefreshFallbackMetadata(remoteStream);
-    }
+        await RefreshFallbackMetadata(remoteStream);
 
     public Task<bool> RefreshFallbackMetadata(Movie movie) =>
         ApplyMetadataUpdate(movie, _fallbackMetadataProvider.GetFallbackMetadata(movie));
@@ -1471,11 +1468,12 @@ public class LocalMetadataProvider : ILocalMetadataProvider
                 var tags = nfo.Tags.Map(t => new Tag { Name = t }).ToList();
                 foreach (string country in nfo.Countries)
                 {
-                    tags.Add(new Tag
-                    {
-                        Name = country,
-                        ExternalTypeId = Tag.NfoCountryTypeId
-                    });
+                    tags.Add(
+                        new Tag
+                        {
+                            Name = country,
+                            ExternalTypeId = Tag.NfoCountryTypeId
+                        });
                 }
 
                 return new MovieMetadata

@@ -13,16 +13,17 @@ public class YamlPlayoutContext(Playout playout, YamlPlayoutDefinition definitio
         NullValueHandling = NullValueHandling.Ignore
     };
 
-    private readonly System.Collections.Generic.HashSet<int> _visitedInstructions = [];
-    private readonly Stack<FillerKind> _fillerKind = new();
     private readonly System.Collections.Generic.HashSet<int> _channelWatermarkIds = [];
+    private readonly Stack<FillerKind> _fillerKind = new();
     private readonly Dictionary<int, string> _graphicsElements = [];
+
+    private readonly System.Collections.Generic.HashSet<int> _visitedInstructions = [];
     private int _guideGroup = guideGroup;
     private bool _guideGroupLocked;
     private int _instructionIndex;
-    private Option<string> _preRollSequence;
-    private Option<string> _postRollSequence;
     private Option<MidRollSequence> _midRollSequence;
+    private Option<string> _postRollSequence;
+    private Option<string> _preRollSequence;
 
     public Playout Playout { get; } = playout;
 
@@ -112,6 +113,7 @@ public class YamlPlayoutContext(Playout playout, YamlPlayoutDefinition definitio
 
     public void PushFillerKind(FillerKind fillerKind) => _fillerKind.Push(fillerKind);
     public void PopFillerKind() => _fillerKind.Pop();
+
     public Option<FillerKind> GetFillerKind() =>
         _fillerKind.TryPeek(out FillerKind fillerKind) ? fillerKind : Option<FillerKind>.None;
 

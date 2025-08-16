@@ -216,7 +216,10 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             videoPath != audioPath, // still image when paths are different
             videoVersion.VideoScanKind == VideoScanKind.Progressive ? ScanKind.Progressive : ScanKind.Interlaced);
 
-        var videoInputFile = new VideoInputFile(videoPath, new List<VideoStream> { ffmpegVideoStream }, streamInputKind);
+        var videoInputFile = new VideoInputFile(
+            videoPath,
+            new List<VideoStream> { ffmpegVideoStream },
+            streamInputKind);
 
         Option<AudioInputFile> audioInputFile = maybeAudioStream.Map(audioStream =>
         {
@@ -347,7 +350,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                     None,
                     None);
 
-                foreach (var watermark in options.Watermark)
+                foreach (ChannelWatermark watermark in options.Watermark)
                 {
                     // don't allow duplicates
                     watermarks.TryAdd(watermark.Id, new WatermarkElementContext(options));
@@ -355,7 +358,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             }
 
             // load all playout item watermarks
-            foreach (var playoutItemWatermark in playoutItemWatermarks)
+            foreach (ChannelWatermark playoutItemWatermark in playoutItemWatermarks)
             {
                 WatermarkOptions options = await _ffmpegProcessService.GetWatermarkOptions(
                     ffprobePath,
@@ -366,7 +369,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                     None,
                     None);
 
-                foreach (var watermark in options.Watermark)
+                foreach (ChannelWatermark watermark in options.Watermark)
                 {
                     // don't allow duplicates
                     watermarks.TryAdd(watermark.Id, new WatermarkElementContext(options));
@@ -448,13 +451,13 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             playbackSettings.VideoTrackTimeScale,
             playbackSettings.Deinterlace);
 
-        foreach (var playoutItemGraphicsElement in graphicsElements)
+        foreach (PlayoutItemGraphicsElement playoutItemGraphicsElement in graphicsElements)
         {
             switch (playoutItemGraphicsElement.GraphicsElement.Kind)
             {
                 case GraphicsElementKind.Text:
                 {
-                    var maybeElement =
+                    Option<TextGraphicsElement> maybeElement =
                         await TextGraphicsElement.FromFile(playoutItemGraphicsElement.GraphicsElement.Path);
                     if (maybeElement.IsNone)
                     {
@@ -463,7 +466,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                             playoutItemGraphicsElement.GraphicsElement.Path);
                     }
 
-                    foreach (var element in maybeElement)
+                    foreach (TextGraphicsElement element in maybeElement)
                     {
                         var variables = new Dictionary<string, string>();
                         if (!string.IsNullOrWhiteSpace(playoutItemGraphicsElement.Variables))
@@ -479,7 +482,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                 }
                 case GraphicsElementKind.Image:
                 {
-                    var maybeElement =
+                    Option<ImageGraphicsElement> maybeElement =
                         await ImageGraphicsElement.FromFile(playoutItemGraphicsElement.GraphicsElement.Path);
                     if (maybeElement.IsNone)
                     {
@@ -488,7 +491,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                             playoutItemGraphicsElement.GraphicsElement.Path);
                     }
 
-                    foreach (var element in maybeElement)
+                    foreach (ImageGraphicsElement element in maybeElement)
                     {
                         graphicsElementContexts.Add(new ImageElementContext(element));
                     }
@@ -497,7 +500,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                 }
                 case GraphicsElementKind.Subtitle:
                 {
-                    var maybeElement =
+                    Option<SubtitlesGraphicsElement> maybeElement =
                         await SubtitlesGraphicsElement.FromFile(playoutItemGraphicsElement.GraphicsElement.Path);
                     if (maybeElement.IsNone)
                     {
@@ -506,7 +509,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                             playoutItemGraphicsElement.GraphicsElement.Path);
                     }
 
-                    foreach (var element in maybeElement)
+                    foreach (SubtitlesGraphicsElement element in maybeElement)
                     {
                         var variables = new Dictionary<string, string>();
                         if (!string.IsNullOrWhiteSpace(playoutItemGraphicsElement.Variables))
@@ -540,8 +543,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                 new Resolution { Width = desiredState.ScaledSize.Width, Height = desiredState.ScaledSize.Height },
                 channel.FFmpegProfile.Resolution,
                 await playbackSettings.FrameRate.IfNoneAsync(24),
-                ChannelStartTime: channelStartTime,
-                ContentStartTime: start,
+                channelStartTime,
+                start,
                 await playbackSettings.StreamSeek.IfNoneAsync(TimeSpan.Zero),
                 finish - now);
         }
@@ -592,7 +595,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
 
         pipelineAction?.Invoke(pipeline);
 
-        var command = GetCommand(
+        Command command = GetCommand(
             ffmpegPath,
             videoInputFile,
             audioInputFile,

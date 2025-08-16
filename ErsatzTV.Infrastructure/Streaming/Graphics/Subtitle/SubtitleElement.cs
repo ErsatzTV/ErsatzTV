@@ -21,12 +21,35 @@ public class SubtitleElement(
     ILogger logger)
     : GraphicsElement, IDisposable
 {
-    private CommandTask<CommandResult> _commandTask;
     private CancellationTokenSource _cancellationTokenSource;
-    private PipeReader _pipeReader;
-    private SKBitmap _videoFrame;
+    private CommandTask<CommandResult> _commandTask;
     private int _frameSize;
+    private PipeReader _pipeReader;
     private SKPointI _point;
+    private SKBitmap _videoFrame;
+
+    public void Dispose()
+    {
+        GC.SuppressFinalize(this);
+
+        _pipeReader?.Complete();
+
+        _cancellationTokenSource?.Cancel();
+        try
+        {
+#pragma warning disable VSTHRD002
+            _commandTask?.Task.Wait();
+#pragma warning restore VSTHRD002
+        }
+        catch (Exception)
+        {
+            // do nothing
+        }
+
+        _cancellationTokenSource?.Dispose();
+
+        _videoFrame?.Dispose();
+    }
 
     public override async Task InitializeAsync(
         Resolution squarePixelFrameSize,
@@ -46,7 +69,7 @@ public class SubtitleElement(
             // subtitles contain their own positioning info
             _point = SKPointI.Empty;
 
-            var subtitleTemplateFile = tempFilePool.GetNextTempFile(TempFileCategory.Subtitle);
+            string subtitleTemplateFile = tempFilePool.GetNextTempFile(TempFileCategory.Subtitle);
 
             var scriptObject = new ScriptObject();
             scriptObject.Import(variables, renamer: member => member.Name);
@@ -55,11 +78,11 @@ public class SubtitleElement(
 
             var context = new TemplateContext { MemberRenamer = member => member.Name };
             context.PushGlobal(scriptObject);
-            var inputText = await File.ReadAllTextAsync(subtitlesElement.Template, cancellationToken);
+            string inputText = await File.ReadAllTextAsync(subtitlesElement.Template, cancellationToken);
             string textToRender = await Template.Parse(inputText).RenderAsync(context);
             await File.WriteAllTextAsync(subtitleTemplateFile, textToRender, cancellationToken);
 
-            var subtitleFile = Path.GetFileName(subtitleTemplateFile);
+            string subtitleFile = Path.GetFileName(subtitleTemplateFile);
             List<string> arguments =
             [
                 "-f", "lavfi",
@@ -77,7 +100,9 @@ public class SubtitleElement(
                 .WithStandardOutputPipe(PipeTarget.ToStream(pipe.Writer.AsStream()));
 
             _cancellationTokenSource = new CancellationTokenSource();
-            var linkedToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _cancellationTokenSource.Token);
+            var linkedToken = CancellationTokenSource.CreateLinkedTokenSource(
+                cancellationToken,
+                _cancellationTokenSource.Token);
 
             _commandTask = command.ExecuteAsync(linkedToken.Token);
         }
@@ -98,15 +123,15 @@ public class SubtitleElement(
         while (true)
         {
             ReadResult readResult = await _pipeReader.ReadAsync(cancellationToken);
-            var buffer = readResult.Buffer;
-            var consumed = buffer.Start;
-            var examined = buffer.End;
+            ReadOnlySequence<byte> buffer = readResult.Buffer;
+            SequencePosition consumed = buffer.Start;
+            SequencePosition examined = buffer.End;
 
             try
             {
                 if (buffer.Length >= _frameSize)
                 {
-                    var sequence = buffer.Slice(0, _frameSize);
+                    ReadOnlySequence<byte> sequence = buffer.Slice(0, _frameSize);
 
                     using (SKPixmap pixmap = _videoFrame.PeekPixels())
                     {
@@ -132,27 +157,5 @@ public class SubtitleElement(
                 _pipeReader.AdvanceTo(consumed, examined);
             }
         }
-    }
-
-    public void Dispose()
-    {
-        GC.SuppressFinalize(this);
-
-        _pipeReader?.Complete();
-
-        _cancellationTokenSource?.Cancel();
-        try
-        {
-#pragma warning disable VSTHRD002
-            _commandTask?.Task.Wait();
-#pragma warning restore VSTHRD002
-        }
-        catch (Exception)
-        {
-            // do nothing
-        }
-        _cancellationTokenSource?.Dispose();
-
-        _videoFrame?.Dispose();
     }
 }

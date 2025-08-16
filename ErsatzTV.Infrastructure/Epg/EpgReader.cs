@@ -32,8 +32,9 @@ public static class EpgReader
 
             if (foundCurrent)
             {
-                using var subtreeReader = reader.ReadSubtree();
-                var maybeSubtreeProgramme = Optional(serializer.Deserialize(subtreeReader) as EpgProgramme);
+                using XmlReader subtreeReader = reader.ReadSubtree();
+                Option<EpgProgramme> maybeSubtreeProgramme =
+                    Optional(serializer.Deserialize(subtreeReader) as EpgProgramme);
                 result.AddRange(maybeSubtreeProgramme);
                 if (maybeSubtreeProgramme.IsNone)
                 {
@@ -57,18 +58,19 @@ public static class EpgReader
                     XmlTvDateFormat,
                     CultureInfo.InvariantCulture,
                     DateTimeStyles.None,
-                    out var start) &&
+                    out DateTimeOffset start) &&
                 DateTimeOffset.TryParseExact(
                     stopStr,
                     XmlTvDateFormat,
                     CultureInfo.InvariantCulture,
                     DateTimeStyles.None,
-                    out var stop))
+                    out DateTimeOffset stop))
             {
                 if (start <= targetTime && targetTime < stop)
                 {
-                    using var subtreeReader = reader.ReadSubtree();
-                    var maybeCurrentProgramme = Optional(serializer.Deserialize(subtreeReader) as EpgProgramme);
+                    using XmlReader subtreeReader = reader.ReadSubtree();
+                    Option<EpgProgramme> maybeCurrentProgramme =
+                        Optional(serializer.Deserialize(subtreeReader) as EpgProgramme);
                     result.AddRange(maybeCurrentProgramme);
                     if (maybeCurrentProgramme.IsNone)
                     {

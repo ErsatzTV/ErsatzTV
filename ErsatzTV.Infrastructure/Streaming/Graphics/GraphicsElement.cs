@@ -10,10 +10,17 @@ public abstract class GraphicsElement : IGraphicsElement
 
     public bool IsFailed { get; set; }
 
-    public abstract Task InitializeAsync(Resolution squarePixelFrameSize, Resolution frameSize, int frameRate,
+    public abstract Task InitializeAsync(
+        Resolution squarePixelFrameSize,
+        Resolution frameSize,
+        int frameRate,
         CancellationToken cancellationToken);
 
-    public abstract ValueTask<Option<PreparedElementImage>> PrepareImage(TimeSpan timeOfDay, TimeSpan contentTime, TimeSpan contentTotalTime, TimeSpan channelTime,
+    public abstract ValueTask<Option<PreparedElementImage>> PrepareImage(
+        TimeSpan timeOfDay,
+        TimeSpan contentTime,
+        TimeSpan contentTotalTime,
+        TimeSpan channelTime,
         CancellationToken cancellationToken);
 
     protected static SKPointI CalculatePosition(
@@ -23,9 +30,8 @@ public abstract class GraphicsElement : IGraphicsElement
         int imageWidth,
         int imageHeight,
         int horizontalMargin,
-        int verticalMargin)
-    {
-        return location switch
+        int verticalMargin) =>
+        location switch
         {
             WatermarkLocation.BottomLeft => new SKPointI(horizontalMargin, frameHeight - imageHeight - verticalMargin),
             WatermarkLocation.TopLeft => new SKPointI(horizontalMargin, verticalMargin),
@@ -40,7 +46,6 @@ public abstract class GraphicsElement : IGraphicsElement
             WatermarkLocation.LeftMiddle => new SKPointI(horizontalMargin, (frameHeight - imageHeight) / 2),
             _ => new SKPointI(
                 frameWidth - imageWidth - horizontalMargin,
-                frameHeight - imageHeight - verticalMargin),
+                frameHeight - imageHeight - verticalMargin)
         };
-    }
 }

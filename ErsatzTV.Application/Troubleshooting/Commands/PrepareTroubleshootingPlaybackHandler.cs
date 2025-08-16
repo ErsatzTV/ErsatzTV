@@ -34,12 +34,16 @@ public class PrepareTroubleshootingPlaybackHandler(
     ILogger<PrepareTroubleshootingPlaybackHandler> logger)
     : IRequestHandler<PrepareTroubleshootingPlayback, Either<BaseError, PlayoutItemResult>>
 {
-    public async Task<Either<BaseError, PlayoutItemResult>> Handle(PrepareTroubleshootingPlayback request, CancellationToken cancellationToken)
+    public async Task<Either<BaseError, PlayoutItemResult>> Handle(
+        PrepareTroubleshootingPlayback request,
+        CancellationToken cancellationToken)
     {
         try
         {
             await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
-            Validation<BaseError, Tuple<MediaItem, string, string, FFmpegProfile>> validation = await Validate(dbContext, request);
+            Validation<BaseError, Tuple<MediaItem, string, string, FFmpegProfile>> validation = await Validate(
+                dbContext,
+                request);
             return await validation.Match(
                 tuple => GetProcess(dbContext, request, tuple.Item1, tuple.Item2, tuple.Item3, tuple.Item4),
                 error => Task.FromResult<Either<BaseError, PlayoutItemResult>>(error.Join()));
@@ -96,8 +100,8 @@ public class PrepareTroubleshootingPlaybackHandler(
         List<ChannelWatermark> watermarks = [];
         if (request.WatermarkIds.Count > 0)
         {
-            var channelWatermarks = await dbContext.ChannelWatermarks
-                .Where(w =>  request.WatermarkIds.Contains(w.Id))
+            List<ChannelWatermark> channelWatermarks = await dbContext.ChannelWatermarks
+                .Where(w => request.WatermarkIds.Contains(w.Id))
                 .ToListAsync();
 
             watermarks.AddRange(channelWatermarks);
@@ -126,18 +130,19 @@ public class PrepareTroubleshootingPlaybackHandler(
                 string image = is43 ? "song_progress_overlay_43.png" : "song_progress_overlay.png";
 
                 watermarks.Clear();
-                watermarks.Add(new ChannelWatermark
-                {
-                    Mode = ChannelWatermarkMode.Permanent,
-                    Size = WatermarkSize.Scaled,
-                    WidthPercent = 100,
-                    HorizontalMarginPercent = 0,
-                    VerticalMarginPercent = 0,
-                    Opacity = 100,
-                    Location = WatermarkLocation.TopLeft,
-                    ImageSource = ChannelWatermarkImageSource.Resource,
-                    Image = image
-                });
+                watermarks.Add(
+                    new ChannelWatermark
+                    {
+                        Mode = ChannelWatermarkMode.Permanent,
+                        Size = WatermarkSize.Scaled,
+                        WidthPercent = 100,
+                        HorizontalMarginPercent = 0,
+                        VerticalMarginPercent = 0,
+                        Opacity = 100,
+                        Location = WatermarkLocation.TopLeft,
+                        ImageSource = ChannelWatermarkImageSource.Resource,
+                        Image = image
+                    });
             }
         }
 
@@ -156,7 +161,7 @@ public class PrepareTroubleshootingPlaybackHandler(
         TimeSpan outPoint = duration;
         if (!hlsRealtime)
         {
-            foreach (var seekSeconds in request.SeekSeconds)
+            foreach (int seekSeconds in request.SeekSeconds)
             {
                 inPoint = TimeSpan.FromSeconds(seekSeconds);
                 if (inPoint > version.Duration)
@@ -173,7 +178,7 @@ public class PrepareTroubleshootingPlaybackHandler(
             }
         }
 
-        var graphicsElements = await dbContext.GraphicsElements
+        List<GraphicsElement> graphicsElements = await dbContext.GraphicsElements
             .Where(ge => request.GraphicsElementIds.Contains(ge.Id))
             .ToListAsync();
 
@@ -216,7 +221,9 @@ public class PrepareTroubleshootingPlaybackHandler(
         return playoutItemResult;
     }
 
-    private static async Task<List<Subtitle>> GetSelectedSubtitle(MediaItem mediaItem, PrepareTroubleshootingPlayback request)
+    private static async Task<List<Subtitle>> GetSelectedSubtitle(
+        MediaItem mediaItem,
+        PrepareTroubleshootingPlayback request)
     {
         if (request.SubtitleId is not null)
         {
@@ -268,9 +275,8 @@ public class PrepareTroubleshootingPlaybackHandler(
 
     private static async Task<Validation<BaseError, MediaItem>> MediaItemMustExist(
         TvContext dbContext,
-        PrepareTroubleshootingPlayback request)
-    {
-        return await dbContext.MediaItems
+        PrepareTroubleshootingPlayback request) =>
+        await dbContext.MediaItems
             .AsNoTracking()
             .Include(mi => (mi as Episode).EpisodeMetadata)
             .ThenInclude(em => em.Subtitles)
@@ -325,7 +331,6 @@ public class PrepareTroubleshootingPlaybackHandler(
             .Include(mi => (mi as RemoteStream).RemoteStreamMetadata)
             .SelectOneAsync(mi => mi.Id, mi => mi.Id == request.MediaItemId)
             .Map(o => o.ToValidation<BaseError>(new UnableToLocatePlayoutItem()));
-    }
 
     private static Task<Validation<BaseError, string>> FFmpegPathMustExist(TvContext dbContext) =>
         dbContext.ConfigElements.GetValue<string>(ConfigElementKey.FFmpegPath)

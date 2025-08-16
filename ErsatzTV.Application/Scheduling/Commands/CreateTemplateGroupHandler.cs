@@ -26,7 +26,9 @@ public class CreateTemplateGroupHandler(IDbContextFactory<TvContext> dbContextFa
         return Mapper.ProjectToViewModel(templateGroup);
     }
 
-    private static Task<Validation<BaseError, TemplateGroup>> Validate(TvContext dbContext, CreateTemplateGroup request) =>
+    private static Task<Validation<BaseError, TemplateGroup>> Validate(
+        TvContext dbContext,
+        CreateTemplateGroup request) =>
         ValidateName(dbContext, request).MapT(name => new TemplateGroup { Name = name, Templates = [] });
 
     private static async Task<Validation<BaseError, string>> ValidateName(

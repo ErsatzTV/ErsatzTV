@@ -26,7 +26,9 @@ public class CreateDecoTemplateGroupHandler(IDbContextFactory<TvContext> dbConte
         return Mapper.ProjectToViewModel(decoDecoTemplateGroup);
     }
 
-    private static Task<Validation<BaseError, DecoTemplateGroup>> Validate(TvContext dbContext, CreateDecoTemplateGroup request) =>
+    private static Task<Validation<BaseError, DecoTemplateGroup>> Validate(
+        TvContext dbContext,
+        CreateDecoTemplateGroup request) =>
         ValidateName(dbContext, request).MapT(name => new DecoTemplateGroup { Name = name, DecoTemplates = [] });
 
     private static async Task<Validation<BaseError, string>> ValidateName(

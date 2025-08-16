@@ -1,5 +1,4 @@
 using ErsatzTV.Application.Tree;
-using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Scheduling;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;

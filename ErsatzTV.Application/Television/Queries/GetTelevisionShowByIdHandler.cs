@@ -9,8 +9,8 @@ namespace ErsatzTV.Application.Television;
 
 public class GetTelevisionShowByIdHandler : IRequestHandler<GetTelevisionShowById, Option<TelevisionShowViewModel>>
 {
-    private readonly IMediaSourceRepository _mediaSourceRepository;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
+    private readonly IMediaSourceRepository _mediaSourceRepository;
     private readonly ISearchRepository _searchRepository;
 
     public GetTelevisionShowByIdHandler(

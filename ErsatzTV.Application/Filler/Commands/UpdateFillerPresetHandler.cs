@@ -39,7 +39,8 @@ public class UpdateFillerPresetHandler : IRequestHandler<UpdateFillerPreset, Eit
         existing.SmartCollectionId = request.SmartCollectionId;
         existing.PlaylistId = request.PlaylistId;
         existing.Expression = request.FillerKind is FillerKind.MidRoll ? request.Expression : null;
-        existing.UseChaptersAsMediaItems = request.FillerKind is not FillerKind.Fallback && request.UseChaptersAsMediaItems;
+        existing.UseChaptersAsMediaItems =
+            request.FillerKind is not FillerKind.Fallback && request.UseChaptersAsMediaItems;
 
         await dbContext.SaveChangesAsync();
 

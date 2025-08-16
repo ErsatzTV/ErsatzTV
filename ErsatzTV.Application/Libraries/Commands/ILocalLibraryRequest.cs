@@ -2,5 +2,5 @@
 
 public interface ILocalLibraryRequest
 {
-    public string Name { get; }
+    string Name { get; }
 }

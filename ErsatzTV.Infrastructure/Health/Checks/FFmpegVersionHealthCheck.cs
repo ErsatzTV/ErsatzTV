@@ -61,7 +61,10 @@ public class FFmpegVersionHealthCheck : BaseHealthCheck, IFFmpegVersionHealthChe
             Option<string> maybeVersion = await GetVersion(ffprobePath.Value, cancellationToken);
             if (maybeVersion.IsNone)
             {
-                return WarningResult("Unable to determine ffprobe version", "Unable to determine ffprobe version", link);
+                return WarningResult(
+                    "Unable to determine ffprobe version",
+                    "Unable to determine ffprobe version",
+                    link);
             }
 
             foreach (string version in maybeVersion)
@@ -83,7 +86,10 @@ public class FFmpegVersionHealthCheck : BaseHealthCheck, IFFmpegVersionHealthChe
             version.StartsWith("5.", StringComparison.OrdinalIgnoreCase) ||
             version.StartsWith("6.", StringComparison.OrdinalIgnoreCase))
         {
-            return FailResult($"{app} version {version} is too old; please install 7.1.1!", $"{app} version is too old", link);
+            return FailResult(
+                $"{app} version {version} is too old; please install 7.1.1!",
+                $"{app} version is too old",
+                link);
         }
 
         if (!version.StartsWith("7.1.1", StringComparison.OrdinalIgnoreCase) &&
@@ -92,7 +98,9 @@ public class FFmpegVersionHealthCheck : BaseHealthCheck, IFFmpegVersionHealthChe
             version != BundledVersionVaapi)
         {
             return WarningResult(
-                $"{app} version {version} is unexpected and may have problems; please install 7.1.1!", $"{app} version is unexpected", link);
+                $"{app} version {version} is unexpected and may have problems; please install 7.1.1!",
+                $"{app} version is unexpected",
+                link);
         }
 
         return None;

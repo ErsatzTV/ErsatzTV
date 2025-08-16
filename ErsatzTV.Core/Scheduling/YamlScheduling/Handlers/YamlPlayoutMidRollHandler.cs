@@ -20,7 +20,8 @@ public class YamlPlayoutMidRollHandler : IYamlPlayoutHandler
             return Task.FromResult(false);
         }
 
-        if (midRoll.MidRoll && !string.IsNullOrWhiteSpace(midRoll.Sequence) && !string.IsNullOrWhiteSpace(midRoll.Expression))
+        if (midRoll.MidRoll && !string.IsNullOrWhiteSpace(midRoll.Sequence) &&
+            !string.IsNullOrWhiteSpace(midRoll.Expression))
         {
             context.SetMidRollSequence(new YamlPlayoutContext.MidRollSequence(midRoll.Sequence, midRoll.Expression));
         }

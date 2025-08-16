@@ -15,7 +15,7 @@
                     <MudText>Search</MudText>
                 </div>
                 <MudTextField T="string" ValueChanged="@(s => OnSearch(s))" Adornment="Adornment.Start"
-                              AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" />
+                              AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium"/>
             </MudStack>
             <MudTable FixedHeader="true"
                       @bind-RowsPerPage="@_rowsPerPage"

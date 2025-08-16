@@ -14,6 +14,7 @@ public static class PathUtils
         {
             builder.Append(b.ToString("x2", CultureInfo.InvariantCulture));
         }
+
         return builder.ToString();
     }
 }

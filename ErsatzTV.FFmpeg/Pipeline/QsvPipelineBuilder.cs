@@ -291,7 +291,8 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
             IPixelFormat formatForDownload = pixelFormat;
 
             bool usesVppQsv =
-                videoInputFile.FilterSteps.Any(f => f is QsvFormatFilter or ScaleQsvFilter or DeinterlaceQsvFilter or TonemapQsvFilter);
+                videoInputFile.FilterSteps.Any(f =>
+                    f is QsvFormatFilter or ScaleQsvFilter or DeinterlaceQsvFilter or TonemapQsvFilter);
 
             // if we have no filters, check whether we need to convert pixel format
             // since qsv doesn't seem to like doing that at the encoder
@@ -432,7 +433,7 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
 
             foreach (VideoStream watermarkStream in watermark.VideoStreams)
             {
-                if (watermarkStream.StillImage == false)
+                if (!watermarkStream.StillImage)
                 {
                     watermark.AddOption(new DoNotIgnoreLoopInputOption());
                 }
@@ -560,7 +561,7 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
         FrameState desiredState,
         List<IPipelineFilterStep> graphicsEngineOverlayFilterSteps)
     {
-        foreach (var _ in graphicsEngineInput)
+        foreach (GraphicsEngineInput _ in graphicsEngineInput)
         {
             foreach (IPixelFormat desiredPixelFormat in desiredState.PixelFormat)
             {
@@ -608,12 +609,13 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
         {
             DecoderHardwareAccelerationMode: HardwareAccelerationMode.None,
             EncoderHardwareAccelerationMode: HardwareAccelerationMode.None
-        } && context is { HasGraphicsEngine: false, HasWatermark: false, HasSubtitleOverlay: false, ShouldDeinterlace: false };
+        } && context is
+            { HasGraphicsEngine: false, HasWatermark: false, HasSubtitleOverlay: false, ShouldDeinterlace: false };
 
         // auto_scale filter seems to muck up 10-bit software decode => hardware scale, so use software scale in that case
         useSoftwareFilter = useSoftwareFilter ||
-                            (ffmpegState is { DecoderHardwareAccelerationMode: HardwareAccelerationMode.None } &&
-                             OperatingSystem.IsWindows() && currentState.BitDepth == 10);
+                            ffmpegState is { DecoderHardwareAccelerationMode: HardwareAccelerationMode.None } &&
+                            OperatingSystem.IsWindows() && currentState.BitDepth == 10;
 
         if (currentState.ScaledSize != desiredState.ScaledSize && useSoftwareFilter)
         {

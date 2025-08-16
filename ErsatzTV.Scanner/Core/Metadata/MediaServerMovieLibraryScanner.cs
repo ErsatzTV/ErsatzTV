@@ -19,8 +19,8 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
     where TMovie : Movie
     where TEtag : MediaServerItemEtag
 {
-    private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalChaptersProvider _localChaptersProvider;
+    private readonly ILocalFileSystem _localFileSystem;
     private readonly ILogger _logger;
     private readonly IMediator _mediator;
     private readonly IMetadataRepository _metadataRepository;
@@ -101,7 +101,7 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
 
             string localPath = getLocalPath(incoming);
 
-            if (await ShouldScanItem(movieRepository, library, existingMovies, incoming, localPath, deepScan) == false)
+            if (!await ShouldScanItem(movieRepository, library, existingMovies, incoming, localPath, deepScan))
             {
                 continue;
             }

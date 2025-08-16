@@ -10,10 +10,10 @@ namespace ErsatzTV.Scanner.Application.Plex;
 public class SynchronizePlexShowByIdHandler : IRequestHandler<SynchronizePlexShowById, Either<BaseError, string>>
 {
     private readonly ILogger<SynchronizePlexShowByIdHandler> _logger;
-    private readonly IPlexTelevisionRepository _plexTelevisionRepository;
     private readonly IMediaSourceRepository _mediaSourceRepository;
     private readonly IPlexSecretStore _plexSecretStore;
     private readonly IPlexTelevisionLibraryScanner _plexTelevisionLibraryScanner;
+    private readonly IPlexTelevisionRepository _plexTelevisionRepository;
 
     public SynchronizePlexShowByIdHandler(
         IPlexTelevisionRepository plexTelevisionRepository,
@@ -119,7 +119,8 @@ public class SynchronizePlexShowByIdHandler : IRequestHandler<SynchronizePlexSho
     private Task<Validation<BaseError, PlexShowTitleKeyResult>> PlexShowMustExist(
         SynchronizePlexShowById request) =>
         _plexTelevisionRepository.GetShowTitleKey(request.PlexLibraryId, request.ShowId)
-            .Map(v => v.ToValidation<BaseError>($"Plex show {request.ShowId} does not exist in library {request.PlexLibraryId}."));
+            .Map(v => v.ToValidation<BaseError>(
+                $"Plex show {request.ShowId} does not exist in library {request.PlexLibraryId}."));
 
     private record RequestParameters(
         ConnectionParameters ConnectionParameters,

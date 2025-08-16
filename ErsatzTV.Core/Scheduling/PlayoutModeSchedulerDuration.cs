@@ -55,7 +55,7 @@ public class PlayoutModeSchedulerDuration : PlayoutModeSchedulerBase<ProgramSche
 
             if (itemStartTime >= nextState.DurationFinish.IfNone(SystemTime.MaxValueUtc) ||
                 // don't start if the first item will already be after the hard stop
-                (playoutItems.Count == 0 && itemStartTime >= hardStop))
+                playoutItems.Count == 0 && itemStartTime >= hardStop)
             {
                 nextState = nextState with { CurrentTime = hardStop };
                 break;
@@ -165,7 +165,8 @@ public class PlayoutModeSchedulerDuration : PlayoutModeSchedulerBase<ProgramSche
                     PlayoutItemWatermarks = []
                 };
 
-                foreach (var programScheduleItemWatermark in scheduleItem.ProgramScheduleItemWatermarks ?? [])
+                foreach (ProgramScheduleItemWatermark programScheduleItemWatermark in scheduleItem
+                             .ProgramScheduleItemWatermarks ?? [])
                 {
                     playoutItem.PlayoutItemWatermarks.Add(
                         new PlayoutItemWatermark

@@ -1,11 +1,11 @@
+using System.Text.RegularExpressions;
+using System.Xml;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Scanner.Core.Interfaces.Metadata;
 using Microsoft.Extensions.Logging;
-using System.Text.RegularExpressions;
-using System.Xml;
 
 namespace ErsatzTV.Scanner.Core.Metadata;
 
@@ -49,6 +49,12 @@ public partial class LocalChaptersProvider : ILocalChaptersProvider
             _logger.LogError(ex, "Failed to update chapters for media item {MediaItemId}", mediaItem.Id);
             return false;
         }
+    }
+
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
     }
 
     public List<MediaChapter> LocateExternalChapters(string mediaItemPath)
@@ -124,7 +130,7 @@ public partial class LocalChaptersProvider : ILocalChaptersProvider
         var chapters = new List<MediaChapter>();
 
         XmlNodeList? chapterAtoms = chaptersNode.SelectNodes(".//ChapterAtom") ??
-                                   chaptersNode.SelectNodes(".//chapteratom");
+                                    chaptersNode.SelectNodes(".//chapteratom");
 
         if (chapterAtoms == null)
         {
@@ -134,7 +140,7 @@ public partial class LocalChaptersProvider : ILocalChaptersProvider
         long chapterId = 0;
         foreach (XmlNode chapterAtom in chapterAtoms)
         {
-            var chapter = ParseChapterAtom(chapterAtom, chapterId++);
+            MediaChapter? chapter = ParseChapterAtom(chapterAtom, chapterId++);
             if (chapter != null)
             {
                 chapters.Add(chapter);
@@ -143,7 +149,7 @@ public partial class LocalChaptersProvider : ILocalChaptersProvider
 
         chapters.Sort((a, b) => a.StartTime.CompareTo(b.StartTime));
 
-        for (int i = 0; i < chapters.Count; i++)
+        for (var i = 0; i < chapters.Count; i++)
         {
             chapters[i].ChapterId = i;
         }
@@ -154,7 +160,7 @@ public partial class LocalChaptersProvider : ILocalChaptersProvider
     private static MediaChapter? ParseChapterAtom(XmlNode chapterAtom, long chapterId)
     {
         XmlNode? startNode = chapterAtom.SelectSingleNode(".//ChapterTimeStart") ??
-                            chapterAtom.SelectSingleNode(".//chaptertimestart");
+                             chapterAtom.SelectSingleNode(".//chaptertimestart");
 
         if (startNode?.InnerText == null)
         {
@@ -168,7 +174,7 @@ public partial class LocalChaptersProvider : ILocalChaptersProvider
 
         TimeSpan endTime = TimeSpan.Zero;
         XmlNode? endNode = chapterAtom.SelectSingleNode(".//ChapterTimeEnd") ??
-                          chapterAtom.SelectSingleNode(".//chaptertimeend");
+                           chapterAtom.SelectSingleNode(".//chaptertimeend");
 
         if (endNode?.InnerText != null)
         {
@@ -177,9 +183,9 @@ public partial class LocalChaptersProvider : ILocalChaptersProvider
 
         string title = string.Empty;
         XmlNode? titleNode = chapterAtom.SelectSingleNode(".//ChapterString") ??
-                            chapterAtom.SelectSingleNode(".//ChapString") ??
-                            chapterAtom.SelectSingleNode(".//chapterstring") ??
-                            chapterAtom.SelectSingleNode(".//chapstring");
+                             chapterAtom.SelectSingleNode(".//ChapString") ??
+                             chapterAtom.SelectSingleNode(".//chapterstring") ??
+                             chapterAtom.SelectSingleNode(".//chapstring");
 
         if (titleNode?.InnerText != null)
         {
@@ -212,7 +218,7 @@ public partial class LocalChaptersProvider : ILocalChaptersProvider
         }
 
         // Handle time format HH:MM:SS.mmm or HH:MM:SS,mmm
-        var timeFormats = new Regex[]
+        var timeFormats = new[]
         {
             GetParseFullTimeCodeRegex(),
             GetParseTimeCodeNoMilliRegex()
@@ -220,14 +226,14 @@ public partial class LocalChaptersProvider : ILocalChaptersProvider
 
         foreach (Regex pattern in timeFormats)
         {
-            var match = pattern.Match(timeString);
+            Match match = pattern.Match(timeString);
             if (match.Success)
             {
                 if (int.TryParse(match.Groups[1].Value, out int hours) &&
                     int.TryParse(match.Groups[2].Value, out int minutes) &&
                     int.TryParse(match.Groups[3].Value, out int seconds))
                 {
-                    int milliseconds = 0;
+                    var milliseconds = 0;
                     if (match.Groups.Count > 4 && !int.TryParse(match.Groups[4].Value, out milliseconds))
                     {
                         milliseconds = 0;
@@ -242,12 +248,6 @@ public partial class LocalChaptersProvider : ILocalChaptersProvider
         return false;
     }
 
-    public void Dispose()
-    {
-        Dispose(true);
-        GC.SuppressFinalize(this);
-    }
-
     protected virtual void Dispose(bool disposing)
     {
         if (!_disposedValue)
@@ -258,6 +258,7 @@ public partial class LocalChaptersProvider : ILocalChaptersProvider
 
     [GeneratedRegex(@"^(\d{1,2}):(\d{2}):(\d{2})[\.,](\d{3})$")]
     private static partial Regex GetParseFullTimeCodeRegex();
+
     [GeneratedRegex(@"^(\d{1,2}):(\d{2}):(\d{2})$")]
     private static partial Regex GetParseTimeCodeNoMilliRegex();
 }

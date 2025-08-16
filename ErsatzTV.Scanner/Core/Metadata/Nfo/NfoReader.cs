@@ -49,7 +49,11 @@ public abstract class NfoReader<T> : NfoReaderBase
         }
         catch (XmlException ex)
         {
-            _logger.LogWarning(ex, "Error reading string content from NFO {ElementName} file {FileName}", reader.Name, fileName);
+            _logger.LogWarning(
+                ex,
+                "Error reading string content from NFO {ElementName} file {FileName}",
+                reader.Name,
+                fileName);
         }
     }
 
@@ -64,7 +68,11 @@ public abstract class NfoReader<T> : NfoReaderBase
         }
         catch (XmlException ex)
         {
-            _logger.LogWarning(ex, "Error reading int content from NFO {ElementName} file {FileName}", reader.Name, fileName);
+            _logger.LogWarning(
+                ex,
+                "Error reading int content from NFO {ElementName} file {FileName}",
+                reader.Name,
+                fileName);
         }
     }
 
@@ -81,7 +89,11 @@ public abstract class NfoReader<T> : NfoReaderBase
         }
         catch (XmlException ex)
         {
-            _logger.LogWarning(ex, "Error reading date content from NFO {ElementName} file {FileName}", reader.Name, fileName);
+            _logger.LogWarning(
+                ex,
+                "Error reading date content from NFO {ElementName} file {FileName}",
+                reader.Name,
+                fileName);
         }
     }
 
@@ -123,7 +135,11 @@ public abstract class NfoReader<T> : NfoReaderBase
         }
         catch (XmlException ex)
         {
-            _logger.LogWarning(ex, "Error reading actor content from NFO {ElementName} file {FileName}", reader.Name, fileName);
+            _logger.LogWarning(
+                ex,
+                "Error reading actor content from NFO {ElementName} file {FileName}",
+                reader.Name,
+                fileName);
         }
     }
 
@@ -146,7 +162,11 @@ public abstract class NfoReader<T> : NfoReaderBase
         }
         catch (XmlException ex)
         {
-            _logger.LogWarning(ex, "Error reading uniqueid content from NFO {ElementName} file {FileName}", reader.Name, fileName);
+            _logger.LogWarning(
+                ex,
+                "Error reading uniqueid content from NFO {ElementName} file {FileName}",
+                reader.Name,
+                fileName);
         }
     }
 }

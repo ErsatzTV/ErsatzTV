@@ -22,9 +22,9 @@ public class LibrariesController(ITelevisionRepository televisionRepository, IMe
             return new BadRequestObjectResult(new { error = "ShowTitle is required" });
         }
 
-        var trimmedTitle = request.ShowTitle.Trim();
-        var maybeShowId = await televisionRepository.GetShowIdByTitle(id, trimmedTitle);
-        foreach (var showId in maybeShowId)
+        string trimmedTitle = request.ShowTitle.Trim();
+        Option<int> maybeShowId = await televisionRepository.GetShowIdByTitle(id, trimmedTitle);
+        foreach (int showId in maybeShowId)
         {
             bool result = await mediator.Send(new QueueShowScanByLibraryId(id, showId, trimmedTitle, request.DeepScan));
 
@@ -33,7 +33,8 @@ public class LibrariesController(ITelevisionRepository televisionRepository, IMe
                 : new BadRequestObjectResult(new { error = "Unable to queue show scan. Library may not exist, may not support single show scanning, or may already be scanning." });
         }
 
-        return new BadRequestObjectResult(new { error = $"Unable to locate show with title {request.ShowTitle} in library {id}" });
+        return new BadRequestObjectResult(
+            new { error = $"Unable to locate show with title {request.ShowTitle} in library {id}" });
     }
 }
 

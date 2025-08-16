@@ -2,7 +2,7 @@
 
 public class CudaVisibleDevicesVariable(string visibleDevices) : IPipelineStep
 {
-    public EnvironmentVariable[] EnvironmentVariables => [ new("CUDA_VISIBLE_DEVICES", visibleDevices) ];
+    public EnvironmentVariable[] EnvironmentVariables => [new("CUDA_VISIBLE_DEVICES", visibleDevices)];
     public string[] GlobalOptions => [];
     public string[] InputOptions(InputFile inputFile) => [];
     public string[] FilterOptions => [];

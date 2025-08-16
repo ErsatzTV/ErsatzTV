@@ -1,3 +1,5 @@
+using System.Globalization;
+using System.Threading.Channels;
 using ErsatzTV.Application.Libraries;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Errors;
@@ -5,8 +7,6 @@ using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.FFmpeg.Runtime;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
-using System.Globalization;
-using System.Threading.Channels;
 
 namespace ErsatzTV.Application.Plex;
 
@@ -67,16 +67,12 @@ public class CallPlexShowScannerHandler : CallLibraryScannerHandler<SynchronizeP
 
     protected override Task<DateTimeOffset> GetLastScan(
         TvContext dbContext,
-        SynchronizePlexShowById request)
-    {
-        return Task.FromResult(DateTimeOffset.MinValue);
-    }
+        SynchronizePlexShowById request) =>
+        Task.FromResult(DateTimeOffset.MinValue);
 
     protected override bool ScanIsRequired(
         DateTimeOffset lastScan,
         int libraryRefreshInterval,
-        SynchronizePlexShowById request)
-    {
-        return true;
-    }
+        SynchronizePlexShowById request) =>
+        true;
 }

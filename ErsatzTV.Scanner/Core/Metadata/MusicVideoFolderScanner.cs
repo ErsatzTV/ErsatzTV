@@ -21,10 +21,10 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
     private readonly IArtistRepository _artistRepository;
     private readonly IClient _client;
     private readonly ILibraryRepository _libraryRepository;
+    private readonly ILocalChaptersProvider _localChaptersProvider;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalMetadataProvider _localMetadataProvider;
     private readonly ILocalSubtitlesProvider _localSubtitlesProvider;
-    private readonly ILocalChaptersProvider _localChaptersProvider;
     private readonly ILogger<MusicVideoFolderScanner> _logger;
     private readonly IMediaItemRepository _mediaItemRepository;
     private readonly IMediator _mediator;

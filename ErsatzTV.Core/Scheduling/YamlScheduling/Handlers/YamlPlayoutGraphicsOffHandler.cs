@@ -30,7 +30,7 @@ public class YamlPlayoutGraphicsOffHandler(IGraphicsElementRepository graphicsEl
         }
         else
         {
-            foreach (var ge in await GetGraphicsElementByPath(graphicsOff.GraphicsOff))
+            foreach (GraphicsElement ge in await GetGraphicsElementByPath(graphicsOff.GraphicsOff))
             {
                 context.RemoveGraphicsElement(ge.Id);
             }
@@ -41,7 +41,7 @@ public class YamlPlayoutGraphicsOffHandler(IGraphicsElementRepository graphicsEl
 
     private async Task<Option<GraphicsElement>> GetGraphicsElementByPath(string path)
     {
-        if (_graphicsElementCache.TryGetValue(path, out var cachedGraphicsElement))
+        if (_graphicsElementCache.TryGetValue(path, out Option<GraphicsElement> cachedGraphicsElement))
         {
             foreach (GraphicsElement graphicsElement in cachedGraphicsElement)
             {

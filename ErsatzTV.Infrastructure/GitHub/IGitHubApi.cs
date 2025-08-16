@@ -7,8 +7,8 @@ namespace ErsatzTV.Infrastructure.GitHub;
 public interface IGitHubApi
 {
     [Get("/repos/ErsatzTV/ErsatzTV/releases")]
-    public Task<List<GitHubTag>> GetReleases(CancellationToken cancellationToken);
+    Task<List<GitHubTag>> GetReleases(CancellationToken cancellationToken);
 
     [Get("/repos/ErsatzTV/ErsatzTV/releases/tags/{tag}")]
-    public Task<GitHubTag> GetTag(string tag, CancellationToken cancellationToken);
+    Task<GitHubTag> GetTag(string tag, CancellationToken cancellationToken);
 }

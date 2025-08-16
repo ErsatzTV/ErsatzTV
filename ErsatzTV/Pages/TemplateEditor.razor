@@ -197,7 +197,7 @@
         while (maybeStart.Date == DateTime.Today)
         {
             DateTime maybeEnd = maybeStart.AddMinutes(_selectedBlock.Minutes);
-            if (IntersectsOthers(null, maybeStart, maybeEnd) == false)
+            if (!IntersectsOthers(null, maybeStart, maybeEnd))
             {
                 var item = new TemplateItemEditViewModel
                 {
@@ -269,7 +269,7 @@
             }
         }
 
-        return willFit == false;
+        return !willFit;
     }
 
     // private void RemoveTemplateItem(TemplateItemEditViewModel item)

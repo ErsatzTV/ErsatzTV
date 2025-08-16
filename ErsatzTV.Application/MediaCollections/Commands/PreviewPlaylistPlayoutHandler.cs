@@ -55,7 +55,11 @@ public class PreviewPlaylistPlayoutHandler(
         // TODO: make an explicit method to preview, this is ugly
         playoutBuilder.TrimStart = false;
         playoutBuilder.DebugPlaylist = playout.ProgramSchedule.Items[0].Playlist;
-        var result = await playoutBuilder.Build(playout, referenceData, PlayoutBuildMode.Reset, cancellationToken);
+        PlayoutBuildResult result = await playoutBuilder.Build(
+            playout,
+            referenceData,
+            PlayoutBuildMode.Reset,
+            cancellationToken);
 
         var maxItems = 0;
         Dictionary<PlaylistItem, List<MediaItem>> map =

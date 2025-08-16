@@ -217,7 +217,7 @@ public class SoftwarePipelineBuilder : PipelineBuilderBase
 
             foreach (VideoStream watermarkStream in watermark.VideoStreams)
             {
-                if (watermarkStream.StillImage == false)
+                if (!watermarkStream.StillImage)
                 {
                     watermark.AddOption(new DoNotIgnoreLoopInputOption());
                 }
@@ -315,7 +315,7 @@ public class SoftwarePipelineBuilder : PipelineBuilderBase
         FrameState desiredState,
         List<IPipelineFilterStep> graphicsEngineOverlayFilterSteps)
     {
-        foreach (var _ in graphicsEngineInput)
+        foreach (GraphicsEngineInput _ in graphicsEngineInput)
         {
             foreach (IPixelFormat desiredPixelFormat in desiredState.PixelFormat)
             {

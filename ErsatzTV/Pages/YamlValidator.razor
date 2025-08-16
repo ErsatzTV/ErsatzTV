@@ -12,7 +12,7 @@
                 <div class="d-flex">
                     <MudText>YAML File</MudText>
                 </div>
-                <MudTextField T="string" Value="_yamlFile" ValueChanged="@(async x => await OnYamlFileChanged(x))" />
+                <MudTextField T="string" Value="_yamlFile" ValueChanged="@(async x => await OnYamlFileChanged(x))"/>
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                 <div class="d-flex">
@@ -68,8 +68,8 @@
                 </MudTabPanel>
             </MudTabs>
             <div class="mb-6">
-                <br />
-                <br />
+                <br/>
+                <br/>
             </div>
         </MudContainer>
     </div>
@@ -100,7 +100,7 @@
             try
             {
                 _jsonText = YamlScheduleValidator.ToJson(_yamlText);
-                var messages = await YamlScheduleValidator.GetValidationMessages(_yamlText, _isImport);
+                IList<string> messages = await YamlScheduleValidator.GetValidationMessages(_yamlText, _isImport);
                 _messagesCount = messages.Count;
                 _messages = string.Join("\n", messages);
 
@@ -116,7 +116,7 @@
 
     private async Task OnYamlFileChanged(string yamlFile)
     {
-        var extension = Path.GetExtension(yamlFile);
+        string extension = Path.GetExtension(yamlFile);
         _exists = extension is ".yaml" or ".yml" && File.Exists(yamlFile);
 
         await Task.Delay(100);
@@ -129,4 +129,5 @@
 
         StateHasChanged();
     }
+
 }

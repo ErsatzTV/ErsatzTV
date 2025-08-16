@@ -130,9 +130,19 @@ public class ScheduleIntegrationTests
 
             Option<Playout> maybePlayout = await GetPlayout(context, PLAYOUT_ID);
             Playout playout = maybePlayout.ValueUnsafe();
-            var referenceData = await GetReferenceData(context, PLAYOUT_ID, ProgramSchedulePlayoutType.Classic);
+            PlayoutReferenceData referenceData = await GetReferenceData(
+                context,
+                PLAYOUT_ID,
+                ProgramSchedulePlayoutType.Classic);
 
-            await builder.Build(playout, referenceData, PlayoutBuildResult.Empty, PlayoutBuildMode.Reset, start, finish, _cancellationToken);
+            await builder.Build(
+                playout,
+                referenceData,
+                PlayoutBuildResult.Empty,
+                PlayoutBuildMode.Reset,
+                start,
+                finish,
+                _cancellationToken);
 
             // TODO: would need to apply changes from build result
             await context.SaveChangesAsync(_cancellationToken);
@@ -144,7 +154,10 @@ public class ScheduleIntegrationTests
 
             Option<Playout> maybePlayout = await GetPlayout(context, PLAYOUT_ID);
             Playout playout = maybePlayout.ValueUnsafe();
-            var referenceData = await GetReferenceData(context, PLAYOUT_ID, ProgramSchedulePlayoutType.Classic);
+            PlayoutReferenceData referenceData = await GetReferenceData(
+                context,
+                PLAYOUT_ID,
+                ProgramSchedulePlayoutType.Classic);
 
             await builder.Build(
                 playout,
@@ -165,7 +178,10 @@ public class ScheduleIntegrationTests
 
             Option<Playout> maybePlayout = await GetPlayout(context, PLAYOUT_ID);
             Playout playout = maybePlayout.ValueUnsafe();
-            var referenceData = await GetReferenceData(context, PLAYOUT_ID, ProgramSchedulePlayoutType.Classic);
+            PlayoutReferenceData referenceData = await GetReferenceData(
+                context,
+                PLAYOUT_ID,
+                ProgramSchedulePlayoutType.Classic);
 
             await builder.Build(
                 playout,
@@ -310,7 +326,10 @@ public class ScheduleIntegrationTests
 
             Option<Playout> maybePlayout = await GetPlayout(context, playoutId);
             Playout playout = maybePlayout.ValueUnsafe();
-            var referenceData = await GetReferenceData(context, playoutId, ProgramSchedulePlayoutType.Classic);
+            PlayoutReferenceData referenceData = await GetReferenceData(
+                context,
+                playoutId,
+                ProgramSchedulePlayoutType.Classic);
 
             await builder.Build(
                 playout,
@@ -380,7 +399,7 @@ public class ScheduleIntegrationTests
         int playoutId,
         ProgramSchedulePlayoutType playoutType)
     {
-        var channel = await dbContext.Channels
+        Channel channel = await dbContext.Channels
             .AsNoTracking()
             .Where(c => c.Playouts.Any(p => p.Id == playoutId))
             .FirstOrDefaultAsync();
@@ -408,7 +427,7 @@ public class ScheduleIntegrationTests
                 .ToListAsync();
         }
 
-        var programSchedule = await dbContext.ProgramSchedules
+        ProgramSchedule programSchedule = await dbContext.ProgramSchedules
             .AsNoTracking()
             .Where(ps => ps.Playouts.Any(p => p.Id == playoutId))
             .Include(ps => ps.Items)
@@ -430,7 +449,7 @@ public class ScheduleIntegrationTests
             .ThenInclude(psi => psi.FallbackFiller)
             .FirstOrDefaultAsync();
 
-        var programScheduleAlternates = await dbContext.ProgramScheduleAlternates
+        List<ProgramScheduleAlternate> programScheduleAlternates = await dbContext.ProgramScheduleAlternates
             .AsNoTracking()
             .Where(pt => pt.PlayoutId == playoutId)
             .Include(a => a.ProgramSchedule)
@@ -460,7 +479,7 @@ public class ScheduleIntegrationTests
             .ThenInclude(psi => psi.FallbackFiller)
             .ToListAsync();
 
-        var playoutHistory = await dbContext.PlayoutHistory
+        List<PlayoutHistory> playoutHistory = await dbContext.PlayoutHistory
             .AsNoTracking()
             .Where(h => h.PlayoutId == playoutId)
             .ToListAsync();

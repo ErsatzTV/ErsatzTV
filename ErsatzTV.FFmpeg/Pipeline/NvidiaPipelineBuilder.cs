@@ -209,7 +209,8 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
         currentState = SetCrop(videoInputFile, desiredState, currentState);
         SetStillImageLoop(videoInputFile, videoStream, ffmpegState, desiredState, pipelineSteps);
 
-        if (currentState.BitDepth == 8 && context.HasSubtitleOverlay || context.HasWatermark || context.HasGraphicsEngine)
+        if (currentState.BitDepth == 8 && context.HasSubtitleOverlay || context.HasWatermark ||
+            context.HasGraphicsEngine)
         {
             Option<IPixelFormat> desiredPixelFormat = Some((IPixelFormat)new PixelFormatYuv420P());
 
@@ -244,7 +245,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
 
         // need to upload for any sort of overlay
         if (currentState.FrameDataLocation == FrameDataLocation.Software &&
-            currentState.BitDepth == 8 && context.HasSubtitleText == false
+            currentState.BitDepth == 8 && !context.HasSubtitleText
             && (context.HasSubtitleOverlay || context.HasWatermark || context.HasGraphicsEngine))
         {
             var hardwareUpload = new HardwareUploadCudaFilter(currentState);
@@ -462,7 +463,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
 
             foreach (VideoStream watermarkStream in watermark.VideoStreams)
             {
-                if (watermarkStream.StillImage == false)
+                if (!watermarkStream.StillImage)
                 {
                     watermark.AddOption(new DoNotIgnoreLoopInputOption());
                 }
@@ -650,7 +651,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
         FrameState currentState,
         List<IPipelineFilterStep> graphicsEngineOverlayFilterSteps)
     {
-        foreach (var graphicsEngine in graphicsEngineInput)
+        foreach (GraphicsEngineInput graphicsEngine in graphicsEngineInput)
         {
             graphicsEngine.FilterSteps.Add(new PixelFormatFilter(new PixelFormatYuva420P()));
 

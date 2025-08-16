@@ -35,7 +35,7 @@ public class YamlPlayoutGraphicsOnHandler(IGraphicsElementRepository graphicsEle
             return false;
         }
 
-        foreach (var ge in await GetGraphicsElementByPath(graphicsOn.GraphicsOn))
+        foreach (GraphicsElement ge in await GetGraphicsElementByPath(graphicsOn.GraphicsOn))
         {
             string variables = null;
             if (graphicsOn.Variables.Count > 0)
@@ -51,7 +51,7 @@ public class YamlPlayoutGraphicsOnHandler(IGraphicsElementRepository graphicsEle
 
     private async Task<Option<GraphicsElement>> GetGraphicsElementByPath(string path)
     {
-        if (_graphicsElementCache.TryGetValue(path, out var cachedGraphicsElement))
+        if (_graphicsElementCache.TryGetValue(path, out Option<GraphicsElement> cachedGraphicsElement))
         {
             foreach (GraphicsElement graphicsElement in cachedGraphicsElement)
             {

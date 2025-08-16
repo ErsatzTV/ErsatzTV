@@ -15,7 +15,7 @@ public class DoNotIgnoreLoopInputOption : IInputOption
 
     public bool AppliesTo(AudioInputFile audioInputFile) => false;
 
-    public bool AppliesTo(VideoInputFile videoInputFile) => videoInputFile.VideoStreams.All(s => s.StillImage == false);
+    public bool AppliesTo(VideoInputFile videoInputFile) => videoInputFile.VideoStreams.All(s => !s.StillImage);
 
     public bool AppliesTo(ConcatInputFile concatInputFile) => false;
 

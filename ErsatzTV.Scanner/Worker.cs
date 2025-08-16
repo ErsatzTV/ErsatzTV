@@ -34,7 +34,7 @@ public class Worker : BackgroundService
         string[] arguments = Environment.GetCommandLineArgs().Skip(1).ToArray();
 
         ParseResult parseResult = rootCommand.Parse(arguments);
-        await parseResult.InvokeAsync(stoppingToken);
+        await parseResult.InvokeAsync(cancellationToken: stoppingToken);
 
         _appLifetime.StopApplication();
     }
@@ -117,7 +117,9 @@ public class Worker : BackgroundService
         scanEmbyShowCommand.Arguments.Add(showIdArgument);
         scanEmbyShowCommand.Options.Add(deepOption);
 
-        var scanJellyfinShowCommand = new Command("scan-jellyfin-show", "Scan a specific TV show in a Jellyfin library");
+        var scanJellyfinShowCommand = new Command(
+            "scan-jellyfin-show",
+            "Scan a specific TV show in a Jellyfin library");
         scanJellyfinShowCommand.Arguments.Add(libraryIdArgument);
         scanJellyfinShowCommand.Arguments.Add(showIdArgument);
         scanJellyfinShowCommand.Options.Add(deepOption);

@@ -45,7 +45,7 @@
     protected override async Task OnParametersSetAsync()
     {
         Option<SmartCollectionViewModel> maybeSmartCollection = await Mediator.Send(new GetSmartCollectionById(Id), _cts.Token);
-        foreach (var smartCollection in maybeSmartCollection)
+        foreach (SmartCollectionViewModel smartCollection in maybeSmartCollection)
         {
             _model.Id = smartCollection.Id;
             _model.Name = smartCollection.Name;
@@ -68,4 +68,5 @@
                 });
         }
     }
+
 }

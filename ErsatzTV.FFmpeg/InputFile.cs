@@ -61,7 +61,10 @@ public record NullAudioInputFile : AudioInputFile
     public void Deconstruct(out AudioState DesiredState) => DesiredState = this.DesiredState;
 }
 
-public record VideoInputFile(string Path, IList<VideoStream> VideoStreams, StreamInputKind StreamInputKind = StreamInputKind.Vod) : InputFile(
+public record VideoInputFile(
+    string Path,
+    IList<VideoStream> VideoStreams,
+    StreamInputKind StreamInputKind = StreamInputKind.Vod) : InputFile(
     Path,
     VideoStreams.Cast<MediaStream>().ToList())
 {

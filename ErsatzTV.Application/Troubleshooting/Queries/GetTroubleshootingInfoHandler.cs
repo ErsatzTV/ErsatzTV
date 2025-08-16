@@ -135,23 +135,25 @@ public class GetTroubleshootingInfoHandler : IRequestHandler<GetTroubleshootingI
 
                 if (_runtimeInfo.IsOSPlatform(OSPlatform.OSX))
                 {
-                    var decoders = _hardwareCapabilitiesFactory.GetVideoToolboxDecoders();
+                    List<string> decoders = _hardwareCapabilitiesFactory.GetVideoToolboxDecoders();
                     videoToolboxCapabilities.AppendLine("VideoToolbox Decoders: ");
                     videoToolboxCapabilities.AppendLine();
-                    foreach (var decoder in decoders)
+                    foreach (string decoder in decoders)
                     {
                         videoToolboxCapabilities.AppendLine(CultureInfo.InvariantCulture, $"\t{decoder}");
                     }
+
                     videoToolboxCapabilities.AppendLine();
                     videoToolboxCapabilities.AppendLine();
 
-                    var encoders = _hardwareCapabilitiesFactory.GetVideoToolboxEncoders();
+                    List<string> encoders = _hardwareCapabilitiesFactory.GetVideoToolboxEncoders();
                     videoToolboxCapabilities.AppendLine("VideoToolbox Encoders: ");
                     videoToolboxCapabilities.AppendLine();
-                    foreach (var encoder in encoders)
+                    foreach (string encoder in encoders)
                     {
                         videoToolboxCapabilities.AppendLine(CultureInfo.InvariantCulture, $"\t{encoder}");
                     }
+
                     videoToolboxCapabilities.AppendLine();
                     videoToolboxCapabilities.AppendLine();
                 }

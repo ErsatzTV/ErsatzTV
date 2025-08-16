@@ -41,7 +41,7 @@ public class PlexTvApiClient : IPlexTvApiClient
                     clientIdentifier,
                     token.AuthToken);
 
-                var allServers = httpResources.Filter(resource => resource.HttpsRequired == false)
+                var allServers = httpResources.Filter(resource => !resource.HttpsRequired)
                     .Append(httpsResources.Filter(resource => resource.HttpsRequired))
                     .Filter(r => r.Provides.Split(",").Any(p => p == "server"))
                     .ToList();

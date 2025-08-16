@@ -504,7 +504,7 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
             .FirstOrDefaultAsync()
             .Map(Optional);
 
-        foreach (var show in maybeShow)
+        foreach (PlexShow show in maybeShow)
         {
             return new PlexShowTitleKeyResult(
                 await show.ShowMetadata.HeadOrNone().Map(sm => sm.Title).IfNoneAsync("Unknown Show"),

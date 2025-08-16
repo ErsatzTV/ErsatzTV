@@ -1,5 +1,4 @@
 @using System.Globalization
-
 <div style="display: flex; flex-direction: row; margin-bottom: auto; margin-top: auto; width: 100%" class="ml-6 mr-6">
     @if (IsSelectMode())
     {
@@ -105,4 +104,5 @@
         int length = maximum.ToString(CultureInfo.InvariantCulture).Length;
         return (MarkupString)value.ToString(CultureInfo.InvariantCulture).PadLeft(length, ' ').Replace(" ", "&nbsp;");
     }
+
 }

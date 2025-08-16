@@ -76,7 +76,7 @@ public class InternalController : ControllerBase
 
             if (!string.IsNullOrWhiteSpace(remoteStream.Script))
             {
-                string[] split =  remoteStream.Script.Split(" ");
+                string[] split = remoteStream.Script.Split(" ");
                 if (split.Length > 0)
                 {
                     Command command = Cli.Wrap(split.Head());
@@ -112,7 +112,6 @@ public class InternalController : ControllerBase
         }
 
         return NotFound();
-
     }
 
     [HttpGet("/media/plex/{plexMediaSourceId:int}/{*path}")]
@@ -317,13 +316,12 @@ public class InternalController : ControllerBase
             _logger.LogDebug("ffmpeg arguments {FFmpegArguments}", process.Arguments);
 
             var cts = new CancellationTokenSource();
-            HttpContext.Response.OnCompleted(
-                async () =>
-                {
-                    ffmpegProcess.Dispose();
-                    await cts.CancelAsync();
-                    cts.Dispose();
-                });
+            HttpContext.Response.OnCompleted(async () =>
+            {
+                ffmpegProcess.Dispose();
+                await cts.CancelAsync();
+                cts.Dispose();
+            });
 
             using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(
                 cts.Token,
@@ -332,8 +330,8 @@ public class InternalController : ControllerBase
             var pipe = new Pipe();
             var stdErrBuffer = new StringBuilder();
 
-            var processWithPipe = process;
-            foreach (var graphicsEngineContext in processModel.GraphicsEngineContext)
+            Command processWithPipe = process;
+            foreach (GraphicsEngineContext graphicsEngineContext in processModel.GraphicsEngineContext)
             {
                 var gePipe = new Pipe();
                 processWithPipe = process.WithStandardInputPipe(PipeSource.FromStream(gePipe.Reader.AsStream()));
@@ -345,7 +343,7 @@ public class InternalController : ControllerBase
                     linkedCts.Token);
             }
 
-            var task = processWithPipe
+            CommandTask<CommandResult> task = processWithPipe
                 .WithStandardOutputPipe(PipeTarget.ToStream(pipe.Writer.AsStream()))
                 .WithStandardErrorPipe(PipeTarget.ToStringBuilder(stdErrBuffer))
                 .WithValidation(CommandResultValidation.None)
@@ -357,7 +355,7 @@ public class InternalController : ControllerBase
                 pipe.Writer,
                 TaskScheduler.Default);
 
-            var contentType = mode switch
+            string contentType = mode switch
             {
                 "segmenter-v2" => "video/x-matroska",
                 _ => "video/mp2t"

@@ -14,5 +14,13 @@ public record PlayoutBuildResult(
     Option<DateTimeOffset> TimeShiftTo)
 {
     public static PlayoutBuildResult Empty =>
-        new(false, Option<DateTimeOffset>.None, Option<DateTimeOffset>.None, [], [], [], [], Option<DateTimeOffset>.None);
+        new(
+            false,
+            Option<DateTimeOffset>.None,
+            Option<DateTimeOffset>.None,
+            [],
+            [],
+            [],
+            [],
+            Option<DateTimeOffset>.None);
 }

@@ -8,9 +8,9 @@ public class OutputFormatHls : IPipelineStep
 
     private readonly FrameState _desiredState;
     private readonly bool _isFirstTranscode;
+    private readonly bool _isTroubleshooting;
     private readonly Option<string> _mediaFrameRate;
     private readonly bool _oneSecondGop;
-    private readonly bool _isTroubleshooting;
     private readonly string _playlistPath;
     private readonly string _segmentTemplate;
 

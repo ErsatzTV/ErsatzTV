@@ -162,7 +162,7 @@ public class TranscodingTests
             //new InputFormat("libx265", "yuv420p"),
             new("libx265", "yuv420p10le"),
             //
-            new("mpeg4", "yuv420p"),
+            new("mpeg4", "yuv420p")
             //
             // new("libvpx-vp9", "yuv420p"),
             // new("libvpx-vp9", "yuv420p10le"),
@@ -328,7 +328,7 @@ public class TranscodingTests
             .Do(x =>
             {
                 MediaVersion version = x.Arg<MediaVersion>();
-                if (version.Streams.Any(s => s.MediaStreamKind == MediaStreamKind.Video && s.AttachedPic == false))
+                if (version.Streams.Any(s => s.MediaStreamKind == MediaStreamKind.Video && !s.AttachedPic))
                 {
                     version.MediaFiles = videoVersion.MediaFiles;
                     videoVersion = version;
@@ -1088,5 +1088,7 @@ public class TranscodingTests
     }
 
     private static string ExecutableName(string baseName) =>
-        OperatingSystem.IsWindows() ? $"{baseName}.exe" : $"/home/jason/Downloads/ffmpeg/ffmpeg-n7.1.1-56-gc2184b65d2-linux64-gpl-7.1/bin/{baseName}";
+        OperatingSystem.IsWindows()
+            ? $"{baseName}.exe"
+            : $"/home/jason/Downloads/ffmpeg/ffmpeg-n7.1.1-56-gc2184b65d2-linux64-gpl-7.1/bin/{baseName}";
 }

@@ -66,7 +66,8 @@ internal static class Mapper
                     duration.FallbackFiller != null
                         ? Filler.Mapper.ProjectToViewModel(duration.FallbackFiller)
                         : null,
-                    duration.ProgramScheduleItemWatermarks.Map(wm => Watermarks.Mapper.ProjectToViewModel(wm.Watermark)).ToList(),
+                    duration.ProgramScheduleItemWatermarks.Map(wm => Watermarks.Mapper.ProjectToViewModel(wm.Watermark))
+                        .ToList(),
                     duration.PreferredAudioLanguageCode,
                     duration.PreferredAudioTitle,
                     duration.PreferredSubtitleLanguageCode,
@@ -117,7 +118,8 @@ internal static class Mapper
                     flood.FallbackFiller != null
                         ? Filler.Mapper.ProjectToViewModel(flood.FallbackFiller)
                         : null,
-                    flood.ProgramScheduleItemWatermarks.Map(wm => Watermarks.Mapper.ProjectToViewModel(wm.Watermark)).ToList(),
+                    flood.ProgramScheduleItemWatermarks.Map(wm => Watermarks.Mapper.ProjectToViewModel(wm.Watermark))
+                        .ToList(),
                     flood.PreferredAudioLanguageCode,
                     flood.PreferredAudioTitle,
                     flood.PreferredSubtitleLanguageCode,
@@ -170,7 +172,8 @@ internal static class Mapper
                     multiple.FallbackFiller != null
                         ? Filler.Mapper.ProjectToViewModel(multiple.FallbackFiller)
                         : null,
-                    multiple.ProgramScheduleItemWatermarks.Map(wm => Watermarks.Mapper.ProjectToViewModel(wm.Watermark)).ToList(),
+                    multiple.ProgramScheduleItemWatermarks.Map(wm => Watermarks.Mapper.ProjectToViewModel(wm.Watermark))
+                        .ToList(),
                     multiple.PreferredAudioLanguageCode,
                     multiple.PreferredAudioTitle,
                     multiple.PreferredSubtitleLanguageCode,
@@ -221,7 +224,8 @@ internal static class Mapper
                     one.FallbackFiller != null
                         ? Filler.Mapper.ProjectToViewModel(one.FallbackFiller)
                         : null,
-                    one.ProgramScheduleItemWatermarks.Map(wm => Watermarks.Mapper.ProjectToViewModel(wm.Watermark)).ToList(),
+                    one.ProgramScheduleItemWatermarks.Map(wm => Watermarks.Mapper.ProjectToViewModel(wm.Watermark))
+                        .ToList(),
                     one.PreferredAudioLanguageCode,
                     one.PreferredAudioTitle,
                     one.PreferredSubtitleLanguageCode,

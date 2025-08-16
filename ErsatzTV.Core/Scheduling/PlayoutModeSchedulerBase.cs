@@ -286,7 +286,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
 
         // missing pad-to-nearest-minute value is invalid; use no filler
         FillerPreset invalidPadFiller = allFiller
-            .FirstOrDefault(f => f.FillerMode == FillerMode.Pad && f.PadToNearestMinute.HasValue == false);
+            .FirstOrDefault(f => f.FillerMode == FillerMode.Pad && !f.PadToNearestMinute.HasValue);
         if (invalidPadFiller is not null)
         {
             Logger.LogError(
@@ -340,7 +340,8 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
         // convert playlist filler
         if (allFiller.Any(f => f.CollectionType is ProgramScheduleItemCollectionType.Playlist))
         {
-            var toRemove = allFiller.Filter(f => f.CollectionType is ProgramScheduleItemCollectionType.Playlist).ToList();
+            var toRemove = allFiller.Filter(f => f.CollectionType is ProgramScheduleItemCollectionType.Playlist)
+                .ToList();
             allFiller.RemoveAll(toRemove.Contains);
 
             foreach (FillerPreset playlistFiller in toRemove)
@@ -367,7 +368,8 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                 };
 
                 // if filler count is 2, we need to schedule 2 * (number of items in one full playlist iteration)
-                var fillerEnumerator = enumerators[CollectionKey.ForFillerPreset(playlistFiller)];
+                IMediaCollectionEnumerator fillerEnumerator =
+                    enumerators[CollectionKey.ForFillerPreset(playlistFiller)];
                 if (fillerEnumerator is PlaylistEnumerator playlistEnumerator)
                 {
                     clone.Count *= playlistEnumerator.CountForFiller;
@@ -428,7 +430,10 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
             foreach (FillerPreset filler in allFiller.Filter(f =>
                          f.FillerKind == FillerKind.MidRoll && f.FillerMode != FillerMode.Pad))
             {
-                List<MediaChapter> filteredChapters = FillerExpression.FilterChapters(filler.Expression, effectiveChapters, playoutItem);
+                List<MediaChapter> filteredChapters = FillerExpression.FilterChapters(
+                    filler.Expression,
+                    effectiveChapters,
+                    playoutItem);
                 if (filteredChapters.Count <= 1)
                 {
                     result.Add(playoutItem);
@@ -797,7 +802,6 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
 
                 if (remainingToFill - itemDuration >= TimeSpan.Zero)
                 {
-
                     var playoutItem = new PlayoutItem
                     {
                         PlayoutId = playoutBuilderState.PlayoutId,

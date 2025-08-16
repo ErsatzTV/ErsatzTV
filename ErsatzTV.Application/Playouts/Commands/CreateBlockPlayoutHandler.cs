@@ -33,6 +33,7 @@ public class CreateBlockPlayoutHandler(
         {
             await channel.WriteAsync(new TimeShiftOnDemandPlayout(playout.Id, DateTimeOffset.Now, false));
         }
+
         await channel.WriteAsync(new RefreshChannelList());
         return new CreatePlayoutResponse(playout.Id);
     }

@@ -63,7 +63,7 @@ internal record EffectiveBlock(Block Block, BlockKey BlockKey, DateTimeOffset St
     private static EffectiveBlock NormalizeGuideMode(EffectiveBlock effectiveBlock)
     {
         if (effectiveBlock.Block.Items is not null &&
-            effectiveBlock.Block.Items.All(bi => bi.IncludeInProgramGuide == false))
+            effectiveBlock.Block.Items.All(bi => !bi.IncludeInProgramGuide))
         {
             foreach (BlockItem blockItem in effectiveBlock.Block.Items)
             {

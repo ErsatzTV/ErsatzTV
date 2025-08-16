@@ -431,7 +431,7 @@ public class EmbyTelevisionRepository : IEmbyTelevisionRepository
             .FirstOrDefaultAsync()
             .Map(Optional);
 
-        foreach (var show in maybeShow)
+        foreach (EmbyShow show in maybeShow)
         {
             return new EmbyShowTitleItemIdResult(
                 await show.ShowMetadata.HeadOrNone().Map(sm => sm.Title).IfNoneAsync("Unknown Show"),

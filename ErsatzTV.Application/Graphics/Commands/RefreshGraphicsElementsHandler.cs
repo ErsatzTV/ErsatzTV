@@ -18,10 +18,10 @@ public class RefreshGraphicsElementsHandler(
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         // cleanup existing elements
-        var allExisting = await dbContext.GraphicsElements
+        List<GraphicsElement> allExisting = await dbContext.GraphicsElements
             .ToListAsync(cancellationToken);
 
-        foreach (var existing in allExisting.Where(e => !localFileSystem.FileExists(e.Path)))
+        foreach (GraphicsElement existing in allExisting.Where(e => !localFileSystem.FileExists(e.Path)))
         {
             logger.LogWarning(
                 "Removing graphics element that references non-existing file {File}",
@@ -35,7 +35,7 @@ public class RefreshGraphicsElementsHandler(
             .Where(f => allExisting.All(e => e.Path != f))
             .ToList();
 
-        foreach (var path in newTextPaths)
+        foreach (string path in newTextPaths)
         {
             logger.LogDebug("Adding new graphics element from file {File}", path);
 
@@ -53,7 +53,7 @@ public class RefreshGraphicsElementsHandler(
             .Where(f => allExisting.All(e => e.Path != f))
             .ToList();
 
-        foreach (var path in newImagePaths)
+        foreach (string path in newImagePaths)
         {
             logger.LogDebug("Adding new graphics element from file {File}", path);
 
@@ -71,7 +71,7 @@ public class RefreshGraphicsElementsHandler(
             .Where(f => allExisting.All(e => e.Path != f))
             .ToList();
 
-        foreach (var path in newSubtitlePaths)
+        foreach (string path in newSubtitlePaths)
         {
             logger.LogDebug("Adding new graphics element from file {File}", path);
 

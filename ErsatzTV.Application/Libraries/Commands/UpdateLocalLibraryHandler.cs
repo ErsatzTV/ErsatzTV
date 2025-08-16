@@ -55,7 +55,7 @@ public class UpdateLocalLibraryHandler : LocalLibraryHandlerBase,
 
         var toRemoveIds = toRemove.Map(lp => lp.Id).ToHashSet();
 
-        int changeCount = 0;
+        var changeCount = 0;
 
         // save item ids first; will need to remove from search index
         List<int> itemsToRemove = await dbContext.MediaItems

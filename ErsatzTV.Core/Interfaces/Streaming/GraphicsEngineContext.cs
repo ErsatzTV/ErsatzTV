@@ -28,7 +28,9 @@ public record TextElementDataContext(TextGraphicsElement TextElement, Dictionary
 
 public record ImageElementContext(ImageGraphicsElement ImageElement) : GraphicsElementContext;
 
-public record SubtitleElementDataContext(SubtitlesGraphicsElement SubtitlesElement, Dictionary<string, string> Variables)
+public record SubtitleElementDataContext(
+    SubtitlesGraphicsElement SubtitlesElement,
+    Dictionary<string, string> Variables)
     : GraphicsElementContext, ITemplateDataContext
 {
     public int EpgEntries => SubtitlesElement.EpgEntries;

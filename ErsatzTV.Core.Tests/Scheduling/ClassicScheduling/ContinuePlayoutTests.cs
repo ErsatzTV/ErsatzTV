@@ -28,7 +28,14 @@ public class ContinuePlayoutTests : PlayoutBuilderTestBase
         DateTimeOffset start = HoursAfterMidnight(0);
         DateTimeOffset finish = start + TimeSpan.FromHours(6);
 
-        PlayoutBuildResult result = await builder.Build(playout, referenceData, PlayoutBuildResult.Empty, PlayoutBuildMode.Reset, start, finish, CancellationToken);
+        PlayoutBuildResult result = await builder.Build(
+            playout,
+            referenceData,
+            PlayoutBuildResult.Empty,
+            PlayoutBuildMode.Reset,
+            start,
+            finish,
+            CancellationToken);
 
         result.AddedItems.Count.ShouldBe(1);
         result.AddedItems.Head().MediaItemId.ShouldBe(1);
@@ -73,7 +80,14 @@ public class ContinuePlayoutTests : PlayoutBuilderTestBase
         DateTimeOffset start = HoursAfterMidnight(0);
         DateTimeOffset finish = start + TimeSpan.FromHours(6);
 
-        PlayoutBuildResult result = await builder.Build(playout, referenceData, PlayoutBuildResult.Empty, PlayoutBuildMode.Reset, start, finish, CancellationToken);
+        PlayoutBuildResult result = await builder.Build(
+            playout,
+            referenceData,
+            PlayoutBuildResult.Empty,
+            PlayoutBuildMode.Reset,
+            start,
+            finish,
+            CancellationToken);
 
         result.AddedItems.Count.ShouldBe(1);
         result.AddedItems.Head().MediaItemId.ShouldBe(1);
@@ -119,7 +133,14 @@ public class ContinuePlayoutTests : PlayoutBuilderTestBase
         DateTimeOffset start = HoursAfterMidnight(0);
         DateTimeOffset finish = start + TimeSpan.FromDays(1);
 
-        PlayoutBuildResult result = await builder.Build(playout, referenceData, PlayoutBuildResult.Empty, PlayoutBuildMode.Reset, start, finish, CancellationToken);
+        PlayoutBuildResult result = await builder.Build(
+            playout,
+            referenceData,
+            PlayoutBuildResult.Empty,
+            PlayoutBuildMode.Reset,
+            start,
+            finish,
+            CancellationToken);
 
         result.AddedItems.Count.ShouldBe(4);
         result.AddedItems.Map(i => i.MediaItemId).ToList().ShouldBe([1, 2, 1, 2]);
@@ -156,7 +177,14 @@ public class ContinuePlayoutTests : PlayoutBuilderTestBase
         DateTimeOffset start2 = HoursAfterMidnight(1);
         DateTimeOffset finish2 = start2 + TimeSpan.FromDays(1);
 
-        result = await builder.Build(playout, referenceData, PlayoutBuildResult.Empty, PlayoutBuildMode.Continue, start2, finish2, CancellationToken);
+        result = await builder.Build(
+            playout,
+            referenceData,
+            PlayoutBuildResult.Empty,
+            PlayoutBuildMode.Continue,
+            start2,
+            finish2,
+            CancellationToken);
 
         result.AddedItems.Count.ShouldBe(1);
         result.AddedItems[0].StartOffset.ShouldBe(finish);
@@ -171,7 +199,14 @@ public class ContinuePlayoutTests : PlayoutBuilderTestBase
         DateTimeOffset start3 = HoursAfterMidnight(2);
         DateTimeOffset finish3 = start3 + TimeSpan.FromDays(1);
 
-        result = await builder.Build(playout, referenceData, PlayoutBuildResult.Empty, PlayoutBuildMode.Continue, start3, finish3, CancellationToken);
+        result = await builder.Build(
+            playout,
+            referenceData,
+            PlayoutBuildResult.Empty,
+            PlayoutBuildMode.Continue,
+            start3,
+            finish3,
+            CancellationToken);
 
         result.AddedItems.Count.ShouldBe(0);
 
@@ -196,8 +231,14 @@ public class ContinuePlayoutTests : PlayoutBuilderTestBase
         DateTimeOffset start = HoursAfterMidnight(0);
         DateTimeOffset finish = start + TimeSpan.FromHours(6);
 
-        PlayoutBuildResult result = await builder.Build(playout, referenceData, PlayoutBuildResult.Empty,
-            PlayoutBuildMode.Reset, start, finish, CancellationToken);
+        PlayoutBuildResult result = await builder.Build(
+            playout,
+            referenceData,
+            PlayoutBuildResult.Empty,
+            PlayoutBuildMode.Reset,
+            start,
+            finish,
+            CancellationToken);
 
         result.AddedItems.Count.ShouldBe(6);
         playout.ProgramScheduleAnchors.Count.ShouldBe(1);
@@ -235,11 +276,19 @@ public class ContinuePlayoutTests : PlayoutBuilderTestBase
             mediaItems.Add(TestMovie(i, TimeSpan.FromMinutes(55), DateTime.Today.AddHours(i)));
         }
 
-        (PlayoutBuilder builder, Playout playout, PlayoutReferenceData referenceData) = TestDataFloodForItems(mediaItems, PlaybackOrder.Shuffle);
+        (PlayoutBuilder builder, Playout playout, PlayoutReferenceData referenceData) =
+            TestDataFloodForItems(mediaItems, PlaybackOrder.Shuffle);
         DateTimeOffset start = HoursAfterMidnight(0).AddSeconds(5);
         DateTimeOffset finish = start + TimeSpan.FromDays(2);
 
-        PlayoutBuildResult result = await builder.Build(playout, referenceData, PlayoutBuildResult.Empty, PlayoutBuildMode.Reset, start, finish, CancellationToken);
+        PlayoutBuildResult result = await builder.Build(
+            playout,
+            referenceData,
+            PlayoutBuildResult.Empty,
+            PlayoutBuildMode.Reset,
+            start,
+            finish,
+            CancellationToken);
 
         result.AddedItems.Count.ShouldBe(53);
         playout.ProgramScheduleAnchors.Count.ShouldBe(2);
@@ -301,7 +350,14 @@ public class ContinuePlayoutTests : PlayoutBuilderTestBase
         DateTimeOffset start = HoursAfterMidnight(0);
         DateTimeOffset finish = start + TimeSpan.FromHours(6);
 
-        PlayoutBuildResult result = await builder.Build(playout, referenceData, PlayoutBuildResult.Empty, PlayoutBuildMode.Reset, start, finish, CancellationToken);
+        PlayoutBuildResult result = await builder.Build(
+            playout,
+            referenceData,
+            PlayoutBuildResult.Empty,
+            PlayoutBuildMode.Reset,
+            start,
+            finish,
+            CancellationToken);
 
         result.AddedItems.Count.ShouldBe(6);
         playout.ProgramScheduleAnchors.Count.ShouldBe(2);
@@ -346,7 +402,14 @@ public class ContinuePlayoutTests : PlayoutBuilderTestBase
         DateTimeOffset start = HoursAfterMidnight(0).AddSeconds(5);
         DateTimeOffset finish = start + TimeSpan.FromDays(2);
 
-        PlayoutBuildResult result = await builder.Build(playout, referenceData, PlayoutBuildResult.Empty, PlayoutBuildMode.Reset, start, finish, CancellationToken);
+        PlayoutBuildResult result = await builder.Build(
+            playout,
+            referenceData,
+            PlayoutBuildResult.Empty,
+            PlayoutBuildMode.Reset,
+            start,
+            finish,
+            CancellationToken);
 
         result.AddedItems.Count.ShouldBe(53);
         playout.ProgramScheduleAnchors.Count.ShouldBe(4);
@@ -482,8 +545,14 @@ public class ContinuePlayoutTests : PlayoutBuilderTestBase
         DateTimeOffset start = HoursAfterMidnight(0);
         DateTimeOffset finish = start + TimeSpan.FromHours(32);
 
-        PlayoutBuildResult result = await builder.Build(playout, referenceData, PlayoutBuildResult.Empty,
-            PlayoutBuildMode.Continue, start, finish, CancellationToken);
+        PlayoutBuildResult result = await builder.Build(
+            playout,
+            referenceData,
+            PlayoutBuildResult.Empty,
+            PlayoutBuildMode.Continue,
+            start,
+            finish,
+            CancellationToken);
 
         result.AddedItems.Count.ShouldBe(5);
 
@@ -595,8 +664,14 @@ public class ContinuePlayoutTests : PlayoutBuilderTestBase
         DateTimeOffset start = HoursAfterMidnight(0);
         DateTimeOffset finish = start + TimeSpan.FromHours(5);
 
-        PlayoutBuildResult result = await builder.Build(playout, referenceData, PlayoutBuildResult.Empty,
-            PlayoutBuildMode.Continue, start, finish, CancellationToken);
+        PlayoutBuildResult result = await builder.Build(
+            playout,
+            referenceData,
+            PlayoutBuildResult.Empty,
+            PlayoutBuildMode.Continue,
+            start,
+            finish,
+            CancellationToken);
 
         result.AddedItems.Count.ShouldBe(4);
 
@@ -707,8 +782,14 @@ public class ContinuePlayoutTests : PlayoutBuilderTestBase
             localFileSystem,
             Logger);
 
-        PlayoutBuildResult result = await builder.Build(playout, referenceData, PlayoutBuildResult.Empty,
-            PlayoutBuildMode.Continue, start, finish, CancellationToken);
+        PlayoutBuildResult result = await builder.Build(
+            playout,
+            referenceData,
+            PlayoutBuildResult.Empty,
+            PlayoutBuildMode.Continue,
+            start,
+            finish,
+            CancellationToken);
 
         result.AddedItems.Count.ShouldBe(5);
 

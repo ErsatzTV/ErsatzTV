@@ -24,9 +24,9 @@ namespace ErsatzTV.Application.Streaming;
 public class HlsSessionWorker : IHlsSessionWorker
 {
     private static int _workAheadCount;
-    private readonly IGraphicsEngine _graphicsEngine;
     private readonly IClient _client;
     private readonly IConfigElementRepository _configElementRepository;
+    private readonly IGraphicsEngine _graphicsEngine;
     private readonly IHlsPlaylistFilter _hlsPlaylistFilter;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILogger<HlsSessionWorker> _logger;
@@ -36,6 +36,7 @@ public class HlsSessionWorker : IHlsSessionWorker
     private readonly Option<int> _targetFramerate;
     private CancellationTokenSource _cancellationTokenSource;
     private string _channelNumber;
+    private DateTimeOffset _channelStart;
     private bool _disposedValue;
     private bool _hasWrittenSegments;
     private DateTimeOffset _lastAccess;
@@ -44,7 +45,6 @@ public class HlsSessionWorker : IHlsSessionWorker
     private HlsSessionState _state;
     private Timer _timer;
     private DateTimeOffset _transcodedUntil;
-    private DateTimeOffset _channelStart;
 
     public HlsSessionWorker(
         IServiceScopeFactory serviceScopeFactory,
@@ -152,7 +152,10 @@ public class HlsSessionWorker : IHlsSessionWorker
         GC.SuppressFinalize(this);
     }
 
-    public async Task Run(string channelNumber, Option<TimeSpan> idleTimeout, CancellationToken incomingCancellationToken)
+    public async Task Run(
+        string channelNumber,
+        Option<TimeSpan> idleTimeout,
+        CancellationToken incomingCancellationToken)
     {
         _cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(incomingCancellationToken);
 
@@ -160,7 +163,7 @@ public class HlsSessionWorker : IHlsSessionWorker
         {
             _channelNumber = channelNumber;
 
-            foreach (var timeout in idleTimeout)
+            foreach (TimeSpan timeout in idleTimeout)
             {
                 lock (_sync)
                 {
@@ -181,14 +184,14 @@ public class HlsSessionWorker : IHlsSessionWorker
             Touch();
             _transcodedUntil = DateTimeOffset.Now;
             PlaylistStart = _transcodedUntil;
-            _channelStart =  _transcodedUntil;
+            _channelStart = _transcodedUntil;
 
-            var maybePlayoutId = await _mediator.Send(
+            Option<int> maybePlayoutId = await _mediator.Send(
                 new GetPlayoutIdByChannelNumber(_channelNumber),
                 cancellationToken);
 
             // time shift on-demand playout if needed
-            foreach (var playoutId in maybePlayoutId)
+            foreach (int playoutId in maybePlayoutId)
             {
                 await _mediator.Send(
                     new TimeShiftOnDemandPlayout(playoutId, _transcodedUntil, true),
@@ -205,7 +208,7 @@ public class HlsSessionWorker : IHlsSessionWorker
 
             while (!cancellationToken.IsCancellationRequested)
             {
-                foreach (var timeout in idleTimeout)
+                foreach (TimeSpan timeout in idleTimeout)
                 {
                     if (DateTimeOffset.Now - _lastAccess > timeout)
                     {
@@ -461,7 +464,7 @@ public class HlsSessionWorker : IHlsSessionWorker
             {
                 await TrimAndDelete(cancellationToken);
 
-                var maybePipe = Option<Pipe>.None;
+                Option<Pipe> maybePipe = Option<Pipe>.None;
                 var stdErrBuffer = new StringBuilder();
 
                 Command process = processModel.Process;
@@ -472,8 +475,8 @@ public class HlsSessionWorker : IHlsSessionWorker
                 {
                     using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
-                    var processWithPipe = process;
-                    foreach (var graphicsEngineContext in processModel.GraphicsEngineContext)
+                    Command processWithPipe = process;
+                    foreach (GraphicsEngineContext graphicsEngineContext in processModel.GraphicsEngineContext)
                     {
                         var pipe = new Pipe();
                         maybePipe = pipe;
@@ -505,7 +508,7 @@ public class HlsSessionWorker : IHlsSessionWorker
                         await linkedCts.CancelAsync();
 
                         // detect the non-zero exit code and transcode the ffmpeg error message instead
-                        string errorMessage = stdErrBuffer.ToString();
+                        var errorMessage = stdErrBuffer.ToString();
                         if (string.IsNullOrWhiteSpace(errorMessage))
                         {
                             errorMessage = $"Unknown FFMPEG error; exit code {commandResult.ExitCode}";
@@ -563,7 +566,7 @@ public class HlsSessionWorker : IHlsSessionWorker
                 }
                 finally
                 {
-                    foreach (var pipe in maybePipe)
+                    foreach (Pipe pipe in maybePipe)
                     {
                         await pipe.Writer.CompleteAsync();
                     }

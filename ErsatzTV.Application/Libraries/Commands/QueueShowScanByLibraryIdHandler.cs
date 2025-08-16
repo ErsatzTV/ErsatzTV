@@ -1,6 +1,7 @@
 using ErsatzTV.Application.Emby;
 using ErsatzTV.Application.Jellyfin;
 using ErsatzTV.Application.Plex;
+using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Locking;
 using ErsatzTV.Infrastructure.Data;
@@ -48,25 +49,28 @@ public class QueueShowScanByLibraryIdHandler(
                 return false;
             }
 
-            logger.LogDebug("Queued show scan for library id {Id}, show: {ShowTitle}, deepScan: {DeepScan}",
-                library.Id, request.ShowTitle, request.DeepScan);
+            logger.LogDebug(
+                "Queued show scan for library id {Id}, show: {ShowTitle}, deepScan: {DeepScan}",
+                library.Id,
+                request.ShowTitle,
+                request.DeepScan);
 
             try
             {
                 switch (library)
                 {
                     case PlexLibrary:
-                        var plexResult = await mediator.Send(
+                        Either<BaseError, string> plexResult = await mediator.Send(
                             new SynchronizePlexShowById(library.Id, request.ShowId, request.DeepScan),
                             cancellationToken);
                         return plexResult.IsRight;
                     case JellyfinLibrary:
-                        var jellyfinResult = await mediator.Send(
+                        Either<BaseError, string> jellyfinResult = await mediator.Send(
                             new SynchronizeJellyfinShowById(library.Id, request.ShowId, request.DeepScan),
                             cancellationToken);
                         return jellyfinResult.IsRight;
                     case EmbyLibrary:
-                        var embyResult = await mediator.Send(
+                        Either<BaseError, string> embyResult = await mediator.Send(
                             new SynchronizeEmbyShowById(library.Id, request.ShowId, request.DeepScan),
                             cancellationToken);
                         return embyResult.IsRight;

@@ -7,13 +7,14 @@ using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Scanner.Application.Jellyfin;
 
-public class SynchronizeJellyfinShowByIdHandler : IRequestHandler<SynchronizeJellyfinShowById, Either<BaseError, string>>
+public class
+    SynchronizeJellyfinShowByIdHandler : IRequestHandler<SynchronizeJellyfinShowById, Either<BaseError, string>>
 {
     private readonly IJellyfinSecretStore _jellyfinSecretStore;
     private readonly IJellyfinTelevisionLibraryScanner _jellyfinTelevisionLibraryScanner;
+    private readonly IJellyfinTelevisionRepository _jellyfinTelevisionRepository;
     private readonly ILogger<SynchronizeJellyfinShowByIdHandler> _logger;
     private readonly IMediaSourceRepository _mediaSourceRepository;
-    private readonly IJellyfinTelevisionRepository _jellyfinTelevisionRepository;
 
     public SynchronizeJellyfinShowByIdHandler(
         IMediaSourceRepository mediaSourceRepository,
@@ -71,7 +72,8 @@ public class SynchronizeJellyfinShowByIdHandler : IRequestHandler<SynchronizeJel
     }
 
     private async Task<Validation<BaseError, RequestParameters>> Validate(SynchronizeJellyfinShowById request) =>
-        (await ValidateConnection(request), await JellyfinLibraryMustExist(request), await JellyfinShowMustExist(request))
+        (await ValidateConnection(request), await JellyfinLibraryMustExist(request),
+            await JellyfinShowMustExist(request))
         .Apply((connectionParameters, jellyfinLibrary, showTitleItemId) =>
             new RequestParameters(
                 connectionParameters,
@@ -119,7 +121,8 @@ public class SynchronizeJellyfinShowByIdHandler : IRequestHandler<SynchronizeJel
     private Task<Validation<BaseError, JellyfinShowTitleItemIdResult>> JellyfinShowMustExist(
         SynchronizeJellyfinShowById request) =>
         _jellyfinTelevisionRepository.GetShowTitleItemId(request.JellyfinLibraryId, request.ShowId)
-            .Map(v => v.ToValidation<BaseError>($"Jellyfin show {request.ShowId} does not exist in library {request.JellyfinLibraryId}."));
+            .Map(v => v.ToValidation<BaseError>(
+                $"Jellyfin show {request.ShowId} does not exist in library {request.JellyfinLibraryId}."));
 
     private record RequestParameters(
         ConnectionParameters ConnectionParameters,

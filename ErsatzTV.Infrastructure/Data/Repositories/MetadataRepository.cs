@@ -541,7 +541,7 @@ public class MetadataRepository : IMetadataRepository
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
-        var maybeExisting = await dbContext.MediaVersions
+        Option<MediaVersion> maybeExisting = await dbContext.MediaVersions
             .Include(mv => mv.Chapters)
             .SelectOneAsync(mv => mv.Id, mv => mv.Id == version.Id);
 

@@ -60,6 +60,7 @@ public class PlayoutModeSchedulerMultiple : PlayoutModeSchedulerBase<ProgramSche
                                 .Enumerator.Count
                         };
                     }
+
                     break;
                 case MultipleMode.MultiEpisodeGroupSize:
                     if (contentEnumerator is ChronologicalMediaCollectionEnumerator chronologicalEnumerator)
@@ -72,6 +73,7 @@ public class PlayoutModeSchedulerMultiple : PlayoutModeSchedulerBase<ProgramSche
                             };
                         }
                     }
+
                     break;
             }
         }
@@ -108,7 +110,8 @@ public class PlayoutModeSchedulerMultiple : PlayoutModeSchedulerBase<ProgramSche
                 PlayoutItemWatermarks = []
             };
 
-            foreach (var programScheduleItemWatermark in scheduleItem.ProgramScheduleItemWatermarks ?? [])
+            foreach (ProgramScheduleItemWatermark programScheduleItemWatermark in scheduleItem
+                         .ProgramScheduleItemWatermarks ?? [])
             {
                 playoutItem.PlayoutItemWatermarks.Add(
                     new PlayoutItemWatermark

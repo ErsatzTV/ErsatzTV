@@ -2,9 +2,11 @@ using System.Runtime.InteropServices;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.FFmpeg.State;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats;
 using SixLabors.ImageSharp.Formats.Gif;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.Formats.Webp;
+using SixLabors.ImageSharp.Metadata;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using SkiaSharp;
@@ -14,13 +16,20 @@ namespace ErsatzTV.Infrastructure.Streaming.Graphics;
 
 public abstract class ImageElementBase : GraphicsElement, IDisposable
 {
-    private readonly List<SKBitmap> _scaledFrames = [];
     private readonly List<double> _frameDelays = [];
-
-    private Image _sourceImage;
+    private readonly List<SKBitmap> _scaledFrames = [];
     private double _animatedDurationSeconds;
 
+    private Image _sourceImage;
+
     protected SKPointI Location { get; private set; }
+
+    public virtual void Dispose()
+    {
+        GC.SuppressFinalize(this);
+        _sourceImage?.Dispose();
+        _scaledFrames?.ForEach(f => f.Dispose());
+    }
 
     protected async Task LoadImage(
         Resolution squarePixelFrameSize,
@@ -34,8 +43,8 @@ public abstract class ImageElementBase : GraphicsElement, IDisposable
         bool placeWithinSourceContent,
         CancellationToken cancellationToken)
     {
-        bool isRemoteUri = Uri.TryCreate(image, UriKind.Absolute, out var uriResult)
-                   && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
+        bool isRemoteUri = Uri.TryCreate(image, UriKind.Absolute, out Uri uriResult)
+                           && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
 
         if (isRemoteUri)
         {
@@ -76,13 +85,13 @@ public abstract class ImageElementBase : GraphicsElement, IDisposable
 
         _animatedDurationSeconds = 0;
 
-        for (int i = 0; i < _sourceImage.Frames.Count; i++)
+        for (var i = 0; i < _sourceImage.Frames.Count; i++)
         {
             Image frame = _sourceImage.Frames.CloneFrame(i);
             frame.Mutate(ctx => ctx.Resize(scaledWidth, scaledHeight));
             _scaledFrames.Add(ToSkiaBitmap(frame));
 
-            var frameDelay = GetFrameDelaySeconds(_sourceImage, i);
+            double frameDelay = GetFrameDelaySeconds(_sourceImage, i);
             _animatedDurationSeconds += frameDelay;
             _frameDelays.Add(frameDelay);
         }
@@ -117,27 +126,27 @@ public abstract class ImageElementBase : GraphicsElement, IDisposable
 
     protected static double GetFrameDelaySeconds(Image image, int frameIndex)
     {
-        var format = image.Metadata.DecodedImageFormat;
-        var frameMeta = image.Frames[frameIndex].Metadata;
+        IImageFormat format = image.Metadata.DecodedImageFormat;
+        ImageFrameMetadata frameMeta = image.Frames[frameIndex].Metadata;
 
         if (format == GifFormat.Instance)
         {
             // GIF frame delay is in hundredths of a second
-            var gifMeta = frameMeta.GetFormatMetadata(GifFormat.Instance);
+            GifFrameMetadata gifMeta = frameMeta.GetFormatMetadata(GifFormat.Instance);
             return gifMeta.FrameDelay / 100.0;
         }
 
         if (format == PngFormat.Instance)
         {
             // PNG animated frame delay is in seconds (as double)
-            var pngMeta = frameMeta.GetFormatMetadata(PngFormat.Instance);
+            PngFrameMetadata pngMeta = frameMeta.GetFormatMetadata(PngFormat.Instance);
             return pngMeta.FrameDelay.ToDouble();
         }
 
         if (format == WebpFormat.Instance)
         {
             // WEBP animated frame delay is in milliseconds
-            var webpMeta = frameMeta.GetFormatMetadata(WebpFormat.Instance);
+            WebpFrameMetadata webpMeta = frameMeta.GetFormatMetadata(WebpFormat.Instance);
             return webpMeta.FrameDelay / 1000.0;
         }
 
@@ -155,7 +164,7 @@ public abstract class ImageElementBase : GraphicsElement, IDisposable
         double currentTime = timestamp.TotalSeconds % _animatedDurationSeconds;
 
         double frameTime = 0;
-        for (int i = 0; i < _sourceImage.Frames.Count; i++)
+        for (var i = 0; i < _sourceImage.Frames.Count; i++)
         {
             frameTime += _frameDelays[i];
             if (currentTime <= frameTime)
@@ -198,11 +207,4 @@ public abstract class ImageElementBase : GraphicsElement, IDisposable
     }
 
     private sealed record WatermarkMargins(int HorizontalMargin, int VerticalMargin);
-
-    public virtual void Dispose()
-    {
-        GC.SuppressFinalize(this);
-        _sourceImage?.Dispose();
-        _scaledFrames?.ForEach(f => f.Dispose());
-    }
 }

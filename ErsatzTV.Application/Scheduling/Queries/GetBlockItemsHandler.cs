@@ -33,7 +33,7 @@ public class GetBlockItemsHandler(IDbContextFactory<TvContext> dbContextFactory)
             .ThenInclude(am => am.Artwork)
             .ToListAsync(cancellationToken);
 
-        if (allItems.All(bi => bi.IncludeInProgramGuide == false))
+        if (allItems.All(bi => !bi.IncludeInProgramGuide))
         {
             foreach (BlockItem bi in allItems)
             {

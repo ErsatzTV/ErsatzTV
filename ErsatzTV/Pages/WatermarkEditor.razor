@@ -69,12 +69,12 @@
                 @if (!string.IsNullOrWhiteSpace(_model.Image?.Path) && _model.ImageSource == ChannelWatermarkImageSource.Custom)
                 {
                     <div class="d-flex" style="max-height: 50px">
-                        <MudElement HtmlTag="img" src="@($"artwork/watermarks/{_model.Image.UrlWithContentType}")" />
+                        <MudElement HtmlTag="img" src="@($"artwork/watermarks/{_model.Image.UrlWithContentType}")"/>
                     </div>
                 }
                 else
                 {
-                    <MudTextField Disabled="true" For="@(() => _model.Image.Path)" />
+                    <MudTextField Disabled="true" For="@(() => _model.Image.Path)"/>
                 }
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">

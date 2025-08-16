@@ -125,10 +125,7 @@
         }
     }
 
-    protected override void OnInitialized()
-    {
-        Locker.OnLibraryChanged += LockChanged;
-    }
+    protected override void OnInitialized() => Locker.OnLibraryChanged += LockChanged;
 
     private void LockChanged(object sender, EventArgs e) =>
         InvokeAsync(StateHasChanged);

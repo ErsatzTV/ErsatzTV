@@ -17,7 +17,8 @@ public class YamlScheduleValidator(ILogger<YamlScheduleValidator> logger) : IYam
     {
         try
         {
-            string schemaFileName = Path.Combine(FileSystemLayout.ResourcesCacheFolder,
+            string schemaFileName = Path.Combine(
+                FileSystemLayout.ResourcesCacheFolder,
                 isImport ? "yaml-playout-import.schema.json" : "yaml-playout.schema.json");
             using StreamReader sr = File.OpenText(schemaFileName);
             await using var reader = new JsonTextReader(sr);
@@ -50,8 +51,8 @@ public class YamlScheduleValidator(ILogger<YamlScheduleValidator> logger) : IYam
         var yamlStream = new YamlStream();
         yamlStream.Load(textReader);
         var schedule = JObject.Parse(Convert(yamlStream));
-        var formatted = JsonConvert.SerializeObject(schedule, Formatting.Indented);
-        var lines = formatted.Split('\n');
+        string formatted = JsonConvert.SerializeObject(schedule, Formatting.Indented);
+        string[] lines = formatted.Split('\n');
         return string.Join('\n', lines.Select((line, index) => $"{index + 1,4}: {line}"));
     }
 
@@ -59,7 +60,8 @@ public class YamlScheduleValidator(ILogger<YamlScheduleValidator> logger) : IYam
     {
         try
         {
-            string schemaFileName = Path.Combine(FileSystemLayout.ResourcesCacheFolder,
+            string schemaFileName = Path.Combine(
+                FileSystemLayout.ResourcesCacheFolder,
                 isImport ? "yaml-playout-import.schema.json" : "yaml-playout.schema.json");
             using StreamReader sr = File.OpenText(schemaFileName);
             await using var reader = new JsonTextReader(sr);
@@ -87,14 +89,14 @@ public class YamlScheduleValidator(ILogger<YamlScheduleValidator> logger) : IYam
 
     private sealed class YamlToJsonVisitor : IYamlVisitor
     {
-        private readonly JsonSerializerOptions _options = new() { WriteIndented = false, };
+        private readonly JsonSerializerOptions _options = new() { WriteIndented = false };
         private object _currentValue;
 
         public string JsonString => JsonSerializer.Serialize(_currentValue, _options);
 
         public void Visit(YamlScalarNode scalar)
         {
-            var value = scalar.Value;
+            string value = scalar.Value;
 
             if (string.IsNullOrEmpty(value))
             {
@@ -115,13 +117,13 @@ public class YamlScheduleValidator(ILogger<YamlScheduleValidator> logger) : IYam
                 return;
             }
 
-            if (int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var intResult))
+            if (int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int intResult))
             {
                 _currentValue = intResult;
                 return;
             }
 
-            if (double.TryParse(value, NumberStyles.Number, CultureInfo.InvariantCulture, out var doubleResult))
+            if (double.TryParse(value, NumberStyles.Number, CultureInfo.InvariantCulture, out double doubleResult))
             {
                 _currentValue = doubleResult;
                 return;
@@ -133,7 +135,7 @@ public class YamlScheduleValidator(ILogger<YamlScheduleValidator> logger) : IYam
         public void Visit(YamlSequenceNode sequence)
         {
             var array = new List<object>();
-            foreach (var node in sequence.Children)
+            foreach (YamlNode node in sequence.Children)
             {
                 node.Accept(this);
                 array.Add(_currentValue);
@@ -145,12 +147,12 @@ public class YamlScheduleValidator(ILogger<YamlScheduleValidator> logger) : IYam
         public void Visit(YamlMappingNode mapping)
         {
             Dictionary<string, object> dict = new(StringComparer.OrdinalIgnoreCase);
-            foreach (var entry in mapping.Children)
+            foreach (KeyValuePair<YamlNode, YamlNode> entry in mapping.Children)
             {
-                var key = entry.Key switch
+                string key = entry.Key switch
                 {
                     YamlScalarNode scalar => scalar.Value,
-                    _ => entry.Key.ToString(),
+                    _ => entry.Key.ToString()
                 };
 
                 entry.Value.Accept(this);

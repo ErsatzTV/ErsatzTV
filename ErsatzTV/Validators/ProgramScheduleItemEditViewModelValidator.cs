@@ -15,7 +15,9 @@ public class ProgramScheduleItemEditViewModelValidator : AbstractValidator<Progr
             i => i.PlayoutMode == PlayoutMode.Multiple,
             () =>
             {
-                When(i => i.MultipleMode is MultipleMode.Count, () => RuleFor(i => i.MultipleCount).NotNull().GreaterThan(0));
+                When(
+                    i => i.MultipleMode is MultipleMode.Count,
+                    () => RuleFor(i => i.MultipleCount).NotNull().GreaterThan(0));
             });
         When(
             i => i.PlayoutMode == PlayoutMode.Duration,

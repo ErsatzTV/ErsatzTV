@@ -6,8 +6,8 @@ namespace ErsatzTV.FFmpeg.Filter;
 public class ComplexFilter : IPipelineStep
 {
     private readonly Option<AudioInputFile> _maybeAudioInputFile;
-    private readonly Option<SubtitleInputFile> _maybeSubtitleInputFile;
     private readonly Option<GraphicsEngineInput> _maybeGraphicsEngineInput;
+    private readonly Option<SubtitleInputFile> _maybeSubtitleInputFile;
     private readonly Option<VideoInputFile> _maybeVideoInputFile;
     private readonly Option<WatermarkInputFile> _maybeWatermarkInputFile;
     private readonly PipelineContext _pipelineContext;

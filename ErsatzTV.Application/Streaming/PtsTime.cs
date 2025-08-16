@@ -14,6 +14,7 @@ public record PtsTime(long Value)
         {
             ptsTime += duration;
         }
+
         return new PtsTime(ptsTime);
     }
 }
