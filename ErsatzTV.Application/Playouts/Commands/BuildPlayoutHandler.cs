@@ -13,6 +13,7 @@ using ErsatzTV.Core.Scheduling;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
+using Channel = ErsatzTV.Core.Domain.Channel;
 
 namespace ErsatzTV.Application.Playouts;
 
@@ -23,10 +24,10 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
     private readonly IClient _client;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly IEntityLocker _entityLocker;
-    private readonly IPlayoutTimeShifter _playoutTimeShifter;
     private readonly IExternalJsonPlayoutBuilder _externalJsonPlayoutBuilder;
     private readonly IFFmpegSegmenterService _ffmpegSegmenterService;
     private readonly IPlayoutBuilder _playoutBuilder;
+    private readonly IPlayoutTimeShifter _playoutTimeShifter;
     private readonly ChannelWriter<IBackgroundServiceRequest> _workerChannel;
     private readonly IYamlPlayoutBuilder _yamlPlayoutBuilder;
 
@@ -78,9 +79,9 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
             }
 
             // after dbcontext is closed
-            foreach (var playoutBuildResult in result.RightToSeq())
+            foreach (PlayoutBuildResult playoutBuildResult in result.RightToSeq())
             {
-                foreach (var timeShiftTo in playoutBuildResult.TimeShiftTo)
+                foreach (DateTimeOffset timeShiftTo in playoutBuildResult.TimeShiftTo)
                 {
                     await _playoutTimeShifter.TimeShift(request.PlayoutId, timeShiftTo, false);
                 }
@@ -100,14 +101,17 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
         Playout playout,
         CancellationToken cancellationToken)
     {
-        string channelName = "[unknown]";
+        var channelName = "[unknown]";
 
         try
         {
-            var referenceData = await GetReferenceData(dbContext, playout.Id, playout.ProgramSchedulePlayoutType);
-            var channelNumber = referenceData.Channel.Number;
+            PlayoutReferenceData referenceData = await GetReferenceData(
+                dbContext,
+                playout.Id,
+                playout.ProgramSchedulePlayoutType);
+            string channelNumber = referenceData.Channel.Number;
             channelName = referenceData.Channel.Name;
-            var result = PlayoutBuildResult.Empty;
+            PlayoutBuildResult result = PlayoutBuildResult.Empty;
 
             switch (playout.ProgramSchedulePlayoutType)
             {
@@ -133,7 +137,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
                     break;
             }
 
-            int changeCount = 0;
+            var changeCount = 0;
 
             if (result.ClearItems)
             {
@@ -142,7 +146,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
                     .ExecuteDeleteAsync(cancellationToken);
             }
 
-            foreach (var removeBefore in result.RemoveBefore)
+            foreach (DateTimeOffset removeBefore in result.RemoveBefore)
             {
                 changeCount += await dbContext.PlayoutItems
                     .Where(pi => pi.PlayoutId == playout.Id)
@@ -150,7 +154,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
                     .ExecuteDeleteAsync(cancellationToken);
             }
 
-            foreach (var removeAfter in result.RemoveAfter)
+            foreach (DateTimeOffset removeAfter in result.RemoveAfter)
             {
                 changeCount += await dbContext.PlayoutItems
                     .Where(pi => pi.PlayoutId == playout.Id)
@@ -261,11 +265,11 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
         TvContext dbContext,
         BuildPlayout buildPlayout)
     {
-        var maybePlayout = await dbContext.Playouts
+        Option<Playout> maybePlayout = await dbContext.Playouts
             .Include(p => p.Anchor)
             .SelectOneAsync(p => p.Id, p => p.Id == buildPlayout.PlayoutId);
 
-        foreach (var playout in maybePlayout)
+        foreach (Playout playout in maybePlayout)
         {
             switch (playout.ProgramSchedulePlayoutType)
             {
@@ -274,7 +278,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
                         .Collection(p => p.FillGroupIndices)
                         .LoadAsync();
 
-                    foreach (var fillGroupIndex in playout.FillGroupIndices)
+                    foreach (PlayoutScheduleItemFillGroupIndex fillGroupIndex in playout.FillGroupIndices)
                     {
                         await dbContext.Entry(fillGroupIndex)
                             .Reference(fgi => fgi.EnumeratorState)
@@ -285,7 +289,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
                         .Collection(p => p.ProgramScheduleAnchors)
                         .LoadAsync();
 
-                    foreach (var anchor in playout.ProgramScheduleAnchors)
+                    foreach (PlayoutProgramScheduleAnchor anchor in playout.ProgramScheduleAnchors)
                     {
                         await dbContext.Entry(anchor)
                             .Reference(a => a.EnumeratorState)
@@ -304,12 +308,12 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
         int playoutId,
         ProgramSchedulePlayoutType playoutType)
     {
-        var channel = await dbContext.Channels
+        Channel channel = await dbContext.Channels
             .AsNoTracking()
             .Where(c => c.Playouts.Any(p => p.Id == playoutId))
             .FirstOrDefaultAsync();
 
-        var deco = Option<Deco>.None;
+        Option<Deco> deco = Option<Deco>.None;
         List<PlayoutItem> existingItems = [];
         List<PlayoutTemplate> playoutTemplates = [];
 
@@ -339,7 +343,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
                 .ToListAsync();
         }
 
-        var programSchedule = await dbContext.ProgramSchedules
+        ProgramSchedule programSchedule = await dbContext.ProgramSchedules
             .AsNoTracking()
             .Where(ps => ps.Playouts.Any(p => p.Id == playoutId))
             .Include(ps => ps.Items)
@@ -361,7 +365,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
             .ThenInclude(psi => psi.FallbackFiller)
             .FirstOrDefaultAsync();
 
-        var programScheduleAlternates = await dbContext.ProgramScheduleAlternates
+        List<ProgramScheduleAlternate> programScheduleAlternates = await dbContext.ProgramScheduleAlternates
             .AsNoTracking()
             .Where(pt => pt.PlayoutId == playoutId)
             .Include(a => a.ProgramSchedule)
@@ -391,7 +395,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
             .ThenInclude(psi => psi.FallbackFiller)
             .ToListAsync();
 
-        var playoutHistory = await dbContext.PlayoutHistory
+        List<PlayoutHistory> playoutHistory = await dbContext.PlayoutHistory
             .AsNoTracking()
             .Where(h => h.PlayoutId == playoutId)
             .ToListAsync();

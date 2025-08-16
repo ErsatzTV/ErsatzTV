@@ -3,7 +3,6 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Graphics;
 using Microsoft.Extensions.Logging;
 using NCalc;
-using Topten.RichTextKit;
 using Scriban;
 using Scriban.Runtime;
 using SkiaSharp;
@@ -20,11 +19,19 @@ public partial class TextElement(
     : GraphicsElement, IDisposable
 {
     private static readonly Regex StylePattern = StyleRegex();
+    private SKBitmap _image;
+    private SKPointI _location;
 
     private Option<Expression> _maybeOpacityExpression;
     private float _opacity;
-    private SKBitmap _image;
-    private SKPointI _location;
+
+    public void Dispose()
+    {
+        GC.SuppressFinalize(this);
+
+        _image?.Dispose();
+        _image = null;
+    }
 
     public override async Task InitializeAsync(
         Resolution squarePixelFrameSize,
@@ -70,7 +77,7 @@ public partial class TextElement(
             context.PushGlobal(scriptObject);
             string textToRender = await Template.Parse(textElement.Text).RenderAsync(context);
 
-            var textBlock = BuildTextBlock(textToRender);
+            RichTextKit.TextBlock textBlock = BuildTextBlock(textToRender);
 
             _image = new SKBitmap(
                 (int)Math.Ceiling(textBlock.MeasuredWidth),
@@ -81,9 +88,9 @@ public partial class TextElement(
                 textBlock.Paint(canvas, new SKPoint(0, 0));
             }
 
-            int horizontalMargin =
+            var horizontalMargin =
                 (int)Math.Round((textElement.HorizontalMarginPercent ?? 0) / 100.0 * frameSize.Width);
-            int verticalMargin = (int)Math.Round((textElement.VerticalMarginPercent ?? 0) / 100.0 * frameSize.Height);
+            var verticalMargin = (int)Math.Round((textElement.VerticalMarginPercent ?? 0) / 100.0 * frameSize.Height);
 
             _location = CalculatePosition(
                 textElement.Location,
@@ -109,7 +116,7 @@ public partial class TextElement(
         CancellationToken cancellationToken)
     {
         float opacity = _opacity;
-        foreach (var expression in _maybeOpacityExpression)
+        foreach (Expression expression in _maybeOpacityExpression)
         {
             opacity = OpacityExpressionHelper.GetOpacity(
                 expression,
@@ -124,21 +131,13 @@ public partial class TextElement(
             : new ValueTask<Option<PreparedElementImage>>(new PreparedElementImage(_image, _location, opacity, false));
     }
 
-    public void Dispose()
+    private RichTextKit.TextBlock BuildTextBlock(string textToRender)
     {
-        GC.SuppressFinalize(this);
-
-        _image?.Dispose();
-        _image = null;
-    }
-
-    private TextBlock BuildTextBlock(string textToRender)
-    {
-        var textBlock = new TextBlock { FontMapper = graphicsEngineFonts.Mapper };
+        var textBlock = new RichTextKit.TextBlock { FontMapper = graphicsEngineFonts.Mapper };
 
         (Dictionary<string, RichTextKit.Style> styles, RichTextKit.Style baseStyle) = BuildTextStyles();
 
-        int lastIndex = 0;
+        var lastIndex = 0;
         foreach (Match match in StylePattern.Matches(textToRender))
         {
             // unstyled text before match
@@ -147,10 +146,10 @@ public partial class TextElement(
                 textBlock.AddText(textToRender.AsSpan(lastIndex, match.Index - lastIndex), baseStyle);
             }
 
-            var styleName = match.Groups[1].Value;
-            var innerText = match.Groups[2].Value;
+            string styleName = match.Groups[1].Value;
+            string innerText = match.Groups[2].Value;
 
-            if (styles.TryGetValue(styleName, out var style))
+            if (styles.TryGetValue(styleName, out RichTextKit.Style style))
             {
                 textBlock.AddText(innerText, style);
             }
@@ -175,17 +174,17 @@ public partial class TextElement(
     {
         var styles = new Dictionary<string, RichTextKit.Style>();
 
-        var baseStyleDef = textElement.Styles.Find(s => s.Name == textElement.BaseStyle);
+        StyleDefinition baseStyleDef = textElement.Styles.Find(s => s.Name == textElement.BaseStyle);
         if (baseStyleDef == null)
         {
             throw new InvalidOperationException(
                 $"The specified base_style '{textElement.BaseStyle}' was not found in the styles list.");
         }
 
-        foreach (var s in textElement.Styles)
+        foreach (StyleDefinition s in textElement.Styles)
         {
             // start with base and merge in additional settings
-            var finalStyle = RichTextStyleFromDef(baseStyleDef);
+            RichTextKit.Style finalStyle = RichTextStyleFromDef(baseStyleDef);
 
             finalStyle.FontFamily = s.FontFamily ?? finalStyle.FontFamily;
             finalStyle.FontItalic = s.FontItalic ?? finalStyle.FontItalic;
@@ -193,7 +192,7 @@ public partial class TextElement(
             finalStyle.FontWeight = s.FontWeight ?? finalStyle.FontWeight;
             finalStyle.LetterSpacing = s.LetterSpacing ?? finalStyle.LetterSpacing;
 
-            if (s.TextColor != null && SKColor.TryParse(s.TextColor, out var parsedColor))
+            if (s.TextColor != null && SKColor.TryParse(s.TextColor, out SKColor parsedColor))
             {
                 finalStyle.TextColor = parsedColor;
             }
@@ -209,20 +208,20 @@ public partial class TextElement(
             {
                 FontFamily = def.FontFamily,
                 FontItalic = def.FontItalic ?? false,
-                TextColor = SKColor.TryParse(def.TextColor, out var color) ? color : SKColors.White
+                TextColor = SKColor.TryParse(def.TextColor, out SKColor color) ? color : SKColors.White
             };
 
-            foreach (var fontSize in Optional(def.FontSize))
+            foreach (float fontSize in Optional(def.FontSize))
             {
                 style.FontSize = fontSize;
             }
 
-            foreach (var fontWeight in Optional(def.FontWeight))
+            foreach (int fontWeight in Optional(def.FontWeight))
             {
                 style.FontWeight = fontWeight;
             }
 
-            foreach (var letterSpacing in Optional(def.LetterSpacing))
+            foreach (float letterSpacing in Optional(def.LetterSpacing))
             {
                 style.LetterSpacing = letterSpacing;
             }

@@ -202,17 +202,17 @@
         var uri = new UriBuilder(NavigationManager.ToAbsoluteUri(NavigationManager.Uri));
         uri.Path = uri.Path.Replace("/system/troubleshooting/playback", "/api/troubleshoot/playback.m3u8");
         uri.Query = $"?mediaItem={MediaItemId}&ffmpegProfile={_ffmpegProfileId}&seekSeconds={_seekSeconds}";
-        foreach (var watermarkName in _watermarkNames)
+        foreach (string watermarkName in _watermarkNames)
         {
-            foreach (var watermark in _watermarks.Where(wm => wm.Name == watermarkName))
+            foreach (WatermarkViewModel watermark in _watermarks.Where(wm => wm.Name == watermarkName))
             {
                 uri.Query += $"&watermark={watermark.Id}";
             }
         }
 
-        foreach (var graphicsElementName in _graphicsElementNames)
+        foreach (string graphicsElementName in _graphicsElementNames)
         {
-            foreach (var graphicsElement in _graphicsElements.Where(ge => ge.Name == graphicsElementName))
+            foreach (GraphicsElementViewModel graphicsElement in _graphicsElements.Where(ge => ge.Name == graphicsElementName))
             {
                 uri.Query += $"&graphicsElement={graphicsElement.Id}";
             }
@@ -261,17 +261,17 @@
     {
         var uri = $"api/troubleshoot/playback/archive?mediaItem={MediaItemId ?? 0}&ffmpegProfile={_ffmpegProfileId}&seekSeconds={_seekSeconds}";
 
-        foreach (var watermarkName in _watermarkNames)
+        foreach (string watermarkName in _watermarkNames)
         {
-            foreach (var watermark in _watermarks.Where(wm => wm.Name == watermarkName))
+            foreach (WatermarkViewModel watermark in _watermarks.Where(wm => wm.Name == watermarkName))
             {
                 uri += $"&watermark={watermark.Id}";
             }
         }
 
-        foreach (var graphicsElementName in _graphicsElementNames)
+        foreach (string graphicsElementName in _graphicsElementNames)
         {
-            foreach (var graphicsElement in _graphicsElements.Where(ge => ge.Name == graphicsElementName))
+            foreach (GraphicsElementViewModel graphicsElement in _graphicsElements.Where(ge => ge.Name == graphicsElementName))
             {
                 uri += $"&graphicsElement={graphicsElement.Id}";
             }

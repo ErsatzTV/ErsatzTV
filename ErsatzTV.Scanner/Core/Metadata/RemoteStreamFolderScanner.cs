@@ -22,13 +22,13 @@ namespace ErsatzTV.Scanner.Core.Metadata;
 public class RemoteStreamFolderScanner : LocalFolderScanner, IRemoteStreamFolderScanner
 {
     private readonly IClient _client;
-    private readonly IRemoteStreamRepository _remoteStreamRepository;
     private readonly ILibraryRepository _libraryRepository;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalMetadataProvider _localMetadataProvider;
     private readonly ILogger<RemoteStreamFolderScanner> _logger;
     private readonly IMediaItemRepository _mediaItemRepository;
     private readonly IMediator _mediator;
+    private readonly IRemoteStreamRepository _remoteStreamRepository;
 
     public RemoteStreamFolderScanner(
         ILocalFileSystem localFileSystem,
@@ -284,10 +284,10 @@ public class RemoteStreamFolderScanner : LocalFolderScanner, IRemoteStreamFolder
             YamlRemoteStreamDefinition definition = deserializer.Deserialize<YamlRemoteStreamDefinition>(yaml);
             if (!definition.IsLive.HasValue)
             {
-                return BaseError.New($"Remote stream definition is missing required `is_live` property");
+                return BaseError.New("Remote stream definition is missing required `is_live` property");
             }
 
-            bool updated = false;
+            var updated = false;
             if (remoteStream.IsLive != definition.IsLive.Value)
             {
                 remoteStream.IsLive = definition.IsLive.Value;

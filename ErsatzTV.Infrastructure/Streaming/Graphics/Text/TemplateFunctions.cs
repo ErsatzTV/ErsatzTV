@@ -10,7 +10,7 @@ public class TemplateFunctions(ILogger<TemplateFunctions> logger)
     {
         try
         {
-            var tz = TZConvert.GetTimeZoneInfo(timeZoneId);
+            TimeZoneInfo tz = TZConvert.GetTimeZoneInfo(timeZoneId);
             return TimeZoneInfo.ConvertTime(dateTimeOffset, tz);
         }
         catch (TimeZoneNotFoundException ex)
@@ -24,7 +24,7 @@ public class TemplateFunctions(ILogger<TemplateFunctions> logger)
     {
         try
         {
-            var tz = TZConvert.GetTimeZoneInfo(timeZoneId);
+            TimeZoneInfo tz = TZConvert.GetTimeZoneInfo(timeZoneId);
             dateTimeOffset = TimeZoneInfo.ConvertTime(dateTimeOffset, tz);
         }
         catch (TimeZoneNotFoundException ex)

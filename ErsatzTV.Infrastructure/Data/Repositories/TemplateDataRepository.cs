@@ -6,6 +6,7 @@ using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Metadata;
 using ErsatzTV.Infrastructure.Epg;
+using ErsatzTV.Infrastructure.Epg.Models;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
 
@@ -33,11 +34,11 @@ public class TemplateDataRepository(ILocalFileSystem localFileSystem, IDbContext
             string targetFile = Path.Combine(FileSystemLayout.ChannelGuideCacheFolder, $"{channelNumber}.xml");
             if (localFileSystem.FileExists(targetFile))
             {
-                await using var stream = File.OpenRead(targetFile);
-                var xmlProgrammes = EpgReader.FindProgrammesAt(stream, time, count);
+                await using FileStream stream = File.OpenRead(targetFile);
+                List<EpgProgramme> xmlProgrammes = EpgReader.FindProgrammesAt(stream, time, count);
                 var result = new List<EpgProgrammeTemplateData>();
 
-                foreach (var epgProgramme in xmlProgrammes)
+                foreach (EpgProgramme epgProgramme in xmlProgrammes)
                 {
                     var data = new EpgProgrammeTemplateData
                     {
@@ -54,7 +55,7 @@ public class TemplateDataRepository(ILocalFileSystem localFileSystem, IDbContext
                             EpgReader.XmlTvDateFormat,
                             CultureInfo.InvariantCulture,
                             DateTimeStyles.None,
-                            out var start))
+                            out DateTimeOffset start))
                     {
                         data.Start = start;
                     }
@@ -64,7 +65,7 @@ public class TemplateDataRepository(ILocalFileSystem localFileSystem, IDbContext
                             EpgReader.XmlTvDateFormat,
                             CultureInfo.InvariantCulture,
                             DateTimeStyles.None,
-                            out var stop))
+                            out DateTimeOffset stop))
                     {
                         data.Stop = stop;
                     }
@@ -102,9 +103,9 @@ public class TemplateDataRepository(ILocalFileSystem localFileSystem, IDbContext
             .ThenInclude(mm => mm.Genres)
             .SelectOneAsync(m => m.Id, m => m.Id == movieId);
 
-        foreach (var movie in maybeMovie)
+        foreach (Movie movie in maybeMovie)
         {
-            foreach (var metadata in movie.MovieMetadata.HeadOrNone())
+            foreach (MovieMetadata metadata in movie.MovieMetadata.HeadOrNone())
             {
                 return new Dictionary<string, object>
                 {
@@ -143,9 +144,9 @@ public class TemplateDataRepository(ILocalFileSystem localFileSystem, IDbContext
 
         var result = new Dictionary<string, object>();
 
-        foreach (var episode in maybeEpisode)
+        foreach (Episode episode in maybeEpisode)
         {
-            foreach (var showMetadata in Optional(episode.Season?.Show?.ShowMetadata.HeadOrNone()).Flatten())
+            foreach (ShowMetadata showMetadata in Optional(episode.Season?.Show?.ShowMetadata.HeadOrNone()).Flatten())
             {
                 result.Add(MediaItemTemplateDataKey.ShowTitle, showMetadata.Title);
                 result.Add(MediaItemTemplateDataKey.ShowYear, showMetadata.Year);
@@ -155,7 +156,7 @@ public class TemplateDataRepository(ILocalFileSystem localFileSystem, IDbContext
                     (showMetadata.Genres ?? []).Map(s => s.Name).OrderBy(identity));
             }
 
-            foreach (var metadata in episode.EpisodeMetadata.HeadOrNone())
+            foreach (EpisodeMetadata metadata in episode.EpisodeMetadata.HeadOrNone())
             {
                 result.Add(MediaItemTemplateDataKey.Title, metadata.Title);
                 result.Add(MediaItemTemplateDataKey.Plot, metadata.Plot);
@@ -197,9 +198,9 @@ public class TemplateDataRepository(ILocalFileSystem localFileSystem, IDbContext
             .ThenInclude(mvm => mvm.Genres)
             .SelectOneAsync(mv => mv.Id, mv => mv.Id == musicVideoId);
 
-        foreach (var musicVideo in maybeMusicVideo)
+        foreach (MusicVideo musicVideo in maybeMusicVideo)
         {
-            foreach (var metadata in musicVideo.MusicVideoMetadata.HeadOrNone())
+            foreach (MusicVideoMetadata metadata in musicVideo.MusicVideoMetadata.HeadOrNone())
             {
                 string artist = string.Empty;
                 foreach (ArtistMetadata artistMetadata in Optional(musicVideo.Artist?.ArtistMetadata).Flatten())

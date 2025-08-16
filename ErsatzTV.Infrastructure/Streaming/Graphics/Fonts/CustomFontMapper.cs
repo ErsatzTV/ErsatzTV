@@ -10,16 +10,16 @@ public sealed class CustomFontMapper(ILogger<CustomFontMapper> logger) : FontMap
 
     public void LoadPrivateFont(Stream stream, string familyName)
     {
-        var typeface = SKTypeface.FromStream(stream) ??
-                       throw new ArgumentException("Cannot load font from stream", nameof(stream));
-        var qualifiedName = familyName ?? typeface.FamilyName;
+        SKTypeface typeface = SKTypeface.FromStream(stream) ??
+                              throw new ArgumentException("Cannot load font from stream", nameof(stream));
+        string qualifiedName = familyName ?? typeface.FamilyName;
 
         if (typeface.FontSlant != SKFontStyleSlant.Upright)
         {
             qualifiedName += "-Italic";
         }
 
-        if (!_customFonts.TryGetValue(qualifiedName, out var listFonts))
+        if (!_customFonts.TryGetValue(qualifiedName, out List<SKTypeface> listFonts))
         {
             listFonts = [];
             _customFonts[qualifiedName] = listFonts;
@@ -30,7 +30,7 @@ public sealed class CustomFontMapper(ILogger<CustomFontMapper> logger) : FontMap
 
     public override SKTypeface TypefaceFromStyle(IStyle style, bool ignoreFontVariants)
     {
-        var qualifiedName = style.FontFamily;
+        string qualifiedName = style.FontFamily;
         if (style.FontItalic)
         {
             qualifiedName += "-Italic";

@@ -6,9 +6,9 @@ namespace ErsatzTV.Core.Scheduling;
 
 public sealed class ChronologicalMediaCollectionEnumerator : IMediaCollectionEnumerator
 {
+    private readonly Lazy<Dictionary<int, int>> _lazyMediaItemGroupSize;
     private readonly Lazy<Option<TimeSpan>> _lazyMinimumDuration;
     private readonly List<MediaItem> _sortedMediaItems;
-    private readonly Lazy<Dictionary<int, int>> _lazyMediaItemGroupSize;
 
     public ChronologicalMediaCollectionEnumerator(
         IEnumerable<MediaItem> mediaItems,
@@ -36,6 +36,21 @@ public sealed class ChronologicalMediaCollectionEnumerator : IMediaCollectionEnu
         }
     }
 
+    public void ResetState(CollectionEnumeratorState state) =>
+        // seed doesn't matter in chronological
+        State.Index = state.Index;
+
+    public CollectionEnumeratorState State { get; }
+
+    public Option<MediaItem> Current => _sortedMediaItems.Count != 0 ? _sortedMediaItems[State.Index] : None;
+    public Option<bool> CurrentIncludeInProgramGuide { get; }
+
+    public void MoveNext() => State.Index = (State.Index + 1) % _sortedMediaItems.Count;
+
+    public Option<TimeSpan> MinimumDuration => _lazyMinimumDuration.Value;
+
+    public int Count => _sortedMediaItems.Count;
+
     private Dictionary<int, int> CalculateMediaItemGroupSizes()
     {
         var result = new Dictionary<int, int>();
@@ -53,21 +68,6 @@ public sealed class ChronologicalMediaCollectionEnumerator : IMediaCollectionEnu
 
         return result;
     }
-
-    public void ResetState(CollectionEnumeratorState state) =>
-        // seed doesn't matter in chronological
-        State.Index = state.Index;
-
-    public CollectionEnumeratorState State { get; }
-
-    public Option<MediaItem> Current => _sortedMediaItems.Count != 0 ? _sortedMediaItems[State.Index] : None;
-    public Option<bool> CurrentIncludeInProgramGuide { get; }
-
-    public void MoveNext() => State.Index = (State.Index + 1) % _sortedMediaItems.Count;
-
-    public Option<TimeSpan> MinimumDuration => _lazyMinimumDuration.Value;
-
-    public int Count => _sortedMediaItems.Count;
 
     public int GroupSizeForMediaItem(MediaItem mediaItem) =>
         _lazyMediaItemGroupSize.Value.GetValueOrDefault(mediaItem.Id, 1);

@@ -9,8 +9,8 @@ namespace ErsatzTV.Infrastructure.Streaming.Graphics;
 
 public class WatermarkElement : ImageElementBase
 {
-    private readonly ILogger _logger;
     private readonly string _imagePath;
+    private readonly ILogger _logger;
     private readonly ChannelWatermark _watermark;
 
     private Option<Expression> _maybeOpacityExpression;
@@ -20,12 +20,12 @@ public class WatermarkElement : ImageElementBase
     {
         _logger = logger;
         // TODO: better model coming in here?
-        foreach (var imagePath in watermarkOptions.ImagePath)
+        foreach (string imagePath in watermarkOptions.ImagePath)
         {
             _imagePath = imagePath;
         }
 
-        foreach (var watermark in watermarkOptions.Watermark)
+        foreach (ChannelWatermark watermark in watermarkOptions.Watermark)
         {
             _watermark = watermark;
             ZIndex = watermark.ZIndex;
@@ -44,7 +44,7 @@ public class WatermarkElement : ImageElementBase
         {
             if (_watermark.Mode is ChannelWatermarkMode.Intermittent)
             {
-                string expressionString = $@"
+                var expressionString = $@"
                     if(time_of_day_seconds % {_watermark.FrequencyMinutes * 60} < 1,
                         (time_of_day_seconds % {_watermark.FrequencyMinutes * 60}),
                         if(time_of_day_seconds % {_watermark.FrequencyMinutes * 60} < {1 + _watermark.DurationSeconds},
@@ -67,7 +67,7 @@ public class WatermarkElement : ImageElementBase
                 _opacity = _watermark.Opacity / 100.0f;
             }
 
-            foreach (var expression in _maybeOpacityExpression)
+            foreach (Expression expression in _maybeOpacityExpression)
             {
                 expression.EvaluateFunction += OpacityExpressionHelper.EvaluateFunction;
             }
@@ -99,7 +99,7 @@ public class WatermarkElement : ImageElementBase
         CancellationToken cancellationToken)
     {
         float opacity = _opacity;
-        foreach (var expression in _maybeOpacityExpression)
+        foreach (Expression expression in _maybeOpacityExpression)
         {
             opacity = OpacityExpressionHelper.GetOpacity(
                 expression,

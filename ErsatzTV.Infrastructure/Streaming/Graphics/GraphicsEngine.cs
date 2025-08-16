@@ -31,11 +31,11 @@ public class GraphicsEngine(
             templateVariables[MediaItemTemplateDataKey.StreamSeek] = context.Seek;
 
             // media item variables
-            var maybeTemplateData =
+            Option<Dictionary<string, object>> maybeTemplateData =
                 await templateDataRepository.GetMediaItemTemplateData(context.MediaItem);
-            foreach (var templateData in maybeTemplateData)
+            foreach (Dictionary<string, object> templateData in maybeTemplateData)
             {
-                foreach (var variable in templateData)
+                foreach (KeyValuePair<string, object> variable in templateData)
                 {
                     templateVariables.Add(variable.Key, variable.Value);
                 }
@@ -43,12 +43,12 @@ public class GraphicsEngine(
 
             // epg variables
             int maxEpg = context.Elements.OfType<ITemplateDataContext>().Max(c => c.EpgEntries);
-            var startTime = context.ContentStartTime + context.Seek;
-            var maybeEpgData =
+            DateTimeOffset startTime = context.ContentStartTime + context.Seek;
+            Option<Dictionary<string, object>> maybeEpgData =
                 await templateDataRepository.GetEpgTemplateData(context.ChannelNumber, startTime, maxEpg);
-            foreach (var templateData in maybeEpgData)
+            foreach (Dictionary<string, object> templateData in maybeEpgData)
             {
-                foreach (var variable in templateData)
+                foreach (KeyValuePair<string, object> variable in templateData)
                 {
                     templateVariables.Add(variable.Key, variable.Value);
                 }
@@ -56,7 +56,7 @@ public class GraphicsEngine(
         }
 
         var elements = new List<IGraphicsElement>();
-        foreach (var element in context.Elements)
+        foreach (GraphicsElementContext element in context.Elements)
         {
             switch (element)
             {
@@ -76,7 +76,7 @@ public class GraphicsEngine(
                 case TextElementDataContext textElementContext:
                 {
                     var variables = templateVariables.ToDictionary();
-                    foreach (var variable in textElementContext.Variables)
+                    foreach (KeyValuePair<string, string> variable in textElementContext.Variables)
                     {
                         variables.Add(variable.Key, variable.Value);
                     }
@@ -95,7 +95,7 @@ public class GraphicsEngine(
                 case SubtitleElementDataContext subtitleElementContext:
                 {
                     var variables = templateVariables.ToDictionary();
-                    foreach (var variable in subtitleElementContext.Variables)
+                    foreach (KeyValuePair<string, string> variable in subtitleElementContext.Variables)
                     {
                         variables.Add(variable.Key, variable.Value);
                     }
@@ -134,7 +134,7 @@ public class GraphicsEngine(
         try
         {
             // `content_total_seconds` - the total number of seconds in the content
-            var contentTotalTime = context.Seek + context.Duration;
+            TimeSpan contentTotalTime = context.Seek + context.Duration;
 
             while (!cancellationToken.IsCancellationRequested && frameCount < totalFrames)
             {
@@ -143,24 +143,24 @@ public class GraphicsEngine(
                 var streamTime = TimeSpan.FromSeconds(streamTimeSeconds);
 
                 // `content_seconds` - the total number of seconds the frame is into the content
-                var contentTime = context.Seek + streamTime;
+                TimeSpan contentTime = context.Seek + streamTime;
 
                 // `time_of_day_seconds` - the total number of seconds the frame is since midnight
-                var frameTime = context.ContentStartTime + contentTime;
+                DateTimeOffset frameTime = context.ContentStartTime + contentTime;
 
                 // `channel_seconds` - the total number of seconds the frame is from when the channel started/activated
-                var channelTime = frameTime - context.ChannelStartTime;
+                TimeSpan channelTime = frameTime - context.ChannelStartTime;
 
                 using var canvas = new SKCanvas(outputBitmap);
                 canvas.Clear(SKColors.Transparent);
 
                 // prepare images outside mutate to allow async image generation
                 var preparedElementImages = new List<PreparedElementImage>();
-                foreach (var element in elements.Where(e => !e.IsFailed).OrderBy(e => e.ZIndex))
+                foreach (IGraphicsElement element in elements.Where(e => !e.IsFailed).OrderBy(e => e.ZIndex))
                 {
                     try
                     {
-                        var maybePreparedImage = await element.PrepareImage(
+                        Option<PreparedElementImage> maybePreparedImage = await element.PrepareImage(
                             frameTime.TimeOfDay,
                             contentTime,
                             contentTotalTime,
@@ -182,7 +182,7 @@ public class GraphicsEngine(
                 // draw each element
                 using (var paint = new SKPaint())
                 {
-                    foreach (var preparedImage in preparedElementImages)
+                    foreach (PreparedElementImage preparedImage in preparedElementImages)
                     {
                         using (var colorFilter = SKColorFilter.CreateBlendMode(
                                    SKColors.White.WithAlpha((byte)(preparedImage.Opacity * 255)),
@@ -206,7 +206,7 @@ public class GraphicsEngine(
                 int frameBufferSize = context.FrameSize.Width * context.FrameSize.Height * 4;
                 using (SKPixmap pixmap = outputBitmap.PeekPixels())
                 {
-                    var memory = pipeWriter.GetMemory(frameBufferSize);
+                    Memory<byte> memory = pipeWriter.GetMemory(frameBufferSize);
                     pixmap.GetPixelSpan().CopyTo(memory.Span);
                 }
 
@@ -224,7 +224,7 @@ public class GraphicsEngine(
         {
             await pipeWriter.CompleteAsync();
 
-            foreach (var element in elements.OfType<IDisposable>())
+            foreach (IDisposable element in elements.OfType<IDisposable>())
             {
                 element.Dispose();
             }

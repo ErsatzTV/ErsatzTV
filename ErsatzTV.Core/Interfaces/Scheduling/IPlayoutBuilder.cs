@@ -5,8 +5,8 @@ namespace ErsatzTV.Core.Interfaces.Scheduling;
 
 public interface IPlayoutBuilder
 {
-    public bool TrimStart { get; set; }
-    public Playlist DebugPlaylist { get; set; }
+    bool TrimStart { get; set; }
+    Playlist DebugPlaylist { get; set; }
 
     Task<PlayoutBuildResult> Build(
         Playout playout,

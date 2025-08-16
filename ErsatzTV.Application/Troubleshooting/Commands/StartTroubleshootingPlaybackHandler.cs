@@ -70,8 +70,8 @@ public class StartTroubleshootingPlaybackHandler(
                     cancellationToken);
             }
 
-            if (hwAccel is HardwareAccelerationKind.Vaapi || (hwAccel is HardwareAccelerationKind.Qsv &&
-                                                              runtimeInfo.IsOSPlatform(OSPlatform.Linux)))
+            if (hwAccel is HardwareAccelerationKind.Vaapi || hwAccel is HardwareAccelerationKind.Qsv &&
+                runtimeInfo.IsOSPlatform(OSPlatform.Linux))
             {
                 await File.WriteAllTextAsync(
                     Path.Combine(FileSystemLayout.TranscodeTroubleshootingFolder, "capabilities_vaapi.txt"),
@@ -91,14 +91,14 @@ public class StartTroubleshootingPlaybackHandler(
                 "ffmpeg troubleshooting arguments {FFmpegArguments}",
                 request.PlayoutItemResult.Process.Arguments);
 
-            var maybePipe = Option<Pipe>.None;
+            Option<Pipe> maybePipe = Option<Pipe>.None;
 
             try
             {
                 using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
-                var processWithPipe = request.PlayoutItemResult.Process;
-                foreach (var graphicsEngineContext in request.PlayoutItemResult.GraphicsEngineContext)
+                Command processWithPipe = request.PlayoutItemResult.Process;
+                foreach (GraphicsEngineContext graphicsEngineContext in request.PlayoutItemResult.GraphicsEngineContext)
                 {
                     var pipe = new Pipe();
                     maybePipe = pipe;
@@ -139,7 +139,7 @@ public class StartTroubleshootingPlaybackHandler(
             }
             finally
             {
-                foreach (var pipe in maybePipe)
+                foreach (Pipe pipe in maybePipe)
                 {
                     await pipe.Writer.CompleteAsync();
                 }

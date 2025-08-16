@@ -11,9 +11,9 @@ public class SynchronizeEmbyShowByIdHandler : IRequestHandler<SynchronizeEmbySho
 {
     private readonly IEmbySecretStore _embySecretStore;
     private readonly IEmbyTelevisionLibraryScanner _embyTelevisionLibraryScanner;
+    private readonly IEmbyTelevisionRepository _embyTelevisionRepository;
     private readonly ILogger<SynchronizeEmbyShowByIdHandler> _logger;
     private readonly IMediaSourceRepository _mediaSourceRepository;
-    private readonly IEmbyTelevisionRepository _embyTelevisionRepository;
 
     public SynchronizeEmbyShowByIdHandler(
         IMediaSourceRepository mediaSourceRepository,

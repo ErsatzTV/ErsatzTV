@@ -6,9 +6,9 @@ using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
-using ErsatzTV.Scanner.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Metadata;
 using ErsatzTV.Core.Plex;
+using ErsatzTV.Scanner.Core.Interfaces.Metadata;
 using ErsatzTV.Scanner.Core.Metadata;
 using Microsoft.Extensions.Logging;
 
@@ -120,7 +120,7 @@ public partial class PlexTelevisionLibraryScanner :
         return await showResult.Match(
             async maybeShow =>
             {
-                foreach (var show in maybeShow)
+                foreach (PlexShow show in maybeShow)
                 {
                     _logger.LogInformation(
                         "Found show '{ShowTitle}' with key {ShowKey}, starting targeted scan",

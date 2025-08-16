@@ -185,9 +185,9 @@ public abstract class YamlPlayoutContentHandler(EnumeratorCache enumeratorCache)
         }
         else
         {
-            foreach (var midRollSequence in maybeMidRollSequence)
+            foreach (YamlPlayoutContext.MidRollSequence midRollSequence in maybeMidRollSequence)
             {
-                var filteredChapters = FillerExpression.FilterChapters(
+                List<MediaChapter> filteredChapters = FillerExpression.FilterChapters(
                     midRollSequence.Expression,
                     itemChapters,
                     playoutItem);
@@ -201,7 +201,7 @@ public abstract class YamlPlayoutContentHandler(EnumeratorCache enumeratorCache)
                 {
                     for (var j = 0; j < filteredChapters.Count; j++)
                     {
-                        var nextItem = playoutItem.ForChapter(filteredChapters[j]);
+                        PlayoutItem nextItem = playoutItem.ForChapter(filteredChapters[j]);
 
                         nextItem.Start = context.CurrentTime.UtcDateTime;
                         nextItem.Finish = context.CurrentTime.UtcDateTime + (nextItem.OutPoint - nextItem.InPoint);

@@ -13,13 +13,13 @@ public class ScanLocalLibraryHandler : IRequestHandler<ScanLocalLibrary, Either<
 {
     private readonly IConfigElementRepository _configElementRepository;
     private readonly IImageFolderScanner _imageFolderScanner;
-    private readonly IRemoteStreamFolderScanner _remoteStreamFolderScanner;
     private readonly ILibraryRepository _libraryRepository;
     private readonly ILogger<ScanLocalLibraryHandler> _logger;
     private readonly IMediator _mediator;
     private readonly IMovieFolderScanner _movieFolderScanner;
     private readonly IMusicVideoFolderScanner _musicVideoFolderScanner;
     private readonly IOtherVideoFolderScanner _otherVideoFolderScanner;
+    private readonly IRemoteStreamFolderScanner _remoteStreamFolderScanner;
     private readonly ISongFolderScanner _songFolderScanner;
     private readonly ITelevisionFolderScanner _televisionFolderScanner;
 

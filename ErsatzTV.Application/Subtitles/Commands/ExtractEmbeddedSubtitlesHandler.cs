@@ -280,7 +280,7 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
                     .Filter(s => s.SubtitleKind == SubtitleKind.Embedded)
                     .Filter(s => s.Codec != "hdmv_pgs_subtitle" && s.Codec != "dvd_subtitle" && s.Codec != "dvdsub" &&
                                  s.Codec != "vobsub" && s.Codec != "pgssub" && s.Codec != "pgs")
-                    .Filter(s => s.IsExtracted == false || string.IsNullOrWhiteSpace(s.Path) ||
+                    .Filter(s => !s.IsExtracted || string.IsNullOrWhiteSpace(s.Path) ||
                                  FileDoesntExist(mediaItem.Id, s));
 
                 // find cache paths for each subtitle
@@ -347,7 +347,7 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
     {
         foreach (string path in GetRelativeOutputPath(mediaItemId, subtitle))
         {
-            return _localFileSystem.FileExists(path) == false;
+            return !_localFileSystem.FileExists(path);
         }
 
         return false;

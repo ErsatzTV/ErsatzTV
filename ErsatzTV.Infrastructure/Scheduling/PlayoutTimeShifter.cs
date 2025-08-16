@@ -25,7 +25,7 @@ public class PlayoutTimeShifter(
             .SelectOneAsync(p => p.Id, p => p.Id == playoutId)
             .MapT(p => p.Channel);
 
-        foreach (var channel in maybeChannel.Where(c => c.PlayoutMode is ChannelPlayoutMode.OnDemand))
+        foreach (Channel channel in maybeChannel.Where(c => c.PlayoutMode is ChannelPlayoutMode.OnDemand))
         {
             Option<Playout> maybePlayout = await dbContext.Playouts
                 .Include(p => p.Channel)
@@ -35,7 +35,7 @@ public class PlayoutTimeShifter(
                 .Include(p => p.PlayoutHistory)
                 .SelectOneAsync(p => p.ChannelId, p => p.ChannelId == channel.Id);
 
-            foreach (var playout in maybePlayout)
+            foreach (Playout playout in maybePlayout)
             {
                 if (playout.Channel.PlayoutMode is not ChannelPlayoutMode.OnDemand)
                 {

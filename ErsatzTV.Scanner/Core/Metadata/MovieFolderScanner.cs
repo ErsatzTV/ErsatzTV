@@ -21,10 +21,10 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
 {
     private readonly IClient _client;
     private readonly ILibraryRepository _libraryRepository;
+    private readonly ILocalChaptersProvider _localChaptersProvider;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalMetadataProvider _localMetadataProvider;
     private readonly ILocalSubtitlesProvider _localSubtitlesProvider;
-    private readonly ILocalChaptersProvider _localChaptersProvider;
     private readonly ILogger<MovieFolderScanner> _logger;
     private readonly IMediaItemRepository _mediaItemRepository;
     private readonly IMediator _mediator;

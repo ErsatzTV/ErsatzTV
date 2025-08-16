@@ -19,9 +19,9 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
 {
     private readonly Option<AudioInputFile> _audioInputFile;
     private readonly Option<ConcatInputFile> _concatInputFile;
-    private readonly Option<GraphicsEngineInput> _graphicsEngineInput;
     private readonly IFFmpegCapabilities _ffmpegCapabilities;
     private readonly string _fontsFolder;
+    private readonly Option<GraphicsEngineInput> _graphicsEngineInput;
     private readonly HardwareAccelerationMode _hardwareAccelerationMode;
     private readonly ILogger _logger;
     private readonly string _reportsFolder;
@@ -93,7 +93,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
             new StreamSeekFilterOption(seek),
             new EncoderCopySubtitle(),
             outputFormat,
-            new PipeProtocol(),
+            new PipeProtocol()
         };
 
         return new FFmpegPipeline(pipelineSteps, false);

@@ -89,7 +89,7 @@ internal static partial class VideoToolboxUtil
         }
 
         long maxSize = length * 4 + 1;
-        byte[] buffer = new byte[maxSize];
+        var buffer = new byte[maxSize];
         if (CFStringGetCString(cfString, buffer, maxSize, kCFStringEncodingUTF8))
         {
             int terminator = Array.IndexOf(buffer, (byte)0);
@@ -107,7 +107,7 @@ internal static partial class VideoToolboxUtil
             throw new ArgumentException("FourCC must be 4 characters long.", nameof(fourCC));
         }
 
-        return ((uint)fourCC[0] << 24) | ((uint)fourCC[1] << 16) | ((uint)fourCC[2] << 8) | (uint)fourCC[3];
+        return ((uint)fourCC[0] << 24) | ((uint)fourCC[1] << 16) | ((uint)fourCC[2] << 8) | fourCC[3];
     }
 
     internal static List<string> GetAvailableEncoders(ILogger logger)
@@ -138,7 +138,7 @@ internal static partial class VideoToolboxUtil
             }
 
             var count = (int)CFArrayGetCount(encoderList);
-            for (int i = 0; i < count; i++)
+            for (var i = 0; i < count; i++)
             {
                 IntPtr encoderDict = CFArrayGetValueAtIndex(encoderList, i);
                 if (encoderDict == IntPtr.Zero)

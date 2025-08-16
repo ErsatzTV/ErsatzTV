@@ -388,7 +388,7 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
 
             foreach (VideoStream watermarkStream in watermark.VideoStreams)
             {
-                if (watermarkStream.StillImage == false)
+                if (!watermarkStream.StillImage)
                 {
                     watermark.AddOption(new DoNotIgnoreLoopInputOption());
                 }
@@ -542,7 +542,7 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
         FrameState desiredState,
         List<IPipelineFilterStep> graphicsEngineOverlayFilterSteps)
     {
-        foreach (var graphicsEngine in graphicsEngineInput)
+        foreach (GraphicsEngineInput graphicsEngine in graphicsEngineInput)
         {
             foreach (IPixelFormat desiredPixelFormat in desiredState.PixelFormat)
             {

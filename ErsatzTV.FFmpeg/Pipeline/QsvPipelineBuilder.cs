@@ -433,7 +433,7 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
 
             foreach (VideoStream watermarkStream in watermark.VideoStreams)
             {
-                if (watermarkStream.StillImage == false)
+                if (!watermarkStream.StillImage)
                 {
                     watermark.AddOption(new DoNotIgnoreLoopInputOption());
                 }
@@ -561,7 +561,7 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
         FrameState desiredState,
         List<IPipelineFilterStep> graphicsEngineOverlayFilterSteps)
     {
-        foreach (var _ in graphicsEngineInput)
+        foreach (GraphicsEngineInput _ in graphicsEngineInput)
         {
             foreach (IPixelFormat desiredPixelFormat in desiredState.PixelFormat)
             {
@@ -614,8 +614,8 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
 
         // auto_scale filter seems to muck up 10-bit software decode => hardware scale, so use software scale in that case
         useSoftwareFilter = useSoftwareFilter ||
-                            (ffmpegState is { DecoderHardwareAccelerationMode: HardwareAccelerationMode.None } &&
-                             OperatingSystem.IsWindows() && currentState.BitDepth == 10);
+                            ffmpegState is { DecoderHardwareAccelerationMode: HardwareAccelerationMode.None } &&
+                            OperatingSystem.IsWindows() && currentState.BitDepth == 10;
 
         if (currentState.ScaledSize != desiredState.ScaledSize && useSoftwareFilter)
         {

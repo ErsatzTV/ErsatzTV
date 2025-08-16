@@ -21,8 +21,8 @@ public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Eit
 {
     private readonly IClient _client;
     private readonly IConfigElementRepository _configElementRepository;
-    private readonly IGraphicsEngine _graphicsEngine;
     private readonly IFFmpegSegmenterService _ffmpegSegmenterService;
+    private readonly IGraphicsEngine _graphicsEngine;
     private readonly IHlsPlaylistFilter _hlsPlaylistFilter;
     private readonly IHostApplicationLifetime _hostApplicationLifetime;
     private readonly ILocalFileSystem _localFileSystem;

@@ -7,9 +7,11 @@ public class GraphicsEngineFonts(CustomFontMapper mapper)
     private static readonly System.Collections.Generic.HashSet<string> LoadedFontFiles
         = new(StringComparer.OrdinalIgnoreCase);
 
+    public FontMapper Mapper => mapper;
+
     public void LoadFonts(string fontsFolder)
     {
-        foreach (var file in Directory.EnumerateFiles(fontsFolder, "*.*", SearchOption.AllDirectories))
+        foreach (string file in Directory.EnumerateFiles(fontsFolder, "*.*", SearchOption.AllDirectories))
         {
             if (!file.EndsWith(".ttf", StringComparison.OrdinalIgnoreCase) &&
                 !file.EndsWith(".otf", StringComparison.OrdinalIgnoreCase))
@@ -22,10 +24,8 @@ public class GraphicsEngineFonts(CustomFontMapper mapper)
                 continue;
             }
 
-            using var stream = File.OpenRead(file);
+            using FileStream stream = File.OpenRead(file);
             mapper.LoadPrivateFont(stream, null);
         }
     }
-
-    public FontMapper Mapper => mapper;
 }

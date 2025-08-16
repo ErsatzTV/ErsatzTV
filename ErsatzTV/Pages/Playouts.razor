@@ -274,7 +274,7 @@
     public async Task HandlePlayoutUpdated(PlayoutUpdatedNotification notification, CancellationToken cancellationToken)
     {
         // only refresh detail table on unlock operations (after playout has been modified)
-        if (notification.IsLocked == false)
+        if (!notification.IsLocked)
         {
             if (notification.PlayoutId == _selectedPlayoutId && _detailTable is not null)
             {

@@ -32,7 +32,7 @@ public class ImageElement(ImageGraphicsElement imageGraphicsElement, ILogger log
 
             ZIndex = imageGraphicsElement.ZIndex ?? 0;
 
-            foreach (var expression in _maybeOpacityExpression)
+            foreach (Expression expression in _maybeOpacityExpression)
             {
                 expression.EvaluateFunction += OpacityExpressionHelper.EvaluateFunction;
             }
@@ -46,7 +46,7 @@ public class ImageElement(ImageGraphicsElement imageGraphicsElement, ILogger log
                 imageGraphicsElement.ScaleWidthPercent,
                 imageGraphicsElement.HorizontalMarginPercent,
                 imageGraphicsElement.VerticalMarginPercent,
-                placeWithinSourceContent: false,
+                false,
                 cancellationToken);
         }
         catch (Exception ex)
@@ -64,7 +64,7 @@ public class ImageElement(ImageGraphicsElement imageGraphicsElement, ILogger log
         CancellationToken cancellationToken)
     {
         float opacity = _opacity;
-        foreach (var expression in _maybeOpacityExpression)
+        foreach (Expression expression in _maybeOpacityExpression)
         {
             opacity = OpacityExpressionHelper.GetOpacity(
                 expression,

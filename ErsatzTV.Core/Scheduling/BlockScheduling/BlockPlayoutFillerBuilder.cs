@@ -37,7 +37,7 @@ public class BlockPlayoutFillerBuilder(
         {
             // remove all playout items with type filler
             // except block items that are hidden from the guide (guide mode)
-            foreach (var item in filteredExistingItems)
+            foreach (PlayoutItem item in filteredExistingItems)
             {
                 if (item.FillerKind is FillerKind.None or FillerKind.GuideMode)
                 {

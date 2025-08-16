@@ -1,11 +1,11 @@
+using System.Text.RegularExpressions;
+using System.Xml;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Scanner.Core.Interfaces.Metadata;
 using Microsoft.Extensions.Logging;
-using System.Text.RegularExpressions;
-using System.Xml;
 
 namespace ErsatzTV.Scanner.Core.Metadata;
 
@@ -49,6 +49,12 @@ public partial class LocalChaptersProvider : ILocalChaptersProvider
             _logger.LogError(ex, "Failed to update chapters for media item {MediaItemId}", mediaItem.Id);
             return false;
         }
+    }
+
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
     }
 
     public List<MediaChapter> LocateExternalChapters(string mediaItemPath)
@@ -134,7 +140,7 @@ public partial class LocalChaptersProvider : ILocalChaptersProvider
         long chapterId = 0;
         foreach (XmlNode chapterAtom in chapterAtoms)
         {
-            var chapter = ParseChapterAtom(chapterAtom, chapterId++);
+            MediaChapter? chapter = ParseChapterAtom(chapterAtom, chapterId++);
             if (chapter != null)
             {
                 chapters.Add(chapter);
@@ -143,7 +149,7 @@ public partial class LocalChaptersProvider : ILocalChaptersProvider
 
         chapters.Sort((a, b) => a.StartTime.CompareTo(b.StartTime));
 
-        for (int i = 0; i < chapters.Count; i++)
+        for (var i = 0; i < chapters.Count; i++)
         {
             chapters[i].ChapterId = i;
         }
@@ -212,7 +218,7 @@ public partial class LocalChaptersProvider : ILocalChaptersProvider
         }
 
         // Handle time format HH:MM:SS.mmm or HH:MM:SS,mmm
-        var timeFormats = new Regex[]
+        var timeFormats = new[]
         {
             GetParseFullTimeCodeRegex(),
             GetParseTimeCodeNoMilliRegex()
@@ -220,14 +226,14 @@ public partial class LocalChaptersProvider : ILocalChaptersProvider
 
         foreach (Regex pattern in timeFormats)
         {
-            var match = pattern.Match(timeString);
+            Match match = pattern.Match(timeString);
             if (match.Success)
             {
                 if (int.TryParse(match.Groups[1].Value, out int hours) &&
                     int.TryParse(match.Groups[2].Value, out int minutes) &&
                     int.TryParse(match.Groups[3].Value, out int seconds))
                 {
-                    int milliseconds = 0;
+                    var milliseconds = 0;
                     if (match.Groups.Count > 4 && !int.TryParse(match.Groups[4].Value, out milliseconds))
                     {
                         milliseconds = 0;
@@ -240,12 +246,6 @@ public partial class LocalChaptersProvider : ILocalChaptersProvider
         }
 
         return false;
-    }
-
-    public void Dispose()
-    {
-        Dispose(true);
-        GC.SuppressFinalize(this);
     }
 
     protected virtual void Dispose(bool disposing)

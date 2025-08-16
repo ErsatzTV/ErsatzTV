@@ -225,7 +225,7 @@
         while (maybeStart.Date == DateTime.Today)
         {
             DateTime maybeEnd = maybeStart.AddHours(_durationHours).AddMinutes(_durationMinutes);
-            if (IntersectsOthers(null, maybeStart, maybeEnd) == false)
+            if (!IntersectsOthers(null, maybeStart, maybeEnd))
             {
                 var item = new DecoTemplateItemEditViewModel
                 {
@@ -297,7 +297,7 @@
             }
         }
 
-        return willFit == false;
+        return !willFit;
     }
 
     // private void RemoveDecoTemplateItem(DecoTemplateItemEditViewModel item)

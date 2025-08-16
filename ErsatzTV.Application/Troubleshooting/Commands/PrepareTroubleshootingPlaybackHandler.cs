@@ -100,7 +100,7 @@ public class PrepareTroubleshootingPlaybackHandler(
         List<ChannelWatermark> watermarks = [];
         if (request.WatermarkIds.Count > 0)
         {
-            var channelWatermarks = await dbContext.ChannelWatermarks
+            List<ChannelWatermark> channelWatermarks = await dbContext.ChannelWatermarks
                 .Where(w => request.WatermarkIds.Contains(w.Id))
                 .ToListAsync();
 
@@ -161,7 +161,7 @@ public class PrepareTroubleshootingPlaybackHandler(
         TimeSpan outPoint = duration;
         if (!hlsRealtime)
         {
-            foreach (var seekSeconds in request.SeekSeconds)
+            foreach (int seekSeconds in request.SeekSeconds)
             {
                 inPoint = TimeSpan.FromSeconds(seekSeconds);
                 if (inPoint > version.Duration)
@@ -178,7 +178,7 @@ public class PrepareTroubleshootingPlaybackHandler(
             }
         }
 
-        var graphicsElements = await dbContext.GraphicsElements
+        List<GraphicsElement> graphicsElements = await dbContext.GraphicsElements
             .Where(ge => request.GraphicsElementIds.Contains(ge.Id))
             .ToListAsync();
 
@@ -275,9 +275,8 @@ public class PrepareTroubleshootingPlaybackHandler(
 
     private static async Task<Validation<BaseError, MediaItem>> MediaItemMustExist(
         TvContext dbContext,
-        PrepareTroubleshootingPlayback request)
-    {
-        return await dbContext.MediaItems
+        PrepareTroubleshootingPlayback request) =>
+        await dbContext.MediaItems
             .AsNoTracking()
             .Include(mi => (mi as Episode).EpisodeMetadata)
             .ThenInclude(em => em.Subtitles)
@@ -332,7 +331,6 @@ public class PrepareTroubleshootingPlaybackHandler(
             .Include(mi => (mi as RemoteStream).RemoteStreamMetadata)
             .SelectOneAsync(mi => mi.Id, mi => mi.Id == request.MediaItemId)
             .Map(o => o.ToValidation<BaseError>(new UnableToLocatePlayoutItem()));
-    }
 
     private static Task<Validation<BaseError, string>> FFmpegPathMustExist(TvContext dbContext) =>
         dbContext.ConfigElements.GetValue<string>(ConfigElementKey.FFmpegPath)

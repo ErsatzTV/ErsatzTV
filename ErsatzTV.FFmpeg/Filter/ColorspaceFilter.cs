@@ -7,8 +7,8 @@ public class ColorspaceFilter : BaseFilter
     private readonly FrameState _currentState;
     private readonly IPixelFormat _desiredPixelFormat;
     private readonly bool _forceInputOverrides;
-    private readonly VideoStream _videoStream;
     private readonly bool _isQsv;
+    private readonly VideoStream _videoStream;
 
     public ColorspaceFilter(
         FrameState currentState,

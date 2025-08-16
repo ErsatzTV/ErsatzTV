@@ -28,6 +28,7 @@ public class HlsSessionWorkerV2 : IHlsSessionWorker
     private readonly Option<int> _targetFramerate;
     private CancellationTokenSource _cancellationTokenSource;
     private string _channelNumber;
+    private DateTimeOffset _channelStart;
     private bool _disposedValue;
     private DateTimeOffset _lastAccess;
     private Option<PlayoutItemProcessModel> _lastProcessModel;
@@ -35,7 +36,6 @@ public class HlsSessionWorkerV2 : IHlsSessionWorker
     private HlsSessionState _state;
     private Timer _timer;
     private DateTimeOffset _transcodedUntil;
-    private DateTimeOffset _channelStart;
 
     public HlsSessionWorkerV2(
         IServiceScopeFactory serviceScopeFactory,
@@ -110,7 +110,7 @@ public class HlsSessionWorkerV2 : IHlsSessionWorker
         {
             _channelNumber = channelNumber;
 
-            foreach (var timeout in idleTimeout)
+            foreach (TimeSpan timeout in idleTimeout)
             {
                 lock (_sync)
                 {
@@ -133,12 +133,12 @@ public class HlsSessionWorkerV2 : IHlsSessionWorker
             PlaylistStart = _transcodedUntil;
             _channelStart = _transcodedUntil;
 
-            var maybePlayoutId = await _mediator.Send(
+            Option<int> maybePlayoutId = await _mediator.Send(
                 new GetPlayoutIdByChannelNumber(_channelNumber),
                 cancellationToken);
 
             // time shift on-demand playout if needed
-            foreach (var playoutId in maybePlayoutId)
+            foreach (int playoutId in maybePlayoutId)
             {
                 await _mediator.Send(
                     new TimeShiftOnDemandPlayout(playoutId, _transcodedUntil, true),

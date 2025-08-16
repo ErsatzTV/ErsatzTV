@@ -65,7 +65,7 @@ public class PlayoutBuilder : IPlayoutBuilder
         PlayoutBuildMode mode,
         CancellationToken cancellationToken)
     {
-        var result = PlayoutBuildResult.Empty;
+        PlayoutBuildResult result = PlayoutBuildResult.Empty;
 
         if (playout.ProgramSchedulePlayoutType is not ProgramSchedulePlayoutType.Classic)
         {
@@ -449,7 +449,7 @@ public class PlayoutBuilder : IPlayoutBuilder
         {
             // check for future items that aren't grouped inside range
             var futureItems = result.AddedItems.Filter(i => i.StartOffset > trimAfter).ToList();
-            var futureItemCount = futureItems.Count(futureItem =>
+            int futureItemCount = futureItems.Count(futureItem =>
                 result.AddedItems.All(i => i == futureItem || i.GuideGroup != futureItem.GuideGroup));
 
             // it feels hacky to have to clean up a playlist like this,
@@ -895,14 +895,12 @@ public class PlayoutBuilder : IPlayoutBuilder
     }
 
     private static IEnumerable<KeyValuePair<CollectionKey, Option<FillerPreset>>> GetAllCollectionKeys(
-        PlayoutReferenceData referenceData)
-    {
-        return referenceData.ProgramSchedule.Items
+        PlayoutReferenceData referenceData) =>
+        referenceData.ProgramSchedule.Items
             .Append(referenceData.ProgramScheduleAlternates.Bind(psa => psa.ProgramSchedule.Items))
             .DistinctBy(item => item.Id)
             .SelectMany(CollectionKeysForItem)
             .DistinctBy(kvp => kvp.Key);
-    }
 
     private async Task<List<MediaItem>> FetchMediaItemsForKeyAsync(
         CollectionKey collectionKey,

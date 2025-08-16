@@ -55,7 +55,7 @@ public class TroubleshootController(
                 return NotFound();
             }
 
-            foreach (var playoutItemResult in result.RightToSeq())
+            foreach (PlayoutItemResult playoutItemResult in result.RightToSeq())
             {
                 Either<BaseError, MediaItemInfo> maybeMediaInfo =
                     await mediator.Send(new GetMediaItemInfo(mediaItem), cancellationToken);

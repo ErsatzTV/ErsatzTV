@@ -1,3 +1,4 @@
+using ErsatzTV.Core.Domain;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -26,13 +27,13 @@ public class CheckForOverlappingPlayoutItemsHandler(
 
         if (hasConflict)
         {
-            var maybeChannel = await dbContext.Channels
+            Option<Channel> maybeChannel = await dbContext.Channels
                 .AsNoTracking()
                 .Where(c => c.Playouts.Any(p => p.Id == request.PlayoutId))
                 .FirstOrDefaultAsync(cancellationToken)
                 .Map(Optional);
 
-            foreach (var channel in maybeChannel)
+            foreach (Channel channel in maybeChannel)
             {
                 logger.LogWarning(
                     "Playout for channel {ChannelName} has overlapping playout items; this may be a bug.",

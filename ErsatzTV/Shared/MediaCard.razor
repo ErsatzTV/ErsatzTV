@@ -227,9 +227,6 @@
         }
     }
 
-    private void TroubleshootPlayback()
-    {
-        NavigationManager.NavigateTo($"system/troubleshooting/playback?mediaItem={Data.MediaItemId}");
-    }
+    private void TroubleshootPlayback() => NavigationManager.NavigateTo($"system/troubleshooting/playback?mediaItem={Data.MediaItemId}");
 
 }

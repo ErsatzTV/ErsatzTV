@@ -97,7 +97,7 @@ public class UpdateFFmpegSettingsHandler : IRequestHandler<UpdateFFmpegSettings,
             request.Settings.UseEmbeddedSubtitles);
 
         // do not extract when subtitles are not used
-        if (request.Settings.UseEmbeddedSubtitles == false)
+        if (!request.Settings.UseEmbeddedSubtitles)
         {
             request.Settings.ExtractEmbeddedSubtitles = false;
         }

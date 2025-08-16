@@ -16,11 +16,11 @@ public class ProgramScheduleItemEditViewModel : INotifyPropertyChanged
     private int? _discardToFillAttempts;
     private FixedStartTimeBehavior? _fixedStartTimeBehavior;
     private int? _multipleCount;
+    private PlaybackOrder _playbackOrder;
     private TimeSpan? _playoutDuration;
     private int _playoutDurationHours;
     private int _playoutDurationMinutes;
     private TimeSpan? _startTime;
-    private PlaybackOrder _playbackOrder;
 
     public int Id { get; set; }
     public int Index { get; set; }

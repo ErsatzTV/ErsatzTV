@@ -302,7 +302,7 @@ public abstract class ProgramScheduleItemCommandBase
             _ => throw new NotSupportedException($"Unsupported playout mode {item.PlayoutMode}")
         };
 
-        foreach (var watermarkId in item.WatermarkIds)
+        foreach (int watermarkId in item.WatermarkIds)
         {
             result.ProgramScheduleItemWatermarks ??= [];
             result.ProgramScheduleItemWatermarks.Add(

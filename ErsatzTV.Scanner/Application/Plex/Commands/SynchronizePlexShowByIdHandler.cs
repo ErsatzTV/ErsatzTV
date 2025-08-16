@@ -10,10 +10,10 @@ namespace ErsatzTV.Scanner.Application.Plex;
 public class SynchronizePlexShowByIdHandler : IRequestHandler<SynchronizePlexShowById, Either<BaseError, string>>
 {
     private readonly ILogger<SynchronizePlexShowByIdHandler> _logger;
-    private readonly IPlexTelevisionRepository _plexTelevisionRepository;
     private readonly IMediaSourceRepository _mediaSourceRepository;
     private readonly IPlexSecretStore _plexSecretStore;
     private readonly IPlexTelevisionLibraryScanner _plexTelevisionLibraryScanner;
+    private readonly IPlexTelevisionRepository _plexTelevisionRepository;
 
     public SynchronizePlexShowByIdHandler(
         IPlexTelevisionRepository plexTelevisionRepository,

@@ -61,11 +61,11 @@ public class VideoToolboxHardwareCapabilities : IHardwareCapabilities
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX) && Encoders.IsEmpty)
         {
-            var encoderList = VideoToolboxUtil.GetAvailableEncoders(_logger);
+            List<string> encoderList = VideoToolboxUtil.GetAvailableEncoders(_logger);
             _logger.LogDebug("VideoToolbox reports {Count} encoders", encoderList.Count);
 
             // we only really care about h264 and hevc hardware encoders
-            foreach (var encoder in encoderList)
+            foreach (string encoder in encoderList)
             {
                 if (encoder.Contains("HEVC (HW)", StringComparison.OrdinalIgnoreCase))
                 {

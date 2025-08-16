@@ -435,7 +435,7 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
             .FirstOrDefaultAsync()
             .Map(Optional);
 
-        foreach (var show in maybeShow)
+        foreach (JellyfinShow show in maybeShow)
         {
             return new JellyfinShowTitleItemIdResult(
                 await show.ShowMetadata.HeadOrNone().Map(sm => sm.Title).IfNoneAsync("Unknown Show"),

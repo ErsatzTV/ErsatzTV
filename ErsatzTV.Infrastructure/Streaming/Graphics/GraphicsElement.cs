@@ -30,9 +30,8 @@ public abstract class GraphicsElement : IGraphicsElement
         int imageWidth,
         int imageHeight,
         int horizontalMargin,
-        int verticalMargin)
-    {
-        return location switch
+        int verticalMargin) =>
+        location switch
         {
             WatermarkLocation.BottomLeft => new SKPointI(horizontalMargin, frameHeight - imageHeight - verticalMargin),
             WatermarkLocation.TopLeft => new SKPointI(horizontalMargin, verticalMargin),
@@ -47,7 +46,6 @@ public abstract class GraphicsElement : IGraphicsElement
             WatermarkLocation.LeftMiddle => new SKPointI(horizontalMargin, (frameHeight - imageHeight) / 2),
             _ => new SKPointI(
                 frameWidth - imageWidth - horizontalMargin,
-                frameHeight - imageHeight - verticalMargin),
+                frameHeight - imageHeight - verticalMargin)
         };
-    }
 }

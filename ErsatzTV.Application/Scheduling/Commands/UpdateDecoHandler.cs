@@ -32,10 +32,12 @@ public class UpdateDecoHandler(IDbContextFactory<TvContext> dbContextFactory)
         if (request.WatermarkMode is DecoMode.Override)
         {
             // this is different than schedule item/playout item because we have to merge watermark ids
-            var toAdd = request.WatermarkIds.Where(id => existing.DecoWatermarks.All(wm => wm.WatermarkId != id));
-            var toRemove = existing.DecoWatermarks.Where(wm => !request.WatermarkIds.Contains(wm.WatermarkId));
+            IEnumerable<int> toAdd =
+                request.WatermarkIds.Where(id => existing.DecoWatermarks.All(wm => wm.WatermarkId != id));
+            IEnumerable<DecoWatermark> toRemove =
+                existing.DecoWatermarks.Where(wm => !request.WatermarkIds.Contains(wm.WatermarkId));
             existing.DecoWatermarks.RemoveAll(toRemove.Contains);
-            foreach (var watermarkId in toAdd)
+            foreach (int watermarkId in toAdd)
             {
                 existing.DecoWatermarks.Add(
                     new DecoWatermark

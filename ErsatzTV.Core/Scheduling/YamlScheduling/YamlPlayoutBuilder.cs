@@ -30,7 +30,7 @@ public class YamlPlayoutBuilder(
         PlayoutBuildMode mode,
         CancellationToken cancellationToken)
     {
-        var result = PlayoutBuildResult.Empty;
+        PlayoutBuildResult result = PlayoutBuildResult.Empty;
 
         if (!localFileSystem.FileExists(playout.TemplateFile))
         {
@@ -39,7 +39,7 @@ public class YamlPlayoutBuilder(
         }
 
         Option<YamlPlayoutDefinition> maybePlayoutDefinition =
-            await LoadYamlDefinition(playout.TemplateFile, isImport: false, cancellationToken);
+            await LoadYamlDefinition(playout.TemplateFile, false, cancellationToken);
         if (maybePlayoutDefinition.IsNone)
         {
             logger.LogWarning("YAML playout file {File} is invalid; aborting.", playout.TemplateFile);
@@ -49,11 +49,11 @@ public class YamlPlayoutBuilder(
         // using ValueUnsafe to avoid nesting
         YamlPlayoutDefinition playoutDefinition = maybePlayoutDefinition.ValueUnsafe();
 
-        foreach (var import in playoutDefinition.Import)
+        foreach (string import in playoutDefinition.Import)
         {
             try
             {
-                var path = import;
+                string path = import;
                 if (!File.Exists(import))
                 {
                     path = Path.Combine(
@@ -66,10 +66,11 @@ public class YamlPlayoutBuilder(
                     }
                 }
 
-                var maybeImportedDefinition = await LoadYamlDefinition(path, isImport: true, cancellationToken);
-                foreach (var importedDefinition in maybeImportedDefinition)
+                Option<YamlPlayoutDefinition> maybeImportedDefinition =
+                    await LoadYamlDefinition(path, true, cancellationToken);
+                foreach (YamlPlayoutDefinition importedDefinition in maybeImportedDefinition)
                 {
-                    var contentToAdd = importedDefinition.Content
+                    IEnumerable<YamlPlayoutContentItem> contentToAdd = importedDefinition.Content
                         .Where(c => playoutDefinition.Content.All(c2 => !string.Equals(
                             c2.Key,
                             c.Key,
@@ -77,7 +78,7 @@ public class YamlPlayoutBuilder(
 
                     playoutDefinition.Content.AddRange(contentToAdd);
 
-                    var sequencesToAdd = importedDefinition.Sequence
+                    IEnumerable<YamlPlayoutSequenceItem> sequencesToAdd = importedDefinition.Sequence
                         .Where(s => playoutDefinition.Sequence.All(s2 => !string.Equals(
                             s2.Key,
                             s.Key,
@@ -242,13 +243,16 @@ public class YamlPlayoutBuilder(
 
                 continue;
 
-                async Task ExecuteSequenceLocal(string sequence) => await ExecuteSequence(
-                    handlers,
-                    enumeratorCache,
-                    mode,
-                    context,
-                    sequence,
-                    cancellationToken);
+                async Task ExecuteSequenceLocal(string sequence)
+                {
+                    await ExecuteSequence(
+                        handlers,
+                        enumeratorCache,
+                        mode,
+                        context,
+                        sequence,
+                        cancellationToken);
+                }
             }
 
             if (!instruction.ChangesIndex)
@@ -444,7 +448,7 @@ public class YamlPlayoutBuilder(
         try
         {
             string yaml = await File.ReadAllTextAsync(fileName, cancellationToken);
-            if (await yamlScheduleValidator.ValidateSchedule(yaml, isImport) == false)
+            if (!await yamlScheduleValidator.ValidateSchedule(yaml, isImport))
             {
                 return Option<YamlPlayoutDefinition>.None;
             }

@@ -33,7 +33,7 @@ public class BlockPlayoutBuilder(
         PlayoutBuildMode mode,
         CancellationToken cancellationToken)
     {
-        var result = PlayoutBuildResult.Empty;
+        PlayoutBuildResult result = PlayoutBuildResult.Empty;
 
         logger.LogDebug(
             "Building block playout {PlayoutId} for channel {ChannelNumber} - {ChannelName}",
@@ -72,7 +72,7 @@ public class BlockPlayoutBuilder(
             BlockPlayoutChangeDetection.GetPlayoutItemToBlockKeyMap(referenceData);
 
         // remove items without a block key (shouldn't happen often, just upgrades)
-        foreach (var item in referenceData.ExistingItems.Where(i =>
+        foreach (PlayoutItem item in referenceData.ExistingItems.Where(i =>
                      i.FillerKind is not FillerKind.DecoDefault && !itemBlockKeys.ContainsKey(i)))
         {
             result.ItemsToRemove.Add(item.Id);
@@ -333,7 +333,7 @@ public class BlockPlayoutBuilder(
         DateTimeOffset start,
         PlayoutBuildResult result)
     {
-        var allItemsToDelete = referenceData.PlayoutHistory
+        IEnumerable<PlayoutHistory> allItemsToDelete = referenceData.PlayoutHistory
             .Append(result.AddedHistory)
             .GroupBy(h => (h.BlockId, h.Key))
             .SelectMany(group => group

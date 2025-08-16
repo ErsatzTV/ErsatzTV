@@ -5,9 +5,9 @@ using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
-using ErsatzTV.Scanner.Core.Interfaces.Metadata;
 using ErsatzTV.Core.MediaSources;
 using ErsatzTV.Core.Metadata;
+using ErsatzTV.Scanner.Core.Interfaces.Metadata;
 using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Scanner.Core.Metadata;
@@ -21,8 +21,8 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
     where TEpisode : Episode
     where TEtag : MediaServerItemEtag
 {
-    private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalChaptersProvider _localChaptersProvider;
+    private readonly ILocalFileSystem _localFileSystem;
     private readonly ILogger _logger;
     private readonly IMediator _mediator;
     private readonly IMetadataRepository _metadataRepository;
@@ -198,18 +198,16 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
         Func<TEpisode, string> getLocalPath,
         IAsyncEnumerable<Tuple<TShow, int>> showEntries,
         bool deepScan,
-        CancellationToken cancellationToken)
-    {
-        return await InternalScanLibrary(
+        CancellationToken cancellationToken) =>
+        await InternalScanLibrary(
             televisionRepository,
             connectionParameters,
             library,
             getLocalPath,
             showEntries,
             deepScan,
-            cleanupFileNotFoundItems: true,
+            true,
             cancellationToken);
-    }
 
     protected async Task<Either<BaseError, Unit>> ScanLibraryWithoutCleanup(
         IMediaServerTelevisionRepository<TLibrary, TShow, TSeason, TEpisode, TEtag> televisionRepository,
@@ -218,18 +216,16 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
         Func<TEpisode, string> getLocalPath,
         IAsyncEnumerable<Tuple<TShow, int>> showEntries,
         bool deepScan,
-        CancellationToken cancellationToken)
-    {
-        return await InternalScanLibrary(
+        CancellationToken cancellationToken) =>
+        await InternalScanLibrary(
             televisionRepository,
             connectionParameters,
             library,
             getLocalPath,
             showEntries,
             deepScan,
-            cleanupFileNotFoundItems: false,
+            false,
             cancellationToken);
-    }
 
     protected abstract IAsyncEnumerable<Tuple<TSeason, int>> GetSeasonLibraryItems(
         TLibrary library,
@@ -408,7 +404,7 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
             incomingItemIds.Add(MediaServerItemId(incoming));
 
             string localPath = getLocalPath(incoming);
-            if (await ShouldScanItem(
+            if (!await ShouldScanItem(
                     televisionRepository,
                     library,
                     show,
@@ -416,7 +412,7 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
                     existingEpisodes,
                     incoming,
                     localPath,
-                    deepScan) == false)
+                    deepScan))
             {
                 continue;
             }

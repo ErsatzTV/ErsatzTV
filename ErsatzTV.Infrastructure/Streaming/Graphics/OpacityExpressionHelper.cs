@@ -17,11 +17,11 @@ public static class OpacityExpressionHelper
                     throw new ArgumentException("LinearFadePoints() requires 5 arguments.");
                 }
 
-                double time = Convert.ToDouble(args.Parameters[0].Evaluate(), CultureInfo.CurrentCulture);
-                double start = Convert.ToDouble(args.Parameters[1].Evaluate(), CultureInfo.CurrentCulture);
-                double peakStart = Convert.ToDouble(args.Parameters[2].Evaluate(), CultureInfo.CurrentCulture);
-                double peakEnd = Convert.ToDouble(args.Parameters[3].Evaluate(), CultureInfo.CurrentCulture);
-                double end = Convert.ToDouble(args.Parameters[4].Evaluate(), CultureInfo.CurrentCulture);
+                var time = Convert.ToDouble(args.Parameters[0].Evaluate(), CultureInfo.CurrentCulture);
+                var start = Convert.ToDouble(args.Parameters[1].Evaluate(), CultureInfo.CurrentCulture);
+                var peakStart = Convert.ToDouble(args.Parameters[2].Evaluate(), CultureInfo.CurrentCulture);
+                var peakEnd = Convert.ToDouble(args.Parameters[3].Evaluate(), CultureInfo.CurrentCulture);
+                var end = Convert.ToDouble(args.Parameters[4].Evaluate(), CultureInfo.CurrentCulture);
 
                 args.Result = LinearFadePoints(time, start, peakStart, peakEnd, end);
                 break;
@@ -33,10 +33,10 @@ public static class OpacityExpressionHelper
                     throw new ArgumentException("LinearFadeDuration() requires 4 arguments.");
                 }
 
-                double time = Convert.ToDouble(args.Parameters[0].Evaluate(), CultureInfo.CurrentCulture);
-                double start = Convert.ToDouble(args.Parameters[1].Evaluate(), CultureInfo.CurrentCulture);
-                double fadeSeconds = Convert.ToDouble(args.Parameters[2].Evaluate(), CultureInfo.CurrentCulture);
-                double peakSeconds = Convert.ToDouble(args.Parameters[3].Evaluate(), CultureInfo.CurrentCulture);
+                var time = Convert.ToDouble(args.Parameters[0].Evaluate(), CultureInfo.CurrentCulture);
+                var start = Convert.ToDouble(args.Parameters[1].Evaluate(), CultureInfo.CurrentCulture);
+                var fadeSeconds = Convert.ToDouble(args.Parameters[2].Evaluate(), CultureInfo.CurrentCulture);
+                var peakSeconds = Convert.ToDouble(args.Parameters[3].Evaluate(), CultureInfo.CurrentCulture);
 
                 args.Result = LinearFadeDuration(time, start, fadeSeconds, peakSeconds);
                 break;
@@ -73,7 +73,7 @@ public static class OpacityExpressionHelper
         if (fadeSeconds <= 0)
         {
             double noFadeEnd = start + peakSeconds;
-            return (time >= start && time < noFadeEnd) ? 1.0 : 0.0;
+            return time >= start && time < noFadeEnd ? 1.0 : 0.0;
         }
 
         double peakStart = start + fadeSeconds;

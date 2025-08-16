@@ -26,11 +26,11 @@ public class ChannelEditViewModelValidator : AbstractValidator<ChannelEditViewMo
             });
 
         When(
-            x => x.IsEnabled == false,
+            x => !x.IsEnabled,
             () =>
             {
                 RuleFor(x => x.ShowInEpg)
-                    .Must(x => x == false)
+                    .Must(x => !x)
                     .WithMessage("Disabled channels cannot be shown in EPG");
             });
     }

@@ -7,27 +7,27 @@ public interface IPlexServerApi
 {
     [Get("/")]
     [Headers("Accept: text/xml")]
-    public Task<PlexXmlMediaContainerPingResponse> Ping(
+    Task<PlexXmlMediaContainerPingResponse> Ping(
         [Query] [AliasAs("X-Plex-Token")]
         string token,
         CancellationToken cancellationToken);
 
     [Get("/library/sections")]
     [Headers("Accept: application/json")]
-    public Task<PlexMediaContainerResponse<PlexMediaContainerDirectoryContent<PlexLibraryResponse>>> GetLibraries(
+    Task<PlexMediaContainerResponse<PlexMediaContainerDirectoryContent<PlexLibraryResponse>>> GetLibraries(
         [Query] [AliasAs("X-Plex-Token")]
         string token);
 
     [Get("/library/sections/{key}/all?X-Plex-Container-Start=0&X-Plex-Container-Size=0")]
     [Headers("Accept: text/xml")]
-    public Task<PlexXmlMediaContainerStatsResponse> GetLibrarySection(
+    Task<PlexXmlMediaContainerStatsResponse> GetLibrarySection(
         string key,
         [Query] [AliasAs("X-Plex-Token")]
         string token);
 
     [Get("/library/sections/{key}/all")]
     [Headers("Accept: application/json")]
-    public Task<PlexMediaContainerResponse<PlexMediaContainerMetadataContent<PlexMetadataResponse>>>
+    Task<PlexMediaContainerResponse<PlexMediaContainerMetadataContent<PlexMetadataResponse>>>
         GetLibrarySectionContents(
             string key,
             [Query] [AliasAs("X-Plex-Container-Start")]
@@ -39,13 +39,13 @@ public interface IPlexServerApi
 
     [Get("/library/all?type=18&X-Plex-Container-Start=0&X-Plex-Container-Size=0")]
     [Headers("Accept: text/xml")]
-    public Task<PlexXmlMediaContainerStatsResponse> GetCollectionCount(
+    Task<PlexXmlMediaContainerStatsResponse> GetCollectionCount(
         [Query] [AliasAs("X-Plex-Token")]
         string token);
 
     [Get("/library/all?type=18")]
     [Headers("Accept: application/json")]
-    public Task<PlexMediaContainerResponse<PlexMediaContainerMetadataContent<PlexCollectionMetadataResponse>>>
+    Task<PlexMediaContainerResponse<PlexMediaContainerMetadataContent<PlexCollectionMetadataResponse>>>
         GetCollections(
             [Query] [AliasAs("X-Plex-Container-Start")]
             int skip,
@@ -56,14 +56,14 @@ public interface IPlexServerApi
 
     [Get("/library/collections/{key}/children?X-Plex-Container-Start=0&X-Plex-Container-Size=0")]
     [Headers("Accept: text/xml")]
-    public Task<PlexXmlMediaContainerStatsResponse> GetCollectionItemsCount(
+    Task<PlexXmlMediaContainerStatsResponse> GetCollectionItemsCount(
         string key,
         [Query] [AliasAs("X-Plex-Token")]
         string token);
 
     [Get("/library/collections/{key}/children")]
     [Headers("Accept: application/json")]
-    public Task<PlexMediaContainerResponse<PlexMediaContainerMetadataContent<PlexCollectionItemMetadataResponse>>>
+    Task<PlexMediaContainerResponse<PlexMediaContainerMetadataContent<PlexCollectionItemMetadataResponse>>>
         GetCollectionItems(
             string key,
             [Query] [AliasAs("X-Plex-Container-Start")]
@@ -75,14 +75,14 @@ public interface IPlexServerApi
 
     [Get("/library/tags?type={type}&X-Plex-Container-Start=0&X-Plex-Container-Size=0")]
     [Headers("Accept: text/xml")]
-    public Task<PlexXmlMediaContainerStatsResponse> GetTagsCount(
+    Task<PlexXmlMediaContainerStatsResponse> GetTagsCount(
         int type,
         [Query] [AliasAs("X-Plex-Token")]
         string token);
 
     [Get("/library/tags?type={type}")]
     [Headers("Accept: application/json")]
-    public Task<PlexMediaContainerResponse<PlexMediaContainerDirectoryContent<PlexTagMetadataResponse>>>
+    Task<PlexMediaContainerResponse<PlexMediaContainerDirectoryContent<PlexTagMetadataResponse>>>
         GetTags(
             int type,
             [Query] [AliasAs("X-Plex-Container-Start")]
@@ -94,7 +94,7 @@ public interface IPlexServerApi
 
     [Get("/library/sections/{key}/all?X-Plex-Container-Start=0&X-Plex-Container-Size=0")]
     [Headers("Accept: text/xml")]
-    public Task<PlexXmlMediaContainerStatsResponse> CountTagContents(
+    Task<PlexXmlMediaContainerStatsResponse> CountTagContents(
         string key,
         [Query] [AliasAs("X-Plex-Token")]
         string token,
@@ -103,7 +103,7 @@ public interface IPlexServerApi
 
     [Get("/library/sections/{key}/all")]
     [Headers("Accept: application/json")]
-    public Task<PlexMediaContainerResponse<PlexMediaContainerMetadataContent<PlexMetadataResponse>>>
+    Task<PlexMediaContainerResponse<PlexMediaContainerMetadataContent<PlexMetadataResponse>>>
         GetTagContents(
             string key,
             [Query] [AliasAs("X-Plex-Container-Start")]
@@ -117,7 +117,7 @@ public interface IPlexServerApi
 
     [Get("/library/metadata/{key}?includeChapters=1")]
     [Headers("Accept: text/xml")]
-    public Task<PlexXmlVideoMetadataResponseContainer>
+    Task<PlexXmlVideoMetadataResponseContainer>
         GetVideoMetadata(
             string key,
             [Query] [AliasAs("X-Plex-Token")]
@@ -125,7 +125,7 @@ public interface IPlexServerApi
 
     [Get("/library/metadata/{key}")]
     [Headers("Accept: text/xml")]
-    public Task<PlexXmlDirectoryMetadataResponseContainer>
+    Task<PlexXmlDirectoryMetadataResponseContainer>
         GetDirectoryMetadata(
             string key,
             [Query] [AliasAs("X-Plex-Token")]
@@ -133,14 +133,14 @@ public interface IPlexServerApi
 
     [Get("/library/metadata/{key}/children?X-Plex-Container-Start=0&X-Plex-Container-Size=0")]
     [Headers("Accept: text/xml")]
-    public Task<PlexXmlMediaContainerStatsResponse> CountShowChildren(
+    Task<PlexXmlMediaContainerStatsResponse> CountShowChildren(
         string key,
         [Query] [AliasAs("X-Plex-Token")]
         string token);
 
     [Get("/library/metadata/{key}/children")]
     [Headers("Accept: text/xml")]
-    public Task<PlexXmlSeasonsMetadataResponseContainer>
+    Task<PlexXmlSeasonsMetadataResponseContainer>
         GetShowChildren(
             string key,
             [Query] [AliasAs("X-Plex-Container-Start")]
@@ -152,14 +152,14 @@ public interface IPlexServerApi
 
     [Get("/library/metadata/{key}/children?X-Plex-Container-Start=0&X-Plex-Container-Size=0")]
     [Headers("Accept: text/xml")]
-    public Task<PlexXmlMediaContainerStatsResponse> CountSeasonChildren(
+    Task<PlexXmlMediaContainerStatsResponse> CountSeasonChildren(
         string key,
         [Query] [AliasAs("X-Plex-Token")]
         string token);
 
     [Get("/library/metadata/{key}/children")]
     [Headers("Accept: text/xml")]
-    public Task<PlexXmlEpisodesMetadataResponseContainer>
+    Task<PlexXmlEpisodesMetadataResponseContainer>
         GetSeasonChildren(
             string key,
             [Query] [AliasAs("X-Plex-Container-Start")]
@@ -171,7 +171,7 @@ public interface IPlexServerApi
 
     [Get("/hubs/search")]
     [Headers("Accept: application/json")]
-    public Task<PlexMediaContainerResponse<PlexMediaContainerHubContent<PlexHubResponse>>>
+    Task<PlexMediaContainerResponse<PlexMediaContainerHubContent<PlexHubResponse>>>
         Search(
             [Query] [AliasAs("query")]
             string searchTerm,

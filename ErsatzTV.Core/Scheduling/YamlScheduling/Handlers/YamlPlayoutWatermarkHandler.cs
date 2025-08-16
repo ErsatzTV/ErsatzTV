@@ -26,7 +26,7 @@ public class YamlPlayoutWatermarkHandler(IChannelRepository channelRepository) :
 
         if (watermark.Watermark && !string.IsNullOrWhiteSpace(watermark.Name))
         {
-            foreach (var wm in await GetChannelWatermarkByName(watermark.Name))
+            foreach (ChannelWatermark wm in await GetChannelWatermarkByName(watermark.Name))
             {
                 context.SetChannelWatermarkId(wm.Id);
             }
@@ -35,7 +35,7 @@ public class YamlPlayoutWatermarkHandler(IChannelRepository channelRepository) :
         {
             if (!string.IsNullOrWhiteSpace(watermark.Name))
             {
-                foreach (var wm in await GetChannelWatermarkByName(watermark.Name))
+                foreach (ChannelWatermark wm in await GetChannelWatermarkByName(watermark.Name))
                 {
                     context.RemoveChannelWatermarkId(wm.Id);
                 }
@@ -51,7 +51,7 @@ public class YamlPlayoutWatermarkHandler(IChannelRepository channelRepository) :
 
     private async Task<Option<ChannelWatermark>> GetChannelWatermarkByName(string name)
     {
-        if (_watermarkCache.TryGetValue(name, out var cachedWatermark))
+        if (_watermarkCache.TryGetValue(name, out Option<ChannelWatermark> cachedWatermark))
         {
             foreach (ChannelWatermark channelWatermark in cachedWatermark)
             {

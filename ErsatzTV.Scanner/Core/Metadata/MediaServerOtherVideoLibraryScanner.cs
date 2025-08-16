@@ -6,9 +6,9 @@ using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
-using ErsatzTV.Scanner.Core.Interfaces.Metadata;
 using ErsatzTV.Core.MediaSources;
 using ErsatzTV.Core.Metadata;
+using ErsatzTV.Scanner.Core.Interfaces.Metadata;
 using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Scanner.Core.Metadata;
@@ -19,8 +19,8 @@ public abstract class MediaServerOtherVideoLibraryScanner<TConnectionParameters,
     where TOtherVideo : OtherVideo
     where TEtag : MediaServerItemEtag
 {
-    private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalChaptersProvider _localChaptersProvider;
+    private readonly ILocalFileSystem _localFileSystem;
     private readonly ILogger _logger;
     private readonly IMediator _mediator;
     private readonly IMetadataRepository _metadataRepository;
@@ -102,13 +102,13 @@ public abstract class MediaServerOtherVideoLibraryScanner<TConnectionParameters,
 
             string localPath = getLocalPath(incoming);
 
-            if (await ShouldScanItem(
+            if (!await ShouldScanItem(
                     otherVideoRepository,
                     library,
                     existingOtherVideos,
                     incoming,
                     localPath,
-                    deepScan) == false)
+                    deepScan))
             {
                 continue;
             }

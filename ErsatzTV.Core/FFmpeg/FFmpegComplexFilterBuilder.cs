@@ -199,7 +199,7 @@ public class FFmpegComplexFilterBuilder
             }
         });
 
-        if (scaleOrPad && _boxBlur == false)
+        if (scaleOrPad && !_boxBlur)
         {
             videoFilterQueue.Add("setsar=1");
         }

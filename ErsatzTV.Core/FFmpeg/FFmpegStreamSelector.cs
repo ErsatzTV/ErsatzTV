@@ -157,7 +157,7 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
                      .Filter(s => s.SubtitleKind is SubtitleKind.Embedded && !s.IsImage)
                      .ToList())
         {
-            if (subtitle.IsExtracted == false)
+            if (!subtitle.IsExtracted)
             {
                 _logger.LogDebug(
                     "Ignoring embedded subtitle with index {Index} that has not been extracted",

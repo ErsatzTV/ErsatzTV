@@ -16,9 +16,6 @@ namespace ErsatzTV.Core.Tests.Scheduling.ClassicScheduling;
 
 public abstract class PlayoutBuilderTestBase
 {
-    [SetUp]
-    public void SetUp() => CancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(10)).Token;
-
     protected readonly ILogger<PlayoutBuilder> Logger;
     protected CancellationToken CancellationToken;
 
@@ -34,6 +31,9 @@ public abstract class PlayoutBuilderTestBase
 
         Logger = loggerFactory.CreateLogger<PlayoutBuilder>();
     }
+
+    [SetUp]
+    public void SetUp() => CancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(10)).Token;
 
     protected static DateTimeOffset HoursAfterMidnight(int hours)
     {

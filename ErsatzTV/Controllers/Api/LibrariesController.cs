@@ -22,9 +22,9 @@ public class LibrariesController(ITelevisionRepository televisionRepository, IMe
             return new BadRequestObjectResult(new { error = "ShowTitle is required" });
         }
 
-        var trimmedTitle = request.ShowTitle.Trim();
-        var maybeShowId = await televisionRepository.GetShowIdByTitle(id, trimmedTitle);
-        foreach (var showId in maybeShowId)
+        string trimmedTitle = request.ShowTitle.Trim();
+        Option<int> maybeShowId = await televisionRepository.GetShowIdByTitle(id, trimmedTitle);
+        foreach (int showId in maybeShowId)
         {
             bool result = await mediator.Send(new QueueShowScanByLibraryId(id, showId, trimmedTitle, request.DeepScan));
 

@@ -286,7 +286,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
 
         // missing pad-to-nearest-minute value is invalid; use no filler
         FillerPreset invalidPadFiller = allFiller
-            .FirstOrDefault(f => f.FillerMode == FillerMode.Pad && f.PadToNearestMinute.HasValue == false);
+            .FirstOrDefault(f => f.FillerMode == FillerMode.Pad && !f.PadToNearestMinute.HasValue);
         if (invalidPadFiller is not null)
         {
             Logger.LogError(
@@ -368,7 +368,8 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                 };
 
                 // if filler count is 2, we need to schedule 2 * (number of items in one full playlist iteration)
-                var fillerEnumerator = enumerators[CollectionKey.ForFillerPreset(playlistFiller)];
+                IMediaCollectionEnumerator fillerEnumerator =
+                    enumerators[CollectionKey.ForFillerPreset(playlistFiller)];
                 if (fillerEnumerator is PlaylistEnumerator playlistEnumerator)
                 {
                     clone.Count *= playlistEnumerator.CountForFiller;

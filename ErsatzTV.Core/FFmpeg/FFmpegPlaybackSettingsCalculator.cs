@@ -114,7 +114,7 @@ public static class FFmpegPlaybackSettingsCalculator
 
                 result.VideoTrackTimeScale = 90000;
 
-                foreach (MediaStream stream in videoStream.Where(s => s.AttachedPic == false))
+                foreach (MediaStream stream in videoStream.Where(s => !s.AttachedPic))
                 {
                     result.VideoFormat = ffmpegProfile.VideoFormat;
                     result.VideoBitrate = ffmpegProfile.VideoBitrate;

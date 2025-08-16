@@ -29,7 +29,7 @@ public class YamlPlayoutDurationHandler(EnumeratorCache enumeratorCache) : YamlP
             return false;
         }
 
-        if (duration.StopBeforeEnd == false && duration.OfflineTail)
+        if (!duration.StopBeforeEnd && duration.OfflineTail)
         {
             logger.LogError("offline_tail must be false when stop_before_end is false");
             return false;

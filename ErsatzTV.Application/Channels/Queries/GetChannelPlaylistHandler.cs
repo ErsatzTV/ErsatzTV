@@ -27,7 +27,7 @@ public class GetChannelPlaylistHandler : IRequestHandler<GetChannelPlaylist, Cha
         var result = new List<Channel>();
         foreach (Channel channel in channels)
         {
-            if (channel.IsEnabled == false)
+            if (!channel.IsEnabled)
             {
                 continue;
             }

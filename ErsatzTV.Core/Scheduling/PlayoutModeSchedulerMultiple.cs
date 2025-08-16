@@ -110,7 +110,8 @@ public class PlayoutModeSchedulerMultiple : PlayoutModeSchedulerBase<ProgramSche
                 PlayoutItemWatermarks = []
             };
 
-            foreach (var programScheduleItemWatermark in scheduleItem.ProgramScheduleItemWatermarks ?? [])
+            foreach (ProgramScheduleItemWatermark programScheduleItemWatermark in scheduleItem
+                         .ProgramScheduleItemWatermarks ?? [])
             {
                 playoutItem.PlayoutItemWatermarks.Add(
                     new PlayoutItemWatermark

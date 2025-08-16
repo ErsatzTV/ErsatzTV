@@ -12,9 +12,9 @@ public class
 {
     private readonly IJellyfinSecretStore _jellyfinSecretStore;
     private readonly IJellyfinTelevisionLibraryScanner _jellyfinTelevisionLibraryScanner;
+    private readonly IJellyfinTelevisionRepository _jellyfinTelevisionRepository;
     private readonly ILogger<SynchronizeJellyfinShowByIdHandler> _logger;
     private readonly IMediaSourceRepository _mediaSourceRepository;
-    private readonly IJellyfinTelevisionRepository _jellyfinTelevisionRepository;
 
     public SynchronizeJellyfinShowByIdHandler(
         IMediaSourceRepository mediaSourceRepository,
