@@ -173,15 +173,25 @@ public class GraphicsEngine(
                 }
 
                 // draw each element
-                foreach (var preparedImage in preparedElementImages)
+                using (var paint = new SKPaint())
                 {
-                    using var paint = new SKPaint();
-                    paint.Color = new SKColor(255, 255, 255, (byte)(preparedImage.Opacity * 255));
-                    canvas.DrawBitmap(preparedImage.Image, new SKPoint(preparedImage.Point.X, preparedImage.Point.Y), paint);
-
-                    if (preparedImage.Dispose)
+                    foreach (var preparedImage in preparedElementImages)
                     {
-                        preparedImage.Image.Dispose();
+                        using (var colorFilter = SKColorFilter.CreateBlendMode(
+                                   SKColors.White.WithAlpha((byte)(preparedImage.Opacity * 255)),
+                                   SKBlendMode.Modulate))
+                        {
+                            paint.ColorFilter = colorFilter;
+                            canvas.DrawBitmap(
+                                preparedImage.Image,
+                                new SKPoint(preparedImage.Point.X, preparedImage.Point.Y),
+                                paint);
+                        }
+
+                        if (preparedImage.Dispose)
+                        {
+                            preparedImage.Image.Dispose();
+                        }
                     }
                 }
 
