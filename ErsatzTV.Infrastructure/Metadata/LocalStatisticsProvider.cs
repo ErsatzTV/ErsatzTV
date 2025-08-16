@@ -568,7 +568,18 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
         [property: JsonProperty(PropertyName = "variant_bitrate")]
         string variantBitrate)
     {
-        public static readonly FFprobeTags Empty = new(null, null, null, null, null, null, null, null, null, null, null);
+        public static readonly FFprobeTags Empty = new(
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null);
     }
     // ReSharper restore InconsistentNaming
 }

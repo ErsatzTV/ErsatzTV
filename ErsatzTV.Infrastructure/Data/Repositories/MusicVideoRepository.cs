@@ -233,7 +233,13 @@ public class MusicVideoRepository : IMusicVideoRepository
                 [
                     new MediaVersion
                     {
-                        MediaFiles = [new MediaFile { Path = path, PathHash = PathUtils.GetPathHash(path), LibraryFolderId = libraryFolderId }],
+                        MediaFiles =
+                        [
+                            new MediaFile
+                            {
+                                Path = path, PathHash = PathUtils.GetPathHash(path), LibraryFolderId = libraryFolderId
+                            }
+                        ],
                         Streams = []
                     }
                 ],

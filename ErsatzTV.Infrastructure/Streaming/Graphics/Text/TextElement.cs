@@ -7,7 +7,7 @@ using Topten.RichTextKit;
 using Scriban;
 using Scriban.Runtime;
 using SkiaSharp;
-using RichTextKit=Topten.RichTextKit;
+using RichTextKit = Topten.RichTextKit;
 
 namespace ErsatzTV.Infrastructure.Streaming.Graphics;
 
@@ -72,7 +72,9 @@ public partial class TextElement(
 
             var textBlock = BuildTextBlock(textToRender);
 
-            _image = new SKBitmap((int)Math.Ceiling(textBlock.MeasuredWidth), (int)Math.Ceiling(textBlock.MeasuredHeight));
+            _image = new SKBitmap(
+                (int)Math.Ceiling(textBlock.MeasuredWidth),
+                (int)Math.Ceiling(textBlock.MeasuredHeight));
             using (var canvas = new SKCanvas(_image))
             {
                 canvas.Clear(SKColors.Transparent);

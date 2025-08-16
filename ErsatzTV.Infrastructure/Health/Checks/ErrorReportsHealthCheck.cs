@@ -25,7 +25,9 @@ public class ErrorReportsHealthCheck : BaseHealthCheck, IErrorReportsHealthCheck
                 .AsTask();
         }
 
-        return InfoResult("Automated error reporting is disabled. Please enable to support bug fixing efforts!", "Automated error reporting is disabled")
+        return InfoResult(
+                "Automated error reporting is disabled. Please enable to support bug fixing efforts!",
+                "Automated error reporting is disabled")
             .AsTask();
     }
 }

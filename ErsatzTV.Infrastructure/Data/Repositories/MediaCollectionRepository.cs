@@ -1223,7 +1223,9 @@ public class MediaCollectionRepository : IMediaCollectionRepository
         return await GetRemoteStreamItems(dbContext, ids);
     }
 
-    private static Task<List<RemoteStream>> GetRemoteStreamItems(TvContext dbContext, IEnumerable<int> remoteStreamIds) =>
+    private static Task<List<RemoteStream>> GetRemoteStreamItems(
+        TvContext dbContext,
+        IEnumerable<int> remoteStreamIds) =>
         dbContext.RemoteStreams
             .AsNoTracking()
             .Include(m => m.RemoteStreamMetadata)

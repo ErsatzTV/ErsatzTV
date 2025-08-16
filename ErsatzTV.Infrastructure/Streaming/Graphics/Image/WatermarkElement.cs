@@ -57,7 +57,8 @@ public class WatermarkElement : ImageElementBase
                     )";
                 _maybeOpacityExpression = new Expression(expressionString);
             }
-            else if (_watermark.Mode is ChannelWatermarkMode.OpacityExpression && !string.IsNullOrWhiteSpace(_watermark.OpacityExpression))
+            else if (_watermark.Mode is ChannelWatermarkMode.OpacityExpression &&
+                     !string.IsNullOrWhiteSpace(_watermark.OpacityExpression))
             {
                 _maybeOpacityExpression = new Expression(_watermark.OpacityExpression);
             }

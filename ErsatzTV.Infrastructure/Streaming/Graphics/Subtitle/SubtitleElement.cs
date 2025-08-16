@@ -77,7 +77,9 @@ public class SubtitleElement(
                 .WithStandardOutputPipe(PipeTarget.ToStream(pipe.Writer.AsStream()));
 
             _cancellationTokenSource = new CancellationTokenSource();
-            var linkedToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _cancellationTokenSource.Token);
+            var linkedToken = CancellationTokenSource.CreateLinkedTokenSource(
+                cancellationToken,
+                _cancellationTokenSource.Token);
 
             _commandTask = command.ExecuteAsync(linkedToken.Token);
         }
@@ -151,6 +153,7 @@ public class SubtitleElement(
         {
             // do nothing
         }
+
         _cancellationTokenSource?.Dispose();
 
         _videoFrame?.Dispose();

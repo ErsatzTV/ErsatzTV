@@ -66,6 +66,7 @@ public class GraphicsEngine(
                     {
                         elements.Add(watermark);
                     }
+
                     break;
 
                 case ImageElementContext imageElementContext:
@@ -113,8 +114,13 @@ public class GraphicsEngine(
         }
 
         // initialize all elements
-        await Task.WhenAll(elements.Select(e =>
-            e.InitializeAsync(context.SquarePixelFrameSize, context.FrameSize, context.FrameRate, cancellationToken)));
+        await Task.WhenAll(
+            elements.Select(e =>
+                e.InitializeAsync(
+                    context.SquarePixelFrameSize,
+                    context.FrameSize,
+                    context.FrameRate,
+                    cancellationToken)));
 
         long frameCount = 0;
         var totalFrames = (long)(context.Duration.TotalSeconds * context.FrameRate);
@@ -166,7 +172,8 @@ public class GraphicsEngine(
                     catch (Exception ex)
                     {
                         element.IsFailed = true;
-                        logger.LogWarning(ex,
+                        logger.LogWarning(
+                            ex,
                             "Failed to draw graphics element of type {Type}; will disable for this content",
                             element.GetType().Name);
                     }

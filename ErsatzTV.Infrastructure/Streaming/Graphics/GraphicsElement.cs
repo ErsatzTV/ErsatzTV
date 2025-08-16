@@ -10,10 +10,17 @@ public abstract class GraphicsElement : IGraphicsElement
 
     public bool IsFailed { get; set; }
 
-    public abstract Task InitializeAsync(Resolution squarePixelFrameSize, Resolution frameSize, int frameRate,
+    public abstract Task InitializeAsync(
+        Resolution squarePixelFrameSize,
+        Resolution frameSize,
+        int frameRate,
         CancellationToken cancellationToken);
 
-    public abstract ValueTask<Option<PreparedElementImage>> PrepareImage(TimeSpan timeOfDay, TimeSpan contentTime, TimeSpan contentTotalTime, TimeSpan channelTime,
+    public abstract ValueTask<Option<PreparedElementImage>> PrepareImage(
+        TimeSpan timeOfDay,
+        TimeSpan contentTime,
+        TimeSpan contentTotalTime,
+        TimeSpan channelTime,
         CancellationToken cancellationToken);
 
     protected static SKPointI CalculatePosition(

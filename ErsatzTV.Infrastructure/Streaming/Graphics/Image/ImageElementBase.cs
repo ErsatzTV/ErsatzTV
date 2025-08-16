@@ -35,7 +35,7 @@ public abstract class ImageElementBase : GraphicsElement, IDisposable
         CancellationToken cancellationToken)
     {
         bool isRemoteUri = Uri.TryCreate(image, UriKind.Absolute, out var uriResult)
-                   && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
+                           && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
 
         if (isRemoteUri)
         {

@@ -112,7 +112,8 @@ public class TemplateDataRepository(ILocalFileSystem localFileSystem, IDbContext
                     [MediaItemTemplateDataKey.Plot] = metadata.Plot,
                     [MediaItemTemplateDataKey.ReleaseDate] = metadata.ReleaseDate,
                     [MediaItemTemplateDataKey.Studios] = (metadata.Studios ?? []).Map(s => s.Name).OrderBy(identity),
-                    [MediaItemTemplateDataKey.Directors] = (metadata.Directors ?? []).Map(d => d.Name).OrderBy(identity),
+                    [MediaItemTemplateDataKey.Directors] =
+                        (metadata.Directors ?? []).Map(d => d.Name).OrderBy(identity),
                     [MediaItemTemplateDataKey.Genres] = (metadata.Genres ?? []).Map(g => g.Name).OrderBy(identity),
                     [MediaItemTemplateDataKey.Duration] = movie.GetHeadVersion().Duration
                 };
@@ -149,7 +150,8 @@ public class TemplateDataRepository(ILocalFileSystem localFileSystem, IDbContext
                 result.Add(MediaItemTemplateDataKey.ShowTitle, showMetadata.Title);
                 result.Add(MediaItemTemplateDataKey.ShowYear, showMetadata.Year);
                 result.Add(MediaItemTemplateDataKey.ShowContentRating, showMetadata.ContentRating);
-                result.Add(MediaItemTemplateDataKey.ShowGenres,
+                result.Add(
+                    MediaItemTemplateDataKey.ShowGenres,
                     (showMetadata.Genres ?? []).Map(s => s.Name).OrderBy(identity));
             }
 
@@ -158,11 +160,14 @@ public class TemplateDataRepository(ILocalFileSystem localFileSystem, IDbContext
                 result.Add(MediaItemTemplateDataKey.Title, metadata.Title);
                 result.Add(MediaItemTemplateDataKey.Plot, metadata.Plot);
                 result.Add(MediaItemTemplateDataKey.ReleaseDate, metadata.ReleaseDate);
-                result.Add(MediaItemTemplateDataKey.Studios,
+                result.Add(
+                    MediaItemTemplateDataKey.Studios,
                     (metadata.Studios ?? []).Map(s => s.Name).OrderBy(identity));
-                result.Add(MediaItemTemplateDataKey.Directors,
+                result.Add(
+                    MediaItemTemplateDataKey.Directors,
                     (metadata.Directors ?? []).Map(s => s.Name).OrderBy(identity));
-                result.Add(MediaItemTemplateDataKey.Genres,
+                result.Add(
+                    MediaItemTemplateDataKey.Genres,
                     (metadata.Genres ?? []).Map(s => s.Name).OrderBy(identity));
                 result.Add(MediaItemTemplateDataKey.Duration, episode.GetHeadVersion().Duration);
             }
@@ -212,7 +217,8 @@ public class TemplateDataRepository(ILocalFileSystem localFileSystem, IDbContext
                     [MediaItemTemplateDataKey.Artists] = (metadata.Artists ?? []).Map(a => a.Name).OrderBy(identity),
                     [MediaItemTemplateDataKey.Artist] = artist,
                     [MediaItemTemplateDataKey.Studios] = (metadata.Studios ?? []).Map(s => s.Name).OrderBy(identity),
-                    [MediaItemTemplateDataKey.Directors] = (metadata.Directors ?? []).Map(d => d.Name).OrderBy(identity),
+                    [MediaItemTemplateDataKey.Directors] =
+                        (metadata.Directors ?? []).Map(d => d.Name).OrderBy(identity),
                     [MediaItemTemplateDataKey.Genres] = (metadata.Genres ?? []).Map(g => g.Name).OrderBy(identity),
                     [MediaItemTemplateDataKey.Duration] = musicVideo.GetHeadVersion().Duration
                 };

@@ -17,7 +17,8 @@ public class YamlScheduleValidator(ILogger<YamlScheduleValidator> logger) : IYam
     {
         try
         {
-            string schemaFileName = Path.Combine(FileSystemLayout.ResourcesCacheFolder,
+            string schemaFileName = Path.Combine(
+                FileSystemLayout.ResourcesCacheFolder,
                 isImport ? "yaml-playout-import.schema.json" : "yaml-playout.schema.json");
             using StreamReader sr = File.OpenText(schemaFileName);
             await using var reader = new JsonTextReader(sr);
@@ -59,7 +60,8 @@ public class YamlScheduleValidator(ILogger<YamlScheduleValidator> logger) : IYam
     {
         try
         {
-            string schemaFileName = Path.Combine(FileSystemLayout.ResourcesCacheFolder,
+            string schemaFileName = Path.Combine(
+                FileSystemLayout.ResourcesCacheFolder,
                 isImport ? "yaml-playout-import.schema.json" : "yaml-playout.schema.json");
             using StreamReader sr = File.OpenText(schemaFileName);
             await using var reader = new JsonTextReader(sr);
