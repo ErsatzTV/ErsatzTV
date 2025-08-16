@@ -34,7 +34,7 @@ public class Worker : BackgroundService
         string[] arguments = Environment.GetCommandLineArgs().Skip(1).ToArray();
 
         ParseResult parseResult = rootCommand.Parse(arguments);
-        await parseResult.InvokeAsync(stoppingToken);
+        await parseResult.InvokeAsync(cancellationToken: stoppingToken);
 
         _appLifetime.StopApplication();
     }
