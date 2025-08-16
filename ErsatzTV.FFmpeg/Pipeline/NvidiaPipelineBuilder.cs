@@ -209,7 +209,8 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
         currentState = SetCrop(videoInputFile, desiredState, currentState);
         SetStillImageLoop(videoInputFile, videoStream, ffmpegState, desiredState, pipelineSteps);
 
-        if (currentState.BitDepth == 8 && context.HasSubtitleOverlay || context.HasWatermark || context.HasGraphicsEngine)
+        if (currentState.BitDepth == 8 && context.HasSubtitleOverlay || context.HasWatermark ||
+            context.HasGraphicsEngine)
         {
             Option<IPixelFormat> desiredPixelFormat = Some((IPixelFormat)new PixelFormatYuv420P());
 

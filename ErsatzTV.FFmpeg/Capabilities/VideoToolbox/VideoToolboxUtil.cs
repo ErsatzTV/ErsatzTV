@@ -8,7 +8,7 @@ internal static partial class VideoToolboxUtil
 {
     private const string CoreFoundation = "/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation";
     private const string VideoToolbox = "/System/Library/Frameworks/VideoToolbox.framework/VideoToolbox";
-    private const string LibSystem =  "/usr/lib/libSystem.dylib";
+    private const string LibSystem = "/usr/lib/libSystem.dylib";
 
     [LibraryImport(CoreFoundation)]
     private static partial long CFArrayGetCount(IntPtr array);

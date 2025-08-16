@@ -8,8 +8,8 @@ namespace ErsatzTV.FFmpeg.Capabilities;
 
 public class VideoToolboxHardwareCapabilities : IHardwareCapabilities
 {
-    private static readonly ConcurrentDictionary<string, bool> Encoders = new ();
-    private static readonly ConcurrentDictionary<string, bool> Decoders = new ();
+    private static readonly ConcurrentDictionary<string, bool> Encoders = new();
+    private static readonly ConcurrentDictionary<string, bool> Decoders = new();
 
     private readonly IFFmpegCapabilities _ffmpegCapabilities;
     private readonly ILogger _logger;
@@ -20,7 +20,11 @@ public class VideoToolboxHardwareCapabilities : IHardwareCapabilities
         _logger = logger;
     }
 
-    public FFmpegCapability CanDecode(string videoFormat, Option<string> videoProfile, Option<IPixelFormat> maybePixelFormat, bool isHdr)
+    public FFmpegCapability CanDecode(
+        string videoFormat,
+        Option<string> videoProfile,
+        Option<IPixelFormat> maybePixelFormat,
+        bool isHdr)
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX) && Decoders.IsEmpty)
         {
@@ -50,7 +54,10 @@ public class VideoToolboxHardwareCapabilities : IHardwareCapabilities
         };
     }
 
-    public FFmpegCapability CanEncode(string videoFormat, Option<string> videoProfile, Option<IPixelFormat> maybePixelFormat)
+    public FFmpegCapability CanEncode(
+        string videoFormat,
+        Option<string> videoProfile,
+        Option<IPixelFormat> maybePixelFormat)
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX) && Encoders.IsEmpty)
         {
