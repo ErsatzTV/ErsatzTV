@@ -75,6 +75,7 @@ public class UpdateDecoHandler(IDbContextFactory<TvContext> dbContextFactory)
                     break;
             }
         }
+
         existing.DefaultFillerTrimToFit = request.DefaultFillerTrimToFit;
 
         // dead air fallback

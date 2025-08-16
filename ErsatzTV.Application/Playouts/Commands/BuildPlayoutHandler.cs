@@ -113,7 +113,12 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
             {
                 case ProgramSchedulePlayoutType.Block:
                     result = await _blockPlayoutBuilder.Build(playout, referenceData, request.Mode, cancellationToken);
-                    result = await _blockPlayoutFillerBuilder.Build(playout, referenceData, result, request.Mode, cancellationToken);
+                    result = await _blockPlayoutFillerBuilder.Build(
+                        playout,
+                        referenceData,
+                        result,
+                        request.Mode,
+                        cancellationToken);
                     break;
                 case ProgramSchedulePlayoutType.Yaml:
                     result = await _yamlPlayoutBuilder.Build(playout, referenceData, request.Mode, cancellationToken);
@@ -163,8 +168,10 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
             if (result.AddedItems.Count > 0)
             {
                 changeCount += 1;
-                bool anyWatermarks = result.AddedItems.Any(i => i.PlayoutItemWatermarks is not null && i.PlayoutItemWatermarks.Count > 0);
-                bool anyGraphicsElements = result.AddedItems.Any(i => i.PlayoutItemGraphicsElements is not null && i.PlayoutItemGraphicsElements.Count > 0);
+                bool anyWatermarks = result.AddedItems.Any(i =>
+                    i.PlayoutItemWatermarks is not null && i.PlayoutItemWatermarks.Count > 0);
+                bool anyGraphicsElements = result.AddedItems.Any(i =>
+                    i.PlayoutItemGraphicsElements is not null && i.PlayoutItemGraphicsElements.Count > 0);
                 if (anyWatermarks || anyGraphicsElements)
                 {
                     // need to use slow ef core to also insert watermarks and graphics elements properly

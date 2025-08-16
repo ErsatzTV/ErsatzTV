@@ -9,9 +9,10 @@ internal static class Mapper
     internal static TreeViewModel ProjectToViewModel(List<DecoTemplateGroup> decoTemplateGroups) =>
         new(
             decoTemplateGroups.OrderBy(dtg => dtg.Name).Map(dtg => new TreeGroupViewModel(
-                dtg.Id,
-                dtg.Name,
-                dtg.DecoTemplates.OrderBy(dt => dt.Name).Map(dt => new TreeItemViewModel(dt.Id, dt.Name)).ToList())).ToList());
+                    dtg.Id,
+                    dtg.Name,
+                    dtg.DecoTemplates.OrderBy(dt => dt.Name).Map(dt => new TreeItemViewModel(dt.Id, dt.Name)).ToList()))
+                .ToList());
 
     internal static TreeViewModel ProjectToViewModel(List<DecoGroup> decoGroups) =>
         new(
@@ -30,9 +31,11 @@ internal static class Mapper
     internal static BlockTreeViewModel ProjectToViewModel(List<BlockGroup> blockGroups) =>
         new(
             blockGroups.OrderBy(bg => bg.Name).Map(bg => new BlockTreeBlockGroupViewModel(
-                bg.Id,
-                bg.Name,
-                bg.Blocks.OrderBy(b => b.Name).Map(b => new BlockTreeBlockViewModel(b.Id, b.Name, b.Minutes)).ToList())).ToList());
+                    bg.Id,
+                    bg.Name,
+                    bg.Blocks.OrderBy(b => b.Name).Map(b => new BlockTreeBlockViewModel(b.Id, b.Name, b.Minutes))
+                        .ToList()))
+                .ToList());
 
     internal static BlockGroupViewModel ProjectToViewModel(BlockGroup blockGroup) =>
         new(blockGroup.Id, blockGroup.Name);

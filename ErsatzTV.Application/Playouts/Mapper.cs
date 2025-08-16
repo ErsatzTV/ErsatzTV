@@ -76,7 +76,8 @@ internal static class Mapper
             case Image i:
                 return i.ImageMetadata.HeadOrNone().Map(im => im.Title ?? string.Empty).IfNone("[unknown image]");
             case RemoteStream rs:
-                return rs.RemoteStreamMetadata.HeadOrNone().Map(im => im.Title ?? string.Empty).IfNone("[unknown remote stream]");
+                return rs.RemoteStreamMetadata.HeadOrNone().Map(im => im.Title ?? string.Empty)
+                    .IfNone("[unknown remote stream]");
             default:
                 return string.Empty;
         }

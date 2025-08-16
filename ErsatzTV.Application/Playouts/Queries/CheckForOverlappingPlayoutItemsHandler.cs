@@ -18,11 +18,10 @@ public class CheckForOverlappingPlayoutItemsHandler(
             .AnyAsync(
                 a => dbContext.PlayoutItems
                     .Where(b => b.PlayoutId == a.PlayoutId)
-                    .Any(
-                        b =>
-                            a.Id < b.Id &&
-                            a.Start < b.Finish &&
-                            a.Finish > b.Start),
+                    .Any(b =>
+                        a.Id < b.Id &&
+                        a.Start < b.Finish &&
+                        a.Finish > b.Start),
                 cancellationToken);
 
         if (hasConflict)

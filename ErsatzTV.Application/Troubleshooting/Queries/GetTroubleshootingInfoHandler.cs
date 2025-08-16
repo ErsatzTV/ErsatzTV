@@ -142,6 +142,7 @@ public class GetTroubleshootingInfoHandler : IRequestHandler<GetTroubleshootingI
                     {
                         videoToolboxCapabilities.AppendLine(CultureInfo.InvariantCulture, $"\t{decoder}");
                     }
+
                     videoToolboxCapabilities.AppendLine();
                     videoToolboxCapabilities.AppendLine();
 
@@ -152,6 +153,7 @@ public class GetTroubleshootingInfoHandler : IRequestHandler<GetTroubleshootingI
                     {
                         videoToolboxCapabilities.AppendLine(CultureInfo.InvariantCulture, $"\t{encoder}");
                     }
+
                     videoToolboxCapabilities.AppendLine();
                     videoToolboxCapabilities.AppendLine();
                 }

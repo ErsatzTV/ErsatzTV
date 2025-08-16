@@ -46,6 +46,7 @@ public class CreateYamlPlayoutHandler
         {
             await _channel.WriteAsync(new TimeShiftOnDemandPlayout(playout.Id, DateTimeOffset.Now, false));
         }
+
         await _channel.WriteAsync(new RefreshChannelList());
         return new CreatePlayoutResponse(playout.Id);
     }

@@ -99,7 +99,10 @@ public class HlsSessionWorkerV2 : IHlsSessionWorker
         GC.SuppressFinalize(this);
     }
 
-    public async Task Run(string channelNumber, Option<TimeSpan> idleTimeout, CancellationToken incomingCancellationToken)
+    public async Task Run(
+        string channelNumber,
+        Option<TimeSpan> idleTimeout,
+        CancellationToken incomingCancellationToken)
     {
         _cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(incomingCancellationToken);
 

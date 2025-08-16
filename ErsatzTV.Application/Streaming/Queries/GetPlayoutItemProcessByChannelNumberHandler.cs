@@ -290,18 +290,19 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
 
                     disableWatermarks = false;
                     playoutItemWatermarks.Clear();
-                    playoutItemWatermarks.Add(new ChannelWatermark
-                    {
-                        Mode = ChannelWatermarkMode.Permanent,
-                        Size = WatermarkSize.Scaled,
-                        WidthPercent = 100,
-                        HorizontalMarginPercent = 0,
-                        VerticalMarginPercent = 0,
-                        Opacity = 100,
-                        Location = WatermarkLocation.TopLeft,
-                        ImageSource = ChannelWatermarkImageSource.Resource,
-                        Image = image
-                    });
+                    playoutItemWatermarks.Add(
+                        new ChannelWatermark
+                        {
+                            Mode = ChannelWatermarkMode.Permanent,
+                            Size = WatermarkSize.Scaled,
+                            WidthPercent = 100,
+                            HorizontalMarginPercent = 0,
+                            VerticalMarginPercent = 0,
+                            Opacity = 100,
+                            Location = WatermarkLocation.TopLeft,
+                            ImageSource = ChannelWatermarkImageSource.Resource,
+                            Image = image
+                        });
                 }
             }
 
@@ -355,7 +356,9 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 channel.FFmpegProfile.VaapiDevice,
                 Optional(channel.FFmpegProfile.QsvExtraHardwareFrames),
                 hlsRealtime: request.HlsRealtime,
-                playoutItemWithPath.PlayoutItem.MediaItem is RemoteStream { IsLive: true } ? StreamInputKind.Live : StreamInputKind.Vod,
+                playoutItemWithPath.PlayoutItem.MediaItem is RemoteStream { IsLive: true }
+                    ? StreamInputKind.Live
+                    : StreamInputKind.Vod,
                 playoutItemWithPath.PlayoutItem.FillerKind,
                 inPoint,
                 outPoint,

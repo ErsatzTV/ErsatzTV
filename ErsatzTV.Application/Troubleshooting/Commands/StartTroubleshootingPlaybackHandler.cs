@@ -87,7 +87,9 @@ public class StartTroubleshootingPlaybackHandler(
                     cancellationToken);
             }
 
-            logger.LogDebug("ffmpeg troubleshooting arguments {FFmpegArguments}", request.PlayoutItemResult.Process.Arguments);
+            logger.LogDebug(
+                "ffmpeg troubleshooting arguments {FFmpegArguments}",
+                request.PlayoutItemResult.Process.Arguments);
 
             var maybePipe = Option<Pipe>.None;
 
@@ -100,7 +102,8 @@ public class StartTroubleshootingPlaybackHandler(
                 {
                     var pipe = new Pipe();
                     maybePipe = pipe;
-                    processWithPipe = processWithPipe.WithStandardInputPipe(PipeSource.FromStream(pipe.Reader.AsStream()));
+                    processWithPipe =
+                        processWithPipe.WithStandardInputPipe(PipeSource.FromStream(pipe.Reader.AsStream()));
 
                     // fire and forget graphics engine task
                     _ = graphicsEngine.Run(

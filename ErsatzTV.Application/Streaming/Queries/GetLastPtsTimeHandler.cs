@@ -60,7 +60,10 @@ public class GetLastPtsTimeHandler : IRequestHandler<GetLastPtsTime, Either<Base
         return BaseError.New($"Failed to determine last pts duration for channel {parameters.ChannelNumber}");
     }
 
-    private async Task<Option<PtsTime>> GetPts(RequestParameters parameters, FileInfo segment, CancellationToken cancellationToken)
+    private async Task<Option<PtsTime>> GetPts(
+        RequestParameters parameters,
+        FileInfo segment,
+        CancellationToken cancellationToken)
     {
         string[] argumentList =
         {

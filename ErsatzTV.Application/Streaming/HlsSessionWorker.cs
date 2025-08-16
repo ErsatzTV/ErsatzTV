@@ -152,7 +152,10 @@ public class HlsSessionWorker : IHlsSessionWorker
         GC.SuppressFinalize(this);
     }
 
-    public async Task Run(string channelNumber, Option<TimeSpan> idleTimeout, CancellationToken incomingCancellationToken)
+    public async Task Run(
+        string channelNumber,
+        Option<TimeSpan> idleTimeout,
+        CancellationToken incomingCancellationToken)
     {
         _cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(incomingCancellationToken);
 
@@ -181,7 +184,7 @@ public class HlsSessionWorker : IHlsSessionWorker
             Touch();
             _transcodedUntil = DateTimeOffset.Now;
             PlaylistStart = _transcodedUntil;
-            _channelStart =  _transcodedUntil;
+            _channelStart = _transcodedUntil;
 
             var maybePlayoutId = await _mediator.Send(
                 new GetPlayoutIdByChannelNumber(_channelNumber),

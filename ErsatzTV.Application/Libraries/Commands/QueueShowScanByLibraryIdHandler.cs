@@ -48,8 +48,11 @@ public class QueueShowScanByLibraryIdHandler(
                 return false;
             }
 
-            logger.LogDebug("Queued show scan for library id {Id}, show: {ShowTitle}, deepScan: {DeepScan}",
-                library.Id, request.ShowTitle, request.DeepScan);
+            logger.LogDebug(
+                "Queued show scan for library id {Id}, show: {ShowTitle}, deepScan: {DeepScan}",
+                library.Id,
+                request.ShowTitle,
+                request.DeepScan);
 
             try
             {
