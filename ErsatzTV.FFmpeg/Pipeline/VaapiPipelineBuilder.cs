@@ -557,6 +557,9 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
 
                 if (currentState.FrameDataLocation is FrameDataLocation.Hardware)
                 {
+                    // overlay_vaapi expects straight alpha
+                    graphicsEngine.FilterSteps.Add(new UnpremultiplyFilter());
+
                     graphicsEngine.FilterSteps.Add(new HardwareUploadVaapiFilter(false));
                 }
 

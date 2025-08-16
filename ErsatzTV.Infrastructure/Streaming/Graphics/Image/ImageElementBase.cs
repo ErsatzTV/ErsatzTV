@@ -88,35 +88,13 @@ public abstract class ImageElementBase : GraphicsElement, IDisposable
         }
     }
 
-    protected static async Task<Stream> GetImageStream(string image, CancellationToken cancellationToken)
-    {
-        Stream imageStream;
-
-        bool isRemoteUri = Uri.TryCreate(image, UriKind.Absolute, out var uriResult)
-                           && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
-
-        if (isRemoteUri)
-        {
-            using var client = new HttpClient();
-            imageStream = new MemoryStream(await client.GetByteArrayAsync(uriResult, cancellationToken));
-        }
-        else
-        {
-            imageStream = new FileStream(image!, FileMode.Open, FileAccess.Read);
-        }
-
-        return imageStream;
-    }
-
     protected static SKBitmap ToSkiaBitmap(Image image)
     {
-        // Force a known pixel format
         using Image<Rgba32> rgbaImage = image.CloneAs<Rgba32>();
 
         int width = rgbaImage.Width;
         int height = rgbaImage.Height;
 
-        // Allocate destination SKBitmap with RGBA8888 (straight alpha)
         var info = new SKImageInfo(width, height, SKColorType.Rgba8888, SKAlphaType.Unpremul);
         var skBitmap = new SKBitmap(info);
         if (!skBitmap.TryAllocPixels(info))
@@ -125,16 +103,12 @@ public abstract class ImageElementBase : GraphicsElement, IDisposable
             throw new InvalidOperationException("Failed to allocate pixels for SKBitmap.");
         }
 
-        // Pull pixel data from ImageSharp into a managed byte[]
-        // (Rgba32 is 4 bytes, so length = width * height * 4)
         var pixelArray = new Rgba32[width * height];
         rgbaImage.CopyPixelDataTo(pixelArray);
 
-        // Convert the Rgba32[] to a byte[] without unsafe code
         var bytes = new byte[pixelArray.Length * 4];
         MemoryMarshal.AsBytes(pixelArray.AsSpan()).CopyTo(bytes);
 
-        // Copy into Skia's pixel buffer
         IntPtr dstPtr = skBitmap.GetPixels(out _);
         Marshal.Copy(bytes, 0, dstPtr, bytes.Length);
 
