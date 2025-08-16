@@ -233,19 +233,19 @@
                 <div class="d-flex" style="width: 300px"></div>
                 <MudText Typo="Typo.body2">
                     <span style="font-weight: bold;">total_points</span>: total number of potential mid-roll points
-                    <br />
+                    <br/>
                     <span style="font-weight: bold;">matched_points</span>: number of mid-roll points that have already matched the expression
-                    <br />
+                    <br/>
                     <span style="font-weight: bold;">total_duration</span>: total duration of the content, in seconds
-                    <br />
+                    <br/>
                     <span style="font-weight: bold;">total_progress</span>: normalized position from 0 to 1
-                    <br />
+                    <br/>
                     <span style="font-weight: bold;">last_mid_filler</span>: seconds since last mid-roll filler
-                    <br />
+                    <br/>
                     <span style="font-weight: bold;">remaining_duration</span>: duration of the content after this mid-roll point, in seconds
-                    <br />
+                    <br/>
                     <span style="font-weight: bold;">point</span>: the position of the mid-roll point, in seconds
-                    <br />
+                    <br/>
                     <span style="font-weight: bold;">num</span>: the mid-roll point number, starting with 1
                 </MudText>
             </MudStack>
@@ -282,18 +282,24 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        _mediaCollections.AddRange(await Mediator.Send(new GetAllCollections(), _cts.Token)
-            .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList()));
-        _multiCollections.AddRange(await Mediator.Send(new GetAllMultiCollections(), _cts.Token)
-            .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList()));
-        _smartCollections.AddRange(await Mediator.Send(new GetAllSmartCollections(), _cts.Token)
-            .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList()));
-        _televisionShows.AddRange(await Mediator.Send(new GetAllTelevisionShows(), _cts.Token)
-            .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList()));
-        _televisionSeasons.AddRange(await Mediator.Send(new GetAllTelevisionSeasons(), _cts.Token)
-            .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList()));
-        _artists.AddRange(await Mediator.Send(new GetAllArtists(), _cts.Token)
-            .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList()));
+        _mediaCollections.AddRange(
+            await Mediator.Send(new GetAllCollections(), _cts.Token)
+                .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList()));
+        _multiCollections.AddRange(
+            await Mediator.Send(new GetAllMultiCollections(), _cts.Token)
+                .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList()));
+        _smartCollections.AddRange(
+            await Mediator.Send(new GetAllSmartCollections(), _cts.Token)
+                .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList()));
+        _televisionShows.AddRange(
+            await Mediator.Send(new GetAllTelevisionShows(), _cts.Token)
+                .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList()));
+        _televisionSeasons.AddRange(
+            await Mediator.Send(new GetAllTelevisionSeasons(), _cts.Token)
+                .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList()));
+        _artists.AddRange(
+            await Mediator.Send(new GetAllArtists(), _cts.Token)
+                .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList()));
 
         _playlistGroups.AddRange(await Mediator.Send(new GetAllPlaylistGroups(), _cts.Token));
 

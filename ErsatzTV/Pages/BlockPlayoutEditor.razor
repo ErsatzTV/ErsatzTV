@@ -157,10 +157,7 @@
                 Snackbar.Add($"Unexpected error saving default deco: {error.Value}", Severity.Error);
                 Logger.LogError("Unexpected error saving default deco: {Error}", error.Value);
             },
-            () =>
-            {
-                Snackbar.Add($"Saved default deco for playout {_channelName}", Severity.Success);
-            });
+            () => { Snackbar.Add($"Saved default deco for playout {_channelName}", Severity.Success); });
     }
 
 }

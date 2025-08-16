@@ -12,7 +12,7 @@
                 <div class="d-flex">
                     <MudText>YAML File</MudText>
                 </div>
-                <MudTextField T="string" Value="_yamlFile" ValueChanged="@(async x => await OnYamlFileChanged(x))" />
+                <MudTextField T="string" Value="_yamlFile" ValueChanged="@(async x => await OnYamlFileChanged(x))"/>
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                 <div class="d-flex">
@@ -68,8 +68,8 @@
                 </MudTabPanel>
             </MudTabs>
             <div class="mb-6">
-                <br />
-                <br />
+                <br/>
+                <br/>
             </div>
         </MudContainer>
     </div>
@@ -129,4 +129,5 @@
 
         StateHasChanged();
     }
+
 }

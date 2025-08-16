@@ -33,7 +33,8 @@ public class LibrariesController(ITelevisionRepository televisionRepository, IMe
                 : new BadRequestObjectResult(new { error = "Unable to queue show scan. Library may not exist, may not support single show scanning, or may already be scanning." });
         }
 
-        return new BadRequestObjectResult(new { error = $"Unable to locate show with title {request.ShowTitle} in library {id}" });
+        return new BadRequestObjectResult(
+            new { error = $"Unable to locate show with title {request.ShowTitle} in library {id}" });
     }
 }
 

@@ -20,18 +20,18 @@
     }
     else
     {
-        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Animation="Animation.False" />
+        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Animation="Animation.False"/>
     }
 </MudContainer>
 <MudContainer MaxWidth="MaxWidth.Large" Style="margin-top: 100px" Class="z-10">
     <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Spacing="6">
         @if (!string.IsNullOrWhiteSpace(_artist.Thumbnail))
         {
-            <MudImage Elevation="2" Src="@($"artwork/thumbnails/{_artist.Thumbnail}")" Class="rounded-lg z-10" Style="height: 220px; width: 220px; margin-left: auto; margin-right: auto;" />
+            <MudImage Elevation="2" Src="@($"artwork/thumbnails/{_artist.Thumbnail}")" Class="rounded-lg z-10" Style="height: 220px; width: 220px; margin-left: auto; margin-right: auto;"/>
         }
         else
         {
-            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Class="rounded-lg z-10" Animation="Animation.False" Height="220px" Width="220px" Style="margin-left: auto; margin-right: auto" />
+            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Class="rounded-lg z-10" Animation="Animation.False" Height="220px" Width="220px" Style="margin-left: auto; margin-right: auto"/>
         }
         <div style="display: flex; flex-direction: column; height: 100%; width: 100%" class="z-10">
             <MudStack Row="false">
@@ -43,28 +43,28 @@
                 </MudHidden>
                 <MudText Typo="Typo.subtitle1" Class="media-item-subtitle mb-6 mud-text-secondary">@_artist.Disambiguation</MudText>
             </MudStack>
-                <MudCard Elevation="2" Class="mb-6">
-                    <MudCardContent Class="mx-3 my-3" Style="height: 100%">
-                        @if (!string.IsNullOrWhiteSpace(_artist.Biography))
-                        {
-                            <MudText Style="flex-grow: 1">
-                                @if (_artist.Biography.Length > 400)
-                                {
-                                    @(_artist.Biography.Substring(0, 400) + "...")
-                                }
-                                else
-                                {
-                                    @_artist.Biography
-                                }
-                            </MudText>
-                        }
-                        else
-                        {
-                            <div style="height: 130px; flex-grow: 1">
-                            </div>
-                        }
-                    </MudCardContent>
-                </MudCard>
+            <MudCard Elevation="2" Class="mb-6">
+                <MudCardContent Class="mx-3 my-3" Style="height: 100%">
+                    @if (!string.IsNullOrWhiteSpace(_artist.Biography))
+                    {
+                        <MudText Style="flex-grow: 1">
+                            @if (_artist.Biography.Length > 400)
+                            {
+                                @(_artist.Biography.Substring(0, 400) + "...")
+                            }
+                            else
+                            {
+                                @_artist.Biography
+                            }
+                        </MudText>
+                    }
+                    else
+                    {
+                        <div style="height: 130px; flex-grow: 1">
+                        </div>
+                    }
+                </MudCardContent>
+            </MudCard>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="mb-6">
                 <MudButton Variant="Variant.Filled"
                            Color="Color.Primary"
@@ -182,7 +182,7 @@
                         </MudHidden>
                         <MudHidden Invert="true" Breakpoint="Breakpoint.MdAndUp">
                             <div style="display: flex; position: relative; height: 220px; width: 265px; ">
-                                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Animation="Animation.False" />
+                                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Animation="Animation.False"/>
                                 @if (musicVideo.State == MediaItemState.FileNotFound)
                                 {
                                     <div style="position: absolute; right: 10px; top: 8px;">

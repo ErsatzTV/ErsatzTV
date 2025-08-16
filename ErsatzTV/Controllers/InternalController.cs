@@ -76,7 +76,7 @@ public class InternalController : ControllerBase
 
             if (!string.IsNullOrWhiteSpace(remoteStream.Script))
             {
-                string[] split =  remoteStream.Script.Split(" ");
+                string[] split = remoteStream.Script.Split(" ");
                 if (split.Length > 0)
                 {
                     Command command = Cli.Wrap(split.Head());
@@ -112,7 +112,6 @@ public class InternalController : ControllerBase
         }
 
         return NotFound();
-
     }
 
     [HttpGet("/media/plex/{plexMediaSourceId:int}/{*path}")]
@@ -317,13 +316,12 @@ public class InternalController : ControllerBase
             _logger.LogDebug("ffmpeg arguments {FFmpegArguments}", process.Arguments);
 
             var cts = new CancellationTokenSource();
-            HttpContext.Response.OnCompleted(
-                async () =>
-                {
-                    ffmpegProcess.Dispose();
-                    await cts.CancelAsync();
-                    cts.Dispose();
-                });
+            HttpContext.Response.OnCompleted(async () =>
+            {
+                ffmpegProcess.Dispose();
+                await cts.CancelAsync();
+                cts.Dispose();
+            });
 
             using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(
                 cts.Token,

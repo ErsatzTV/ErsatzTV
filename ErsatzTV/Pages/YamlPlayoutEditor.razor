@@ -95,10 +95,7 @@
             await Mediator.Send(new UpdateYamlPlayout(_playout.PlayoutId, _playout.TemplateFile), _cts.Token);
 
         result.Match(
-            _ =>
-            {
-                Snackbar.Add($"Saved YAML file for playout {_channelName}", Severity.Success);
-            },
+            _ => { Snackbar.Add($"Saved YAML file for playout {_channelName}", Severity.Success); },
             error =>
             {
                 Snackbar.Add($"Unexpected error saving YAML file: {error.Value}", Severity.Error);

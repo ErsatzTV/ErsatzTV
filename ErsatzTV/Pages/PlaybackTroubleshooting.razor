@@ -34,13 +34,13 @@
                 <div class="d-flex">
                     <MudText>Media Item ID</MudText>
                 </div>
-                <MudTextField T="int?" Value="MediaItemId" ValueChanged="@(async x => await OnMediaItemIdChanged(x))" />
+                <MudTextField T="int?" Value="MediaItemId" ValueChanged="@(async x => await OnMediaItemIdChanged(x))"/>
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                 <div class="d-flex">
                     <MudText>Title</MudText>
                 </div>
-                <MudTextField Value="@(_info?.Title)" Disabled="true" />
+                <MudTextField Value="@(_info?.Title)" Disabled="true"/>
             </MudStack>
             <MudText Typo="Typo.h5" Class="mt-10 mb-2">Playback Settings</MudText>
             <MudDivider Class="mb-6"/>
@@ -96,13 +96,13 @@
                 <MudCheckBox T="bool"
                              Dense="true"
                              Disabled="@(string.Equals(_info?.Kind, "RemoteStream", StringComparison.OrdinalIgnoreCase))"
-                             ValueChanged="@(c => OnStartFromBeginningChanged(c))" />
+                             ValueChanged="@(c => OnStartFromBeginningChanged(c))"/>
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                 <div class="d-flex">
                     <MudText>Seek Seconds</MudText>
                 </div>
-                <MudTextField @bind-Value="@(_seekSeconds)" Disabled="@(_startFromBeginning)" />
+                <MudTextField @bind-Value="@(_seekSeconds)" Disabled="@(_startFromBeginning)"/>
             </MudStack>
             <MudText Typo="Typo.h5" Class="mt-10 mb-2">Preview</MudText>
             <MudDivider Class="mb-6"/>
@@ -129,8 +129,8 @@
                 <div class="d-none d-md-flex" style="width: 400px"></div>
             </div>
             <div class="mb-6">
-                <br />
-                <br />
+                <br/>
+                <br/>
             </div>
         </MudContainer>
     </div>
@@ -209,6 +209,7 @@
                 uri.Query += $"&watermark={watermark.Id}";
             }
         }
+
         foreach (var graphicsElementName in _graphicsElementNames)
         {
             foreach (var graphicsElement in _graphicsElements.Where(ge => ge.Name == graphicsElementName))
@@ -216,10 +217,12 @@
                 uri.Query += $"&graphicsElement={graphicsElement.Id}";
             }
         }
+
         if (_subtitleId is not null)
         {
             uri.Query += $"&subtitleId={_subtitleId.Value}";
         }
+
         await JsRuntime.InvokeVoidAsync("previewChannel", uri.ToString());
 
         await Task.Delay(TimeSpan.FromSeconds(1));

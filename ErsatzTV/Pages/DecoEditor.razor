@@ -13,325 +13,325 @@
 @inject IMediator Mediator
 
 <MudForm Style="max-height: 100%">
-    <MudPaper Square="true" Style="display: flex; height: 64px; min-height: 64px; width: 100%; z-index: 100; align-items: center">
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => SaveChanges())" Class="ml-6" StartIcon="@Icons.Material.Filled.Save">
-            Save Changes
-        </MudButton>
-    </MudPaper>
-    <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
-        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-            <MudText Typo="Typo.h5" Class="mb-2">Deco</MudText>
-            <MudDivider Class="mb-6"/>
-            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                <div class="d-flex">
-                    <MudText>Deco Group Name</MudText>
-                </div>
-                <MudTextField @bind-Value="_deco.GroupName" Disabled="true"/>
-            </MudStack>
-            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                <div class="d-flex">
-                    <MudText>Deco Name</MudText>
-                </div>
-                <MudTextField @bind-Value="_deco.Name" For="@(() => _deco.Name)"/>
-            </MudStack>
-            <MudText Typo="Typo.h5" Class="mt-10 mb-2">Watermark</MudText>
-            <MudDivider Class="mb-6"/>
-            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                <div class="d-flex">
-                    <MudText>Watermark Mode</MudText>
-                </div>
-                <MudSelect @bind-Value="_deco.WatermarkMode" For="@(() => _deco.WatermarkMode)">
-                    <MudSelectItem Value="DecoMode.Inherit">Inherit</MudSelectItem>
-                    <MudSelectItem Value="DecoMode.Disable">Disable</MudSelectItem>
-                    <MudSelectItem Value="DecoMode.Override">Override</MudSelectItem>
-                </MudSelect>
-            </MudStack>
-            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                <div class="d-flex">
-                    <MudText>Watermark Override</MudText>
-                </div>
-                <MudSelect T="WatermarkViewModel"
-                           @bind-SelectedValues="_deco.Watermarks"
-                           Disabled="@(_deco.WatermarkMode != DecoMode.Override)"
-                           ToStringFunc="@(wm => wm?.Name)"
-                           Clearable="true"
-                           MultiSelection="true">
-                    @foreach (WatermarkViewModel watermark in _watermarks)
-                    {
-                        <MudSelectItem Value="@watermark">@watermark.Name</MudSelectItem>
-                    }
-                </MudSelect>
-            </MudStack>
-            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                <div class="d-flex">
-                    <MudText>Use Watermark During Filler</MudText>
-                </div>
-                <MudCheckBox T="bool"
-                             Disabled="@(_deco.WatermarkMode != DecoMode.Override)"
-                             @bind-Value="_deco.UseWatermarkDuringFiller"
-                             Dense="true" />
-            </MudStack>
-            <MudText Typo="Typo.h5" Class="mt-10 mb-2">Default Filler</MudText>
-            <MudDivider Class="mb-6"/>
-            <MudText Typo="Typo.body2" Class="mb-6">After all blocks have been scheduled, a second pass will be made to fill unscheduled time using random items from this collection.</MudText>
-            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                <div class="d-flex">
-                    <MudText>Default Filler Mode</MudText>
-                </div>
-                <MudSelect @bind-Value="_deco.DefaultFillerMode" For="@(() => _deco.DefaultFillerMode)">
-                    <MudSelectItem Value="DecoMode.Inherit">Inherit</MudSelectItem>
-                    <MudSelectItem Value="DecoMode.Disable">Disable</MudSelectItem>
-                    <MudSelectItem Value="DecoMode.Override">Override</MudSelectItem>
-                </MudSelect>
-            </MudStack>
-            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                <div class="d-flex">
-                    <MudText>Default Filler Collection Type</MudText>
-                </div>
-                <MudSelect Disabled="@(_deco.DefaultFillerMode != DecoMode.Override)"
-                           @bind-Value="_deco.DefaultFillerCollectionType"
-                           For="@(() => _deco.DefaultFillerCollectionType)">
-                    <MudSelectItem Value="ProgramScheduleItemCollectionType.Collection">Collection</MudSelectItem>
-                    <MudSelectItem Value="ProgramScheduleItemCollectionType.TelevisionShow">Television Show</MudSelectItem>
-                    <MudSelectItem Value="ProgramScheduleItemCollectionType.TelevisionSeason">Television Season</MudSelectItem>
-                    <MudSelectItem Value="ProgramScheduleItemCollectionType.Artist">Artist</MudSelectItem>
-                    <MudSelectItem Value="ProgramScheduleItemCollectionType.MultiCollection">Multi Collection</MudSelectItem>
-                    <MudSelectItem Value="ProgramScheduleItemCollectionType.SmartCollection">Smart Collection</MudSelectItem>
-                </MudSelect>
-            </MudStack>
-            @if (_deco.DefaultFillerCollectionType == ProgramScheduleItemCollectionType.Collection)
-            {
-                <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                    <div class="d-flex">
-                        <MudText>Collection</MudText>
-                    </div>
-                    <MudSelect T="MediaCollectionViewModel"
-                               Disabled="@(_deco.DefaultFillerMode != DecoMode.Override)"
-                               @bind-value="_deco.DefaultFillerCollection">
-                        @foreach (MediaCollectionViewModel collection in _mediaCollections)
-                        {
-                            <MudSelectItem Value="@collection">@collection.Name</MudSelectItem>
-                        }
-                    </MudSelect>
-                </MudStack>
-            }
-            @if (_deco.DefaultFillerCollectionType == ProgramScheduleItemCollectionType.MultiCollection)
-            {
-                <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                    <div class="d-flex">
-                        <MudText>Multi Collection</MudText>
-                    </div>
-                    <MudSelect T="MultiCollectionViewModel"
-                               Disabled="@(_deco.DefaultFillerMode != DecoMode.Override)"
-                               @bind-value="_deco.DefaultFillerMultiCollection">
-                        @foreach (MultiCollectionViewModel collection in _multiCollections)
-                        {
-                            <MudSelectItem Value="@collection">@collection.Name</MudSelectItem>
-                        }
-                    </MudSelect>
-                </MudStack>
-            }
-            @if (_deco.DefaultFillerCollectionType == ProgramScheduleItemCollectionType.SmartCollection)
-            {
-                <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                    <div class="d-flex">
-                        <MudText>Smart Collection</MudText>
-                    </div>
-                    <MudSelect T="SmartCollectionViewModel"
-                               Disabled="@(_deco.DefaultFillerMode != DecoMode.Override)"
-                               @bind-value="_deco.DefaultFillerSmartCollection">
-                        @foreach (SmartCollectionViewModel collection in _smartCollections)
-                        {
-                            <MudSelectItem Value="@collection">@collection.Name</MudSelectItem>
-                        }
-                    </MudSelect>
-                </MudStack>
-            }
-            @if (_deco.DefaultFillerCollectionType == ProgramScheduleItemCollectionType.TelevisionShow)
-            {
-                <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                    <div class="d-flex">
-                        <MudText>Television Show</MudText>
-                    </div>
-                    <MudSelect T="NamedMediaItemViewModel"
-                               Disabled="@(_deco.DefaultFillerMode != DecoMode.Override)"
-                               @bind-value="_deco.DefaultFillerMediaItem">
-                        @foreach (NamedMediaItemViewModel show in _televisionShows)
-                        {
-                            <MudSelectItem Value="@show">@show.Name</MudSelectItem>
-                        }
-                    </MudSelect>
-                </MudStack>
-            }
-            @if (_deco.DefaultFillerCollectionType == ProgramScheduleItemCollectionType.TelevisionSeason)
-            {
-                <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                    <div class="d-flex">
-                        <MudText>Television Season</MudText>
-                    </div>
-                    <MudSelect T="NamedMediaItemViewModel"
-                               Disabled="@(_deco.DefaultFillerMode != DecoMode.Override)"
-                               @bind-value="_deco.DefaultFillerMediaItem">
-                        @foreach (NamedMediaItemViewModel season in _televisionSeasons)
-                        {
-                            <MudSelectItem Value="@season">@season.Name</MudSelectItem>
-                        }
-                    </MudSelect>
-                </MudStack>
-            }
-            @if (_deco.DefaultFillerCollectionType == ProgramScheduleItemCollectionType.Artist)
-            {
-                <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                    <div class="d-flex">
-                        <MudText>Artist</MudText>
-                    </div>
-                    <MudSelect T="NamedMediaItemViewModel"
-                               Disabled="@(_deco.DefaultFillerMode != DecoMode.Override)"
-                               @bind-value="_deco.DefaultFillerMediaItem">
-                        @foreach (NamedMediaItemViewModel artist in _artists)
-                        {
-                            <MudSelectItem Value="@artist">@artist.Name</MudSelectItem>
-                        }
-                    </MudSelect>
-                </MudStack>
-            }
-            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                <div class="d-flex">
-                    <MudText>Trim To Fit</MudText>
-                </div>
-                <MudCheckBox T="bool"
-                             Disabled="@(_deco.DefaultFillerMode != DecoMode.Override)"
-                             @bind-Value="_deco.DefaultFillerTrimToFit"
-                             Color="Color.Primary"
-                             Dense="true"/>
-            </MudStack>
-            <MudText Typo="Typo.h5" Class="mt-10 mb-2">Dead Air Fallback</MudText>
-            <MudDivider Class="mb-6"/>
-            <MudText Typo="Typo.body2">When no playout item is found for the current time, *one* item will be randomly selected from this collection and looped and trimmed to exactly fit until the start of the next playout item.</MudText>
-            <MudText Typo="Typo.body2" Class="mb-6 mt-3">This replaces the "Channel is Offline" image that would otherwise display.</MudText>
-            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                <div class="d-flex">
-                    <MudText>Dead Air Fallback Mode</MudText>
-                </div>
-                <MudSelect @bind-Value="_deco.DeadAirFallbackMode" For="@(() => _deco.DeadAirFallbackMode)">
-                    <MudSelectItem Value="DecoMode.Inherit">Inherit</MudSelectItem>
-                    <MudSelectItem Value="DecoMode.Disable">Disable</MudSelectItem>
-                    <MudSelectItem Value="DecoMode.Override">Override</MudSelectItem>
-                </MudSelect>
-            </MudStack>
-            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                <div class="d-flex">
-                    <MudText>Dead Air Fallback Collection Type</MudText>
-                </div>
-                <MudSelect Disabled="@(_deco.DeadAirFallbackMode != DecoMode.Override)"
-                           @bind-Value="_deco.DeadAirFallbackCollectionType"
-                           For="@(() => _deco.DeadAirFallbackCollectionType)">
-                    <MudSelectItem Value="ProgramScheduleItemCollectionType.Collection">Collection</MudSelectItem>
-                    <MudSelectItem Value="ProgramScheduleItemCollectionType.TelevisionShow">Television Show</MudSelectItem>
-                    <MudSelectItem Value="ProgramScheduleItemCollectionType.TelevisionSeason">Television Season</MudSelectItem>
-                    <MudSelectItem Value="ProgramScheduleItemCollectionType.Artist">Artist</MudSelectItem>
-                    <MudSelectItem Value="ProgramScheduleItemCollectionType.MultiCollection">Multi Collection</MudSelectItem>
-                    <MudSelectItem Value="ProgramScheduleItemCollectionType.SmartCollection">Smart Collection</MudSelectItem>
-                </MudSelect>
-            </MudStack>
-            @if (_deco.DeadAirFallbackCollectionType == ProgramScheduleItemCollectionType.Collection)
-            {
-                <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                    <div class="d-flex">
-                        <MudText>Collection</MudText>
-                    </div>
-                    <MudSelect T="MediaCollectionViewModel"
-                               Disabled="@(_deco.DeadAirFallbackMode != DecoMode.Override)"
-                               @bind-value="_deco.DeadAirFallbackCollection">
-                        @foreach (MediaCollectionViewModel collection in _mediaCollections)
-                        {
-                            <MudSelectItem Value="@collection">@collection.Name</MudSelectItem>
-                        }
-                    </MudSelect>
-                </MudStack>
-            }
-            @if (_deco.DeadAirFallbackCollectionType == ProgramScheduleItemCollectionType.MultiCollection)
-            {
-                <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                    <div class="d-flex">
-                        <MudText>Multi Collection</MudText>
-                    </div>
-                    <MudSelect T="MultiCollectionViewModel"
-                               Disabled="@(_deco.DeadAirFallbackMode != DecoMode.Override)"
-                               @bind-value="_deco.DeadAirFallbackMultiCollection">
-                        @foreach (MultiCollectionViewModel collection in _multiCollections)
-                        {
-                            <MudSelectItem Value="@collection">@collection.Name</MudSelectItem>
-                        }
-                    </MudSelect>
-                </MudStack>
-            }
-            @if (_deco.DeadAirFallbackCollectionType == ProgramScheduleItemCollectionType.SmartCollection)
-            {
-                <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                    <div class="d-flex">
-                        <MudText>Smart Collection</MudText>
-                    </div>
-                    <MudSelect T="SmartCollectionViewModel"
-                               Disabled="@(_deco.DeadAirFallbackMode != DecoMode.Override)"
-                               @bind-value="_deco.DeadAirFallbackSmartCollection">
-                        @foreach (SmartCollectionViewModel collection in _smartCollections)
-                        {
-                            <MudSelectItem Value="@collection">@collection.Name</MudSelectItem>
-                        }
-                    </MudSelect>
-                </MudStack>
-            }
-            @if (_deco.DeadAirFallbackCollectionType == ProgramScheduleItemCollectionType.TelevisionShow)
-            {
-                <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                    <div class="d-flex">
-                        <MudText>Television Show</MudText>
-                    </div>
-                    <MudSelect T="NamedMediaItemViewModel"
-                               Disabled="@(_deco.DeadAirFallbackMode != DecoMode.Override)"
-                               @bind-value="_deco.DeadAirFallbackMediaItem">
-                        @foreach (NamedMediaItemViewModel show in _televisionShows)
-                        {
-                            <MudSelectItem Value="@show">@show.Name</MudSelectItem>
-                        }
-                    </MudSelect>
-                </MudStack>
-            }
-            @if (_deco.DeadAirFallbackCollectionType == ProgramScheduleItemCollectionType.TelevisionSeason)
-            {
-                <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                    <div class="d-flex">
-                        <MudText>Television Season</MudText>
-                    </div>
-                    <MudSelect T="NamedMediaItemViewModel"
-                               Disabled="@(_deco.DeadAirFallbackMode != DecoMode.Override)"
-                               @bind-value="_deco.DeadAirFallbackMediaItem">
-                        @foreach (NamedMediaItemViewModel season in _televisionSeasons)
-                        {
-                            <MudSelectItem Value="@season">@season.Name</MudSelectItem>
-                        }
-                    </MudSelect>
-                </MudStack>
-            }
-            @if (_deco.DeadAirFallbackCollectionType == ProgramScheduleItemCollectionType.Artist)
-            {
-                <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                    <div class="d-flex">
-                        <MudText>Artist</MudText>
-                    </div>
-                    <MudSelect T="NamedMediaItemViewModel"
-                               Disabled="@(_deco.DeadAirFallbackMode != DecoMode.Override)"
-                               @bind-value="_deco.DeadAirFallbackMediaItem">
-                        @foreach (NamedMediaItemViewModel artist in _artists)
-                        {
-                            <MudSelectItem Value="@artist">@artist.Name</MudSelectItem>
-                        }
-                    </MudSelect>
-                </MudStack>
-            }
-        </MudContainer>
+<MudPaper Square="true" Style="display: flex; height: 64px; min-height: 64px; width: 100%; z-index: 100; align-items: center">
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => SaveChanges())" Class="ml-6" StartIcon="@Icons.Material.Filled.Save">
+        Save Changes
+    </MudButton>
+</MudPaper>
+<div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+<MudText Typo="Typo.h5" Class="mb-2">Deco</MudText>
+<MudDivider Class="mb-6"/>
+<MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+    <div class="d-flex">
+        <MudText>Deco Group Name</MudText>
     </div>
+    <MudTextField @bind-Value="_deco.GroupName" Disabled="true"/>
+</MudStack>
+<MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+    <div class="d-flex">
+        <MudText>Deco Name</MudText>
+    </div>
+    <MudTextField @bind-Value="_deco.Name" For="@(() => _deco.Name)"/>
+</MudStack>
+<MudText Typo="Typo.h5" Class="mt-10 mb-2">Watermark</MudText>
+<MudDivider Class="mb-6"/>
+<MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+    <div class="d-flex">
+        <MudText>Watermark Mode</MudText>
+    </div>
+    <MudSelect @bind-Value="_deco.WatermarkMode" For="@(() => _deco.WatermarkMode)">
+        <MudSelectItem Value="DecoMode.Inherit">Inherit</MudSelectItem>
+        <MudSelectItem Value="DecoMode.Disable">Disable</MudSelectItem>
+        <MudSelectItem Value="DecoMode.Override">Override</MudSelectItem>
+    </MudSelect>
+</MudStack>
+<MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+    <div class="d-flex">
+        <MudText>Watermark Override</MudText>
+    </div>
+    <MudSelect T="WatermarkViewModel"
+               @bind-SelectedValues="_deco.Watermarks"
+               Disabled="@(_deco.WatermarkMode != DecoMode.Override)"
+               ToStringFunc="@(wm => wm?.Name)"
+               Clearable="true"
+               MultiSelection="true">
+        @foreach (WatermarkViewModel watermark in _watermarks)
+        {
+            <MudSelectItem Value="@watermark">@watermark.Name</MudSelectItem>
+        }
+    </MudSelect>
+</MudStack>
+<MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+    <div class="d-flex">
+        <MudText>Use Watermark During Filler</MudText>
+    </div>
+    <MudCheckBox T="bool"
+                 Disabled="@(_deco.WatermarkMode != DecoMode.Override)"
+                 @bind-Value="_deco.UseWatermarkDuringFiller"
+                 Dense="true"/>
+</MudStack>
+<MudText Typo="Typo.h5" Class="mt-10 mb-2">Default Filler</MudText>
+<MudDivider Class="mb-6"/>
+<MudText Typo="Typo.body2" Class="mb-6">After all blocks have been scheduled, a second pass will be made to fill unscheduled time using random items from this collection.</MudText>
+<MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+    <div class="d-flex">
+        <MudText>Default Filler Mode</MudText>
+    </div>
+    <MudSelect @bind-Value="_deco.DefaultFillerMode" For="@(() => _deco.DefaultFillerMode)">
+        <MudSelectItem Value="DecoMode.Inherit">Inherit</MudSelectItem>
+        <MudSelectItem Value="DecoMode.Disable">Disable</MudSelectItem>
+        <MudSelectItem Value="DecoMode.Override">Override</MudSelectItem>
+    </MudSelect>
+</MudStack>
+<MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+    <div class="d-flex">
+        <MudText>Default Filler Collection Type</MudText>
+    </div>
+    <MudSelect Disabled="@(_deco.DefaultFillerMode != DecoMode.Override)"
+               @bind-Value="_deco.DefaultFillerCollectionType"
+               For="@(() => _deco.DefaultFillerCollectionType)">
+        <MudSelectItem Value="ProgramScheduleItemCollectionType.Collection">Collection</MudSelectItem>
+        <MudSelectItem Value="ProgramScheduleItemCollectionType.TelevisionShow">Television Show</MudSelectItem>
+        <MudSelectItem Value="ProgramScheduleItemCollectionType.TelevisionSeason">Television Season</MudSelectItem>
+        <MudSelectItem Value="ProgramScheduleItemCollectionType.Artist">Artist</MudSelectItem>
+        <MudSelectItem Value="ProgramScheduleItemCollectionType.MultiCollection">Multi Collection</MudSelectItem>
+        <MudSelectItem Value="ProgramScheduleItemCollectionType.SmartCollection">Smart Collection</MudSelectItem>
+    </MudSelect>
+</MudStack>
+@if (_deco.DefaultFillerCollectionType == ProgramScheduleItemCollectionType.Collection)
+{
+    <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+        <div class="d-flex">
+            <MudText>Collection</MudText>
+        </div>
+        <MudSelect T="MediaCollectionViewModel"
+                   Disabled="@(_deco.DefaultFillerMode != DecoMode.Override)"
+                   @bind-value="_deco.DefaultFillerCollection">
+            @foreach (MediaCollectionViewModel collection in _mediaCollections)
+            {
+                <MudSelectItem Value="@collection">@collection.Name</MudSelectItem>
+            }
+        </MudSelect>
+    </MudStack>
+}
+@if (_deco.DefaultFillerCollectionType == ProgramScheduleItemCollectionType.MultiCollection)
+{
+    <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+        <div class="d-flex">
+            <MudText>Multi Collection</MudText>
+        </div>
+        <MudSelect T="MultiCollectionViewModel"
+                   Disabled="@(_deco.DefaultFillerMode != DecoMode.Override)"
+                   @bind-value="_deco.DefaultFillerMultiCollection">
+            @foreach (MultiCollectionViewModel collection in _multiCollections)
+            {
+                <MudSelectItem Value="@collection">@collection.Name</MudSelectItem>
+            }
+        </MudSelect>
+    </MudStack>
+}
+@if (_deco.DefaultFillerCollectionType == ProgramScheduleItemCollectionType.SmartCollection)
+{
+    <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+        <div class="d-flex">
+            <MudText>Smart Collection</MudText>
+        </div>
+        <MudSelect T="SmartCollectionViewModel"
+                   Disabled="@(_deco.DefaultFillerMode != DecoMode.Override)"
+                   @bind-value="_deco.DefaultFillerSmartCollection">
+            @foreach (SmartCollectionViewModel collection in _smartCollections)
+            {
+                <MudSelectItem Value="@collection">@collection.Name</MudSelectItem>
+            }
+        </MudSelect>
+    </MudStack>
+}
+@if (_deco.DefaultFillerCollectionType == ProgramScheduleItemCollectionType.TelevisionShow)
+{
+    <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+        <div class="d-flex">
+            <MudText>Television Show</MudText>
+        </div>
+        <MudSelect T="NamedMediaItemViewModel"
+                   Disabled="@(_deco.DefaultFillerMode != DecoMode.Override)"
+                   @bind-value="_deco.DefaultFillerMediaItem">
+            @foreach (NamedMediaItemViewModel show in _televisionShows)
+            {
+                <MudSelectItem Value="@show">@show.Name</MudSelectItem>
+            }
+        </MudSelect>
+    </MudStack>
+}
+@if (_deco.DefaultFillerCollectionType == ProgramScheduleItemCollectionType.TelevisionSeason)
+{
+    <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+        <div class="d-flex">
+            <MudText>Television Season</MudText>
+        </div>
+        <MudSelect T="NamedMediaItemViewModel"
+                   Disabled="@(_deco.DefaultFillerMode != DecoMode.Override)"
+                   @bind-value="_deco.DefaultFillerMediaItem">
+            @foreach (NamedMediaItemViewModel season in _televisionSeasons)
+            {
+                <MudSelectItem Value="@season">@season.Name</MudSelectItem>
+            }
+        </MudSelect>
+    </MudStack>
+}
+@if (_deco.DefaultFillerCollectionType == ProgramScheduleItemCollectionType.Artist)
+{
+    <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+        <div class="d-flex">
+            <MudText>Artist</MudText>
+        </div>
+        <MudSelect T="NamedMediaItemViewModel"
+                   Disabled="@(_deco.DefaultFillerMode != DecoMode.Override)"
+                   @bind-value="_deco.DefaultFillerMediaItem">
+            @foreach (NamedMediaItemViewModel artist in _artists)
+            {
+                <MudSelectItem Value="@artist">@artist.Name</MudSelectItem>
+            }
+        </MudSelect>
+    </MudStack>
+}
+<MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+    <div class="d-flex">
+        <MudText>Trim To Fit</MudText>
+    </div>
+    <MudCheckBox T="bool"
+                 Disabled="@(_deco.DefaultFillerMode != DecoMode.Override)"
+                 @bind-Value="_deco.DefaultFillerTrimToFit"
+                 Color="Color.Primary"
+                 Dense="true"/>
+</MudStack>
+<MudText Typo="Typo.h5" Class="mt-10 mb-2">Dead Air Fallback</MudText>
+<MudDivider Class="mb-6"/>
+<MudText Typo="Typo.body2">When no playout item is found for the current time, *one* item will be randomly selected from this collection and looped and trimmed to exactly fit until the start of the next playout item.</MudText>
+<MudText Typo="Typo.body2" Class="mb-6 mt-3">This replaces the "Channel is Offline" image that would otherwise display.</MudText>
+<MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+    <div class="d-flex">
+        <MudText>Dead Air Fallback Mode</MudText>
+    </div>
+    <MudSelect @bind-Value="_deco.DeadAirFallbackMode" For="@(() => _deco.DeadAirFallbackMode)">
+        <MudSelectItem Value="DecoMode.Inherit">Inherit</MudSelectItem>
+        <MudSelectItem Value="DecoMode.Disable">Disable</MudSelectItem>
+        <MudSelectItem Value="DecoMode.Override">Override</MudSelectItem>
+    </MudSelect>
+</MudStack>
+<MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+    <div class="d-flex">
+        <MudText>Dead Air Fallback Collection Type</MudText>
+    </div>
+    <MudSelect Disabled="@(_deco.DeadAirFallbackMode != DecoMode.Override)"
+               @bind-Value="_deco.DeadAirFallbackCollectionType"
+               For="@(() => _deco.DeadAirFallbackCollectionType)">
+        <MudSelectItem Value="ProgramScheduleItemCollectionType.Collection">Collection</MudSelectItem>
+        <MudSelectItem Value="ProgramScheduleItemCollectionType.TelevisionShow">Television Show</MudSelectItem>
+        <MudSelectItem Value="ProgramScheduleItemCollectionType.TelevisionSeason">Television Season</MudSelectItem>
+        <MudSelectItem Value="ProgramScheduleItemCollectionType.Artist">Artist</MudSelectItem>
+        <MudSelectItem Value="ProgramScheduleItemCollectionType.MultiCollection">Multi Collection</MudSelectItem>
+        <MudSelectItem Value="ProgramScheduleItemCollectionType.SmartCollection">Smart Collection</MudSelectItem>
+    </MudSelect>
+</MudStack>
+@if (_deco.DeadAirFallbackCollectionType == ProgramScheduleItemCollectionType.Collection)
+{
+    <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+        <div class="d-flex">
+            <MudText>Collection</MudText>
+        </div>
+        <MudSelect T="MediaCollectionViewModel"
+                   Disabled="@(_deco.DeadAirFallbackMode != DecoMode.Override)"
+                   @bind-value="_deco.DeadAirFallbackCollection">
+            @foreach (MediaCollectionViewModel collection in _mediaCollections)
+            {
+                <MudSelectItem Value="@collection">@collection.Name</MudSelectItem>
+            }
+        </MudSelect>
+    </MudStack>
+}
+@if (_deco.DeadAirFallbackCollectionType == ProgramScheduleItemCollectionType.MultiCollection)
+{
+    <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+        <div class="d-flex">
+            <MudText>Multi Collection</MudText>
+        </div>
+        <MudSelect T="MultiCollectionViewModel"
+                   Disabled="@(_deco.DeadAirFallbackMode != DecoMode.Override)"
+                   @bind-value="_deco.DeadAirFallbackMultiCollection">
+            @foreach (MultiCollectionViewModel collection in _multiCollections)
+            {
+                <MudSelectItem Value="@collection">@collection.Name</MudSelectItem>
+            }
+        </MudSelect>
+    </MudStack>
+}
+@if (_deco.DeadAirFallbackCollectionType == ProgramScheduleItemCollectionType.SmartCollection)
+{
+    <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+        <div class="d-flex">
+            <MudText>Smart Collection</MudText>
+        </div>
+        <MudSelect T="SmartCollectionViewModel"
+                   Disabled="@(_deco.DeadAirFallbackMode != DecoMode.Override)"
+                   @bind-value="_deco.DeadAirFallbackSmartCollection">
+            @foreach (SmartCollectionViewModel collection in _smartCollections)
+            {
+                <MudSelectItem Value="@collection">@collection.Name</MudSelectItem>
+            }
+        </MudSelect>
+    </MudStack>
+}
+@if (_deco.DeadAirFallbackCollectionType == ProgramScheduleItemCollectionType.TelevisionShow)
+{
+    <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+        <div class="d-flex">
+            <MudText>Television Show</MudText>
+        </div>
+        <MudSelect T="NamedMediaItemViewModel"
+                   Disabled="@(_deco.DeadAirFallbackMode != DecoMode.Override)"
+                   @bind-value="_deco.DeadAirFallbackMediaItem">
+            @foreach (NamedMediaItemViewModel show in _televisionShows)
+            {
+                <MudSelectItem Value="@show">@show.Name</MudSelectItem>
+            }
+        </MudSelect>
+    </MudStack>
+}
+@if (_deco.DeadAirFallbackCollectionType == ProgramScheduleItemCollectionType.TelevisionSeason)
+{
+    <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+        <div class="d-flex">
+            <MudText>Television Season</MudText>
+        </div>
+        <MudSelect T="NamedMediaItemViewModel"
+                   Disabled="@(_deco.DeadAirFallbackMode != DecoMode.Override)"
+                   @bind-value="_deco.DeadAirFallbackMediaItem">
+            @foreach (NamedMediaItemViewModel season in _televisionSeasons)
+            {
+                <MudSelectItem Value="@season">@season.Name</MudSelectItem>
+            }
+        </MudSelect>
+    </MudStack>
+}
+@if (_deco.DeadAirFallbackCollectionType == ProgramScheduleItemCollectionType.Artist)
+{
+    <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+        <div class="d-flex">
+            <MudText>Artist</MudText>
+        </div>
+        <MudSelect T="NamedMediaItemViewModel"
+                   Disabled="@(_deco.DeadAirFallbackMode != DecoMode.Override)"
+                   @bind-value="_deco.DeadAirFallbackMediaItem">
+            @foreach (NamedMediaItemViewModel artist in _artists)
+            {
+                <MudSelectItem Value="@artist">@artist.Name</MudSelectItem>
+            }
+        </MudSelect>
+    </MudStack>
+}
+</MudContainer>
+</div>
 </MudForm>
 
 @code {

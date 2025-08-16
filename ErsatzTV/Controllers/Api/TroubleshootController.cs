@@ -41,7 +41,13 @@ public class TroubleshootController(
             Option<int> ss = seekSeconds > 0 ? seekSeconds : Option<int>.None;
 
             Either<BaseError, PlayoutItemResult> result = await mediator.Send(
-                new PrepareTroubleshootingPlayback(mediaItem, ffmpegProfile, watermark, graphicsElement, subtitleId, ss),
+                new PrepareTroubleshootingPlayback(
+                    mediaItem,
+                    ffmpegProfile,
+                    watermark,
+                    graphicsElement,
+                    subtitleId,
+                    ss),
                 cancellationToken);
 
             if (result.IsLeft)
@@ -70,7 +76,10 @@ public class TroubleshootController(
                         troubleshootingInfo.Watermarks.RemoveAll(p => !watermark.Contains(p.Id));
 
                         await channelWriter.WriteAsync(
-                            new StartTroubleshootingPlayback(sessionId, playoutItemResult, mediaInfo,
+                            new StartTroubleshootingPlayback(
+                                sessionId,
+                                playoutItemResult,
+                                mediaInfo,
                                 troubleshootingInfo),
                             cancellationToken);
 
@@ -92,7 +101,6 @@ public class TroubleshootController(
                         {
                             return Redirect("~/iptv/session/.troubleshooting/live.m3u8");
                         }
-
                     }
                     finally
                     {
@@ -141,5 +149,4 @@ public class TroubleshootController(
 
         return NotFound();
     }
-
 }

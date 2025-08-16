@@ -105,4 +105,5 @@
         int length = maximum.ToString(CultureInfo.InvariantCulture).Length;
         return (MarkupString)value.ToString(CultureInfo.InvariantCulture).PadLeft(length, ' ').Replace(" ", "&nbsp;");
     }
+
 }
