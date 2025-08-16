@@ -1,27 +1,10 @@
-
 [*]
 charset=utf-8
 end_of_line=lf
 trim_trailing_whitespace=true
-insert_final_newline=false
+insert_final_newline=true
 indent_style=space
 indent_size=4
-
-[*.json]
-ij_json_array_wrapping = normal
-ij_json_keep_blank_lines_in_code = 0
-ij_json_keep_indents_on_empty_lines = false
-ij_json_keep_line_breaks = true
-ij_json_keep_trailing_comma = false
-ij_json_object_wrapping = normal
-ij_json_property_alignment = do_not_align
-ij_json_space_after_colon = true
-ij_json_space_after_comma = true
-ij_json_space_before_colon = false
-ij_json_space_before_comma = false
-ij_json_spaces_within_braces = true
-ij_json_spaces_within_brackets = true
-ij_json_wrap_long_lines = false
 
 # Microsoft .NET properties
 csharp_new_line_before_members_in_object_initializers=false
@@ -58,6 +41,7 @@ resharper_braces_for_for=required
 resharper_braces_for_foreach=required
 resharper_braces_for_ifelse=required
 resharper_braces_for_while=required
+resharper_csharp_arguments_literal=named
 resharper_csharp_insert_final_newline=true
 resharper_csharp_max_attribute_length_for_same_line=0
 resharper_csharp_place_accessorholder_attribute_on_same_line=never
@@ -100,6 +84,21 @@ tab_width=4
 indent_style = space
 indent_size = 2
 
+[*.json]
+ij_json_array_wrapping = normal
+ij_json_keep_blank_lines_in_code = 0
+ij_json_keep_indents_on_empty_lines = false
+ij_json_keep_line_breaks = true
+ij_json_keep_trailing_comma = false
+ij_json_object_wrapping = normal
+ij_json_property_alignment = do_not_align
+ij_json_space_after_colon = true
+ij_json_space_after_comma = true
+ij_json_space_before_colon = false
+ij_json_space_before_comma = false
+ij_json_spaces_within_braces = true
+ij_json_spaces_within_brackets = true
+ij_json_wrap_long_lines = false
 
 [*.cs]
 # disable CA1848: Use the LoggerMessage delegates`
