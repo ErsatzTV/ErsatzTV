@@ -654,6 +654,9 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
         {
             graphicsEngine.FilterSteps.Add(new PixelFormatFilter(new PixelFormatYuva420P()));
 
+            // overlay_cuda expects straight alpha
+            graphicsEngine.FilterSteps.Add(new UnpremultiplyFilter());
+
             graphicsEngine.FilterSteps.Add(
                 new HardwareUploadCudaFilter(currentState with { FrameDataLocation = FrameDataLocation.Software }));
 
