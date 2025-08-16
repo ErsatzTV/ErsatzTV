@@ -112,6 +112,7 @@ public class YamlPlayoutContext(Playout playout, YamlPlayoutDefinition definitio
 
     public void PushFillerKind(FillerKind fillerKind) => _fillerKind.Push(fillerKind);
     public void PopFillerKind() => _fillerKind.Pop();
+
     public Option<FillerKind> GetFillerKind() =>
         _fillerKind.TryPeek(out FillerKind fillerKind) ? fillerKind : Option<FillerKind>.None;
 

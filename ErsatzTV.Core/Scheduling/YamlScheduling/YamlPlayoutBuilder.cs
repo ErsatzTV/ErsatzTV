@@ -70,12 +70,18 @@ public class YamlPlayoutBuilder(
                 foreach (var importedDefinition in maybeImportedDefinition)
                 {
                     var contentToAdd = importedDefinition.Content
-                        .Where(c => playoutDefinition.Content.All(c2 => !string.Equals(c2.Key, c.Key, StringComparison.OrdinalIgnoreCase)));
+                        .Where(c => playoutDefinition.Content.All(c2 => !string.Equals(
+                            c2.Key,
+                            c.Key,
+                            StringComparison.OrdinalIgnoreCase)));
 
                     playoutDefinition.Content.AddRange(contentToAdd);
 
                     var sequencesToAdd = importedDefinition.Sequence
-                        .Where(s => playoutDefinition.Sequence.All(s2 => !string.Equals(s2.Key, s.Key, StringComparison.OrdinalIgnoreCase)));
+                        .Where(s => playoutDefinition.Sequence.All(s2 => !string.Equals(
+                            s2.Key,
+                            s.Key,
+                            StringComparison.OrdinalIgnoreCase)));
 
                     playoutDefinition.Sequence.AddRange(sequencesToAdd);
                 }
@@ -303,7 +309,13 @@ public class YamlPlayoutBuilder(
 
             foreach (IYamlPlayoutHandler handler in maybeHandler)
             {
-                if (!await handler.Handle(context, instruction, mode, _ => Task.CompletedTask, logger, cancellationToken))
+                if (!await handler.Handle(
+                        context,
+                        instruction,
+                        mode,
+                        _ => Task.CompletedTask,
+                        logger,
+                        cancellationToken))
                 {
                     logger.LogInformation("YAML playout instruction handler failed");
                 }

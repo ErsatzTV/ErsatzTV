@@ -5,7 +5,10 @@ namespace ErsatzTV.Core.Scheduling;
 
 public static class FillerExpression
 {
-    public static List<MediaChapter> FilterChapters(string fillerExpression, List<MediaChapter> effectiveChapters, PlayoutItem playoutItem)
+    public static List<MediaChapter> FilterChapters(
+        string fillerExpression,
+        List<MediaChapter> effectiveChapters,
+        PlayoutItem playoutItem)
     {
         if (effectiveChapters.Count == 0 || string.IsNullOrWhiteSpace(fillerExpression))
         {

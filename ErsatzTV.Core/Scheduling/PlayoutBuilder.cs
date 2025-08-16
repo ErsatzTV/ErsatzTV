@@ -117,7 +117,13 @@ public class PlayoutBuilder : IPlayoutBuilder
     {
         foreach (PlayoutParameters parameters in await Validate(playout, referenceData))
         {
-            result = await Build(playout, referenceData, result, mode, parameters with { Start = start, Finish = finish }, cancellationToken);
+            result = await Build(
+                playout,
+                referenceData,
+                result,
+                mode,
+                parameters with { Start = start, Finish = finish },
+                cancellationToken);
         }
 
         return result;
@@ -808,7 +814,8 @@ public class PlayoutBuilder : IPlayoutBuilder
             playoutBuilderState.CurrentTime);
 
         // if we ended in a different alternate schedule, fix the anchor data
-        if (playoutBuilderState.CurrentTime > playoutFinish && activeScheduleAtAnchor.Id != activeSchedule.Id && activeScheduleAtAnchor.Items.Count > 0)
+        if (playoutBuilderState.CurrentTime > playoutFinish && activeScheduleAtAnchor.Id != activeSchedule.Id &&
+            activeScheduleAtAnchor.Items.Count > 0)
         {
             PlayoutBuilderState cleanState = playoutBuilderState with
             {
@@ -875,7 +882,8 @@ public class PlayoutBuilder : IPlayoutBuilder
 
     private async Task<Map<CollectionKey, List<MediaItem>>> GetCollectionMediaItems(PlayoutReferenceData referenceData)
     {
-        IEnumerable<KeyValuePair<CollectionKey, Option<FillerPreset>>> collectionKeys = GetAllCollectionKeys(referenceData);
+        IEnumerable<KeyValuePair<CollectionKey, Option<FillerPreset>>> collectionKeys =
+            GetAllCollectionKeys(referenceData);
 
         IEnumerable<Task<KeyValuePair<CollectionKey, List<MediaItem>>>> tasks = collectionKeys.Select(async key =>
         {
@@ -886,7 +894,8 @@ public class PlayoutBuilder : IPlayoutBuilder
         return Map.createRange(await Task.WhenAll(tasks));
     }
 
-    private static IEnumerable<KeyValuePair<CollectionKey, Option<FillerPreset>>> GetAllCollectionKeys(PlayoutReferenceData referenceData)
+    private static IEnumerable<KeyValuePair<CollectionKey, Option<FillerPreset>>> GetAllCollectionKeys(
+        PlayoutReferenceData referenceData)
     {
         return referenceData.ProgramSchedule.Items
             .Append(referenceData.ProgramScheduleAlternates.Bind(psa => psa.ProgramSchedule.Items))

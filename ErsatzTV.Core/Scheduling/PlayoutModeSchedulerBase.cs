@@ -340,7 +340,8 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
         // convert playlist filler
         if (allFiller.Any(f => f.CollectionType is ProgramScheduleItemCollectionType.Playlist))
         {
-            var toRemove = allFiller.Filter(f => f.CollectionType is ProgramScheduleItemCollectionType.Playlist).ToList();
+            var toRemove = allFiller.Filter(f => f.CollectionType is ProgramScheduleItemCollectionType.Playlist)
+                .ToList();
             allFiller.RemoveAll(toRemove.Contains);
 
             foreach (FillerPreset playlistFiller in toRemove)
@@ -428,7 +429,10 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
             foreach (FillerPreset filler in allFiller.Filter(f =>
                          f.FillerKind == FillerKind.MidRoll && f.FillerMode != FillerMode.Pad))
             {
-                List<MediaChapter> filteredChapters = FillerExpression.FilterChapters(filler.Expression, effectiveChapters, playoutItem);
+                List<MediaChapter> filteredChapters = FillerExpression.FilterChapters(
+                    filler.Expression,
+                    effectiveChapters,
+                    playoutItem);
                 if (filteredChapters.Count <= 1)
                 {
                     result.Add(playoutItem);
@@ -797,7 +801,6 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
 
                 if (remainingToFill - itemDuration >= TimeSpan.Zero)
                 {
-
                     var playoutItem = new PlayoutItem
                     {
                         PlayoutId = playoutBuilderState.PlayoutId,

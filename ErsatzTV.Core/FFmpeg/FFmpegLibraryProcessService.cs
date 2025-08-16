@@ -216,7 +216,10 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             videoPath != audioPath, // still image when paths are different
             videoVersion.VideoScanKind == VideoScanKind.Progressive ? ScanKind.Progressive : ScanKind.Interlaced);
 
-        var videoInputFile = new VideoInputFile(videoPath, new List<VideoStream> { ffmpegVideoStream }, streamInputKind);
+        var videoInputFile = new VideoInputFile(
+            videoPath,
+            new List<VideoStream> { ffmpegVideoStream },
+            streamInputKind);
 
         Option<AudioInputFile> audioInputFile = maybeAudioStream.Map(audioStream =>
         {

@@ -72,7 +72,8 @@ public class BlockPlayoutBuilder(
             BlockPlayoutChangeDetection.GetPlayoutItemToBlockKeyMap(referenceData);
 
         // remove items without a block key (shouldn't happen often, just upgrades)
-        foreach (var item in referenceData.ExistingItems.Where(i => i.FillerKind is not FillerKind.DecoDefault && !itemBlockKeys.ContainsKey(i)))
+        foreach (var item in referenceData.ExistingItems.Where(i =>
+                     i.FillerKind is not FillerKind.DecoDefault && !itemBlockKeys.ContainsKey(i)))
         {
             result.ItemsToRemove.Add(item.Id);
         }
@@ -327,7 +328,10 @@ public class BlockPlayoutBuilder(
         return $"{showTitle}s{e.Season.SeasonNumber:00}{numbersString} - {titlesString}";
     }
 
-    private static PlayoutBuildResult CleanUpHistory(PlayoutReferenceData referenceData, DateTimeOffset start, PlayoutBuildResult result)
+    private static PlayoutBuildResult CleanUpHistory(
+        PlayoutReferenceData referenceData,
+        DateTimeOffset start,
+        PlayoutBuildResult result)
     {
         var allItemsToDelete = referenceData.PlayoutHistory
             .Append(result.AddedHistory)
