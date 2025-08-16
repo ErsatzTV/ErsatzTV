@@ -1088,5 +1088,7 @@ public class TranscodingTests
     }
 
     private static string ExecutableName(string baseName) =>
-        OperatingSystem.IsWindows() ? $"{baseName}.exe" : $"/home/jason/Downloads/ffmpeg/ffmpeg-n7.1.1-56-gc2184b65d2-linux64-gpl-7.1/bin/{baseName}";
+        OperatingSystem.IsWindows()
+            ? $"{baseName}.exe"
+            : $"/home/jason/Downloads/ffmpeg/ffmpeg-n7.1.1-56-gc2184b65d2-linux64-gpl-7.1/bin/{baseName}";
 }
