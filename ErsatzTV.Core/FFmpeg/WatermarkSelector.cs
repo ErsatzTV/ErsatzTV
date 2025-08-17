@@ -17,8 +17,40 @@ public class WatermarkSelector(IImageCache imageCache, ILogger<WatermarkSelector
         PlayoutItem playoutItem,
         DateTimeOffset now)
     {
-        logger.LogDebug("TODO");
-        return [];
+        var result = new List<WatermarkOptions>();
+
+        if (channel.StreamingMode == StreamingMode.HttpLiveStreamingDirect)
+        {
+            return result;
+        }
+
+        if (playoutItem.DisableWatermarks)
+        {
+            logger.LogDebug("Watermark is disabled by playout item");
+            return result;
+        }
+
+        // TODO: decos
+
+        if (playoutItem.Watermarks.Count > 0)
+        {
+            foreach (var watermark in playoutItem.Watermarks)
+            {
+                var options = GetWatermarkOptions(channel, watermark, Option<ChannelWatermark>.None);
+                result.Add(options);
+            }
+
+            return result;
+        }
+
+
+        var finalOptions = GetWatermarkOptions(channel, Option<ChannelWatermark>.None, globalWatermark);
+        if (finalOptions != WatermarkOptions.NoWatermark)
+        {
+            result.Add(finalOptions);
+        }
+
+        return result;
     }
 
     public WatermarkResult GetPlayoutItemWatermark(PlayoutItem playoutItem, DateTimeOffset now)
