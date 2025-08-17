@@ -23,6 +23,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
 {
     private readonly IConfigElementRepository _configElementRepository;
     private readonly ICustomStreamSelector _customStreamSelector;
+    private readonly IWatermarkSelector _watermarkSelector;
     private readonly FFmpegProcessService _ffmpegProcessService;
     private readonly IFFmpegStreamSelector _ffmpegStreamSelector;
     private readonly ILogger<FFmpegLibraryProcessService> _logger;
@@ -33,6 +34,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         FFmpegProcessService ffmpegProcessService,
         IFFmpegStreamSelector ffmpegStreamSelector,
         ICustomStreamSelector customStreamSelector,
+        IWatermarkSelector watermarkSelector,
         ITempFilePool tempFilePool,
         IPipelineBuilderFactory pipelineBuilderFactory,
         IConfigElementRepository configElementRepository,
@@ -41,6 +43,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         _ffmpegProcessService = ffmpegProcessService;
         _ffmpegStreamSelector = ffmpegStreamSelector;
         _customStreamSelector = customStreamSelector;
+        _watermarkSelector = watermarkSelector;
         _tempFilePool = tempFilePool;
         _pipelineBuilderFactory = pipelineBuilderFactory;
         _configElementRepository = configElementRepository;
@@ -337,7 +340,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             // still need channel and global watermarks
             if (playoutItemWatermarks.Count == 0)
             {
-                WatermarkOptions options = await _ffmpegProcessService.GetWatermarkOptions(
+                WatermarkOptions options = await _watermarkSelector.GetWatermarkOptions(
                     ffprobePath,
                     channel,
                     Option<ChannelWatermark>.None,
@@ -356,7 +359,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             // load all playout item watermarks
             foreach (ChannelWatermark playoutItemWatermark in playoutItemWatermarks)
             {
-                WatermarkOptions options = await _ffmpegProcessService.GetWatermarkOptions(
+                WatermarkOptions options = await _watermarkSelector.GetWatermarkOptions(
                     ffprobePath,
                     channel,
                     playoutItemWatermark,

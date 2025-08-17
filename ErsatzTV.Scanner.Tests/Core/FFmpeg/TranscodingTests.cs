@@ -252,18 +252,23 @@ public class TranscodingTests
                 Arg.Any<Option<int>>())
             .Returns(Path.Combine(TestContext.CurrentContext.TestDirectory, "Resources", "song_album_cover_512.png"));
 
+        var watermarkSelector = new WatermarkSelector(
+            mockImageCache,
+            MemoryCache,
+            LoggerFactory.CreateLogger<WatermarkSelector>());
+
         var oldService = new FFmpegProcessService(
             new FakeStreamSelector(),
-            mockImageCache,
+            watermarkSelector,
             tempFilePool,
             Substitute.For<IClient>(),
-            MemoryCache,
             LoggerFactory.CreateLogger<FFmpegProcessService>());
 
         var service = new FFmpegLibraryProcessService(
             oldService,
             new FakeStreamSelector(),
             Substitute.For<ICustomStreamSelector>(),
+            watermarkSelector,
             tempFilePool,
             new PipelineBuilderFactory(
                 //new FakeNvidiaCapabilitiesFactory(),
@@ -896,18 +901,23 @@ public class TranscodingTests
                 Arg.Any<Option<int>>())
             .Returns(Path.Combine(TestContext.CurrentContext.TestDirectory, "Resources", "song_album_cover_512.png"));
 
+        var watermarkSelector = new WatermarkSelector(
+            imageCache,
+            MemoryCache,
+            LoggerFactory.CreateLogger<WatermarkSelector>());
+
         var oldService = new FFmpegProcessService(
             new FakeStreamSelector(),
-            imageCache,
+            watermarkSelector,
             Substitute.For<ITempFilePool>(),
             Substitute.For<IClient>(),
-            MemoryCache,
             LoggerFactory.CreateLogger<FFmpegProcessService>());
 
         var service = new FFmpegLibraryProcessService(
             oldService,
             new FakeStreamSelector(),
             Substitute.For<ICustomStreamSelector>(),
+            watermarkSelector,
             Substitute.For<ITempFilePool>(),
             new PipelineBuilderFactory(
                 //new FakeNvidiaCapabilitiesFactory(),

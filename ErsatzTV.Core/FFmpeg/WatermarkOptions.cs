@@ -6,4 +6,7 @@ public record WatermarkOptions(
     Option<ChannelWatermark> Watermark,
     Option<string> ImagePath,
     Option<int> ImageStreamIndex,
-    bool IsAnimated);
+    bool IsAnimated)
+{
+    public static WatermarkOptions NoWatermark => new(None, None, None, false);
+}
