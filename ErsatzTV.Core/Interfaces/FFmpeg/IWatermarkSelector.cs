@@ -5,6 +5,8 @@ namespace ErsatzTV.Core.Interfaces.FFmpeg;
 
 public interface IWatermarkSelector
 {
+    WatermarkResult GetPlayoutItemWatermark(PlayoutItem playoutItem, DateTimeOffset now);
+
     Task<WatermarkOptions> GetWatermarkOptions(
         string ffprobePath,
         Channel channel,
