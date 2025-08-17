@@ -341,7 +341,6 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             if (playoutItemWatermarks.Count == 0)
             {
                 WatermarkOptions options = await _watermarkSelector.GetWatermarkOptions(
-                    ffprobePath,
                     channel,
                     Option<ChannelWatermark>.None,
                     globalWatermark,
@@ -360,7 +359,6 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             foreach (ChannelWatermark playoutItemWatermark in playoutItemWatermarks)
             {
                 WatermarkOptions options = await _watermarkSelector.GetWatermarkOptions(
-                    ffprobePath,
                     channel,
                     playoutItemWatermark,
                     globalWatermark,

@@ -71,7 +71,6 @@ public class FFmpegProcessService
 
             Option<WatermarkOptions> watermarkOptions =
                 await _watermarkSelector.GetWatermarkOptions(
-                    ffprobePath,
                     channel,
                     playoutItemWatermark,
                     globalWatermark,

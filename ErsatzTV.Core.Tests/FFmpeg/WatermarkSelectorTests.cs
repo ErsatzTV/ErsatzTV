@@ -2,7 +2,6 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NUnit.Framework;
@@ -32,7 +31,6 @@ public class WatermarkSelectorTests
 
         WatermarkSelector = new WatermarkSelector(
             Substitute.For<IImageCache>(),
-            new MemoryCache(new MemoryCacheOptions()),
             loggerFactory.CreateLogger<WatermarkSelector>());
 
         GlobalWatermark = new ChannelWatermark { Id = 0, Name = "Global", Image = "GlobalImage" };
@@ -62,7 +60,6 @@ public class WatermarkSelectorTests
         playoutItemWatermark.ShouldBeOfType<InheritWatermark>();
 
         WatermarkOptions watermarkOptions = await WatermarkSelector.GetWatermarkOptions(
-            string.Empty,
             channel,
             playoutItem.Watermarks.HeadOrNone(),
             globalWatermark,
@@ -93,7 +90,6 @@ public class WatermarkSelectorTests
         await Task.Delay(10);
 
         // WatermarkOptions watermarkOptions = await WatermarkSelector.GetWatermarkOptions(
-        //     string.Empty,
         //     channel,
         //     playoutItem.Watermarks.HeadOrNone(),
         //     globalWatermark,
@@ -121,7 +117,6 @@ public class WatermarkSelectorTests
         playoutItemWatermark.ShouldBeOfType<InheritWatermark>();
 
         WatermarkOptions watermarkOptions = await WatermarkSelector.GetWatermarkOptions(
-            string.Empty,
             channel,
             playoutItem.Watermarks.HeadOrNone(),
             globalWatermark,
@@ -150,7 +145,6 @@ public class WatermarkSelectorTests
         playoutItemWatermark.ShouldBeOfType<InheritWatermark>();
 
         WatermarkOptions watermarkOptions = await WatermarkSelector.GetWatermarkOptions(
-            string.Empty,
             channel,
             playoutItem.Watermarks.HeadOrNone(),
             globalWatermark,
@@ -179,7 +173,6 @@ public class WatermarkSelectorTests
         playoutItemWatermark.ShouldBeOfType<InheritWatermark>();
 
         WatermarkOptions watermarkOptions = await WatermarkSelector.GetWatermarkOptions(
-            string.Empty,
             channel,
             playoutItem.Watermarks.HeadOrNone(),
             globalWatermark,
@@ -211,7 +204,6 @@ public class WatermarkSelectorTests
         await Task.Delay(10);
 
         // WatermarkOptions watermarkOptions = await WatermarkSelector.GetWatermarkOptions(
-        //     string.Empty,
         //     channel,
         //     playoutItem.Watermarks.HeadOrNone(),
         //     globalWatermark,
@@ -239,7 +231,6 @@ public class WatermarkSelectorTests
         playoutItemWatermark.ShouldBeOfType<InheritWatermark>();
 
         WatermarkOptions watermarkOptions = await WatermarkSelector.GetWatermarkOptions(
-            string.Empty,
             channel,
             playoutItem.Watermarks.HeadOrNone(),
             globalWatermark,
@@ -268,7 +259,6 @@ public class WatermarkSelectorTests
         playoutItemWatermark.ShouldBeOfType<InheritWatermark>();
 
         WatermarkOptions watermarkOptions = await WatermarkSelector.GetWatermarkOptions(
-            string.Empty,
             channel,
             playoutItem.Watermarks.HeadOrNone(),
             globalWatermark,
@@ -297,7 +287,6 @@ public class WatermarkSelectorTests
         playoutItemWatermark.ShouldBeOfType<InheritWatermark>();
 
         WatermarkOptions watermarkOptions = await WatermarkSelector.GetWatermarkOptions(
-            string.Empty,
             channel,
             playoutItem.Watermarks.HeadOrNone(),
             globalWatermark,
@@ -330,7 +319,6 @@ public class WatermarkSelectorTests
         // GetWatermarkOptions is not even called when disableWatermarks is passed through
 
         // WatermarkOptions watermarkOptions = await WatermarkSelector.GetWatermarkOptions(
-        //     string.Empty,
         //     channel,
         //     playoutItem.Watermarks.HeadOrNone(),
         //     globalWatermark,

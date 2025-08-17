@@ -254,7 +254,6 @@ public class TranscodingTests
 
         var watermarkSelector = new WatermarkSelector(
             mockImageCache,
-            MemoryCache,
             LoggerFactory.CreateLogger<WatermarkSelector>());
 
         var oldService = new FFmpegProcessService(
@@ -903,7 +902,6 @@ public class TranscodingTests
 
         var watermarkSelector = new WatermarkSelector(
             imageCache,
-            MemoryCache,
             LoggerFactory.CreateLogger<WatermarkSelector>());
 
         var oldService = new FFmpegProcessService(

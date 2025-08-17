@@ -1,20 +1,28 @@
-using System.Text;
-using CliWrap;
-using CliWrap.Buffered;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Domain.Scheduling;
 using ErsatzTV.Core.Images;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Core.FFmpeg;
 
-public class WatermarkSelector(IImageCache imageCache, IMemoryCache memoryCache, ILogger<WatermarkSelector> logger)
+public class WatermarkSelector(IImageCache imageCache, ILogger<WatermarkSelector> logger)
     : IWatermarkSelector
 {
+    public async Task<List<WatermarkOptions>> SelectWatermarks(
+        Option<ChannelWatermark> globalWatermark,
+        Channel channel,
+        PlayoutItem playoutItem,
+        DateTimeOffset now)
+    {
+        logger.LogDebug("TODO");
+        await Task.Delay(10);
+
+        return [];
+    }
+
     public WatermarkResult GetPlayoutItemWatermark(PlayoutItem playoutItem, DateTimeOffset now)
     {
         if (playoutItem.DisableWatermarks)
@@ -75,7 +83,6 @@ public class WatermarkSelector(IImageCache imageCache, IMemoryCache memoryCache,
     }
 
     public async Task<WatermarkOptions> GetWatermarkOptions(
-        string ffprobePath,
         Channel channel,
         Option<ChannelWatermark> playoutItemWatermark,
         Option<ChannelWatermark> globalWatermark,
@@ -93,8 +100,7 @@ public class WatermarkSelector(IImageCache imageCache, IMemoryCache memoryCache,
             return new WatermarkOptions(
                 watermarkOverride,
                 await watermarkPath.IfNoneAsync(videoVersion.MediaFiles.Head().Path),
-                0,
-                false);
+                0);
         }
 
         // check for playout item watermark
@@ -107,8 +113,7 @@ public class WatermarkSelector(IImageCache imageCache, IMemoryCache memoryCache,
                     return new WatermarkOptions(
                         await watermarkOverride.IfNoneAsync(watermark),
                         Path.Combine(FileSystemLayout.ResourcesCacheFolder, watermark.Image),
-                        Option<int>.None,
-                        false);
+                        Option<int>.None);
                 case ChannelWatermarkImageSource.Custom:
                     // bad form validation makes this possible
                     if (string.IsNullOrWhiteSpace(watermark.Image))
@@ -128,8 +133,7 @@ public class WatermarkSelector(IImageCache imageCache, IMemoryCache memoryCache,
                     return new WatermarkOptions(
                         await watermarkOverride.IfNoneAsync(watermark),
                         customPath,
-                        None,
-                        await IsAnimated(ffprobePath, customPath));
+                        None);
                 case ChannelWatermarkImageSource.ChannelLogo:
                     logger.LogDebug("Watermark will come from playout item (channel logo)");
 
@@ -149,10 +153,7 @@ public class WatermarkSelector(IImageCache imageCache, IMemoryCache memoryCache,
                     return new WatermarkOptions(
                         await watermarkOverride.IfNoneAsync(watermark),
                         maybeChannelPath,
-                        None,
-                        await maybeChannelPath.Match(
-                            p => IsAnimated(ffprobePath, p),
-                            () => Task.FromResult(false)));
+                        None);
                 default:
                     throw new NotSupportedException("Unsupported watermark image source");
             }
@@ -173,8 +174,7 @@ public class WatermarkSelector(IImageCache imageCache, IMemoryCache memoryCache,
                     return new WatermarkOptions(
                         await watermarkOverride.IfNoneAsync(channel.Watermark),
                         customPath,
-                        None,
-                        await IsAnimated(ffprobePath, customPath));
+                        None);
                 case ChannelWatermarkImageSource.ChannelLogo:
                     logger.LogDebug("Watermark will come from channel (channel logo)");
 
@@ -193,10 +193,7 @@ public class WatermarkSelector(IImageCache imageCache, IMemoryCache memoryCache,
                     return new WatermarkOptions(
                         await watermarkOverride.IfNoneAsync(channel.Watermark),
                         maybeChannelPath,
-                        None,
-                        await maybeChannelPath.Match(
-                            p => IsAnimated(ffprobePath, p),
-                            () => Task.FromResult(false)));
+                        None);
                 default:
                     throw new NotSupportedException("Unsupported watermark image source");
             }
@@ -217,8 +214,7 @@ public class WatermarkSelector(IImageCache imageCache, IMemoryCache memoryCache,
                     return new WatermarkOptions(
                         await watermarkOverride.IfNoneAsync(watermark),
                         customPath,
-                        None,
-                        await IsAnimated(ffprobePath, customPath));
+                        None);
                 case ChannelWatermarkImageSource.ChannelLogo:
                     logger.LogDebug("Watermark will come from global (channel logo)");
 
@@ -237,79 +233,12 @@ public class WatermarkSelector(IImageCache imageCache, IMemoryCache memoryCache,
                     return new WatermarkOptions(
                         await watermarkOverride.IfNoneAsync(watermark),
                         maybeChannelPath,
-                        None,
-                        await maybeChannelPath.Match(
-                            p => IsAnimated(ffprobePath, p),
-                            () => Task.FromResult(false)));
+                        None);
                 default:
                     throw new NotSupportedException("Unsupported watermark image source");
             }
         }
 
         return WatermarkOptions.NoWatermark;
-    }
-
-    private async Task<bool> IsAnimated(string ffprobePath, string path)
-    {
-        try
-        {
-            if (string.IsNullOrWhiteSpace(ffprobePath))
-            {
-                throw new ArgumentException(
-                    "FFprobe is required to check for animated watermark",
-                    nameof(ffprobePath));
-            }
-
-            if (string.IsNullOrWhiteSpace(path))
-            {
-                throw new ArgumentException(
-                    "Watermark path is required to check for animated watermark",
-                    nameof(path));
-            }
-
-            var cacheKey = $"image.animated.{Path.GetFileName(path)}";
-            if (memoryCache.TryGetValue(cacheKey, out bool animated))
-            {
-                return animated;
-            }
-
-            BufferedCommandResult result = await Cli.Wrap(ffprobePath)
-                .WithArguments(
-                [
-                    "-loglevel", "error",
-                    "-select_streams", "v:0",
-                    "-count_frames",
-                    "-show_entries", "stream=nb_read_frames",
-                    "-print_format", "csv",
-                    path
-                ])
-                .WithValidation(CommandResultValidation.None)
-                .ExecuteBufferedAsync(Encoding.UTF8);
-
-            if (result.ExitCode == 0)
-            {
-                string output = result.StandardOutput;
-                output = output.Replace("stream,", string.Empty);
-                if (int.TryParse(output, out int frameCount))
-                {
-                    bool isAnimated = frameCount > 1;
-                    memoryCache.Set(cacheKey, isAnimated, TimeSpan.FromDays(1));
-                    return isAnimated;
-                }
-            }
-            else
-            {
-                logger.LogWarning(
-                    "Error checking frame count for file {File}l exit code {ExitCode}",
-                    path,
-                    result.ExitCode);
-            }
-        }
-        catch (Exception ex)
-        {
-            logger.LogWarning(ex, "Error checking frame count for file {File}", path);
-        }
-
-        return false;
     }
 }
