@@ -14,11 +14,25 @@ namespace ErsatzTV.Core.Tests.FFmpeg;
 public class WatermarkSelectorTests
 {
     private static readonly WatermarkSelector WatermarkSelector;
-    private static readonly ChannelWatermark GlobalWatermark;
-    private static readonly ChannelWatermark ChannelWatermark;
+    private static readonly Option<ChannelWatermark> GlobalWatermark;
+    private static readonly Option<ChannelWatermark> NoGlobalWatermark;
+    private static readonly Option<ChannelWatermark> ChannelWatermark;
     private static readonly ChannelWatermark PlayoutItemWatermark;
     private static readonly Channel ChannelWithWatermark;
     private static readonly Channel ChannelNoWatermark;
+    private static readonly DateTimeOffset Now = new(2025, 08, 17, 12, 0, 0, TimeSpan.FromHours(-5));
+
+    private static readonly PlayoutItem PlayoutItemDisableWatermarks =
+        new() { Watermarks = [], DisableWatermarks = true };
+
+    private static readonly PlayoutItem PlayoutItemWithNoWatermarks =
+        new() { Watermarks = [], DisableWatermarks = false };
+
+    private static readonly PlayoutItem PlayoutItemWithWatermark;
+
+    private static readonly PlayoutItem PlayoutItemWithDisabledWatermark;
+
+    private static readonly List<ChannelWatermark> WatermarkResultEmpty = [];
 
     static WatermarkSelectorTests()
     {
@@ -34,28 +48,33 @@ public class WatermarkSelectorTests
             loggerFactory.CreateLogger<WatermarkSelector>());
 
         GlobalWatermark = new ChannelWatermark { Id = 0, Name = "Global", Image = "GlobalImage" };
+        NoGlobalWatermark = Option<ChannelWatermark>.None;
+
         ChannelWatermark = new ChannelWatermark { Id = 1, Name = "Channel", Image = "ChannelImage" };
         PlayoutItemWatermark = new ChannelWatermark { Id = 2, Name = "PlayoutItem", Image = "PlayoutItemImage" };
 
-        ChannelWithWatermark = new Channel(Guid.Empty)
-            { Id = 0, Watermark = ChannelWatermark, WatermarkId = ChannelWatermark.Id };
+        foreach (var channelWatermark in ChannelWatermark)
+        {
+            ChannelWithWatermark = new Channel(Guid.Empty)
+                { Id = 0, Watermark = channelWatermark, WatermarkId = channelWatermark.Id };
+        }
 
         ChannelNoWatermark = new Channel(Guid.Empty) { Id = 0, Watermark = null, WatermarkId = null };
+
+        PlayoutItemWithWatermark = new PlayoutItem { Watermarks = [PlayoutItemWatermark], DisableWatermarks = false };
+
+        PlayoutItemWithDisabledWatermark = new PlayoutItem
+            { Watermarks = [PlayoutItemWatermark], DisableWatermarks = true };
     }
 
     [Test]
     public void Should_Select_No_Watermark_When_None_Are_Configured()
     {
-        var now = DateTimeOffset.Now;
-        Option<ChannelWatermark> globalWatermark = Option<ChannelWatermark>.None;
+        Option<ChannelWatermark> globalWatermark = NoGlobalWatermark;
         var channel = ChannelNoWatermark;
-        var playoutItem = new PlayoutItem
-        {
-            Watermarks = [],
-            DisableWatermarks = false
-        };
+        var playoutItem = PlayoutItemWithNoWatermarks;
 
-        WatermarkResult playoutItemWatermark = WatermarkSelector.GetPlayoutItemWatermark(playoutItem, now);
+        WatermarkResult playoutItemWatermark = WatermarkSelector.GetPlayoutItemWatermark(playoutItem, Now);
         playoutItemWatermark.ShouldBeOfType<InheritWatermark>();
 
         WatermarkOptions watermarkOptions = WatermarkSelector.GetWatermarkOptions(
@@ -69,16 +88,11 @@ public class WatermarkSelectorTests
     [Test]
     public void Should_Select_No_Watermark_When_Global_Configured_But_Disabled_PlayoutItem()
     {
-        var now = DateTimeOffset.Now;
         Option<ChannelWatermark> globalWatermark = GlobalWatermark;
         var channel = ChannelNoWatermark;
-        var playoutItem = new PlayoutItem
-        {
-            Watermarks = [],
-            DisableWatermarks = true
-        };
+        var playoutItem = PlayoutItemDisableWatermarks;
 
-        WatermarkResult playoutItemWatermark = WatermarkSelector.GetPlayoutItemWatermark(playoutItem, now);
+        WatermarkResult playoutItemWatermark = WatermarkSelector.GetPlayoutItemWatermark(playoutItem, Now);
         playoutItemWatermark.ShouldBeOfType<DisableWatermark>();
 
         // GetWatermarkOptions is not even called when disableWatermarks is passed through
@@ -94,16 +108,11 @@ public class WatermarkSelectorTests
     [Test]
     public void Should_Select_Global_Watermark_When_Global_Configured()
     {
-        var now = DateTimeOffset.Now;
         Option<ChannelWatermark> globalWatermark = GlobalWatermark;
         var channel = ChannelNoWatermark;
-        var playoutItem = new PlayoutItem
-        {
-            Watermarks = [],
-            DisableWatermarks = false
-        };
+        var playoutItem = PlayoutItemWithNoWatermarks;
 
-        WatermarkResult playoutItemWatermark = WatermarkSelector.GetPlayoutItemWatermark(playoutItem, now);
+        WatermarkResult playoutItemWatermark = WatermarkSelector.GetPlayoutItemWatermark(playoutItem, Now);
         playoutItemWatermark.ShouldBeOfType<InheritWatermark>();
 
         WatermarkOptions watermarkOptions = WatermarkSelector.GetWatermarkOptions(
@@ -118,16 +127,11 @@ public class WatermarkSelectorTests
     [Test]
     public void Should_Select_Channel_Watermark_When_Global_And_Channel_Configured()
     {
-        var now = DateTimeOffset.Now;
         Option<ChannelWatermark> globalWatermark = GlobalWatermark;
         var channel = ChannelWithWatermark;
-        var playoutItem = new PlayoutItem
-        {
-            Watermarks = [],
-            DisableWatermarks = false
-        };
+        var playoutItem = PlayoutItemWithNoWatermarks;
 
-        WatermarkResult playoutItemWatermark = WatermarkSelector.GetPlayoutItemWatermark(playoutItem, now);
+        WatermarkResult playoutItemWatermark = WatermarkSelector.GetPlayoutItemWatermark(playoutItem, Now);
         playoutItemWatermark.ShouldBeOfType<InheritWatermark>();
 
         WatermarkOptions watermarkOptions = WatermarkSelector.GetWatermarkOptions(
@@ -142,16 +146,11 @@ public class WatermarkSelectorTests
     [Test]
     public void Should_Select_Channel_Watermark_When_Channel_Configured()
     {
-        var now = DateTimeOffset.Now;
-        Option<ChannelWatermark> globalWatermark = Option<ChannelWatermark>.None;
+        Option<ChannelWatermark> globalWatermark = NoGlobalWatermark;
         var channel = ChannelWithWatermark;
-        var playoutItem = new PlayoutItem
-        {
-            Watermarks = [],
-            DisableWatermarks = false
-        };
+        var playoutItem = PlayoutItemWithNoWatermarks;
 
-        WatermarkResult playoutItemWatermark = WatermarkSelector.GetPlayoutItemWatermark(playoutItem, now);
+        WatermarkResult playoutItemWatermark = WatermarkSelector.GetPlayoutItemWatermark(playoutItem, Now);
         playoutItemWatermark.ShouldBeOfType<InheritWatermark>();
 
         WatermarkOptions watermarkOptions = WatermarkSelector.GetWatermarkOptions(
@@ -166,16 +165,11 @@ public class WatermarkSelectorTests
     [Test]
     public void Should_Select_No_Watermark_When_Channel_Configured_But_Disabled_PlayoutItem()
     {
-        var now = DateTimeOffset.Now;
-        Option<ChannelWatermark> globalWatermark = Option<ChannelWatermark>.None;
+        Option<ChannelWatermark> globalWatermark = NoGlobalWatermark;
         var channel = ChannelWithWatermark;
-        var playoutItem = new PlayoutItem
-        {
-            Watermarks = [],
-            DisableWatermarks = true
-        };
+        var playoutItem = PlayoutItemDisableWatermarks;
 
-        WatermarkResult playoutItemWatermark = WatermarkSelector.GetPlayoutItemWatermark(playoutItem, now);
+        WatermarkResult playoutItemWatermark = WatermarkSelector.GetPlayoutItemWatermark(playoutItem, Now);
         playoutItemWatermark.ShouldBeOfType<DisableWatermark>();
 
         // GetWatermarkOptions is not even called when disableWatermarks is passed through
@@ -191,16 +185,11 @@ public class WatermarkSelectorTests
     [Test]
     public void Should_Select_PlayoutItem_Watermark_When_Global_And_Channel_And_PlayoutItem_Configured()
     {
-        var now = DateTimeOffset.Now;
         Option<ChannelWatermark> globalWatermark = GlobalWatermark;
         var channel = ChannelWithWatermark;
-        var playoutItem = new PlayoutItem
-        {
-            Watermarks = [PlayoutItemWatermark],
-            DisableWatermarks = false
-        };
+        var playoutItem = PlayoutItemWithWatermark;
 
-        WatermarkResult playoutItemWatermark = WatermarkSelector.GetPlayoutItemWatermark(playoutItem, now);
+        WatermarkResult playoutItemWatermark = WatermarkSelector.GetPlayoutItemWatermark(playoutItem, Now);
         playoutItemWatermark.ShouldBeOfType<InheritWatermark>();
 
         WatermarkOptions watermarkOptions = WatermarkSelector.GetWatermarkOptions(
@@ -215,16 +204,11 @@ public class WatermarkSelectorTests
     [Test]
     public void Should_Select_PlayoutItem_Watermark_When_Channel_And_PlayoutItem_Configured()
     {
-        var now = DateTimeOffset.Now;
-        Option<ChannelWatermark> globalWatermark = Option<ChannelWatermark>.None;
+        Option<ChannelWatermark> globalWatermark = NoGlobalWatermark;
         var channel = ChannelWithWatermark;
-        var playoutItem = new PlayoutItem
-        {
-            Watermarks = [PlayoutItemWatermark],
-            DisableWatermarks = false
-        };
+        var playoutItem = PlayoutItemWithWatermark;
 
-        WatermarkResult playoutItemWatermark = WatermarkSelector.GetPlayoutItemWatermark(playoutItem, now);
+        WatermarkResult playoutItemWatermark = WatermarkSelector.GetPlayoutItemWatermark(playoutItem, Now);
         playoutItemWatermark.ShouldBeOfType<InheritWatermark>();
 
         WatermarkOptions watermarkOptions = WatermarkSelector.GetWatermarkOptions(
@@ -239,16 +223,11 @@ public class WatermarkSelectorTests
     [Test]
     public void Should_Select_PlayoutItem_Watermark_When_PlayoutItem_Configured()
     {
-        var now = DateTimeOffset.Now;
-        Option<ChannelWatermark> globalWatermark = Option<ChannelWatermark>.None;
+        Option<ChannelWatermark> globalWatermark = NoGlobalWatermark;
         var channel = ChannelNoWatermark;
-        var playoutItem = new PlayoutItem
-        {
-            Watermarks = [PlayoutItemWatermark],
-            DisableWatermarks = false
-        };
+        var playoutItem = PlayoutItemWithWatermark;
 
-        WatermarkResult playoutItemWatermark = WatermarkSelector.GetPlayoutItemWatermark(playoutItem, now);
+        WatermarkResult playoutItemWatermark = WatermarkSelector.GetPlayoutItemWatermark(playoutItem, Now);
         playoutItemWatermark.ShouldBeOfType<InheritWatermark>();
 
         WatermarkOptions watermarkOptions = WatermarkSelector.GetWatermarkOptions(
@@ -263,16 +242,11 @@ public class WatermarkSelectorTests
     [Test]
     public void Should_Select_No_Watermark_When_Global_And_Channel_And_PlayoutItem_Configured_But_Disabled_PlayoutItem()
     {
-        var now = DateTimeOffset.Now;
         Option<ChannelWatermark> globalWatermark = GlobalWatermark;
         var channel = ChannelWithWatermark;
-        var playoutItem = new PlayoutItem
-        {
-            Watermarks = [PlayoutItemWatermark],
-            DisableWatermarks = true
-        };
+        var playoutItem = PlayoutItemWithDisabledWatermark;
 
-        WatermarkResult playoutItemWatermark = WatermarkSelector.GetPlayoutItemWatermark(playoutItem, now);
+        WatermarkResult playoutItemWatermark = WatermarkSelector.GetPlayoutItemWatermark(playoutItem, Now);
         playoutItemWatermark.ShouldBeOfType<DisableWatermark>();
 
         // GetWatermarkOptions is not even called when disableWatermarks is passed through
@@ -286,222 +260,62 @@ public class WatermarkSelectorTests
         // watermarkOptions.Watermark.ShouldBe(PlayoutItemWatermark);
     }
 
-    [Test]
-    public void New_Should_Select_No_Watermark_When_None_Are_Configured()
+    private static IEnumerable<(Option<ChannelWatermark>, Channel, PlayoutItem, List<ChannelWatermark>)>
+        SelectWatermarksTestCases()
     {
-        var now = DateTimeOffset.Now;
-        Option<ChannelWatermark> globalWatermark = Option<ChannelWatermark>.None;
-        var channel = ChannelNoWatermark;
-        var playoutItem = new PlayoutItem
-        {
-            Watermarks = [],
-            DisableWatermarks = false
-        };
+        // no watermark when none are configured
+        yield return (NoGlobalWatermark, ChannelNoWatermark, PlayoutItemWithNoWatermarks, WatermarkResultEmpty);
 
-        List<WatermarkOptions> watermarks = WatermarkSelector.SelectWatermarks(
-            globalWatermark,
-            channel,
-            playoutItem,
-            now);
+        // no watermark when global configured but disabled playout item
+        yield return (GlobalWatermark, ChannelNoWatermark, PlayoutItemDisableWatermarks, WatermarkResultEmpty);
 
-        watermarks.ShouldBeEmpty();
+        // global watermark when global configured
+        yield return (GlobalWatermark, ChannelNoWatermark, PlayoutItemWithNoWatermarks, [GlobalWatermark.Head()]);
+
+        // channel watermark when global and channel configured
+        yield return (GlobalWatermark, ChannelWithWatermark, PlayoutItemWithNoWatermarks, [ChannelWatermark.Head()]);
+
+        // channel watermark when channel configured
+        yield return (NoGlobalWatermark, ChannelWithWatermark, PlayoutItemWithNoWatermarks, [ChannelWatermark.Head()]);
+
+        // playout item when global, channel and playout item configured
+        yield return (GlobalWatermark, ChannelWithWatermark, PlayoutItemWithWatermark, [PlayoutItemWatermark]);
+
+        // playout item when channel and playout item configured
+        yield return (NoGlobalWatermark, ChannelWithWatermark, PlayoutItemWithWatermark, [PlayoutItemWatermark]);
+
+        // playout item when playout item configured
+        yield return (NoGlobalWatermark, ChannelNoWatermark, PlayoutItemWithWatermark, [PlayoutItemWatermark]);
+
+        // no watermark when channel configured with playout item disabled
+        yield return (NoGlobalWatermark, ChannelWithWatermark, PlayoutItemDisableWatermarks, WatermarkResultEmpty);
+
+        // no watermark when global and channel configured with playout item disabled
+        yield return (GlobalWatermark, ChannelWithWatermark, PlayoutItemDisableWatermarks, WatermarkResultEmpty);
+
+        // no watermark when global, channel and playout item configured with playout item disabled
+        yield return (GlobalWatermark, ChannelWithWatermark, PlayoutItemWithDisabledWatermark, WatermarkResultEmpty);
     }
 
-    [Test]
-    public void New_Should_Select_No_Watermark_When_Global_Configured_But_Disabled_PlayoutItem()
+    [TestCaseSource(nameof(SelectWatermarksTestCases))]
+    public void Should_Select_Appropriate_Watermark(
+        (Option<ChannelWatermark> globalWatermark,
+        Channel channel,
+        PlayoutItem playoutItem,
+        List<ChannelWatermark> expectedWatermarks) td)
     {
-        var now = DateTimeOffset.Now;
-        Option<ChannelWatermark> globalWatermark = GlobalWatermark;
-        var channel = ChannelNoWatermark;
-        var playoutItem = new PlayoutItem
-        {
-            Watermarks = [],
-            DisableWatermarks = true
-        };
-
         List<WatermarkOptions> watermarks = WatermarkSelector.SelectWatermarks(
-            globalWatermark,
-            channel,
-            playoutItem,
-            now);
+            td.globalWatermark,
+            td.channel,
+            td.playoutItem,
+            Now);
 
-        watermarks.ShouldBeEmpty();
-    }
-
-    [Test]
-    public void New_Should_Select_Global_Watermark_When_Global_Configured()
-    {
-        var now = DateTimeOffset.Now;
-        Option<ChannelWatermark> globalWatermark = GlobalWatermark;
-        var channel = ChannelNoWatermark;
-        var playoutItem = new PlayoutItem
+        watermarks.Count.ShouldBe(td.expectedWatermarks.Count);
+        for (var i = 0; i < td.expectedWatermarks.Count; i++)
         {
-            Watermarks = [],
-            DisableWatermarks = false
-        };
-
-        List<WatermarkOptions> watermarks = WatermarkSelector.SelectWatermarks(
-            globalWatermark,
-            channel,
-            playoutItem,
-            now);
-
-        watermarks.Count.ShouldBe(1);
-        watermarks.Head().Watermark.ShouldBe(GlobalWatermark);
+            watermarks[i].Watermark.ShouldBe(td.expectedWatermarks[i]);
+        }
     }
-
-    [Test]
-    public void New_Should_Select_Channel_Watermark_When_Global_And_Channel_Configured()
-    {
-        var now = DateTimeOffset.Now;
-        Option<ChannelWatermark> globalWatermark = GlobalWatermark;
-        var channel = ChannelWithWatermark;
-        var playoutItem = new PlayoutItem
-        {
-            Watermarks = [],
-            DisableWatermarks = false
-        };
-
-        List<WatermarkOptions> watermarks = WatermarkSelector.SelectWatermarks(
-            globalWatermark,
-            channel,
-            playoutItem,
-            now);
-
-        watermarks.Count.ShouldBe(1);
-        watermarks.Head().Watermark.ShouldBe(ChannelWatermark);
-    }
-
-    [Test]
-    public void New_Should_Select_Channel_Watermark_When_Channel_Configured()
-    {
-        var now = DateTimeOffset.Now;
-        Option<ChannelWatermark> globalWatermark = Option<ChannelWatermark>.None;
-        var channel = ChannelWithWatermark;
-        var playoutItem = new PlayoutItem
-        {
-            Watermarks = [],
-            DisableWatermarks = false
-        };
-
-        List<WatermarkOptions> watermarks = WatermarkSelector.SelectWatermarks(
-            globalWatermark,
-            channel,
-            playoutItem,
-            now);
-
-        watermarks.Count.ShouldBe(1);
-        watermarks.Head().Watermark.ShouldBe(ChannelWatermark);
-    }
-
-    [Test]
-    public void New_Should_Select_No_Watermark_When_Channel_Configured_But_Disabled_PlayoutItem()
-    {
-        var now = DateTimeOffset.Now;
-        Option<ChannelWatermark> globalWatermark = Option<ChannelWatermark>.None;
-        var channel = ChannelWithWatermark;
-        var playoutItem = new PlayoutItem
-        {
-            Watermarks = [],
-            DisableWatermarks = true
-        };
-
-        List<WatermarkOptions> watermarks = WatermarkSelector.SelectWatermarks(
-            globalWatermark,
-            channel,
-            playoutItem,
-            now);
-
-        watermarks.ShouldBeEmpty();
-    }
-
-    [Test]
-    public void New_Should_Select_PlayoutItem_Watermark_When_Global_And_Channel_And_PlayoutItem_Configured()
-    {
-        var now = DateTimeOffset.Now;
-        Option<ChannelWatermark> globalWatermark = GlobalWatermark;
-        var channel = ChannelWithWatermark;
-        var playoutItem = new PlayoutItem
-        {
-            Watermarks = [PlayoutItemWatermark],
-            DisableWatermarks = false
-        };
-
-        List<WatermarkOptions> watermarks = WatermarkSelector.SelectWatermarks(
-            globalWatermark,
-            channel,
-            playoutItem,
-            now);
-
-        watermarks.Count.ShouldBe(1);
-        watermarks.Head().Watermark.ShouldBe(PlayoutItemWatermark);
-    }
-
-    [Test]
-    public void New_Should_Select_PlayoutItem_Watermark_When_Channel_And_PlayoutItem_Configured()
-    {
-        var now = DateTimeOffset.Now;
-        Option<ChannelWatermark> globalWatermark = Option<ChannelWatermark>.None;
-        var channel = ChannelWithWatermark;
-        var playoutItem = new PlayoutItem
-        {
-            Watermarks = [PlayoutItemWatermark],
-            DisableWatermarks = false
-        };
-
-        List<WatermarkOptions> watermarks = WatermarkSelector.SelectWatermarks(
-            globalWatermark,
-            channel,
-            playoutItem,
-            now);
-
-        watermarks.Count.ShouldBe(1);
-        watermarks.Head().Watermark.ShouldBe(PlayoutItemWatermark);
-    }
-
-    [Test]
-    public void New_Should_Select_PlayoutItem_Watermark_When_PlayoutItem_Configured()
-    {
-        var now = DateTimeOffset.Now;
-        Option<ChannelWatermark> globalWatermark = Option<ChannelWatermark>.None;
-        var channel = ChannelNoWatermark;
-        var playoutItem = new PlayoutItem
-        {
-            Watermarks = [PlayoutItemWatermark],
-            DisableWatermarks = false
-        };
-
-        List<WatermarkOptions> watermarks = WatermarkSelector.SelectWatermarks(
-            globalWatermark,
-            channel,
-            playoutItem,
-            now);
-
-        watermarks.Count.ShouldBe(1);
-        watermarks.Head().Watermark.ShouldBe(PlayoutItemWatermark);
-    }
-
-    [Test]
-    public void New_Should_Select_No_Watermark_When_Global_And_Channel_And_PlayoutItem_Configured_But_Disabled_PlayoutItem()
-    {
-        var now = DateTimeOffset.Now;
-        Option<ChannelWatermark> globalWatermark = GlobalWatermark;
-        var channel = ChannelWithWatermark;
-        var playoutItem = new PlayoutItem
-        {
-            Watermarks = [PlayoutItemWatermark],
-            DisableWatermarks = true
-        };
-
-        List<WatermarkOptions> watermarks = WatermarkSelector.SelectWatermarks(
-            globalWatermark,
-            channel,
-            playoutItem,
-            now);
-
-        watermarks.ShouldBeEmpty();
-    }
-
 
     // TODO: also decos?
 }
