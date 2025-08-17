@@ -14,19 +14,16 @@ public class FFmpegProcessService
 {
     private readonly IClient _client;
     private readonly IFFmpegStreamSelector _ffmpegStreamSelector;
-    private readonly IWatermarkSelector _watermarkSelector;
     private readonly ILogger<FFmpegProcessService> _logger;
     private readonly ITempFilePool _tempFilePool;
 
     public FFmpegProcessService(
         IFFmpegStreamSelector ffmpegStreamSelector,
-        IWatermarkSelector watermarkSelector,
         ITempFilePool tempFilePool,
         IClient client,
         ILogger<FFmpegProcessService> logger)
     {
         _ffmpegStreamSelector = ffmpegStreamSelector;
-        _watermarkSelector = watermarkSelector;
         _tempFilePool = tempFilePool;
         _client = client;
         _logger = logger;
@@ -55,28 +52,25 @@ public class FFmpegProcessService
 
             MediaStream videoStream = await _ffmpegStreamSelector.SelectVideoStream(videoVersion);
 
-            Option<ChannelWatermark> watermarkOverride =
-                videoVersion is FallbackMediaVersion or CoverArtMediaVersion
-                    ? new ChannelWatermark
-                    {
-                        Mode = ChannelWatermarkMode.Permanent,
-                        HorizontalMarginPercent = horizontalMarginPercent,
-                        VerticalMarginPercent = verticalMarginPercent,
-                        Location = watermarkLocation,
-                        Size = WatermarkSize.Scaled,
-                        WidthPercent = watermarkWidthPercent,
-                        Opacity = 100
-                    }
-                    : None;
+            Option<WatermarkOptions> watermarkOptions = Option<WatermarkOptions>.None;
+            if (videoVersion is FallbackMediaVersion or CoverArtMediaVersion)
+            {
+                var songWatermark = new ChannelWatermark
+                {
+                    Mode = ChannelWatermarkMode.Permanent,
+                    HorizontalMarginPercent = horizontalMarginPercent,
+                    VerticalMarginPercent = verticalMarginPercent,
+                    Location = watermarkLocation,
+                    Size = WatermarkSize.Scaled,
+                    WidthPercent = watermarkWidthPercent,
+                    Opacity = 100
+                };
 
-            Option<WatermarkOptions> watermarkOptions =
-                await _watermarkSelector.GetWatermarkOptions(
-                    channel,
-                    playoutItemWatermark,
-                    globalWatermark,
-                    videoVersion,
-                    watermarkOverride,
-                    watermarkPath);
+                watermarkOptions = new WatermarkOptions(
+                    songWatermark,
+                    await watermarkPath.IfNoneAsync(videoVersion.MediaFiles.Head().Path),
+                    0);
+            }
 
             FFmpegPlaybackSettings playbackSettings =
                 FFmpegPlaybackSettingsCalculator.CalculateErrorSettings(

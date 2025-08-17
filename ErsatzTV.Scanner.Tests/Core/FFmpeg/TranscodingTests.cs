@@ -258,7 +258,6 @@ public class TranscodingTests
 
         var oldService = new FFmpegProcessService(
             new FakeStreamSelector(),
-            watermarkSelector,
             tempFilePool,
             Substitute.For<IClient>(),
             LoggerFactory.CreateLogger<FFmpegProcessService>());
@@ -906,7 +905,6 @@ public class TranscodingTests
 
         var oldService = new FFmpegProcessService(
             new FakeStreamSelector(),
-            watermarkSelector,
             Substitute.For<ITempFilePool>(),
             Substitute.For<IClient>(),
             LoggerFactory.CreateLogger<FFmpegProcessService>());

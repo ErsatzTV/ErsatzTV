@@ -340,13 +340,10 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             // still need channel and global watermarks
             if (playoutItemWatermarks.Count == 0)
             {
-                WatermarkOptions options = await _watermarkSelector.GetWatermarkOptions(
+                WatermarkOptions options = _watermarkSelector.GetWatermarkOptions(
                     channel,
                     Option<ChannelWatermark>.None,
-                    globalWatermark,
-                    videoVersion,
-                    None,
-                    None);
+                    globalWatermark);
 
                 foreach (ChannelWatermark watermark in options.Watermark)
                 {
@@ -358,13 +355,10 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             // load all playout item watermarks
             foreach (ChannelWatermark playoutItemWatermark in playoutItemWatermarks)
             {
-                WatermarkOptions options = await _watermarkSelector.GetWatermarkOptions(
+                WatermarkOptions options = _watermarkSelector.GetWatermarkOptions(
                     channel,
                     playoutItemWatermark,
-                    globalWatermark,
-                    videoVersion,
-                    None,
-                    None);
+                    globalWatermark);
 
                 foreach (ChannelWatermark watermark in options.Watermark)
                 {

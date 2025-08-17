@@ -5,7 +5,7 @@ namespace ErsatzTV.Core.Interfaces.FFmpeg;
 
 public interface IWatermarkSelector
 {
-    Task<List<WatermarkOptions>> SelectWatermarks(
+    List<WatermarkOptions> SelectWatermarks(
         Option<ChannelWatermark> globalWatermark,
         Channel channel,
         PlayoutItem playoutItem,
@@ -13,11 +13,8 @@ public interface IWatermarkSelector
 
     WatermarkResult GetPlayoutItemWatermark(PlayoutItem playoutItem, DateTimeOffset now);
 
-    Task<WatermarkOptions> GetWatermarkOptions(
+    WatermarkOptions GetWatermarkOptions(
         Channel channel,
         Option<ChannelWatermark> playoutItemWatermark,
-        Option<ChannelWatermark> globalWatermark,
-        MediaVersion videoVersion,
-        Option<ChannelWatermark> watermarkOverride,
-        Option<string> watermarkPath);
+        Option<ChannelWatermark> globalWatermark);
 }

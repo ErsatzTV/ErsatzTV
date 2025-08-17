@@ -11,15 +11,13 @@ namespace ErsatzTV.Core.FFmpeg;
 public class WatermarkSelector(IImageCache imageCache, ILogger<WatermarkSelector> logger)
     : IWatermarkSelector
 {
-    public async Task<List<WatermarkOptions>> SelectWatermarks(
+    public List<WatermarkOptions> SelectWatermarks(
         Option<ChannelWatermark> globalWatermark,
         Channel channel,
         PlayoutItem playoutItem,
         DateTimeOffset now)
     {
         logger.LogDebug("TODO");
-        await Task.Delay(10);
-
         return [];
     }
 
@@ -82,25 +80,14 @@ public class WatermarkSelector(IImageCache imageCache, ILogger<WatermarkSelector
         return new InheritWatermark();
     }
 
-    public async Task<WatermarkOptions> GetWatermarkOptions(
+    public WatermarkOptions GetWatermarkOptions(
         Channel channel,
         Option<ChannelWatermark> playoutItemWatermark,
-        Option<ChannelWatermark> globalWatermark,
-        MediaVersion videoVersion,
-        Option<ChannelWatermark> watermarkOverride,
-        Option<string> watermarkPath)
+        Option<ChannelWatermark> globalWatermark)
     {
         if (channel.StreamingMode == StreamingMode.HttpLiveStreamingDirect)
         {
             return WatermarkOptions.NoWatermark;
-        }
-
-        if (videoVersion is CoverArtMediaVersion)
-        {
-            return new WatermarkOptions(
-                watermarkOverride,
-                await watermarkPath.IfNoneAsync(videoVersion.MediaFiles.Head().Path),
-                0);
         }
 
         // check for playout item watermark
@@ -111,7 +98,7 @@ public class WatermarkSelector(IImageCache imageCache, ILogger<WatermarkSelector
                 // used for song progress overlay
                 case ChannelWatermarkImageSource.Resource:
                     return new WatermarkOptions(
-                        await watermarkOverride.IfNoneAsync(watermark),
+                        watermark,
                         Path.Combine(FileSystemLayout.ResourcesCacheFolder, watermark.Image),
                         Option<int>.None);
                 case ChannelWatermarkImageSource.Custom:
@@ -131,7 +118,7 @@ public class WatermarkSelector(IImageCache imageCache, ILogger<WatermarkSelector
                         ArtworkKind.Watermark,
                         Option<int>.None);
                     return new WatermarkOptions(
-                        await watermarkOverride.IfNoneAsync(watermark),
+                        watermark,
                         customPath,
                         None);
                 case ChannelWatermarkImageSource.ChannelLogo:
@@ -151,7 +138,7 @@ public class WatermarkSelector(IImageCache imageCache, ILogger<WatermarkSelector
                                 : imageCache.GetPathForImage(a.Path, ArtworkKind.Logo, Option<int>.None));
 
                     return new WatermarkOptions(
-                        await watermarkOverride.IfNoneAsync(watermark),
+                        watermark,
                         maybeChannelPath,
                         None);
                 default:
@@ -172,7 +159,7 @@ public class WatermarkSelector(IImageCache imageCache, ILogger<WatermarkSelector
                         ArtworkKind.Watermark,
                         Option<int>.None);
                     return new WatermarkOptions(
-                        await watermarkOverride.IfNoneAsync(channel.Watermark),
+                        channel.Watermark,
                         customPath,
                         None);
                 case ChannelWatermarkImageSource.ChannelLogo:
@@ -191,7 +178,7 @@ public class WatermarkSelector(IImageCache imageCache, ILogger<WatermarkSelector
                                 ? a.Path
                                 : imageCache.GetPathForImage(a.Path, ArtworkKind.Logo, Option<int>.None));
                     return new WatermarkOptions(
-                        await watermarkOverride.IfNoneAsync(channel.Watermark),
+                        channel.Watermark,
                         maybeChannelPath,
                         None);
                 default:
@@ -212,7 +199,7 @@ public class WatermarkSelector(IImageCache imageCache, ILogger<WatermarkSelector
                         ArtworkKind.Watermark,
                         Option<int>.None);
                     return new WatermarkOptions(
-                        await watermarkOverride.IfNoneAsync(watermark),
+                        watermark,
                         customPath,
                         None);
                 case ChannelWatermarkImageSource.ChannelLogo:
@@ -231,7 +218,7 @@ public class WatermarkSelector(IImageCache imageCache, ILogger<WatermarkSelector
                                 ? a.Path
                                 : imageCache.GetPathForImage(a.Path, ArtworkKind.Logo, Option<int>.None));
                     return new WatermarkOptions(
-                        await watermarkOverride.IfNoneAsync(watermark),
+                        watermark,
                         maybeChannelPath,
                         None);
                 default:
