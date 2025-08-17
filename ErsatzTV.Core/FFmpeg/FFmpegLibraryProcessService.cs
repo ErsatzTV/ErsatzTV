@@ -149,7 +149,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
 
         foreach (Subtitle subtitle in maybeSubtitle)
         {
-            if (subtitle.SubtitleKind == SubtitleKind.Sidecar)
+            if (subtitle.SubtitleKind == SubtitleKind.Sidecar || subtitle is
+                    { SubtitleKind: SubtitleKind.Embedded, IsImage: false, IsExtracted: true })
             {
                 // proxy to avoid dealing with escaping
                 subtitle.Path = $"http://localhost:{Settings.StreamingPort}/media/subtitle/{subtitle.Id}";
@@ -276,12 +277,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                 subtitle.Codec,
                 StreamKind.Video);
 
-            string path = subtitle.IsImage switch
-            {
-                true => videoPath,
-                false when subtitle.SubtitleKind == SubtitleKind.Sidecar => subtitle.Path,
-                _ => Path.Combine(FileSystemLayout.SubtitleCacheFolder, subtitle.Path)
-            };
+            string path = subtitle.IsImage ? videoPath : subtitle.Path;
 
             SubtitleMethod method = SubtitleMethod.Burn;
             if (channel.StreamingMode == StreamingMode.HttpLiveStreamingDirect)
