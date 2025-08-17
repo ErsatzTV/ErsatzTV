@@ -8,43 +8,48 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Application.Subtitles.Queries;
 
-public class GetSubtitlePathByIdHandler : IRequestHandler<GetSubtitlePathById, Either<BaseError, string>>
+public class GetSubtitlePathByIdHandler(IDbContextFactory<TvContext> dbContextFactory)
+    : IRequestHandler<GetSubtitlePathById, Either<BaseError, string>>
 {
-    private readonly IDbContextFactory<TvContext> _dbContextFactory;
-
-    public GetSubtitlePathByIdHandler(IDbContextFactory<TvContext> dbContextFactory) =>
-        _dbContextFactory = dbContextFactory;
-
     public async Task<Either<BaseError, string>> Handle(
         GetSubtitlePathById request,
         CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         Option<Subtitle> maybeSubtitle = await dbContext.Subtitles
+            .AsNoTracking()
             .SelectOneAsync(s => s.Id, s => s.Id == request.Id);
 
-        foreach (string plexUrl in await GetPlexUrl(request, dbContext, maybeSubtitle))
+        foreach (var subtitle in maybeSubtitle)
         {
-            return plexUrl;
+            if (subtitle is { SubtitleKind: SubtitleKind.Embedded, IsExtracted: true })
+            {
+                return Path.Combine(FileSystemLayout.SubtitleCacheFolder, subtitle.Path);
+            }
+
+            foreach (string plexUrl in await GetPlexUrl(request.Id, dbContext, maybeSubtitle))
+            {
+                return plexUrl;
+            }
+
+            foreach (string jellyfinUrl in await GetJellyfinUrl(request.Id, dbContext, maybeSubtitle))
+            {
+                return jellyfinUrl;
+            }
+
+            foreach (string embyUrl in await GetEmbyUrl(request.Id, dbContext, maybeSubtitle))
+            {
+                return embyUrl;
+            }
+
+            return subtitle.Path;
         }
 
-        foreach (string jellyfinUrl in await GetJellyfinUrl(request, dbContext, maybeSubtitle))
-        {
-            return jellyfinUrl;
-        }
-
-        foreach (string embyUrl in await GetEmbyUrl(request, dbContext, maybeSubtitle))
-        {
-            return embyUrl;
-        }
-
-        return maybeSubtitle
-            .Map(s => s.Path)
-            .ToEither(BaseError.New($"Unable to locate subtitle with id {request.Id}"));
+        return BaseError.New($"Unable to locate subtitle with id {request.Id}");
     }
 
-    private static async Task<Option<string>> GetPlexUrl(
-        GetSubtitlePathById request,
+        protected static async Task<Option<string>> GetPlexUrl(
+        int subtitleId,
         TvContext dbContext,
         Option<Subtitle> maybeSubtitle)
     {
@@ -57,7 +62,7 @@ public class GetSubtitlePathByIdHandler : IRequestHandler<GetSubtitlePathById, E
                      inner join EpisodeMetadata EM on EM.EpisodeId = MI.Id
                      inner join Subtitle S on EM.Id = S.EpisodeMetadataId
                      where S.Id = @SubtitleId",
-                new { SubtitleId = request.Id })
+                new { SubtitleId = subtitleId })
             .Map(Optional);
 
         // check for plex movie
@@ -71,7 +76,7 @@ public class GetSubtitlePathByIdHandler : IRequestHandler<GetSubtitlePathById, E
                      inner join MovieMetadata MM on MM.MovieId = MI.Id
                      inner join Subtitle S on MM.Id = S.MovieMetadataId
                      where S.Id = @SubtitleId",
-                    new { SubtitleId = request.Id })
+                    new { SubtitleId = subtitleId })
                 .Map(Optional);
         }
 
@@ -86,8 +91,8 @@ public class GetSubtitlePathByIdHandler : IRequestHandler<GetSubtitlePathById, E
         return Option<string>.None;
     }
 
-    private static async Task<Option<string>> GetJellyfinUrl(
-        GetSubtitlePathById request,
+    protected static async Task<Option<string>> GetJellyfinUrl(
+        int subtitleId,
         TvContext dbContext,
         Option<Subtitle> maybeSubtitle)
     {
@@ -97,7 +102,7 @@ public class GetSubtitlePathByIdHandler : IRequestHandler<GetSubtitlePathById, E
                      inner join EpisodeMetadata EM on EM.EpisodeId = JE.Id
                      inner join Subtitle S on EM.Id = S.EpisodeMetadataId
                      where S.Id = @SubtitleId",
-                new { SubtitleId = request.Id })
+                new { SubtitleId = subtitleId })
             .Map(Optional);
 
         // check for jellyfin movie
@@ -108,7 +113,7 @@ public class GetSubtitlePathByIdHandler : IRequestHandler<GetSubtitlePathById, E
                      inner join MovieMetadata MM on MM.MovieId = JM.Id
                      inner join Subtitle S on MM.Id = S.MovieMetadataId
                      where S.Id = @SubtitleId",
-                    new { SubtitleId = request.Id })
+                    new { SubtitleId = subtitleId })
                 .Map(Optional);
         }
 
@@ -127,8 +132,8 @@ public class GetSubtitlePathByIdHandler : IRequestHandler<GetSubtitlePathById, E
         return Option<string>.None;
     }
 
-    private static async Task<Option<string>> GetEmbyUrl(
-        GetSubtitlePathById request,
+    protected static async Task<Option<string>> GetEmbyUrl(
+        int subtitleId,
         TvContext dbContext,
         Option<Subtitle> maybeSubtitle)
     {
@@ -138,7 +143,7 @@ public class GetSubtitlePathByIdHandler : IRequestHandler<GetSubtitlePathById, E
                      inner join EpisodeMetadata EM on EM.EpisodeId = EE.Id
                      inner join Subtitle S on EM.Id = S.EpisodeMetadataId
                      where S.Id = @SubtitleId",
-                new { SubtitleId = request.Id })
+                new { SubtitleId = subtitleId })
             .Map(Optional);
 
         // check for emby movie
@@ -149,7 +154,7 @@ public class GetSubtitlePathByIdHandler : IRequestHandler<GetSubtitlePathById, E
                      inner join MovieMetadata MM on MM.MovieId = EM.Id
                      inner join Subtitle S on MM.Id = S.MovieMetadataId
                      where S.Id = @SubtitleId",
-                    new { SubtitleId = request.Id })
+                    new { SubtitleId = subtitleId })
                 .Map(Optional);
         }
 
