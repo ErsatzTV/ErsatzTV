@@ -25,6 +25,7 @@ public class YamlPlayoutBuilder(
     : IYamlPlayoutBuilder
 {
     public async Task<PlayoutBuildResult> Build(
+        DateTimeOffset start,
         Playout playout,
         PlayoutReferenceData referenceData,
         PlayoutBuildMode mode,
@@ -99,8 +100,6 @@ public class YamlPlayoutBuilder(
             }
         }
 
-        DateTimeOffset start = DateTimeOffset.Now;
-
         int daysToBuild = await GetDaysToBuild();
         DateTimeOffset finish = start.AddDays(daysToBuild);
 
@@ -155,17 +154,24 @@ public class YamlPlayoutBuilder(
             }
         }
 
-        // logger.LogDebug(
-        //     "Saved yaml context from {Start} to {Finish}, instruction {Instruction}",
-        //     context.CurrentTime,
-        //     finish,
-        //     context.InstructionIndex);
+        logger.LogDebug(
+            "Saved yaml context from {Start} to {Finish}, instruction {Instruction}",
+            context.CurrentTime,
+            finish,
+            context.InstructionIndex);
 
-        // apply all history
+        // apply all (filtered) history
+        var filteredHistory = referenceData.PlayoutHistory.ToList();
+        filteredHistory.RemoveAll(h => result.HistoryToRemove.Contains(h.Id));
         var applyHistoryHandler = new YamlPlayoutApplyHistoryHandler(enumeratorCache);
         foreach (YamlPlayoutContentItem contentItem in playoutDefinition.Content)
         {
-            await applyHistoryHandler.Handle(referenceData, context, contentItem, logger, cancellationToken);
+            await applyHistoryHandler.Handle(
+                filteredHistory.ToImmutableList(),
+                context,
+                contentItem,
+                logger,
+                cancellationToken);
         }
 
         if (mode is PlayoutBuildMode.Reset)
@@ -286,6 +292,7 @@ public class YamlPlayoutBuilder(
         playout.Anchor = anchor;
 
         result.AddedItems.AddRange(context.AddedItems);
+        result.AddedHistory.AddRange(context.AddedHistory);
 
         return result;
     }

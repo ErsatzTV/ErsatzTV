@@ -125,7 +125,12 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
                         cancellationToken);
                     break;
                 case ProgramSchedulePlayoutType.Yaml:
-                    result = await _yamlPlayoutBuilder.Build(playout, referenceData, request.Mode, cancellationToken);
+                    result = await _yamlPlayoutBuilder.Build(
+                        request.Start,
+                        playout,
+                        referenceData,
+                        request.Mode,
+                        cancellationToken);
                     break;
                 case ProgramSchedulePlayoutType.ExternalJson:
                     await _externalJsonPlayoutBuilder.Build(playout, request.Mode, cancellationToken);
