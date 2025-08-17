@@ -28,6 +28,9 @@ public class ChannelWatermark
     public List<Deco> Decos { get; set; }
     public List<DecoWatermark> DecoWatermarks { get; set; }
     public int ZIndex { get; set; }
+
+    // for unit testing
+    public override string ToString() => Name;
 }
 
 public enum ChannelWatermarkMode
