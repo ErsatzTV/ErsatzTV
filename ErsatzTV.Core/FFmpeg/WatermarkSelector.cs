@@ -253,6 +253,20 @@ public class WatermarkSelector(IImageCache imageCache, IMemoryCache memoryCache,
     {
         try
         {
+            if (string.IsNullOrWhiteSpace(ffprobePath))
+            {
+                throw new ArgumentException(
+                    "FFprobe is required to check for animated watermark",
+                    nameof(ffprobePath));
+            }
+
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                throw new ArgumentException(
+                    "Watermark path is required to check for animated watermark",
+                    nameof(path));
+            }
+
             var cacheKey = $"image.animated.{Path.GetFileName(path)}";
             if (memoryCache.TryGetValue(cacheKey, out bool animated))
             {
