@@ -154,11 +154,11 @@ public class YamlPlayoutBuilder(
             }
         }
 
-        logger.LogDebug(
-            "Saved yaml context from {Start} to {Finish}, instruction {Instruction}",
-            context.CurrentTime,
-            finish,
-            context.InstructionIndex);
+        // logger.LogDebug(
+        //     "Saved yaml context from {Start} to {Finish}, instruction {Instruction}",
+        //     context.CurrentTime,
+        //     finish,
+        //     context.InstructionIndex);
 
         // apply all (filtered) history
         var filteredHistory = referenceData.PlayoutHistory.ToList();
