@@ -20,16 +20,10 @@ public class WatermarkElement : ImageElementBase
     {
         _logger = logger;
         // TODO: better model coming in here?
-        foreach (string imagePath in watermarkOptions.ImagePath)
-        {
-            _imagePath = imagePath;
-        }
 
-        foreach (ChannelWatermark watermark in watermarkOptions.Watermark)
-        {
-            _watermark = watermark;
-            ZIndex = watermark.ZIndex;
-        }
+        _imagePath = watermarkOptions.ImagePath;
+        _watermark = watermarkOptions.Watermark;
+        ZIndex = watermarkOptions.Watermark.ZIndex;
     }
 
     public bool IsValid => _imagePath != null && _watermark != null;

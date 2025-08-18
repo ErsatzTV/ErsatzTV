@@ -26,8 +26,7 @@ public interface IFFmpegProcessService
         DateTimeOffset start,
         DateTimeOffset finish,
         DateTimeOffset now,
-        List<ChannelWatermark> playoutItemWatermarks,
-        Option<ChannelWatermark> globalWatermark,
+        List<WatermarkOptions> watermarks,
         List<PlayoutItemGraphicsElement> graphicsElements,
         string vaapiDisplay,
         VaapiDriver vaapiDriver,
@@ -41,7 +40,6 @@ public interface IFFmpegProcessService
         DateTimeOffset channelStartTime,
         long ptsOffset,
         Option<int> targetFramerate,
-        bool disableWatermarks,
         Option<string> customReportsFolder,
         Action<FFmpegPipeline> pipelineAction);
 
@@ -81,8 +79,6 @@ public interface IFFmpegProcessService
         string ffprobePath,
         Option<string> subtitleFile,
         Channel channel,
-        Option<ChannelWatermark> playoutItemWatermark,
-        Option<ChannelWatermark> globalWatermark,
         MediaVersion videoVersion,
         string videoPath,
         bool boxBlur,

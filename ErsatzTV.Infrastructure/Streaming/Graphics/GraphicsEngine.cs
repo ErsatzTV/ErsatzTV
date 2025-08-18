@@ -129,7 +129,7 @@ public class GraphicsEngine(
             context.FrameSize.Width,
             context.FrameSize.Height,
             SKColorType.Bgra8888,
-            SKAlphaType.Premul);
+            SKAlphaType.Unpremul);
 
         try
         {

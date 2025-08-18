@@ -3,7 +3,9 @@
 namespace ErsatzTV.Core.FFmpeg;
 
 public record WatermarkOptions(
-    Option<ChannelWatermark> Watermark,
-    Option<string> ImagePath,
-    Option<int> ImageStreamIndex,
-    bool IsAnimated);
+    ChannelWatermark Watermark,
+    string ImagePath,
+    Option<int> ImageStreamIndex)
+{
+    public static WatermarkOptions NoWatermark => new(null, null, None);
+}

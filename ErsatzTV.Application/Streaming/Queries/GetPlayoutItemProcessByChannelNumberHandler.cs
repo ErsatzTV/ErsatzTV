@@ -36,6 +36,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
     private readonly ILogger<GetPlayoutItemProcessByChannelNumberHandler> _logger;
     private readonly IMediaCollectionRepository _mediaCollectionRepository;
     private readonly IMusicVideoCreditsGenerator _musicVideoCreditsGenerator;
+    private readonly IWatermarkSelector _watermarkSelector;
     private readonly IPlexPathReplacementService _plexPathReplacementService;
     private readonly ISongVideoGenerator _songVideoGenerator;
     private readonly ITelevisionRepository _televisionRepository;
@@ -53,6 +54,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
         IArtistRepository artistRepository,
         ISongVideoGenerator songVideoGenerator,
         IMusicVideoCreditsGenerator musicVideoCreditsGenerator,
+        IWatermarkSelector watermarkSelector,
         ILogger<GetPlayoutItemProcessByChannelNumberHandler> logger)
         : base(dbContextFactory)
     {
@@ -67,6 +69,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
         _artistRepository = artistRepository;
         _songVideoGenerator = songVideoGenerator;
         _musicVideoCreditsGenerator = musicVideoCreditsGenerator;
+        _watermarkSelector = watermarkSelector;
         _logger = logger;
     }
 
@@ -250,32 +253,17 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 .BindT(watermarkId => dbContext.ChannelWatermarks
                     .SelectOneAsync(w => w.Id, w => w.Id == watermarkId));
 
-            List<ChannelWatermark> playoutItemWatermarks = [];
-            playoutItemWatermarks.AddRange(playoutItemWithPath.PlayoutItem.Watermarks);
-
-            bool disableWatermarks = playoutItemWithPath.PlayoutItem.DisableWatermarks;
-            WatermarkResult watermarkResult = GetPlayoutItemWatermark(playoutItemWithPath.PlayoutItem, now);
-            switch (watermarkResult)
-            {
-                case InheritWatermark:
-                    // do nothing, other code will fall back to channel/global
-                    break;
-                case DisableWatermark:
-                    disableWatermarks = true;
-                    break;
-                case CustomWatermarks watermarks:
-                    playoutItemWatermarks.Clear();
-                    playoutItemWatermarks.AddRange(watermarks.Watermarks);
-                    break;
-            }
+            List<WatermarkOptions> watermarks = _watermarkSelector.SelectWatermarks(
+                maybeGlobalWatermark,
+                channel,
+                playoutItemWithPath.PlayoutItem,
+                now);
 
             if (playoutItemWithPath.PlayoutItem.MediaItem is Song song)
             {
                 (videoPath, videoVersion) = await _songVideoGenerator.GenerateSongVideo(
                     song,
                     channel,
-                    playoutItemWatermarks.HeadOrNone(),
-                    maybeGlobalWatermark,
                     ffmpegPath,
                     ffprobePath,
                     cancellationToken);
@@ -288,21 +276,26 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                     bool is43 = Math.Abs(ratio - 4.0 / 3.0) < 0.01;
                     string image = is43 ? "song_progress_overlay_43.png" : "song_progress_overlay.png";
 
-                    disableWatermarks = false;
-                    playoutItemWatermarks.Clear();
-                    playoutItemWatermarks.Add(
-                        new ChannelWatermark
-                        {
-                            Mode = ChannelWatermarkMode.Permanent,
-                            Size = WatermarkSize.Scaled,
-                            WidthPercent = 100,
-                            HorizontalMarginPercent = 0,
-                            VerticalMarginPercent = 0,
-                            Opacity = 100,
-                            Location = WatermarkLocation.TopLeft,
-                            ImageSource = ChannelWatermarkImageSource.Resource,
-                            Image = image
-                        });
+                    var progressWatermark = new ChannelWatermark
+                    {
+                        Mode = ChannelWatermarkMode.Permanent,
+                        Size = WatermarkSize.Scaled,
+                        WidthPercent = 100,
+                        HorizontalMarginPercent = 0,
+                        VerticalMarginPercent = 0,
+                        Opacity = 100,
+                        Location = WatermarkLocation.TopLeft,
+                        ImageSource = ChannelWatermarkImageSource.Resource,
+                        Image = image
+                    };
+
+                    var progressWatermarkOption = new WatermarkOptions(
+                        progressWatermark,
+                        Path.Combine(FileSystemLayout.ResourcesCacheFolder, progressWatermark.Image),
+                        Option<int>.None);
+
+                    watermarks.Clear();
+                    watermarks.Add(progressWatermarkOption);
                 }
             }
 
@@ -348,8 +341,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 start,
                 finish,
                 effectiveNow,
-                playoutItemWatermarks,
-                maybeGlobalWatermark,
+                watermarks,
                 playoutItemWithPath.PlayoutItem.PlayoutItemGraphicsElements,
                 channel.FFmpegProfile.VaapiDisplay,
                 channel.FFmpegProfile.VaapiDriver,
@@ -365,7 +357,6 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 request.ChannelStartTime,
                 request.PtsOffset,
                 request.TargetFramerate,
-                disableWatermarks,
                 Option<string>.None,
                 _ => { });
 
@@ -754,68 +745,9 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
         };
     }
 
-    private WatermarkResult GetPlayoutItemWatermark(PlayoutItem playoutItem, DateTimeOffset now)
-    {
-        if (playoutItem.DisableWatermarks)
-        {
-            _logger.LogDebug("Watermark is disabled by playout item");
-            return new DisableWatermark();
-        }
-
-        DecoEntries decoEntries = GetDecoEntries(playoutItem.Playout, now);
-
-        // first, check deco template / active deco
-        foreach (Deco templateDeco in decoEntries.TemplateDeco)
-        {
-            switch (templateDeco.WatermarkMode)
-            {
-                case DecoMode.Override:
-                    if (playoutItem.FillerKind is FillerKind.None || templateDeco.UseWatermarkDuringFiller)
-                    {
-                        _logger.LogDebug("Watermark will come from template deco (override)");
-                        return new CustomWatermarks(templateDeco.DecoWatermarks.Map(dwm => dwm.Watermark).ToList());
-                    }
-
-                    _logger.LogDebug("Watermark is disabled by template deco during filler");
-                    return new DisableWatermark();
-                case DecoMode.Disable:
-                    _logger.LogDebug("Watermark is disabled by template deco");
-                    return new DisableWatermark();
-                case DecoMode.Inherit:
-                    _logger.LogDebug("Watermark will inherit from playout deco");
-                    break;
-            }
-        }
-
-        // second, check playout deco
-        foreach (Deco playoutDeco in decoEntries.PlayoutDeco)
-        {
-            switch (playoutDeco.WatermarkMode)
-            {
-                case DecoMode.Override:
-                    if (playoutItem.FillerKind is FillerKind.None || playoutDeco.UseWatermarkDuringFiller)
-                    {
-                        _logger.LogDebug("Watermark will come from playout deco (override)");
-                        return new CustomWatermarks(playoutDeco.DecoWatermarks.Map(dwm => dwm.Watermark).ToList());
-                    }
-
-                    _logger.LogDebug("Watermark is disabled by playout deco during filler");
-                    return new DisableWatermark();
-                case DecoMode.Disable:
-                    _logger.LogDebug("Watermark is disabled by playout deco");
-                    return new DisableWatermark();
-                case DecoMode.Inherit:
-                    _logger.LogDebug("Watermark will inherit from channel and/or global setting");
-                    break;
-            }
-        }
-
-        return new InheritWatermark();
-    }
-
     private DeadAirFallbackResult GetDecoDeadAirFallback(Playout playout, DateTimeOffset now)
     {
-        DecoEntries decoEntries = GetDecoEntries(playout, now);
+        DecoEntries decoEntries = DecoSelector.GetDecoEntries(playout, now);
 
         // first, check deco template / active deco
         foreach (Deco templateDeco in decoEntries.TemplateDeco)
@@ -863,43 +795,6 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
 
         return new InheritDeadAirFallback();
     }
-
-    private static DecoEntries GetDecoEntries(Playout playout, DateTimeOffset now)
-    {
-        if (playout is null)
-        {
-            return new DecoEntries(Option<Deco>.None, Option<Deco>.None);
-        }
-
-        Option<Deco> maybePlayoutDeco = Optional(playout.Deco);
-        Option<Deco> maybeTemplateDeco = Option<Deco>.None;
-
-        Option<PlayoutTemplate> maybeActiveTemplate =
-            PlayoutTemplateSelector.GetPlayoutTemplateFor(playout.Templates, now);
-
-        foreach (PlayoutTemplate activeTemplate in maybeActiveTemplate)
-        {
-            Option<DecoTemplateItem> maybeItem = Optional(activeTemplate.DecoTemplate)
-                .SelectMany(dt => dt.Items)
-                .Find(i => i.StartTime <= now.TimeOfDay && i.EndTime == TimeSpan.Zero || i.EndTime > now.TimeOfDay);
-            foreach (DecoTemplateItem item in maybeItem)
-            {
-                maybeTemplateDeco = Optional(item.Deco);
-            }
-        }
-
-        return new DecoEntries(maybeTemplateDeco, maybePlayoutDeco);
-    }
-
-    private sealed record DecoEntries(Option<Deco> TemplateDeco, Option<Deco> PlayoutDeco);
-
-    private abstract record WatermarkResult;
-
-    private sealed record InheritWatermark : WatermarkResult;
-
-    private sealed record DisableWatermark : WatermarkResult;
-
-    private sealed record CustomWatermarks(List<ChannelWatermark> Watermarks) : WatermarkResult;
 
     private abstract record DeadAirFallbackResult;
 
