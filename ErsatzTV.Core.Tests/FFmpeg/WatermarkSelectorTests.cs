@@ -281,6 +281,12 @@ public class WatermarkSelectorTests
         // no watermark when global, channel and playout item configured with template deco disabled
         yield return (WatermarkGlobal, ChannelWithWatermark, TemplateDecoDisableWithWatermark, WatermarkResultEmpty);
 
+        // no watermark when global, channel configured with template deco disabled
+        yield return (WatermarkGlobal, ChannelWithWatermark, TemplateDecoDisable, WatermarkResultEmpty);
+
+        // no watermark when global configured with template deco disabled
+        yield return (WatermarkGlobal, ChannelNoWatermark, TemplateDecoDisable, WatermarkResultEmpty);
+
         // playout item when global, channel and playout item configured with template deco inherit
         yield return (WatermarkGlobal, ChannelWithWatermark, TemplateDecoInheritWithWatermark, [WatermarkPlayoutItem]);
 
@@ -297,6 +303,12 @@ public class WatermarkSelectorTests
 
         // no watermark when global, channel and playout item configured with default deco disabled
         yield return (WatermarkGlobal, ChannelWithWatermark, DefaultDecoDisableWithWatermark, WatermarkResultEmpty);
+
+        // no watermark when global, channel configured with default deco disabled
+        yield return (WatermarkGlobal, ChannelWithWatermark, DefaultDecoDisable, WatermarkResultEmpty);
+
+        // no watermark when global configured with default deco disabled
+        yield return (WatermarkGlobal, ChannelNoWatermark, DefaultDecoDisable, WatermarkResultEmpty);
 
         // playout item when global, channel and playout item configured with default deco inherit
         yield return (WatermarkGlobal, ChannelWithWatermark, DefaultDecoInheritWithWatermark, [WatermarkPlayoutItem]);
