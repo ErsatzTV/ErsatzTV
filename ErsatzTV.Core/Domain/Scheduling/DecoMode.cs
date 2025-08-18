@@ -4,5 +4,6 @@ public enum DecoMode
 {
     Inherit = 0,
     Disable = 1,
-    Override = 2
+    Override = 2,
+    Merge = 3
 }

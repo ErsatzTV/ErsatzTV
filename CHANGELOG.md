@@ -80,6 +80,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Allow multiple watermarks in playback troubleshooting
 - Classic schedules: allow selecting multiple watermarks on schedule items
 - Block schedules: allow selecting multiple watermarks on decos
+- Block schedules: change available watermark modes on decos. For reference, the levels from highest to lowest with block schedules are `Global` > `Channel` > `Playout Default Deco` > `Template Deco`.
+  - `Inherit` - Use watermarks configured at a higher level
+  - `Disable` - Disable watermarks at this level and above
+  - `Replace` - Replace all watermarks configured at a higher level with those on this deco
+    - This was renamed from `Override`
+  - `Merge` - Merge all watermarks configured at a higher level with those on this deco
 - YAML playout: `watermark` instruction changes:
   - When value is `true`, will add named watermark to list of active watermarks
   - When value is `false` and `name` is specified, will remove named watermark from list of active watermarks

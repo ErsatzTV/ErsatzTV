@@ -24,12 +24,13 @@ public class UpdateDecoHandler(IDbContextFactory<TvContext> dbContextFactory)
     {
         existing.Name = request.Name;
 
+        bool hasWatermark = request.WatermarkMode is (DecoMode.Override or DecoMode.Merge);
+
         // watermark
         existing.WatermarkMode = request.WatermarkMode;
-        existing.UseWatermarkDuringFiller =
-            request.WatermarkMode is DecoMode.Override && request.UseWatermarkDuringFiller;
+        existing.UseWatermarkDuringFiller = hasWatermark && request.UseWatermarkDuringFiller;
 
-        if (request.WatermarkMode is DecoMode.Override)
+        if (hasWatermark)
         {
             // this is different than schedule item/playout item because we have to merge watermark ids
             IEnumerable<int> toAdd =

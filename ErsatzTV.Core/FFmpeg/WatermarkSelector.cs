@@ -35,50 +35,98 @@ public class WatermarkSelector(IImageCache imageCache, ILogger<WatermarkSelector
         // first, check deco template / active deco
         foreach (Deco templateDeco in decoEntries.TemplateDeco)
         {
+            var done = false;
+
             switch (templateDeco.WatermarkMode)
             {
-                case DecoMode.Override:
+                case DecoMode.Merge:
                     if (playoutItem.FillerKind is FillerKind.None || templateDeco.UseWatermarkDuringFiller)
                     {
-                        logger.LogDebug("Watermark will come from template deco (override)");
+                        logger.LogDebug("Watermark will come from template deco (merge)");
                         result.AddRange(
                             OptionsForWatermarks(channel, templateDeco.DecoWatermarks.Map(dwm => dwm.Watermark)));
-                        return result;
+                        break;
                     }
 
                     logger.LogDebug("Watermark is disabled by template deco during filler");
-                    return result;
+                    result.Clear();
+                    done = true;
+                    break;
+                case DecoMode.Override:
+                    if (playoutItem.FillerKind is FillerKind.None || templateDeco.UseWatermarkDuringFiller)
+                    {
+                        logger.LogDebug("Watermark will come from template deco (replace)");
+                        result.AddRange(
+                            OptionsForWatermarks(channel, templateDeco.DecoWatermarks.Map(dwm => dwm.Watermark)));
+                        done = true;
+                        break;
+                    }
+
+                    logger.LogDebug("Watermark is disabled by template deco during filler");
+                    result.Clear();
+                    done = true;
+                    break;
                 case DecoMode.Disable:
                     logger.LogDebug("Watermark is disabled by template deco");
-                    return result;
+                    done = true;
+                    break;
                 case DecoMode.Inherit:
                     logger.LogDebug("Watermark will inherit from playout deco");
                     break;
+            }
+
+            if (done)
+            {
+                return result;
             }
         }
 
         // second, check playout deco
         foreach (Deco playoutDeco in decoEntries.PlayoutDeco)
         {
+            var done = false;
+
             switch (playoutDeco.WatermarkMode)
             {
-                case DecoMode.Override:
+                case DecoMode.Merge:
                     if (playoutItem.FillerKind is FillerKind.None || playoutDeco.UseWatermarkDuringFiller)
                     {
-                        logger.LogDebug("Watermark will come from playout deco (override)");
+                        logger.LogDebug("Watermark will come from playout deco (merge)");
                         result.AddRange(
                             OptionsForWatermarks(channel, playoutDeco.DecoWatermarks.Map(dwm => dwm.Watermark)));
-                        return result;
+                        break;
                     }
 
                     logger.LogDebug("Watermark is disabled by playout deco during filler");
-                    return result;
+                    result.Clear();
+                    done = true;
+                    break;
+                case DecoMode.Override:
+                    if (playoutItem.FillerKind is FillerKind.None || playoutDeco.UseWatermarkDuringFiller)
+                    {
+                        logger.LogDebug("Watermark will come from playout deco (replace)");
+                        result.AddRange(
+                            OptionsForWatermarks(channel, playoutDeco.DecoWatermarks.Map(dwm => dwm.Watermark)));
+                        done = true;
+                        break;
+                    }
+
+                    logger.LogDebug("Watermark is disabled by playout deco during filler");
+                    result.Clear();
+                    done = true;
+                    break;
                 case DecoMode.Disable:
                     logger.LogDebug("Watermark is disabled by playout deco");
-                    return result;
+                    done = true;
+                    break;
                 case DecoMode.Inherit:
                     logger.LogDebug("Watermark will inherit from channel and/or global setting");
                     break;
+            }
+
+            if (done)
+            {
+                return result;
             }
         }
 
@@ -86,7 +134,10 @@ public class WatermarkSelector(IImageCache imageCache, ILogger<WatermarkSelector
         {
             foreach (var watermark in playoutItem.Watermarks)
             {
-                var options = GetWatermarkOptions(channel, watermark, Option<ChannelWatermark>.None);
+                Option<WatermarkOptions> options = GetWatermarkOptions(
+                    channel,
+                    watermark,
+                    Option<ChannelWatermark>.None);
                 result.AddRange(options);
             }
 
@@ -265,8 +316,6 @@ public class WatermarkSelector(IImageCache imageCache, ILogger<WatermarkSelector
                     break;
                 }
 
-                logger.LogDebug("Watermark will come from playout item (custom)");
-
                 string customPath = imageCache.GetPathForImage(
                     watermark.Image,
                     ArtworkKind.Watermark,
@@ -276,8 +325,6 @@ public class WatermarkSelector(IImageCache imageCache, ILogger<WatermarkSelector
                     customPath,
                     None);
             case ChannelWatermarkImageSource.ChannelLogo:
-                logger.LogDebug("Watermark will come from playout item (channel logo)");
-
                 string channelPath = ChannelLogoGenerator.GenerateChannelLogoUrl(channel);
                 Option<Artwork> maybeLogoArtwork =
                     Optional(channel.Artwork.Find(a => a.ArtworkKind == ArtworkKind.Logo));
