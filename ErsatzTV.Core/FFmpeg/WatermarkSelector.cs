@@ -100,65 +100,6 @@ public class WatermarkSelector(IImageCache imageCache, ILogger<WatermarkSelector
         return result;
     }
 
-    public WatermarkResult GetPlayoutItemWatermark(PlayoutItem playoutItem, DateTimeOffset now)
-    {
-        if (playoutItem.DisableWatermarks)
-        {
-            logger.LogDebug("Watermark is disabled by playout item");
-            return new DisableWatermark();
-        }
-
-        DecoEntries decoEntries = DecoSelector.GetDecoEntries(playoutItem.Playout, now);
-
-        // first, check deco template / active deco
-        foreach (Deco templateDeco in decoEntries.TemplateDeco)
-        {
-            switch (templateDeco.WatermarkMode)
-            {
-                case DecoMode.Override:
-                    if (playoutItem.FillerKind is FillerKind.None || templateDeco.UseWatermarkDuringFiller)
-                    {
-                        logger.LogDebug("Watermark will come from template deco (override)");
-                        return new CustomWatermarks(templateDeco.DecoWatermarks.Map(dwm => dwm.Watermark).ToList());
-                    }
-
-                    logger.LogDebug("Watermark is disabled by template deco during filler");
-                    return new DisableWatermark();
-                case DecoMode.Disable:
-                    logger.LogDebug("Watermark is disabled by template deco");
-                    return new DisableWatermark();
-                case DecoMode.Inherit:
-                    logger.LogDebug("Watermark will inherit from playout deco");
-                    break;
-            }
-        }
-
-        // second, check playout deco
-        foreach (Deco playoutDeco in decoEntries.PlayoutDeco)
-        {
-            switch (playoutDeco.WatermarkMode)
-            {
-                case DecoMode.Override:
-                    if (playoutItem.FillerKind is FillerKind.None || playoutDeco.UseWatermarkDuringFiller)
-                    {
-                        logger.LogDebug("Watermark will come from playout deco (override)");
-                        return new CustomWatermarks(playoutDeco.DecoWatermarks.Map(dwm => dwm.Watermark).ToList());
-                    }
-
-                    logger.LogDebug("Watermark is disabled by playout deco during filler");
-                    return new DisableWatermark();
-                case DecoMode.Disable:
-                    logger.LogDebug("Watermark is disabled by playout deco");
-                    return new DisableWatermark();
-                case DecoMode.Inherit:
-                    logger.LogDebug("Watermark will inherit from channel and/or global setting");
-                    break;
-            }
-        }
-
-        return new InheritWatermark();
-    }
-
     public Option<WatermarkOptions> GetWatermarkOptions(
         Channel channel,
         Option<ChannelWatermark> playoutItemWatermark,
