@@ -15,9 +15,9 @@ namespace ErsatzTV.Core.Tests.FFmpeg;
 public class WatermarkSelectorTests
 {
     private static readonly WatermarkSelector WatermarkSelector;
-    private static readonly Option<ChannelWatermark> WatermarkGlobal;
     private static readonly Option<ChannelWatermark> WatermarkNone;
-    private static readonly Option<ChannelWatermark> WatermarkChannel;
+    private static readonly ChannelWatermark WatermarkGlobal;
+    private static readonly ChannelWatermark WatermarkChannel;
     private static readonly ChannelWatermark WatermarkPlayoutItem;
     private static readonly ChannelWatermark WatermarkTemplateDeco;
     private static readonly ChannelWatermark WatermarkDefaultDeco;
@@ -63,19 +63,17 @@ public class WatermarkSelectorTests
             Substitute.For<IImageCache>(),
             loggerFactory.CreateLogger<WatermarkSelector>());
 
-        WatermarkGlobal = new ChannelWatermark { Id = 0, Name = "Global", Image = "GlobalImage" };
         WatermarkNone = Option<ChannelWatermark>.None;
+
+        WatermarkGlobal = new ChannelWatermark { Id = 0, Name = "Global", Image = "GlobalImage" };
 
         WatermarkChannel = new ChannelWatermark { Id = 1, Name = "Channel", Image = "ChannelImage" };
         WatermarkPlayoutItem = new ChannelWatermark { Id = 2, Name = "PlayoutItem", Image = "PlayoutItemImage" };
         WatermarkTemplateDeco = new ChannelWatermark { Id = 3, Name = "TemplateDeco", Image = "TemplateDecoImage" };
         WatermarkDefaultDeco = new ChannelWatermark { Id = 4, Name = "DefaultDeco", Image = "DefaultDecoImage" };
 
-        foreach (var channelWatermark in WatermarkChannel)
-        {
-            ChannelWithWatermark = new Channel(Guid.Empty)
-                { Id = 0, Watermark = channelWatermark, WatermarkId = channelWatermark.Id };
-        }
+        ChannelWithWatermark = new Channel(Guid.Empty)
+            { Id = 0, Watermark = WatermarkChannel, WatermarkId = WatermarkChannel.Id };
 
         ChannelNoWatermark = new Channel(Guid.Empty) { Id = 0, Watermark = null, WatermarkId = null };
 
@@ -251,12 +249,12 @@ public class WatermarkSelectorTests
         WatermarkResult playoutItemWatermark = WatermarkSelector.GetPlayoutItemWatermark(playoutItem, Now);
         playoutItemWatermark.ShouldBeOfType<InheritWatermark>();
 
-        WatermarkOptions watermarkOptions = WatermarkSelector.GetWatermarkOptions(
+        Option<WatermarkOptions> watermarkOptions = WatermarkSelector.GetWatermarkOptions(
             channel,
             playoutItem.Watermarks.HeadOrNone(),
             globalWatermark);
 
-        watermarkOptions.ShouldBe(WatermarkOptions.NoWatermark);
+        watermarkOptions.IsNone.ShouldBeTrue();
     }
 
     [Test]
@@ -271,7 +269,7 @@ public class WatermarkSelectorTests
 
         // GetWatermarkOptions is not even called when disableWatermarks is passed through
 
-        // WatermarkOptions watermarkOptions = await WatermarkSelector.GetWatermarkOptions(
+        // Option<WatermarkOptions> watermarkOptions = await WatermarkSelector.GetWatermarkOptions(
         //     channel,
         //     playoutItem.Watermarks.HeadOrNone(),
         //     globalWatermark);
@@ -289,13 +287,13 @@ public class WatermarkSelectorTests
         WatermarkResult playoutItemWatermark = WatermarkSelector.GetPlayoutItemWatermark(playoutItem, Now);
         playoutItemWatermark.ShouldBeOfType<InheritWatermark>();
 
-        WatermarkOptions watermarkOptions = WatermarkSelector.GetWatermarkOptions(
+        Option<WatermarkOptions> watermarkOptions = WatermarkSelector.GetWatermarkOptions(
             channel,
             playoutItem.Watermarks.HeadOrNone(),
             globalWatermark);
 
-        watermarkOptions.ShouldNotBe(WatermarkOptions.NoWatermark);
-        watermarkOptions.Watermark.ShouldBe(WatermarkGlobal);
+        watermarkOptions.IsSome.ShouldBeTrue();
+        watermarkOptions.Head().Watermark.ShouldBe(WatermarkGlobal);
     }
 
     [Test]
@@ -308,13 +306,13 @@ public class WatermarkSelectorTests
         WatermarkResult playoutItemWatermark = WatermarkSelector.GetPlayoutItemWatermark(playoutItem, Now);
         playoutItemWatermark.ShouldBeOfType<InheritWatermark>();
 
-        WatermarkOptions watermarkOptions = WatermarkSelector.GetWatermarkOptions(
+        Option<WatermarkOptions> watermarkOptions = WatermarkSelector.GetWatermarkOptions(
             channel,
             playoutItem.Watermarks.HeadOrNone(),
             globalWatermark);
 
-        watermarkOptions.ShouldNotBe(WatermarkOptions.NoWatermark);
-        watermarkOptions.Watermark.ShouldBe(WatermarkChannel);
+        watermarkOptions.IsSome.ShouldBeTrue();
+        watermarkOptions.Head().Watermark.ShouldBe(WatermarkChannel);
     }
 
     [Test]
@@ -327,13 +325,13 @@ public class WatermarkSelectorTests
         WatermarkResult playoutItemWatermark = WatermarkSelector.GetPlayoutItemWatermark(playoutItem, Now);
         playoutItemWatermark.ShouldBeOfType<InheritWatermark>();
 
-        WatermarkOptions watermarkOptions = WatermarkSelector.GetWatermarkOptions(
+        Option<WatermarkOptions> watermarkOptions = WatermarkSelector.GetWatermarkOptions(
             channel,
             playoutItem.Watermarks.HeadOrNone(),
             globalWatermark);
 
-        watermarkOptions.ShouldNotBe(WatermarkOptions.NoWatermark);
-        watermarkOptions.Watermark.ShouldBe(WatermarkChannel);
+        watermarkOptions.IsSome.ShouldBeTrue();
+        watermarkOptions.Head().Watermark.ShouldBe(WatermarkChannel);
     }
 
     [Test]
@@ -348,7 +346,7 @@ public class WatermarkSelectorTests
 
         // GetWatermarkOptions is not even called when disableWatermarks is passed through
 
-        // WatermarkOptions watermarkOptions = await WatermarkSelector.GetWatermarkOptions(
+        // Option<WatermarkOptions> watermarkOptions = await WatermarkSelector.GetWatermarkOptions(
         //     channel,
         //     playoutItem.Watermarks.HeadOrNone(),
         //     globalWatermark);
@@ -366,13 +364,13 @@ public class WatermarkSelectorTests
         WatermarkResult playoutItemWatermark = WatermarkSelector.GetPlayoutItemWatermark(playoutItem, Now);
         playoutItemWatermark.ShouldBeOfType<InheritWatermark>();
 
-        WatermarkOptions watermarkOptions = WatermarkSelector.GetWatermarkOptions(
+        Option<WatermarkOptions> watermarkOptions = WatermarkSelector.GetWatermarkOptions(
             channel,
             playoutItem.Watermarks.HeadOrNone(),
             globalWatermark);
 
-        watermarkOptions.ShouldNotBe(WatermarkOptions.NoWatermark);
-        watermarkOptions.Watermark.ShouldBe(WatermarkPlayoutItem);
+        watermarkOptions.IsSome.ShouldBeTrue();
+        watermarkOptions.Head().Watermark.ShouldBe(WatermarkPlayoutItem);
     }
 
     [Test]
@@ -385,13 +383,13 @@ public class WatermarkSelectorTests
         WatermarkResult playoutItemWatermark = WatermarkSelector.GetPlayoutItemWatermark(playoutItem, Now);
         playoutItemWatermark.ShouldBeOfType<InheritWatermark>();
 
-        WatermarkOptions watermarkOptions = WatermarkSelector.GetWatermarkOptions(
+        Option<WatermarkOptions> watermarkOptions = WatermarkSelector.GetWatermarkOptions(
             channel,
             playoutItem.Watermarks.HeadOrNone(),
             globalWatermark);
 
-        watermarkOptions.ShouldNotBe(WatermarkOptions.NoWatermark);
-        watermarkOptions.Watermark.ShouldBe(WatermarkPlayoutItem);
+        watermarkOptions.IsSome.ShouldBeTrue();
+        watermarkOptions.Head().Watermark.ShouldBe(WatermarkPlayoutItem);
     }
 
     [Test]
@@ -404,13 +402,13 @@ public class WatermarkSelectorTests
         WatermarkResult playoutItemWatermark = WatermarkSelector.GetPlayoutItemWatermark(playoutItem, Now);
         playoutItemWatermark.ShouldBeOfType<InheritWatermark>();
 
-        WatermarkOptions watermarkOptions = WatermarkSelector.GetWatermarkOptions(
+        Option<WatermarkOptions> watermarkOptions = WatermarkSelector.GetWatermarkOptions(
             channel,
             playoutItem.Watermarks.HeadOrNone(),
             globalWatermark);
 
-        watermarkOptions.ShouldNotBe(WatermarkOptions.NoWatermark);
-        watermarkOptions.Watermark.ShouldBe(WatermarkPlayoutItem);
+        watermarkOptions.IsSome.ShouldBeTrue();
+        watermarkOptions.Head().Watermark.ShouldBe(WatermarkPlayoutItem);
     }
 
     [Test]
@@ -425,13 +423,13 @@ public class WatermarkSelectorTests
 
         // GetWatermarkOptions is not even called when disableWatermarks is passed through
 
-        // WatermarkOptions watermarkOptions = await WatermarkSelector.GetWatermarkOptions(
+        // Option<WatermarkOptions> watermarkOptions = await WatermarkSelector.GetWatermarkOptions(
         //     channel,
         //     playoutItem.Watermarks.HeadOrNone(),
         //     globalWatermark);
         //
-        // watermarkOptions.ShouldNotBe(WatermarkOptions.NoWatermark);
-        // watermarkOptions.Watermark.ShouldBe(PlayoutItemWatermark);
+        // watermarkOptions.IsSome.ShouldBeTrue();
+        // watermarkOptions.Head().Watermark.ShouldBe(PlayoutItemWatermark);
     }
 
     [Test]
@@ -446,13 +444,13 @@ public class WatermarkSelectorTests
 
         // GetWatermarkOptions is not even called when disableWatermarks is passed through
 
-        // WatermarkOptions watermarkOptions = await WatermarkSelector.GetWatermarkOptions(
+        // Option<WatermarkOptions> watermarkOptions = await WatermarkSelector.GetWatermarkOptions(
         //     channel,
         //     playoutItem.Watermarks.HeadOrNone(),
         //     globalWatermark);
         //
-        // watermarkOptions.ShouldNotBe(WatermarkOptions.NoWatermark);
-        // watermarkOptions.Watermark.ShouldBe(PlayoutItemWatermark);
+        // watermarkOptions.IsSome.ShouldBeTrue();
+        // watermarkOptions.Head().Watermark.ShouldBe(PlayoutItemWatermark);
     }
 
     [Test]
@@ -467,13 +465,13 @@ public class WatermarkSelectorTests
 
         // GetWatermarkOptions is not even called when disableWatermarks is passed through
 
-        // WatermarkOptions watermarkOptions = await WatermarkSelector.GetWatermarkOptions(
+        // Option<WatermarkOptions> watermarkOptions = await WatermarkSelector.GetWatermarkOptions(
         //     channel,
         //     playoutItem.Watermarks.HeadOrNone(),
         //     globalWatermark);
         //
-        // watermarkOptions.ShouldNotBe(WatermarkOptions.NoWatermark);
-        // watermarkOptions.Watermark.ShouldBe(PlayoutItemWatermark);
+        // watermarkOptions.IsSome.ShouldBeTrue();
+        // watermarkOptions.Head().Watermark.ShouldBe(PlayoutItemWatermark);
     }
 
     [Test]
@@ -489,13 +487,13 @@ public class WatermarkSelectorTests
         playoutItem.Watermarks.Clear();
         playoutItem.Watermarks.AddRange(((CustomWatermarks)playoutItemWatermark).Watermarks);
 
-        WatermarkOptions watermarkOptions = WatermarkSelector.GetWatermarkOptions(
+        Option<WatermarkOptions> watermarkOptions = WatermarkSelector.GetWatermarkOptions(
             channel,
             playoutItem.Watermarks.HeadOrNone(),
             globalWatermark);
 
-        watermarkOptions.ShouldNotBe(WatermarkOptions.NoWatermark);
-        watermarkOptions.Watermark.ShouldBe(WatermarkTemplateDeco);
+        watermarkOptions.IsSome.ShouldBeTrue();
+        watermarkOptions.Head().Watermark.ShouldBe(WatermarkTemplateDeco);
     }
 
     [Test]
@@ -508,13 +506,13 @@ public class WatermarkSelectorTests
         WatermarkResult playoutItemWatermark = WatermarkSelector.GetPlayoutItemWatermark(playoutItem, Now);
         playoutItemWatermark.ShouldBeOfType<InheritWatermark>();
 
-        WatermarkOptions watermarkOptions = WatermarkSelector.GetWatermarkOptions(
+        Option<WatermarkOptions> watermarkOptions = WatermarkSelector.GetWatermarkOptions(
             channel,
             playoutItem.Watermarks.HeadOrNone(),
             globalWatermark);
 
-        watermarkOptions.ShouldNotBe(WatermarkOptions.NoWatermark);
-        watermarkOptions.Watermark.ShouldBe(WatermarkPlayoutItem);
+        watermarkOptions.IsSome.ShouldBeTrue();
+        watermarkOptions.Head().Watermark.ShouldBe(WatermarkPlayoutItem);
     }
 
     [Test]
@@ -527,13 +525,13 @@ public class WatermarkSelectorTests
         WatermarkResult playoutItemWatermark = WatermarkSelector.GetPlayoutItemWatermark(playoutItem, Now);
         playoutItemWatermark.ShouldBeOfType<InheritWatermark>();
 
-        WatermarkOptions watermarkOptions = WatermarkSelector.GetWatermarkOptions(
+        Option<WatermarkOptions> watermarkOptions = WatermarkSelector.GetWatermarkOptions(
             channel,
             playoutItem.Watermarks.HeadOrNone(),
             globalWatermark);
 
-        watermarkOptions.ShouldNotBe(WatermarkOptions.NoWatermark);
-        watermarkOptions.Watermark.ShouldBe(WatermarkChannel);
+        watermarkOptions.IsSome.ShouldBeTrue();
+        watermarkOptions.Head().Watermark.ShouldBe(WatermarkChannel);
     }
 
     [Test]
@@ -546,13 +544,13 @@ public class WatermarkSelectorTests
         WatermarkResult playoutItemWatermark = WatermarkSelector.GetPlayoutItemWatermark(playoutItem, Now);
         playoutItemWatermark.ShouldBeOfType<InheritWatermark>();
 
-        WatermarkOptions watermarkOptions = WatermarkSelector.GetWatermarkOptions(
+        Option<WatermarkOptions> watermarkOptions = WatermarkSelector.GetWatermarkOptions(
             channel,
             playoutItem.Watermarks.HeadOrNone(),
             globalWatermark);
 
-        watermarkOptions.ShouldNotBe(WatermarkOptions.NoWatermark);
-        watermarkOptions.Watermark.ShouldBe(WatermarkGlobal);
+        watermarkOptions.IsSome.ShouldBeTrue();
+        watermarkOptions.Head().Watermark.ShouldBe(WatermarkGlobal);
     }
 
     [Test]
@@ -565,12 +563,12 @@ public class WatermarkSelectorTests
         WatermarkResult playoutItemWatermark = WatermarkSelector.GetPlayoutItemWatermark(playoutItem, Now);
         playoutItemWatermark.ShouldBeOfType<InheritWatermark>();
 
-        WatermarkOptions watermarkOptions = WatermarkSelector.GetWatermarkOptions(
+        Option<WatermarkOptions> watermarkOptions = WatermarkSelector.GetWatermarkOptions(
             channel,
             playoutItem.Watermarks.HeadOrNone(),
             globalWatermark);
 
-        watermarkOptions.ShouldBe(WatermarkOptions.NoWatermark);
+        watermarkOptions.IsNone.ShouldBeTrue();
     }
 
     [Test]
@@ -585,13 +583,13 @@ public class WatermarkSelectorTests
 
         // GetWatermarkOptions is not even called when disableWatermarks is passed through
 
-        // WatermarkOptions watermarkOptions = await WatermarkSelector.GetWatermarkOptions(
+        // Option<WatermarkOptions> watermarkOptions = await WatermarkSelector.GetWatermarkOptions(
         //     channel,
         //     playoutItem.Watermarks.HeadOrNone(),
         //     globalWatermark);
         //
-        // watermarkOptions.ShouldNotBe(WatermarkOptions.NoWatermark);
-        // watermarkOptions.Watermark.ShouldBe(PlayoutItemWatermark);
+        // watermarkOptions.IsSome.ShouldBeTrue();
+        // watermarkOptions.Head().Watermark.ShouldBe(PlayoutItemWatermark);
     }
 
     [Test]
@@ -606,13 +604,13 @@ public class WatermarkSelectorTests
 
         // GetWatermarkOptions is not even called when disableWatermarks is passed through
 
-        // WatermarkOptions watermarkOptions = await WatermarkSelector.GetWatermarkOptions(
+        // Option<WatermarkOptions> watermarkOptions = await WatermarkSelector.GetWatermarkOptions(
         //     channel,
         //     playoutItem.Watermarks.HeadOrNone(),
         //     globalWatermark);
         //
-        // watermarkOptions.ShouldNotBe(WatermarkOptions.NoWatermark);
-        // watermarkOptions.Watermark.ShouldBe(PlayoutItemWatermark);
+        // watermarkOptions.IsSome.ShouldBeTrue();
+        // watermarkOptions.Head().Watermark.ShouldBe(PlayoutItemWatermark);
     }
 
     [Test]
@@ -628,13 +626,13 @@ public class WatermarkSelectorTests
         playoutItem.Watermarks.Clear();
         playoutItem.Watermarks.AddRange(((CustomWatermarks)playoutItemWatermark).Watermarks);
 
-        WatermarkOptions watermarkOptions = WatermarkSelector.GetWatermarkOptions(
+        Option<WatermarkOptions> watermarkOptions = WatermarkSelector.GetWatermarkOptions(
             channel,
             playoutItem.Watermarks.HeadOrNone(),
             globalWatermark);
 
-        watermarkOptions.ShouldNotBe(WatermarkOptions.NoWatermark);
-        watermarkOptions.Watermark.ShouldBe(WatermarkDefaultDeco);
+        watermarkOptions.IsSome.ShouldBeTrue();
+        watermarkOptions.Head().Watermark.ShouldBe(WatermarkDefaultDeco);
     }
 
     [Test]
@@ -647,13 +645,13 @@ public class WatermarkSelectorTests
         WatermarkResult playoutItemWatermark = WatermarkSelector.GetPlayoutItemWatermark(playoutItem, Now);
         playoutItemWatermark.ShouldBeOfType<InheritWatermark>();
 
-        WatermarkOptions watermarkOptions = WatermarkSelector.GetWatermarkOptions(
+        Option<WatermarkOptions> watermarkOptions = WatermarkSelector.GetWatermarkOptions(
             channel,
             playoutItem.Watermarks.HeadOrNone(),
             globalWatermark);
 
-        watermarkOptions.ShouldNotBe(WatermarkOptions.NoWatermark);
-        watermarkOptions.Watermark.ShouldBe(WatermarkPlayoutItem);
+        watermarkOptions.IsSome.ShouldBeTrue();
+        watermarkOptions.Head().Watermark.ShouldBe(WatermarkPlayoutItem);
     }
 
     [Test]
@@ -666,13 +664,13 @@ public class WatermarkSelectorTests
         WatermarkResult playoutItemWatermark = WatermarkSelector.GetPlayoutItemWatermark(playoutItem, Now);
         playoutItemWatermark.ShouldBeOfType<InheritWatermark>();
 
-        WatermarkOptions watermarkOptions = WatermarkSelector.GetWatermarkOptions(
+        Option<WatermarkOptions> watermarkOptions = WatermarkSelector.GetWatermarkOptions(
             channel,
             playoutItem.Watermarks.HeadOrNone(),
             globalWatermark);
 
-        watermarkOptions.ShouldNotBe(WatermarkOptions.NoWatermark);
-        watermarkOptions.Watermark.ShouldBe(WatermarkChannel);
+        watermarkOptions.IsSome.ShouldBeTrue();
+        watermarkOptions.Head().Watermark.ShouldBe(WatermarkChannel);
     }
 
     [Test]
@@ -685,13 +683,13 @@ public class WatermarkSelectorTests
         WatermarkResult playoutItemWatermark = WatermarkSelector.GetPlayoutItemWatermark(playoutItem, Now);
         playoutItemWatermark.ShouldBeOfType<InheritWatermark>();
 
-        WatermarkOptions watermarkOptions = WatermarkSelector.GetWatermarkOptions(
+        Option<WatermarkOptions> watermarkOptions = WatermarkSelector.GetWatermarkOptions(
             channel,
             playoutItem.Watermarks.HeadOrNone(),
             globalWatermark);
 
-        watermarkOptions.ShouldNotBe(WatermarkOptions.NoWatermark);
-        watermarkOptions.Watermark.ShouldBe(WatermarkGlobal);
+        watermarkOptions.IsSome.ShouldBeTrue();
+        watermarkOptions.Head().Watermark.ShouldBe(WatermarkGlobal);
     }
 
     [Test]
@@ -704,12 +702,12 @@ public class WatermarkSelectorTests
         WatermarkResult playoutItemWatermark = WatermarkSelector.GetPlayoutItemWatermark(playoutItem, Now);
         playoutItemWatermark.ShouldBeOfType<InheritWatermark>();
 
-        WatermarkOptions watermarkOptions = WatermarkSelector.GetWatermarkOptions(
+        Option<WatermarkOptions> watermarkOptions = WatermarkSelector.GetWatermarkOptions(
             channel,
             playoutItem.Watermarks.HeadOrNone(),
             globalWatermark);
 
-        watermarkOptions.ShouldBe(WatermarkOptions.NoWatermark);
+        watermarkOptions.IsNone.ShouldBeTrue();
     }
 
     [Test]
@@ -725,13 +723,13 @@ public class WatermarkSelectorTests
         playoutItem.Watermarks.Clear();
         playoutItem.Watermarks.AddRange(((CustomWatermarks)playoutItemWatermark).Watermarks);
 
-        WatermarkOptions watermarkOptions = WatermarkSelector.GetWatermarkOptions(
+        Option<WatermarkOptions> watermarkOptions = WatermarkSelector.GetWatermarkOptions(
             channel,
             playoutItem.Watermarks.HeadOrNone(),
             globalWatermark);
 
-        watermarkOptions.ShouldNotBe(WatermarkOptions.NoWatermark);
-        watermarkOptions.Watermark.ShouldBe(WatermarkDefaultDeco);
+        watermarkOptions.IsSome.ShouldBeTrue();
+        watermarkOptions.Head().Watermark.ShouldBe(WatermarkDefaultDeco);
     }
 
     private static IEnumerable<(Option<ChannelWatermark>, Channel, PlayoutItem, List<ChannelWatermark>)>
@@ -746,13 +744,13 @@ public class WatermarkSelectorTests
         yield return (WatermarkGlobal, ChannelNoWatermark, PlayoutItemDisableWatermarks, WatermarkResultEmpty);
 
         // global watermark when global configured
-        yield return (WatermarkGlobal, ChannelNoWatermark, PlayoutItemWithNoWatermarks, [WatermarkGlobal.Head()]);
+        yield return (WatermarkGlobal, ChannelNoWatermark, PlayoutItemWithNoWatermarks, [WatermarkGlobal]);
 
         // channel watermark when global and channel configured
-        yield return (WatermarkGlobal, ChannelWithWatermark, PlayoutItemWithNoWatermarks, [WatermarkChannel.Head()]);
+        yield return (WatermarkGlobal, ChannelWithWatermark, PlayoutItemWithNoWatermarks, [WatermarkChannel]);
 
         // channel watermark when channel configured
-        yield return (WatermarkNone, ChannelWithWatermark, PlayoutItemWithNoWatermarks, [WatermarkChannel.Head()]);
+        yield return (WatermarkNone, ChannelWithWatermark, PlayoutItemWithNoWatermarks, [WatermarkChannel]);
 
         // playout item when global, channel and playout item configured
         yield return (WatermarkGlobal, ChannelWithWatermark, PlayoutItemWithWatermark, [WatermarkPlayoutItem]);
@@ -781,10 +779,10 @@ public class WatermarkSelectorTests
         yield return (WatermarkGlobal, ChannelWithWatermark, TemplateDecoInheritWithWatermark, [WatermarkPlayoutItem]);
 
         // channel when global, channel configured with template deco inherit
-        yield return (WatermarkGlobal, ChannelWithWatermark, TemplateDecoInherit, [WatermarkChannel.Head()]);
+        yield return (WatermarkGlobal, ChannelWithWatermark, TemplateDecoInherit, [WatermarkChannel]);
 
         // global when global configured with template deco inherit
-        yield return (WatermarkGlobal, ChannelNoWatermark, TemplateDecoInherit, [WatermarkGlobal.Head()]);
+        yield return (WatermarkGlobal, ChannelNoWatermark, TemplateDecoInherit, [WatermarkGlobal]);
 
         // no watermark when none configured with template deco inherit
         yield return (WatermarkNone, ChannelNoWatermark, TemplateDecoInherit, WatermarkResultEmpty);
@@ -798,10 +796,10 @@ public class WatermarkSelectorTests
         yield return (WatermarkGlobal, ChannelWithWatermark, DefaultDecoInheritWithWatermark, [WatermarkPlayoutItem]);
 
         // channel when global, channel configured with default deco inherit
-        yield return (WatermarkGlobal, ChannelWithWatermark, DefaultDecoInherit, [WatermarkChannel.Head()]);
+        yield return (WatermarkGlobal, ChannelWithWatermark, DefaultDecoInherit, [WatermarkChannel]);
 
         // global when global configured with default deco inherit
-        yield return (WatermarkGlobal, ChannelNoWatermark, DefaultDecoInherit, [WatermarkGlobal.Head()]);
+        yield return (WatermarkGlobal, ChannelNoWatermark, DefaultDecoInherit, [WatermarkGlobal]);
 
         // no watermark when none configured with default deco inherit
         yield return (WatermarkNone, ChannelNoWatermark, DefaultDecoInherit, WatermarkResultEmpty);

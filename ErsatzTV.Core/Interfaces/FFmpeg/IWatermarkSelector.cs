@@ -13,7 +13,7 @@ public interface IWatermarkSelector
 
     WatermarkResult GetPlayoutItemWatermark(PlayoutItem playoutItem, DateTimeOffset now);
 
-    WatermarkOptions GetWatermarkOptions(
+    Option<WatermarkOptions> GetWatermarkOptions(
         Channel channel,
         Option<ChannelWatermark> playoutItemWatermark,
         Option<ChannelWatermark> globalWatermark);

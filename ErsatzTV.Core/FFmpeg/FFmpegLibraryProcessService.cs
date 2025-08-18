@@ -23,7 +23,6 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
 {
     private readonly IConfigElementRepository _configElementRepository;
     private readonly ICustomStreamSelector _customStreamSelector;
-    private readonly IWatermarkSelector _watermarkSelector;
     private readonly FFmpegProcessService _ffmpegProcessService;
     private readonly IFFmpegStreamSelector _ffmpegStreamSelector;
     private readonly ILogger<FFmpegLibraryProcessService> _logger;
@@ -34,7 +33,6 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         FFmpegProcessService ffmpegProcessService,
         IFFmpegStreamSelector ffmpegStreamSelector,
         ICustomStreamSelector customStreamSelector,
-        IWatermarkSelector watermarkSelector,
         ITempFilePool tempFilePool,
         IPipelineBuilderFactory pipelineBuilderFactory,
         IConfigElementRepository configElementRepository,
@@ -43,7 +41,6 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         _ffmpegProcessService = ffmpegProcessService;
         _ffmpegStreamSelector = ffmpegStreamSelector;
         _customStreamSelector = customStreamSelector;
-        _watermarkSelector = watermarkSelector;
         _tempFilePool = tempFilePool;
         _pipelineBuilderFactory = pipelineBuilderFactory;
         _configElementRepository = configElementRepository;
@@ -67,8 +64,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         DateTimeOffset start,
         DateTimeOffset finish,
         DateTimeOffset now,
-        List<ChannelWatermark> playoutItemWatermarks,
-        Option<ChannelWatermark> globalWatermark,
+        List<WatermarkOptions> watermarks,
         List<PlayoutItemGraphicsElement> graphicsElements,
         string vaapiDisplay,
         VaapiDriver vaapiDriver,
@@ -82,7 +78,6 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         DateTimeOffset channelStartTime,
         long ptsOffset,
         Option<int> targetFramerate,
-        bool disableWatermarks,
         Option<string> customReportsFolder,
         Action<FFmpegPipeline> pipelineAction)
     {
@@ -333,42 +328,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         List<GraphicsElementContext> graphicsElementContexts = [];
 
         // use graphics engine for all watermarks
-        if (!disableWatermarks)
-        {
-            var watermarks = new Dictionary<int, WatermarkElementContext>();
-
-            // still need channel and global watermarks
-            if (playoutItemWatermarks.Count == 0)
-            {
-                WatermarkOptions options = _watermarkSelector.GetWatermarkOptions(
-                    channel,
-                    Option<ChannelWatermark>.None,
-                    globalWatermark);
-
-                foreach (ChannelWatermark watermark in options.Watermark)
-                {
-                    // don't allow duplicates
-                    watermarks.TryAdd(watermark.Id, new WatermarkElementContext(options));
-                }
-            }
-
-            // load all playout item watermarks
-            foreach (ChannelWatermark playoutItemWatermark in playoutItemWatermarks)
-            {
-                WatermarkOptions options = _watermarkSelector.GetWatermarkOptions(
-                    channel,
-                    playoutItemWatermark,
-                    globalWatermark);
-
-                foreach (ChannelWatermark watermark in options.Watermark)
-                {
-                    // don't allow duplicates
-                    watermarks.TryAdd(watermark.Id, new WatermarkElementContext(options));
-                }
-            }
-
-            graphicsElementContexts.AddRange(watermarks.Values);
-        }
+        graphicsElementContexts.AddRange(watermarks.Map(wm => new WatermarkElementContext(wm)));
 
         HardwareAccelerationMode hwAccel = GetHardwareAccelerationMode(playbackSettings, fillerKind);
 

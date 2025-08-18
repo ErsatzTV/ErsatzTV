@@ -87,7 +87,7 @@ public class WatermarkSelector(IImageCache imageCache, ILogger<WatermarkSelector
             foreach (var watermark in playoutItem.Watermarks)
             {
                 var options = GetWatermarkOptions(channel, watermark, Option<ChannelWatermark>.None);
-                result.Add(options);
+                result.AddRange(options);
             }
 
             return result;
@@ -95,10 +95,7 @@ public class WatermarkSelector(IImageCache imageCache, ILogger<WatermarkSelector
 
 
         var finalOptions = GetWatermarkOptions(channel, Option<ChannelWatermark>.None, globalWatermark);
-        if (finalOptions != WatermarkOptions.NoWatermark)
-        {
-            result.Add(finalOptions);
-        }
+        result.AddRange(finalOptions);
 
         return result;
     }
@@ -162,14 +159,14 @@ public class WatermarkSelector(IImageCache imageCache, ILogger<WatermarkSelector
         return new InheritWatermark();
     }
 
-    public WatermarkOptions GetWatermarkOptions(
+    public Option<WatermarkOptions> GetWatermarkOptions(
         Channel channel,
         Option<ChannelWatermark> playoutItemWatermark,
         Option<ChannelWatermark> globalWatermark)
     {
         if (channel.StreamingMode == StreamingMode.HttpLiveStreamingDirect)
         {
-            return WatermarkOptions.NoWatermark;
+            return Option<WatermarkOptions>.None;
         }
 
         // check for playout item watermark
@@ -206,23 +203,17 @@ public class WatermarkSelector(IImageCache imageCache, ILogger<WatermarkSelector
                 case ChannelWatermarkImageSource.ChannelLogo:
                     logger.LogDebug("Watermark will come from playout item (channel logo)");
 
-                    Option<string> maybeChannelPath = channel.Artwork.Count == 0
-                        ?
-                        //We have to generate the logo on the fly and save it to a local temp path
-                        ChannelLogoGenerator.GenerateChannelLogoUrl(channel)
-                        :
-                        //We have an artwork attached to the channel, let's use it :)
-                        channel.Artwork
-                            .Filter(a => a.ArtworkKind == ArtworkKind.Logo)
-                            .HeadOrNone()
-                            .Map(a => Artwork.IsExternalUrl(a.Path)
-                                ? a.Path
-                                : imageCache.GetPathForImage(a.Path, ArtworkKind.Logo, Option<int>.None));
+                    string channelPath = ChannelLogoGenerator.GenerateChannelLogoUrl(channel);
+                    Option<Artwork> maybeLogoArtwork =
+                        Optional(channel.Artwork.Find(a => a.ArtworkKind == ArtworkKind.Logo));
+                    foreach (var logoArtwork in maybeLogoArtwork)
+                    {
+                        channelPath = Artwork.IsExternalUrl(logoArtwork.Path)
+                            ? logoArtwork.Path
+                            : imageCache.GetPathForImage(logoArtwork.Path, ArtworkKind.Logo, Option<int>.None);
+                    }
 
-                    return new WatermarkOptions(
-                        watermark,
-                        maybeChannelPath,
-                        None);
+                    return new WatermarkOptions(watermark, channelPath, None);
                 default:
                     throw new NotSupportedException("Unsupported watermark image source");
             }
@@ -247,22 +238,17 @@ public class WatermarkSelector(IImageCache imageCache, ILogger<WatermarkSelector
                 case ChannelWatermarkImageSource.ChannelLogo:
                     logger.LogDebug("Watermark will come from channel (channel logo)");
 
-                    Option<string> maybeChannelPath = channel.Artwork.Count == 0
-                        ?
-                        //We have to generate the logo on the fly and save it to a local temp path
-                        ChannelLogoGenerator.GenerateChannelLogoUrl(channel)
-                        :
-                        //We have an artwork attached to the channel, let's use it :)
-                        channel.Artwork
-                            .Filter(a => a.ArtworkKind == ArtworkKind.Logo)
-                            .HeadOrNone()
-                            .Map(a => Artwork.IsExternalUrl(a.Path)
-                                ? a.Path
-                                : imageCache.GetPathForImage(a.Path, ArtworkKind.Logo, Option<int>.None));
-                    return new WatermarkOptions(
-                        channel.Watermark,
-                        maybeChannelPath,
-                        None);
+                    string channelPath = ChannelLogoGenerator.GenerateChannelLogoUrl(channel);
+                    Option<Artwork> maybeLogoArtwork =
+                        Optional(channel.Artwork.Find(a => a.ArtworkKind == ArtworkKind.Logo));
+                    foreach (var logoArtwork in maybeLogoArtwork)
+                    {
+                        channelPath = Artwork.IsExternalUrl(logoArtwork.Path)
+                            ? logoArtwork.Path
+                            : imageCache.GetPathForImage(logoArtwork.Path, ArtworkKind.Logo, Option<int>.None);
+                    }
+
+                    return new WatermarkOptions(channel.Watermark, channelPath, None);
                 default:
                     throw new NotSupportedException("Unsupported watermark image source");
             }
@@ -287,28 +273,23 @@ public class WatermarkSelector(IImageCache imageCache, ILogger<WatermarkSelector
                 case ChannelWatermarkImageSource.ChannelLogo:
                     logger.LogDebug("Watermark will come from global (channel logo)");
 
-                    Option<string> maybeChannelPath = channel.Artwork.Count == 0
-                        ?
-                        //We have to generate the logo on the fly and save it to a local temp path
-                        ChannelLogoGenerator.GenerateChannelLogoUrl(channel)
-                        :
-                        //We have an artwork attached to the channel, let's use it :)
-                        channel.Artwork
-                            .Filter(a => a.ArtworkKind == ArtworkKind.Logo)
-                            .HeadOrNone()
-                            .Map(a => Artwork.IsExternalUrl(a.Path)
-                                ? a.Path
-                                : imageCache.GetPathForImage(a.Path, ArtworkKind.Logo, Option<int>.None));
-                    return new WatermarkOptions(
-                        watermark,
-                        maybeChannelPath,
-                        None);
+                    string channelPath = ChannelLogoGenerator.GenerateChannelLogoUrl(channel);
+                    Option<Artwork> maybeLogoArtwork =
+                        Optional(channel.Artwork.Find(a => a.ArtworkKind == ArtworkKind.Logo));
+                    foreach (var logoArtwork in maybeLogoArtwork)
+                    {
+                        channelPath = Artwork.IsExternalUrl(logoArtwork.Path)
+                            ? logoArtwork.Path
+                            : imageCache.GetPathForImage(logoArtwork.Path, ArtworkKind.Logo, Option<int>.None);
+                    }
+
+                    return new WatermarkOptions(watermark, channelPath, None);
                 default:
                     throw new NotSupportedException("Unsupported watermark image source");
             }
         }
 
-        return WatermarkOptions.NoWatermark;
+        return Option<WatermarkOptions>.None;
     }
 
     private List<WatermarkOptions> OptionsForWatermarks(Channel channel, IEnumerable<ChannelWatermark> watermarks)
@@ -356,23 +337,17 @@ public class WatermarkSelector(IImageCache imageCache, ILogger<WatermarkSelector
             case ChannelWatermarkImageSource.ChannelLogo:
                 logger.LogDebug("Watermark will come from playout item (channel logo)");
 
-                Option<string> maybeChannelPath = channel.Artwork.Count == 0
-                    ?
-                    //We have to generate the logo on the fly and save it to a local temp path
-                    ChannelLogoGenerator.GenerateChannelLogoUrl(channel)
-                    :
-                    //We have an artwork attached to the channel, let's use it :)
-                    channel.Artwork
-                        .Filter(a => a.ArtworkKind == ArtworkKind.Logo)
-                        .HeadOrNone()
-                        .Map(a => Artwork.IsExternalUrl(a.Path)
-                            ? a.Path
-                            : imageCache.GetPathForImage(a.Path, ArtworkKind.Logo, Option<int>.None));
+                string channelPath = ChannelLogoGenerator.GenerateChannelLogoUrl(channel);
+                Option<Artwork> maybeLogoArtwork =
+                    Optional(channel.Artwork.Find(a => a.ArtworkKind == ArtworkKind.Logo));
+                foreach (var logoArtwork in maybeLogoArtwork)
+                {
+                    channelPath = Artwork.IsExternalUrl(logoArtwork.Path)
+                        ? logoArtwork.Path
+                        : imageCache.GetPathForImage(logoArtwork.Path, ArtworkKind.Logo, Option<int>.None);
+                }
 
-                return new WatermarkOptions(
-                    watermark,
-                    maybeChannelPath,
-                    None);
+                return new WatermarkOptions(watermark, channelPath, None);
             default:
                 throw new NotSupportedException("Unsupported watermark image source");
         }

@@ -248,32 +248,16 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
             string audioPath = playoutItemWithPath.Path;
             MediaVersion audioVersion = version;
 
-            // TODO: move these watermark fns into watermark selector
-
             Option<ChannelWatermark> maybeGlobalWatermark = await dbContext.ConfigElements
                 .GetValue<int>(ConfigElementKey.FFmpegGlobalWatermarkId)
                 .BindT(watermarkId => dbContext.ChannelWatermarks
                     .SelectOneAsync(w => w.Id, w => w.Id == watermarkId));
 
-            List<ChannelWatermark> playoutItemWatermarks = [];
-            playoutItemWatermarks.AddRange(playoutItemWithPath.PlayoutItem.Watermarks);
-
-            bool disableWatermarks = playoutItemWithPath.PlayoutItem.DisableWatermarks;
-            WatermarkResult watermarkResult =
-                _watermarkSelector.GetPlayoutItemWatermark(playoutItemWithPath.PlayoutItem, now);
-            switch (watermarkResult)
-            {
-                case InheritWatermark:
-                    // do nothing, other code will fall back to channel/global
-                    break;
-                case DisableWatermark:
-                    disableWatermarks = true;
-                    break;
-                case CustomWatermarks watermarks:
-                    playoutItemWatermarks.Clear();
-                    playoutItemWatermarks.AddRange(watermarks.Watermarks);
-                    break;
-            }
+            List<WatermarkOptions> watermarks = _watermarkSelector.SelectWatermarks(
+                maybeGlobalWatermark,
+                channel,
+                playoutItemWithPath.PlayoutItem,
+                now);
 
             if (playoutItemWithPath.PlayoutItem.MediaItem is Song song)
             {
@@ -292,21 +276,26 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                     bool is43 = Math.Abs(ratio - 4.0 / 3.0) < 0.01;
                     string image = is43 ? "song_progress_overlay_43.png" : "song_progress_overlay.png";
 
-                    disableWatermarks = false;
-                    playoutItemWatermarks.Clear();
-                    playoutItemWatermarks.Add(
-                        new ChannelWatermark
-                        {
-                            Mode = ChannelWatermarkMode.Permanent,
-                            Size = WatermarkSize.Scaled,
-                            WidthPercent = 100,
-                            HorizontalMarginPercent = 0,
-                            VerticalMarginPercent = 0,
-                            Opacity = 100,
-                            Location = WatermarkLocation.TopLeft,
-                            ImageSource = ChannelWatermarkImageSource.Resource,
-                            Image = image
-                        });
+                    var progressWatermark = new ChannelWatermark
+                    {
+                        Mode = ChannelWatermarkMode.Permanent,
+                        Size = WatermarkSize.Scaled,
+                        WidthPercent = 100,
+                        HorizontalMarginPercent = 0,
+                        VerticalMarginPercent = 0,
+                        Opacity = 100,
+                        Location = WatermarkLocation.TopLeft,
+                        ImageSource = ChannelWatermarkImageSource.Resource,
+                        Image = image
+                    };
+
+                    var progressWatermarkOption = new WatermarkOptions(
+                        progressWatermark,
+                        Path.Combine(FileSystemLayout.ResourcesCacheFolder, progressWatermark.Image),
+                        Option<int>.None);
+
+                    watermarks.Clear();
+                    watermarks.Add(progressWatermarkOption);
                 }
             }
 
@@ -352,8 +341,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 start,
                 finish,
                 effectiveNow,
-                playoutItemWatermarks,
-                maybeGlobalWatermark,
+                watermarks,
                 playoutItemWithPath.PlayoutItem.PlayoutItemGraphicsElements,
                 channel.FFmpegProfile.VaapiDisplay,
                 channel.FFmpegProfile.VaapiDriver,
@@ -369,7 +357,6 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 request.ChannelStartTime,
                 request.PtsOffset,
                 request.TargetFramerate,
-                disableWatermarks,
                 Option<string>.None,
                 _ => { });
 

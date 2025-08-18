@@ -29,6 +29,7 @@ public class PrepareTroubleshootingPlaybackHandler(
     IFFmpegProcessService ffmpegProcessService,
     ILocalFileSystem localFileSystem,
     ISongVideoGenerator songVideoGenerator,
+    IWatermarkSelector watermarkSelector,
     IEntityLocker entityLocker,
     IMediator mediator,
     ILogger<PrepareTroubleshootingPlaybackHandler> logger)
@@ -95,16 +96,22 @@ public class PrepareTroubleshootingPlaybackHandler(
             StreamingMode = StreamingMode.HttpLiveStreamingSegmenter,
             StreamSelectorMode = ChannelStreamSelectorMode.Troubleshooting,
             SubtitleMode = SUBTITLE_MODE
+            //SongVideoMode = ChannelSongVideoMode.WithProgress
         };
 
-        List<ChannelWatermark> watermarks = [];
+        List<WatermarkOptions> watermarks = [];
         if (request.WatermarkIds.Count > 0)
         {
             List<ChannelWatermark> channelWatermarks = await dbContext.ChannelWatermarks
+                .AsNoTracking()
                 .Where(w => request.WatermarkIds.Contains(w.Id))
                 .ToListAsync();
 
-            watermarks.AddRange(channelWatermarks);
+            foreach (var watermark in channelWatermarks)
+            {
+                watermarks.AddRange(
+                    watermarkSelector.GetWatermarkOptions(channel, watermark, Option<ChannelWatermark>.None));
+            }
         }
 
         string videoPath = mediaPath;
@@ -127,20 +134,26 @@ public class PrepareTroubleshootingPlaybackHandler(
                 bool is43 = Math.Abs(ratio - 4.0 / 3.0) < 0.01;
                 string image = is43 ? "song_progress_overlay_43.png" : "song_progress_overlay.png";
 
+                var progressWatermark = new ChannelWatermark
+                {
+                    Mode = ChannelWatermarkMode.Permanent,
+                    Size = WatermarkSize.Scaled,
+                    WidthPercent = 100,
+                    HorizontalMarginPercent = 0,
+                    VerticalMarginPercent = 0,
+                    Opacity = 100,
+                    Location = WatermarkLocation.TopLeft,
+                    ImageSource = ChannelWatermarkImageSource.Resource,
+                    Image = image
+                };
+
+                var progressWatermarkOption = new WatermarkOptions(
+                    progressWatermark,
+                    Path.Combine(FileSystemLayout.ResourcesCacheFolder, progressWatermark.Image),
+                    Option<int>.None);
+
                 watermarks.Clear();
-                watermarks.Add(
-                    new ChannelWatermark
-                    {
-                        Mode = ChannelWatermarkMode.Permanent,
-                        Size = WatermarkSize.Scaled,
-                        WidthPercent = 100,
-                        HorizontalMarginPercent = 0,
-                        VerticalMarginPercent = 0,
-                        Opacity = 100,
-                        Location = WatermarkLocation.TopLeft,
-                        ImageSource = ChannelWatermarkImageSource.Resource,
-                        Image = image
-                    });
+                watermarks.Add(progressWatermarkOption);
             }
         }
 
@@ -198,7 +211,6 @@ public class PrepareTroubleshootingPlaybackHandler(
             now + duration,
             now,
             watermarks,
-            Option<ChannelWatermark>.None,
             graphicsElements.Map(ge => new PlayoutItemGraphicsElement { GraphicsElement = ge }).ToList(),
             ffmpegProfile.VaapiDisplay,
             ffmpegProfile.VaapiDriver,
@@ -212,7 +224,6 @@ public class PrepareTroubleshootingPlaybackHandler(
             channelStartTime: DateTimeOffset.Now,
             0,
             None,
-            false,
             FileSystemLayout.TranscodeTroubleshootingFolder,
             _ => { });
 
