@@ -40,6 +40,12 @@ public class WatermarkSelectorTests
     private static readonly PlayoutItem TemplateDecoDisableWithWatermark;
     private static readonly PlayoutItem TemplateDecoOverrideWithWatermark;
     private static readonly PlayoutItem TemplateDecoInheritDefaultDecoOverrideWithWatermark;
+    private static readonly PlayoutItem TemplateDecoInheritDefaultDecoMerge;
+    private static readonly PlayoutItem TemplateDecoMergeDefaultDecoOverrideWithWatermark;
+    private static readonly PlayoutItem TemplateDecoMergeDefaultDecoDisableWithWatermark;
+    private static readonly PlayoutItem TemplateDecoMergeDefaultDecoMergeWithWatermark;
+    private static readonly PlayoutItem TemplateDecoMergeDefaultDecoInheritWithWatermark;
+    private static readonly PlayoutItem TemplateDecoMergeDefaultDecoInherit;
 
     private static readonly PlayoutItem DefaultDecoInherit;
     private static readonly PlayoutItem DefaultDecoDisable;
@@ -100,6 +106,21 @@ public class WatermarkSelectorTests
                     Deco = new Deco
                     {
                         WatermarkMode = DecoMode.Override,
+                        DecoWatermarks = [new DecoWatermark { Watermark = WatermarkTemplateDeco }]
+                    }
+                }
+            ]
+        };
+
+        var decoWithMerge = new DecoTemplate
+        {
+            Items =
+            [
+                new DecoTemplateItem
+                {
+                    Deco = new Deco
+                    {
+                        WatermarkMode = DecoMode.Merge,
                         DecoWatermarks = [new DecoWatermark { Watermark = WatermarkTemplateDeco }]
                     }
                 }
@@ -226,7 +247,7 @@ public class WatermarkSelectorTests
             {
                 WatermarkMode = DecoMode.Override,
                 DecoWatermarks = [new DecoWatermark { Watermark = WatermarkDefaultDeco }]
-            },
+            }
         };
 
         TemplateDecoInheritDefaultDecoOverrideWithWatermark = new PlayoutItem
@@ -236,6 +257,134 @@ public class WatermarkSelectorTests
             Playout = playoutWithTemplateDecoInheritDefaultDecoOverride
         };
 
+        var playoutWithTemplateDecoInheritDefaultDecoMerge = new Playout
+        {
+            Templates =
+            [
+                new PlayoutTemplate
+                {
+                    DaysOfWeek = PlayoutTemplate.AllDaysOfWeek(),
+                    DaysOfMonth = PlayoutTemplate.AllDaysOfMonth(),
+                    MonthsOfYear = PlayoutTemplate.AllMonthsOfYear(),
+                    DecoTemplate = decoWithInherit
+                }
+            ],
+            Deco = new Deco
+            {
+                WatermarkMode = DecoMode.Merge,
+                DecoWatermarks = [new DecoWatermark { Watermark = WatermarkDefaultDeco }]
+            }
+        };
+
+        TemplateDecoInheritDefaultDecoMerge = new PlayoutItem
+        {
+            Watermarks = [],
+            DisableWatermarks = false,
+            Playout = playoutWithTemplateDecoInheritDefaultDecoMerge
+        };
+
+        var playoutWithTemplateDecoMergeDefaultDecoOverride = new Playout
+        {
+            Templates =
+            [
+                new PlayoutTemplate
+                {
+                    DaysOfWeek = PlayoutTemplate.AllDaysOfWeek(),
+                    DaysOfMonth = PlayoutTemplate.AllDaysOfMonth(),
+                    MonthsOfYear = PlayoutTemplate.AllMonthsOfYear(),
+                    DecoTemplate = decoWithMerge
+                }
+            ],
+            Deco = new Deco
+            {
+                WatermarkMode = DecoMode.Override,
+                DecoWatermarks = [new DecoWatermark { Watermark = WatermarkDefaultDeco }]
+            }
+        };
+
+        TemplateDecoMergeDefaultDecoOverrideWithWatermark = new PlayoutItem
+        {
+            Watermarks = [WatermarkPlayoutItem],
+            DisableWatermarks = false,
+            Playout = playoutWithTemplateDecoMergeDefaultDecoOverride
+        };
+
+        var playoutWithTemplateDecoMergeDefaultDecoDisable = new Playout
+        {
+            Templates =
+            [
+                new PlayoutTemplate
+                {
+                    DaysOfWeek = PlayoutTemplate.AllDaysOfWeek(),
+                    DaysOfMonth = PlayoutTemplate.AllDaysOfMonth(),
+                    MonthsOfYear = PlayoutTemplate.AllMonthsOfYear(),
+                    DecoTemplate = decoWithMerge
+                }
+            ],
+            Deco = new Deco { WatermarkMode = DecoMode.Disable, }
+        };
+
+        TemplateDecoMergeDefaultDecoDisableWithWatermark = new PlayoutItem
+        {
+            Watermarks = [WatermarkPlayoutItem],
+            DisableWatermarks = false,
+            Playout = playoutWithTemplateDecoMergeDefaultDecoDisable
+        };
+
+        var playoutWithTemplateDecoMergeDefaultDecoMerge = new Playout
+        {
+            Templates =
+            [
+                new PlayoutTemplate
+                {
+                    DaysOfWeek = PlayoutTemplate.AllDaysOfWeek(),
+                    DaysOfMonth = PlayoutTemplate.AllDaysOfMonth(),
+                    MonthsOfYear = PlayoutTemplate.AllMonthsOfYear(),
+                    DecoTemplate = decoWithMerge
+                }
+            ],
+            Deco = new Deco
+            {
+                WatermarkMode = DecoMode.Merge,
+                DecoWatermarks = [new DecoWatermark { Watermark = WatermarkDefaultDeco }]
+            }
+        };
+
+        TemplateDecoMergeDefaultDecoMergeWithWatermark = new PlayoutItem
+        {
+            Watermarks = [WatermarkPlayoutItem],
+            DisableWatermarks = false,
+            Playout = playoutWithTemplateDecoMergeDefaultDecoMerge
+        };
+
+        var playoutWithTemplateDecoMergeDefaultDecoInherit = new Playout
+        {
+            Templates =
+            [
+                new PlayoutTemplate
+                {
+                    DaysOfWeek = PlayoutTemplate.AllDaysOfWeek(),
+                    DaysOfMonth = PlayoutTemplate.AllDaysOfMonth(),
+                    MonthsOfYear = PlayoutTemplate.AllMonthsOfYear(),
+                    DecoTemplate = decoWithMerge
+                }
+            ],
+            Deco = new Deco { WatermarkMode = DecoMode.Inherit }
+        };
+
+        TemplateDecoMergeDefaultDecoInheritWithWatermark = new PlayoutItem
+        {
+            Watermarks = [WatermarkPlayoutItem],
+            DisableWatermarks = false,
+            Playout = playoutWithTemplateDecoMergeDefaultDecoInherit
+        };
+
+        TemplateDecoMergeDefaultDecoInherit = new PlayoutItem
+        {
+            Watermarks = [],
+            DisableWatermarks = false,
+            Playout = playoutWithTemplateDecoMergeDefaultDecoInherit
+        };
     }
 
     private static IEnumerable<(Option<ChannelWatermark>, Channel, PlayoutItem, List<ChannelWatermark>)>
@@ -325,7 +474,74 @@ public class WatermarkSelectorTests
         // PLAYOUT TEMPLATE AND DEFAULT DECO -------------------
 
         // default deco when global, channel and playout item configured with default deco override, template deco inherit
-        yield return (WatermarkGlobal, ChannelWithWatermark, TemplateDecoInheritDefaultDecoOverrideWithWatermark, [WatermarkDefaultDeco]);
+        yield return (
+            WatermarkGlobal,
+            ChannelWithWatermark,
+            TemplateDecoInheritDefaultDecoOverrideWithWatermark,
+            [WatermarkDefaultDeco]);
+
+        // template deco when global, channel, playout item configured with default deco disable, template deco merge
+        yield return (
+            WatermarkGlobal,
+            ChannelWithWatermark,
+            TemplateDecoMergeDefaultDecoDisableWithWatermark,
+            [WatermarkTemplateDeco]);
+
+        // template deco and default deco when global, channel, playout item configured with default deco override, template deco merge
+        yield return (
+            WatermarkGlobal,
+            ChannelWithWatermark,
+            TemplateDecoMergeDefaultDecoOverrideWithWatermark,
+            [WatermarkTemplateDeco, WatermarkDefaultDeco]);
+
+        // template deco and default deco and playout item when global, channel, playout item configured with default deco merge, template deco merge
+        yield return (
+            WatermarkGlobal,
+            ChannelWithWatermark,
+            TemplateDecoMergeDefaultDecoMergeWithWatermark,
+            [WatermarkTemplateDeco, WatermarkDefaultDeco, WatermarkPlayoutItem]);
+
+        // template deco and playout item when global, channel, playout item configured with default deco inherit, template deco merge
+        yield return (
+            WatermarkGlobal,
+            ChannelWithWatermark,
+            TemplateDecoMergeDefaultDecoInheritWithWatermark,
+            [WatermarkTemplateDeco, WatermarkPlayoutItem]);
+
+        // template deco and channel when global, channel configured with default deco inherit, template deco merge
+        yield return (
+            WatermarkGlobal,
+            ChannelWithWatermark,
+            TemplateDecoMergeDefaultDecoInherit,
+            [WatermarkTemplateDeco, WatermarkChannel]);
+
+        // template deco and global when global configured with default deco inherit, template deco merge
+        yield return (
+            WatermarkGlobal,
+            ChannelNoWatermark,
+            TemplateDecoMergeDefaultDecoInherit,
+            [WatermarkTemplateDeco, WatermarkGlobal]);
+
+        // default deco and channel when global, channel configured with default deco merge, template deco inherit
+        yield return (
+            WatermarkGlobal,
+            ChannelWithWatermark,
+            TemplateDecoInheritDefaultDecoMerge,
+            [WatermarkDefaultDeco, WatermarkChannel]);
+
+        // default deco and global when global configured with default deco merge, template deco inherit
+        yield return (
+            WatermarkGlobal,
+            ChannelNoWatermark,
+            TemplateDecoInheritDefaultDecoMerge,
+            [WatermarkDefaultDeco, WatermarkGlobal]);
+
+        // default deco with default deco merge, template deco inherit
+        yield return (
+            WatermarkNone,
+            ChannelNoWatermark,
+            TemplateDecoInheritDefaultDecoMerge,
+            [WatermarkDefaultDeco]);
     }
 
     [TestCaseSource(nameof(SelectWatermarksTestCases))]

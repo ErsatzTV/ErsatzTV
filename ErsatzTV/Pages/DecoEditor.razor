@@ -43,16 +43,17 @@
     <MudSelect @bind-Value="_deco.WatermarkMode" For="@(() => _deco.WatermarkMode)">
         <MudSelectItem Value="DecoMode.Inherit">Inherit</MudSelectItem>
         <MudSelectItem Value="DecoMode.Disable">Disable</MudSelectItem>
-        <MudSelectItem Value="DecoMode.Override">Override</MudSelectItem>
+        <MudSelectItem Value="DecoMode.Override">Replace</MudSelectItem>
+        <MudSelectItem Value="DecoMode.Merge">Merge</MudSelectItem>
     </MudSelect>
 </MudStack>
 <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
     <div class="d-flex">
-        <MudText>Watermark Override</MudText>
+        <MudText>Watermark</MudText>
     </div>
     <MudSelect T="WatermarkViewModel"
                @bind-SelectedValues="_deco.Watermarks"
-               Disabled="@(_deco.WatermarkMode != DecoMode.Override)"
+               Disabled="@(_deco.WatermarkMode is not (DecoMode.Override or DecoMode.Merge))"
                ToStringFunc="@(wm => wm?.Name)"
                Clearable="true"
                MultiSelection="true">
