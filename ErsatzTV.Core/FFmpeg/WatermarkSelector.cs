@@ -30,7 +30,57 @@ public class WatermarkSelector(IImageCache imageCache, ILogger<WatermarkSelector
             return result;
         }
 
-        // TODO: decos
+        DecoEntries decoEntries = DecoSelector.GetDecoEntries(playoutItem.Playout, now);
+
+        // first, check deco template / active deco
+        foreach (Deco templateDeco in decoEntries.TemplateDeco)
+        {
+            switch (templateDeco.WatermarkMode)
+            {
+                case DecoMode.Override:
+                    if (playoutItem.FillerKind is FillerKind.None || templateDeco.UseWatermarkDuringFiller)
+                    {
+                        logger.LogDebug("Watermark will come from template deco (override)");
+                        result.AddRange(
+                            OptionsForWatermarks(channel, templateDeco.DecoWatermarks.Map(dwm => dwm.Watermark)));
+                        return result;
+                    }
+
+                    logger.LogDebug("Watermark is disabled by template deco during filler");
+                    return result;
+                case DecoMode.Disable:
+                    logger.LogDebug("Watermark is disabled by template deco");
+                    return result;
+                case DecoMode.Inherit:
+                    logger.LogDebug("Watermark will inherit from playout deco");
+                    break;
+            }
+        }
+
+        // second, check playout deco
+        foreach (Deco playoutDeco in decoEntries.PlayoutDeco)
+        {
+            switch (playoutDeco.WatermarkMode)
+            {
+                case DecoMode.Override:
+                    if (playoutItem.FillerKind is FillerKind.None || playoutDeco.UseWatermarkDuringFiller)
+                    {
+                        logger.LogDebug("Watermark will come from playout deco (override)");
+                        result.AddRange(
+                            OptionsForWatermarks(channel, playoutDeco.DecoWatermarks.Map(dwm => dwm.Watermark)));
+                        return result;
+                    }
+
+                    logger.LogDebug("Watermark is disabled by playout deco during filler");
+                    return result;
+                case DecoMode.Disable:
+                    logger.LogDebug("Watermark is disabled by playout deco");
+                    return result;
+                case DecoMode.Inherit:
+                    logger.LogDebug("Watermark will inherit from channel and/or global setting");
+                    break;
+            }
+        }
 
         if (playoutItem.Watermarks.Count > 0)
         {
@@ -259,5 +309,74 @@ public class WatermarkSelector(IImageCache imageCache, ILogger<WatermarkSelector
         }
 
         return WatermarkOptions.NoWatermark;
+    }
+
+    private List<WatermarkOptions> OptionsForWatermarks(Channel channel, IEnumerable<ChannelWatermark> watermarks)
+    {
+        var result = new List<WatermarkOptions>();
+
+        foreach (var watermark in watermarks)
+        {
+            result.AddRange(GetWatermarkOptions(channel, watermark));
+        }
+
+        return result;
+    }
+
+    private Option<WatermarkOptions> GetWatermarkOptions(Channel channel, ChannelWatermark watermark)
+    {
+        switch (watermark.ImageSource)
+        {
+            // used for song progress overlay
+            case ChannelWatermarkImageSource.Resource:
+                return new WatermarkOptions(
+                    watermark,
+                    Path.Combine(FileSystemLayout.ResourcesCacheFolder, watermark.Image),
+                    Option<int>.None);
+            case ChannelWatermarkImageSource.Custom:
+                // bad form validation makes this possible
+                if (string.IsNullOrWhiteSpace(watermark.Image))
+                {
+                    logger.LogWarning(
+                        "Watermark {Name} has custom image configured with no image; ignoring",
+                        watermark.Name);
+                    break;
+                }
+
+                logger.LogDebug("Watermark will come from playout item (custom)");
+
+                string customPath = imageCache.GetPathForImage(
+                    watermark.Image,
+                    ArtworkKind.Watermark,
+                    Option<int>.None);
+                return new WatermarkOptions(
+                    watermark,
+                    customPath,
+                    None);
+            case ChannelWatermarkImageSource.ChannelLogo:
+                logger.LogDebug("Watermark will come from playout item (channel logo)");
+
+                Option<string> maybeChannelPath = channel.Artwork.Count == 0
+                    ?
+                    //We have to generate the logo on the fly and save it to a local temp path
+                    ChannelLogoGenerator.GenerateChannelLogoUrl(channel)
+                    :
+                    //We have an artwork attached to the channel, let's use it :)
+                    channel.Artwork
+                        .Filter(a => a.ArtworkKind == ArtworkKind.Logo)
+                        .HeadOrNone()
+                        .Map(a => Artwork.IsExternalUrl(a.Path)
+                            ? a.Path
+                            : imageCache.GetPathForImage(a.Path, ArtworkKind.Logo, Option<int>.None));
+
+                return new WatermarkOptions(
+                    watermark,
+                    maybeChannelPath,
+                    None);
+            default:
+                throw new NotSupportedException("Unsupported watermark image source");
+        }
+
+        return Option<WatermarkOptions>.None;
     }
 }
