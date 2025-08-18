@@ -112,12 +112,18 @@ public class ReplacePlayoutAlternateScheduleItemsHandler :
                 }
 
                 // save highest index directly to playout
-                if (playout.ProgramScheduleId != highest.ProgramScheduleId)
+                bool hasDefaultScheduleChange = playout.ProgramScheduleId != highest.ProgramScheduleId;
+                if (hasDefaultScheduleChange)
                 {
                     playout.ProgramScheduleId = highest.ProgramScheduleId;
                 }
 
                 await dbContext.SaveChangesAsync(cancellationToken);
+
+                if (hasDefaultScheduleChange)
+                {
+                    await dbContext.Entry(playout).Reference(p => p.ProgramSchedule).LoadAsync(cancellationToken);
+                }
 
                 // load newly-added schedules
                 foreach (ProgramScheduleAlternate alternate in playout.ProgramScheduleAlternates

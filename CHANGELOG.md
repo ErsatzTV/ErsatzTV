@@ -75,6 +75,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix incorrect media item counts after removing paths from local libraries
 - Fix song playback in playback troubleshooting
 - Fix seeking into extracted text subtitles
+- Fix error when changing default (lowest priority) alternate schedule
 
 ### Changed
 - Allow multiple watermarks in playback troubleshooting
