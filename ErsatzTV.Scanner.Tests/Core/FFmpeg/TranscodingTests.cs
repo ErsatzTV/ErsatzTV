@@ -320,8 +320,6 @@ public class TranscodingTests
         (string videoPath, MediaVersion videoVersion) = await songVideoGenerator.GenerateSongVideo(
             song,
             channel,
-            None, // playout item watermark
-            None, // global watermark
             ExecutableName("ffmpeg"),
             ExecutableName("ffprobe"),
             CancellationToken.None);

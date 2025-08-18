@@ -115,8 +115,6 @@ public class PrepareTroubleshootingPlaybackHandler(
             (videoPath, videoVersion) = await songVideoGenerator.GenerateSongVideo(
                 song,
                 channel,
-                Option<ChannelWatermark>.None,
-                Option<ChannelWatermark>.None,
                 ffmpegPath,
                 ffprobePath,
                 CancellationToken.None);

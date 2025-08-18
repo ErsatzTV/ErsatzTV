@@ -280,8 +280,6 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 (videoPath, videoVersion) = await _songVideoGenerator.GenerateSongVideo(
                     song,
                     channel,
-                    playoutItemWatermarks.HeadOrNone(),
-                    maybeGlobalWatermark,
                     ffmpegPath,
                     ffprobePath,
                     cancellationToken);

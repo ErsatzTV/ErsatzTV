@@ -34,8 +34,6 @@ public class FFmpegProcessService
         string ffprobePath,
         Option<string> subtitleFile,
         Channel channel,
-        Option<ChannelWatermark> playoutItemWatermark,
-        Option<ChannelWatermark> globalWatermark,
         MediaVersion videoVersion,
         string videoPath,
         bool boxBlur,
