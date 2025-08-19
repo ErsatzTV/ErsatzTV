@@ -26,7 +26,7 @@ public abstract class LocalFolderScanner
     public static readonly ImmutableHashSet<string> AudioFileExtensions = new[]
     {
         ".aac", ".alac", ".dff", ".dsf", ".flac", ".mp3", ".m4a", ".ogg", ".opus", ".oga", ".ogx", ".spx", ".wav",
-        ".wma"
+        ".wma", ".aiff"
     }.ToImmutableHashSet(StringComparer.OrdinalIgnoreCase);
 
     public static readonly ImmutableHashSet<string> ImageFileExtensions = new[]
