@@ -14,15 +14,15 @@ using YamlDotNet.Serialization.NamingConventions;
 
 namespace ErsatzTV.Core.Scheduling.YamlScheduling;
 
-public class YamlPlayoutBuilder(
+public class SequentialPlayoutBuilder(
     ILocalFileSystem localFileSystem,
     IConfigElementRepository configElementRepository,
     IMediaCollectionRepository mediaCollectionRepository,
     IChannelRepository channelRepository,
     IGraphicsElementRepository graphicsElementRepository,
     ISequentialScheduleValidator sequentialScheduleValidator,
-    ILogger<YamlPlayoutBuilder> logger)
-    : IYamlPlayoutBuilder
+    ILogger<SequentialPlayoutBuilder> logger)
+    : ISequentialPlayoutBuilder
 {
     public async Task<PlayoutBuildResult> Build(
         DateTimeOffset start,

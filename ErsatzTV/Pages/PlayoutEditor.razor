@@ -41,7 +41,7 @@
                         <div class="d-flex">
                             <MudText>JSON (dizqueTV) Schedule</MudText>
                         </div>
-                        <MudTextField @bind-Value="_model.ExternalJsonFile" For="@(() => _model.ExternalJsonFile)"/>
+                        <MudTextField @bind-Value="_model.ScheduleFile" For="@(() => _model.ScheduleFile)"/>
                     </MudStack>
                     break;
                 case PlayoutKind.Sequential:
@@ -49,7 +49,15 @@
                         <div class="d-flex">
                             <MudText>Sequential Schedule</MudText>
                         </div>
-                        <MudTextField @bind-Value="_model.SequentialSchedule" For="@(() => _model.SequentialSchedule)"/>
+                        <MudTextField @bind-Value="_model.ScheduleFile" For="@(() => _model.ScheduleFile)"/>
+                    </MudStack>
+                    break;
+                case PlayoutKind.Scripted:
+                    <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                        <div class="d-flex">
+                            <MudText>Scripted Schedule</MudText>
+                        </div>
+                        <MudTextField @bind-Value="_model.ScheduleFile" For="@(() => _model.ScheduleFile)"/>
                     </MudStack>
                     break;
                 case PlayoutKind.Block:

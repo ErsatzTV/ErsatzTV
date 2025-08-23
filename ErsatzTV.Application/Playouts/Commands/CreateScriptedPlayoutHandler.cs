@@ -11,14 +11,14 @@ using Channel = ErsatzTV.Core.Domain.Channel;
 
 namespace ErsatzTV.Application.Playouts;
 
-public class CreateExternalJsonPlayoutHandler
-    : IRequestHandler<CreateExternalJsonPlayout, Either<BaseError, CreatePlayoutResponse>>
+public class CreateScriptedPlayoutHandler
+    : IRequestHandler<CreateScriptedPlayout, Either<BaseError, CreatePlayoutResponse>>
 {
     private readonly ChannelWriter<IBackgroundServiceRequest> _channel;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly ILocalFileSystem _localFileSystem;
 
-    public CreateExternalJsonPlayoutHandler(
+    public CreateScriptedPlayoutHandler(
         ILocalFileSystem localFileSystem,
         ChannelWriter<IBackgroundServiceRequest> channel,
         IDbContextFactory<TvContext> dbContextFactory)
@@ -29,7 +29,7 @@ public class CreateExternalJsonPlayoutHandler
     }
 
     public async Task<Either<BaseError, CreatePlayoutResponse>> Handle(
-        CreateExternalJsonPlayout request,
+        CreateScriptedPlayout request,
         CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
@@ -42,27 +42,33 @@ public class CreateExternalJsonPlayoutHandler
         await dbContext.Playouts.AddAsync(playout);
         await dbContext.SaveChangesAsync();
         await _channel.WriteAsync(new BuildPlayout(playout.Id, PlayoutBuildMode.Reset));
+        if (playout.Channel.PlayoutMode is ChannelPlayoutMode.OnDemand)
+        {
+            await _channel.WriteAsync(new TimeShiftOnDemandPlayout(playout.Id, DateTimeOffset.Now, false));
+        }
+
         await _channel.WriteAsync(new RefreshChannelList());
         return new CreatePlayoutResponse(playout.Id);
     }
 
     private async Task<Validation<BaseError, Playout>> Validate(
         TvContext dbContext,
-        CreateExternalJsonPlayout request) =>
-        (await ValidateChannel(dbContext, request), ValidateExternalJsonFile(request), ValidateScheduleKind(request))
-        .Apply((channel, externalJsonFile, scheduleKind) => new Playout
+        CreateScriptedPlayout request) =>
+        (await ValidateChannel(dbContext, request), ValidateScheduleFile(request), ValidateScheduleKind(request))
+        .Apply((channel, yamlFile, scheduleKind) => new Playout
         {
             ChannelId = channel.Id,
-            ScheduleFile = externalJsonFile,
-            ScheduleKind = scheduleKind
+            ScheduleFile = yamlFile,
+            ScheduleKind = scheduleKind,
+            Seed = new Random().Next()
         });
 
     private static Task<Validation<BaseError, Channel>> ValidateChannel(
         TvContext dbContext,
-        CreateExternalJsonPlayout createExternalJsonPlayout) =>
+        CreateScriptedPlayout createScriptedPlayout) =>
         dbContext.Channels
             .Include(c => c.Playouts)
-            .SelectOneAsync(c => c.Id, c => c.Id == createExternalJsonPlayout.ChannelId)
+            .SelectOneAsync(c => c.Id, c => c.Id == createScriptedPlayout.ChannelId)
             .Map(o => o.ToValidation<BaseError>("Channel does not exist"))
             .BindT(ChannelMustNotHavePlayouts);
 
@@ -72,19 +78,19 @@ public class CreateExternalJsonPlayoutHandler
             .Map(_ => channel)
             .ToValidation<BaseError>("Channel already has one playout");
 
-    private Validation<BaseError, string> ValidateExternalJsonFile(CreateExternalJsonPlayout request)
+    private Validation<BaseError, string> ValidateScheduleFile(CreateScriptedPlayout request)
     {
         if (!_localFileSystem.FileExists(request.ScheduleFile))
         {
-            return BaseError.New("External Json File does not exist!");
+            return BaseError.New("Scripted schedule does not exist!");
         }
 
         return request.ScheduleFile;
     }
 
     private static Validation<BaseError, PlayoutScheduleKind> ValidateScheduleKind(
-        CreateExternalJsonPlayout createExternalJsonPlayout) =>
-        Optional(createExternalJsonPlayout.ScheduleKind)
-            .Filter(scheduleKind => scheduleKind == PlayoutScheduleKind.ExternalJson)
-            .ToValidation<BaseError>("[ScheduleKind] must be ExternalJson");
+        CreateScriptedPlayout createScriptedPlayout) =>
+        Optional(createScriptedPlayout.ScheduleKind)
+            .Filter(scheduleKind => scheduleKind == PlayoutScheduleKind.Scripted)
+            .ToValidation<BaseError>("[ScheduleKind] must be Scripted");
 }

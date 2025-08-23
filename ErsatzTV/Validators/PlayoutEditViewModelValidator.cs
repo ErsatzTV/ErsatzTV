@@ -10,7 +10,8 @@ public class PlayoutEditViewModelValidator : AbstractValidator<PlayoutEditViewMo
     {
         RuleFor(p => p.Channel).NotNull();
         RuleFor(p => p.ProgramSchedule).NotNull().When(p => string.IsNullOrWhiteSpace(p.Kind));
-        RuleFor(p => p.ExternalJsonFile).NotNull().When(p => p.Kind == PlayoutKind.ExternalJson);
+        RuleFor(p => p.ScheduleFile).NotNull().When(p =>
+            p.Kind is PlayoutKind.ExternalJson or PlayoutKind.Sequential or PlayoutKind.Scripted);
     }
 
     public Func<object, string, Task<IEnumerable<string>>> ValidateValue => async (model, propertyName) =>

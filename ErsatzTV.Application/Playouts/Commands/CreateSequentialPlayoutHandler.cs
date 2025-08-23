@@ -80,17 +80,17 @@ public class CreateSequentialPlayoutHandler
 
     private Validation<BaseError, string> ValidateYamlFile(CreateSequentialPlayout request)
     {
-        if (!_localFileSystem.FileExists(request.TemplateFile))
+        if (!_localFileSystem.FileExists(request.ScheduleFile))
         {
-            return BaseError.New("YAML file does not exist!");
+            return BaseError.New("Sequential schedule does not exist!");
         }
 
-        return request.TemplateFile;
+        return request.ScheduleFile;
     }
 
     private static Validation<BaseError, PlayoutScheduleKind> ValidateScheduleKind(
         CreateSequentialPlayout createSequentialPlayout) =>
         Optional(createSequentialPlayout.ScheduleKind)
             .Filter(scheduleKind => scheduleKind == PlayoutScheduleKind.Sequential)
-            .ToValidation<BaseError>("[ScheduleKind] must be YAML");
+            .ToValidation<BaseError>("[ScheduleKind] must be Sequential");
 }

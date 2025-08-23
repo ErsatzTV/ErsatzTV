@@ -194,6 +194,7 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
             {
                 case PlayoutScheduleKind.Classic:
                 case PlayoutScheduleKind.Sequential:
+                case PlayoutScheduleKind.Scripted:
                     var floodSorted = playouts
                         .Collect(p => p.Items)
                         .OrderBy(pi => pi.Start)

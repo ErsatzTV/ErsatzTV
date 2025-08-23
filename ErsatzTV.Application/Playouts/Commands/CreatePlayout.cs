@@ -12,8 +12,11 @@ public record CreateClassicPlayout(int ChannelId, int ProgramScheduleId)
 public record CreateBlockPlayout(int ChannelId)
     : CreatePlayout(ChannelId, PlayoutScheduleKind.Block);
 
-public record CreateSequentialPlayout(int ChannelId, string TemplateFile)
+public record CreateSequentialPlayout(int ChannelId, string ScheduleFile)
     : CreatePlayout(ChannelId, PlayoutScheduleKind.Sequential);
 
-public record CreateExternalJsonPlayout(int ChannelId, string ExternalJsonFile)
+public record CreateScriptedPlayout(int ChannelId, string ScheduleFile)
+    : CreatePlayout(ChannelId, PlayoutScheduleKind.Scripted);
+
+public record CreateExternalJsonPlayout(int ChannelId, string ScheduleFile)
     : CreatePlayout(ChannelId, PlayoutScheduleKind.ExternalJson);
