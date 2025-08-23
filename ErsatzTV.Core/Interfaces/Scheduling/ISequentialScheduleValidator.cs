@@ -1,6 +1,6 @@
 namespace ErsatzTV.Core.Interfaces.Scheduling;
 
-public interface IYamlScheduleValidator
+public interface ISequentialScheduleValidator
 {
     Task<bool> ValidateSchedule(string yaml, bool isImport);
     string ToJson(string yaml);

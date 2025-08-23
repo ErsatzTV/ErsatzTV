@@ -20,7 +20,7 @@ public class YamlPlayoutBuilder(
     IMediaCollectionRepository mediaCollectionRepository,
     IChannelRepository channelRepository,
     IGraphicsElementRepository graphicsElementRepository,
-    IYamlScheduleValidator yamlScheduleValidator,
+    ISequentialScheduleValidator sequentialScheduleValidator,
     ILogger<YamlPlayoutBuilder> logger)
     : IYamlPlayoutBuilder
 {
@@ -455,7 +455,7 @@ public class YamlPlayoutBuilder(
         try
         {
             string yaml = await File.ReadAllTextAsync(fileName, cancellationToken);
-            if (!await yamlScheduleValidator.ValidateSchedule(yaml, isImport))
+            if (!await sequentialScheduleValidator.ValidateSchedule(yaml, isImport))
             {
                 return Option<YamlPlayoutDefinition>.None;
             }

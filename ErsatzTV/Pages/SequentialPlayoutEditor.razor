@@ -92,7 +92,7 @@
         }
 
         Either<BaseError, PlayoutNameViewModel> result =
-            await Mediator.Send(new UpdateYamlPlayout(_playout.PlayoutId, _playout.TemplateFile), _cts.Token);
+            await Mediator.Send(new UpdateSequentialPlayout(_playout.PlayoutId, _playout.TemplateFile), _cts.Token);
 
         result.Match(
             _ => { Snackbar.Add($"Saved sequential schedule for playout {_channelName}", Severity.Success); },

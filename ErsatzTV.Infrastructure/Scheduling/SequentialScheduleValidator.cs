@@ -11,7 +11,7 @@ using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace ErsatzTV.Infrastructure.Scheduling;
 
-public class YamlScheduleValidator(ILogger<YamlScheduleValidator> logger) : IYamlScheduleValidator
+public class SequentialScheduleValidator(ILogger<SequentialScheduleValidator> logger) : ISequentialScheduleValidator
 {
     public async Task<bool> ValidateSchedule(string yaml, bool isImport)
     {
@@ -19,7 +19,7 @@ public class YamlScheduleValidator(ILogger<YamlScheduleValidator> logger) : IYam
         {
             string schemaFileName = Path.Combine(
                 FileSystemLayout.ResourcesCacheFolder,
-                isImport ? "yaml-playout-import.schema.json" : "yaml-playout.schema.json");
+                isImport ? "sequential-schedule-import.schema.json" : "sequential-schedule.schema.json");
             using StreamReader sr = File.OpenText(schemaFileName);
             await using var reader = new JsonTextReader(sr);
             var schema = JSchema.Load(reader);
@@ -31,7 +31,7 @@ public class YamlScheduleValidator(ILogger<YamlScheduleValidator> logger) : IYam
 
             if (!schedule.IsValid(schema, out IList<string> errorMessages))
             {
-                logger.LogWarning("Failed to validate YAML schedule definition: {ErrorMessages}", errorMessages);
+                logger.LogWarning("Failed to validate sequential schedule definition: {ErrorMessages}", errorMessages);
                 return false;
             }
 
@@ -39,7 +39,7 @@ public class YamlScheduleValidator(ILogger<YamlScheduleValidator> logger) : IYam
         }
         catch (Exception ex)
         {
-            logger.LogWarning(ex, "Unexpected error while validating YAML schedule definition");
+            logger.LogWarning(ex, "Unexpected error while validating sequential schedule definition");
         }
 
         return false;
@@ -62,7 +62,7 @@ public class YamlScheduleValidator(ILogger<YamlScheduleValidator> logger) : IYam
         {
             string schemaFileName = Path.Combine(
                 FileSystemLayout.ResourcesCacheFolder,
-                isImport ? "yaml-playout-import.schema.json" : "yaml-playout.schema.json");
+                isImport ? "sequential-schedule-import.schema.json" : "sequential-schedule.schema.json");
             using StreamReader sr = File.OpenText(schemaFileName);
             await using var reader = new JsonTextReader(sr);
             var schema = JSchema.Load(reader);

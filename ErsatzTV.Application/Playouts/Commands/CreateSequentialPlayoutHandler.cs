@@ -11,14 +11,14 @@ using Channel = ErsatzTV.Core.Domain.Channel;
 
 namespace ErsatzTV.Application.Playouts;
 
-public class CreateYamlPlayoutHandler
+public class CreateSequentialPlayoutHandler
     : IRequestHandler<CreateSequentialPlayout, Either<BaseError, CreatePlayoutResponse>>
 {
     private readonly ChannelWriter<IBackgroundServiceRequest> _channel;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly ILocalFileSystem _localFileSystem;
 
-    public CreateYamlPlayoutHandler(
+    public CreateSequentialPlayoutHandler(
         ILocalFileSystem localFileSystem,
         ChannelWriter<IBackgroundServiceRequest> channel,
         IDbContextFactory<TvContext> dbContextFactory)

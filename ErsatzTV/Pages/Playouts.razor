@@ -86,10 +86,10 @@
                                 <span>Block</span>
                                 break;
                             case PlayoutScheduleKind.Sequential:
-                                <span>YAML</span>
+                                <span>Sequential</span>
                                 break;
                             case PlayoutScheduleKind.ExternalJson:
-                                <span>External Json</span>
+                                <span>JSON (dizqueTV)</span>
                                 break;
                             default:
                                 <span></span>
@@ -290,7 +290,7 @@
 
     private async Task PlayoutSelected(PlayoutNameViewModel playout)
     {
-        // only show details for flood, block and YAML playouts
+        // only show details for flood, block and sequential playouts
         _selectedPlayoutId = playout.ScheduleKind is PlayoutScheduleKind.Classic or PlayoutScheduleKind.Block or PlayoutScheduleKind.Sequential
             ? playout.PlayoutId
             : null;

@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://ersatztv.org/yaml-playout.schema.json",
-  "title": "YAML Playout Import",
-  "description": "An ErsatzTV YAML playout import definition",
+  "$id": "https://ersatztv.org/sequential-schedule.schema.json",
+  "title": "Sequential Schedule Import",
+  "description": "An ErsatzTV sequential schedule import definition",
   "type": "object",
   "properties": {
     "content": {
