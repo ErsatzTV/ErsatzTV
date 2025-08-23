@@ -24,8 +24,7 @@ public class GetPlayoutByIdHandler(IDbContextFactory<TvContext> dbContextFactory
                 p.Channel.Number,
                 p.Channel.PlayoutMode,
                 p.ProgramScheduleId == null ? string.Empty : p.ProgramSchedule.Name,
-                p.TemplateFile,
-                p.ExternalJsonFile,
+                p.ScheduleFile,
                 p.DailyRebuildTime));
     }
 }

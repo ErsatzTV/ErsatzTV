@@ -37,7 +37,7 @@ public class
         UpdateExternalJsonPlayout request,
         Playout playout)
     {
-        playout.ExternalJsonFile = request.ExternalJsonFile;
+        playout.ScheduleFile = request.ScheduleFile;
 
         if (await dbContext.SaveChangesAsync() > 0)
         {
@@ -51,8 +51,7 @@ public class
             playout.Channel.Number,
             playout.Channel.PlayoutMode,
             playout.ProgramSchedule?.Name ?? string.Empty,
-            playout.TemplateFile,
-            playout.ExternalJsonFile,
+            playout.ScheduleFile,
             playout.DailyRebuildTime);
     }
 

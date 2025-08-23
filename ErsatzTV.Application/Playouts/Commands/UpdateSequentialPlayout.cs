@@ -2,5 +2,5 @@
 
 namespace ErsatzTV.Application.Playouts;
 
-public record UpdateSequentialPlayout(int PlayoutId, string TemplateFile)
+public record UpdateSequentialPlayout(int PlayoutId, string ScheduleFile)
     : IRequest<Either<BaseError, PlayoutNameViewModel>>;

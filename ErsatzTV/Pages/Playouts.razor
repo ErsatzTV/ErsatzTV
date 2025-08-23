@@ -303,14 +303,14 @@
 
     private async Task EditExternalJsonFile(PlayoutNameViewModel playout)
     {
-        var parameters = new DialogParameters { { "ExternalJsonFile", $"{playout.ExternalJsonFile}" } };
+        var parameters = new DialogParameters { { "ScheduleFile", $"{playout.ScheduleFile}" } };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraLarge };
 
         IDialogReference dialog = await Dialog.ShowAsync<EditExternalJsonFileDialog>("Edit External Json File", parameters, options);
         DialogResult result = await dialog.Result;
         if (result is { Canceled: false })
         {
-            await Mediator.Send(new UpdateExternalJsonPlayout(playout.PlayoutId, result.Data as string ?? playout.ExternalJsonFile), _cts.Token);
+            await Mediator.Send(new UpdateExternalJsonPlayout(playout.PlayoutId, result.Data as string ?? playout.ScheduleFile), _cts.Token);
             if (_table != null)
             {
                 await _table.ReloadServerData();

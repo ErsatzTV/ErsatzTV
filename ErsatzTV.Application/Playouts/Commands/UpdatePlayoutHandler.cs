@@ -43,8 +43,7 @@ public class UpdatePlayoutHandler : IRequestHandler<UpdatePlayout, Either<BaseEr
             playout.Channel.Number,
             playout.Channel.PlayoutMode,
             playout.ProgramSchedule?.Name ?? string.Empty,
-            playout.TemplateFile,
-            playout.ExternalJsonFile,
+            playout.ScheduleFile,
             playout.DailyRebuildTime);
     }
 

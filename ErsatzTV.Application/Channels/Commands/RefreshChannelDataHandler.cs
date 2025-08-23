@@ -230,7 +230,7 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
                         xml);
                     break;
                 case PlayoutScheduleKind.ExternalJson:
-                    var externalJsonSorted = (await CollectExternalJsonItems(playout.ExternalJsonFile))
+                    var externalJsonSorted = (await CollectExternalJsonItems(playout.ScheduleFile))
                         .Filter(pi => pi.StartOffset <= finish)
                         .ToList();
 

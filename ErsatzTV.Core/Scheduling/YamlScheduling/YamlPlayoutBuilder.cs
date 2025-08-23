@@ -33,17 +33,17 @@ public class YamlPlayoutBuilder(
     {
         PlayoutBuildResult result = PlayoutBuildResult.Empty;
 
-        if (!localFileSystem.FileExists(playout.TemplateFile))
+        if (!localFileSystem.FileExists(playout.ScheduleFile))
         {
-            logger.LogWarning("YAML playout file {File} does not exist; aborting.", playout.TemplateFile);
+            logger.LogWarning("Sequential schedule file {File} does not exist; aborting.", playout.ScheduleFile);
             return result;
         }
 
         Option<YamlPlayoutDefinition> maybePlayoutDefinition =
-            await LoadYamlDefinition(playout.TemplateFile, false, cancellationToken);
+            await LoadYamlDefinition(playout.ScheduleFile, false, cancellationToken);
         if (maybePlayoutDefinition.IsNone)
         {
-            logger.LogWarning("YAML playout file {File} is invalid; aborting.", playout.TemplateFile);
+            logger.LogWarning("Sequential schedule file {File} is invalid; aborting.", playout.ScheduleFile);
             return result;
         }
 
@@ -58,7 +58,7 @@ public class YamlPlayoutBuilder(
                 if (!File.Exists(import))
                 {
                     path = Path.Combine(
-                        Path.GetDirectoryName(playout.TemplateFile) ?? string.Empty,
+                        Path.GetDirectoryName(playout.ScheduleFile) ?? string.Empty,
                         import ?? string.Empty);
                     if (!File.Exists(path))
                     {

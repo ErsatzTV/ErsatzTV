@@ -58,7 +58,7 @@ public class CreateSequentialPlayoutHandler
         .Apply((channel, yamlFile, scheduleKind) => new Playout
         {
             ChannelId = channel.Id,
-            TemplateFile = yamlFile,
+            ScheduleFile = yamlFile,
             ScheduleKind = scheduleKind,
             Seed = new Random().Next()
         });

@@ -61,14 +61,14 @@ public class ExternalJsonPlayoutItemProvider : IExternalJsonPlayoutItemProvider
             if (playout.ScheduleKind == PlayoutScheduleKind.ExternalJson)
             {
                 // json file must exist
-                if (_localFileSystem.FileExists(playout.ExternalJsonFile))
+                if (_localFileSystem.FileExists(playout.ScheduleFile))
                 {
                     return await GetExternalJsonPlayoutItem(dbContext, playout, now, ffprobePath);
                 }
 
                 _logger.LogWarning(
-                    "Unable to locate external json file {File} for channel {Number} - {Name}",
-                    playout.ExternalJsonFile,
+                    "Unable to locate json schedule file {File} for channel {Number} - {Name}",
+                    playout.ScheduleFile,
                     channel.Number,
                     channel.Name);
             }
@@ -84,7 +84,7 @@ public class ExternalJsonPlayoutItemProvider : IExternalJsonPlayoutItemProvider
         string ffprobePath)
     {
         Option<ExternalJsonChannel> maybeChannel = JsonConvert.DeserializeObject<ExternalJsonChannel>(
-            await File.ReadAllTextAsync(playout.ExternalJsonFile));
+            await File.ReadAllTextAsync(playout.ScheduleFile));
 
         // must deserialize channel from json
         foreach (ExternalJsonChannel channel in maybeChannel)

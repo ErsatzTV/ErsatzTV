@@ -3,6 +3,7 @@ using System;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ErsatzTV.Infrastructure.Sqlite.Migrations
 {
     [DbContext(typeof(TvContext))]
-    partial class TvContextModelSnapshot : ModelSnapshot
+    [Migration("20250823155845_Add_PlayoutScheduleFile")]
+    partial class Add_PlayoutScheduleFile
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.8");
@@ -1733,6 +1736,9 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Property<int?>("DecoId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("ExternalJsonFile")
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTimeOffset?>("OnDemandCheckpoint")
                         .HasColumnType("TEXT");
 
@@ -1747,6 +1753,9 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
 
                     b.Property<int>("Seed")
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("TemplateFile")
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 

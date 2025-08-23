@@ -53,7 +53,7 @@ public class CreateExternalJsonPlayoutHandler
         .Apply((channel, externalJsonFile, scheduleKind) => new Playout
         {
             ChannelId = channel.Id,
-            ExternalJsonFile = externalJsonFile,
+            ScheduleFile = externalJsonFile,
             ScheduleKind = scheduleKind
         });
 
