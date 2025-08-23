@@ -49,6 +49,13 @@ public class
             DetachEntity(dbContext, item);
             item.ProgramScheduleId = 0;
             item.ProgramSchedule = schedule;
+
+            foreach (ProgramScheduleItemWatermark watermark in item.ProgramScheduleItemWatermarks)
+            {
+                DetachEntity(dbContext, watermark);
+                watermark.ProgramScheduleItemId = 0;
+                watermark.ProgramScheduleItem = item;
+            }
         }
 
         await dbContext.ProgramSchedules.AddAsync(schedule, cancellationToken);
@@ -71,6 +78,7 @@ public class
         dbContext.ProgramSchedules
             .AsNoTracking()
             .Include(ps => ps.Items)
+            .ThenInclude(ps => ps.ProgramScheduleItemWatermarks)
             .SelectOneAsync(p => p.Id, p => p.Id == request.ProgramScheduleId)
             .Map(o => o.ToValidation<BaseError>("Schedule does not exist."));
 
