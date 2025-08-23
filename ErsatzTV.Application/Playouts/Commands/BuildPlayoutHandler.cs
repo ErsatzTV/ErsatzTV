@@ -119,7 +119,12 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
             switch (playout.ScheduleKind)
             {
                 case PlayoutScheduleKind.Block:
-                    result = await _blockPlayoutBuilder.Build(playout, referenceData, request.Mode, cancellationToken);
+                    result = await _blockPlayoutBuilder.Build(
+                        request.Start,
+                        playout,
+                        referenceData,
+                        request.Mode,
+                        cancellationToken);
                     result = await _blockPlayoutFillerBuilder.Build(
                         playout,
                         referenceData,

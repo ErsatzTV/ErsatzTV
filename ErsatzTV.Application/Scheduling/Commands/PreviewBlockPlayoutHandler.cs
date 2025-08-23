@@ -68,7 +68,12 @@ public class PreviewBlockPlayoutHandler(
             playout.PlayoutHistory.ToList());
 
         PlayoutBuildResult result =
-            await blockPlayoutBuilder.Build(playout, referenceData, PlayoutBuildMode.Reset, cancellationToken);
+            await blockPlayoutBuilder.Build(
+                DateTimeOffset.Now,
+                playout,
+                referenceData,
+                PlayoutBuildMode.Reset,
+                cancellationToken);
 
         // load playout item details for title
         foreach (PlayoutItem playoutItem in result.AddedItems)

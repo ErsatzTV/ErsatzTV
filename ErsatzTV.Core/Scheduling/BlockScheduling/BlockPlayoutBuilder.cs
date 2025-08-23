@@ -28,6 +28,7 @@ public class BlockPlayoutBuilder(
     protected virtual ILogger Logger => logger;
 
     public virtual async Task<PlayoutBuildResult> Build(
+        DateTimeOffset start,
         Playout playout,
         PlayoutReferenceData referenceData,
         PlayoutBuildMode mode,
@@ -49,8 +50,6 @@ public class BlockPlayoutBuilder(
             PlaybackOrder.Random,
             PlaybackOrder.RandomRotation
         ];
-
-        DateTimeOffset start = DateTimeOffset.Now;
 
         int daysToBuild = await GetDaysToBuild();
 
@@ -78,9 +77,9 @@ public class BlockPlayoutBuilder(
             result.ItemsToRemove.Add(item.Id);
         }
 
-        // remove old items
-        // importantly, this should not remove their history
-        result = result with { RemoveBefore = start };
+        // // remove old items
+        // // importantly, this should not remove their history
+        // result = result with { RemoveBefore = start };
 
         (List<EffectiveBlock> updatedEffectiveBlocks, List<PlayoutItem> playoutItemsToRemove) =
             BlockPlayoutChangeDetection.FindUpdatedItems(
