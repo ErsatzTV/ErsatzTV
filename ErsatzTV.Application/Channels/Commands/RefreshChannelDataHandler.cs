@@ -363,53 +363,99 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
             .GetValue<XmltvTimeZone>(ConfigElementKey.XmltvTimeZone)
             .IfNoneAsync(XmltvTimeZone.Local);
 
+        XmltvBlockBehavior xmltvBlockBehavior = await _configElementRepository
+            .GetValue<XmltvBlockBehavior>(ConfigElementKey.XmltvBlockBehavior)
+            .IfNoneAsync(XmltvBlockBehavior.SplitTimeEvenly);
+
         var groups = sorted.GroupBy(s => new { s.GuideStart, s.GuideFinish, s.GuideGroup });
         foreach (var group in groups)
         {
-            DateTime groupStart = group.Key.GuideStart!.Value;
-            DateTime groupFinish = group.Key.GuideFinish!.Value;
-            TimeSpan groupDuration = groupFinish - groupStart;
-
             var itemsToInclude = group.Filter(g => g.FillerKind is FillerKind.None).ToList();
             if (itemsToInclude.Count == 0)
             {
                 continue;
             }
 
-            TimeSpan perItem = groupDuration / itemsToInclude.Count;
-
-            DateTimeOffset currentStart = xmltvTimeZone switch
+            switch (xmltvBlockBehavior)
             {
-                XmltvTimeZone.Utc => new DateTimeOffset(groupStart, TimeSpan.Zero),
-                _ => new DateTimeOffset(groupStart, TimeSpan.Zero).ToLocalTime()
-            };
+                case XmltvBlockBehavior.UseActualTimes:
+                    foreach (PlayoutItem item in itemsToInclude)
+                    {
+                        DateTimeOffset actualStart = xmltvTimeZone switch
+                        {
+                            XmltvTimeZone.Utc => new DateTimeOffset(item.Start, TimeSpan.Zero),
+                            _ => new DateTimeOffset(item.Start, TimeSpan.Zero).ToLocalTime()
+                        };
 
-            DateTimeOffset currentFinish = currentStart + perItem;
+                        DateTimeOffset actualFinish = xmltvTimeZone switch
+                        {
+                            XmltvTimeZone.Utc => new DateTimeOffset(item.Finish, TimeSpan.Zero),
+                            _ => new DateTimeOffset(item.Finish, TimeSpan.Zero).ToLocalTime()
+                        };
 
-            foreach (PlayoutItem item in itemsToInclude)
-            {
-                string start = currentStart.ToString("yyyyMMddHHmmss zzz", CultureInfo.InvariantCulture)
-                    .Replace(":", string.Empty);
-                string stop = currentFinish.ToString("yyyyMMddHHmmss zzz", CultureInfo.InvariantCulture)
-                    .Replace(":", string.Empty);
+                        string start = actualStart.ToString("yyyyMMddHHmmss zzz", CultureInfo.InvariantCulture)
+                            .Replace(":", string.Empty);
+                        string stop = actualFinish.ToString("yyyyMMddHHmmss zzz", CultureInfo.InvariantCulture)
+                            .Replace(":", string.Empty);
 
-                await WriteItemToXml(
-                    request,
-                    item,
-                    start,
-                    stop,
-                    false,
-                    templateContext,
-                    movieTemplate,
-                    episodeTemplate,
-                    musicVideoTemplate,
-                    songTemplate,
-                    otherVideoTemplate,
-                    minifier,
-                    xml);
+                        await WriteItemToXml(
+                            request,
+                            item,
+                            start,
+                            stop,
+                            false,
+                            templateContext,
+                            movieTemplate,
+                            episodeTemplate,
+                            musicVideoTemplate,
+                            songTemplate,
+                            otherVideoTemplate,
+                            minifier,
+                            xml);
+                    }
+                    break;
+                case XmltvBlockBehavior.SplitTimeEvenly:
+                default:
+                    DateTime groupStart = group.Key.GuideStart!.Value;
+                    DateTime groupFinish = group.Key.GuideFinish!.Value;
+                    TimeSpan groupDuration = groupFinish - groupStart;
 
-                currentStart = currentFinish;
-                currentFinish += perItem;
+                    TimeSpan perItem = groupDuration / itemsToInclude.Count;
+
+                    DateTimeOffset currentStart = xmltvTimeZone switch
+                    {
+                        XmltvTimeZone.Utc => new DateTimeOffset(groupStart, TimeSpan.Zero),
+                        _ => new DateTimeOffset(groupStart, TimeSpan.Zero).ToLocalTime()
+                    };
+
+                    DateTimeOffset currentFinish = currentStart + perItem;
+
+                    foreach (PlayoutItem item in itemsToInclude)
+                    {
+                        string start = currentStart.ToString("yyyyMMddHHmmss zzz", CultureInfo.InvariantCulture)
+                            .Replace(":", string.Empty);
+                        string stop = currentFinish.ToString("yyyyMMddHHmmss zzz", CultureInfo.InvariantCulture)
+                            .Replace(":", string.Empty);
+
+                        await WriteItemToXml(
+                            request,
+                            item,
+                            start,
+                            stop,
+                            false,
+                            templateContext,
+                            movieTemplate,
+                            episodeTemplate,
+                            musicVideoTemplate,
+                            songTemplate,
+                            otherVideoTemplate,
+                            minifier,
+                            xml);
+
+                        currentStart = currentFinish;
+                        currentFinish += perItem;
+                    }
+                    break;
             }
         }
     }

@@ -36,6 +36,7 @@ public class UpdateXmltvSettingsHandler(
     {
         await configElementRepository.Upsert(ConfigElementKey.XmltvTimeZone, xmltvSettings.TimeZone);
         await configElementRepository.Upsert(ConfigElementKey.XmltvDaysToBuild, xmltvSettings.DaysToBuild);
+        await configElementRepository.Upsert(ConfigElementKey.XmltvBlockBehavior, xmltvSettings.BlockBehavior);
 
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
 
