@@ -25,7 +25,7 @@
                         <MudMenuItem Icon="@Icons.Material.Filled.Add" Label="Classic Schedule" Href="playouts/add"/>
                         <MudMenuItem Icon="@Icons.Material.Filled.Add" Label="Block Schedule" Href="@($"playouts/add/{PlayoutKind.Block}")"/>
                         <MudMenuItem Icon="@Icons.Material.Filled.Add" Label="Sequential Schedule" Href="@($"playouts/add/{PlayoutKind.Sequential}")"/>
-                        <MudMenuItem Icon="@Icons.Material.Filled.Add" Label="Scripted Schedule" Href="@($"playouts/add/{PlayoutKind.Scripted}")"/>
+                        @* <MudMenuItem Icon="@Icons.Material.Filled.Add" Label="Scripted Schedule" Href="@($"playouts/add/{PlayoutKind.Scripted}")"/> *@
                         <MudMenuItem Icon="@Icons.Material.Filled.Warning" Label="JSON (dizqueTV) Schedule" Href="@($"playouts/add/{PlayoutKind.ExternalJson}")"/>
                     </ChildContent>
                 </MudMenu>
@@ -39,7 +39,7 @@
                     <MudMenuItem Icon="@Icons.Material.Filled.Add" Label="Add Classic Playout" Href="playouts/add"/>
                     <MudMenuItem Icon="@Icons.Material.Filled.Add" Label="Add Block Playout" Href="@($"playouts/add/{PlayoutKind.Block}")"/>
                     <MudMenuItem Icon="@Icons.Material.Filled.Add" Label="Add Sequential Playout" Href="@($"playouts/add/{PlayoutKind.Sequential}")"/>
-                    <MudMenuItem Icon="@Icons.Material.Filled.Add" Label="Add Scripted Playout" Href="@($"playouts/add/{PlayoutKind.Scripted}")"/>
+                    @* <MudMenuItem Icon="@Icons.Material.Filled.Add" Label="Add Scripted Playout" Href="@($"playouts/add/{PlayoutKind.Scripted}")"/> *@
                     <MudMenuItem Icon="@Icons.Material.Filled.Warning" Label="Add JSON (dizqueTV) Playout" Href="@($"playouts/add/{PlayoutKind.ExternalJson}")"/>
                     <MudMenuItem Icon="@Icons.Material.Filled.Refresh" Label="Reset All Playouts" OnClick="@ResetAllPlayouts"/>
                 </MudMenu>
