@@ -1,11 +1,11 @@
 ﻿namespace ErsatzTV.Core.Domain;
 
-public enum ProgramSchedulePlayoutType
+public enum PlayoutScheduleKind
 {
     None = 0,
     Classic = 1,
     Block = 2,
-    Yaml = 3,
+    Sequential = 3,
 
     ExternalJson = 20
 }

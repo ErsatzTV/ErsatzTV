@@ -78,6 +78,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix error when changing default (lowest priority) alternate schedule
 
 ### Changed
+- Rename some schedule and playout terms for clarity
+  - Schedules are used to build playouts and are what actually differs
+  - The playout is the end result, and is the same no matter what schedule kind is used
+  - Supported schedule kinds:
+    - `Classic Schedules`
+    - `Block Schedules`
+    - `Sequential Schedules` (formerly `YAML Schedules` or `YAML Playouts`)
+    - `JSON (dizqueTV) Schedules` (formerly `External JSON Playouts`)
 - Allow multiple watermarks in playback troubleshooting
 - Classic schedules: allow selecting multiple watermarks on schedule items
 - Block schedules: allow selecting multiple watermarks on decos

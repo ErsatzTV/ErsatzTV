@@ -12,7 +12,7 @@ using Channel = ErsatzTV.Core.Domain.Channel;
 namespace ErsatzTV.Application.Playouts;
 
 public class CreateYamlPlayoutHandler
-    : IRequestHandler<CreateYamlPlayout, Either<BaseError, CreatePlayoutResponse>>
+    : IRequestHandler<CreateSequentialPlayout, Either<BaseError, CreatePlayoutResponse>>
 {
     private readonly ChannelWriter<IBackgroundServiceRequest> _channel;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
@@ -29,7 +29,7 @@ public class CreateYamlPlayoutHandler
     }
 
     public async Task<Either<BaseError, CreatePlayoutResponse>> Handle(
-        CreateYamlPlayout request,
+        CreateSequentialPlayout request,
         CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
@@ -53,22 +53,22 @@ public class CreateYamlPlayoutHandler
 
     private async Task<Validation<BaseError, Playout>> Validate(
         TvContext dbContext,
-        CreateYamlPlayout request) =>
-        (await ValidateChannel(dbContext, request), ValidateYamlFile(request), ValidatePlayoutType(request))
-        .Apply((channel, externalJsonFile, playoutType) => new Playout
+        CreateSequentialPlayout request) =>
+        (await ValidateChannel(dbContext, request), ValidateYamlFile(request), ValidateScheduleKind(request))
+        .Apply((channel, yamlFile, scheduleKind) => new Playout
         {
             ChannelId = channel.Id,
-            TemplateFile = externalJsonFile,
-            ProgramSchedulePlayoutType = playoutType,
+            TemplateFile = yamlFile,
+            ScheduleKind = scheduleKind,
             Seed = new Random().Next()
         });
 
     private static Task<Validation<BaseError, Channel>> ValidateChannel(
         TvContext dbContext,
-        CreateYamlPlayout createYamlPlayout) =>
+        CreateSequentialPlayout createSequentialPlayout) =>
         dbContext.Channels
             .Include(c => c.Playouts)
-            .SelectOneAsync(c => c.Id, c => c.Id == createYamlPlayout.ChannelId)
+            .SelectOneAsync(c => c.Id, c => c.Id == createSequentialPlayout.ChannelId)
             .Map(o => o.ToValidation<BaseError>("Channel does not exist"))
             .BindT(ChannelMustNotHavePlayouts);
 
@@ -78,7 +78,7 @@ public class CreateYamlPlayoutHandler
             .Map(_ => channel)
             .ToValidation<BaseError>("Channel already has one playout");
 
-    private Validation<BaseError, string> ValidateYamlFile(CreateYamlPlayout request)
+    private Validation<BaseError, string> ValidateYamlFile(CreateSequentialPlayout request)
     {
         if (!_localFileSystem.FileExists(request.TemplateFile))
         {
@@ -88,9 +88,9 @@ public class CreateYamlPlayoutHandler
         return request.TemplateFile;
     }
 
-    private static Validation<BaseError, ProgramSchedulePlayoutType> ValidatePlayoutType(
-        CreateYamlPlayout createYamlPlayout) =>
-        Optional(createYamlPlayout.ProgramSchedulePlayoutType)
-            .Filter(playoutType => playoutType == ProgramSchedulePlayoutType.Yaml)
-            .ToValidation<BaseError>("[ProgramSchedulePlayoutType] must be YAML");
+    private static Validation<BaseError, PlayoutScheduleKind> ValidateScheduleKind(
+        CreateSequentialPlayout createSequentialPlayout) =>
+        Optional(createSequentialPlayout.ScheduleKind)
+            .Filter(scheduleKind => scheduleKind == PlayoutScheduleKind.Sequential)
+            .ToValidation<BaseError>("[ScheduleKind] must be YAML");
 }

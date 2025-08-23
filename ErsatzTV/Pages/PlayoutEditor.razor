@@ -13,22 +13,8 @@
 
 <MudForm @ref="_form" Validation="@(_validator.ValidateValue)" ValidationDelay="0" Style="max-height: 100%">
     <MudPaper Square="true" Style="display: flex; height: 64px; min-height: 64px; width: 100%; z-index: 100; align-items: center">
-        <MudButton Class="ml-6" OnClick="HandleSubmitAsync" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add">
-            @switch (Kind)
-            {
-                case PlayoutKind.ExternalJson:
-                    @:Add External Json Playout
-                    break;
-                case PlayoutKind.Yaml:
-                    @:Add YAML Playout
-                    break;
-                case PlayoutKind.Block:
-                    @:Add Block Playout
-                    break;
-                default:
-                    @:Add Playout
-                    break;
-            }
+        <MudButton Class="ml-6" OnClick="@HandleSubmitAsync" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add">
+            Add Playout
         </MudButton>
     </MudPaper>
     <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
@@ -53,25 +39,29 @@
                 case PlayoutKind.ExternalJson:
                     <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                         <div class="d-flex">
-                            <MudText>External Json File</MudText>
+                            <MudText>JSON (dizqueTV) Schedule</MudText>
                         </div>
                         <MudTextField @bind-Value="_model.ExternalJsonFile" For="@(() => _model.ExternalJsonFile)"/>
                     </MudStack>
                     break;
-                case PlayoutKind.Yaml:
+                case PlayoutKind.Sequential:
                     <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                         <div class="d-flex">
-                            <MudText>YAML File</MudText>
+                            <MudText>Sequential Schedule</MudText>
                         </div>
-                        <MudTextField @bind-Value="_model.YamlFile" For="@(() => _model.YamlFile)"/>
+                        <MudTextField @bind-Value="_model.SequentialSchedule" For="@(() => _model.SequentialSchedule)"/>
                     </MudStack>
                     break;
                 case PlayoutKind.Block:
+                    <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                        <div class="d-flex"></div>
+                        <MudText Typo="Typo.caption" Style="font-weight: normal">Block templates are added later</MudText>
+                    </MudStack>
                     break;
                 default:
                     <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                         <div class="d-flex">
-                            <MudText>Schedule</MudText>
+                            <MudText>Classic Schedule</MudText>
                         </div>
                         <MudSelect T="ProgramScheduleViewModel" @bind-value="_model.ProgramSchedule">
                             @foreach (ProgramScheduleViewModel schedule in _programSchedules)

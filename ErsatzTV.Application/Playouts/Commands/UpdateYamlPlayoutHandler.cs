@@ -9,13 +9,13 @@ using Microsoft.EntityFrameworkCore;
 namespace ErsatzTV.Application.Playouts;
 
 public class
-    UpdateTemplatePlayoutHandler : IRequestHandler<UpdateYamlPlayout,
+    UpdateYamlPlayoutHandler : IRequestHandler<UpdateYamlPlayout,
     Either<BaseError, PlayoutNameViewModel>>
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly ChannelWriter<IBackgroundServiceRequest> _workerChannel;
 
-    public UpdateTemplatePlayoutHandler(
+    public UpdateYamlPlayoutHandler(
         IDbContextFactory<TvContext> dbContextFactory,
         ChannelWriter<IBackgroundServiceRequest> workerChannel)
     {
@@ -46,7 +46,7 @@ public class
 
         return new PlayoutNameViewModel(
             playout.Id,
-            playout.ProgramSchedulePlayoutType,
+            playout.ScheduleKind,
             playout.Channel.Name,
             playout.Channel.Number,
             playout.Channel.PlayoutMode,

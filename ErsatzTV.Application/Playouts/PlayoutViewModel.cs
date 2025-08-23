@@ -6,4 +6,4 @@ public record PlayoutViewModel(
     int Id,
     PlayoutChannelViewModel Channel,
     PlayoutProgramScheduleViewModel ProgramSchedule,
-    ProgramSchedulePlayoutType ProgramSchedulePlayoutType);
+    PlayoutScheduleKind ScheduleKind);

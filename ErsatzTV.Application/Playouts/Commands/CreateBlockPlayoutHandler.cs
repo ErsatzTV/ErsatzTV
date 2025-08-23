@@ -41,11 +41,11 @@ public class CreateBlockPlayoutHandler(
     private static async Task<Validation<BaseError, Playout>> Validate(
         TvContext dbContext,
         CreateBlockPlayout request) =>
-        (await ValidateChannel(dbContext, request), ValidatePlayoutType(request))
-        .Apply((channel, playoutType) => new Playout
+        (await ValidateChannel(dbContext, request), ValidateScheduleKind(request))
+        .Apply((channel, scheduleKind) => new Playout
         {
             ChannelId = channel.Id,
-            ProgramSchedulePlayoutType = playoutType,
+            ScheduleKind = scheduleKind,
             Seed = new Random().Next()
         });
 
@@ -64,9 +64,9 @@ public class CreateBlockPlayoutHandler(
             .Map(_ => channel)
             .ToValidation<BaseError>("Channel already has one playout");
 
-    private static Validation<BaseError, ProgramSchedulePlayoutType> ValidatePlayoutType(
+    private static Validation<BaseError, PlayoutScheduleKind> ValidateScheduleKind(
         CreateBlockPlayout createBlockPlayout) =>
-        Optional(createBlockPlayout.ProgramSchedulePlayoutType)
-            .Filter(playoutType => playoutType == ProgramSchedulePlayoutType.Block)
-            .ToValidation<BaseError>("[ProgramSchedulePlayoutType] must be Block");
+        Optional(createBlockPlayout.ScheduleKind)
+            .Filter(scheduleKind => scheduleKind == PlayoutScheduleKind.Block)
+            .ToValidation<BaseError>("[ScheduleKind] must be Block");
 }

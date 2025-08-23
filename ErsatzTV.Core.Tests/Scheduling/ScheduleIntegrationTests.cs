@@ -133,7 +133,7 @@ public class ScheduleIntegrationTests
             PlayoutReferenceData referenceData = await GetReferenceData(
                 context,
                 PLAYOUT_ID,
-                ProgramSchedulePlayoutType.Classic);
+                PlayoutScheduleKind.Classic);
 
             await builder.Build(
                 playout,
@@ -157,7 +157,7 @@ public class ScheduleIntegrationTests
             PlayoutReferenceData referenceData = await GetReferenceData(
                 context,
                 PLAYOUT_ID,
-                ProgramSchedulePlayoutType.Classic);
+                PlayoutScheduleKind.Classic);
 
             await builder.Build(
                 playout,
@@ -181,7 +181,7 @@ public class ScheduleIntegrationTests
             PlayoutReferenceData referenceData = await GetReferenceData(
                 context,
                 PLAYOUT_ID,
-                ProgramSchedulePlayoutType.Classic);
+                PlayoutScheduleKind.Classic);
 
             await builder.Build(
                 playout,
@@ -329,7 +329,7 @@ public class ScheduleIntegrationTests
             PlayoutReferenceData referenceData = await GetReferenceData(
                 context,
                 playoutId,
-                ProgramSchedulePlayoutType.Classic);
+                PlayoutScheduleKind.Classic);
 
             await builder.Build(
                 playout,
@@ -397,7 +397,7 @@ public class ScheduleIntegrationTests
     private static async Task<PlayoutReferenceData> GetReferenceData(
         TvContext dbContext,
         int playoutId,
-        ProgramSchedulePlayoutType playoutType)
+        PlayoutScheduleKind scheduleKind)
     {
         Channel channel = await dbContext.Channels
             .AsNoTracking()
@@ -407,7 +407,7 @@ public class ScheduleIntegrationTests
         List<PlayoutItem> existingItems = [];
         List<PlayoutTemplate> playoutTemplates = [];
 
-        if (playoutType is ProgramSchedulePlayoutType.Block)
+        if (scheduleKind is PlayoutScheduleKind.Block)
         {
             existingItems = await dbContext.PlayoutItems
                 .AsNoTracking()

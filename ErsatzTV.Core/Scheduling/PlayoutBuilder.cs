@@ -67,11 +67,11 @@ public class PlayoutBuilder : IPlayoutBuilder
     {
         PlayoutBuildResult result = PlayoutBuildResult.Empty;
 
-        if (playout.ProgramSchedulePlayoutType is not ProgramSchedulePlayoutType.Classic)
+        if (playout.ScheduleKind is not PlayoutScheduleKind.Classic)
         {
             _logger.LogWarning(
                 "Skipping playout build with type {Type} on channel {Number} - {Name}",
-                playout.ProgramSchedulePlayoutType,
+                playout.ScheduleKind,
                 referenceData.Channel.Number,
                 referenceData.Channel.Name);
 

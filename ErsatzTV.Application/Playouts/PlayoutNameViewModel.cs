@@ -4,7 +4,7 @@ namespace ErsatzTV.Application.Playouts;
 
 public record PlayoutNameViewModel(
     int PlayoutId,
-    ProgramSchedulePlayoutType PlayoutType,
+    PlayoutScheduleKind ScheduleKind,
     string ChannelName,
     string ChannelNumber,
     ChannelPlayoutMode PlayoutMode,

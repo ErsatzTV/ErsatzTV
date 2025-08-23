@@ -21,7 +21,7 @@ public class GetAllPlayoutsHandler : IRequestHandler<GetAllPlayouts, List<Playou
             .Filter(p => p.Channel != null)
             .Map(p => new PlayoutNameViewModel(
                 p.Id,
-                p.ProgramSchedulePlayoutType,
+                p.ScheduleKind,
                 p.Channel.Name,
                 p.Channel.Number,
                 p.Channel.PlayoutMode,
