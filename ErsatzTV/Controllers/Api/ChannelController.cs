@@ -30,7 +30,7 @@ public class ChannelController(ChannelWriter<IBackgroundServiceRequest> workerCh
         return new NotFoundResult();
     }
 
-    // for debugging by fast-forwarding a YAML playout
+    // for debugging by fast-forwarding a playout
     // [HttpPost("/api/channels/{channelNumber}/playout/continue")]
     // public async Task<IActionResult> ContinuePlayout(string channelNumber)
     // {

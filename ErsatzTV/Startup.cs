@@ -37,6 +37,7 @@ using ErsatzTV.Core.Metadata;
 using ErsatzTV.Core.Plex;
 using ErsatzTV.Core.Scheduling;
 using ErsatzTV.Core.Scheduling.BlockScheduling;
+using ErsatzTV.Core.Scheduling.ScriptedScheduling;
 using ErsatzTV.Core.Scheduling.YamlScheduling;
 using ErsatzTV.Core.Search;
 using ErsatzTV.Core.Trakt;
@@ -695,7 +696,8 @@ public class Startup
         services.AddScoped<IBlockPlayoutBuilder, BlockPlayoutBuilder>();
         services.AddScoped<IBlockPlayoutPreviewBuilder, BlockPlayoutPreviewBuilder>();
         services.AddScoped<IBlockPlayoutFillerBuilder, BlockPlayoutFillerBuilder>();
-        services.AddScoped<IYamlPlayoutBuilder, YamlPlayoutBuilder>();
+        services.AddScoped<ISequentialPlayoutBuilder, SequentialPlayoutBuilder>();
+        services.AddScoped<IScriptedPlayoutBuilder, ScriptedPlayoutBuilder>();
         services.AddScoped<IExternalJsonPlayoutBuilder, ExternalJsonPlayoutBuilder>();
         services.AddScoped<IPlayoutTimeShifter, PlayoutTimeShifter>();
         services.AddScoped<IImageCache, ImageCache>();

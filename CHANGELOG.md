@@ -57,6 +57,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Supports quick and deep scans
   - Can be triggered from the `Scan` button on show pages
   - Can be triggered by API call to `/api/libraries/{library-id}/scan-show`
+- Add XMLTV setting `XMLTV Block Behavior` to control how block schedules appear in the EPG
+  - `Split Time Evenly` - default (existing) behavior; block time is split among all items that are visible in the EPG
+  - `Use Actual Times` - actual times are used for all items that are visible in the EPG
+    - This will introduce EPG gaps when filler is used, or when items are hidden from the EPG
 
 ### Fix
 - Fix database operations that were slowing down playout builds

@@ -17,7 +17,8 @@ public class ErasePlayoutItemsHandler(IDbContextFactory<TvContext> dbContextFact
             .Include(p => p.Items)
             .Include(p => p.PlayoutHistory)
             .Filter(p => p.ScheduleKind == PlayoutScheduleKind.Block ||
-                         p.ScheduleKind == PlayoutScheduleKind.Sequential)
+                         p.ScheduleKind == PlayoutScheduleKind.Sequential ||
+                         p.ScheduleKind == PlayoutScheduleKind.Scripted)
             .SelectOneAsync(p => p.Id, p => p.Id == request.PlayoutId);
 
         foreach (Playout playout in maybePlayout)

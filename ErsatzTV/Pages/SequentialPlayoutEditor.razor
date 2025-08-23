@@ -1,4 +1,4 @@
-﻿@page "/playouts/yaml/{Id:int}"
+﻿@page "/playouts/sequential/{Id:int}"
 @using ErsatzTV.Application.Channels
 @using ErsatzTV.Application.Playouts
 @using ErsatzTV.Application.Scheduling
@@ -23,7 +23,7 @@
                 <div class="d-flex">
                     <MudText>Sequential Schedule</MudText>
                 </div>
-                <MudTextField @bind-Value="@_playout.TemplateFile" For="@(() => _playout.TemplateFile)"/>
+                <MudTextField @bind-Value="@_playout.ScheduleFile" For="@(() => _playout.ScheduleFile)"/>
             </MudStack>
             <MudText Typo="Typo.h5" Class="mt-10 mb-2">Maintenance</MudText>
             <MudDivider Class="mb-6"/>
@@ -92,7 +92,7 @@
         }
 
         Either<BaseError, PlayoutNameViewModel> result =
-            await Mediator.Send(new UpdateSequentialPlayout(_playout.PlayoutId, _playout.TemplateFile), _cts.Token);
+            await Mediator.Send(new UpdateSequentialPlayout(_playout.PlayoutId, _playout.ScheduleFile), _cts.Token);
 
         result.Match(
             _ => { Snackbar.Add($"Saved sequential schedule for playout {_channelName}", Severity.Success); },

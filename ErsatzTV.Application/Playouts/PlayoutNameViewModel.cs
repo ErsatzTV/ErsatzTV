@@ -9,11 +9,10 @@ public record PlayoutNameViewModel(
     string ChannelNumber,
     ChannelPlayoutMode PlayoutMode,
     string ScheduleName,
-    string TemplateFile,
-    string ExternalJsonFile,
+    string ScheduleFile,
     TimeSpan? DbDailyRebuildTime)
 {
     public Option<TimeSpan> DailyRebuildTime => Optional(DbDailyRebuildTime);
 
-    public string TemplateFile { get; set; } = TemplateFile;
+    public string ScheduleFile { get; set; } = ScheduleFile;
 }

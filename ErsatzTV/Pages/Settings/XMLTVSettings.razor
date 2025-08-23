@@ -28,6 +28,15 @@
                     <MudSelectItem Value="@XmltvTimeZone.Utc">UTC</MudSelectItem>
                 </MudSelect>
             </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>XMLTV Block Behavior</MudText>
+                </div>
+                <MudSelect @bind-Value="_xmltvSettings.BlockBehavior">
+                    <MudSelectItem Value="@XmltvBlockBehavior.SplitTimeEvenly">Split Time Evenly</MudSelectItem>
+                    <MudSelectItem Value="@XmltvBlockBehavior.UseActualTimes">Use Actual Times</MudSelectItem>
+                </MudSelect>
+            </MudStack>
         </MudContainer>
     </div>
 </MudForm>

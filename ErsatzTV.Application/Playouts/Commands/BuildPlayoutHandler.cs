@@ -29,7 +29,8 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
     private readonly IPlayoutBuilder _playoutBuilder;
     private readonly IPlayoutTimeShifter _playoutTimeShifter;
     private readonly ChannelWriter<IBackgroundServiceRequest> _workerChannel;
-    private readonly IYamlPlayoutBuilder _yamlPlayoutBuilder;
+    private readonly ISequentialPlayoutBuilder _sequentialPlayoutBuilder;
+    private readonly IScriptedPlayoutBuilder _scriptedPlayoutBuilder;
 
     public BuildPlayoutHandler(
         IClient client,
@@ -37,7 +38,8 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
         IPlayoutBuilder playoutBuilder,
         IBlockPlayoutBuilder blockPlayoutBuilder,
         IBlockPlayoutFillerBuilder blockPlayoutFillerBuilder,
-        IYamlPlayoutBuilder yamlPlayoutBuilder,
+        ISequentialPlayoutBuilder sequentialPlayoutBuilder,
+        IScriptedPlayoutBuilder scriptedPlayoutBuilder,
         IExternalJsonPlayoutBuilder externalJsonPlayoutBuilder,
         IFFmpegSegmenterService ffmpegSegmenterService,
         IEntityLocker entityLocker,
@@ -49,7 +51,8 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
         _playoutBuilder = playoutBuilder;
         _blockPlayoutBuilder = blockPlayoutBuilder;
         _blockPlayoutFillerBuilder = blockPlayoutFillerBuilder;
-        _yamlPlayoutBuilder = yamlPlayoutBuilder;
+        _sequentialPlayoutBuilder = sequentialPlayoutBuilder;
+        _scriptedPlayoutBuilder = scriptedPlayoutBuilder;
         _externalJsonPlayoutBuilder = externalJsonPlayoutBuilder;
         _ffmpegSegmenterService = ffmpegSegmenterService;
         _entityLocker = entityLocker;
@@ -116,7 +119,12 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
             switch (playout.ScheduleKind)
             {
                 case PlayoutScheduleKind.Block:
-                    result = await _blockPlayoutBuilder.Build(playout, referenceData, request.Mode, cancellationToken);
+                    result = await _blockPlayoutBuilder.Build(
+                        request.Start,
+                        playout,
+                        referenceData,
+                        request.Mode,
+                        cancellationToken);
                     result = await _blockPlayoutFillerBuilder.Build(
                         playout,
                         referenceData,
@@ -125,7 +133,15 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
                         cancellationToken);
                     break;
                 case PlayoutScheduleKind.Sequential:
-                    result = await _yamlPlayoutBuilder.Build(
+                    result = await _sequentialPlayoutBuilder.Build(
+                        request.Start,
+                        playout,
+                        referenceData,
+                        request.Mode,
+                        cancellationToken);
+                    break;
+                case PlayoutScheduleKind.Scripted:
+                    result = await _scriptedPlayoutBuilder.Build(
                         request.Start,
                         playout,
                         referenceData,

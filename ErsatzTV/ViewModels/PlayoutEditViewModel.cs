@@ -9,14 +9,14 @@ public class PlayoutEditViewModel
     public string Kind { get; set; }
     public ChannelViewModel Channel { get; set; }
     public ProgramScheduleViewModel ProgramSchedule { get; set; }
-    public string ExternalJsonFile { get; set; }
-    public string SequentialSchedule { get; set; }
+    public string ScheduleFile { get; set; }
 
     public CreatePlayout ToCreate() =>
         Kind switch
         {
-            PlayoutKind.ExternalJson => new CreateExternalJsonPlayout(Channel.Id, ExternalJsonFile),
-            PlayoutKind.Sequential => new CreateSequentialPlayout(Channel.Id, SequentialSchedule),
+            PlayoutKind.ExternalJson => new CreateExternalJsonPlayout(Channel.Id, ScheduleFile),
+            PlayoutKind.Sequential => new CreateSequentialPlayout(Channel.Id, ScheduleFile),
+            PlayoutKind.Scripted => new CreateScriptedPlayout(Channel.Id, ScheduleFile),
             PlayoutKind.Block => new CreateBlockPlayout(Channel.Id),
             _ => new CreateClassicPlayout(Channel.Id, ProgramSchedule.Id)
         };

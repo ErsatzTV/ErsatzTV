@@ -3,7 +3,7 @@ using ErsatzTV.Core.Scheduling;
 
 namespace ErsatzTV.Core.Interfaces.Scheduling;
 
-public interface IBlockPlayoutBuilder
+public interface ISequentialPlayoutBuilder
 {
     Task<PlayoutBuildResult> Build(
         DateTimeOffset start,

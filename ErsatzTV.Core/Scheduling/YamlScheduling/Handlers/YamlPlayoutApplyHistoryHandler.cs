@@ -12,7 +12,7 @@ public class YamlPlayoutApplyHistoryHandler(EnumeratorCache enumeratorCache)
         IReadOnlyCollection<PlayoutHistory> filteredHistory,
         YamlPlayoutContext context,
         YamlPlayoutContentItem contentItem,
-        ILogger<YamlPlayoutBuilder> logger,
+        ILogger<SequentialPlayoutBuilder> logger,
         CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(contentItem.Key))

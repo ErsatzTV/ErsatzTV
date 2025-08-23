@@ -15,7 +15,7 @@ public class YamlPlayoutDurationHandler(EnumeratorCache enumeratorCache) : YamlP
         YamlPlayoutInstruction instruction,
         PlayoutBuildMode mode,
         Func<string, Task> executeSequence,
-        ILogger<YamlPlayoutBuilder> logger,
+        ILogger<SequentialPlayoutBuilder> logger,
         CancellationToken cancellationToken)
     {
         if (instruction is not YamlPlayoutDurationInstruction duration)
@@ -89,7 +89,7 @@ public class YamlPlayoutDurationHandler(EnumeratorCache enumeratorCache) : YamlP
         IMediaCollectionEnumerator enumerator,
         Option<IMediaCollectionEnumerator> fallbackEnumerator,
         Func<string, Task> executeSequence,
-        ILogger<YamlPlayoutBuilder> logger)
+        ILogger<SequentialPlayoutBuilder> logger)
     {
         var done = false;
         TimeSpan remainingToFill = targetTime - context.CurrentTime;

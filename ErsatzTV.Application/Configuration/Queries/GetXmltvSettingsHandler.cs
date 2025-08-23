@@ -13,10 +13,14 @@ public class GetXmltvSettingsHandler(IConfigElementRepository configElementRepos
         Option<XmltvTimeZone> maybeTimeZone =
             await configElementRepository.GetValue<XmltvTimeZone>(ConfigElementKey.XmltvTimeZone);
 
+        Option<XmltvBlockBehavior> maybeBlockBehavior =
+            await configElementRepository.GetValue<XmltvBlockBehavior>(ConfigElementKey.XmltvBlockBehavior);
+
         return new XmltvSettingsViewModel
         {
             DaysToBuild = await daysToBuild.IfNoneAsync(2),
-            TimeZone = await maybeTimeZone.IfNoneAsync(XmltvTimeZone.Local)
+            TimeZone = await maybeTimeZone.IfNoneAsync(XmltvTimeZone.Local),
+            BlockBehavior = await maybeBlockBehavior.IfNoneAsync(XmltvBlockBehavior.SplitTimeEvenly)
         };
     }
 }
