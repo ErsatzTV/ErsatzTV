@@ -49,12 +49,12 @@ public class CreateExternalJsonPlayoutHandler
     private async Task<Validation<BaseError, Playout>> Validate(
         TvContext dbContext,
         CreateExternalJsonPlayout request) =>
-        (await ValidateChannel(dbContext, request), ValidateExternalJsonFile(request), ValidatePlayoutType(request))
-        .Apply((channel, externalJsonFile, playoutType) => new Playout
+        (await ValidateChannel(dbContext, request), ValidateExternalJsonFile(request), ValidateScheduleKind(request))
+        .Apply((channel, externalJsonFile, scheduleKind) => new Playout
         {
             ChannelId = channel.Id,
             ExternalJsonFile = externalJsonFile,
-            ProgramSchedulePlayoutType = playoutType
+            ScheduleKind = scheduleKind
         });
 
     private static Task<Validation<BaseError, Channel>> ValidateChannel(
@@ -82,9 +82,9 @@ public class CreateExternalJsonPlayoutHandler
         return request.ExternalJsonFile;
     }
 
-    private static Validation<BaseError, ProgramSchedulePlayoutType> ValidatePlayoutType(
+    private static Validation<BaseError, PlayoutScheduleKind> ValidateScheduleKind(
         CreateExternalJsonPlayout createExternalJsonPlayout) =>
-        Optional(createExternalJsonPlayout.ProgramSchedulePlayoutType)
-            .Filter(playoutType => playoutType == ProgramSchedulePlayoutType.ExternalJson)
-            .ToValidation<BaseError>("[ProgramSchedulePlayoutType] must be ExternalJson");
+        Optional(createExternalJsonPlayout.ScheduleKind)
+            .Filter(scheduleKind => scheduleKind == PlayoutScheduleKind.ExternalJson)
+            .ToValidation<BaseError>("[ScheduleKind] must be ExternalJson");
 }

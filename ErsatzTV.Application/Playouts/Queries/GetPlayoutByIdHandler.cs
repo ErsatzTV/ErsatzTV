@@ -19,7 +19,7 @@ public class GetPlayoutByIdHandler(IDbContextFactory<TvContext> dbContextFactory
             .SelectOneAsync(p => p.Id, p => p.Id == request.PlayoutId)
             .MapT(p => new PlayoutNameViewModel(
                 p.Id,
-                p.ProgramSchedulePlayoutType,
+                p.ScheduleKind,
                 p.Channel.Name,
                 p.Channel.Number,
                 p.Channel.PlayoutMode,

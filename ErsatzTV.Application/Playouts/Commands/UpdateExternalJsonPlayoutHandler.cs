@@ -46,7 +46,7 @@ public class
 
         return new PlayoutNameViewModel(
             playout.Id,
-            playout.ProgramSchedulePlayoutType,
+            playout.ScheduleKind,
             playout.Channel.Name,
             playout.Channel.Number,
             playout.Channel.PlayoutMode,

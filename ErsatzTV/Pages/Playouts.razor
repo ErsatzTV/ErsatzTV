@@ -17,24 +17,17 @@
         <div style="display: flex; flex-direction: row; margin-bottom: auto; margin-top: auto; width: 100%; align-items: center" class="ml-6 mr-6">
             <div class="flex-grow-1"></div>
             <div style="margin-left: auto" class="d-none d-md-flex">
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Href="playouts/add">
-                    Add Playout
-                </MudButton>
-                <MudTooltip Text="This feature is experimental">
-                    <MudButton Class="ml-3" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Warning" Href="@($"playouts/add/{PlayoutKind.Block}")">
-                        Add Block Playout
-                    </MudButton>
-                </MudTooltip>
-                <MudTooltip Text="This feature is experimental">
-                    <MudButton Class="ml-3" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Warning" Href="@($"playouts/add/{PlayoutKind.Yaml}")">
-                        Add YAML Playout
-                    </MudButton>
-                </MudTooltip>
-                <MudTooltip Text="This feature is experimental">
-                    <MudButton Class="ml-3" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Warning" Href="@($"playouts/add/{PlayoutKind.ExternalJson}")">
-                        Add External Json Playout
-                    </MudButton>
-                </MudTooltip>
+                <MudMenu>
+                    <ActivatorContent>
+                        <MudButton StartIcon="@Icons.Material.Filled.Add" Variant="Variant.Filled" Color="Color.Primary">Add Playout</MudButton>
+                    </ActivatorContent>
+                    <ChildContent>
+                        <MudMenuItem Icon="@Icons.Material.Filled.Add" Label="Classic Schedule" Href="playouts/add"/>
+                        <MudMenuItem Icon="@Icons.Material.Filled.Add" Label="Block Schedule" Href="@($"playouts/add/{PlayoutKind.Block}")"/>
+                        <MudMenuItem Icon="@Icons.Material.Filled.Add" Label="Sequential Schedule" Href="@($"playouts/add/{PlayoutKind.Sequential}")"/>
+                        <MudMenuItem Icon="@Icons.Material.Filled.Warning" Label="JSON (dizqueTV) Schedule" Href="@($"playouts/add/{PlayoutKind.ExternalJson}")"/>
+                    </ChildContent>
+                </MudMenu>
                 <MudButton Class="ml-3" Variant="Variant.Filled" Color="Color.Warning" StartIcon="@Icons.Material.Filled.Refresh" OnClick="@ResetAllPlayouts">
                     Reset All Playouts
                 </MudButton>
@@ -42,11 +35,11 @@
             <div style="align-items: center; display: flex; margin-left: auto;" class="d-md-none">
                 <div class="flex-grow-1"></div>
                 <MudMenu Icon="@Icons.Material.Filled.MoreVert">
-                    <MudMenuItem Icon="@Icons.Material.Filled.Add" Label="Add Playout" Href="playouts/add"/>
-                    <MudMenuItem Icon="@Icons.Material.Filled.Warning" Label="Add Block Playout" Href="@($"playouts/add/{PlayoutKind.Block}")"/>
-                    <MudMenuItem Icon="@Icons.Material.Filled.Warning" Label="Add YAML Playout" Href="@($"playouts/add/{PlayoutKind.Yaml}")"/>
-                    <MudMenuItem Icon="@Icons.Material.Filled.Warning" Label="Add External Json Playout" Href="@($"playouts/add/{PlayoutKind.ExternalJson}")"/>
-                    <MudMenuItem Icon="@Icons.Material.Filled.Refresh" Label="Reset All Playouts" OnClick="ResetAllPlayouts"/>
+                    <MudMenuItem Icon="@Icons.Material.Filled.Add" Label="Add Classic Playout" Href="playouts/add"/>
+                    <MudMenuItem Icon="@Icons.Material.Filled.Add" Label="Add Block Playout" Href="@($"playouts/add/{PlayoutKind.Block}")"/>
+                    <MudMenuItem Icon="@Icons.Material.Filled.Add" Label="Add Sequential Playout" Href="@($"playouts/add/{PlayoutKind.Sequential}")"/>
+                    <MudMenuItem Icon="@Icons.Material.Filled.Warning" Label="Add JSON (dizqueTV) Playout" Href="@($"playouts/add/{PlayoutKind.ExternalJson}")"/>
+                    <MudMenuItem Icon="@Icons.Material.Filled.Refresh" Label="Reset All Playouts" OnClick="@ResetAllPlayouts"/>
                 </MudMenu>
             </div>
         </div>
@@ -80,23 +73,23 @@
                             Default Schedule
                         </MudTableSortLabel>
                     </MudTh>
-                    <MudTh Class="d-none d-md-table-cell">Playout Type</MudTh>
+                    <MudTh Class="d-none d-md-table-cell">Schedule Kind</MudTh>
                     <MudTh/>
                 </HeaderContent>
                 <RowTemplate>
                     <MudTd>@context.ChannelNumber - @context.ChannelName</MudTd>
                     <MudTd Class="d-none d-md-table-cell">@context.ScheduleName</MudTd>
                     <MudTd Class="d-none d-md-table-cell">
-                        @switch (context.PlayoutType)
+                        @switch (context.ScheduleKind)
                         {
-                            case ProgramSchedulePlayoutType.Block:
+                            case PlayoutScheduleKind.Block:
                                 <span>Block</span>
                                 break;
-                            case ProgramSchedulePlayoutType.Yaml:
-                                <span>YAML</span>
+                            case PlayoutScheduleKind.Sequential:
+                                <span>Sequential</span>
                                 break;
-                            case ProgramSchedulePlayoutType.ExternalJson:
-                                <span>External Json</span>
+                            case PlayoutScheduleKind.ExternalJson:
+                                <span>JSON (dizqueTV)</span>
                                 break;
                             default:
                                 <span></span>
@@ -111,7 +104,7 @@
                                     <MudProgressCircular Color="Color.Primary" Size="Size.Small" Indeterminate="true"/>
                                 }
                             </div>
-                            @if (context.PlayoutType == ProgramSchedulePlayoutType.Classic)
+                            @if (context.ScheduleKind == PlayoutScheduleKind.Classic)
                             {
                                 if (context.PlayoutMode is ChannelPlayoutMode.OnDemand)
                                 {
@@ -144,7 +137,7 @@
                                     </MudIconButton>
                                 </MudTooltip>
                             }
-                            else if (context.PlayoutType == ProgramSchedulePlayoutType.ExternalJson)
+                            else if (context.ScheduleKind == PlayoutScheduleKind.ExternalJson)
                             {
                                 <MudTooltip Text="Edit External Json File">
                                     <MudIconButton Icon="@Icons.Material.Filled.Edit"
@@ -155,7 +148,7 @@
                                 <div style="width: 48px"></div>
                                 <div style="width: 48px"></div>
                             }
-                            else if (context.PlayoutType == ProgramSchedulePlayoutType.Yaml)
+                            else if (context.ScheduleKind == PlayoutScheduleKind.Sequential)
                             {
                                 <MudTooltip Text="Edit Playout">
                                     <MudIconButton Icon="@Icons.Material.Filled.Edit"
@@ -171,7 +164,7 @@
                                 </MudTooltip>
                                 <div style="width: 48px"></div>
                             }
-                            else if (context.PlayoutType == ProgramSchedulePlayoutType.Block)
+                            else if (context.ScheduleKind == PlayoutScheduleKind.Block)
                             {
                                 <MudTooltip Text="Edit Playout">
                                     <MudIconButton Icon="@Icons.Material.Filled.Edit"
@@ -297,8 +290,8 @@
 
     private async Task PlayoutSelected(PlayoutNameViewModel playout)
     {
-        // only show details for flood, block and YAML playouts
-        _selectedPlayoutId = playout.PlayoutType is ProgramSchedulePlayoutType.Classic or ProgramSchedulePlayoutType.Block or ProgramSchedulePlayoutType.Yaml
+        // only show details for flood, block and sequential playouts
+        _selectedPlayoutId = playout.ScheduleKind is PlayoutScheduleKind.Classic or PlayoutScheduleKind.Block or PlayoutScheduleKind.Sequential
             ? playout.PlayoutId
             : null;
 

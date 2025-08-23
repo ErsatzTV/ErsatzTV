@@ -190,10 +190,10 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
 
         foreach (Playout playout in playouts)
         {
-            switch (playout.ProgramSchedulePlayoutType)
+            switch (playout.ScheduleKind)
             {
-                case ProgramSchedulePlayoutType.Classic:
-                case ProgramSchedulePlayoutType.Yaml:
+                case PlayoutScheduleKind.Classic:
+                case PlayoutScheduleKind.Sequential:
                     var floodSorted = playouts
                         .Collect(p => p.Items)
                         .OrderBy(pi => pi.Start)
@@ -211,7 +211,7 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
                         minifier,
                         xml);
                     break;
-                case ProgramSchedulePlayoutType.Block:
+                case PlayoutScheduleKind.Block:
                     var blockSorted = playouts
                         .Collect(p => p.Items)
                         .OrderBy(pi => pi.Start)
@@ -229,7 +229,7 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
                         minifier,
                         xml);
                     break;
-                case ProgramSchedulePlayoutType.ExternalJson:
+                case PlayoutScheduleKind.ExternalJson:
                     var externalJsonSorted = (await CollectExternalJsonItems(playout.ExternalJsonFile))
                         .Filter(pi => pi.StartOffset <= finish)
                         .ToList();

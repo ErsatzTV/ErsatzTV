@@ -1742,7 +1742,7 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Property<int?>("ProgramScheduleId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("ProgramSchedulePlayoutType")
+                    b.Property<int>("ScheduleKind")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("Seed")

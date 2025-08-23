@@ -42,7 +42,7 @@ public class PreviewBlockPlayoutHandler(
                 Name = "Block Preview"
             },
             Items = [],
-            ProgramSchedulePlayoutType = ProgramSchedulePlayoutType.Block,
+            ScheduleKind = PlayoutScheduleKind.Block,
             PlayoutHistory = [],
             Templates =
             [

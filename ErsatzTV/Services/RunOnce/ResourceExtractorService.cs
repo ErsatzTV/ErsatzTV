@@ -24,8 +24,8 @@ public class ResourceExtractorService : BackgroundService
         await ExtractResource(assembly, "song_progress_overlay.png", stoppingToken);
         await ExtractResource(assembly, "song_progress_overlay_43.png", stoppingToken);
         await ExtractResource(assembly, "ErsatzTV.png", stoppingToken);
-        await ExtractResource(assembly, "yaml-playout.schema.json", stoppingToken);
-        await ExtractResource(assembly, "yaml-playout-import.schema.json", stoppingToken);
+        await ExtractResource(assembly, "sequential-schedule.schema.json", stoppingToken);
+        await ExtractResource(assembly, "sequential-schedule-import.schema.json", stoppingToken);
 
         await ExtractFontResource(assembly, "Sen.ttf", stoppingToken);
         await ExtractFontResource(assembly, "Roboto-Regular.ttf", stoppingToken);

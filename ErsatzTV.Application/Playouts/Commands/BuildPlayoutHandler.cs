@@ -108,14 +108,14 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
             PlayoutReferenceData referenceData = await GetReferenceData(
                 dbContext,
                 playout.Id,
-                playout.ProgramSchedulePlayoutType);
+                playout.ScheduleKind);
             string channelNumber = referenceData.Channel.Number;
             channelName = referenceData.Channel.Name;
             PlayoutBuildResult result = PlayoutBuildResult.Empty;
 
-            switch (playout.ProgramSchedulePlayoutType)
+            switch (playout.ScheduleKind)
             {
-                case ProgramSchedulePlayoutType.Block:
+                case PlayoutScheduleKind.Block:
                     result = await _blockPlayoutBuilder.Build(playout, referenceData, request.Mode, cancellationToken);
                     result = await _blockPlayoutFillerBuilder.Build(
                         playout,
@@ -124,7 +124,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
                         request.Mode,
                         cancellationToken);
                     break;
-                case ProgramSchedulePlayoutType.Yaml:
+                case PlayoutScheduleKind.Sequential:
                     result = await _yamlPlayoutBuilder.Build(
                         request.Start,
                         playout,
@@ -132,11 +132,11 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
                         request.Mode,
                         cancellationToken);
                     break;
-                case ProgramSchedulePlayoutType.ExternalJson:
+                case PlayoutScheduleKind.ExternalJson:
                     await _externalJsonPlayoutBuilder.Build(playout, request.Mode, cancellationToken);
                     break;
-                case ProgramSchedulePlayoutType.None:
-                case ProgramSchedulePlayoutType.Classic:
+                case PlayoutScheduleKind.None:
+                case PlayoutScheduleKind.Classic:
                 default:
                     result = await _playoutBuilder.Build(playout, referenceData, request.Mode, cancellationToken);
                     break;
@@ -223,7 +223,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
 
             string fileName = Path.Combine(FileSystemLayout.ChannelGuideCacheFolder, $"{channelNumber}.xml");
             if (hasChanges || !File.Exists(fileName) ||
-                playout.ProgramSchedulePlayoutType is ProgramSchedulePlayoutType.ExternalJson)
+                playout.ScheduleKind is PlayoutScheduleKind.ExternalJson)
             {
                 await _workerChannel.WriteAsync(new RefreshChannelData(channelNumber), cancellationToken);
             }
@@ -276,9 +276,9 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
 
         foreach (Playout playout in maybePlayout)
         {
-            switch (playout.ProgramSchedulePlayoutType)
+            switch (playout.ScheduleKind)
             {
-                case ProgramSchedulePlayoutType.Classic:
+                case PlayoutScheduleKind.Classic:
                     await dbContext.Entry(playout)
                         .Collection(p => p.FillGroupIndices)
                         .LoadAsync();
@@ -311,7 +311,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
     private static async Task<PlayoutReferenceData> GetReferenceData(
         TvContext dbContext,
         int playoutId,
-        ProgramSchedulePlayoutType playoutType)
+        PlayoutScheduleKind scheduleKind)
     {
         Channel channel = await dbContext.Channels
             .AsNoTracking()
@@ -322,7 +322,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
         List<PlayoutItem> existingItems = [];
         List<PlayoutTemplate> playoutTemplates = [];
 
-        if (playoutType is ProgramSchedulePlayoutType.Block)
+        if (scheduleKind is PlayoutScheduleKind.Block)
         {
             deco = await dbContext.Decos
                 .AsNoTracking()

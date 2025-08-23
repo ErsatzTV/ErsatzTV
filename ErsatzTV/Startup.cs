@@ -745,7 +745,7 @@ public class Startup
         services.AddScoped<IJellyfinSecretStore, JellyfinSecretStore>();
         services.AddScoped<IEmbySecretStore, EmbySecretStore>();
         services.AddScoped<IScriptEngine, ScriptEngine>();
-        services.AddScoped<IYamlScheduleValidator, YamlScheduleValidator>();
+        services.AddScoped<ISequentialScheduleValidator, SequentialScheduleValidator>();
 
         services.AddScoped<PlexEtag>();
 

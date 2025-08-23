@@ -32,7 +32,7 @@ public class PreviewPlaylistPlayoutHandler(
                 Name = "Playlist Preview"
             },
             Items = [],
-            ProgramSchedulePlayoutType = ProgramSchedulePlayoutType.Classic,
+            ScheduleKind = PlayoutScheduleKind.Classic,
             PlayoutHistory = [],
             ProgramSchedule = new ProgramSchedule
             {

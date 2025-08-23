@@ -9,13 +9,13 @@ using Microsoft.EntityFrameworkCore;
 namespace ErsatzTV.Application.Playouts;
 
 public class
-    UpdateTemplatePlayoutHandler : IRequestHandler<UpdateYamlPlayout,
+    UpdateSequentialPlayoutHandler : IRequestHandler<UpdateSequentialPlayout,
     Either<BaseError, PlayoutNameViewModel>>
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly ChannelWriter<IBackgroundServiceRequest> _workerChannel;
 
-    public UpdateTemplatePlayoutHandler(
+    public UpdateSequentialPlayoutHandler(
         IDbContextFactory<TvContext> dbContextFactory,
         ChannelWriter<IBackgroundServiceRequest> workerChannel)
     {
@@ -24,7 +24,7 @@ public class
     }
 
     public async Task<Either<BaseError, PlayoutNameViewModel>> Handle(
-        UpdateYamlPlayout request,
+        UpdateSequentialPlayout request,
         CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
@@ -34,7 +34,7 @@ public class
 
     private async Task<PlayoutNameViewModel> ApplyUpdateRequest(
         TvContext dbContext,
-        UpdateYamlPlayout request,
+        UpdateSequentialPlayout request,
         Playout playout)
     {
         playout.TemplateFile = request.TemplateFile;
@@ -46,7 +46,7 @@ public class
 
         return new PlayoutNameViewModel(
             playout.Id,
-            playout.ProgramSchedulePlayoutType,
+            playout.ScheduleKind,
             playout.Channel.Name,
             playout.Channel.Number,
             playout.Channel.PlayoutMode,
@@ -58,12 +58,12 @@ public class
 
     private static Task<Validation<BaseError, Playout>> Validate(
         TvContext dbContext,
-        UpdateYamlPlayout request) =>
+        UpdateSequentialPlayout request) =>
         PlayoutMustExist(dbContext, request);
 
     private static Task<Validation<BaseError, Playout>> PlayoutMustExist(
         TvContext dbContext,
-        UpdateYamlPlayout updatePlayout) =>
+        UpdateSequentialPlayout updatePlayout) =>
         dbContext.Playouts
             .Include(p => p.Channel)
             .SelectOneAsync(p => p.Id, p => p.Id == updatePlayout.PlayoutId)

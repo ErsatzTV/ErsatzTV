@@ -10,12 +10,12 @@ using Channel = ErsatzTV.Core.Domain.Channel;
 
 namespace ErsatzTV.Application.Playouts;
 
-public class CreateFloodPlayoutHandler : IRequestHandler<CreateFloodPlayout, Either<BaseError, CreatePlayoutResponse>>
+public class CreateClassicPlayoutHandler : IRequestHandler<CreateClassicPlayout, Either<BaseError, CreatePlayoutResponse>>
 {
     private readonly ChannelWriter<IBackgroundServiceRequest> _channel;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-    public CreateFloodPlayoutHandler(
+    public CreateClassicPlayoutHandler(
         ChannelWriter<IBackgroundServiceRequest> channel,
         IDbContextFactory<TvContext> dbContextFactory)
     {
@@ -24,7 +24,7 @@ public class CreateFloodPlayoutHandler : IRequestHandler<CreateFloodPlayout, Eit
     }
 
     public async Task<Either<BaseError, CreatePlayoutResponse>> Handle(
-        CreateFloodPlayout request,
+        CreateClassicPlayout request,
         CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
@@ -48,22 +48,22 @@ public class CreateFloodPlayoutHandler : IRequestHandler<CreateFloodPlayout, Eit
 
     private static async Task<Validation<BaseError, Playout>> Validate(
         TvContext dbContext,
-        CreateFloodPlayout request) =>
+        CreateClassicPlayout request) =>
         (await ValidateChannel(dbContext, request), await ValidateProgramSchedule(dbContext, request),
-            ValidatePlayoutType(request))
-        .Apply((channel, programSchedule, playoutType) => new Playout
+            ValidateScheduleKind(request))
+        .Apply((channel, programSchedule, scheduleKind) => new Playout
         {
             ChannelId = channel.Id,
             ProgramScheduleId = programSchedule.Id,
-            ProgramSchedulePlayoutType = playoutType
+            ScheduleKind = scheduleKind
         });
 
     private static Task<Validation<BaseError, Channel>> ValidateChannel(
         TvContext dbContext,
-        CreateFloodPlayout createFloodPlayout) =>
+        CreateClassicPlayout createClassicPlayout) =>
         dbContext.Channels
             .Include(c => c.Playouts)
-            .SelectOneAsync(c => c.Id, c => c.Id == createFloodPlayout.ChannelId)
+            .SelectOneAsync(c => c.Id, c => c.Id == createClassicPlayout.ChannelId)
             .Map(o => o.ToValidation<BaseError>("Channel does not exist"))
             .BindT(ChannelMustNotHavePlayouts);
 
@@ -75,10 +75,10 @@ public class CreateFloodPlayoutHandler : IRequestHandler<CreateFloodPlayout, Eit
 
     private static Task<Validation<BaseError, ProgramSchedule>> ValidateProgramSchedule(
         TvContext dbContext,
-        CreateFloodPlayout createFloodPlayout) =>
+        CreateClassicPlayout createClassicPlayout) =>
         dbContext.ProgramSchedules
             .Include(ps => ps.Items)
-            .SelectOneAsync(ps => ps.Id, ps => ps.Id == createFloodPlayout.ProgramScheduleId)
+            .SelectOneAsync(ps => ps.Id, ps => ps.Id == createClassicPlayout.ProgramScheduleId)
             .Map(o => o.ToValidation<BaseError>("Program schedule does not exist"))
             .BindT(ProgramScheduleMustHaveItems);
 
@@ -88,9 +88,9 @@ public class CreateFloodPlayoutHandler : IRequestHandler<CreateFloodPlayout, Eit
             .Filter(ps => ps.Items.Count != 0)
             .ToValidation<BaseError>("Program schedule must have items");
 
-    private static Validation<BaseError, ProgramSchedulePlayoutType> ValidatePlayoutType(
-        CreateFloodPlayout createFloodPlayout) =>
-        Optional(createFloodPlayout.ProgramSchedulePlayoutType)
-            .Filter(playoutType => playoutType != ProgramSchedulePlayoutType.None)
-            .ToValidation<BaseError>("[ProgramSchedulePlayoutType] must not be None");
+    private static Validation<BaseError, PlayoutScheduleKind> ValidateScheduleKind(
+        CreateClassicPlayout createClassicPlayout) =>
+        Optional(createClassicPlayout.ScheduleKind)
+            .Filter(scheduleKind => scheduleKind == PlayoutScheduleKind.Classic)
+            .ToValidation<BaseError>("[ScheduleKind] must be Classic");
 }

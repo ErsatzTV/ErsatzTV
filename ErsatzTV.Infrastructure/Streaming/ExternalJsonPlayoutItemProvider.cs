@@ -58,7 +58,7 @@ public class ExternalJsonPlayoutItemProvider : IExternalJsonPlayoutItemProvider
         foreach (Playout playout in maybePlayout)
         {
             // playout must be external json
-            if (playout.ProgramSchedulePlayoutType == ProgramSchedulePlayoutType.ExternalJson)
+            if (playout.ScheduleKind == PlayoutScheduleKind.ExternalJson)
             {
                 // json file must exist
                 if (_localFileSystem.FileExists(playout.ExternalJsonFile))
