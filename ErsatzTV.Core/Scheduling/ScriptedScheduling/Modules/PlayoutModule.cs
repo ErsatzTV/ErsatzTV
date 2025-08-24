@@ -99,6 +99,11 @@ public class PlayoutModule(ISchedulingEngine schedulingEngine)
         schedulingEngine.GraphicsOff(graphics.Select(g => g.ToString()).ToList()).GetAwaiter().GetResult();
     }
 
+    public void skip_items(string content, int count)
+    {
+        schedulingEngine.SkipItems(content, count);
+    }
+
     public void wait_until(string when, bool tomorrow = false, bool rewind_on_reset = false)
     {
         if (TimeOnly.TryParse(when, out TimeOnly waitUntil))

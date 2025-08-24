@@ -50,6 +50,7 @@ public interface ISchedulingEngine
     void UnlockGuideGroup();
     Task GraphicsOn(List<string> graphicsElements, Dictionary<string, string> variables);
     Task GraphicsOff(List<string> graphicsElements);
+    void SkipItems(string content, int count);
     ISchedulingEngine WaitUntil(TimeOnly waitUntil, bool tomorrow, bool rewindOnReset);
 
 

@@ -493,6 +493,20 @@ public class SchedulingEngine(
         }
     }
 
+    public void SkipItems(string content, int count)
+    {
+        if (!_enumerators.TryGetValue(content, out EnumeratorDetails enumeratorDetails))
+        {
+            logger.LogWarning("Unable to skip items for invalid content {Key}", content);
+            return;
+        }
+
+        for (var i = 0; i < count; i++)
+        {
+            enumeratorDetails.Enumerator.MoveNext();
+        }
+    }
+
     public ISchedulingEngine WaitUntil(TimeOnly waitUntil, bool tomorrow, bool rewindOnReset)
     {
         var currentTime = _state.CurrentTime;
