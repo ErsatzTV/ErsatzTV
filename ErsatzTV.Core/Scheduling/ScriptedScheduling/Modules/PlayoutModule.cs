@@ -104,6 +104,11 @@ public class PlayoutModule(ISchedulingEngine schedulingEngine)
         schedulingEngine.SkipItems(content, count);
     }
 
+    public void skip_to_item(string content, int season, int episode)
+    {
+        schedulingEngine.SkipToItem(content, season, episode);
+    }
+
     public void wait_until(string when, bool tomorrow = false, bool rewind_on_reset = false)
     {
         if (TimeOnly.TryParse(when, out TimeOnly waitUntil))

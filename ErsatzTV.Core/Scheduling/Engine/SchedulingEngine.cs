@@ -507,6 +507,45 @@ public class SchedulingEngine(
         }
     }
 
+    public void SkipToItem(string content, int season, int episode)
+    {
+        if (!_enumerators.TryGetValue(content, out EnumeratorDetails enumeratorDetails))
+        {
+            logger.LogWarning("Unable to skip items for invalid content {Key}", content);
+            return;
+        }
+
+        if (season < 0 || episode < 1)
+        {
+            logger.LogWarning("Unable to skip to invalid season/episode: {Season}/{Episode}", season, episode);
+            return;
+        }
+
+        var done = false;
+        for (var index = 0; index < enumeratorDetails.Enumerator.Count; index++)
+        {
+            if (done)
+            {
+                break;
+            }
+
+            foreach (MediaItem mediaItem in enumeratorDetails.Enumerator.Current)
+            {
+                if (mediaItem is Episode e)
+                {
+                    if (e.Season?.SeasonNumber == season &&
+                        e.EpisodeMetadata.HeadOrNone().Map(em => em.EpisodeNumber) == episode)
+                    {
+                        done = true;
+                        break;
+                    }
+                }
+
+                enumeratorDetails.Enumerator.MoveNext();
+            }
+        }
+    }
+
     public ISchedulingEngine WaitUntil(TimeOnly waitUntil, bool tomorrow, bool rewindOnReset)
     {
         var currentTime = _state.CurrentTime;

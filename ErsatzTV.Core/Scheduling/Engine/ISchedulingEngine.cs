@@ -51,6 +51,7 @@ public interface ISchedulingEngine
     Task GraphicsOn(List<string> graphicsElements, Dictionary<string, string> variables);
     Task GraphicsOff(List<string> graphicsElements);
     void SkipItems(string content, int count);
+    void SkipToItem(string content, int season, int episode);
     ISchedulingEngine WaitUntil(TimeOnly waitUntil, bool tomorrow, bool rewindOnReset);
 
 
