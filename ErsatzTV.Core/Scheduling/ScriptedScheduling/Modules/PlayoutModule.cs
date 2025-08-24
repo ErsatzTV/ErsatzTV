@@ -99,6 +99,36 @@ public class PlayoutModule(ISchedulingEngine schedulingEngine)
         schedulingEngine.GraphicsOff(graphics.Select(g => g.ToString()).ToList()).GetAwaiter().GetResult();
     }
 
+    public void watermark_on(string watermark)
+    {
+        schedulingEngine.WatermarkOn([watermark]).GetAwaiter().GetResult();
+    }
+
+    public void watermark_on(PythonList watermark)
+    {
+        schedulingEngine
+            .WatermarkOn(watermark.Select(g => g.ToString()).ToList())
+            .GetAwaiter()
+            .GetResult();
+    }
+
+    public void watermark_off(string watermark = null)
+    {
+        if (string.IsNullOrWhiteSpace(watermark))
+        {
+            schedulingEngine.WatermarkOff([]).GetAwaiter().GetResult();
+        }
+        else
+        {
+            schedulingEngine.WatermarkOff([watermark]).GetAwaiter().GetResult();
+        }
+    }
+
+    public void watermark_off(PythonList watermark)
+    {
+        schedulingEngine.WatermarkOff(watermark.Select(g => g.ToString()).ToList()).GetAwaiter().GetResult();
+    }
+
     public void skip_items(string content, int count)
     {
         schedulingEngine.SkipItems(content, count);

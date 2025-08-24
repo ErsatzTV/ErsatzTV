@@ -50,6 +50,8 @@ public interface ISchedulingEngine
     void UnlockGuideGroup();
     Task GraphicsOn(List<string> graphicsElements, Dictionary<string, string> variables);
     Task GraphicsOff(List<string> graphicsElements);
+    Task WatermarkOn(List<string> watermarks);
+    Task WatermarkOff(List<string> watermarks);
     void SkipItems(string content, int count);
     void SkipToItem(string content, int season, int episode);
     ISchedulingEngine WaitUntil(TimeOnly waitUntil, bool tomorrow, bool rewindOnReset);

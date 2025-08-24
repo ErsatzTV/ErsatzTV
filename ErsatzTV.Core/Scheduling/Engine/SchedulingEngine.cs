@@ -14,6 +14,7 @@ namespace ErsatzTV.Core.Scheduling.Engine;
 public class SchedulingEngine(
     IMediaCollectionRepository mediaCollectionRepository,
     IGraphicsElementRepository graphicsElementRepository,
+    IChannelRepository channelRepository,
     ILogger<SchedulingEngine> logger)
     : ISchedulingEngine
 {
@@ -23,6 +24,7 @@ public class SchedulingEngine(
     };
 
     private readonly Dictionary<string, Option<GraphicsElement>> _graphicsElementCache = new();
+    private readonly Dictionary<string, Option<ChannelWatermark>> _watermarkCache = new();
     private readonly Dictionary<string, EnumeratorDetails> _enumerators = new();
     private readonly SchedulingEngineState _state = new(0);
     private PlayoutReferenceData _referenceData;
@@ -398,15 +400,15 @@ public class SchedulingEngine(
                     PlayoutItemGraphicsElements = []
                 };
 
-                // foreach (int watermarkId in context.GetChannelWatermarkIds())
-                // {
-                //     playoutItem.PlayoutItemWatermarks.Add(
-                //         new PlayoutItemWatermark
-                //         {
-                //             PlayoutItem = playoutItem,
-                //             WatermarkId = watermarkId
-                //         });
-                // }
+                foreach (int watermarkId in _state.GetChannelWatermarkIds())
+                {
+                    playoutItem.PlayoutItemWatermarks.Add(
+                        new PlayoutItemWatermark
+                        {
+                            PlayoutItem = playoutItem,
+                            WatermarkId = watermarkId
+                        });
+                }
 
                 foreach ((int graphicsElementId, string variablesJson) in _state.GetGraphicsElements())
                 {
@@ -488,6 +490,35 @@ public class SchedulingEngine(
                 foreach (GraphicsElement ge in await GetGraphicsElementByPath(element))
                 {
                     _state.RemoveGraphicsElement(ge.Id);
+                }
+            }
+        }
+    }
+
+    public async Task WatermarkOn(List<string> watermarks)
+    {
+        foreach (string watermark in watermarks.Where(e => !string.IsNullOrWhiteSpace(e)))
+        {
+            foreach (ChannelWatermark wm in await GetChannelWatermarkByName(watermark))
+            {
+                _state.SetChannelWatermarkId(wm.Id);
+            }
+        }
+    }
+
+    public async Task WatermarkOff(List<string> watermarks)
+    {
+        if (watermarks.Count == 0)
+        {
+            _state.ClearChannelWatermarkIds();
+        }
+        else
+        {
+            foreach (string watermark in watermarks.Where(e => !string.IsNullOrWhiteSpace(e)))
+            {
+                foreach (ChannelWatermark wm in await GetChannelWatermarkByName(watermark))
+                {
+                    _state.RemoveChannelWatermarkId(wm.Id);
                 }
             }
         }
@@ -888,6 +919,28 @@ public class SchedulingEngine(
         return Option<GraphicsElement>.None;
     }
 
+    private async Task<Option<ChannelWatermark>> GetChannelWatermarkByName(string name)
+    {
+        if (_watermarkCache.TryGetValue(name, out Option<ChannelWatermark> cachedWatermark))
+        {
+            foreach (ChannelWatermark channelWatermark in cachedWatermark)
+            {
+                return channelWatermark;
+            }
+        }
+        else
+        {
+            Option<ChannelWatermark> maybeWatermark = await channelRepository.GetWatermarkByName(name);
+            _watermarkCache.Add(name, maybeWatermark);
+            foreach (ChannelWatermark channelWatermark in maybeWatermark)
+            {
+                return channelWatermark;
+            }
+        }
+
+        return Option<ChannelWatermark>.None;
+    }
+
     public record SerializedState(
         int? GuideGroup,
         bool? GuideGroupLocked);
@@ -897,6 +950,7 @@ public class SchedulingEngine(
         private int _guideGroup = guideGroup;
         private bool _guideGroupLocked;
         private readonly Dictionary<int, string> _graphicsElements = [];
+        private readonly System.Collections.Generic.HashSet<int> _channelWatermarkIds = [];
 
         // state
         public int PlayoutId { get; set; }
@@ -953,6 +1007,11 @@ public class SchedulingEngine(
         public void RemoveGraphicsElement(int id) => _graphicsElements.Remove(id);
         public void ClearGraphicsElements() => _graphicsElements.Clear();
         public Dictionary<int, string> GetGraphicsElements() => _graphicsElements;
+
+        public void SetChannelWatermarkId(int id) => _channelWatermarkIds.Add(id);
+        public void RemoveChannelWatermarkId(int id) => _channelWatermarkIds.Remove(id);
+        public void ClearChannelWatermarkIds() => _channelWatermarkIds.Clear();
+        public List<int> GetChannelWatermarkIds() => _channelWatermarkIds.ToList();
 
         // result
         public Option<DateTimeOffset> RemoveBefore { get; set; }
