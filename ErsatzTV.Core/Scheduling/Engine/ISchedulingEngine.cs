@@ -22,6 +22,7 @@ public interface ISchedulingEngine
     // content definitions
     Task<ISchedulingEngine> AddCollection(string key, string collectionName, PlaybackOrder playbackOrder);
     Task<ISchedulingEngine> AddSearch(string key, string query, PlaybackOrder playbackOrder);
+    Task<ISchedulingEngine> AddShow(string key, Dictionary<string, string> guids, PlaybackOrder playbackOrder);
 
     // content instructions
     ISchedulingEngine AddCount(

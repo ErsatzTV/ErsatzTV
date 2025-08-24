@@ -166,6 +166,44 @@ public class SchedulingEngine(IMediaCollectionRepository mediaCollectionReposito
         return this;
     }
 
+    public async Task<ISchedulingEngine> AddShow(
+        string key,
+        Dictionary<string, string> guids,
+        PlaybackOrder playbackOrder)
+    {
+        if (!_enumerators.ContainsKey(key))
+        {
+            int index = _enumerators.Count;
+            List<MediaItem> items =
+                await mediaCollectionRepository.GetShowItemsByShowGuids(
+                    guids.Map(g => $"{g.Key}://{g.Value}").ToList());
+            if (items.Count == 0)
+            {
+                logger.LogWarning("Skipping invalid or empty show with key {Key}", key);
+                return this;
+            }
+
+            var state = new CollectionEnumeratorState { Seed = _state.Seed + index, Index = 0 };
+            foreach (var enumerator in EnumeratorForContent(items, state, playbackOrder))
+            {
+                string historyKey = HistoryDetails.KeyForSchedulingContent(key, playbackOrder);
+                var details = new EnumeratorDetails(enumerator, historyKey, playbackOrder);
+
+                if (_enumerators.TryAdd(key, details))
+                {
+                    logger.LogDebug(
+                        "Added show with key {Key} and order {Order}",
+                        key,
+                        playbackOrder);
+
+                    ApplyHistory(historyKey, items, enumerator, playbackOrder);
+                }
+            }
+        }
+
+        return this;
+    }
+
     public ISchedulingEngine AddCount(
         string content,
         int count,

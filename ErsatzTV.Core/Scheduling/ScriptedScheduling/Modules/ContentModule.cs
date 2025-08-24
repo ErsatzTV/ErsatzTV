@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Scheduling.Engine;
+using IronPython.Runtime;
 
 namespace ErsatzTV.Core.Scheduling.ScriptedScheduling.Modules;
 
@@ -28,6 +29,21 @@ public class ContentModule(ISchedulingEngine schedulingEngine)
         }
 
         schedulingEngine.AddCollection(key, collection, playbackOrder).GetAwaiter().GetResult();
+
+        return true;
+    }
+
+    public bool add_show(string key, PythonDictionary guids, string order)
+    {
+        if (!Enum.TryParse(order, ignoreCase: true, out PlaybackOrder playbackOrder))
+        {
+            return false;
+        }
+
+        schedulingEngine
+            .AddShow(key, guids.ToDictionary(k => k.Key.ToString(), k => k.Value.ToString()), playbackOrder)
+            .GetAwaiter()
+            .GetResult();
 
         return true;
     }
