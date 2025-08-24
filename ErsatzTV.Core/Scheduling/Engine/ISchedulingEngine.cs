@@ -38,6 +38,12 @@ public interface ISchedulingEngine
     Task AddShow(string key, Dictionary<string, string> guids, PlaybackOrder playbackOrder);
 
     // content instructions
+    bool AddAll(
+        string content,
+        Option<FillerKind> fillerKind,
+        string customTitle,
+        bool disableWatermarks);
+
     bool AddCount(
         string content,
         int count,
@@ -45,9 +51,15 @@ public interface ISchedulingEngine
         string customTitle,
         bool disableWatermarks);
 
-    bool AddAll(
+    bool AddDuration(
         string content,
-        Option<FillerKind> fillerKind,
+        string duration,
+        string fallback,
+        bool trim,
+        int discardAttempts,
+        bool stopBeforeEnd,
+        bool offlineTail,
+        Option<FillerKind> maybeFillerKind,
         string customTitle,
         bool disableWatermarks);
 

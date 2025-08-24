@@ -2,6 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Scheduling.Engine;
 using IronPython.Runtime;
+using TimeSpanParserUtil;
 
 namespace ErsatzTV.Core.Scheduling.ScriptedScheduling.Modules;
 
@@ -52,6 +53,46 @@ public class PlayoutModule(ISchedulingEngine schedulingEngine)
         }
 
         bool success = schedulingEngine.AddCount(content, count, maybeFillerKind, custom_title, disable_watermarks);
+        if (success)
+        {
+            FailureCount = 0;
+        }
+        else
+        {
+            FailureCount++;
+        }
+    }
+
+    public void add_duration(
+        string content,
+        string duration,
+        string fallback = null,
+        bool trim = false,
+        int discard_attempts = 0,
+        bool stop_before_end = true,
+        bool offline_tail = false,
+        string filler_kind = null,
+        string custom_title = null,
+        bool disable_watermarks = false)
+    {
+        Option<FillerKind> maybeFillerKind = Option<FillerKind>.None;
+        if (Enum.TryParse(filler_kind, ignoreCase: true, out FillerKind fillerKind))
+        {
+            maybeFillerKind = fillerKind;
+        }
+
+        bool success = schedulingEngine.AddDuration(
+            content,
+            duration,
+            fallback,
+            trim,
+            discard_attempts,
+            stop_before_end,
+            offline_tail,
+            maybeFillerKind,
+            custom_title,
+            disable_watermarks);
+
         if (success)
         {
             FailureCount = 0;
