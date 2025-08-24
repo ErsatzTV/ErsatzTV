@@ -38,10 +38,51 @@ public interface ISchedulingEngine
     Task AddShow(string key, Dictionary<string, string> guids, PlaybackOrder playbackOrder);
 
     // content instructions
+    bool AddAll(
+        string content,
+        Option<FillerKind> fillerKind,
+        string customTitle,
+        bool disableWatermarks);
+
     bool AddCount(
         string content,
         int count,
         Option<FillerKind> fillerKind,
+        string customTitle,
+        bool disableWatermarks);
+
+    bool AddDuration(
+        string content,
+        string duration,
+        string fallback,
+        bool trim,
+        int discardAttempts,
+        bool stopBeforeEnd,
+        bool offlineTail,
+        Option<FillerKind> maybeFillerKind,
+        string customTitle,
+        bool disableWatermarks);
+
+    bool PadToNext(
+        string content,
+        int minutes,
+        string fallback,
+        bool trim,
+        int discardAttempts,
+        Option<FillerKind> maybeFillerKind,
+        string customTitle,
+        bool disableWatermarks);
+
+    bool PadUntil(
+        string content,
+        string padUntil,
+        bool tomorrow,
+        string fallback,
+        bool trim,
+        int discardAttempts,
+        bool stopBeforeEnd,
+        bool offlineTail,
+        Option<FillerKind> maybeFillerKind,
         string customTitle,
         bool disableWatermarks);
 

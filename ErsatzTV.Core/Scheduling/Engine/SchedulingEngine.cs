@@ -8,6 +8,7 @@ using ErsatzTV.Core.Interfaces.Scheduling;
 using ErsatzTV.Core.Scheduling.BlockScheduling;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using TimeSpanParserUtil;
 
 namespace ErsatzTV.Core.Scheduling.Engine;
 
@@ -355,6 +356,22 @@ public class SchedulingEngine(
         }
     }
 
+    public bool AddAll(string content, Option<FillerKind> fillerKind, string customTitle, bool disableWatermarks)
+    {
+        if (!_enumerators.TryGetValue(content, out EnumeratorDetails enumeratorDetails))
+        {
+            logger.LogWarning("Skipping invalid content {Key}", content);
+            return false;
+        }
+
+        return AddCountInternal(
+            enumeratorDetails,
+            enumeratorDetails.Enumerator.Count,
+            fillerKind,
+            customTitle,
+            disableWatermarks);
+    }
+
     public bool AddCount(
         string content,
         int count,
@@ -368,6 +385,363 @@ public class SchedulingEngine(
             return false;
         }
 
+        return AddCountInternal(enumeratorDetails, count, fillerKind, customTitle, disableWatermarks);
+    }
+
+    public bool AddDuration(
+        string content,
+        string duration,
+        string fallback,
+        bool trim,
+        int discardAttempts,
+        bool stopBeforeEnd,
+        bool offlineTail,
+        Option<FillerKind> maybeFillerKind,
+        string customTitle,
+        bool disableWatermarks)
+    {
+        if (!TimeSpanParser.TryParse(duration, out TimeSpan timeSpan))
+        {
+            logger.LogWarning("Skipping invalid duration {Duration} for content {Key}", duration, content);
+            return false;
+        }
+
+        if (!stopBeforeEnd && offlineTail)
+        {
+            logger.LogError("offline_tail must be false when stop_before_end is false");
+            return false;
+        }
+
+        if (!_enumerators.TryGetValue(content, out EnumeratorDetails enumeratorDetails))
+        {
+            logger.LogWarning("Skipping invalid content {Key}", content);
+            return false;
+        }
+
+        EnumeratorDetails fallbackEnumeratorDetails = null;
+        if (!string.IsNullOrEmpty(fallback))
+        {
+            _enumerators.TryGetValue(fallback, out fallbackEnumeratorDetails);
+        }
+
+        DateTimeOffset targetTime = _state.CurrentTime.Add(timeSpan);
+
+        _state.CurrentTime = AddDurationInternal(
+            targetTime,
+            stopBeforeEnd,
+            discardAttempts,
+            trim,
+            offlineTail,
+            GetFillerKind(maybeFillerKind),
+            customTitle,
+            disableWatermarks,
+            enumeratorDetails,
+            Optional(fallbackEnumeratorDetails));
+
+        return true;
+    }
+
+    public bool PadToNext(
+        string content,
+        int minutes,
+        string fallback,
+        bool trim,
+        int discardAttempts,
+        Option<FillerKind> maybeFillerKind,
+        string customTitle,
+        bool disableWatermarks)
+    {
+        if (!_enumerators.TryGetValue(content, out EnumeratorDetails enumeratorDetails))
+        {
+            logger.LogWarning("Skipping invalid content {Key}", content);
+            return false;
+        }
+
+        EnumeratorDetails fallbackEnumeratorDetails = null;
+        if (!string.IsNullOrEmpty(fallback))
+        {
+            _enumerators.TryGetValue(fallback, out fallbackEnumeratorDetails);
+        }
+
+        int currentMinute = _state.CurrentTime.Minute;
+
+        int targetMinute = (currentMinute + minutes - 1) / minutes * minutes;
+
+        DateTimeOffset almostTargetTime =
+            _state.CurrentTime - TimeSpan.FromMinutes(currentMinute) + TimeSpan.FromMinutes(targetMinute);
+
+        var targetTime = new DateTimeOffset(
+            almostTargetTime.Year,
+            almostTargetTime.Month,
+            almostTargetTime.Day,
+            almostTargetTime.Hour,
+            almostTargetTime.Minute,
+            0,
+            almostTargetTime.Offset);
+
+        // ensure filler works for content less than one minute
+        if (targetTime <= _state.CurrentTime)
+        {
+            targetTime = targetTime.AddMinutes(minutes);
+        }
+
+        _state.CurrentTime = AddDurationInternal(
+            targetTime,
+            stopBeforeEnd: true,
+            discardAttempts,
+            trim,
+            offlineTail: true,
+            GetFillerKind(maybeFillerKind),
+            customTitle,
+            disableWatermarks,
+            enumeratorDetails,
+            Optional(fallbackEnumeratorDetails));
+
+        return true;
+    }
+
+    public bool PadUntil(
+        string content,
+        string padUntil,
+        bool tomorrow,
+        string fallback,
+        bool trim,
+        int discardAttempts,
+        bool stopBeforeEnd,
+        bool offlineTail,
+        Option<FillerKind> maybeFillerKind,
+        string customTitle,
+        bool disableWatermarks)
+    {
+        if (!_enumerators.TryGetValue(content, out EnumeratorDetails enumeratorDetails))
+        {
+            logger.LogWarning("Skipping invalid content {Key}", content);
+            return false;
+        }
+
+        EnumeratorDetails fallbackEnumeratorDetails = null;
+        if (!string.IsNullOrEmpty(fallback))
+        {
+            _enumerators.TryGetValue(fallback, out fallbackEnumeratorDetails);
+        }
+
+        if (!TimeOnly.TryParse(padUntil, out TimeOnly padUntilTime))
+        {
+            logger.LogWarning("Skipping pad_until with invalid 'when' {When}", padUntil);
+            return false;
+        }
+
+        DateTimeOffset targetTime = _state.CurrentTime;
+
+        var dayOnly = DateOnly.FromDateTime(targetTime.LocalDateTime);
+        var timeOnly = TimeOnly.FromDateTime(targetTime.LocalDateTime);
+
+        if (timeOnly > padUntilTime)
+        {
+            if (tomorrow)
+            {
+                // this is wrong when offset changes
+                dayOnly = dayOnly.AddDays(1);
+                targetTime = new DateTimeOffset(dayOnly, padUntilTime, targetTime.Offset);
+            }
+        }
+        else
+        {
+            // this is wrong when offset changes
+            targetTime = new DateTimeOffset(dayOnly, padUntilTime, targetTime.Offset);
+        }
+
+        _state.CurrentTime = AddDurationInternal(
+            targetTime,
+            stopBeforeEnd,
+            discardAttempts,
+            trim,
+            offlineTail,
+            GetFillerKind(maybeFillerKind),
+            customTitle,
+            disableWatermarks,
+            enumeratorDetails,
+            Optional(fallbackEnumeratorDetails));
+
+        return true;
+    }
+
+    private DateTimeOffset AddDurationInternal(
+        DateTimeOffset targetTime,
+        bool stopBeforeEnd,
+        int discardAttempts,
+        bool trim,
+        bool offlineTail,
+        FillerKind fillerKind,
+        string customTitle,
+        bool disableWatermarks,
+        EnumeratorDetails enumeratorDetails,
+        Option<EnumeratorDetails> maybeFallbackEnumeratorDetails)
+    {
+        var done = false;
+        TimeSpan remainingToFill = targetTime - _state.CurrentTime;
+        while (!done && enumeratorDetails.Enumerator.Current.IsSome && remainingToFill > TimeSpan.Zero)
+        {
+            // foreach (string preRollSequence in context.GetPreRollSequence())
+            // {
+            //     context.PushFillerKind(FillerKind.PreRoll);
+            //     await executeSequence(preRollSequence);
+            //     context.PopFillerKind();
+            //
+            //     remainingToFill = targetTime - context.CurrentTime;
+            //     if (remainingToFill <= TimeSpan.Zero)
+            //     {
+            //         break;
+            //     }
+            // }
+
+            foreach (MediaItem mediaItem in enumeratorDetails.Enumerator.Current)
+            {
+                TimeSpan itemDuration = DurationForMediaItem(mediaItem);
+
+                var playoutItem = new PlayoutItem
+                {
+                    PlayoutId = _state.PlayoutId,
+                    MediaItemId = mediaItem.Id,
+                    Start = _state.CurrentTime.UtcDateTime,
+                    Finish = _state.CurrentTime.UtcDateTime + itemDuration,
+                    InPoint = TimeSpan.Zero,
+                    OutPoint = itemDuration,
+                    GuideGroup = _state.PeekNextGuideGroup(),
+                    FillerKind = fillerKind,
+                    CustomTitle = string.IsNullOrWhiteSpace(customTitle) ? null : customTitle,
+                    DisableWatermarks = disableWatermarks,
+                    PlayoutItemWatermarks = [],
+                    PlayoutItemGraphicsElements = []
+                };
+
+                foreach (int watermarkId in _state.GetChannelWatermarkIds())
+                {
+                    playoutItem.PlayoutItemWatermarks.Add(
+                        new PlayoutItemWatermark
+                        {
+                            PlayoutItem = playoutItem,
+                            WatermarkId = watermarkId
+                        });
+                }
+
+                foreach ((int graphicsElementId, string variablesJson) in _state.GetGraphicsElements())
+                {
+                    playoutItem.PlayoutItemGraphicsElements.Add(
+                        new PlayoutItemGraphicsElement
+                        {
+                            PlayoutItem = playoutItem,
+                            GraphicsElementId = graphicsElementId,
+                            Variables = variablesJson
+                        });
+                }
+
+                if (remainingToFill - itemDuration >= TimeSpan.Zero || !stopBeforeEnd)
+                {
+                    _state.AddedItems.Add(playoutItem);
+                    _state.AdvanceGuideGroup();
+
+                    // create history record
+                    List<PlayoutHistory> maybeHistory = GetHistoryForItem(enumeratorDetails, playoutItem, mediaItem);
+                    foreach (PlayoutHistory history in maybeHistory)
+                    {
+                        _state.AddedHistory.Add(history);
+                    }
+
+                    remainingToFill -= itemDuration;
+                    _state.CurrentTime += itemDuration;
+
+                    enumeratorDetails.Enumerator.MoveNext();
+                }
+                else if (discardAttempts > 0)
+                {
+                    // item won't fit; try the next one
+                    discardAttempts--;
+                    enumeratorDetails.Enumerator.MoveNext();
+                }
+                else if (trim)
+                {
+                    // trim item to exactly fit
+                    playoutItem.Finish = targetTime.UtcDateTime;
+                    playoutItem.OutPoint = playoutItem.Finish - playoutItem.Start;
+
+                    _state.AddedItems.Add(playoutItem);
+                    _state.AdvanceGuideGroup();
+
+                    // create history record
+                    List<PlayoutHistory> maybeHistory = GetHistoryForItem(enumeratorDetails, playoutItem, mediaItem);
+                    foreach (PlayoutHistory history in maybeHistory)
+                    {
+                        _state.AddedHistory.Add(history);
+                    }
+
+                    remainingToFill = TimeSpan.Zero;
+                    _state.CurrentTime = targetTime;
+
+                    enumeratorDetails.Enumerator.MoveNext();
+                }
+                else if (maybeFallbackEnumeratorDetails.IsSome)
+                {
+                    foreach (EnumeratorDetails fallbackEnumeratorDetails in maybeFallbackEnumeratorDetails)
+                    {
+                        remainingToFill = TimeSpan.Zero;
+                        _state.CurrentTime = targetTime;
+                        done = true;
+
+                        // replace with fallback content
+                        foreach (MediaItem fallbackItem in fallbackEnumeratorDetails.Enumerator.Current)
+                        {
+                            playoutItem.MediaItemId = fallbackItem.Id;
+                            playoutItem.Finish = targetTime.UtcDateTime;
+                            playoutItem.FillerKind = FillerKind.Fallback;
+
+                            _state.AddedItems.Add(playoutItem);
+
+                            // create history record
+                            List<PlayoutHistory> maybeHistory = GetHistoryForItem(
+                                fallbackEnumeratorDetails,
+                                playoutItem,
+                                mediaItem);
+
+                            foreach (PlayoutHistory history in maybeHistory)
+                            {
+                                _state.AddedHistory.Add(history);
+                            }
+
+                            fallbackEnumeratorDetails.Enumerator.MoveNext();
+                        }
+                    }
+                }
+                else
+                {
+                    // item won't fit; we're done
+                    done = true;
+                }
+            }
+
+            // foreach (string postRollSequence in context.GetPostRollSequence())
+            // {
+            //     context.PushFillerKind(FillerKind.PostRoll);
+            //     await executeSequence(postRollSequence);
+            //     context.PopFillerKind();
+            // }
+        }
+
+        if (!stopBeforeEnd)
+        {
+            return _state.CurrentTime;
+        }
+
+        return offlineTail ? targetTime : _state.CurrentTime;
+    }
+
+    private bool AddCountInternal(
+        EnumeratorDetails enumeratorDetails,
+        int count,
+        Option<FillerKind> fillerKind,
+        string customTitle,
+        bool disableWatermarks)
+    {
         var result = false;
 
         for (var i = 0; i < count; i++)

@@ -15,6 +15,29 @@ public class PlayoutModule(ISchedulingEngine schedulingEngine)
 
     // content instructions
 
+    public void add_all(
+        string content,
+        string filler_kind = null,
+        string custom_title = null,
+        bool disable_watermarks = false)
+    {
+        Option<FillerKind> maybeFillerKind = Option<FillerKind>.None;
+        if (Enum.TryParse(filler_kind, ignoreCase: true, out FillerKind fillerKind))
+        {
+            maybeFillerKind = fillerKind;
+        }
+
+        bool success = schedulingEngine.AddAll(content, maybeFillerKind, custom_title, disable_watermarks);
+        if (success)
+        {
+            FailureCount = 0;
+        }
+        else
+        {
+            FailureCount++;
+        }
+    }
+
     public void add_count(
         string content,
         int count,
@@ -29,6 +52,124 @@ public class PlayoutModule(ISchedulingEngine schedulingEngine)
         }
 
         bool success = schedulingEngine.AddCount(content, count, maybeFillerKind, custom_title, disable_watermarks);
+        if (success)
+        {
+            FailureCount = 0;
+        }
+        else
+        {
+            FailureCount++;
+        }
+    }
+
+    public void add_duration(
+        string content,
+        string duration,
+        string fallback = null,
+        bool trim = false,
+        int discard_attempts = 0,
+        bool stop_before_end = true,
+        bool offline_tail = false,
+        string filler_kind = null,
+        string custom_title = null,
+        bool disable_watermarks = false)
+    {
+        Option<FillerKind> maybeFillerKind = Option<FillerKind>.None;
+        if (Enum.TryParse(filler_kind, ignoreCase: true, out FillerKind fillerKind))
+        {
+            maybeFillerKind = fillerKind;
+        }
+
+        bool success = schedulingEngine.AddDuration(
+            content,
+            duration,
+            fallback,
+            trim,
+            discard_attempts,
+            stop_before_end,
+            offline_tail,
+            maybeFillerKind,
+            custom_title,
+            disable_watermarks);
+
+        if (success)
+        {
+            FailureCount = 0;
+        }
+        else
+        {
+            FailureCount++;
+        }
+    }
+
+    public void pad_to_next(
+        string content,
+        int minutes,
+        string fallback = null,
+        bool trim = false,
+        int discard_attempts = 0,
+        string filler_kind = null,
+        string custom_title = null,
+        bool disable_watermarks = false)
+    {
+        Option<FillerKind> maybeFillerKind = Option<FillerKind>.None;
+        if (Enum.TryParse(filler_kind, ignoreCase: true, out FillerKind fillerKind))
+        {
+            maybeFillerKind = fillerKind;
+        }
+
+        bool success = schedulingEngine.PadToNext(
+            content,
+            minutes,
+            fallback,
+            trim,
+            discard_attempts,
+            maybeFillerKind,
+            custom_title,
+            disable_watermarks);
+
+        if (success)
+        {
+            FailureCount = 0;
+        }
+        else
+        {
+            FailureCount++;
+        }
+    }
+
+    public void pad_until(
+        string content,
+        string when,
+        bool tomorrow = false,
+        string fallback = null,
+        bool trim = false,
+        int discard_attempts = 0,
+        bool stop_before_end = true,
+        bool offline_tail = false,
+        string filler_kind = null,
+        string custom_title = null,
+        bool disable_watermarks = false)
+    {
+        Option<FillerKind> maybeFillerKind = Option<FillerKind>.None;
+        if (Enum.TryParse(filler_kind, ignoreCase: true, out FillerKind fillerKind))
+        {
+            maybeFillerKind = fillerKind;
+        }
+
+        bool success = schedulingEngine.PadUntil(
+            content,
+            when,
+            tomorrow,
+            fallback,
+            trim,
+            discard_attempts,
+            stop_before_end,
+            offline_tail,
+            maybeFillerKind,
+            custom_title,
+            disable_watermarks);
+
         if (success)
         {
             FailureCount = 0;
