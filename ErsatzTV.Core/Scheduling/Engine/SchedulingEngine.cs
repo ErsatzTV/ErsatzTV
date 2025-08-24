@@ -1,18 +1,32 @@
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Domain.Scheduling;
+using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using ErsatzTV.Core.Scheduling.BlockScheduling;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 
 namespace ErsatzTV.Core.Scheduling.Engine;
 
 public class SchedulingEngine(IMediaCollectionRepository mediaCollectionRepository, ILogger<SchedulingEngine> logger)
     : ISchedulingEngine
 {
-    private readonly Dictionary<string, IMediaCollectionEnumerator> _enumerators = new();
-    private readonly SchedulingEngineState _state = new();
+    private static readonly JsonSerializerSettings JsonSettings = new()
+    {
+        NullValueHandling = NullValueHandling.Ignore
+    };
+
+    private readonly Dictionary<string, EnumeratorDetails> _enumerators = new();
+    private readonly SchedulingEngineState _state = new(0);
     private PlayoutReferenceData _referenceData;
+
+    public ISchedulingEngine WithPlayoutId(int playoutId)
+    {
+        _state.PlayoutId = playoutId;
+        return this;
+    }
 
     public ISchedulingEngine WithMode(PlayoutBuildMode mode)
     {
@@ -76,7 +90,8 @@ public class SchedulingEngine(IMediaCollectionRepository mediaCollectionReposito
                     break;
                 }
 
-                // TODO: load the rest of the context
+                SerializedState state = JsonConvert.DeserializeObject<SerializedState>(anchor.Context);
+                _state.LoadContext(state);
             }
         }
 
@@ -98,7 +113,10 @@ public class SchedulingEngine(IMediaCollectionRepository mediaCollectionReposito
             var state = new CollectionEnumeratorState { Seed = _state.Seed + index, Index = 0 };
             foreach (var enumerator in EnumeratorForContent(items, state, playbackOrder))
             {
-                if (_enumerators.TryAdd(key, enumerator))
+                string historyKey = HistoryDetails.KeyForSchedulingContent(key, playbackOrder);
+                var details = new EnumeratorDetails(enumerator, historyKey, playbackOrder);
+
+                if (_enumerators.TryAdd(key, details))
                 {
                     logger.LogDebug(
                         "Added collection {Name} with key {Key} and order {Order}",
@@ -106,13 +124,150 @@ public class SchedulingEngine(IMediaCollectionRepository mediaCollectionReposito
                         key,
                         playbackOrder);
 
-                    string historyKey = HistoryDetails.KeyForSchedulingContent(key, playbackOrder);
                     ApplyHistory(historyKey, items, enumerator, playbackOrder);
                 }
             }
         }
 
         return this;
+    }
+
+    public ISchedulingEngine AddCount(
+        string content,
+        int count,
+        Option<FillerKind> fillerKind,
+        string customTitle,
+        bool disableWatermarks)
+    {
+        if (!_enumerators.TryGetValue(content, out EnumeratorDetails enumeratorDetails))
+        {
+            logger.LogWarning("Skipping invalid content {Key}", content);
+            return this;
+        }
+
+        for (var i = 0; i < count; i++)
+        {
+            // foreach (string preRollSequence in context.GetPreRollSequence())
+            // {
+            //     context.PushFillerKind(FillerKind.PreRoll);
+            //     await executeSequence(preRollSequence);
+            //     context.PopFillerKind();
+            // }
+
+            foreach (MediaItem mediaItem in enumeratorDetails.Enumerator.Current)
+            {
+                TimeSpan itemDuration = DurationForMediaItem(mediaItem);
+
+                // create a playout item
+                var playoutItem = new PlayoutItem
+                {
+                    PlayoutId = _state.PlayoutId,
+                    MediaItemId = mediaItem.Id,
+                    Start = _state.CurrentTime.UtcDateTime,
+                    Finish = _state.CurrentTime.UtcDateTime + itemDuration,
+                    InPoint = TimeSpan.Zero,
+                    OutPoint = itemDuration,
+                    FillerKind = GetFillerKind(fillerKind),
+                    CustomTitle = string.IsNullOrWhiteSpace(customTitle) ? null : customTitle,
+                    DisableWatermarks = disableWatermarks,
+                    GuideGroup = _state.PeekNextGuideGroup(),
+                    PlayoutItemWatermarks = [],
+                    PlayoutItemGraphicsElements = []
+                };
+
+                // foreach (int watermarkId in context.GetChannelWatermarkIds())
+                // {
+                //     playoutItem.PlayoutItemWatermarks.Add(
+                //         new PlayoutItemWatermark
+                //         {
+                //             PlayoutItem = playoutItem,
+                //             WatermarkId = watermarkId
+                //         });
+                // }
+                //
+                // foreach ((int graphicsElementId, string variablesJson) in context.GetGraphicsElements())
+                // {
+                //     playoutItem.PlayoutItemGraphicsElements.Add(
+                //         new PlayoutItemGraphicsElement
+                //         {
+                //             PlayoutItem = playoutItem,
+                //             GraphicsElementId = graphicsElementId,
+                //             Variables = variablesJson
+                //         });
+                // }
+
+                //await AddItemAndMidRoll(context, playoutItem, mediaItem, executeSequence);
+
+                _state.AddedItems.Add(playoutItem);
+                _state.CurrentTime += playoutItem.OutPoint - playoutItem.InPoint;
+                _state.AdvanceGuideGroup();
+
+                // create history record
+                List<PlayoutHistory> maybeHistory = GetHistoryForItem(enumeratorDetails, playoutItem, mediaItem);
+                foreach (PlayoutHistory history in maybeHistory)
+                {
+                    _state.AddedHistory.Add(history);
+                }
+
+                enumeratorDetails.Enumerator.MoveNext();
+            }
+
+            // foreach (string postRollSequence in context.GetPostRollSequence())
+            // {
+            //     context.PushFillerKind(FillerKind.PostRoll);
+            //     await executeSequence(postRollSequence);
+            //     context.PopFillerKind();
+            // }
+        }
+
+        return this;
+    }
+
+    public ISchedulingEngine WaitUntil(TimeOnly waitUntil, bool tomorrow, bool rewindOnReset)
+    {
+        var currentTime = _state.CurrentTime;
+
+        var dayOnly = DateOnly.FromDateTime(currentTime.LocalDateTime);
+        var timeOnly = TimeOnly.FromDateTime(currentTime.LocalDateTime);
+
+        if (timeOnly > waitUntil)
+        {
+            if (tomorrow)
+            {
+                // this is wrong when offset changes
+                dayOnly = dayOnly.AddDays(1);
+                currentTime = new DateTimeOffset(dayOnly, waitUntil, currentTime.Offset);
+            }
+            else if (rewindOnReset && _state.Mode == PlayoutBuildMode.Reset)
+            {
+                // maybe wrong when offset changes?
+                currentTime = new DateTimeOffset(dayOnly, waitUntil, currentTime.Offset);
+            }
+        }
+        else
+        {
+            // this is wrong when offset changes
+            currentTime = new DateTimeOffset(dayOnly, waitUntil, currentTime.Offset);
+        }
+
+        _state.CurrentTime = currentTime;
+
+        return this;
+    }
+
+    public PlayoutAnchor GetAnchor()
+    {
+        DateTime maxTime = _state.CurrentTime.UtcDateTime;
+        if (_state.AddedItems.Count > 0)
+        {
+            maxTime = _state.AddedItems.Max(i => i.Finish);
+        }
+
+        return new PlayoutAnchor
+        {
+            NextStart = maxTime,
+            Context = _state.SerializeContext()
+        };
     }
 
     public ISchedulingEngineState GetState()
@@ -269,18 +424,198 @@ public class SchedulingEngine(IMediaCollectionRepository mediaCollectionReposito
         }
     }
 
-    private class SchedulingEngineState : ISchedulingEngineState
+    private static TimeSpan DurationForMediaItem(MediaItem mediaItem)
     {
+        if (mediaItem is Image image)
+        {
+            return TimeSpan.FromSeconds(image.ImageMetadata.Head().DurationSeconds ?? Image.DefaultSeconds);
+        }
+
+        MediaVersion version = mediaItem.GetHeadVersion();
+        return version.Duration;
+    }
+
+    private List<PlayoutHistory> GetHistoryForItem(
+        EnumeratorDetails enumeratorDetails,
+        PlayoutItem playoutItem,
+        MediaItem mediaItem)
+    {
+        var result = new List<PlayoutHistory>();
+
+        if (enumeratorDetails.Enumerator is PlaylistEnumerator playlistEnumerator)
+        {
+            // create a playout history record
+            var nextHistory = new PlayoutHistory
+            {
+                PlayoutId = _state.PlayoutId,
+                PlaybackOrder = enumeratorDetails.PlaybackOrder,
+                Index = playlistEnumerator.EnumeratorIndex,
+                When = playoutItem.StartOffset.UtcDateTime,
+                Finish = playoutItem.FinishOffset.UtcDateTime,
+                Key = enumeratorDetails.HistoryKey,
+                Details = HistoryDetails.ForMediaItem(mediaItem)
+            };
+
+            result.Add(nextHistory);
+
+            for (var i = 0; i < playlistEnumerator.ChildEnumerators.Count; i++)
+            {
+                (IMediaCollectionEnumerator childEnumerator, CollectionKey collectionKey) =
+                    playlistEnumerator.ChildEnumerators[i];
+                bool isCurrentChild = i == playlistEnumerator.EnumeratorIndex;
+                foreach (MediaItem currentMediaItem in childEnumerator.Current)
+                {
+                    // create a playout history record
+                    var childHistory = new PlayoutHistory
+                    {
+                        PlayoutId = _state.PlayoutId,
+                        PlaybackOrder = enumeratorDetails.PlaybackOrder,
+                        Index = childEnumerator.State.Index,
+                        When = playoutItem.StartOffset.UtcDateTime,
+                        Finish = playoutItem.FinishOffset.UtcDateTime,
+                        Key = enumeratorDetails.HistoryKey,
+                        ChildKey = HistoryDetails.KeyForCollectionKey(collectionKey),
+                        IsCurrentChild = isCurrentChild,
+                        Details = HistoryDetails.ForMediaItem(currentMediaItem)
+                    };
+
+                    result.Add(childHistory);
+                }
+            }
+        }
+        else
+        {
+            // create a playout history record
+            var nextHistory = new PlayoutHistory
+            {
+                PlayoutId = _state.PlayoutId,
+                PlaybackOrder = enumeratorDetails.PlaybackOrder,
+                Index = enumeratorDetails.Enumerator.State.Index,
+                When = playoutItem.StartOffset.UtcDateTime,
+                Finish = playoutItem.FinishOffset.UtcDateTime,
+                Key = enumeratorDetails.HistoryKey,
+                Details = HistoryDetails.ForMediaItem(mediaItem)
+            };
+
+            result.Add(nextHistory);
+        }
+
+        return result;
+    }
+
+    protected static FillerKind GetFillerKind(Option<FillerKind> maybeFillerKind)
+    {
+        foreach (FillerKind fillerKind in maybeFillerKind)
+        {
+            return fillerKind;
+        }
+
+        // foreach (FillerKind fillerKind in _state.GetFillerKind())
+        // {
+        //     return fillerKind;
+        // }
+
+        return FillerKind.None;
+    }
+
+    public record SerializedState(
+        int? GuideGroup,
+        bool? GuideGroupLocked);
+
+    private class SchedulingEngineState(int guideGroup) : ISchedulingEngineState
+    {
+        private int _guideGroup = guideGroup;
+        private bool _guideGroupLocked;
+
         // state
+        public int PlayoutId { get; set; }
         public PlayoutBuildMode Mode { get; set; }
         public int Seed { get; set; }
         public DateTimeOffset Finish { get; set; }
         public DateTimeOffset Start { get; set; }
         public DateTimeOffset CurrentTime { get; set; }
 
+        // guide group
+        public int PeekNextGuideGroup()
+        {
+            if (_guideGroupLocked)
+            {
+                return _guideGroup;
+            }
+
+            int result = _guideGroup + 1;
+            if (result > 1000)
+            {
+                result = 1;
+            }
+
+            return result;
+        }
+
+        public void AdvanceGuideGroup()
+        {
+            if (_guideGroupLocked)
+            {
+                return;
+            }
+
+            _guideGroup++;
+            if (_guideGroup > 1000)
+            {
+                _guideGroup = 1;
+            }
+        }
+
+        public void LockGuideGroup(bool advance = true)
+        {
+            if (advance)
+            {
+                AdvanceGuideGroup();
+            }
+
+            _guideGroupLocked = true;
+        }
+
+        public void UnlockGuideGroup() => _guideGroupLocked = false;
+
         // result
-        public DateTimeOffset RemoveBefore { get; set; }
+        public Option<DateTimeOffset> RemoveBefore { get; set; }
         public bool ClearItems { get; set; }
-        public System.Collections.Generic.HashSet<int> HistoryToRemove { get; set; } = [];
+        public List<PlayoutItem> AddedItems { get; } = [];
+        public System.Collections.Generic.HashSet<int> HistoryToRemove { get; } = [];
+        public List<PlayoutHistory> AddedHistory { get; } = [];
+
+        public string SerializeContext()
+        {
+            // string preRollSequence = null;
+            // foreach (string sequence in _preRollSequence)
+            // {
+            //     preRollSequence = sequence;
+            // }
+
+            var state = new SerializedState(
+                _guideGroup,
+                _guideGroupLocked);
+
+            return JsonConvert.SerializeObject(state, Formatting.None, JsonSettings);
+        }
+
+        public void LoadContext(SerializedState state)
+        {
+            foreach (int guideGroup in Optional(state.GuideGroup))
+            {
+                _guideGroup = guideGroup;
+            }
+
+            foreach (bool guideGroupLocked in Optional(state.GuideGroupLocked))
+            {
+                _guideGroupLocked = guideGroupLocked;
+            }
+        }
     }
+
+    private record EnumeratorDetails(
+        IMediaCollectionEnumerator Enumerator,
+        string HistoryKey,
+        PlaybackOrder PlaybackOrder);
 }
