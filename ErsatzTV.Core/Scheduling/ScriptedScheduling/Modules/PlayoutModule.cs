@@ -2,7 +2,6 @@ using System.Diagnostics.CodeAnalysis;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Scheduling.Engine;
 using IronPython.Runtime;
-using TimeSpanParserUtil;
 
 namespace ErsatzTV.Core.Scheduling.ScriptedScheduling.Modules;
 
@@ -89,6 +88,42 @@ public class PlayoutModule(ISchedulingEngine schedulingEngine)
             discard_attempts,
             stop_before_end,
             offline_tail,
+            maybeFillerKind,
+            custom_title,
+            disable_watermarks);
+
+        if (success)
+        {
+            FailureCount = 0;
+        }
+        else
+        {
+            FailureCount++;
+        }
+    }
+
+    public void pad_to_next(
+        string content,
+        int minutes,
+        string fallback = null,
+        bool trim = false,
+        int discard_attempts = 0,
+        string filler_kind = null,
+        string custom_title = null,
+        bool disable_watermarks = false)
+    {
+        Option<FillerKind> maybeFillerKind = Option<FillerKind>.None;
+        if (Enum.TryParse(filler_kind, ignoreCase: true, out FillerKind fillerKind))
+        {
+            maybeFillerKind = fillerKind;
+        }
+
+        bool success = schedulingEngine.PadToNext(
+            content,
+            minutes,
+            fallback,
+            trim,
+            discard_attempts,
             maybeFillerKind,
             custom_title,
             disable_watermarks);

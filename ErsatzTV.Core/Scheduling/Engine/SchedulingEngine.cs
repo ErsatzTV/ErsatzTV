@@ -441,6 +441,65 @@ public class SchedulingEngine(
         return true;
     }
 
+    public bool PadToNext(
+        string content,
+        int minutes,
+        string fallback,
+        bool trim,
+        int discardAttempts,
+        Option<FillerKind> maybeFillerKind,
+        string customTitle,
+        bool disableWatermarks)
+    {
+        if (!_enumerators.TryGetValue(content, out EnumeratorDetails enumeratorDetails))
+        {
+            logger.LogWarning("Skipping invalid content {Key}", content);
+            return false;
+        }
+
+        EnumeratorDetails fallbackEnumeratorDetails = null;
+        if (!string.IsNullOrEmpty(fallback))
+        {
+            _enumerators.TryGetValue(fallback, out fallbackEnumeratorDetails);
+        }
+
+        int currentMinute = _state.CurrentTime.Minute;
+
+        int targetMinute = (currentMinute + minutes - 1) / minutes * minutes;
+
+        DateTimeOffset almostTargetTime =
+            _state.CurrentTime - TimeSpan.FromMinutes(currentMinute) + TimeSpan.FromMinutes(targetMinute);
+
+        var targetTime = new DateTimeOffset(
+            almostTargetTime.Year,
+            almostTargetTime.Month,
+            almostTargetTime.Day,
+            almostTargetTime.Hour,
+            almostTargetTime.Minute,
+            0,
+            almostTargetTime.Offset);
+
+        // ensure filler works for content less than one minute
+        if (targetTime <= _state.CurrentTime)
+        {
+            targetTime = targetTime.AddMinutes(minutes);
+        }
+
+        _state.CurrentTime = AddDurationInternal(
+            targetTime,
+            stopBeforeEnd: true,
+            discardAttempts,
+            trim,
+            offlineTail: true,
+            GetFillerKind(maybeFillerKind),
+            customTitle,
+            disableWatermarks,
+            enumeratorDetails,
+            Optional(fallbackEnumeratorDetails));
+
+        return true;
+    }
+
     private DateTimeOffset AddDurationInternal(
         DateTimeOffset targetTime,
         bool stopBeforeEnd,

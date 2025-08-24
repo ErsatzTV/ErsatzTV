@@ -63,6 +63,16 @@ public interface ISchedulingEngine
         string customTitle,
         bool disableWatermarks);
 
+    bool PadToNext(
+        string content,
+        int minutes,
+        string fallback,
+        bool trim,
+        int discardAttempts,
+        Option<FillerKind> maybeFillerKind,
+        string customTitle,
+        bool disableWatermarks);
+
     // control instructions
     void LockGuideGroup(bool advance);
     void UnlockGuideGroup();
