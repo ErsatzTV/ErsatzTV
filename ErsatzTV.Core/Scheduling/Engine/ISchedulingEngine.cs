@@ -46,6 +46,8 @@ public interface ISchedulingEngine
         bool disableWatermarks);
 
     // control instructions
+    void LockGuideGroup(bool advance);
+    void UnlockGuideGroup();
     ISchedulingEngine WaitUntil(TimeOnly waitUntil, bool tomorrow, bool rewindOnReset);
 
 

@@ -444,6 +444,16 @@ public class SchedulingEngine(IMediaCollectionRepository mediaCollectionReposito
         return result;
     }
 
+    public void LockGuideGroup(bool advance)
+    {
+        _state.LockGuideGroup(advance);
+    }
+
+    public void UnlockGuideGroup()
+    {
+        _state.UnlockGuideGroup();
+    }
+
     public ISchedulingEngine WaitUntil(TimeOnly waitUntil, bool tomorrow, bool rewindOnReset)
     {
         var currentTime = _state.CurrentTime;

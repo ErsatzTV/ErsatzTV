@@ -41,6 +41,16 @@ public class PlayoutModule(ISchedulingEngine schedulingEngine)
 
     // control instructions
 
+    public void start_epg_group(bool advance = true)
+    {
+        schedulingEngine.LockGuideGroup(advance);
+    }
+
+    public void stop_epg_group()
+    {
+        schedulingEngine.UnlockGuideGroup();
+    }
+
     public void wait_until(string when, bool tomorrow = false, bool rewind_on_reset = false)
     {
         if (TimeOnly.TryParse(when, out TimeOnly waitUntil))
