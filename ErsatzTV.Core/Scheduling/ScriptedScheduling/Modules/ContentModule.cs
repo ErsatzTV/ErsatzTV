@@ -8,6 +8,18 @@ namespace ErsatzTV.Core.Scheduling.ScriptedScheduling.Modules;
 [SuppressMessage("Usage", "VSTHRD002:Avoid problematic synchronous waits")]
 public class ContentModule(ISchedulingEngine schedulingEngine)
 {
+    public bool add_search(string key, string query, string order)
+    {
+        if (!Enum.TryParse(order, ignoreCase: true, out PlaybackOrder playbackOrder))
+        {
+            return false;
+        }
+
+        schedulingEngine.AddSearch(key, query, playbackOrder).GetAwaiter().GetResult();
+
+        return true;
+    }
+
     public bool add_collection(string key, string collection, string order)
     {
         if (!Enum.TryParse(order, ignoreCase: true, out PlaybackOrder playbackOrder))
