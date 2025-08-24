@@ -2,32 +2,31 @@ using System.Collections.Immutable;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Repositories;
-using ErsatzTV.Core.Scheduling.YamlScheduling.Models;
 
-namespace ErsatzTV.Core.Scheduling.YamlScheduling;
+namespace ErsatzTV.Core.Scheduling.Engine;
 
-public class YamlPlayoutMarathonHelper(IMediaCollectionRepository mediaCollectionRepository)
+public class MarathonHelper(IMediaCollectionRepository mediaCollectionRepository)
 {
-    public async Task<Option<YamlMarathonContentResult>> GetEnumerator(
-        YamlPlayoutContentMarathonItem marathon,
+    public async Task<Option<MarathonContentResult>> GetEnumerator(
+        Dictionary<string, List<string>> guids,
+        List<string> searches,
+        string groupBy,
+        bool shuffleGroups,
+        PlaybackOrder itemPlaybackOrder,
+        bool playAllItems,
         CollectionEnumeratorState state,
         CancellationToken cancellationToken)
     {
-        if (!Enum.TryParse(marathon.ItemOrder, true, out PlaybackOrder playbackOrder))
-        {
-            playbackOrder = PlaybackOrder.Shuffle;
-        }
-
         var allMediaItems = new List<MediaItem>();
 
         // grab items from each show guid
-        foreach (string showGuid in marathon.Guids.Map(g => $"{g.Source}://{g.Value}"))
+        foreach (string showGuid in guids.SelectMany(g => g.Value.Select(v => $"{g.Key}://{v}")))
         {
             allMediaItems.AddRange(await mediaCollectionRepository.GetShowItemsByShowGuids([showGuid]));
         }
 
         // grab items from each search
-        foreach (string query in marathon.Searches)
+        foreach (string query in searches)
         {
             allMediaItems.AddRange(await mediaCollectionRepository.GetSmartCollectionItems(query, string.Empty));
         }
@@ -35,22 +34,22 @@ public class YamlPlayoutMarathonHelper(IMediaCollectionRepository mediaCollectio
         List<IGrouping<GroupKey, MediaItem>> groups = [];
 
         // group by show
-        if (string.Equals(marathon.GroupBy, "show", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(groupBy, "show", StringComparison.OrdinalIgnoreCase))
         {
             groups.AddRange(allMediaItems.GroupBy(MediaItemKeyByShow));
         }
         // group by season
-        else if (string.Equals(marathon.GroupBy, "season", StringComparison.OrdinalIgnoreCase))
+        else if (string.Equals(groupBy, "season", StringComparison.OrdinalIgnoreCase))
         {
             groups.AddRange(allMediaItems.GroupBy(MediaItemKeyBySeason));
         }
         // group by artist
-        else if (string.Equals(marathon.GroupBy, "artist", StringComparison.OrdinalIgnoreCase))
+        else if (string.Equals(groupBy, "artist", StringComparison.OrdinalIgnoreCase))
         {
             groups.AddRange(allMediaItems.GroupBy(MediaItemKeyByArtist));
         }
         // group by album
-        else if (string.Equals(marathon.GroupBy, "album", StringComparison.OrdinalIgnoreCase))
+        else if (string.Equals(groupBy, "album", StringComparison.OrdinalIgnoreCase))
         {
             groups.AddRange(allMediaItems.GroupBy(MediaItemKeyByAlbum));
         }
@@ -60,7 +59,7 @@ public class YamlPlayoutMarathonHelper(IMediaCollectionRepository mediaCollectio
         for (var index = 0; index < groups.Count; index++)
         {
             IGrouping<GroupKey, MediaItem> group = groups[index];
-            PlaylistItem playlistItem = GroupToPlaylistItem(index, marathon, playbackOrder, group);
+            PlaylistItem playlistItem = GroupToPlaylistItem(index, playAllItems, itemPlaybackOrder, group);
             itemMap.Add(playlistItem, group.ToList());
         }
 
@@ -68,10 +67,10 @@ public class YamlPlayoutMarathonHelper(IMediaCollectionRepository mediaCollectio
             mediaCollectionRepository,
             itemMap,
             state,
-            marathon.ShuffleGroups,
+            shuffleGroups,
             cancellationToken);
 
-        return new YamlMarathonContentResult(
+        return new MarathonContentResult(
             enumerator,
             itemMap.ToImmutableDictionary(x => CollectionKey.ForPlaylistItem(x.Key), x => x.Value));
     }
@@ -133,7 +132,7 @@ public class YamlPlayoutMarathonHelper(IMediaCollectionRepository mediaCollectio
 
     private static PlaylistItem GroupToPlaylistItem(
         int index,
-        YamlPlayoutContentMarathonItem marathon,
+        bool playAllItems,
         PlaybackOrder playbackOrder,
         IGrouping<GroupKey, MediaItem> group) =>
         new()
@@ -146,7 +145,7 @@ public class YamlPlayoutMarathonHelper(IMediaCollectionRepository mediaCollectio
             SmartCollectionId = group.Key.SmartCollectionId,
             MediaItemId = group.Key.MediaItemId,
 
-            PlayAll = marathon.PlayAllItems,
+            PlayAll = playAllItems,
             PlaybackOrder = playbackOrder,
 
             IncludeInProgramGuide = true

@@ -20,11 +20,25 @@ public interface ISchedulingEngine
     ISchedulingEngine RestoreOrReset(Option<PlayoutAnchor> maybeAnchor);
 
     // content definitions
-    Task<ISchedulingEngine> AddCollection(string key, string collectionName, PlaybackOrder playbackOrder);
-    Task<ISchedulingEngine> AddSearch(string key, string query, PlaybackOrder playbackOrder);
+    Task AddCollection(string key, string collectionName, PlaybackOrder playbackOrder);
+
+    Task AddMarathon(
+        string key,
+        Dictionary<string, List<string>> guids,
+        List<string> searches,
+        string groupBy,
+        bool shuffleGroups,
+        PlaybackOrder itemPlaybackOrder,
+        bool playAllItems);
+
+    Task AddMultiCollection(string key, string multiCollectionName, PlaybackOrder playbackOrder);
+    Task AddPlaylist(string key, string playlist, string playlistGroup);
+    Task AddSmartCollection(string key, string smartCollectionName, PlaybackOrder playbackOrder);
+    Task AddSearch(string key, string query, PlaybackOrder playbackOrder);
+    Task AddShow(string key, Dictionary<string, string> guids, PlaybackOrder playbackOrder);
 
     // content instructions
-    ISchedulingEngine AddCount(
+    bool AddCount(
         string content,
         int count,
         Option<FillerKind> fillerKind,
