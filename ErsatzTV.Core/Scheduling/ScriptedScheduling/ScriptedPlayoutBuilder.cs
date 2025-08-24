@@ -8,6 +8,7 @@ using ErsatzTV.Core.Scheduling.ScriptedScheduling.Modules;
 using IronPython.Hosting;
 using IronPython.Runtime;
 using Microsoft.Extensions.Logging;
+using Microsoft.Scripting.Hosting;
 
 namespace ErsatzTV.Core.Scheduling.ScriptedScheduling;
 
@@ -88,14 +89,16 @@ public class ScriptedPlayoutBuilder(
             // define content first
             engine.Operations.Invoke(defineContentFunc);
 
+            var context = new PythonPlayoutContext(schedulingEngine.GetState(), engine);
+
             // reset if applicable
             if (mode is PlayoutBuildMode.Reset && resetPlayoutFunc != null)
             {
-                engine.Operations.Invoke(resetPlayoutFunc, new PythonPlayoutContext(schedulingEngine.GetState()));
+                engine.Operations.Invoke(resetPlayoutFunc, context);
             }
 
             // build playout
-            engine.Operations.Invoke(buildPlayoutFunc, new PythonPlayoutContext(schedulingEngine.GetState()));
+            engine.Operations.Invoke(buildPlayoutFunc, context);
 
             playout.Anchor = schedulingEngine.GetAnchor();
 
@@ -128,10 +131,53 @@ public class ScriptedPlayoutBuilder(
 
     [SuppressMessage("ReSharper", "InconsistentNaming")]
     [SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores")]
-    public class PythonPlayoutContext(ISchedulingEngineState state)
+    public class PythonPlayoutContext
     {
-        public DateTimeOffset current_time => state.CurrentTime;
-        public DateTimeOffset finish => state.Finish;
-        public bool is_done() => current_time >= finish;
+        private readonly ISchedulingEngineState _state;
+        private readonly ScriptEngine _scriptEngine;
+        private readonly dynamic _datetimeModule;
+
+        public PythonPlayoutContext(ISchedulingEngineState state, ScriptEngine scriptEngine)
+        {
+            _state = state;
+            _scriptEngine = scriptEngine;
+            _datetimeModule = _scriptEngine.ImportModule("datetime");
+        }
+
+        public object current_time => ToPythonDateTime(_state.CurrentTime);
+        //public object finish => ToPythonDateTime(_state.Finish);
+
+        public bool is_done() => _state.CurrentTime >= _state.Finish;
+
+        private object ToPythonDateTime(DateTimeOffset dto)
+        {
+            dynamic dt_constructor = _datetimeModule.datetime;
+            dynamic timedelta_constructor = _datetimeModule.timedelta;
+            dynamic timezone_constructor = _datetimeModule.timezone;
+
+            var offset = dto.Offset;
+            dynamic py_offset = _scriptEngine.Operations.Invoke(
+                timedelta_constructor,
+                0,
+                (int)offset.TotalSeconds
+            );
+
+            dynamic py_tzinfo = _scriptEngine.Operations.Invoke(
+                timezone_constructor,
+                py_offset
+            );
+
+            return _scriptEngine.Operations.Invoke(
+                dt_constructor,
+                dto.Year,
+                dto.Month,
+                dto.Day,
+                dto.Hour,
+                dto.Minute,
+                dto.Second,
+                dto.Millisecond * 1000,
+                py_tzinfo
+            );
+        }
     }
 }
