@@ -49,6 +49,17 @@ internal static class HistoryDetails
         return JsonConvert.SerializeObject(key, Formatting.None, JsonSettings);
     }
 
+    public static string KeyForSchedulingContent(string key, PlaybackOrder playbackOrder)
+    {
+        var historyKey = new Dictionary<string, object>
+        {
+            { "Key", key },
+            { "Order", playbackOrder.ToString().ToLowerInvariant() }
+        };
+
+        return JsonConvert.SerializeObject(historyKey, Formatting.None, JsonSettings);
+    }
+
     public static string KeyForCollectionKey(CollectionKey collectionKey)
     {
         dynamic key = new
