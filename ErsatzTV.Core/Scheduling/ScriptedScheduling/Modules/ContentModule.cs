@@ -47,6 +47,18 @@ public class ContentModule(ISchedulingEngine schedulingEngine)
         return true;
     }
 
+    public bool add_smart_collection(string key, string smart_collection, string order)
+    {
+        if (!Enum.TryParse(order, ignoreCase: true, out PlaybackOrder playbackOrder))
+        {
+            return false;
+        }
+
+        schedulingEngine.AddSmartCollection(key, smart_collection, playbackOrder).GetAwaiter().GetResult();
+
+        return true;
+    }
+
     public bool add_show(string key, PythonDictionary guids, string order)
     {
         if (!Enum.TryParse(order, ignoreCase: true, out PlaybackOrder playbackOrder))

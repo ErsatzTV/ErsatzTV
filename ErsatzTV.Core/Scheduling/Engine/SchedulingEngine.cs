@@ -169,6 +169,43 @@ public class SchedulingEngine(IMediaCollectionRepository mediaCollectionReposito
         return this;
     }
 
+    public async Task<ISchedulingEngine> AddSmartCollection(
+        string key,
+        string smartCollectionName,
+        PlaybackOrder playbackOrder)
+    {
+        if (!_enumerators.ContainsKey(key))
+        {
+            int index = _enumerators.Count;
+            List<MediaItem> items = await mediaCollectionRepository.GetSmartCollectionItemsByName(smartCollectionName);
+            if (items.Count == 0)
+            {
+                logger.LogWarning("Skipping invalid or empty smart collection {Name}", smartCollectionName);
+                return this;
+            }
+
+            var state = new CollectionEnumeratorState { Seed = _state.Seed + index, Index = 0 };
+            foreach (var enumerator in EnumeratorForContent(items, state, playbackOrder))
+            {
+                string historyKey = HistoryDetails.KeyForSchedulingContent(key, playbackOrder);
+                var details = new EnumeratorDetails(enumerator, historyKey, playbackOrder);
+
+                if (_enumerators.TryAdd(key, details))
+                {
+                    logger.LogDebug(
+                        "Added smart collection {Name} with key {Key} and order {Order}",
+                        smartCollectionName,
+                        key,
+                        playbackOrder);
+
+                    ApplyHistory(historyKey, items, enumerator, playbackOrder);
+                }
+            }
+        }
+
+        return this;
+    }
+
     public async Task<ISchedulingEngine> AddSearch(string key, string query, PlaybackOrder playbackOrder)
     {
         if (!_enumerators.ContainsKey(key))
