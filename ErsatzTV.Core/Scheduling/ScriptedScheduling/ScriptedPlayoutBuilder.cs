@@ -50,6 +50,14 @@ public class ScriptedPlayoutBuilder(
             var engine = Python.CreateEngine();
             var scope = engine.CreateScope();
 
+            string scriptPath = Path.GetDirectoryName(playout.ScheduleFile);
+            if (!string.IsNullOrWhiteSpace(scriptPath) && localFileSystem.FolderExists(scriptPath))
+            {
+                ICollection<string> paths = engine.GetSearchPaths();
+                paths.Add(scriptPath);
+                engine.SetSearchPaths(paths);
+            }
+
             var sys = engine.GetSysModule();
             var modules = (PythonDictionary)sys.GetVariable("modules");
 

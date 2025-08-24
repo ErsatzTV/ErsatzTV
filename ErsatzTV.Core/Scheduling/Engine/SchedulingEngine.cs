@@ -11,7 +11,11 @@ using Newtonsoft.Json;
 
 namespace ErsatzTV.Core.Scheduling.Engine;
 
-public class SchedulingEngine(IMediaCollectionRepository mediaCollectionRepository, ILogger<SchedulingEngine> logger)
+public class SchedulingEngine(
+    IMediaCollectionRepository mediaCollectionRepository,
+    IGraphicsElementRepository graphicsElementRepository,
+    IChannelRepository channelRepository,
+    ILogger<SchedulingEngine> logger)
     : ISchedulingEngine
 {
     private static readonly JsonSerializerSettings JsonSettings = new()
@@ -19,6 +23,8 @@ public class SchedulingEngine(IMediaCollectionRepository mediaCollectionReposito
         NullValueHandling = NullValueHandling.Ignore
     };
 
+    private readonly Dictionary<string, Option<GraphicsElement>> _graphicsElementCache = new();
+    private readonly Dictionary<string, Option<ChannelWatermark>> _watermarkCache = new();
     private readonly Dictionary<string, EnumeratorDetails> _enumerators = new();
     private readonly SchedulingEngineState _state = new(0);
     private PlayoutReferenceData _referenceData;
@@ -394,26 +400,26 @@ public class SchedulingEngine(IMediaCollectionRepository mediaCollectionReposito
                     PlayoutItemGraphicsElements = []
                 };
 
-                // foreach (int watermarkId in context.GetChannelWatermarkIds())
-                // {
-                //     playoutItem.PlayoutItemWatermarks.Add(
-                //         new PlayoutItemWatermark
-                //         {
-                //             PlayoutItem = playoutItem,
-                //             WatermarkId = watermarkId
-                //         });
-                // }
-                //
-                // foreach ((int graphicsElementId, string variablesJson) in context.GetGraphicsElements())
-                // {
-                //     playoutItem.PlayoutItemGraphicsElements.Add(
-                //         new PlayoutItemGraphicsElement
-                //         {
-                //             PlayoutItem = playoutItem,
-                //             GraphicsElementId = graphicsElementId,
-                //             Variables = variablesJson
-                //         });
-                // }
+                foreach (int watermarkId in _state.GetChannelWatermarkIds())
+                {
+                    playoutItem.PlayoutItemWatermarks.Add(
+                        new PlayoutItemWatermark
+                        {
+                            PlayoutItem = playoutItem,
+                            WatermarkId = watermarkId
+                        });
+                }
+
+                foreach ((int graphicsElementId, string variablesJson) in _state.GetGraphicsElements())
+                {
+                    playoutItem.PlayoutItemGraphicsElements.Add(
+                        new PlayoutItemGraphicsElement
+                        {
+                            PlayoutItem = playoutItem,
+                            GraphicsElementId = graphicsElementId,
+                            Variables = variablesJson
+                        });
+                }
 
                 //await AddItemAndMidRoll(context, playoutItem, mediaItem, executeSequence);
 
@@ -442,6 +448,133 @@ public class SchedulingEngine(IMediaCollectionRepository mediaCollectionReposito
         }
 
         return result;
+    }
+
+    public void LockGuideGroup(bool advance)
+    {
+        _state.LockGuideGroup(advance);
+    }
+
+    public void UnlockGuideGroup()
+    {
+        _state.UnlockGuideGroup();
+    }
+
+    public async Task GraphicsOn(List<string> graphicsElements, Dictionary<string, string> variables)
+    {
+        string variablesJson = null;
+        if (variables.Count > 0)
+        {
+            variablesJson = JsonConvert.SerializeObject(variables, JsonSettings);
+        }
+
+        foreach (string element in graphicsElements.Where(e => !string.IsNullOrWhiteSpace(e)))
+        {
+            foreach (GraphicsElement ge in await GetGraphicsElementByPath(element))
+            {
+                _state.SetGraphicsElement(ge.Id, variablesJson);
+            }
+        }
+    }
+
+    public async Task GraphicsOff(List<string> graphicsElements)
+    {
+        if (graphicsElements.Count == 0)
+        {
+            _state.ClearGraphicsElements();
+        }
+        else
+        {
+            foreach (string element in graphicsElements.Where(e => !string.IsNullOrWhiteSpace(e)))
+            {
+                foreach (GraphicsElement ge in await GetGraphicsElementByPath(element))
+                {
+                    _state.RemoveGraphicsElement(ge.Id);
+                }
+            }
+        }
+    }
+
+    public async Task WatermarkOn(List<string> watermarks)
+    {
+        foreach (string watermark in watermarks.Where(e => !string.IsNullOrWhiteSpace(e)))
+        {
+            foreach (ChannelWatermark wm in await GetChannelWatermarkByName(watermark))
+            {
+                _state.SetChannelWatermarkId(wm.Id);
+            }
+        }
+    }
+
+    public async Task WatermarkOff(List<string> watermarks)
+    {
+        if (watermarks.Count == 0)
+        {
+            _state.ClearChannelWatermarkIds();
+        }
+        else
+        {
+            foreach (string watermark in watermarks.Where(e => !string.IsNullOrWhiteSpace(e)))
+            {
+                foreach (ChannelWatermark wm in await GetChannelWatermarkByName(watermark))
+                {
+                    _state.RemoveChannelWatermarkId(wm.Id);
+                }
+            }
+        }
+    }
+
+    public void SkipItems(string content, int count)
+    {
+        if (!_enumerators.TryGetValue(content, out EnumeratorDetails enumeratorDetails))
+        {
+            logger.LogWarning("Unable to skip items for invalid content {Key}", content);
+            return;
+        }
+
+        for (var i = 0; i < count; i++)
+        {
+            enumeratorDetails.Enumerator.MoveNext();
+        }
+    }
+
+    public void SkipToItem(string content, int season, int episode)
+    {
+        if (!_enumerators.TryGetValue(content, out EnumeratorDetails enumeratorDetails))
+        {
+            logger.LogWarning("Unable to skip items for invalid content {Key}", content);
+            return;
+        }
+
+        if (season < 0 || episode < 1)
+        {
+            logger.LogWarning("Unable to skip to invalid season/episode: {Season}/{Episode}", season, episode);
+            return;
+        }
+
+        var done = false;
+        for (var index = 0; index < enumeratorDetails.Enumerator.Count; index++)
+        {
+            if (done)
+            {
+                break;
+            }
+
+            foreach (MediaItem mediaItem in enumeratorDetails.Enumerator.Current)
+            {
+                if (mediaItem is Episode e)
+                {
+                    if (e.Season?.SeasonNumber == season &&
+                        e.EpisodeMetadata.HeadOrNone().Map(em => em.EpisodeNumber) == episode)
+                    {
+                        done = true;
+                        break;
+                    }
+                }
+
+                enumeratorDetails.Enumerator.MoveNext();
+            }
+        }
     }
 
     public ISchedulingEngine WaitUntil(TimeOnly waitUntil, bool tomorrow, bool rewindOnReset)
@@ -763,6 +896,51 @@ public class SchedulingEngine(IMediaCollectionRepository mediaCollectionReposito
         return FillerKind.None;
     }
 
+    private async Task<Option<GraphicsElement>> GetGraphicsElementByPath(string path)
+    {
+        if (_graphicsElementCache.TryGetValue(path, out Option<GraphicsElement> cachedGraphicsElement))
+        {
+            foreach (GraphicsElement graphicsElement in cachedGraphicsElement)
+            {
+                return graphicsElement;
+            }
+        }
+        else
+        {
+            Option<GraphicsElement> maybeGraphicsElement =
+                await graphicsElementRepository.GetGraphicsElementByPath(path);
+            _graphicsElementCache.Add(path, maybeGraphicsElement);
+            foreach (GraphicsElement graphicsElement in maybeGraphicsElement)
+            {
+                return graphicsElement;
+            }
+        }
+
+        return Option<GraphicsElement>.None;
+    }
+
+    private async Task<Option<ChannelWatermark>> GetChannelWatermarkByName(string name)
+    {
+        if (_watermarkCache.TryGetValue(name, out Option<ChannelWatermark> cachedWatermark))
+        {
+            foreach (ChannelWatermark channelWatermark in cachedWatermark)
+            {
+                return channelWatermark;
+            }
+        }
+        else
+        {
+            Option<ChannelWatermark> maybeWatermark = await channelRepository.GetWatermarkByName(name);
+            _watermarkCache.Add(name, maybeWatermark);
+            foreach (ChannelWatermark channelWatermark in maybeWatermark)
+            {
+                return channelWatermark;
+            }
+        }
+
+        return Option<ChannelWatermark>.None;
+    }
+
     public record SerializedState(
         int? GuideGroup,
         bool? GuideGroupLocked);
@@ -771,6 +949,8 @@ public class SchedulingEngine(IMediaCollectionRepository mediaCollectionReposito
     {
         private int _guideGroup = guideGroup;
         private bool _guideGroupLocked;
+        private readonly Dictionary<int, string> _graphicsElements = [];
+        private readonly System.Collections.Generic.HashSet<int> _channelWatermarkIds = [];
 
         // state
         public int PlayoutId { get; set; }
@@ -822,6 +1002,16 @@ public class SchedulingEngine(IMediaCollectionRepository mediaCollectionReposito
         }
 
         public void UnlockGuideGroup() => _guideGroupLocked = false;
+
+        public void SetGraphicsElement(int id, string variablesJson) => _graphicsElements.Add(id, variablesJson);
+        public void RemoveGraphicsElement(int id) => _graphicsElements.Remove(id);
+        public void ClearGraphicsElements() => _graphicsElements.Clear();
+        public Dictionary<int, string> GetGraphicsElements() => _graphicsElements;
+
+        public void SetChannelWatermarkId(int id) => _channelWatermarkIds.Add(id);
+        public void RemoveChannelWatermarkId(int id) => _channelWatermarkIds.Remove(id);
+        public void ClearChannelWatermarkIds() => _channelWatermarkIds.Clear();
+        public List<int> GetChannelWatermarkIds() => _channelWatermarkIds.ToList();
 
         // result
         public Option<DateTimeOffset> RemoveBefore { get; set; }

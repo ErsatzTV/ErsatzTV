@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Scheduling.Engine;
+using IronPython.Runtime;
 
 namespace ErsatzTV.Core.Scheduling.ScriptedScheduling.Modules;
 
@@ -40,6 +41,103 @@ public class PlayoutModule(ISchedulingEngine schedulingEngine)
 
 
     // control instructions
+
+    public void start_epg_group(bool advance = true)
+    {
+        schedulingEngine.LockGuideGroup(advance);
+    }
+
+    public void stop_epg_group()
+    {
+        schedulingEngine.UnlockGuideGroup();
+    }
+
+    public void graphics_on(string graphics, PythonDictionary variables = null)
+    {
+        var maybeVariables = new Dictionary<string, string>();
+        if (variables != null)
+        {
+            maybeVariables = variables.ToDictionary(v => v.Key.ToString(), v => v.Value.ToString());
+        }
+
+        schedulingEngine
+            .GraphicsOn([graphics], maybeVariables)
+            .GetAwaiter()
+            .GetResult();
+    }
+
+    public void graphics_on(PythonList graphics, PythonDictionary variables = null)
+    {
+        var maybeVariables = new Dictionary<string, string>();
+        if (variables != null)
+        {
+            maybeVariables = variables.ToDictionary(v => v.Key.ToString(), v => v.Value.ToString());
+        }
+
+        schedulingEngine
+            .GraphicsOn(
+                graphics.Select(g => g.ToString()).ToList(),
+                maybeVariables)
+            .GetAwaiter()
+            .GetResult();
+    }
+
+    public void graphics_off(string graphics = null)
+    {
+        if (string.IsNullOrWhiteSpace(graphics))
+        {
+            schedulingEngine.GraphicsOff([]).GetAwaiter().GetResult();
+        }
+        else
+        {
+            schedulingEngine.GraphicsOff([graphics]).GetAwaiter().GetResult();
+        }
+    }
+
+    public void graphics_off(PythonList graphics)
+    {
+        schedulingEngine.GraphicsOff(graphics.Select(g => g.ToString()).ToList()).GetAwaiter().GetResult();
+    }
+
+    public void watermark_on(string watermark)
+    {
+        schedulingEngine.WatermarkOn([watermark]).GetAwaiter().GetResult();
+    }
+
+    public void watermark_on(PythonList watermark)
+    {
+        schedulingEngine
+            .WatermarkOn(watermark.Select(g => g.ToString()).ToList())
+            .GetAwaiter()
+            .GetResult();
+    }
+
+    public void watermark_off(string watermark = null)
+    {
+        if (string.IsNullOrWhiteSpace(watermark))
+        {
+            schedulingEngine.WatermarkOff([]).GetAwaiter().GetResult();
+        }
+        else
+        {
+            schedulingEngine.WatermarkOff([watermark]).GetAwaiter().GetResult();
+        }
+    }
+
+    public void watermark_off(PythonList watermark)
+    {
+        schedulingEngine.WatermarkOff(watermark.Select(g => g.ToString()).ToList()).GetAwaiter().GetResult();
+    }
+
+    public void skip_items(string content, int count)
+    {
+        schedulingEngine.SkipItems(content, count);
+    }
+
+    public void skip_to_item(string content, int season, int episode)
+    {
+        schedulingEngine.SkipToItem(content, season, episode);
+    }
 
     public void wait_until(string when, bool tomorrow = false, bool rewind_on_reset = false)
     {
