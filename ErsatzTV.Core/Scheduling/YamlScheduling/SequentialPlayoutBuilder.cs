@@ -4,6 +4,7 @@ using ErsatzTV.Core.Domain.Scheduling;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Scheduling;
+//using ErsatzTV.Core.Scheduling.Engine;
 using ErsatzTV.Core.Scheduling.YamlScheduling.Handlers;
 using ErsatzTV.Core.Scheduling.YamlScheduling.Models;
 using ErsatzTV.Core.Search;
@@ -15,6 +16,7 @@ using YamlDotNet.Serialization.NamingConventions;
 namespace ErsatzTV.Core.Scheduling.YamlScheduling;
 
 public class SequentialPlayoutBuilder(
+    //ISchedulingEngine schedulingEngine,
     ILocalFileSystem localFileSystem,
     IConfigElementRepository configElementRepository,
     IMediaCollectionRepository mediaCollectionRepository,
@@ -31,6 +33,9 @@ public class SequentialPlayoutBuilder(
         PlayoutBuildMode mode,
         CancellationToken cancellationToken)
     {
+        //schedulingEngine.WithMode(mode);
+        //schedulingEngine.WithSeed(playout.Seed);
+
         PlayoutBuildResult result = PlayoutBuildResult.Empty;
 
         if (!localFileSystem.FileExists(playout.ScheduleFile))
@@ -114,6 +119,8 @@ public class SequentialPlayoutBuilder(
             // InstructionIndex = 0
         };
 
+        //schedulingEngine.BuildBetween(start, finish);
+
         // logger.LogDebug(
         //     "Default yaml context from {Start} to {Finish}, instruction {Instruction}",
         //     context.CurrentTime,
@@ -123,6 +130,9 @@ public class SequentialPlayoutBuilder(
         // remove old items
         // importantly, this should not remove their history
         result = result with { RemoveBefore = start };
+        //schedulingEngine.RemoveBefore(start);
+
+        //schedulingEngine.RestoreOrReset(Optional(playout.Anchor));
 
         // load saved state
         if (mode is not PlayoutBuildMode.Reset)
@@ -166,6 +176,22 @@ public class SequentialPlayoutBuilder(
         var applyHistoryHandler = new YamlPlayoutApplyHistoryHandler(enumeratorCache);
         foreach (YamlPlayoutContentItem contentItem in playoutDefinition.Content)
         {
+            // if (!Enum.TryParse(contentItem.Order, true, out PlaybackOrder playbackOrder))
+            // {
+            //     continue;
+            // }
+            //
+            // switch (contentItem)
+            // {
+            //     case YamlPlayoutContentCollectionItem collectionItem:
+            //         // also applies history
+            //         await schedulingEngine.AddCollection(
+            //             collectionItem.Key,
+            //             collectionItem.Collection,
+            //             playbackOrder);
+            //         break;
+            // }
+
             await applyHistoryHandler.Handle(
                 filteredHistory.ToImmutableList(),
                 context,

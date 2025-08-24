@@ -61,6 +61,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - `Split Time Evenly` - default (existing) behavior; block time is split among all items that are visible in the EPG
   - `Use Actual Times` - actual times are used for all items that are visible in the EPG
     - This will introduce EPG gaps when filler is used, or when items are hidden from the EPG
+- Add *experimental* `Scripted Schedule` playout system
+  - This system uses python scripts to support the highest degree of customization
+  - The goal is to expose methods equivalent to all sequential schedule (YAML) instructions
 
 ### Fix
 - Fix database operations that were slowing down playout builds
@@ -89,6 +92,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - `Classic Schedules`
     - `Block Schedules`
     - `Sequential Schedules` (formerly `YAML Schedules` or `YAML Playouts`)
+    - `Scripted Schedules`
     - `JSON (dizqueTV) Schedules` (formerly `External JSON Playouts`)
 - Allow multiple watermarks in playback troubleshooting
 - Classic schedules: allow selecting multiple watermarks on schedule items
