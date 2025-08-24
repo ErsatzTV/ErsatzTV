@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Scheduling.Engine;
+using IronPython.Runtime;
 
 namespace ErsatzTV.Core.Scheduling.ScriptedScheduling.Modules;
 
@@ -49,6 +50,53 @@ public class PlayoutModule(ISchedulingEngine schedulingEngine)
     public void stop_epg_group()
     {
         schedulingEngine.UnlockGuideGroup();
+    }
+
+    public void graphics_on(string graphics, PythonDictionary variables = null)
+    {
+        var maybeVariables = new Dictionary<string, string>();
+        if (variables != null)
+        {
+            maybeVariables = variables.ToDictionary(v => v.Key.ToString(), v => v.Value.ToString());
+        }
+
+        schedulingEngine
+            .GraphicsOn([graphics], maybeVariables)
+            .GetAwaiter()
+            .GetResult();
+    }
+
+    public void graphics_on(PythonList graphics, PythonDictionary variables = null)
+    {
+        var maybeVariables = new Dictionary<string, string>();
+        if (variables != null)
+        {
+            maybeVariables = variables.ToDictionary(v => v.Key.ToString(), v => v.Value.ToString());
+        }
+
+        schedulingEngine
+            .GraphicsOn(
+                graphics.Select(g => g.ToString()).ToList(),
+                maybeVariables)
+            .GetAwaiter()
+            .GetResult();
+    }
+
+    public void graphics_off(string graphics = null)
+    {
+        if (string.IsNullOrWhiteSpace(graphics))
+        {
+            schedulingEngine.GraphicsOff([]).GetAwaiter().GetResult();
+        }
+        else
+        {
+            schedulingEngine.GraphicsOff([graphics]).GetAwaiter().GetResult();
+        }
+    }
+
+    public void graphics_off(PythonList graphics)
+    {
+        schedulingEngine.GraphicsOff(graphics.Select(g => g.ToString()).ToList()).GetAwaiter().GetResult();
     }
 
     public void wait_until(string when, bool tomorrow = false, bool rewind_on_reset = false)

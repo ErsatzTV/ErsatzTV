@@ -11,7 +11,10 @@ using Newtonsoft.Json;
 
 namespace ErsatzTV.Core.Scheduling.Engine;
 
-public class SchedulingEngine(IMediaCollectionRepository mediaCollectionRepository, ILogger<SchedulingEngine> logger)
+public class SchedulingEngine(
+    IMediaCollectionRepository mediaCollectionRepository,
+    IGraphicsElementRepository graphicsElementRepository,
+    ILogger<SchedulingEngine> logger)
     : ISchedulingEngine
 {
     private static readonly JsonSerializerSettings JsonSettings = new()
@@ -19,6 +22,7 @@ public class SchedulingEngine(IMediaCollectionRepository mediaCollectionReposito
         NullValueHandling = NullValueHandling.Ignore
     };
 
+    private readonly Dictionary<string, Option<GraphicsElement>> _graphicsElementCache = new();
     private readonly Dictionary<string, EnumeratorDetails> _enumerators = new();
     private readonly SchedulingEngineState _state = new(0);
     private PlayoutReferenceData _referenceData;
@@ -403,17 +407,17 @@ public class SchedulingEngine(IMediaCollectionRepository mediaCollectionReposito
                 //             WatermarkId = watermarkId
                 //         });
                 // }
-                //
-                // foreach ((int graphicsElementId, string variablesJson) in context.GetGraphicsElements())
-                // {
-                //     playoutItem.PlayoutItemGraphicsElements.Add(
-                //         new PlayoutItemGraphicsElement
-                //         {
-                //             PlayoutItem = playoutItem,
-                //             GraphicsElementId = graphicsElementId,
-                //             Variables = variablesJson
-                //         });
-                // }
+
+                foreach ((int graphicsElementId, string variablesJson) in _state.GetGraphicsElements())
+                {
+                    playoutItem.PlayoutItemGraphicsElements.Add(
+                        new PlayoutItemGraphicsElement
+                        {
+                            PlayoutItem = playoutItem,
+                            GraphicsElementId = graphicsElementId,
+                            Variables = variablesJson
+                        });
+                }
 
                 //await AddItemAndMidRoll(context, playoutItem, mediaItem, executeSequence);
 
@@ -452,6 +456,41 @@ public class SchedulingEngine(IMediaCollectionRepository mediaCollectionReposito
     public void UnlockGuideGroup()
     {
         _state.UnlockGuideGroup();
+    }
+
+    public async Task GraphicsOn(List<string> graphicsElements, Dictionary<string, string> variables)
+    {
+        string variablesJson = null;
+        if (variables.Count > 0)
+        {
+            variablesJson = JsonConvert.SerializeObject(variables, JsonSettings);
+        }
+
+        foreach (string element in graphicsElements.Where(e => !string.IsNullOrWhiteSpace(e)))
+        {
+            foreach (GraphicsElement ge in await GetGraphicsElementByPath(element))
+            {
+                _state.SetGraphicsElement(ge.Id, variablesJson);
+            }
+        }
+    }
+
+    public async Task GraphicsOff(List<string> graphicsElements)
+    {
+        if (graphicsElements.Count == 0)
+        {
+            _state.ClearGraphicsElements();
+        }
+        else
+        {
+            foreach (string element in graphicsElements.Where(e => !string.IsNullOrWhiteSpace(e)))
+            {
+                foreach (GraphicsElement ge in await GetGraphicsElementByPath(element))
+                {
+                    _state.RemoveGraphicsElement(ge.Id);
+                }
+            }
+        }
     }
 
     public ISchedulingEngine WaitUntil(TimeOnly waitUntil, bool tomorrow, bool rewindOnReset)
@@ -773,6 +812,29 @@ public class SchedulingEngine(IMediaCollectionRepository mediaCollectionReposito
         return FillerKind.None;
     }
 
+    private async Task<Option<GraphicsElement>> GetGraphicsElementByPath(string path)
+    {
+        if (_graphicsElementCache.TryGetValue(path, out Option<GraphicsElement> cachedGraphicsElement))
+        {
+            foreach (GraphicsElement graphicsElement in cachedGraphicsElement)
+            {
+                return graphicsElement;
+            }
+        }
+        else
+        {
+            Option<GraphicsElement> maybeGraphicsElement =
+                await graphicsElementRepository.GetGraphicsElementByPath(path);
+            _graphicsElementCache.Add(path, maybeGraphicsElement);
+            foreach (GraphicsElement graphicsElement in maybeGraphicsElement)
+            {
+                return graphicsElement;
+            }
+        }
+
+        return Option<GraphicsElement>.None;
+    }
+
     public record SerializedState(
         int? GuideGroup,
         bool? GuideGroupLocked);
@@ -781,6 +843,7 @@ public class SchedulingEngine(IMediaCollectionRepository mediaCollectionReposito
     {
         private int _guideGroup = guideGroup;
         private bool _guideGroupLocked;
+        private readonly Dictionary<int, string> _graphicsElements = [];
 
         // state
         public int PlayoutId { get; set; }
@@ -832,6 +895,11 @@ public class SchedulingEngine(IMediaCollectionRepository mediaCollectionReposito
         }
 
         public void UnlockGuideGroup() => _guideGroupLocked = false;
+
+        public void SetGraphicsElement(int id, string variablesJson) => _graphicsElements.Add(id, variablesJson);
+        public void RemoveGraphicsElement(int id) => _graphicsElements.Remove(id);
+        public void ClearGraphicsElements() => _graphicsElements.Clear();
+        public Dictionary<int, string> GetGraphicsElements() => _graphicsElements;
 
         // result
         public Option<DateTimeOffset> RemoveBefore { get; set; }

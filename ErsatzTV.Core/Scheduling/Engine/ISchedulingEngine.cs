@@ -48,6 +48,8 @@ public interface ISchedulingEngine
     // control instructions
     void LockGuideGroup(bool advance);
     void UnlockGuideGroup();
+    Task GraphicsOn(List<string> graphicsElements, Dictionary<string, string> variables);
+    Task GraphicsOff(List<string> graphicsElements);
     ISchedulingEngine WaitUntil(TimeOnly waitUntil, bool tomorrow, bool rewindOnReset);
 
 
