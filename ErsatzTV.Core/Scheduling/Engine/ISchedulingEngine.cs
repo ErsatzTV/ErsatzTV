@@ -28,7 +28,7 @@ public interface ISchedulingEngine
     Task<ISchedulingEngine> AddShow(string key, Dictionary<string, string> guids, PlaybackOrder playbackOrder);
 
     // content instructions
-    ISchedulingEngine AddCount(
+    bool AddCount(
         string content,
         int count,
         Option<FillerKind> fillerKind,

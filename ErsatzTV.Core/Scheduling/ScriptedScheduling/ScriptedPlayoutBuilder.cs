@@ -89,7 +89,7 @@ public class ScriptedPlayoutBuilder(
             // define content first
             engine.Operations.Invoke(defineContentFunc);
 
-            var context = new PythonPlayoutContext(schedulingEngine.GetState(), engine);
+            var context = new PythonPlayoutContext(schedulingEngine.GetState(), playoutModule, engine);
 
             // reset if applicable
             if (mode is PlayoutBuildMode.Reset && resetPlayoutFunc != null)
@@ -134,12 +134,18 @@ public class ScriptedPlayoutBuilder(
     public class PythonPlayoutContext
     {
         private readonly ISchedulingEngineState _state;
+        private readonly PlayoutModule _playoutModule;
         private readonly ScriptEngine _scriptEngine;
         private readonly dynamic _datetimeModule;
+        private const int MaxFailures = 10;
 
-        public PythonPlayoutContext(ISchedulingEngineState state, ScriptEngine scriptEngine)
+        public PythonPlayoutContext(
+            ISchedulingEngineState state,
+            PlayoutModule playoutModule,
+            ScriptEngine scriptEngine)
         {
             _state = state;
+            _playoutModule = playoutModule;
             _scriptEngine = scriptEngine;
             _datetimeModule = _scriptEngine.ImportModule("datetime");
         }
@@ -147,7 +153,17 @@ public class ScriptedPlayoutBuilder(
         public object current_time => ToPythonDateTime(_state.CurrentTime);
         //public object finish => ToPythonDateTime(_state.Finish);
 
-        public bool is_done() => _state.CurrentTime >= _state.Finish;
+        public bool is_done()
+        {
+            if (_playoutModule.FailureCount >= MaxFailures)
+            {
+                throw new InvalidOperationException(
+                    $"Script execution halted after {MaxFailures} consecutive failures to add content."
+                );
+            }
+
+            return _state.CurrentTime >= _state.Finish;
+        }
 
         private object ToPythonDateTime(DateTimeOffset dto)
         {

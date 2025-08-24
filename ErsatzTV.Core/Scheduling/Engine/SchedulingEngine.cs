@@ -314,7 +314,7 @@ public class SchedulingEngine(IMediaCollectionRepository mediaCollectionReposito
         return this;
     }
 
-    public ISchedulingEngine AddCount(
+    public bool AddCount(
         string content,
         int count,
         Option<FillerKind> fillerKind,
@@ -324,8 +324,10 @@ public class SchedulingEngine(IMediaCollectionRepository mediaCollectionReposito
         if (!_enumerators.TryGetValue(content, out EnumeratorDetails enumeratorDetails))
         {
             logger.LogWarning("Skipping invalid content {Key}", content);
-            return this;
+            return false;
         }
+
+        var result = false;
 
         for (var i = 0; i < count; i++)
         {
@@ -392,6 +394,8 @@ public class SchedulingEngine(IMediaCollectionRepository mediaCollectionReposito
                 }
 
                 enumeratorDetails.Enumerator.MoveNext();
+
+                result = true;
             }
 
             // foreach (string postRollSequence in context.GetPostRollSequence())
@@ -402,7 +406,7 @@ public class SchedulingEngine(IMediaCollectionRepository mediaCollectionReposito
             // }
         }
 
-        return this;
+        return result;
     }
 
     public ISchedulingEngine WaitUntil(TimeOnly waitUntil, bool tomorrow, bool rewindOnReset)
