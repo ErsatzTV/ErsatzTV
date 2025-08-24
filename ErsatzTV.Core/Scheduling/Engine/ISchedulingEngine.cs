@@ -73,6 +73,19 @@ public interface ISchedulingEngine
         string customTitle,
         bool disableWatermarks);
 
+    bool PadUntil(
+        string content,
+        string padUntil,
+        bool tomorrow,
+        string fallback,
+        bool trim,
+        int discardAttempts,
+        bool stopBeforeEnd,
+        bool offlineTail,
+        Option<FillerKind> maybeFillerKind,
+        string customTitle,
+        bool disableWatermarks);
+
     // control instructions
     void LockGuideGroup(bool advance);
     void UnlockGuideGroup();

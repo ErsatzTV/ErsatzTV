@@ -500,6 +500,72 @@ public class SchedulingEngine(
         return true;
     }
 
+    public bool PadUntil(
+        string content,
+        string padUntil,
+        bool tomorrow,
+        string fallback,
+        bool trim,
+        int discardAttempts,
+        bool stopBeforeEnd,
+        bool offlineTail,
+        Option<FillerKind> maybeFillerKind,
+        string customTitle,
+        bool disableWatermarks)
+    {
+        if (!_enumerators.TryGetValue(content, out EnumeratorDetails enumeratorDetails))
+        {
+            logger.LogWarning("Skipping invalid content {Key}", content);
+            return false;
+        }
+
+        EnumeratorDetails fallbackEnumeratorDetails = null;
+        if (!string.IsNullOrEmpty(fallback))
+        {
+            _enumerators.TryGetValue(fallback, out fallbackEnumeratorDetails);
+        }
+
+        if (!TimeOnly.TryParse(padUntil, out TimeOnly padUntilTime))
+        {
+            logger.LogWarning("Skipping pad_until with invalid 'when' {When}", padUntil);
+            return false;
+        }
+
+        DateTimeOffset targetTime = _state.CurrentTime;
+
+        var dayOnly = DateOnly.FromDateTime(targetTime.LocalDateTime);
+        var timeOnly = TimeOnly.FromDateTime(targetTime.LocalDateTime);
+
+        if (timeOnly > padUntilTime)
+        {
+            if (tomorrow)
+            {
+                // this is wrong when offset changes
+                dayOnly = dayOnly.AddDays(1);
+                targetTime = new DateTimeOffset(dayOnly, padUntilTime, targetTime.Offset);
+            }
+        }
+        else
+        {
+            // this is wrong when offset changes
+            targetTime = new DateTimeOffset(dayOnly, padUntilTime, targetTime.Offset);
+        }
+
+        _state.CurrentTime = AddDurationInternal(
+            targetTime,
+            stopBeforeEnd,
+            discardAttempts,
+            trim,
+            offlineTail,
+            GetFillerKind(maybeFillerKind),
+            customTitle,
+            disableWatermarks,
+            enumeratorDetails,
+            Optional(fallbackEnumeratorDetails));
+
+        return true;
+    }
+
     private DateTimeOffset AddDurationInternal(
         DateTimeOffset targetTime,
         bool stopBeforeEnd,

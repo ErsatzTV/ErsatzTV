@@ -138,6 +138,48 @@ public class PlayoutModule(ISchedulingEngine schedulingEngine)
         }
     }
 
+    public void pad_until(
+        string content,
+        string when,
+        bool tomorrow = false,
+        string fallback = null,
+        bool trim = false,
+        int discard_attempts = 0,
+        bool stop_before_end = true,
+        bool offline_tail = false,
+        string filler_kind = null,
+        string custom_title = null,
+        bool disable_watermarks = false)
+    {
+        Option<FillerKind> maybeFillerKind = Option<FillerKind>.None;
+        if (Enum.TryParse(filler_kind, ignoreCase: true, out FillerKind fillerKind))
+        {
+            maybeFillerKind = fillerKind;
+        }
+
+        bool success = schedulingEngine.PadUntil(
+            content,
+            when,
+            tomorrow,
+            fallback,
+            trim,
+            discard_attempts,
+            stop_before_end,
+            offline_tail,
+            maybeFillerKind,
+            custom_title,
+            disable_watermarks);
+
+        if (success)
+        {
+            FailureCount = 0;
+        }
+        else
+        {
+            FailureCount++;
+        }
+    }
+
 
     // control instructions
 
