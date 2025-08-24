@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Domain.Scheduling;
@@ -98,7 +99,7 @@ public class SchedulingEngine(IMediaCollectionRepository mediaCollectionReposito
         return this;
     }
 
-    public async Task<ISchedulingEngine> AddCollection(string key, string collectionName, PlaybackOrder playbackOrder)
+    public async Task AddCollection(string key, string collectionName, PlaybackOrder playbackOrder)
     {
         if (!_enumerators.ContainsKey(key))
         {
@@ -107,7 +108,7 @@ public class SchedulingEngine(IMediaCollectionRepository mediaCollectionReposito
             if (items.Count == 0)
             {
                 logger.LogWarning("Skipping invalid or empty collection {Name}", collectionName);
-                return this;
+                return;
             }
 
             var state = new CollectionEnumeratorState { Seed = _state.Seed + index, Index = 0 };
@@ -128,11 +129,53 @@ public class SchedulingEngine(IMediaCollectionRepository mediaCollectionReposito
                 }
             }
         }
-
-        return this;
     }
 
-    public async Task<ISchedulingEngine> AddMultiCollection(
+    public async Task AddMarathon(
+        string key,
+        Dictionary<string, List<string>> guids,
+        List<string> searches,
+        string groupBy,
+        bool shuffleGroups,
+        PlaybackOrder itemPlaybackOrder,
+        bool playAllItems)
+    {
+        var helper = new MarathonHelper(mediaCollectionRepository);
+
+        int index = _enumerators.Count;
+        var state = new CollectionEnumeratorState { Seed = _state.Seed + index, Index = 0 };
+        Option<MarathonContentResult> maybeResult = await helper.GetEnumerator(
+            guids,
+            searches,
+            groupBy,
+            shuffleGroups,
+            itemPlaybackOrder,
+            playAllItems,
+            state,
+            CancellationToken.None);
+
+        foreach (MarathonContentResult result in maybeResult)
+        {
+            foreach (PlaylistEnumerator enumerator in Optional(result.PlaylistEnumerator))
+            {
+                string historyKey = HistoryDetails.KeyForSchedulingMarathonContent(key, itemPlaybackOrder, groupBy);
+                var details = new EnumeratorDetails(enumerator, historyKey, PlaybackOrder.None);
+
+                if (_enumerators.TryAdd(key, details))
+                {
+                    logger.LogDebug("Added marathon with key {Key}", key);
+                    ApplyPlaylistHistory(
+                        historyKey,
+                        result.Content,
+                        enumerator);
+                }
+            }
+        }
+
+        await Task.Delay(10);
+    }
+
+    public async Task AddMultiCollection(
         string key,
         string multiCollectionName,
         PlaybackOrder playbackOrder)
@@ -144,7 +187,7 @@ public class SchedulingEngine(IMediaCollectionRepository mediaCollectionReposito
             if (items.Count == 0)
             {
                 logger.LogWarning("Skipping invalid or empty multi collection {Name}", multiCollectionName);
-                return this;
+                return;
             }
 
             var state = new CollectionEnumeratorState { Seed = _state.Seed + index, Index = 0 };
@@ -165,16 +208,13 @@ public class SchedulingEngine(IMediaCollectionRepository mediaCollectionReposito
                 }
             }
         }
-
-        return this;
     }
 
-    public async Task<ISchedulingEngine> AddPlaylist(string key, string playlist, string playlistGroup)
+    public async Task AddPlaylist(string key, string playlist, string playlistGroup)
     {
         if (!_enumerators.ContainsKey(key))
         {
             int index = _enumerators.Count;
-            List<MediaItem> items = [];
             Dictionary<PlaylistItem, List<MediaItem>> itemMap =
                 await mediaCollectionRepository.GetPlaylistItemMap(playlistGroup, playlist);
 
@@ -198,14 +238,15 @@ public class SchedulingEngine(IMediaCollectionRepository mediaCollectionReposito
                     playlist,
                     key);
 
-                ApplyHistory(historyKey, items, enumerator, PlaybackOrder.None);
+                ApplyPlaylistHistory(
+                    historyKey,
+                    itemMap.ToImmutableDictionary(m => CollectionKey.ForPlaylistItem(m.Key), m => m.Value),
+                    enumerator);
             }
         }
-
-        return this;
     }
 
-    public async Task<ISchedulingEngine> AddSmartCollection(
+    public async Task AddSmartCollection(
         string key,
         string smartCollectionName,
         PlaybackOrder playbackOrder)
@@ -217,7 +258,7 @@ public class SchedulingEngine(IMediaCollectionRepository mediaCollectionReposito
             if (items.Count == 0)
             {
                 logger.LogWarning("Skipping invalid or empty smart collection {Name}", smartCollectionName);
-                return this;
+                return;
             }
 
             var state = new CollectionEnumeratorState { Seed = _state.Seed + index, Index = 0 };
@@ -238,11 +279,9 @@ public class SchedulingEngine(IMediaCollectionRepository mediaCollectionReposito
                 }
             }
         }
-
-        return this;
     }
 
-    public async Task<ISchedulingEngine> AddSearch(string key, string query, PlaybackOrder playbackOrder)
+    public async Task AddSearch(string key, string query, PlaybackOrder playbackOrder)
     {
         if (!_enumerators.ContainsKey(key))
         {
@@ -251,7 +290,7 @@ public class SchedulingEngine(IMediaCollectionRepository mediaCollectionReposito
             if (items.Count == 0)
             {
                 logger.LogWarning("Skipping invalid or empty search query {Query}", query);
-                return this;
+                return;
             }
 
             var state = new CollectionEnumeratorState { Seed = _state.Seed + index, Index = 0 };
@@ -272,11 +311,9 @@ public class SchedulingEngine(IMediaCollectionRepository mediaCollectionReposito
                 }
             }
         }
-
-        return this;
     }
 
-    public async Task<ISchedulingEngine> AddShow(
+    public async Task AddShow(
         string key,
         Dictionary<string, string> guids,
         PlaybackOrder playbackOrder)
@@ -290,7 +327,7 @@ public class SchedulingEngine(IMediaCollectionRepository mediaCollectionReposito
             if (items.Count == 0)
             {
                 logger.LogWarning("Skipping invalid or empty show with key {Key}", key);
-                return this;
+                return;
             }
 
             var state = new CollectionEnumeratorState { Seed = _state.Seed + index, Index = 0 };
@@ -310,8 +347,6 @@ public class SchedulingEngine(IMediaCollectionRepository mediaCollectionReposito
                 }
             }
         }
-
-        return this;
     }
 
     public bool AddCount(
@@ -482,6 +517,106 @@ public class SchedulingEngine(IMediaCollectionRepository mediaCollectionReposito
         return Option<IMediaCollectionEnumerator>.None;
     }
 
+    private void ApplyPlaylistHistory(
+        string historyKey,
+        ImmutableDictionary<CollectionKey, List<MediaItem>> itemMap,
+        PlaylistEnumerator playlistEnumerator)
+    {
+        DateTime historyTime = _state.CurrentTime.UtcDateTime;
+
+        var filteredHistory = _referenceData.PlayoutHistory.ToList();
+        filteredHistory.RemoveAll(h => _state.HistoryToRemove.Contains(h.Id));
+
+        Option<DateTime> maxWhen = filteredHistory
+            .Filter(h => h.Key == historyKey)
+            .Filter(h => h.When < historyTime)
+            .Map(h => h.When)
+            .OrderByDescending(h => h)
+            .HeadOrNone()
+            .IfNone(DateTime.MinValue);
+
+        var maybeHistory = filteredHistory
+            .Filter(h => h.Key == historyKey)
+            .Filter(h => h.When == maxWhen)
+            .ToList();
+
+        Option<PlayoutHistory> maybePrimaryHistory = maybeHistory
+            .Filter(h => string.IsNullOrWhiteSpace(h.ChildKey))
+            .HeadOrNone();
+
+        foreach (PlayoutHistory primaryHistory in maybePrimaryHistory)
+        {
+            var hasSetEnumeratorIndex = false;
+
+            var childEnumeratorKeys = playlistEnumerator.ChildEnumerators.Map(x => x.CollectionKey).ToList();
+            foreach ((IMediaCollectionEnumerator childEnumerator, CollectionKey collectionKey) in
+                     playlistEnumerator.ChildEnumerators)
+            {
+                PlaybackOrder itemPlaybackOrder = childEnumerator switch
+                {
+                    ChronologicalMediaCollectionEnumerator => PlaybackOrder.Chronological,
+                    RandomizedMediaCollectionEnumerator => PlaybackOrder.Random,
+                    ShuffledMediaCollectionEnumerator => PlaybackOrder.Shuffle,
+                    _ => PlaybackOrder.None
+                };
+
+                Option<PlayoutHistory> maybeApplicableHistory = maybeHistory
+                    .Filter(h => h.ChildKey == HistoryDetails.KeyForCollectionKey(collectionKey))
+                    .HeadOrNone();
+
+                if (!itemMap.TryGetValue(collectionKey, out List<MediaItem> collectionItems) ||
+                    collectionItems.Count == 0)
+                {
+                    continue;
+                }
+
+                foreach (PlayoutHistory h in maybeApplicableHistory)
+                {
+                    // logger.LogDebug(
+                    //     "History is applicable: {When}: {ChildKey} / {History} / {IsCurrentChild}",
+                    //     h.When,
+                    //     h.ChildKey,
+                    //     h.Details,
+                    //     h.IsCurrentChild);
+
+                    playlistEnumerator.ResetState(
+                        new CollectionEnumeratorState
+                        {
+                            Seed = playlistEnumerator.State.Seed,
+                            Index = h.Index + (h.IsCurrentChild ? 1 : 0)
+                        });
+
+                    if (itemPlaybackOrder is PlaybackOrder.Chronological)
+                    {
+                        HistoryDetails.MoveToNextItem(
+                            collectionItems,
+                            h.Details,
+                            childEnumerator,
+                            itemPlaybackOrder,
+                            true);
+                    }
+
+                    if (h.IsCurrentChild)
+                    {
+                        // try to find enumerator based on collection key
+                        playlistEnumerator.SetEnumeratorIndex(childEnumeratorKeys.IndexOf(collectionKey));
+                        hasSetEnumeratorIndex = true;
+                    }
+                }
+            }
+
+            if (!hasSetEnumeratorIndex)
+            {
+                // falling back to enumerator based on index
+                playlistEnumerator.SetEnumeratorIndex(primaryHistory.Index);
+            }
+
+            // only move next at the end, because that may also move
+            // the enumerator index
+            playlistEnumerator.MoveNext();
+        }
+    }
+
     private void ApplyHistory(
         string historyKey,
         List<MediaItem> collectionItems,
@@ -506,106 +641,30 @@ public class SchedulingEngine(IMediaCollectionRepository mediaCollectionReposito
             .Filter(h => h.When == maxWhen)
             .ToList();
 
-        if (enumerator is PlaylistEnumerator playlistEnumerator)
+        if (enumerator is PlaylistEnumerator)
         {
-            Option<PlayoutHistory> maybePrimaryHistory = maybeHistory
-                .Filter(h => string.IsNullOrWhiteSpace(h.ChildKey))
-                .HeadOrNone();
-
-            foreach (PlayoutHistory primaryHistory in maybePrimaryHistory)
-            {
-                var hasSetEnumeratorIndex = false;
-
-                var childEnumeratorKeys = playlistEnumerator.ChildEnumerators.Map(x => x.CollectionKey).ToList();
-                foreach ((IMediaCollectionEnumerator childEnumerator, CollectionKey collectionKey) in
-                         playlistEnumerator.ChildEnumerators)
-                {
-                    PlaybackOrder itemPlaybackOrder = childEnumerator switch
-                    {
-                        ChronologicalMediaCollectionEnumerator => PlaybackOrder.Chronological,
-                        RandomizedMediaCollectionEnumerator => PlaybackOrder.Random,
-                        ShuffledMediaCollectionEnumerator => PlaybackOrder.Shuffle,
-                        _ => PlaybackOrder.None
-                    };
-
-                    Option<PlayoutHistory> maybeApplicableHistory = maybeHistory
-                        .Filter(h => h.ChildKey == HistoryDetails.KeyForCollectionKey(collectionKey))
-                        .HeadOrNone();
-
-                    if (collectionItems.Count == 0)
-                    {
-                        continue;
-                    }
-
-                    foreach (PlayoutHistory h in maybeApplicableHistory)
-                    {
-                        // logger.LogDebug(
-                        //     "History is applicable: {When}: {ChildKey} / {History} / {IsCurrentChild}",
-                        //     h.When,
-                        //     h.ChildKey,
-                        //     h.Details,
-                        //     h.IsCurrentChild);
-
-                        enumerator.ResetState(
-                            new CollectionEnumeratorState
-                            {
-                                Seed = enumerator.State.Seed,
-                                Index = h.Index + (h.IsCurrentChild ? 1 : 0)
-                            });
-
-                        if (itemPlaybackOrder is PlaybackOrder.Chronological)
-                        {
-                            HistoryDetails.MoveToNextItem(
-                                collectionItems,
-                                h.Details,
-                                childEnumerator,
-                                itemPlaybackOrder,
-                                true);
-                        }
-
-                        if (h.IsCurrentChild)
-                        {
-                            // try to find enumerator based on collection key
-                            playlistEnumerator.SetEnumeratorIndex(childEnumeratorKeys.IndexOf(collectionKey));
-                            hasSetEnumeratorIndex = true;
-                        }
-                    }
-                }
-
-                if (!hasSetEnumeratorIndex)
-                {
-                    // falling back to enumerator based on index
-                    playlistEnumerator.SetEnumeratorIndex(primaryHistory.Index);
-                }
-
-                // only move next at the end, because that may also move
-                // the enumerator index
-                playlistEnumerator.MoveNext();
-            }
+            return;
         }
-        else
+
+        if (collectionItems.Count == 0)
         {
-            if (collectionItems.Count == 0)
+            return;
+        }
+
+        // seek to the appropriate place in the collection enumerator
+        foreach (PlayoutHistory h in maybeHistory)
+        {
+            // logger.LogDebug("History is applicable: {When}: {History}", h.When, h.Details);
+
+            enumerator.ResetState(new CollectionEnumeratorState { Seed = enumerator.State.Seed, Index = h.Index + 1 });
+
+            if (playbackOrder is PlaybackOrder.Chronological)
             {
-                return;
-            }
-
-            // seek to the appropriate place in the collection enumerator
-            foreach (PlayoutHistory h in maybeHistory)
-            {
-                // logger.LogDebug("History is applicable: {When}: {History}", h.When, h.Details);
-
-                enumerator.ResetState(
-                    new CollectionEnumeratorState { Seed = enumerator.State.Seed, Index = h.Index + 1 });
-
-                if (playbackOrder is PlaybackOrder.Chronological)
-                {
-                    HistoryDetails.MoveToNextItem(
-                        collectionItems,
-                        h.Details,
-                        enumerator,
-                        playbackOrder);
-                }
+                HistoryDetails.MoveToNextItem(
+                    collectionItems,
+                    h.Details,
+                    enumerator,
+                    playbackOrder);
             }
         }
     }

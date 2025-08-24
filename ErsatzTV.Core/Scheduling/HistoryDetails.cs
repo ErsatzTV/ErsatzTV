@@ -54,7 +54,22 @@ internal static class HistoryDetails
         var historyKey = new Dictionary<string, object>
         {
             { "Key", key },
-            { "Order", playbackOrder.ToString().ToLowerInvariant() }
+            { "Order", playbackOrder.ToString() }
+        };
+
+        return JsonConvert.SerializeObject(historyKey, Formatting.None, JsonSettings);
+    }
+
+    public static string KeyForSchedulingMarathonContent(string key, PlaybackOrder itemPlaybackOrder, string groupBy)
+    {
+        var historyKey = new Dictionary<string, object>
+        {
+            { "Key", key },
+            { "Order", nameof(PlaybackOrder.None) },
+
+            // we need to ignore history when any of these properties change
+            { "ItemOrder", itemPlaybackOrder.ToString() },
+            { "GroupBy", groupBy }
         };
 
         return JsonConvert.SerializeObject(historyKey, Formatting.None, JsonSettings);

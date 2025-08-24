@@ -31,6 +31,52 @@ public class ContentModule(ISchedulingEngine schedulingEngine)
         schedulingEngine.AddCollection(key, collection, playbackOrder).GetAwaiter().GetResult();
     }
 
+    public void add_marathon(
+        string key,
+        string group_by,
+        string item_order = "shuffle",
+        PythonDictionary guids = null,
+        PythonList searches = null,
+        bool play_all_items = false,
+        bool shuffle_groups = false)
+    {
+
+        if (!Enum.TryParse(item_order, ignoreCase: true, out PlaybackOrder itemPlaybackOrder))
+        {
+            itemPlaybackOrder = PlaybackOrder.Shuffle;
+        }
+
+        var mappedGuids = new Dictionary<string, List<string>>();
+        if (guids != null)
+        {
+            foreach (KeyValuePair<object, object> guid in guids)
+            {
+                var guidKey = guid.Key.ToString();
+                if (guidKey is not null && guid.Value is PythonList guidValues)
+                {
+                    mappedGuids.Add(guidKey, guidValues.Select(x => x.ToString()).ToList());
+                }
+            }
+        }
+
+        var mappedSearches = new List<string>();
+        if (searches != null)
+        {
+            mappedSearches.AddRange(searches.Select(x => x.ToString()));
+        }
+
+        // guids OR searches are required
+        if (mappedGuids.Count == 0 && mappedSearches.Count == 0)
+        {
+            return;
+        }
+
+        schedulingEngine
+            .AddMarathon(key, mappedGuids, mappedSearches, group_by, shuffle_groups, itemPlaybackOrder, play_all_items)
+            .GetAwaiter()
+            .GetResult();
+    }
+
     public void add_multi_collection(string key, string multi_collection, string order)
     {
         if (!Enum.TryParse(order, ignoreCase: true, out PlaybackOrder playbackOrder))
