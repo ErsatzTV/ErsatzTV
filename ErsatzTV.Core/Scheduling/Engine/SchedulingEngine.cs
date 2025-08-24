@@ -169,6 +169,42 @@ public class SchedulingEngine(IMediaCollectionRepository mediaCollectionReposito
         return this;
     }
 
+    public async Task<ISchedulingEngine> AddPlaylist(string key, string playlist, string playlistGroup)
+    {
+        if (!_enumerators.ContainsKey(key))
+        {
+            int index = _enumerators.Count;
+            List<MediaItem> items = [];
+            Dictionary<PlaylistItem, List<MediaItem>> itemMap =
+                await mediaCollectionRepository.GetPlaylistItemMap(playlistGroup, playlist);
+
+            var state = new CollectionEnumeratorState { Seed = _state.Seed + index, Index = 0 };
+
+            var enumerator = await PlaylistEnumerator.Create(
+                mediaCollectionRepository,
+                itemMap,
+                state,
+                false,
+                CancellationToken.None);
+
+            string historyKey = HistoryDetails.KeyForSchedulingContent(key, PlaybackOrder.None);
+            var details = new EnumeratorDetails(enumerator, historyKey, PlaybackOrder.None);
+
+            if (_enumerators.TryAdd(key, details))
+            {
+                logger.LogDebug(
+                    "Added playlist {Group} / {Name} with key {Key}",
+                    playlistGroup,
+                    playlist,
+                    key);
+
+                ApplyHistory(historyKey, items, enumerator, PlaybackOrder.None);
+            }
+        }
+
+        return this;
+    }
+
     public async Task<ISchedulingEngine> AddSmartCollection(
         string key,
         string smartCollectionName,
