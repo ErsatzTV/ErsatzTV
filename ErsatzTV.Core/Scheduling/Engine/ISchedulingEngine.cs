@@ -45,6 +45,12 @@ public interface ISchedulingEngine
         string customTitle,
         bool disableWatermarks);
 
+    bool AddAll(
+        string content,
+        Option<FillerKind> fillerKind,
+        string customTitle,
+        bool disableWatermarks);
+
     // control instructions
     void LockGuideGroup(bool advance);
     void UnlockGuideGroup();

@@ -15,6 +15,29 @@ public class PlayoutModule(ISchedulingEngine schedulingEngine)
 
     // content instructions
 
+    public void add_all(
+        string content,
+        string filler_kind = null,
+        string custom_title = null,
+        bool disable_watermarks = false)
+    {
+        Option<FillerKind> maybeFillerKind = Option<FillerKind>.None;
+        if (Enum.TryParse(filler_kind, ignoreCase: true, out FillerKind fillerKind))
+        {
+            maybeFillerKind = fillerKind;
+        }
+
+        bool success = schedulingEngine.AddAll(content, maybeFillerKind, custom_title, disable_watermarks);
+        if (success)
+        {
+            FailureCount = 0;
+        }
+        else
+        {
+            FailureCount++;
+        }
+    }
+
     public void add_count(
         string content,
         int count,

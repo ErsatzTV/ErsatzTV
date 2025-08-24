@@ -368,6 +368,32 @@ public class SchedulingEngine(
             return false;
         }
 
+        return AddCountInternal(enumeratorDetails, count, fillerKind, customTitle, disableWatermarks);
+    }
+
+    public bool AddAll(string content, Option<FillerKind> fillerKind, string customTitle, bool disableWatermarks)
+    {
+        if (!_enumerators.TryGetValue(content, out EnumeratorDetails enumeratorDetails))
+        {
+            logger.LogWarning("Skipping invalid content {Key}", content);
+            return false;
+        }
+
+        return AddCountInternal(
+            enumeratorDetails,
+            enumeratorDetails.Enumerator.Count,
+            fillerKind,
+            customTitle,
+            disableWatermarks);
+    }
+
+    private bool AddCountInternal(
+        EnumeratorDetails enumeratorDetails,
+        int count,
+        Option<FillerKind> fillerKind,
+        string customTitle,
+        bool disableWatermarks)
+    {
         var result = false;
 
         for (var i = 0; i < count; i++)
