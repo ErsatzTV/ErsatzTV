@@ -83,6 +83,7 @@ public class BlockPlayoutBuilder(
 
         (List<EffectiveBlock> updatedEffectiveBlocks, List<PlayoutItem> playoutItemsToRemove) =
             BlockPlayoutChangeDetection.FindUpdatedItems(
+                start,
                 referenceData.ExistingItems,
                 itemBlockKeys,
                 blocksToSchedule,
