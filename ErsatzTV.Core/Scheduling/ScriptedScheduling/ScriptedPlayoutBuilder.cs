@@ -7,6 +7,7 @@ using ErsatzTV.Core.Scheduling.Engine;
 using ErsatzTV.Core.Scheduling.ScriptedScheduling.Modules;
 using IronPython.Hosting;
 using IronPython.Runtime;
+using IronPython.Runtime.Exceptions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Scripting.Hosting;
 
@@ -49,6 +50,19 @@ public class ScriptedPlayoutBuilder(
 
             var engine = Python.CreateEngine();
             var scope = engine.CreateScope();
+
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            var token = cts.Token;
+            TracebackDelegate traceDelegate = null;
+            traceDelegate = (_, why, _) =>
+            {
+                if (why == "line")
+                {
+                    token.ThrowIfCancellationRequested();
+                }
+                return traceDelegate;
+            };
+            engine.SetTrace(traceDelegate);
 
             string scriptPath = Path.GetDirectoryName(playout.ScheduleFile);
             if (!string.IsNullOrWhiteSpace(scriptPath) && localFileSystem.FolderExists(scriptPath))
@@ -117,9 +131,14 @@ public class ScriptedPlayoutBuilder(
 
             result = MergeResult(result, schedulingEngine.GetState());
         }
+        catch (OperationCanceledException)
+        {
+            logger.LogWarning("Scripted playout build timed out after 30 seconds");
+            throw new TimeoutException("Scripted playout build timed out after 30 seconds");
+        }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Unexpected error building scripted playout");
+            logger.LogWarning(ex, "Unexpected exception building scripted playout");
             throw;
         }
 
