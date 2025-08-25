@@ -150,7 +150,14 @@ public class ScriptedPlayoutBuilder(
         private readonly PlayoutModule _playoutModule;
         private readonly ScriptEngine _scriptEngine;
         private readonly dynamic _datetimeModule;
+
+        // track playout build failures
         private const int MaxFailures = 10;
+
+        // track is_done calls when current_time has not advanced
+        private DateTimeOffset _lastCheckedTime;
+        private int _noProgressCounter;
+        private const int MaxCallsNoProgress = 20;
 
         public PythonPlayoutContext(
             ISchedulingEngineState state,
@@ -161,6 +168,7 @@ public class ScriptedPlayoutBuilder(
             _playoutModule = playoutModule;
             _scriptEngine = scriptEngine;
             _datetimeModule = _scriptEngine.ImportModule("datetime");
+            _lastCheckedTime = _state.CurrentTime;
         }
 
         public object current_time => ToPythonDateTime(_state.CurrentTime);
@@ -174,6 +182,21 @@ public class ScriptedPlayoutBuilder(
                 throw new InvalidOperationException(
                     $"Script execution halted after {MaxFailures} consecutive failures to add content."
                 );
+            }
+
+            if (_state.CurrentTime == _lastCheckedTime)
+            {
+                _noProgressCounter++;
+                if (_noProgressCounter >= MaxCallsNoProgress)
+                {
+                    throw new InvalidOperationException(
+                        $"Script execution halted after {MaxCallsNoProgress} consecutive calls to is_done() without time advancing.");
+                }
+            }
+            else
+            {
+                _lastCheckedTime = _state.CurrentTime;
+                _noProgressCounter = 0;
             }
 
             return _state.CurrentTime >= _state.Finish;
