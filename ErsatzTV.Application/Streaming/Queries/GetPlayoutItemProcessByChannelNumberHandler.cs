@@ -626,7 +626,11 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 FillerKind = FillerKind.Fallback,
                 InPoint = TimeSpan.Zero,
                 OutPoint = version.Duration,
-                DisableWatermarks = !fallbackPreset.AllowWatermarks
+                DisableWatermarks = !fallbackPreset.AllowWatermarks,
+                Watermarks = [],
+                PlayoutItemWatermarks = [],
+                GraphicsElements = [],
+                PlayoutItemGraphicsElements = []
             };
 
             return await ValidatePlayoutItemPath(dbContext, playoutItem);
