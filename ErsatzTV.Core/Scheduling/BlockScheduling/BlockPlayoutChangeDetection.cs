@@ -144,7 +144,8 @@ internal static class BlockPlayoutChangeDetection
             }
         }
 
-        return Tuple(updatedBlocks.ToList(), playoutItems.Filter(i => updatedItemIds.Contains(i.Id)).ToList());
+        var itemsToRemove = playoutItems.Filter(i => updatedItemIds.Contains(i.Id)).ToList();
+        return Tuple(updatedBlocks.ToList(), itemsToRemove);
     }
 
     public static void RemoveItemAndHistory(

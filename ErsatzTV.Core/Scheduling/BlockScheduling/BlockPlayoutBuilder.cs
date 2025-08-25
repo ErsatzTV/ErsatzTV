@@ -77,9 +77,9 @@ public class BlockPlayoutBuilder(
             result.ItemsToRemove.Add(item.Id);
         }
 
-        // // remove old items
-        // // importantly, this should not remove their history
-        // result = result with { RemoveBefore = start };
+        // remove old items
+        // importantly, this should not remove their history
+        result = result with { RemoveBefore = start };
 
         (List<EffectiveBlock> updatedEffectiveBlocks, List<PlayoutItem> playoutItemsToRemove) =
             BlockPlayoutChangeDetection.FindUpdatedItems(
@@ -231,6 +231,7 @@ public class BlockPlayoutBuilder(
                         PlaybackOrder = blockItem.PlaybackOrder,
                         Index = enumerator.State.Index,
                         When = currentTime.UtcDateTime,
+                        Finish = playoutItem.FinishOffset.UtcDateTime,
                         Key = historyKey,
                         Details = HistoryDetails.ForMediaItem(mediaItem)
                     };
