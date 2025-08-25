@@ -335,30 +335,15 @@ public class BlockPlayoutBuilder(
         PlayoutBuildResult result)
     {
         IEnumerable<PlayoutHistory> allItemsToDelete = referenceData.PlayoutHistory
-            .Append(result.AddedHistory)
-            .GroupBy(h => (h.BlockId, h.Key))
+            .GroupBy(h => h.Key)
             .SelectMany(group => group
-                .Filter(h => h.When < start.UtcDateTime)
-                .OrderByDescending(h => h.When)
+                .Filter(h => h.Finish < start.UtcDateTime)
+                .OrderByDescending(h => h.Finish)
                 .Tail());
-
-        var addedToRemove = new System.Collections.Generic.HashSet<PlayoutHistory>();
 
         foreach (PlayoutHistory delete in allItemsToDelete)
         {
-            if (delete.Id > 0)
-            {
-                result.HistoryToRemove.Add(delete.Id);
-            }
-            else
-            {
-                addedToRemove.Add(delete);
-            }
-        }
-
-        if (addedToRemove.Count > 0)
-        {
-            result.AddedHistory.RemoveAll(addedToRemove.Contains);
+            result.HistoryToRemove.Add(delete.Id);
         }
 
         return result;
