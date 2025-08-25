@@ -58,20 +58,8 @@ public class ScriptedPlayoutBuilder(
                 engine.SetSearchPaths(paths);
             }
 
-            var sys = engine.GetSysModule();
-            var modules = (PythonDictionary)sys.GetVariable("modules");
-
-            var types = engine.ImportModule("types");
-            dynamic moduleType = types.GetVariable("ModuleType");
-
-            dynamic ersatztv = engine.Operations.Invoke(moduleType, "ersatztv");
-            modules["ersatztv"] = ersatztv;
-
             var contentModule = new ContentModule(schedulingEngine);
-            engine.Operations.SetMember(ersatztv, "content", contentModule);
-
             var playoutModule = new PlayoutModule(schedulingEngine);
-            engine.Operations.SetMember(ersatztv, "playout", playoutModule);
 
             engine.ExecuteFile(playout.ScheduleFile, scope);
 
@@ -82,8 +70,19 @@ public class ScriptedPlayoutBuilder(
                 return result;
             }
 
+            if (defineContentFunc.__code__.co_argcount != 2)
+            {
+                logger.LogError("Script function 'define_content' must accept 2 parameters: (content, context)");
+                return result;
+            }
+
             // reset_playout is NOT required
             scope.TryGetVariable("reset_playout", out PythonFunction resetPlayoutFunc);
+            if (resetPlayoutFunc != null && resetPlayoutFunc.__code__.co_argcount != 2)
+            {
+                logger.LogError("Script function 'reset_playout' must accept 2 parameters: (playout, context)");
+                return result;
+            }
 
             // build_playout is required
             if (!scope.TryGetVariable("build_playout", out PythonFunction buildPlayoutFunc))
@@ -92,21 +91,27 @@ public class ScriptedPlayoutBuilder(
                 return result;
             }
 
+            if (buildPlayoutFunc.__code__.co_argcount != 2)
+            {
+                logger.LogError("Script function 'build_playout' must accept 2 parameters: (playout, context)");
+                return result;
+            }
+
             schedulingEngine.RestoreOrReset(Optional(playout.Anchor));
 
-            // define content first
-            engine.Operations.Invoke(defineContentFunc);
-
             var context = new PythonPlayoutContext(schedulingEngine.GetState(), playoutModule, engine);
+
+            // define content first
+            engine.Operations.Invoke(defineContentFunc, contentModule, context);
 
             // reset if applicable
             if (mode is PlayoutBuildMode.Reset && resetPlayoutFunc != null)
             {
-                engine.Operations.Invoke(resetPlayoutFunc, context);
+                engine.Operations.Invoke(resetPlayoutFunc, playoutModule, context);
             }
 
             // build playout
-            engine.Operations.Invoke(buildPlayoutFunc, context);
+            engine.Operations.Invoke(buildPlayoutFunc, playoutModule, context);
 
             playout.Anchor = schedulingEngine.GetAnchor();
 
@@ -159,7 +164,8 @@ public class ScriptedPlayoutBuilder(
         }
 
         public object current_time => ToPythonDateTime(_state.CurrentTime);
-        //public object finish => ToPythonDateTime(_state.Finish);
+        public object start_time => ToPythonDateTime(_state.Start);
+        public object finish_time => ToPythonDateTime(_state.Finish);
 
         public bool is_done()
         {

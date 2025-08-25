@@ -10,6 +10,7 @@ public interface ISchedulingEngineState
     PlayoutBuildMode Mode { get; }
     int Seed { get; }
     DateTimeOffset CurrentTime { get; }
+    DateTimeOffset Start { get; }
     DateTimeOffset Finish { get; }
 
     // result
