@@ -32,13 +32,13 @@ public class ChannelController(ChannelWriter<IBackgroundServiceRequest> workerCh
 
     // for debugging by fast-forwarding a playout
     // [HttpPost("/api/channels/{channelNumber}/playout/continue")]
-    // public async Task<IActionResult> ContinuePlayout(string channelNumber)
+    // public async Task<IActionResult> ContinuePlayout(string channelNumber, [FromQuery] int days = 1)
     // {
     //     Option<int> maybePlayoutId = await mediator.Send(new GetPlayoutIdByChannelNumber(channelNumber));
     //     foreach (int playoutId in maybePlayoutId)
     //     {
     //         DateTimeOffset start = DateTimeOffset.Now;
-    //         for (int i = 0; i < 24; i++)
+    //         for (int i = 0; i < 24 * days; i++)
     //         {
     //             await workerChannel.WriteAsync(new BuildPlayout(playoutId, PlayoutBuildMode.Continue, start));
     //             start += TimeSpan.FromHours(1);
