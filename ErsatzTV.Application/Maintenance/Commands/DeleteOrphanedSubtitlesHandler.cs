@@ -25,7 +25,7 @@ public class DeleteOrphanedSubtitlesHandler : IRequestHandler<DeleteOrphanedSubt
                       WHERE S.ArtistMetadataId IS NULL AND S.EpisodeMetadataId IS NULL
                       AND S.MovieMetadataId IS NULL AND S.MusicVideoMetadataId IS NULL
                       AND S.OtherVideoMetadataId IS NULL AND S.SeasonMetadataId IS NULL
-                      AND S.ShowMetadataId IS NULL AND s.SongMetadataId IS NULL");
+                      AND S.ShowMetadataId IS NULL AND S.SongMetadataId IS NULL");
 
             foreach (int id in toDelete)
             {
