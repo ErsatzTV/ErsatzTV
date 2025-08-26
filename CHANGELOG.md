@@ -83,7 +83,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix song playback in playback troubleshooting
 - Fix seeking into extracted text subtitles
 - Fix error when changing default (lowest priority) alternate schedule
-- Fix editing remote libraries with MySql/MariaDB
+- Fix remote library editing, tv shows, artists with MySql/MariaDB
 
 ### Changed
 - Rename some schedule and playout terms for clarity
