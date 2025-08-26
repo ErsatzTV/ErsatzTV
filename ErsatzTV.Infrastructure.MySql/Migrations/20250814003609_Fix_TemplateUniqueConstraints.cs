@@ -14,9 +14,17 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                 name: "IX_Template_Name",
                 table: "Template");
 
+            migrationBuilder.DropForeignKey(
+                name: "FK_Template_TemplateGroup_TemplateGroupId",
+                table: "Template");
+
             migrationBuilder.DropIndex(
                 name: "IX_Template_TemplateGroupId",
                 table: "Template");
+
+            migrationBuilder.DropForeignKey(
+                name: "FK_DecoTemplate_DecoTemplateGroup_DecoTemplateGroupId",
+                table: "DecoTemplate");
 
             migrationBuilder.DropIndex(
                 name: "IX_DecoTemplate_DecoTemplateGroupId",
@@ -37,6 +45,22 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                 table: "DecoTemplate",
                 columns: new[] { "DecoTemplateGroupId", "Name" },
                 unique: true);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_Template_TemplateGroup_TemplateGroupId",
+                table: "Template",
+                column: "TemplateGroupId",
+                principalTable: "TemplateGroup",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Cascade);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_DecoTemplate_DecoTemplateGroup_DecoTemplateGroupId",
+                table: "DecoTemplate",
+                column: "DecoTemplateGroupId",
+                principalTable: "DecoTemplateGroup",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Cascade);
         }
 
         /// <inheritdoc />
