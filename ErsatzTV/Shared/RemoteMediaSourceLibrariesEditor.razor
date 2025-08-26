@@ -14,7 +14,7 @@
     </MudPaper>
     <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
         <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-            <MudText Typo="Typo.h5" Class="mb-2"><b>@_source.Name</b> Libraries</MudText>
+            <MudText Typo="Typo.h5" Class="mb-2"><b>@_source?.Name</b> Libraries</MudText>
             <MudDivider Class="mb-6"/>
             <MudTable Hover="true" Items="_libraries" Dense="true">
                 <ColGroup>
