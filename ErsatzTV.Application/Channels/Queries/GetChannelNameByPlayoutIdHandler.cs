@@ -16,7 +16,7 @@ public class GetChannelNameByPlayoutIdHandler : IRequestHandler<GetChannelNameBy
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await dbContext.Playouts
             .Include(p => p.Channel)
-            .SelectOneAsync(p => p.Id, p => p.Id == request.PlayoutId)
+            .SelectOneAsync(p => p.Id, p => p.Id == request.PlayoutId, cancellationToken)
             .MapT(p => p.Channel.Name);
     }
 }

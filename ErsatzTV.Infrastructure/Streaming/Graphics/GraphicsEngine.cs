@@ -32,7 +32,7 @@ public class GraphicsEngine(
 
             // media item variables
             Option<Dictionary<string, object>> maybeTemplateData =
-                await templateDataRepository.GetMediaItemTemplateData(context.MediaItem);
+                await templateDataRepository.GetMediaItemTemplateData(context.MediaItem, cancellationToken);
             foreach (Dictionary<string, object> templateData in maybeTemplateData)
             {
                 foreach (KeyValuePair<string, object> variable in templateData)

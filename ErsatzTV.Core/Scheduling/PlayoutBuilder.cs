@@ -78,7 +78,7 @@ public class PlayoutBuilder : IPlayoutBuilder
             return result;
         }
 
-        foreach (PlayoutParameters parameters in await Validate(playout, referenceData))
+        foreach (PlayoutParameters parameters in await Validate(playout, referenceData, cancellationToken))
         {
             // for testing purposes
             // if (mode == PlayoutBuildMode.Reset)
@@ -115,7 +115,7 @@ public class PlayoutBuilder : IPlayoutBuilder
         DateTimeOffset finish,
         CancellationToken cancellationToken)
     {
-        foreach (PlayoutParameters parameters in await Validate(playout, referenceData))
+        foreach (PlayoutParameters parameters in await Validate(playout, referenceData, cancellationToken))
         {
             result = await Build(
                 playout,
@@ -318,9 +318,13 @@ public class PlayoutBuilder : IPlayoutBuilder
             cancellationToken);
     }
 
-    private async Task<Option<PlayoutParameters>> Validate(Playout playout, PlayoutReferenceData referenceData)
+    private async Task<Option<PlayoutParameters>> Validate(
+        Playout playout,
+        PlayoutReferenceData referenceData,
+        CancellationToken cancellationToken)
     {
-        Map<CollectionKey, List<MediaItem>> collectionMediaItems = await GetCollectionMediaItems(referenceData);
+        Map<CollectionKey, List<MediaItem>> collectionMediaItems =
+            await GetCollectionMediaItems(referenceData, cancellationToken);
         if (collectionMediaItems.IsEmpty)
         {
             _logger.LogWarning("Playout {Playout} has no items", referenceData.Channel.Name);
@@ -328,7 +332,7 @@ public class PlayoutBuilder : IPlayoutBuilder
         }
 
         Option<bool> skipMissingItems =
-            await _configElementRepository.GetValue<bool>(ConfigElementKey.PlayoutSkipMissingItems);
+            await _configElementRepository.GetValue<bool>(ConfigElementKey.PlayoutSkipMissingItems, cancellationToken);
 
         Option<CollectionKey> maybeEmptyCollection = await CheckForEmptyCollections(
             collectionMediaItems,
@@ -336,7 +340,8 @@ public class PlayoutBuilder : IPlayoutBuilder
 
         foreach (CollectionKey emptyCollection in maybeEmptyCollection)
         {
-            Option<string> maybeName = await _mediaCollectionRepository.GetNameFromKey(emptyCollection);
+            Option<string> maybeName =
+                await _mediaCollectionRepository.GetNameFromKey(emptyCollection, cancellationToken);
             if (maybeName.IsSome)
             {
                 foreach (string name in maybeName)
@@ -357,7 +362,9 @@ public class PlayoutBuilder : IPlayoutBuilder
             return None;
         }
 
-        Option<int> daysToBuild = await _configElementRepository.GetValue<int>(ConfigElementKey.PlayoutDaysToBuild);
+        Option<int> daysToBuild = await _configElementRepository.GetValue<int>(
+            ConfigElementKey.PlayoutDaysToBuild,
+            cancellationToken);
 
         DateTimeOffset now = DateTimeOffset.Now;
 
@@ -541,7 +548,8 @@ public class PlayoutBuilder : IPlayoutBuilder
                 _mediaCollectionRepository,
                 _televisionRepository,
                 _artistRepository,
-                collectionKey);
+                collectionKey,
+                cancellationToken);
             string collectionKeyString = JsonConvert.SerializeObject(
                 collectionKey,
                 Formatting.None,
@@ -880,14 +888,16 @@ public class PlayoutBuilder : IPlayoutBuilder
         return result;
     }
 
-    private async Task<Map<CollectionKey, List<MediaItem>>> GetCollectionMediaItems(PlayoutReferenceData referenceData)
+    private async Task<Map<CollectionKey, List<MediaItem>>> GetCollectionMediaItems(
+        PlayoutReferenceData referenceData,
+        CancellationToken cancellationToken)
     {
         IEnumerable<KeyValuePair<CollectionKey, Option<FillerPreset>>> collectionKeys =
             GetAllCollectionKeys(referenceData);
 
         IEnumerable<Task<KeyValuePair<CollectionKey, List<MediaItem>>>> tasks = collectionKeys.Select(async key =>
         {
-            List<MediaItem> mediaItems = await FetchMediaItemsForKeyAsync(key.Key, key.Value);
+            List<MediaItem> mediaItems = await FetchMediaItemsForKeyAsync(key.Key, key.Value, cancellationToken);
             return new KeyValuePair<CollectionKey, List<MediaItem>>(key.Key, mediaItems);
         });
 
@@ -904,13 +914,15 @@ public class PlayoutBuilder : IPlayoutBuilder
 
     private async Task<List<MediaItem>> FetchMediaItemsForKeyAsync(
         CollectionKey collectionKey,
-        Option<FillerPreset> fillerPreset)
+        Option<FillerPreset> fillerPreset,
+        CancellationToken cancellationToken)
     {
         List<MediaItem> result = await MediaItemsForCollection.Collect(
             _mediaCollectionRepository,
             _televisionRepository,
             _artistRepository,
-            collectionKey);
+            collectionKey,
+            cancellationToken);
 
         foreach (FillerPreset _ in fillerPreset.Where(p => p.UseChaptersAsMediaItems))
         {
@@ -1125,8 +1137,8 @@ public class PlayoutBuilder : IPlayoutBuilder
             foreach (int playlistId in Optional(collectionKey.PlaylistId))
             {
                 Dictionary<PlaylistItem, List<MediaItem>> playlistItemMap = DebugPlaylist is not null
-                    ? await _mediaCollectionRepository.GetPlaylistItemMap(DebugPlaylist)
-                    : await _mediaCollectionRepository.GetPlaylistItemMap(playlistId);
+                    ? await _mediaCollectionRepository.GetPlaylistItemMap(DebugPlaylist, cancellationToken)
+                    : await _mediaCollectionRepository.GetPlaylistItemMap(playlistId, cancellationToken);
 
                 return await PlaylistEnumerator.Create(
                     _mediaCollectionRepository,
@@ -1185,14 +1197,17 @@ public class PlayoutBuilder : IPlayoutBuilder
                 return new RandomizedMediaCollectionEnumerator(mediaItems, state);
             case PlaybackOrder.ShuffleInOrder:
                 return new ShuffleInOrderCollectionEnumerator(
-                    await GetCollectionItemsForShuffleInOrder(_mediaCollectionRepository, collectionKey),
+                    await GetCollectionItemsForShuffleInOrder(
+                        _mediaCollectionRepository,
+                        collectionKey,
+                        cancellationToken),
                     state,
                     activeSchedule.RandomStartPoint,
                     cancellationToken);
             case PlaybackOrder.MultiEpisodeShuffle when
                 collectionKey.CollectionType == ProgramScheduleItemCollectionType.TelevisionShow &&
                 collectionKey.MediaItemId.HasValue:
-                foreach (Show show in await _televisionRepository.GetShow(collectionKey.MediaItemId.Value))
+                foreach (Show show in await _televisionRepository.GetShow(collectionKey.MediaItemId.Value, cancellationToken))
                 {
                     foreach (MetadataGuid guid in show.ShowMetadata.Map(sm => sm.Guids).Flatten())
                     {
@@ -1230,7 +1245,8 @@ public class PlayoutBuilder : IPlayoutBuilder
                         _mediaCollectionRepository,
                         activeSchedule,
                         mediaItems,
-                        collectionKey),
+                        collectionKey,
+                        cancellationToken),
                     state,
                     cancellationToken);
             default:
@@ -1243,12 +1259,13 @@ public class PlayoutBuilder : IPlayoutBuilder
         IMediaCollectionRepository mediaCollectionRepository,
         ProgramSchedule activeSchedule,
         List<MediaItem> mediaItems,
-        CollectionKey collectionKey)
+        CollectionKey collectionKey,
+        CancellationToken cancellationToken)
     {
         if (collectionKey.MultiCollectionId != null)
         {
             List<CollectionWithItems> collections = await mediaCollectionRepository
-                .GetMultiCollectionCollections(collectionKey.MultiCollectionId.Value);
+                .GetMultiCollectionCollections(collectionKey.MultiCollectionId.Value, cancellationToken);
 
             return MultiCollectionGrouper.GroupMediaItems(collections);
         }
@@ -1260,20 +1277,23 @@ public class PlayoutBuilder : IPlayoutBuilder
 
     internal static async Task<List<CollectionWithItems>> GetCollectionItemsForShuffleInOrder(
         IMediaCollectionRepository mediaCollectionRepository,
-        CollectionKey collectionKey)
+        CollectionKey collectionKey,
+        CancellationToken cancellationToken)
     {
         List<CollectionWithItems> result;
 
         if (collectionKey.MultiCollectionId != null)
         {
             result = await mediaCollectionRepository.GetMultiCollectionCollections(
-                collectionKey.MultiCollectionId.Value);
+                collectionKey.MultiCollectionId.Value,
+                cancellationToken);
         }
         else
         {
             result = await mediaCollectionRepository.GetFakeMultiCollectionCollections(
                 collectionKey.CollectionId,
-                collectionKey.SmartCollectionId);
+                collectionKey.SmartCollectionId,
+                cancellationToken);
         }
 
         return result;

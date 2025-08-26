@@ -31,7 +31,7 @@ public class DeleteChannelHandler : IRequestHandler<DeleteChannel, Either<BaseEr
     public async Task<Either<BaseError, Unit>> Handle(DeleteChannel request, CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        Validation<BaseError, Channel> validation = await ChannelMustExist(dbContext, request);
+        Validation<BaseError, Channel> validation = await ChannelMustExist(dbContext, request, cancellationToken);
         return await validation.Apply(c => DoDeletion(dbContext, c, cancellationToken));
     }
 
@@ -57,10 +57,11 @@ public class DeleteChannelHandler : IRequestHandler<DeleteChannel, Either<BaseEr
 
     private static async Task<Validation<BaseError, Channel>> ChannelMustExist(
         TvContext dbContext,
-        DeleteChannel deleteChannel)
+        DeleteChannel deleteChannel,
+        CancellationToken cancellationToken)
     {
         Option<Channel> maybeChannel = await dbContext.Channels
-            .SelectOneAsync(c => c.Id, c => c.Id == deleteChannel.ChannelId);
+            .SelectOneAsync(c => c.Id, c => c.Id == deleteChannel.ChannelId, cancellationToken);
         return maybeChannel.ToValidation<BaseError>($"Channel {deleteChannel.ChannelId} does not exist.");
     }
 }

@@ -16,7 +16,7 @@ public class GetProgramScheduleItemsHandler(IDbContextFactory<TvContext> dbConte
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         Option<ProgramSchedule> maybeProgramSchedule =
-            await dbContext.ProgramSchedules.SelectOneAsync(ps => ps.Id, ps => ps.Id == request.Id);
+            await dbContext.ProgramSchedules.SelectOneAsync(ps => ps.Id, ps => ps.Id == request.Id, cancellationToken);
 
         return await dbContext.ProgramScheduleItems
             .Filter(psi => psi.ProgramScheduleId == request.Id)

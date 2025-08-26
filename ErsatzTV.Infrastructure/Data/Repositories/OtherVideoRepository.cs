@@ -23,9 +23,10 @@ public class OtherVideoRepository : IOtherVideoRepository
     public async Task<Either<BaseError, MediaItemScanResult<OtherVideo>>> GetOrAdd(
         LibraryPath libraryPath,
         LibraryFolder libraryFolder,
-        string path)
+        string path,
+        CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Option<OtherVideo> maybeExisting = await dbContext.OtherVideos
             .AsNoTracking()
             .Include(i => i.OtherVideoMetadata)
@@ -54,13 +55,13 @@ public class OtherVideoRepository : IOtherVideoRepository
             .Include(ov => ov.TraktListItems)
             .ThenInclude(tli => tli.TraktList)
             .OrderBy(i => i.MediaVersions.First().MediaFiles.First().Path)
-            .SingleOrDefaultAsync(i => i.MediaVersions.First().MediaFiles.First().Path == path);
+            .SingleOrDefaultAsync(i => i.MediaVersions.First().MediaFiles.First().Path == path, cancellationToken);
 
         return await maybeExisting.Match(
             mediaItem =>
                 Right<BaseError, MediaItemScanResult<OtherVideo>>(
                     new MediaItemScanResult<OtherVideo>(mediaItem) { IsAdded = false }).AsTask(),
-            async () => await AddOtherVideo(dbContext, libraryPath.Id, libraryFolder.Id, path));
+            async () => await AddOtherVideo(dbContext, libraryPath.Id, libraryFolder.Id, path, cancellationToken));
     }
 
     public async Task<IEnumerable<string>> FindOtherVideoPaths(LibraryPath libraryPath)
@@ -191,11 +192,17 @@ public class OtherVideoRepository : IOtherVideoRepository
         TvContext dbContext,
         int libraryPathId,
         int libraryFolderId,
-        string path)
+        string path,
+        CancellationToken cancellationToken)
     {
         try
         {
-            if (await MediaItemRepository.MediaFileAlreadyExists(path, libraryPathId, dbContext, _logger))
+            if (await MediaItemRepository.MediaFileAlreadyExists(
+                    path,
+                    libraryPathId,
+                    dbContext,
+                    _logger,
+                    cancellationToken))
             {
                 return new MediaFileAlreadyExists();
             }
@@ -220,10 +227,10 @@ public class OtherVideoRepository : IOtherVideoRepository
                 TraktListItems = []
             };
 
-            await dbContext.OtherVideos.AddAsync(otherVideo);
-            await dbContext.SaveChangesAsync();
-            await dbContext.Entry(otherVideo).Reference(m => m.LibraryPath).LoadAsync();
-            await dbContext.Entry(otherVideo.LibraryPath).Reference(lp => lp.Library).LoadAsync();
+            await dbContext.OtherVideos.AddAsync(otherVideo, cancellationToken);
+            await dbContext.SaveChangesAsync(cancellationToken);
+            await dbContext.Entry(otherVideo).Reference(m => m.LibraryPath).LoadAsync(cancellationToken);
+            await dbContext.Entry(otherVideo.LibraryPath).Reference(lp => lp.Library).LoadAsync(cancellationToken);
             return new MediaItemScanResult<OtherVideo>(otherVideo) { IsAdded = true };
         }
         catch (Exception ex)

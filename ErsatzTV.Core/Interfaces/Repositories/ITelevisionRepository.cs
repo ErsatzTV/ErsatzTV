@@ -9,7 +9,7 @@ public interface ITelevisionRepository
     Task<bool> AllSeasonsExist(List<int> seasonIds);
     Task<bool> AllEpisodesExist(List<int> episodeIds);
     Task<List<Show>> GetAllShows();
-    Task<Option<Show>> GetShow(int showId);
+    Task<Option<Show>> GetShow(int showId, CancellationToken cancellationToken);
     Task<Option<int>> GetShowIdByTitle(int libraryId, string title);
     Task<List<ShowMetadata>> GetShowsForCards(List<int> ids);
     Task<List<SeasonMetadata>> GetSeasonsForCards(List<int> ids);
@@ -19,7 +19,13 @@ public interface ITelevisionRepository
     Task<List<Season>> GetAllSeasons();
     Task<Option<Season>> GetSeason(int seasonId);
     Task<int> GetSeasonCount(int showId);
-    Task<List<Season>> GetPagedSeasons(int televisionShowId, int pageNumber, int pageSize);
+
+    Task<List<Season>> GetPagedSeasons(
+        int televisionShowId,
+        int pageNumber,
+        int pageSize,
+        CancellationToken cancellationToken);
+
     Task<List<Episode>> GetSeasonItems(int seasonId);
     Task<int> GetEpisodeCount(int seasonId);
     Task<List<EpisodeMetadata>> GetPagedEpisodes(int seasonId, int pageNumber, int pageSize);
@@ -31,7 +37,8 @@ public interface ITelevisionRepository
         Season season,
         LibraryPath libraryPath,
         LibraryFolder libraryFolder,
-        string path);
+        string path,
+        CancellationToken cancellationToken);
 
     Task<IEnumerable<string>> FindEpisodePaths(LibraryPath libraryPath);
     Task<Unit> DeleteByPath(LibraryPath libraryPath, string path);

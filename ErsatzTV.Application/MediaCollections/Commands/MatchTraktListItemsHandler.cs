@@ -43,9 +43,12 @@ public class MatchTraktListItemsHandler : TraktCommandBase,
         {
             await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
-            Validation<BaseError, TraktList> validation = await TraktListMustExist(dbContext, request.TraktListId);
+            Validation<BaseError, TraktList> validation = await TraktListMustExist(
+                dbContext,
+                request.TraktListId,
+                cancellationToken);
             return await validation.Match(
-                async l => await MatchListItems(dbContext, l).MapT(_ => Unit.Default),
+                async l => await MatchListItems(dbContext, l, cancellationToken).MapT(_ => Unit.Default),
                 error => Task.FromResult<Either<BaseError, Unit>>(error.Join()));
         }
         finally

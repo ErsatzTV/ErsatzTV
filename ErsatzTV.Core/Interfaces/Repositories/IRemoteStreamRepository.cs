@@ -8,7 +8,8 @@ public interface IRemoteStreamRepository
     Task<Either<BaseError, MediaItemScanResult<RemoteStream>>> GetOrAdd(
         LibraryPath libraryPath,
         LibraryFolder libraryFolder,
-        string path);
+        string path,
+        CancellationToken cancellationToken);
 
     Task<IEnumerable<string>> FindRemoteStreamPaths(LibraryPath libraryPath);
     Task<List<int>> DeleteByPath(LibraryPath libraryPath, string path);

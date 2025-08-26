@@ -25,7 +25,7 @@ public class ReplacePlayoutTemplateItemsHandler(
                 .Include(p => p.ProgramSchedule)
                 .Include(p => p.Templates)
                 .ThenInclude(t => t.Template)
-                .SelectOneAsync(p => p.Id, p => p.Id == request.PlayoutId);
+                .SelectOneAsync(p => p.Id, p => p.Id == request.PlayoutId, cancellationToken);
 
             foreach (Playout playout in maybePlayout)
             {

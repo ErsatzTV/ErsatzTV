@@ -42,7 +42,7 @@ public class BlockPlayoutPreviewBuilder(
         return result;
     }
 
-    protected override Task<int> GetDaysToBuild() => Task.FromResult(1);
+    protected override Task<int> GetDaysToBuild(CancellationToken cancellationToken) => Task.FromResult(1);
 
     protected override IMediaCollectionEnumerator GetEnumerator(
         Playout playout,

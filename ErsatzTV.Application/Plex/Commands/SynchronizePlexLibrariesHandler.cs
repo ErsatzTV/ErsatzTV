@@ -34,17 +34,21 @@ public class
     public Task<Either<BaseError, Unit>> Handle(
         SynchronizePlexLibraries request,
         CancellationToken cancellationToken) =>
-        Validate(request)
-            .MapT(SynchronizeLibraries)
+        Validate(request, cancellationToken)
+            .MapT(p => SynchronizeLibraries(p, cancellationToken))
             .Bind(v => v.ToEitherAsync());
 
-    private Task<Validation<BaseError, ConnectionParameters>> Validate(SynchronizePlexLibraries request) =>
-        MediaSourceMustExist(request)
+    private Task<Validation<BaseError, ConnectionParameters>> Validate(
+        SynchronizePlexLibraries request,
+        CancellationToken cancellationToken) =>
+        MediaSourceMustExist(request, cancellationToken)
             .BindT(MediaSourceMustHaveActiveConnection)
             .BindT(MediaSourceMustHaveToken);
 
-    private Task<Validation<BaseError, PlexMediaSource>> MediaSourceMustExist(SynchronizePlexLibraries request) =>
-        _mediaSourceRepository.GetPlex(request.PlexMediaSourceId)
+    private Task<Validation<BaseError, PlexMediaSource>> MediaSourceMustExist(
+        SynchronizePlexLibraries request,
+        CancellationToken cancellationToken) =>
+        _mediaSourceRepository.GetPlex(request.PlexMediaSourceId, cancellationToken)
             .Map(o => o.ToValidation<BaseError>("Plex media source does not exist."));
 
     private Validation<BaseError, ConnectionParameters> MediaSourceMustHaveActiveConnection(
@@ -65,7 +69,9 @@ public class
             .ToValidation<BaseError>("Plex media source requires a token");
     }
 
-    private async Task<Unit> SynchronizeLibraries(ConnectionParameters connectionParameters)
+    private async Task<Unit> SynchronizeLibraries(
+        ConnectionParameters connectionParameters,
+        CancellationToken cancellationToken)
     {
         Either<BaseError, List<PlexLibrary>> maybeLibraries = await _plexServerApiClient.GetLibraries(
             connectionParameters.ActiveConnection,
@@ -90,7 +96,8 @@ public class
                 connectionParameters.PlexMediaSource.Id,
                 toAdd,
                 toRemove,
-                toUpdate);
+                toUpdate,
+                cancellationToken);
             if (ids.Count != 0)
             {
                 await _searchIndex.RemoveItems(ids);

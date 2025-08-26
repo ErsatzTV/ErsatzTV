@@ -20,7 +20,7 @@ public class UpdateXmltvSettingsHandler(
     {
         int playoutDaysToBuild =
             await configElementRepository
-                .GetValue<int>(ConfigElementKey.PlayoutDaysToBuild)
+                .GetValue<int>(ConfigElementKey.PlayoutDaysToBuild, cancellationToken)
                 .IfNoneAsync(2);
 
         if (playoutDaysToBuild < request.XmltvSettings.DaysToBuild)
@@ -29,20 +29,20 @@ public class UpdateXmltvSettingsHandler(
                 $"XMLTV days to build ({request.XmltvSettings.DaysToBuild}) cannot be greater than Playout days to build ({playoutDaysToBuild})");
         }
 
-        return await ApplyUpdate(request.XmltvSettings);
+        return await ApplyUpdate(request.XmltvSettings, cancellationToken);
     }
 
-    private async Task<Unit> ApplyUpdate(XmltvSettingsViewModel xmltvSettings)
+    private async Task<Unit> ApplyUpdate(XmltvSettingsViewModel xmltvSettings, CancellationToken cancellationToken)
     {
-        await configElementRepository.Upsert(ConfigElementKey.XmltvTimeZone, xmltvSettings.TimeZone);
-        await configElementRepository.Upsert(ConfigElementKey.XmltvDaysToBuild, xmltvSettings.DaysToBuild);
-        await configElementRepository.Upsert(ConfigElementKey.XmltvBlockBehavior, xmltvSettings.BlockBehavior);
+        await configElementRepository.Upsert(ConfigElementKey.XmltvTimeZone, xmltvSettings.TimeZone, cancellationToken);
+        await configElementRepository.Upsert(ConfigElementKey.XmltvDaysToBuild, xmltvSettings.DaysToBuild, cancellationToken);
+        await configElementRepository.Upsert(ConfigElementKey.XmltvBlockBehavior, xmltvSettings.BlockBehavior, cancellationToken);
 
-        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
-        foreach (string channelNumber in await dbContext.Channels.Map(c => c.Number).ToListAsync())
+        foreach (string channelNumber in await dbContext.Channels.Map(c => c.Number).ToListAsync(cancellationToken))
         {
-            await workerChannel.WriteAsync(new RefreshChannelData(channelNumber));
+            await workerChannel.WriteAsync(new RefreshChannelData(channelNumber), cancellationToken);
         }
 
         return Unit.Default;

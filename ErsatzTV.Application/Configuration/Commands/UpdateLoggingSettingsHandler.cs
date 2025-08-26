@@ -19,36 +19,36 @@ public class UpdateLoggingSettingsHandler : IRequestHandler<UpdateLoggingSetting
 
     public async Task<Either<BaseError, Unit>> Handle(
         UpdateLoggingSettings request,
-        CancellationToken cancellationToken) => await ApplyUpdate(request.LoggingSettings);
+        CancellationToken cancellationToken) => await ApplyUpdate(request.LoggingSettings, cancellationToken);
 
-    private async Task<Unit> ApplyUpdate(LoggingSettingsViewModel loggingSettings)
+    private async Task<Unit> ApplyUpdate(LoggingSettingsViewModel loggingSettings, CancellationToken cancellationToken)
     {
-        await _configElementRepository.Upsert(ConfigElementKey.MinimumLogLevel, loggingSettings.DefaultMinimumLogLevel);
+        await _configElementRepository.Upsert(ConfigElementKey.MinimumLogLevel, loggingSettings.DefaultMinimumLogLevel, cancellationToken);
         _loggingLevelSwitches.DefaultLevelSwitch.MinimumLevel = loggingSettings.DefaultMinimumLogLevel;
 
         await _configElementRepository.Upsert(
             ConfigElementKey.MinimumLogLevelScanning,
-            loggingSettings.ScanningMinimumLogLevel);
+            loggingSettings.ScanningMinimumLogLevel, cancellationToken);
         _loggingLevelSwitches.ScanningLevelSwitch.MinimumLevel = loggingSettings.ScanningMinimumLogLevel;
 
         await _configElementRepository.Upsert(
             ConfigElementKey.MinimumLogLevelScheduling,
-            loggingSettings.SchedulingMinimumLogLevel);
+            loggingSettings.SchedulingMinimumLogLevel, cancellationToken);
         _loggingLevelSwitches.SchedulingLevelSwitch.MinimumLevel = loggingSettings.SchedulingMinimumLogLevel;
 
         await _configElementRepository.Upsert(
             ConfigElementKey.MinimumLogLevelSearching,
-            loggingSettings.SearchingMinimumLogLevel);
+            loggingSettings.SearchingMinimumLogLevel, cancellationToken);
         _loggingLevelSwitches.SearchingLevelSwitch.MinimumLevel = loggingSettings.SearchingMinimumLogLevel;
 
         await _configElementRepository.Upsert(
             ConfigElementKey.MinimumLogLevelStreaming,
-            loggingSettings.StreamingMinimumLogLevel);
+            loggingSettings.StreamingMinimumLogLevel, cancellationToken);
         _loggingLevelSwitches.StreamingLevelSwitch.MinimumLevel = loggingSettings.StreamingMinimumLogLevel;
 
         await _configElementRepository.Upsert(
             ConfigElementKey.MinimumLogLevelHttp,
-            loggingSettings.HttpMinimumLogLevel);
+            loggingSettings.HttpMinimumLogLevel, cancellationToken);
         _loggingLevelSwitches.HttpLevelSwitch.MinimumLevel = loggingSettings.HttpMinimumLogLevel;
 
         return Unit.Default;

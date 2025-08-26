@@ -92,7 +92,8 @@ public class BlockPlayoutFillerBuilder(
                         mediaCollectionRepository,
                         televisionRepository,
                         artistRepository,
-                        collectionKey);
+                        collectionKey,
+                        cancellationToken);
 
                     enumerator = BlockPlayoutEnumerator.Shuffle(
                         collectionItems,

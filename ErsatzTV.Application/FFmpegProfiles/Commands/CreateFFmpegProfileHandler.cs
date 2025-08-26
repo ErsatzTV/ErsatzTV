@@ -24,7 +24,7 @@ public class CreateFFmpegProfileHandler :
         CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        Validation<BaseError, FFmpegProfile> validation = await Validate(dbContext, request);
+        Validation<BaseError, FFmpegProfile> validation = await Validate(dbContext, request, cancellationToken);
         return await validation.Apply(profile => PersistFFmpegProfile(dbContext, profile));
     }
 
@@ -40,8 +40,10 @@ public class CreateFFmpegProfileHandler :
 
     private static async Task<Validation<BaseError, FFmpegProfile>> Validate(
         TvContext dbContext,
-        CreateFFmpegProfile request) =>
-        (ValidateName(request), ValidateThreadCount(request), await ResolutionMustExist(dbContext, request))
+        CreateFFmpegProfile request,
+        CancellationToken cancellationToken) =>
+        (ValidateName(request), ValidateThreadCount(request),
+            await ResolutionMustExist(dbContext, request, cancellationToken))
         .Apply((name, threadCount, resolutionId) => new FFmpegProfile
         {
             Name = name,
@@ -84,9 +86,10 @@ public class CreateFFmpegProfileHandler :
 
     private static Task<Validation<BaseError, int>> ResolutionMustExist(
         TvContext dbContext,
-        CreateFFmpegProfile createFFmpegProfile) =>
+        CreateFFmpegProfile createFFmpegProfile,
+        CancellationToken cancellationToken) =>
         dbContext.Resolutions
-            .SelectOneAsync(r => r.Id, r => r.Id == createFFmpegProfile.ResolutionId)
+            .SelectOneAsync(r => r.Id, r => r.Id == createFFmpegProfile.ResolutionId, cancellationToken)
             .MapT(r => r.Id)
             .Map(o => o.ToValidation<BaseError>($"[Resolution] {createFFmpegProfile.ResolutionId} does not exist"));
 }

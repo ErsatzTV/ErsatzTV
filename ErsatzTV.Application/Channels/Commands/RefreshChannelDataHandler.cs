@@ -183,7 +183,7 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
             new XmlWriterSettings { Async = true, ConformanceLevel = ConformanceLevel.Fragment });
 
         int daysToBuild = await _configElementRepository
-            .GetValue<int>(ConfigElementKey.XmltvDaysToBuild)
+            .GetValue<int>(ConfigElementKey.XmltvDaysToBuild, cancellationToken)
             .IfNoneAsync(2);
 
         DateTimeOffset finish = DateTimeOffset.UtcNow.AddDays(daysToBuild);
@@ -210,7 +210,8 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
                         songTemplate,
                         otherVideoTemplate,
                         minifier,
-                        xml);
+                        xml,
+                        cancellationToken);
                     break;
                 case PlayoutScheduleKind.Block:
                     var blockSorted = playouts
@@ -228,7 +229,8 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
                         songTemplate,
                         otherVideoTemplate,
                         minifier,
-                        xml);
+                        xml,
+                        cancellationToken);
                     break;
                 case PlayoutScheduleKind.ExternalJson:
                     var externalJsonSorted = (await CollectExternalJsonItems(playout.ScheduleFile))
@@ -245,7 +247,8 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
                         songTemplate,
                         otherVideoTemplate,
                         minifier,
-                        xml);
+                        xml,
+                        cancellationToken);
                     break;
             }
         }
@@ -268,10 +271,11 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
         Template songTemplate,
         Template otherVideoTemplate,
         XmlMinifier minifier,
-        XmlWriter xml)
+        XmlWriter xml,
+        CancellationToken cancellationToken)
     {
         XmltvTimeZone xmltvTimeZone = await _configElementRepository
-            .GetValue<XmltvTimeZone>(ConfigElementKey.XmltvTimeZone)
+            .GetValue<XmltvTimeZone>(ConfigElementKey.XmltvTimeZone, cancellationToken)
             .IfNoneAsync(XmltvTimeZone.Local);
 
         // skip all filler that isn't pre-roll
@@ -357,14 +361,15 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
         Template songTemplate,
         Template otherVideoTemplate,
         XmlMinifier minifier,
-        XmlWriter xml)
+        XmlWriter xml,
+        CancellationToken cancellationToken)
     {
         XmltvTimeZone xmltvTimeZone = await _configElementRepository
-            .GetValue<XmltvTimeZone>(ConfigElementKey.XmltvTimeZone)
+            .GetValue<XmltvTimeZone>(ConfigElementKey.XmltvTimeZone, cancellationToken)
             .IfNoneAsync(XmltvTimeZone.Local);
 
         XmltvBlockBehavior xmltvBlockBehavior = await _configElementRepository
-            .GetValue<XmltvBlockBehavior>(ConfigElementKey.XmltvBlockBehavior)
+            .GetValue<XmltvBlockBehavior>(ConfigElementKey.XmltvBlockBehavior, cancellationToken)
             .IfNoneAsync(XmltvBlockBehavior.SplitTimeEvenly);
 
         var groups = sorted.GroupBy(s => new { s.GuideStart, s.GuideFinish, s.GuideGroup });

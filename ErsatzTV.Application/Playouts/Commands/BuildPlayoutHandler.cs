@@ -68,14 +68,14 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
             if (request.Mode is not PlayoutBuildMode.Reset)
             {
                 // this needs to happen before we load the playout in this handler because it modifies items, etc
-                await _playoutTimeShifter.TimeShift(request.PlayoutId, DateTimeOffset.Now, false);
+                await _playoutTimeShifter.TimeShift(request.PlayoutId, DateTimeOffset.Now, false, cancellationToken);
             }
 
             Either<BaseError, PlayoutBuildResult> result;
 
             {
                 await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-                Validation<BaseError, Playout> validation = await Validate(dbContext, request);
+                Validation<BaseError, Playout> validation = await Validate(dbContext, request, cancellationToken);
                 result = await validation.Match(
                     playout => ApplyUpdateRequest(dbContext, request, playout, cancellationToken),
                     error => Task.FromResult<Either<BaseError, PlayoutBuildResult>>(error.Join()));
@@ -86,7 +86,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
             {
                 foreach (DateTimeOffset timeShiftTo in playoutBuildResult.TimeShiftTo)
                 {
-                    await _playoutTimeShifter.TimeShift(request.PlayoutId, timeShiftTo, false);
+                    await _playoutTimeShifter.TimeShift(request.PlayoutId, timeShiftTo, false, cancellationToken);
                 }
             }
 
@@ -264,8 +264,11 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
         }
     }
 
-    private static Task<Validation<BaseError, Playout>> Validate(TvContext dbContext, BuildPlayout request) =>
-        PlayoutMustExist(dbContext, request).BindT(DiscardAttemptsMustBeValid);
+    private static Task<Validation<BaseError, Playout>> Validate(
+        TvContext dbContext,
+        BuildPlayout request,
+        CancellationToken cancellationToken) =>
+        PlayoutMustExist(dbContext, request, cancellationToken).BindT(DiscardAttemptsMustBeValid);
 
     private static Validation<BaseError, Playout> DiscardAttemptsMustBeValid(Playout playout)
     {
@@ -284,11 +287,12 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
 
     private static async Task<Validation<BaseError, Playout>> PlayoutMustExist(
         TvContext dbContext,
-        BuildPlayout buildPlayout)
+        BuildPlayout buildPlayout,
+        CancellationToken cancellationToken)
     {
         Option<Playout> maybePlayout = await dbContext.Playouts
             .Include(p => p.Anchor)
-            .SelectOneAsync(p => p.Id, p => p.Id == buildPlayout.PlayoutId);
+            .SelectOneAsync(p => p.Id, p => p.Id == buildPlayout.PlayoutId, cancellationToken);
 
         foreach (Playout playout in maybePlayout)
         {
@@ -297,24 +301,24 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
                 case PlayoutScheduleKind.Classic:
                     await dbContext.Entry(playout)
                         .Collection(p => p.FillGroupIndices)
-                        .LoadAsync();
+                        .LoadAsync(cancellationToken);
 
                     foreach (PlayoutScheduleItemFillGroupIndex fillGroupIndex in playout.FillGroupIndices)
                     {
                         await dbContext.Entry(fillGroupIndex)
                             .Reference(fgi => fgi.EnumeratorState)
-                            .LoadAsync();
+                            .LoadAsync(cancellationToken);
                     }
 
                     await dbContext.Entry(playout)
                         .Collection(p => p.ProgramScheduleAnchors)
-                        .LoadAsync();
+                        .LoadAsync(cancellationToken);
 
                     foreach (PlayoutProgramScheduleAnchor anchor in playout.ProgramScheduleAnchors)
                     {
                         await dbContext.Entry(anchor)
                             .Reference(a => a.EnumeratorState)
-                            .LoadAsync();
+                            .LoadAsync(cancellationToken);
                     }
 
                     break;

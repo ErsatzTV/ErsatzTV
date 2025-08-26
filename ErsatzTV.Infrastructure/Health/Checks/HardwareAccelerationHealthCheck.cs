@@ -35,7 +35,7 @@ public class HardwareAccelerationHealthCheck : BaseHealthCheck, IHardwareAcceler
     public async Task<HealthCheckResult> Check(CancellationToken cancellationToken)
     {
         Option<ConfigElement> maybeFFmpegPath =
-            await _configElementRepository.GetConfigElement(ConfigElementKey.FFmpegPath);
+            await _configElementRepository.GetConfigElement(ConfigElementKey.FFmpegPath, cancellationToken);
         if (maybeFFmpegPath.IsNone)
         {
             return FailResult("Unable to locate ffmpeg", "Unable to locate ffmpeg");

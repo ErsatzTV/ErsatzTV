@@ -14,5 +14,5 @@ public class
     public Task<Option<EmbyMediaSourceViewModel>> Handle(
         GetEmbyMediaSourceById request,
         CancellationToken cancellationToken) =>
-        _mediaSourceRepository.GetEmby(request.EmbyMediaSourceId).MapT(ProjectToViewModel);
+        _mediaSourceRepository.GetEmby(request.EmbyMediaSourceId, cancellationToken).MapT(ProjectToViewModel);
 }

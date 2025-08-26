@@ -46,7 +46,7 @@ public class GetTelevisionShowByIdHandler : IRequestHandler<GetTelevisionShowByI
             .ThenInclude(a => a.Artwork)
             .Include(s => s.ShowMetadata)
             .ThenInclude(sm => sm.Guids)
-            .SelectOneAsync(s => s.Id, s => s.Id == request.Id);
+            .SelectOneAsync(s => s.Id, s => s.Id == request.Id, cancellationToken);
 
         foreach (Show show in maybeShow)
         {

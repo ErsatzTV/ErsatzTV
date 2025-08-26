@@ -105,7 +105,7 @@ public class SequentialPlayoutBuilder(
             }
         }
 
-        int daysToBuild = await GetDaysToBuild();
+        int daysToBuild = await GetDaysToBuild(cancellationToken);
         DateTimeOffset finish = start.AddDays(daysToBuild);
 
         Dictionary<YamlPlayoutInstruction, IYamlPlayoutHandler> handlers = new();
@@ -376,9 +376,9 @@ public class SequentialPlayoutBuilder(
         return graph.HasAnyCycle();
     }
 
-    private async Task<int> GetDaysToBuild() =>
+    private async Task<int> GetDaysToBuild(CancellationToken cancellationToken) =>
         await configElementRepository
-            .GetValue<int>(ConfigElementKey.PlayoutDaysToBuild)
+            .GetValue<int>(ConfigElementKey.PlayoutDaysToBuild, cancellationToken)
             .IfNoneAsync(2);
 
     private static void FlattenSequences(YamlPlayoutContext context)

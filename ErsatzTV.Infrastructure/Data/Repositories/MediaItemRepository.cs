@@ -141,17 +141,19 @@ public class MediaItemRepository : IMediaItemRepository
         MediaItem incoming,
         int libraryPathId,
         TvContext dbContext,
-        ILogger logger)
+        ILogger logger,
+        CancellationToken cancellationToken)
     {
         string path = incoming.GetHeadVersion().MediaFiles.Head().Path;
-        return await MediaFileAlreadyExists(path, libraryPathId, dbContext, logger);
+        return await MediaFileAlreadyExists(path, libraryPathId, dbContext, logger, cancellationToken);
     }
 
     public static async Task<bool> MediaFileAlreadyExists(
         string path,
         int libraryPathId,
         TvContext dbContext,
-        ILogger logger)
+        ILogger logger,
+        CancellationToken cancellationToken)
     {
         Option<int> maybeMediaItemId = await dbContext.Connection
             .QuerySingleOrDefaultAsync<int?>(
@@ -168,13 +170,14 @@ public class MediaItemRepository : IMediaItemRepository
                 .AsNoTracking()
                 .Include(mi => mi.LibraryPath)
                 .ThenInclude(lp => lp.Library)
-                .SelectOneAsync(mi => mi.Id, mi => mi.Id == mediaItemId);
+                .SelectOneAsync(mi => mi.Id, mi => mi.Id == mediaItemId, cancellationToken);
 
             foreach (MediaItem mediaItem in maybeMediaItem)
             {
                 Option<Library> maybeIncomingLibrary = await dbContext.Libraries
+                    .AsNoTracking()
                     .Filter(l => l.Paths.Any(p => p.Id == libraryPathId))
-                    .SingleOrDefaultAsync()
+                    .SingleOrDefaultAsync(cancellationToken)
                     .Map(Optional);
 
                 foreach (Library incomingLibrary in maybeIncomingLibrary)

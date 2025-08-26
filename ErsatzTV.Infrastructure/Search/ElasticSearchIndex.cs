@@ -53,11 +53,12 @@ public class ElasticSearchIndex : ISearchIndex
 
     public async Task<bool> Initialize(
         ILocalFileSystem localFileSystem,
-        IConfigElementRepository configElementRepository)
+        IConfigElementRepository configElementRepository,
+        CancellationToken cancellationToken)
     {
         _client ??= CreateClient();
 
-        ExistsResponse exists = await _client.Indices.ExistsAsync(IndexName);
+        ExistsResponse exists = await _client.Indices.ExistsAsync(IndexName, cancellationToken);
         if (!exists.IsValidResponse)
         {
             CreateIndexResponse createResponse = await CreateIndex();
@@ -94,11 +95,12 @@ public class ElasticSearchIndex : ISearchIndex
     public async Task<Unit> RebuildItems(
         ICachingSearchRepository searchRepository,
         IFallbackMetadataProvider fallbackMetadataProvider,
-        IEnumerable<int> itemIds)
+        IEnumerable<int> itemIds,
+        CancellationToken cancellationToken)
     {
         foreach (int id in itemIds)
         {
-            foreach (MediaItem mediaItem in await searchRepository.GetItemToIndex(id))
+            foreach (MediaItem mediaItem in await searchRepository.GetItemToIndex(id, cancellationToken))
             {
                 await RebuildItem(searchRepository, fallbackMetadataProvider, mediaItem);
             }

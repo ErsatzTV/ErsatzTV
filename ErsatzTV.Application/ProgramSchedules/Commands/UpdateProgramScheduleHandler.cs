@@ -28,7 +28,7 @@ public class UpdateProgramScheduleHandler :
         CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        Validation<BaseError, ProgramSchedule> validation = await Validate(dbContext, request);
+        Validation<BaseError, ProgramSchedule> validation = await Validate(dbContext, request, cancellationToken);
         return await validation.Apply(ps => ApplyUpdateRequest(dbContext, ps, request));
     }
 
@@ -73,15 +73,17 @@ public class UpdateProgramScheduleHandler :
 
     private static async Task<Validation<BaseError, ProgramSchedule>> Validate(
         TvContext dbContext,
-        UpdateProgramSchedule request) =>
-        (await ProgramScheduleMustExist(dbContext, request), ValidateName(request))
+        UpdateProgramSchedule request,
+        CancellationToken cancellationToken) =>
+        (await ProgramScheduleMustExist(dbContext, request, cancellationToken), ValidateName(request))
         .Apply((programSchedule, _) => programSchedule);
 
     private static Task<Validation<BaseError, ProgramSchedule>> ProgramScheduleMustExist(
         TvContext dbContext,
-        UpdateProgramSchedule request) =>
+        UpdateProgramSchedule request,
+        CancellationToken cancellationToken) =>
         dbContext.ProgramSchedules
-            .SelectOneAsync(ps => ps.Id, ps => ps.Id == request.ProgramScheduleId)
+            .SelectOneAsync(ps => ps.Id, ps => ps.Id == request.ProgramScheduleId, cancellationToken)
             .Map(o => o.ToValidation<BaseError>("ProgramSchedule does not exist"));
 
     private static Validation<BaseError, string> ValidateName(UpdateProgramSchedule request) =>

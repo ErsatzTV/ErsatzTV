@@ -16,7 +16,7 @@ public class GetFillerPresetByIdHandler(IDbContextFactory<TvContext> dbContextFa
         return await dbContext.FillerPresets
             .AsNoTracking()
             .Include(i => i.Playlist)
-            .SelectOneAsync(c => c.Id, c => c.Id == request.Id)
+            .SelectOneAsync(c => c.Id, c => c.Id == request.Id, cancellationToken)
             .MapT(ProjectToViewModel);
     }
 }

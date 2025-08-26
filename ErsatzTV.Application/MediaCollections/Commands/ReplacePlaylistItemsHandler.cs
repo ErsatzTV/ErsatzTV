@@ -14,14 +14,15 @@ public class ReplacePlaylistItemsHandler(IDbContextFactory<TvContext> dbContextF
         CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
-        Validation<BaseError, Playlist> validation = await Validate(dbContext, request);
-        return await validation.Apply(ps => Persist(dbContext, request, ps));
+        Validation<BaseError, Playlist> validation = await Validate(dbContext, request, cancellationToken);
+        return await validation.Apply(ps => Persist(dbContext, request, ps, cancellationToken));
     }
 
     private static async Task<List<PlaylistItemViewModel>> Persist(
         TvContext dbContext,
         ReplacePlaylistItems request,
-        Playlist playlist)
+        Playlist playlist,
+        CancellationToken cancellationToken)
     {
         playlist.Name = request.Name;
         //playlist.DateUpdated = DateTime.UtcNow;
@@ -29,7 +30,7 @@ public class ReplacePlaylistItemsHandler(IDbContextFactory<TvContext> dbContextF
         dbContext.RemoveRange(playlist.Items);
         playlist.Items = request.Items.Map(i => BuildItem(playlist, i.Index, i)).ToList();
 
-        await dbContext.SaveChangesAsync();
+        await dbContext.SaveChangesAsync(cancellationToken);
 
         return playlist.Items.Map(Mapper.ProjectToViewModel).ToList();
     }
@@ -49,14 +50,20 @@ public class ReplacePlaylistItemsHandler(IDbContextFactory<TvContext> dbContextF
             IncludeInProgramGuide = item.IncludeInProgramGuide
         };
 
-    private static Task<Validation<BaseError, Playlist>> Validate(TvContext dbContext, ReplacePlaylistItems request) =>
-        PlaylistMustExist(dbContext, request.PlaylistId)
+    private static Task<Validation<BaseError, Playlist>> Validate(
+        TvContext dbContext,
+        ReplacePlaylistItems request,
+        CancellationToken cancellationToken) =>
+        PlaylistMustExist(dbContext, request.PlaylistId, cancellationToken)
             .BindT(playlist => CollectionTypesMustBeValid(request, playlist));
 
-    private static Task<Validation<BaseError, Playlist>> PlaylistMustExist(TvContext dbContext, int playlistId) =>
+    private static Task<Validation<BaseError, Playlist>> PlaylistMustExist(
+        TvContext dbContext,
+        int playlistId,
+        CancellationToken cancellationToken) =>
         dbContext.Playlists
             .Include(b => b.Items)
-            .SelectOneAsync(b => b.Id, b => b.Id == playlistId)
+            .SelectOneAsync(b => b.Id, b => b.Id == playlistId, cancellationToken)
             .Map(o => o.ToValidation<BaseError>("[PlaylistId] does not exist."));
 
     private static Validation<BaseError, Playlist> CollectionTypesMustBeValid(

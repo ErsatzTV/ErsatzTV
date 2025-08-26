@@ -21,7 +21,7 @@ public class UpdateOnDemandCheckpointHandler(
         Option<Playout> maybePlayout = await dbContext.Playouts
             .Include(p => p.Channel)
             .Include(p => p.Items)
-            .SelectOneAsync(p => p.Channel.Number, p => p.Channel.Number == request.ChannelNumber);
+            .SelectOneAsync(p => p.Channel.Number, p => p.Channel.Number == request.ChannelNumber, cancellationToken);
 
         foreach (Playout playout in maybePlayout)
         {
@@ -32,7 +32,9 @@ public class UpdateOnDemandCheckpointHandler(
 
             playout.OnDemandCheckpoint ??= SystemTime.MinValueUtc;
 
-            int timeout = await (await configElementRepository.GetValue<int>(ConfigElementKey.FFmpegSegmenterTimeout))
+            int timeout = await (await configElementRepository.GetValue<int>(
+                    ConfigElementKey.FFmpegSegmenterTimeout,
+                    cancellationToken))
                 .IfNoneAsync(60);
 
             // don't move checkpoint back in time

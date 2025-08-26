@@ -15,12 +15,14 @@ namespace ErsatzTV.Infrastructure.Data.Repositories;
 public class TemplateDataRepository(ILocalFileSystem localFileSystem, IDbContextFactory<TvContext> dbContextFactory)
     : ITemplateDataRepository
 {
-    public async Task<Option<Dictionary<string, object>>> GetMediaItemTemplateData(MediaItem mediaItem) =>
+    public async Task<Option<Dictionary<string, object>>> GetMediaItemTemplateData(
+        MediaItem mediaItem,
+        CancellationToken cancellationToken) =>
         mediaItem switch
         {
-            Movie => await GetMovieTemplateData(mediaItem.Id),
-            Episode => await GetEpisodeTemplateData(mediaItem.Id),
-            MusicVideo => await GetMusicVideoTemplateData(mediaItem.Id),
+            Movie => await GetMovieTemplateData(mediaItem.Id, cancellationToken),
+            Episode => await GetEpisodeTemplateData(mediaItem.Id, cancellationToken),
+            MusicVideo => await GetMusicVideoTemplateData(mediaItem.Id, cancellationToken),
             _ => Option<Dictionary<string, object>>.None
         };
 
@@ -88,9 +90,9 @@ public class TemplateDataRepository(ILocalFileSystem localFileSystem, IDbContext
         return Option<Dictionary<string, object>>.None;
     }
 
-    private async Task<Option<Dictionary<string, object>>> GetMovieTemplateData(int movieId)
+    private async Task<Option<Dictionary<string, object>>> GetMovieTemplateData(int movieId, CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         Option<Movie> maybeMovie = await dbContext.Movies
             .AsNoTracking()
@@ -101,7 +103,7 @@ public class TemplateDataRepository(ILocalFileSystem localFileSystem, IDbContext
             .ThenInclude(mm => mm.Directors)
             .Include(m => m.MovieMetadata)
             .ThenInclude(mm => mm.Genres)
-            .SelectOneAsync(m => m.Id, m => m.Id == movieId);
+            .SelectOneAsync(m => m.Id, m => m.Id == movieId, cancellationToken);
 
         foreach (Movie movie in maybeMovie)
         {
@@ -124,9 +126,9 @@ public class TemplateDataRepository(ILocalFileSystem localFileSystem, IDbContext
         return Option<Dictionary<string, object>>.None;
     }
 
-    private async Task<Option<Dictionary<string, object>>> GetEpisodeTemplateData(int episodeId)
+    private async Task<Option<Dictionary<string, object>>> GetEpisodeTemplateData(int episodeId, CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         Option<Episode> maybeEpisode = await dbContext.Episodes
             .AsNoTracking()
@@ -140,7 +142,7 @@ public class TemplateDataRepository(ILocalFileSystem localFileSystem, IDbContext
             .ThenInclude(em => em.Directors)
             .Include(e => e.EpisodeMetadata)
             .ThenInclude(em => em.Genres)
-            .SelectOneAsync(e => e.Id, e => e.Id == episodeId);
+            .SelectOneAsync(e => e.Id, e => e.Id == episodeId, cancellationToken);
 
         var result = new Dictionary<string, object>();
 
@@ -179,9 +181,9 @@ public class TemplateDataRepository(ILocalFileSystem localFileSystem, IDbContext
         return Option<Dictionary<string, object>>.None;
     }
 
-    private async Task<Option<Dictionary<string, object>>> GetMusicVideoTemplateData(int musicVideoId)
+    private async Task<Option<Dictionary<string, object>>> GetMusicVideoTemplateData(int musicVideoId, CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         Option<MusicVideo> maybeMusicVideo = await dbContext.MusicVideos
             .AsNoTracking()
@@ -196,7 +198,7 @@ public class TemplateDataRepository(ILocalFileSystem localFileSystem, IDbContext
             .ThenInclude(mvm => mvm.Directors)
             .Include(mv => mv.MusicVideoMetadata)
             .ThenInclude(mvm => mvm.Genres)
-            .SelectOneAsync(mv => mv.Id, mv => mv.Id == musicVideoId);
+            .SelectOneAsync(mv => mv.Id, mv => mv.Id == musicVideoId, cancellationToken);
 
         foreach (MusicVideo musicVideo in maybeMusicVideo)
         {

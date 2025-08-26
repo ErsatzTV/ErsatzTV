@@ -20,7 +20,11 @@ public interface ISchedulingEngine
     ISchedulingEngine RestoreOrReset(Option<PlayoutAnchor> maybeAnchor);
 
     // content definitions
-    Task AddCollection(string key, string collectionName, PlaybackOrder playbackOrder);
+    Task AddCollection(
+        string key,
+        string collectionName,
+        PlaybackOrder playbackOrder,
+        CancellationToken cancellationToken);
 
     Task AddMarathon(
         string key,
@@ -31,9 +35,20 @@ public interface ISchedulingEngine
         PlaybackOrder itemPlaybackOrder,
         bool playAllItems);
 
-    Task AddMultiCollection(string key, string multiCollectionName, PlaybackOrder playbackOrder);
-    Task AddPlaylist(string key, string playlist, string playlistGroup);
-    Task AddSmartCollection(string key, string smartCollectionName, PlaybackOrder playbackOrder);
+    Task AddMultiCollection(
+        string key,
+        string multiCollectionName,
+        PlaybackOrder playbackOrder,
+        CancellationToken cancellationToken);
+
+    Task AddPlaylist(string key, string playlist, string playlistGroup, CancellationToken cancellationToken);
+
+    Task AddSmartCollection(
+        string key,
+        string smartCollectionName,
+        PlaybackOrder playbackOrder,
+        CancellationToken cancellationToken);
+
     Task AddSearch(string key, string query, PlaybackOrder playbackOrder);
     Task AddShow(string key, Dictionary<string, string> guids, PlaybackOrder playbackOrder);
 
@@ -89,8 +104,13 @@ public interface ISchedulingEngine
     // control instructions
     void LockGuideGroup(bool advance);
     void UnlockGuideGroup();
-    Task GraphicsOn(List<string> graphicsElements, Dictionary<string, string> variables);
-    Task GraphicsOff(List<string> graphicsElements);
+
+    Task GraphicsOn(
+        List<string> graphicsElements,
+        Dictionary<string, string> variables,
+        CancellationToken cancellationToken);
+
+    Task GraphicsOff(List<string> graphicsElements, CancellationToken cancellationToken);
     Task WatermarkOn(List<string> watermarks);
     Task WatermarkOff(List<string> watermarks);
     void SkipItems(string content, int count);

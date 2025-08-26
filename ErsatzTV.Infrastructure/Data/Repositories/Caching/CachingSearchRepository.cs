@@ -14,7 +14,8 @@ public class CachingSearchRepository : ICachingSearchRepository
 
     public CachingSearchRepository(ISearchRepository searchRepository) => _searchRepository = searchRepository;
 
-    public Task<Option<MediaItem>> GetItemToIndex(int id) => _searchRepository.GetItemToIndex(id);
+    public Task<Option<MediaItem>> GetItemToIndex(int id, CancellationToken cancellationToken) =>
+        _searchRepository.GetItemToIndex(id, cancellationToken);
 
     public Task<List<string>> GetLanguagesForShow(Show show) => _searchRepository.GetLanguagesForShow(show);
     public Task<List<string>> GetSubLanguagesForShow(Show show) => _searchRepository.GetSubLanguagesForShow(show);

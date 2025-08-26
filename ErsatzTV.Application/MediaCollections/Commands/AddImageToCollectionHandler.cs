@@ -35,7 +35,7 @@ public class AddImageToCollectionHandler : IRequestHandler<AddImageToCollection,
         CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        Validation<BaseError, Parameters> validation = await Validate(dbContext, request);
+        Validation<BaseError, Parameters> validation = await Validate(dbContext, request, cancellationToken);
         return await validation.Apply(parameters => ApplyAddImageRequest(dbContext, parameters));
     }
 
@@ -59,23 +59,27 @@ public class AddImageToCollectionHandler : IRequestHandler<AddImageToCollection,
 
     private static async Task<Validation<BaseError, Parameters>> Validate(
         TvContext dbContext,
-        AddImageToCollection request) =>
-        (await CollectionMustExist(dbContext, request), await ValidateImage(dbContext, request))
+        AddImageToCollection request,
+        CancellationToken cancellationToken) =>
+        (await CollectionMustExist(dbContext, request, cancellationToken),
+            await ValidateImage(dbContext, request, cancellationToken))
         .Apply((collection, episode) => new Parameters(collection, episode));
 
     private static Task<Validation<BaseError, Collection>> CollectionMustExist(
         TvContext dbContext,
-        AddImageToCollection request) =>
+        AddImageToCollection request,
+        CancellationToken cancellationToken) =>
         dbContext.Collections
             .Include(c => c.MediaItems)
-            .SelectOneAsync(c => c.Id, c => c.Id == request.CollectionId)
+            .SelectOneAsync(c => c.Id, c => c.Id == request.CollectionId, cancellationToken)
             .Map(o => o.ToValidation<BaseError>("Collection does not exist."));
 
     private static Task<Validation<BaseError, Image>> ValidateImage(
         TvContext dbContext,
-        AddImageToCollection request) =>
+        AddImageToCollection request,
+        CancellationToken cancellationToken) =>
         dbContext.Images
-            .SelectOneAsync(m => m.Id, e => e.Id == request.ImageId)
+            .SelectOneAsync(m => m.Id, e => e.Id == request.ImageId, cancellationToken)
             .Map(o => o.ToValidation<BaseError>("Image does not exist"));
 
     private sealed record Parameters(Collection Collection, Image Image);

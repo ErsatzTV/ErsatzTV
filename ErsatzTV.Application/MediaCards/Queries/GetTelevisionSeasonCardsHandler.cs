@@ -32,7 +32,7 @@ public class
             .Map(list => list.HeadOrNone());
 
         List<TelevisionSeasonCardViewModel> results = await _televisionRepository
-            .GetPagedSeasons(request.TelevisionShowId, request.PageNumber, request.PageSize)
+            .GetPagedSeasons(request.TelevisionShowId, request.PageNumber, request.PageSize, cancellationToken)
             .Map(list => list.Map(s => ProjectToViewModel(s, maybeJellyfin, maybeEmby)).ToList());
 
         return new TelevisionSeasonCardResultsViewModel(count, results, null);

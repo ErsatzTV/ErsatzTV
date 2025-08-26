@@ -51,14 +51,15 @@ public class BlockPlayoutBuilder(
             PlaybackOrder.RandomRotation
         ];
 
-        int daysToBuild = await GetDaysToBuild();
+        int daysToBuild = await GetDaysToBuild(cancellationToken);
 
         // get blocks to schedule
         List<EffectiveBlock> blocksToSchedule =
             EffectiveBlock.GetEffectiveBlocks(referenceData.PlayoutTemplates, start, daysToBuild);
 
         // get all collection items for the playout
-        Map<CollectionKey, List<MediaItem>> collectionMediaItems = await GetCollectionMediaItems(blocksToSchedule);
+        Map<CollectionKey, List<MediaItem>> collectionMediaItems =
+            await GetCollectionMediaItems(blocksToSchedule, cancellationToken);
         if (collectionMediaItems.Values.All(v => v.Count == 0))
         {
             logger.LogWarning("There are no media items to schedule");
@@ -256,9 +257,9 @@ public class BlockPlayoutBuilder(
         return result;
     }
 
-    protected virtual async Task<int> GetDaysToBuild() =>
+    protected virtual async Task<int> GetDaysToBuild(CancellationToken cancellationToken) =>
         await configElementRepository
-            .GetValue<int>(ConfigElementKey.PlayoutDaysToBuild)
+            .GetValue<int>(ConfigElementKey.PlayoutDaysToBuild, cancellationToken)
             .IfNoneAsync(2);
 
     protected virtual IMediaCollectionEnumerator GetEnumerator(
@@ -350,7 +351,8 @@ public class BlockPlayoutBuilder(
     }
 
     private async Task<Map<CollectionKey, List<MediaItem>>> GetCollectionMediaItems(
-        List<EffectiveBlock> effectiveBlocks)
+        List<EffectiveBlock> effectiveBlocks,
+        CancellationToken cancellationToken)
     {
         var collectionKeys = effectiveBlocks.Map(b => b.Block.Items)
             .Flatten()
@@ -366,7 +368,8 @@ public class BlockPlayoutBuilder(
                     mediaCollectionRepository,
                     televisionRepository,
                     artistRepository,
-                    collectionKey))).SequenceParallel();
+                    collectionKey,
+                    cancellationToken))).SequenceParallel();
 
         return Map.createRange(tuples);
     }

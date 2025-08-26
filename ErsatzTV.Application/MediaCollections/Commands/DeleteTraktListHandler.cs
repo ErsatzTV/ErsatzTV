@@ -43,8 +43,11 @@ public class DeleteTraktListHandler : TraktCommandBase, IRequestHandler<DeleteTr
         try
         {
             await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-            Validation<BaseError, TraktList> validation = await TraktListMustExist(dbContext, request.TraktListId);
-            return await validation.Apply(c => DoDeletion(dbContext, c));
+            Validation<BaseError, TraktList> validation = await TraktListMustExist(
+                dbContext,
+                request.TraktListId,
+                cancellationToken);
+            return await validation.Apply(c => DoDeletion(dbContext, c, cancellationToken));
         }
         finally
         {
@@ -52,14 +55,18 @@ public class DeleteTraktListHandler : TraktCommandBase, IRequestHandler<DeleteTr
         }
     }
 
-    private async Task<Unit> DoDeletion(TvContext dbContext, TraktList traktList)
+    private async Task<Unit> DoDeletion(TvContext dbContext, TraktList traktList, CancellationToken cancellationToken)
     {
         var mediaItemIds = traktList.Items.Bind(i => Optional(i.MediaItemId)).ToList();
 
         dbContext.TraktLists.Remove(traktList);
-        if (await dbContext.SaveChangesAsync() > 0)
+        if (await dbContext.SaveChangesAsync(cancellationToken) > 0)
         {
-            await _searchIndex.RebuildItems(_searchRepository, _fallbackMetadataProvider, mediaItemIds);
+            await _searchIndex.RebuildItems(
+                _searchRepository,
+                _fallbackMetadataProvider,
+                mediaItemIds,
+                cancellationToken);
         }
 
         _searchIndex.Commit();

@@ -38,7 +38,7 @@ public class CallPlexLibraryScannerHandler : CallLibraryScannerHandler<ISynchron
         ISynchronizePlexLibraryById request,
         CancellationToken cancellationToken)
     {
-        Validation<BaseError, string> validation = await Validate(request);
+        Validation<BaseError, string> validation = await Validate(request, cancellationToken);
         return await validation.Match(
             scanner => PerformScan(scanner, request, cancellationToken),
             error =>
@@ -77,10 +77,11 @@ public class CallPlexLibraryScannerHandler : CallLibraryScannerHandler<ISynchron
 
     protected override async Task<DateTimeOffset> GetLastScan(
         TvContext dbContext,
-        ISynchronizePlexLibraryById request)
+        ISynchronizePlexLibraryById request,
+        CancellationToken cancellationToken)
     {
         DateTime minDateTime = await dbContext.PlexLibraries
-            .SelectOneAsync(l => l.Id, l => l.Id == request.PlexLibraryId)
+            .SelectOneAsync(l => l.Id, l => l.Id == request.PlexLibraryId, cancellationToken)
             .Match(l => l.LastScan ?? SystemTime.MinValueUtc, () => SystemTime.MaxValueUtc);
 
         return new DateTimeOffset(minDateTime, TimeSpan.Zero);

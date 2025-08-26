@@ -18,7 +18,8 @@ public class FFmpegStreamSelectorTests
     public class SelectAudioStream
     {
         [Test]
-        public async Task Should_Select_Audio_Stream_With_Preferred_Language()
+        [CancelAfter(1000)]
+        public async Task Should_Select_Audio_Stream_With_Preferred_Language(CancellationToken cancellationToken)
         {
             // skip movie/episode script paths by using other video
             var mediaItem = new OtherVideo();
@@ -69,7 +70,8 @@ public class FFmpegStreamSelectorTests
                 StreamingMode.TransportStream,
                 channel,
                 "jpn",
-                "Whatever");
+                "Whatever",
+                cancellationToken);
             selectedStream.IsSome.ShouldBeTrue();
             foreach (MediaStream stream in selectedStream)
             {
@@ -78,7 +80,8 @@ public class FFmpegStreamSelectorTests
         }
 
         [Test]
-        public async Task Should_Select_Audio_Stream_With_Preferred_Title()
+        [CancelAfter(1000)]
+        public async Task Should_Select_Audio_Stream_With_Preferred_Title(CancellationToken cancellationToken)
         {
             // skip movie/episode script paths by using other video
             var mediaItem = new OtherVideo();
@@ -129,7 +132,8 @@ public class FFmpegStreamSelectorTests
                 StreamingMode.TransportStream,
                 channel,
                 null,
-                channel.PreferredAudioTitle);
+                channel.PreferredAudioTitle,
+                cancellationToken);
             selectedStream.IsSome.ShouldBeTrue();
             foreach (MediaStream stream in selectedStream)
             {
@@ -138,7 +142,8 @@ public class FFmpegStreamSelectorTests
         }
 
         [Test]
-        public async Task Should_Select_Subtitle_Stream_With_Preferred_Language()
+        [CancelAfter(1000)]
+        public async Task Should_Select_Subtitle_Stream_With_Preferred_Language(CancellationToken cancellationToken)
         {
             // skip movie/episode script paths by using other video
             var subtitles = new List<Subtitle>
@@ -176,7 +181,8 @@ public class FFmpegStreamSelectorTests
                 subtitles.ToImmutableList(),
                 channel,
                 "heb",
-                ChannelSubtitleMode.Any);
+                ChannelSubtitleMode.Any,
+                cancellationToken);
             selectedStream.IsSome.ShouldBeTrue();
             foreach (Subtitle stream in selectedStream)
             {

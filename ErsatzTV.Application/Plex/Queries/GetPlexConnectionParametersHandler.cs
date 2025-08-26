@@ -42,7 +42,8 @@ public class GetPlexConnectionParametersHandler : PlexBaseConnectionHandler,
             return parameters;
         }
 
-        Option<PlexMediaSource> maybeMediaSource = await _mediaSourceRepository.GetPlex(request.PlexMediaSourceId);
+        Option<PlexMediaSource> maybeMediaSource =
+            await _mediaSourceRepository.GetPlex(request.PlexMediaSourceId, cancellationToken);
         foreach (PlexMediaSource mediaSource in maybeMediaSource)
         {
             Option<PlexServerAuthToken> maybeToken =

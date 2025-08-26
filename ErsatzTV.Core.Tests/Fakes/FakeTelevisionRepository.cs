@@ -13,7 +13,7 @@ public class FakeTelevisionRepository : ITelevisionRepository
 
     public Task<List<Show>> GetAllShows() => throw new NotSupportedException();
 
-    public Task<Option<Show>> GetShow(int showId) => throw new NotSupportedException();
+    public Task<Option<Show>> GetShow(int showId, CancellationToken cancellationToken) => throw new NotSupportedException();
     public Task<Option<int>> GetShowIdByTitle(int libraryId, string title) => throw new NotSupportedException();
     public Task<List<ShowMetadata>> GetShowsForCards(List<int> ids) => throw new NotSupportedException();
     public Task<List<SeasonMetadata>> GetSeasonsForCards(List<int> ids) => throw new NotSupportedException();
@@ -29,7 +29,11 @@ public class FakeTelevisionRepository : ITelevisionRepository
 
     public Task<int> GetSeasonCount(int showId) => throw new NotSupportedException();
 
-    public Task<List<Season>> GetPagedSeasons(int televisionShowId, int pageNumber, int pageSize) =>
+    public Task<List<Season>> GetPagedSeasons(
+        int televisionShowId,
+        int pageNumber,
+        int pageSize,
+        CancellationToken cancellationToken) =>
         throw new NotSupportedException();
 
     public Task<List<Episode>> GetSeasonItems(int seasonId) => throw new NotSupportedException();
@@ -52,7 +56,8 @@ public class FakeTelevisionRepository : ITelevisionRepository
         Season season,
         LibraryPath libraryPath,
         LibraryFolder libraryFolder,
-        string path) =>
+        string path,
+        CancellationToken cancellationToken) =>
         throw new NotSupportedException();
 
     public Task<IEnumerable<string>> FindEpisodePaths(LibraryPath libraryPath) => throw new NotSupportedException();

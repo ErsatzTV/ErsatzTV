@@ -9,7 +9,7 @@ namespace ErsatzTV.Core.Scheduling.ScriptedScheduling.Modules;
 [SuppressMessage("Usage", "VSTHRD002:Avoid problematic synchronous waits")]
 [SuppressMessage("ReSharper", "InconsistentNaming")]
 [SuppressMessage("ReSharper", "UnusedMember.Global")]
-public class ContentModule(ISchedulingEngine schedulingEngine)
+public class ContentModule(ISchedulingEngine schedulingEngine, CancellationToken cancellationToken)
 {
     public void add_search(string key, string query, string order)
     {
@@ -28,7 +28,7 @@ public class ContentModule(ISchedulingEngine schedulingEngine)
             return;
         }
 
-        schedulingEngine.AddCollection(key, collection, playbackOrder).GetAwaiter().GetResult();
+        schedulingEngine.AddCollection(key, collection, playbackOrder, cancellationToken).GetAwaiter().GetResult();
     }
 
     public void add_marathon(
@@ -84,12 +84,15 @@ public class ContentModule(ISchedulingEngine schedulingEngine)
             return;
         }
 
-        schedulingEngine.AddMultiCollection(key, multi_collection, playbackOrder).GetAwaiter().GetResult();
+        schedulingEngine
+            .AddMultiCollection(key, multi_collection, playbackOrder, cancellationToken)
+            .GetAwaiter()
+            .GetResult();
     }
 
     public void add_playlist(string key, string playlist, string playlist_group)
     {
-        schedulingEngine.AddPlaylist(key, playlist, playlist_group).GetAwaiter().GetResult();
+        schedulingEngine.AddPlaylist(key, playlist, playlist_group, cancellationToken).GetAwaiter().GetResult();
     }
 
     public void add_smart_collection(string key, string smart_collection, string order)
@@ -99,7 +102,10 @@ public class ContentModule(ISchedulingEngine schedulingEngine)
             return;
         }
 
-        schedulingEngine.AddSmartCollection(key, smart_collection, playbackOrder).GetAwaiter().GetResult();
+        schedulingEngine
+            .AddSmartCollection(key, smart_collection, playbackOrder, cancellationToken)
+            .GetAwaiter()
+            .GetResult();
     }
 
     public void add_show(string key, PythonDictionary guids, string order)

@@ -41,7 +41,8 @@ public interface IFFmpegProcessService
         long ptsOffset,
         Option<int> targetFramerate,
         Option<string> customReportsFolder,
-        Action<FFmpegPipeline> pipelineAction);
+        Action<FFmpegPipeline> pipelineAction,
+        CancellationToken cancellationToken);
 
     Task<Command> ForError(
         string ffmpegPath,

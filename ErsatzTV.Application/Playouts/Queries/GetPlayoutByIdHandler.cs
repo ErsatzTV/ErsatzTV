@@ -16,7 +16,7 @@ public class GetPlayoutByIdHandler(IDbContextFactory<TvContext> dbContextFactory
             .AsNoTracking()
             .Include(p => p.ProgramSchedule)
             .Include(p => p.Channel)
-            .SelectOneAsync(p => p.Id, p => p.Id == request.PlayoutId)
+            .SelectOneAsync(p => p.Id, p => p.Id == request.PlayoutId, cancellationToken)
             .MapT(p => new PlayoutNameViewModel(
                 p.Id,
                 p.ScheduleKind,

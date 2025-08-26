@@ -75,7 +75,9 @@ public class NewPlayoutTests : PlayoutBuilderTestBase
 
         IConfigElementRepository configRepo = Substitute.For<IConfigElementRepository>();
         configRepo
-            .GetValue<bool>(Arg.Is<ConfigElementKey>(k => k.Key == ConfigElementKey.PlayoutSkipMissingItems.Key))
+            .GetValue<bool>(
+                Arg.Is<ConfigElementKey>(k => k.Key == ConfigElementKey.PlayoutSkipMissingItems.Key),
+                Arg.Any<CancellationToken>())
             .Returns(Some(true));
 
         (PlayoutBuilder builder, Playout playout, PlayoutReferenceData referenceData) =
@@ -100,7 +102,9 @@ public class NewPlayoutTests : PlayoutBuilderTestBase
 
         IConfigElementRepository configRepo = Substitute.For<IConfigElementRepository>();
         configRepo
-            .GetValue<bool>(Arg.Is<ConfigElementKey>(k => k.Key == ConfigElementKey.PlayoutSkipMissingItems.Key))
+            .GetValue<bool>(
+                Arg.Is<ConfigElementKey>(k => k.Key == ConfigElementKey.PlayoutSkipMissingItems.Key),
+                Arg.Any<CancellationToken>())
             .Returns(Some(true));
 
         (PlayoutBuilder builder, Playout playout, PlayoutReferenceData referenceData) =
@@ -137,7 +141,9 @@ public class NewPlayoutTests : PlayoutBuilderTestBase
 
         IConfigElementRepository configRepo = Substitute.For<IConfigElementRepository>();
         configRepo
-            .GetValue<bool>(Arg.Is<ConfigElementKey>(k => k.Key == ConfigElementKey.PlayoutSkipMissingItems.Key))
+            .GetValue<bool>(
+                Arg.Is<ConfigElementKey>(k => k.Key == ConfigElementKey.PlayoutSkipMissingItems.Key),
+                Arg.Any<CancellationToken>())
             .Returns(Some(true));
 
         (PlayoutBuilder builder, Playout playout, PlayoutReferenceData referenceData) =
@@ -162,7 +168,9 @@ public class NewPlayoutTests : PlayoutBuilderTestBase
 
         IConfigElementRepository configRepo = Substitute.For<IConfigElementRepository>();
         configRepo
-            .GetValue<bool>(Arg.Is<ConfigElementKey>(k => k.Key == ConfigElementKey.PlayoutSkipMissingItems.Key))
+            .GetValue<bool>(
+                Arg.Is<ConfigElementKey>(k => k.Key == ConfigElementKey.PlayoutSkipMissingItems.Key),
+                Arg.Any<CancellationToken>())
             .Returns(Some(true));
 
         (PlayoutBuilder builder, Playout playout, PlayoutReferenceData referenceData) =
@@ -199,7 +207,9 @@ public class NewPlayoutTests : PlayoutBuilderTestBase
 
         IConfigElementRepository configRepo = Substitute.For<IConfigElementRepository>();
         configRepo
-            .GetValue<bool>(Arg.Is<ConfigElementKey>(k => k.Key == ConfigElementKey.PlayoutSkipMissingItems.Key))
+            .GetValue<bool>(
+                Arg.Is<ConfigElementKey>(k => k.Key == ConfigElementKey.PlayoutSkipMissingItems.Key),
+                Arg.Any<CancellationToken>())
             .Returns(Some(false));
 
         (PlayoutBuilder builder, Playout playout, PlayoutReferenceData referenceData) =
@@ -235,7 +245,9 @@ public class NewPlayoutTests : PlayoutBuilderTestBase
 
         IConfigElementRepository configRepo = Substitute.For<IConfigElementRepository>();
         configRepo
-            .GetValue<bool>(Arg.Is<ConfigElementKey>(k => k.Key == ConfigElementKey.PlayoutSkipMissingItems.Key))
+            .GetValue<bool>(
+                Arg.Is<ConfigElementKey>(k => k.Key == ConfigElementKey.PlayoutSkipMissingItems.Key),
+                Arg.Any<CancellationToken>())
             .Returns(Some(false));
 
         (PlayoutBuilder builder, Playout playout, PlayoutReferenceData referenceData) =

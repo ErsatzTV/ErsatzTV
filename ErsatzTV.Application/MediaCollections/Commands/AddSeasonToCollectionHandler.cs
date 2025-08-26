@@ -36,7 +36,7 @@ public class AddSeasonToCollectionHandler :
         CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        Validation<BaseError, Parameters> validation = await Validate(dbContext, request);
+        Validation<BaseError, Parameters> validation = await Validate(dbContext, request, cancellationToken);
         return await validation.Apply(parameters => ApplyAddSeasonRequest(dbContext, parameters));
     }
 
@@ -60,23 +60,27 @@ public class AddSeasonToCollectionHandler :
 
     private static async Task<Validation<BaseError, Parameters>> Validate(
         TvContext dbContext,
-        AddSeasonToCollection request) =>
-        (await CollectionMustExist(dbContext, request), await ValidateSeason(dbContext, request))
+        AddSeasonToCollection request,
+        CancellationToken cancellationToken) =>
+        (await CollectionMustExist(dbContext, request, cancellationToken),
+            await ValidateSeason(dbContext, request, cancellationToken))
         .Apply((collection, episode) => new Parameters(collection, episode));
 
     private static Task<Validation<BaseError, Collection>> CollectionMustExist(
         TvContext dbContext,
-        AddSeasonToCollection request) =>
+        AddSeasonToCollection request,
+        CancellationToken cancellationToken) =>
         dbContext.Collections
             .Include(c => c.MediaItems)
-            .SelectOneAsync(c => c.Id, c => c.Id == request.CollectionId)
+            .SelectOneAsync(c => c.Id, c => c.Id == request.CollectionId, cancellationToken)
             .Map(o => o.ToValidation<BaseError>("Collection does not exist."));
 
     private static Task<Validation<BaseError, Season>> ValidateSeason(
         TvContext dbContext,
-        AddSeasonToCollection request) =>
+        AddSeasonToCollection request,
+        CancellationToken cancellationToken) =>
         dbContext.Seasons
-            .SelectOneAsync(m => m.Id, e => e.Id == request.SeasonId)
+            .SelectOneAsync(m => m.Id, e => e.Id == request.SeasonId, cancellationToken)
             .Map(o => o.ToValidation<BaseError>("Season does not exist"));
 
     private sealed record Parameters(Collection Collection, Season Season);

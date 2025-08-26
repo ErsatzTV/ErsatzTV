@@ -11,7 +11,8 @@ public interface IMovieRepository
     Task<Either<BaseError, MediaItemScanResult<Movie>>> GetOrAdd(
         LibraryPath libraryPath,
         LibraryFolder libraryFolder,
-        string path);
+        string path,
+        CancellationToken cancellationToken);
 
     Task<List<MovieMetadata>> GetMoviesForCards(List<int> ids);
     Task<IEnumerable<string>> FindMoviePaths(LibraryPath libraryPath);

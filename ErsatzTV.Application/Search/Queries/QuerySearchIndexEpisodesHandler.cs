@@ -89,7 +89,7 @@ public class
                 .ThenInclude(s => s.Show)
                 .ThenInclude(s => s.ShowMetadata)
                 .ThenInclude(sm => sm.Artwork)
-                .SelectOneAsync(e => e.Id, e => e.Id == missingEpisodeId);
+                .SelectOneAsync(e => e.Id, e => e.Id == missingEpisodeId, cancellationToken);
 
             foreach (Episode episode in maybeEpisode)
             {

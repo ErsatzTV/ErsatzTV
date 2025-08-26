@@ -11,13 +11,19 @@ public interface ISearchIndex : IDisposable
 {
     int Version { get; }
     Task<bool> IndexExists();
-    Task<bool> Initialize(ILocalFileSystem localFileSystem, IConfigElementRepository configElementRepository);
+
+    Task<bool> Initialize(
+        ILocalFileSystem localFileSystem,
+        IConfigElementRepository configElementRepository,
+        CancellationToken cancellationToken);
+
     Task<Unit> Rebuild(ICachingSearchRepository searchRepository, IFallbackMetadataProvider fallbackMetadataProvider);
 
     Task<Unit> RebuildItems(
         ICachingSearchRepository searchRepository,
         IFallbackMetadataProvider fallbackMetadataProvider,
-        IEnumerable<int> itemIds);
+        IEnumerable<int> itemIds,
+        CancellationToken cancellationToken);
 
     Task<Unit> UpdateItems(
         ICachingSearchRepository searchRepository,

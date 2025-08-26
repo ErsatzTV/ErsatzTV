@@ -45,7 +45,7 @@ public class
     public async Task<Either<BaseError, string>>
         Handle(SynchronizeJellyfinLibraryById request, CancellationToken cancellationToken)
     {
-        Validation<BaseError, RequestParameters> validation = await Validate(request);
+        Validation<BaseError, RequestParameters> validation = await Validate(request, cancellationToken);
         return await validation.Match(
             parameters => Synchronize(parameters, cancellationToken),
             error => Task.FromResult<Either<BaseError, string>>(error.Join()));
@@ -108,9 +108,10 @@ public class
     }
 
     private async Task<Validation<BaseError, RequestParameters>> Validate(
-        SynchronizeJellyfinLibraryById request) =>
+        SynchronizeJellyfinLibraryById request,
+        CancellationToken cancellationToken) =>
         (await ValidateConnection(request), await JellyfinLibraryMustExist(request),
-            await ValidateLibraryRefreshInterval())
+            await ValidateLibraryRefreshInterval(cancellationToken))
         .Apply((connectionParameters, jellyfinLibrary, libraryRefreshInterval) =>
             new RequestParameters(
                 connectionParameters,
@@ -155,8 +156,8 @@ public class
         _mediaSourceRepository.GetJellyfinLibrary(request.JellyfinLibraryId)
             .Map(v => v.ToValidation<BaseError>($"Jellyfin library {request.JellyfinLibraryId} does not exist."));
 
-    private Task<Validation<BaseError, int>> ValidateLibraryRefreshInterval() =>
-        _configElementRepository.GetValue<int>(ConfigElementKey.LibraryRefreshInterval)
+    private Task<Validation<BaseError, int>> ValidateLibraryRefreshInterval(CancellationToken cancellationToken) =>
+        _configElementRepository.GetValue<int>(ConfigElementKey.LibraryRefreshInterval, cancellationToken)
             .FilterT(lri => lri is >= 0 and < 1_000_000)
             .Map(lri => lri.ToValidation<BaseError>("Library refresh interval is invalid"));
 

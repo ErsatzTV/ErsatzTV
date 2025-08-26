@@ -10,7 +10,7 @@ public class TimeShiftOnDemandPlayoutHandler(IPlayoutTimeShifter playoutTimeShif
     {
         try
         {
-            await playoutTimeShifter.TimeShift(request.PlayoutId, request.Now, request.Force);
+            await playoutTimeShifter.TimeShift(request.PlayoutId, request.Now, request.Force, cancellationToken);
         }
         catch (Exception ex)
         {

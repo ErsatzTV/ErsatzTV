@@ -13,11 +13,13 @@ public interface IFFmpegStreamSelector
         StreamingMode streamingMode,
         Channel channel,
         string preferredAudioLanguage,
-        string preferredAudioTitle);
+        string preferredAudioTitle,
+        CancellationToken cancellationToken);
 
     Task<Option<Subtitle>> SelectSubtitleStream(
         ImmutableList<Subtitle> subtitles,
         Channel channel,
         string preferredSubtitleLanguage,
-        ChannelSubtitleMode subtitleMode);
+        ChannelSubtitleMode subtitleMode,
+        CancellationToken cancellationToken);
 }

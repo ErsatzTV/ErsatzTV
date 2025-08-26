@@ -25,7 +25,10 @@ public class DeleteLocalLibraryHandler : LocalLibraryHandlerBase,
         CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        Validation<BaseError, LocalLibrary> validation = await LocalLibraryMustExist(dbContext, request);
+        Validation<BaseError, LocalLibrary> validation = await LocalLibraryMustExist(
+            dbContext,
+            request,
+            cancellationToken);
         return await validation.Apply(localLibrary => DoDeletion(dbContext, localLibrary));
     }
 
@@ -77,8 +80,9 @@ public class DeleteLocalLibraryHandler : LocalLibraryHandlerBase,
 
     private static Task<Validation<BaseError, LocalLibrary>> LocalLibraryMustExist(
         TvContext dbContext,
-        DeleteLocalLibrary request) =>
+        DeleteLocalLibrary request,
+        CancellationToken cancellationToken) =>
         dbContext.LocalLibraries
-            .SelectOneAsync(ll => ll.Id, ll => ll.Id == request.LocalLibraryId)
+            .SelectOneAsync(ll => ll.Id, ll => ll.Id == request.LocalLibraryId, cancellationToken)
             .Map(o => o.ToValidation<BaseError>($"Local library {request.LocalLibraryId} does not exist."));
 }

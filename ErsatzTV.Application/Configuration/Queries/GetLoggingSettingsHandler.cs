@@ -14,22 +14,32 @@ public class GetLoggingSettingsHandler : IRequestHandler<GetLoggingSettings, Log
     public async Task<LoggingSettingsViewModel> Handle(GetLoggingSettings request, CancellationToken cancellationToken)
     {
         Option<LogEventLevel> maybeDefaultLevel =
-            await _configElementRepository.GetValue<LogEventLevel>(ConfigElementKey.MinimumLogLevel);
+            await _configElementRepository.GetValue<LogEventLevel>(ConfigElementKey.MinimumLogLevel, cancellationToken);
 
         Option<LogEventLevel> maybeScanningLevel =
-            await _configElementRepository.GetValue<LogEventLevel>(ConfigElementKey.MinimumLogLevelScanning);
+            await _configElementRepository.GetValue<LogEventLevel>(
+                ConfigElementKey.MinimumLogLevelScanning,
+                cancellationToken);
 
         Option<LogEventLevel> maybeSchedulingLevel =
-            await _configElementRepository.GetValue<LogEventLevel>(ConfigElementKey.MinimumLogLevelScheduling);
+            await _configElementRepository.GetValue<LogEventLevel>(
+                ConfigElementKey.MinimumLogLevelScheduling,
+                cancellationToken);
 
         Option<LogEventLevel> maybeSearchingLevel =
-            await _configElementRepository.GetValue<LogEventLevel>(ConfigElementKey.MinimumLogLevelSearching);
+            await _configElementRepository.GetValue<LogEventLevel>(
+                ConfigElementKey.MinimumLogLevelSearching,
+                cancellationToken);
 
         Option<LogEventLevel> maybeStreamingLevel =
-            await _configElementRepository.GetValue<LogEventLevel>(ConfigElementKey.MinimumLogLevelStreaming);
+            await _configElementRepository.GetValue<LogEventLevel>(
+                ConfigElementKey.MinimumLogLevelStreaming,
+                cancellationToken);
 
         Option<LogEventLevel> maybeHttpLevel =
-            await _configElementRepository.GetValue<LogEventLevel>(ConfigElementKey.MinimumLogLevelHttp);
+            await _configElementRepository.GetValue<LogEventLevel>(
+                ConfigElementKey.MinimumLogLevelHttp,
+                cancellationToken);
 
         return new LoggingSettingsViewModel
         {

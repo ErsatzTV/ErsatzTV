@@ -16,7 +16,8 @@ public interface IMediaServerOtherVideoRepository<in TLibrary, TOtherVideo, TEta
     Task<Either<BaseError, MediaItemScanResult<TOtherVideo>>> GetOrAdd(
         TLibrary library,
         TOtherVideo item,
-        bool deepScan);
+        bool deepScan,
+        CancellationToken cancellationToken);
 
     Task<Unit> SetEtag(TOtherVideo otherVideo, string etag);
 }

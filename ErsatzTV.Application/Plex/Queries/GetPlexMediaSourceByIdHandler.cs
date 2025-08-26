@@ -14,5 +14,5 @@ public class
     public Task<Option<PlexMediaSourceViewModel>> Handle(
         GetPlexMediaSourceById request,
         CancellationToken cancellationToken) =>
-        _mediaSourceRepository.GetPlex(request.PlexMediaSourceId).MapT(ProjectToViewModel);
+        _mediaSourceRepository.GetPlex(request.PlexMediaSourceId, cancellationToken).MapT(ProjectToViewModel);
 }

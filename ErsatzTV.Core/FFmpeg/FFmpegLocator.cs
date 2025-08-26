@@ -6,16 +6,14 @@ using ErsatzTV.Core.Interfaces.Repositories;
 
 namespace ErsatzTV.Core.FFmpeg;
 
-public class FFmpegLocator : IFFmpegLocator
+public class FFmpegLocator(IConfigElementRepository configElementRepository) : IFFmpegLocator
 {
-    private readonly IConfigElementRepository _configElementRepository;
-
-    public FFmpegLocator(IConfigElementRepository configElementRepository) =>
-        _configElementRepository = configElementRepository;
-
-    public async Task<Option<string>> ValidatePath(string executableBase, ConfigElementKey key)
+    public async Task<Option<string>> ValidatePath(
+        string executableBase,
+        ConfigElementKey key,
+        CancellationToken cancellationToken)
     {
-        Option<ConfigElement> setting = await _configElementRepository.GetConfigElement(key);
+        Option<ConfigElement> setting = await configElementRepository.GetConfigElement(key, cancellationToken);
 
         return await setting.MatchAsync(
             async ce =>
@@ -26,20 +24,23 @@ public class FFmpegLocator : IFFmpegLocator
                 }
 
                 // configured path was incorrect
-                await _configElementRepository.Delete(ce);
+                await configElementRepository.Delete(ce, cancellationToken);
 
-                return await LocateExecutableAsync(executableBase, key);
+                return await LocateExecutableAsync(executableBase, key, cancellationToken);
             },
-            async () => await LocateExecutableAsync(executableBase, key));
+            async () => await LocateExecutableAsync(executableBase, key, cancellationToken));
     }
 
-    private async Task<Option<string>> LocateExecutableAsync(string executableBase, ConfigElementKey key)
+    private async Task<Option<string>> LocateExecutableAsync(
+        string executableBase,
+        ConfigElementKey key,
+        CancellationToken cancellationToken)
     {
         Option<string> maybePath = await LocateExecutableOnPathAsync(executableBase);
         return await maybePath.MatchAsync(
             async path =>
             {
-                await _configElementRepository.Upsert(key, path);
+                await configElementRepository.Upsert(key, path, cancellationToken);
                 return Some(path);
             },
             () => None);

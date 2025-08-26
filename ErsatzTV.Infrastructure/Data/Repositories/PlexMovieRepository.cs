@@ -147,9 +147,10 @@ public class PlexMovieRepository : IPlexMovieRepository
     public async Task<Either<BaseError, MediaItemScanResult<PlexMovie>>> GetOrAdd(
         PlexLibrary library,
         PlexMovie item,
-        bool deepScan)
+        bool deepScan,
+        CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Option<PlexMovie> maybeExisting = await dbContext.PlexMovies
             .AsNoTracking()
             .Where(pm => pm.LibraryPath.LibraryId == library.Id)
@@ -178,7 +179,7 @@ public class PlexMovieRepository : IPlexMovieRepository
             .ThenInclude(lp => lp.Library)
             .Include(i => i.TraktListItems)
             .ThenInclude(tli => tli.TraktList)
-            .SelectOneAsync(i => i.Key, i => i.Key == item.Key);
+            .SelectOneAsync(i => i.Key, i => i.Key == item.Key, cancellationToken);
 
         foreach (PlexMovie plexMovie in maybeExisting)
         {
@@ -192,7 +193,7 @@ public class PlexMovieRepository : IPlexMovieRepository
             return result;
         }
 
-        return await AddMovie(dbContext, library, item);
+        return await AddMovie(dbContext, library, item, cancellationToken);
     }
 
     public async Task<Unit> SetEtag(PlexMovie movie, string etag)
@@ -206,11 +207,17 @@ public class PlexMovieRepository : IPlexMovieRepository
     private async Task<Either<BaseError, MediaItemScanResult<PlexMovie>>> AddMovie(
         TvContext dbContext,
         PlexLibrary library,
-        PlexMovie item)
+        PlexMovie item,
+        CancellationToken cancellationToken)
     {
         try
         {
-            if (await MediaItemRepository.MediaFileAlreadyExists(item, library.Paths.Head().Id, dbContext, _logger))
+            if (await MediaItemRepository.MediaFileAlreadyExists(
+                    item,
+                    library.Paths.Head().Id,
+                    dbContext,
+                    _logger,
+                    cancellationToken))
             {
                 return new MediaFileAlreadyExists();
             }
@@ -221,14 +228,14 @@ public class PlexMovieRepository : IPlexMovieRepository
 
             item.LibraryPathId = library.Paths.Head().Id;
 
-            await dbContext.PlexMovies.AddAsync(item);
-            await dbContext.SaveChangesAsync();
+            await dbContext.PlexMovies.AddAsync(item, cancellationToken);
+            await dbContext.SaveChangesAsync(cancellationToken);
 
             // restore etag
             item.Etag = etag;
 
-            await dbContext.Entry(item).Reference(i => i.LibraryPath).LoadAsync();
-            await dbContext.Entry(item.LibraryPath).Reference(lp => lp.Library).LoadAsync();
+            await dbContext.Entry(item).Reference(i => i.LibraryPath).LoadAsync(cancellationToken);
+            await dbContext.Entry(item.LibraryPath).Reference(lp => lp.Library).LoadAsync(cancellationToken);
             return new MediaItemScanResult<PlexMovie>(item) { IsAdded = true };
         }
         catch (Exception ex)

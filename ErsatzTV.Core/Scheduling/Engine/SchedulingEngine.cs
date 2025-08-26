@@ -106,12 +106,17 @@ public class SchedulingEngine(
         return this;
     }
 
-    public async Task AddCollection(string key, string collectionName, PlaybackOrder playbackOrder)
+    public async Task AddCollection(
+        string key,
+        string collectionName,
+        PlaybackOrder playbackOrder,
+        CancellationToken cancellationToken)
     {
         if (!_enumerators.ContainsKey(key))
         {
             int index = _enumerators.Count;
-            List<MediaItem> items = await mediaCollectionRepository.GetCollectionItemsByName(collectionName);
+            List<MediaItem> items =
+                await mediaCollectionRepository.GetCollectionItemsByName(collectionName, cancellationToken);
             if (items.Count == 0)
             {
                 logger.LogWarning("Skipping invalid or empty collection {Name}", collectionName);
@@ -185,12 +190,14 @@ public class SchedulingEngine(
     public async Task AddMultiCollection(
         string key,
         string multiCollectionName,
-        PlaybackOrder playbackOrder)
+        PlaybackOrder playbackOrder,
+        CancellationToken cancellationToken)
     {
         if (!_enumerators.ContainsKey(key))
         {
             int index = _enumerators.Count;
-            List<MediaItem> items = await mediaCollectionRepository.GetMultiCollectionItemsByName(multiCollectionName);
+            List<MediaItem> items =
+                await mediaCollectionRepository.GetMultiCollectionItemsByName(multiCollectionName, cancellationToken);
             if (items.Count == 0)
             {
                 logger.LogWarning("Skipping invalid or empty multi collection {Name}", multiCollectionName);
@@ -217,13 +224,17 @@ public class SchedulingEngine(
         }
     }
 
-    public async Task AddPlaylist(string key, string playlist, string playlistGroup)
+    public async Task AddPlaylist(
+        string key,
+        string playlist,
+        string playlistGroup,
+        CancellationToken cancellationToken)
     {
         if (!_enumerators.ContainsKey(key))
         {
             int index = _enumerators.Count;
             Dictionary<PlaylistItem, List<MediaItem>> itemMap =
-                await mediaCollectionRepository.GetPlaylistItemMap(playlistGroup, playlist);
+                await mediaCollectionRepository.GetPlaylistItemMap(playlistGroup, playlist, cancellationToken);
 
             var state = new CollectionEnumeratorState { Seed = _state.Seed + index, Index = 0 };
 
@@ -256,12 +267,14 @@ public class SchedulingEngine(
     public async Task AddSmartCollection(
         string key,
         string smartCollectionName,
-        PlaybackOrder playbackOrder)
+        PlaybackOrder playbackOrder,
+        CancellationToken cancellationToken)
     {
         if (!_enumerators.ContainsKey(key))
         {
             int index = _enumerators.Count;
-            List<MediaItem> items = await mediaCollectionRepository.GetSmartCollectionItemsByName(smartCollectionName);
+            List<MediaItem> items =
+                await mediaCollectionRepository.GetSmartCollectionItemsByName(smartCollectionName, cancellationToken);
             if (items.Count == 0)
             {
                 logger.LogWarning("Skipping invalid or empty smart collection {Name}", smartCollectionName);
@@ -834,7 +847,10 @@ public class SchedulingEngine(
         _state.UnlockGuideGroup();
     }
 
-    public async Task GraphicsOn(List<string> graphicsElements, Dictionary<string, string> variables)
+    public async Task GraphicsOn(
+        List<string> graphicsElements,
+        Dictionary<string, string> variables,
+        CancellationToken cancellationToken)
     {
         string variablesJson = null;
         if (variables.Count > 0)
@@ -844,14 +860,14 @@ public class SchedulingEngine(
 
         foreach (string element in graphicsElements.Where(e => !string.IsNullOrWhiteSpace(e)))
         {
-            foreach (GraphicsElement ge in await GetGraphicsElementByPath(element))
+            foreach (GraphicsElement ge in await GetGraphicsElementByPath(element, cancellationToken))
             {
                 _state.SetGraphicsElement(ge.Id, variablesJson);
             }
         }
     }
 
-    public async Task GraphicsOff(List<string> graphicsElements)
+    public async Task GraphicsOff(List<string> graphicsElements, CancellationToken cancellationToken)
     {
         if (graphicsElements.Count == 0)
         {
@@ -861,7 +877,7 @@ public class SchedulingEngine(
         {
             foreach (string element in graphicsElements.Where(e => !string.IsNullOrWhiteSpace(e)))
             {
-                foreach (GraphicsElement ge in await GetGraphicsElementByPath(element))
+                foreach (GraphicsElement ge in await GetGraphicsElementByPath(element, cancellationToken))
                 {
                     _state.RemoveGraphicsElement(ge.Id);
                 }
@@ -1270,7 +1286,9 @@ public class SchedulingEngine(
         return FillerKind.None;
     }
 
-    private async Task<Option<GraphicsElement>> GetGraphicsElementByPath(string path)
+    private async Task<Option<GraphicsElement>> GetGraphicsElementByPath(
+        string path,
+        CancellationToken cancellationToken)
     {
         if (_graphicsElementCache.TryGetValue(path, out Option<GraphicsElement> cachedGraphicsElement))
         {
@@ -1282,7 +1300,7 @@ public class SchedulingEngine(
         else
         {
             Option<GraphicsElement> maybeGraphicsElement =
-                await graphicsElementRepository.GetGraphicsElementByPath(path);
+                await graphicsElementRepository.GetGraphicsElementByPath(path, cancellationToken);
             _graphicsElementCache.Add(path, maybeGraphicsElement);
             foreach (GraphicsElement graphicsElement in maybeGraphicsElement)
             {

@@ -31,7 +31,7 @@ public class DeletePlayoutHandler : IRequestHandler<DeletePlayout, Either<BaseEr
 
         Option<Playout> maybePlayout = await dbContext.Playouts
             .Include(p => p.Channel)
-            .SelectOneAsync(p => p.Id, p => p.Id == request.PlayoutId);
+            .SelectOneAsync(p => p.Id, p => p.Id == request.PlayoutId, cancellationToken);
 
         foreach (Playout playout in maybePlayout)
         {

@@ -111,7 +111,7 @@ public class GetCollectionCardsHandler :
             .Include(c => c.MediaItems)
             .ThenInclude(i => (i as RemoteStream).MediaVersions)
             .ThenInclude(mv => mv.MediaFiles)
-            .SelectOneAsync(c => c.Id, c => c.Id == request.Id)
+            .SelectOneAsync(c => c.Id, c => c.Id == request.Id, cancellationToken)
             .Map(c => c.ToEither(BaseError.New("Unable to load collection")))
             .MapT(c => ProjectToViewModel(c, maybeJellyfin, maybeEmby));
     }

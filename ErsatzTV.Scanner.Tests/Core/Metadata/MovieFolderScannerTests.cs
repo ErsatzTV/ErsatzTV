@@ -45,7 +45,7 @@ public class MovieFolderScannerTests
         public void SetUp()
         {
             _movieRepository = Substitute.For<IMovieRepository>();
-            _movieRepository.GetOrAdd(Arg.Any<LibraryPath>(), Arg.Any<LibraryFolder>(), Arg.Any<string>())
+            _movieRepository.GetOrAdd(Arg.Any<LibraryPath>(), Arg.Any<LibraryFolder>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
                 .Returns(args =>
                     Right<BaseError, MediaItemScanResult<Movie>>(new FakeMovieWithPath(args.Arg<string>()))
                         .AsTask());
@@ -112,8 +112,13 @@ public class MovieFolderScannerTests
             await _movieRepository.Received(1).GetOrAdd(
                 Arg.Any<LibraryPath>(),
                 Arg.Any<LibraryFolder>(),
-                Arg.Any<string>());
-            await _movieRepository.Received(1).GetOrAdd(libraryPath, Arg.Any<LibraryFolder>(), moviePath);
+                Arg.Any<string>(),
+                Arg.Any<CancellationToken>());
+            await _movieRepository.Received(1).GetOrAdd(
+                libraryPath,
+                Arg.Any<LibraryFolder>(),
+                moviePath,
+                Arg.Any<CancellationToken>());
 
             await _localStatisticsProvider.Received(1).RefreshStatistics(
                 FFmpegPath,
@@ -156,8 +161,13 @@ public class MovieFolderScannerTests
             await _movieRepository.Received(1).GetOrAdd(
                 Arg.Any<LibraryPath>(),
                 Arg.Any<LibraryFolder>(),
-                Arg.Any<string>());
-            await _movieRepository.Received(1).GetOrAdd(libraryPath, Arg.Any<LibraryFolder>(), moviePath);
+                Arg.Any<string>(),
+                Arg.Any<CancellationToken>());
+            await _movieRepository.Received(1).GetOrAdd(
+                libraryPath,
+                Arg.Any<LibraryFolder>(),
+                moviePath,
+                Arg.Any<CancellationToken>());
 
             await _localStatisticsProvider.Received(1).RefreshStatistics(
                 FFmpegPath,
@@ -199,8 +209,13 @@ public class MovieFolderScannerTests
             await _movieRepository.Received(1).GetOrAdd(
                 Arg.Any<LibraryPath>(),
                 Arg.Any<LibraryFolder>(),
-                Arg.Any<string>());
-            await _movieRepository.Received(1).GetOrAdd(libraryPath, Arg.Any<LibraryFolder>(), moviePath);
+                Arg.Any<string>(),
+                Arg.Any<CancellationToken>());
+            await _movieRepository.Received(1).GetOrAdd(
+                libraryPath,
+                Arg.Any<LibraryFolder>(),
+                moviePath,
+                Arg.Any<CancellationToken>());
 
             await _localStatisticsProvider.Received(1).RefreshStatistics(
                 FFmpegPath,
@@ -243,8 +258,13 @@ public class MovieFolderScannerTests
             await _movieRepository.Received(1).GetOrAdd(
                 Arg.Any<LibraryPath>(),
                 Arg.Any<LibraryFolder>(),
-                Arg.Any<string>());
-            await _movieRepository.Received(1).GetOrAdd(libraryPath, Arg.Any<LibraryFolder>(), moviePath);
+                Arg.Any<string>(),
+                Arg.Any<CancellationToken>());
+            await _movieRepository.Received(1).GetOrAdd(
+                libraryPath,
+                Arg.Any<LibraryFolder>(),
+                moviePath,
+                Arg.Any<CancellationToken>());
 
             await _localStatisticsProvider.Received(1).RefreshStatistics(
                 FFmpegPath,
@@ -291,8 +311,13 @@ public class MovieFolderScannerTests
             await _movieRepository.Received(1).GetOrAdd(
                 Arg.Any<LibraryPath>(),
                 Arg.Any<LibraryFolder>(),
-                Arg.Any<string>());
-            await _movieRepository.Received(1).GetOrAdd(libraryPath, Arg.Any<LibraryFolder>(), moviePath);
+                Arg.Any<string>(),
+                Arg.Any<CancellationToken>());
+            await _movieRepository.Received(1).GetOrAdd(
+                libraryPath,
+                Arg.Any<LibraryFolder>(),
+                moviePath,
+                Arg.Any<CancellationToken>());
 
             await _localStatisticsProvider.Received(1).RefreshStatistics(
                 FFmpegPath,
@@ -340,8 +365,13 @@ public class MovieFolderScannerTests
             await _movieRepository.Received(1).GetOrAdd(
                 Arg.Any<LibraryPath>(),
                 Arg.Any<LibraryFolder>(),
-                Arg.Any<string>());
-            await _movieRepository.Received(1).GetOrAdd(libraryPath, Arg.Any<LibraryFolder>(), moviePath);
+                Arg.Any<string>(),
+                Arg.Any<CancellationToken>());
+            await _movieRepository.Received(1).GetOrAdd(
+                libraryPath,
+                Arg.Any<LibraryFolder>(),
+                moviePath,
+                Arg.Any<CancellationToken>());
 
             await _localStatisticsProvider.Received(1).RefreshStatistics(
                 FFmpegPath,
@@ -389,8 +419,13 @@ public class MovieFolderScannerTests
             await _movieRepository.Received(1).GetOrAdd(
                 Arg.Any<LibraryPath>(),
                 Arg.Any<LibraryFolder>(),
-                Arg.Any<string>());
-            await _movieRepository.Received(1).GetOrAdd(libraryPath, Arg.Any<LibraryFolder>(), moviePath);
+                Arg.Any<string>(),
+                Arg.Any<CancellationToken>());
+            await _movieRepository.Received(1).GetOrAdd(
+                libraryPath,
+                Arg.Any<LibraryFolder>(),
+                moviePath,
+                Arg.Any<CancellationToken>());
 
             await _localStatisticsProvider.Received(1).RefreshStatistics(
                 FFmpegPath,
@@ -437,8 +472,13 @@ public class MovieFolderScannerTests
             await _movieRepository.Received(1).GetOrAdd(
                 Arg.Any<LibraryPath>(),
                 Arg.Any<LibraryFolder>(),
-                Arg.Any<string>());
-            await _movieRepository.Received(1).GetOrAdd(libraryPath, Arg.Any<LibraryFolder>(), moviePath);
+                Arg.Any<string>(),
+                Arg.Any<CancellationToken>());
+            await _movieRepository.Received(1).GetOrAdd(
+                libraryPath,
+                Arg.Any<LibraryFolder>(),
+                moviePath,
+                Arg.Any<CancellationToken>());
 
             await _localStatisticsProvider.Received(1).RefreshStatistics(
                 FFmpegPath,
@@ -481,8 +521,13 @@ public class MovieFolderScannerTests
             await _movieRepository.Received(1).GetOrAdd(
                 Arg.Any<LibraryPath>(),
                 Arg.Any<LibraryFolder>(),
-                Arg.Any<string>());
-            await _movieRepository.Received(1).GetOrAdd(libraryPath, Arg.Any<LibraryFolder>(), moviePath);
+                Arg.Any<string>(),
+                Arg.Any<CancellationToken>());
+            await _movieRepository.Received(1).GetOrAdd(
+                libraryPath,
+                Arg.Any<LibraryFolder>(),
+                moviePath,
+                Arg.Any<CancellationToken>());
 
             await _localStatisticsProvider.Received(1).RefreshStatistics(
                 FFmpegPath,
@@ -527,8 +572,13 @@ public class MovieFolderScannerTests
             await _movieRepository.Received(1).GetOrAdd(
                 Arg.Any<LibraryPath>(),
                 Arg.Any<LibraryFolder>(),
-                Arg.Any<string>());
-            await _movieRepository.Received(1).GetOrAdd(libraryPath, Arg.Any<LibraryFolder>(), moviePath);
+                Arg.Any<string>(),
+                Arg.Any<CancellationToken>());
+            await _movieRepository.Received(1).GetOrAdd(
+                libraryPath,
+                Arg.Any<LibraryFolder>(),
+                moviePath,
+                Arg.Any<CancellationToken>());
 
             await _localStatisticsProvider.Received(1).RefreshStatistics(
                 FFmpegPath,
@@ -567,8 +617,13 @@ public class MovieFolderScannerTests
             await _movieRepository.Received(1).GetOrAdd(
                 Arg.Any<LibraryPath>(),
                 Arg.Any<LibraryFolder>(),
-                Arg.Any<string>());
-            await _movieRepository.Received(1).GetOrAdd(libraryPath, Arg.Any<LibraryFolder>(), moviePath);
+                Arg.Any<string>(),
+                Arg.Any<CancellationToken>());
+            await _movieRepository.Received(1).GetOrAdd(
+                libraryPath,
+                Arg.Any<LibraryFolder>(),
+                moviePath,
+                Arg.Any<CancellationToken>());
 
             await _localStatisticsProvider.Received(1).RefreshStatistics(
                 FFmpegPath,

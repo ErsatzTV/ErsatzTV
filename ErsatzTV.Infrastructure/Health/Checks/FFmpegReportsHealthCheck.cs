@@ -17,7 +17,7 @@ public class FFmpegReportsHealthCheck : BaseHealthCheck, IFFmpegReportsHealthChe
     public async Task<HealthCheckResult> Check(CancellationToken cancellationToken)
     {
         Option<bool> saveReports =
-            await _configElementRepository.GetValue<bool>(ConfigElementKey.FFmpegSaveReports);
+            await _configElementRepository.GetValue<bool>(ConfigElementKey.FFmpegSaveReports, cancellationToken);
 
         foreach (bool value in saveReports)
         {

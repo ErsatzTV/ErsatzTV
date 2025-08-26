@@ -127,7 +127,7 @@ public class RemoteStreamFolderScanner : LocalFolderScanner, IRemoteStreamFolder
 
                 string remoteStreamFolder = folderQueue.Dequeue();
                 Option<int> maybeParentFolder =
-                    await _libraryRepository.GetParentFolderId(libraryPath, remoteStreamFolder);
+                    await _libraryRepository.GetParentFolderId(libraryPath, remoteStreamFolder, cancellationToken);
 
                 foldersCompleted++;
 
@@ -178,7 +178,7 @@ public class RemoteStreamFolderScanner : LocalFolderScanner, IRemoteStreamFolder
                 foreach (string file in allFiles.OrderBy(identity))
                 {
                     Either<BaseError, MediaItemScanResult<RemoteStream>> maybeVideo = await _remoteStreamRepository
-                        .GetOrAdd(libraryPath, knownFolder, file)
+                        .GetOrAdd(libraryPath, knownFolder, file, cancellationToken)
                         .BindT(video => ParseRemoteStreamDefinition(video, deserializer, cancellationToken))
                         .BindT(video => UpdateStatistics(video, ffmpegPath, ffprobePath))
                         .BindT(video => UpdateLibraryFolderId(video, knownFolder))

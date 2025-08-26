@@ -110,7 +110,8 @@ public class ScheduleIntegrationTests
             new LocalFileSystem(
                 provider.GetRequiredService<IClient>(),
                 provider.GetRequiredService<ILogger<LocalFileSystem>>()),
-            provider.GetRequiredService<IConfigElementRepository>());
+            provider.GetRequiredService<IConfigElementRepository>(),
+            _cancellationToken);
 
         await searchIndex.Rebuild(
             provider.GetRequiredService<ICachingSearchRepository>(),
@@ -128,7 +129,7 @@ public class ScheduleIntegrationTests
         {
             await using TvContext context = await factory.CreateDbContextAsync(_cancellationToken);
 
-            Option<Playout> maybePlayout = await GetPlayout(context, PLAYOUT_ID);
+            Option<Playout> maybePlayout = await GetPlayout(context, PLAYOUT_ID, _cancellationToken);
             Playout playout = maybePlayout.ValueUnsafe();
             PlayoutReferenceData referenceData = await GetReferenceData(
                 context,
@@ -152,7 +153,7 @@ public class ScheduleIntegrationTests
         {
             await using TvContext context = await factory.CreateDbContextAsync(_cancellationToken);
 
-            Option<Playout> maybePlayout = await GetPlayout(context, PLAYOUT_ID);
+            Option<Playout> maybePlayout = await GetPlayout(context, PLAYOUT_ID, _cancellationToken);
             Playout playout = maybePlayout.ValueUnsafe();
             PlayoutReferenceData referenceData = await GetReferenceData(
                 context,
@@ -176,7 +177,7 @@ public class ScheduleIntegrationTests
         {
             await using TvContext context = await factory.CreateDbContextAsync(_cancellationToken);
 
-            Option<Playout> maybePlayout = await GetPlayout(context, PLAYOUT_ID);
+            Option<Playout> maybePlayout = await GetPlayout(context, PLAYOUT_ID, _cancellationToken);
             Playout playout = maybePlayout.ValueUnsafe();
             PlayoutReferenceData referenceData = await GetReferenceData(
                 context,
@@ -324,7 +325,7 @@ public class ScheduleIntegrationTests
         {
             await using TvContext context = await factory.CreateDbContextAsync(_cancellationToken);
 
-            Option<Playout> maybePlayout = await GetPlayout(context, playoutId);
+            Option<Playout> maybePlayout = await GetPlayout(context, playoutId, _cancellationToken);
             Playout playout = maybePlayout.ValueUnsafe();
             PlayoutReferenceData referenceData = await GetReferenceData(
                 context,
@@ -388,11 +389,14 @@ public class ScheduleIntegrationTests
         return playout.Id;
     }
 
-    private static async Task<Option<Playout>> GetPlayout(TvContext dbContext, int playoutId) =>
+    private static async Task<Option<Playout>> GetPlayout(
+        TvContext dbContext,
+        int playoutId,
+        CancellationToken cancellationToken) =>
         await dbContext.Playouts
             .Include(p => p.ProgramScheduleAnchors)
             .ThenInclude(a => a.EnumeratorState)
-            .SelectOneAsync(p => p.Id, p => p.Id == playoutId);
+            .SelectOneAsync(p => p.Id, p => p.Id == playoutId, cancellationToken);
 
     private static async Task<PlayoutReferenceData> GetReferenceData(
         TvContext dbContext,

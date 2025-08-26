@@ -17,7 +17,10 @@ public abstract class FFmpegProcessHandler<T> : IRequestHandler<T, Either<BaseEr
     public async Task<Either<BaseError, PlayoutItemProcessModel>> Handle(T request, CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        Validation<BaseError, Tuple<Channel, string, string>> validation = await Validate(dbContext, request);
+        Validation<BaseError, Tuple<Channel, string, string>> validation = await Validate(
+            dbContext,
+            request,
+            cancellationToken);
         return await validation.Match(
             tuple => GetProcess(dbContext, request, tuple.Item1, tuple.Item2, tuple.Item3, cancellationToken),
             error => Task.FromResult<Either<BaseError, PlayoutItemProcessModel>>(error.Join()));
@@ -33,18 +36,23 @@ public abstract class FFmpegProcessHandler<T> : IRequestHandler<T, Either<BaseEr
 
     private static async Task<Validation<BaseError, Tuple<Channel, string, string>>> Validate(
         TvContext dbContext,
-        T request) =>
-        (await ChannelMustExist(dbContext, request), await FFmpegPathMustExist(dbContext),
-            await FFprobePathMustExist(dbContext))
+        T request,
+        CancellationToken cancellationToken) =>
+        (await ChannelMustExist(dbContext, request, cancellationToken),
+            await FFmpegPathMustExist(dbContext, cancellationToken),
+            await FFprobePathMustExist(dbContext, cancellationToken))
         .Apply((channel, ffmpegPath, ffprobePath) => Tuple(channel, ffmpegPath, ffprobePath));
 
-    private static Task<Validation<BaseError, Channel>> ChannelMustExist(TvContext dbContext, T request) =>
+    private static Task<Validation<BaseError, Channel>> ChannelMustExist(
+        TvContext dbContext,
+        T request,
+        CancellationToken cancellationToken) =>
         dbContext.Channels
             .Include(c => c.FFmpegProfile)
             .ThenInclude(p => p.Resolution)
             .Include(c => c.Artwork)
             .Include(c => c.Watermark)
-            .SelectOneAsync(c => c.Number, c => c.Number == request.ChannelNumber)
+            .SelectOneAsync(c => c.Number, c => c.Number == request.ChannelNumber, cancellationToken)
             .MapT(channel =>
             {
                 channel.StreamingMode = request.Mode.ToLowerInvariant() switch
@@ -61,13 +69,17 @@ public abstract class FFmpegProcessHandler<T> : IRequestHandler<T, Either<BaseEr
             })
             .Map(o => o.ToValidation<BaseError>($"Channel number {request.ChannelNumber} does not exist."));
 
-    private static Task<Validation<BaseError, string>> FFmpegPathMustExist(TvContext dbContext) =>
-        dbContext.ConfigElements.GetValue<string>(ConfigElementKey.FFmpegPath)
+    private static Task<Validation<BaseError, string>> FFmpegPathMustExist(
+        TvContext dbContext,
+        CancellationToken cancellationToken) =>
+        dbContext.ConfigElements.GetValue<string>(ConfigElementKey.FFmpegPath, cancellationToken)
             .FilterT(File.Exists)
             .Map(maybePath => maybePath.ToValidation<BaseError>("FFmpeg path does not exist on filesystem"));
 
-    private static Task<Validation<BaseError, string>> FFprobePathMustExist(TvContext dbContext) =>
-        dbContext.ConfigElements.GetValue<string>(ConfigElementKey.FFprobePath)
+    private static Task<Validation<BaseError, string>> FFprobePathMustExist(
+        TvContext dbContext,
+        CancellationToken cancellationToken) =>
+        dbContext.ConfigElements.GetValue<string>(ConfigElementKey.FFprobePath, cancellationToken)
             .FilterT(File.Exists)
             .Map(maybePath => maybePath.ToValidation<BaseError>("FFprobe path does not exist on filesystem"));
 }

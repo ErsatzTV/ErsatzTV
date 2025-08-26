@@ -16,7 +16,7 @@ public class ErasePlayoutHistoryHandler(IDbContextFactory<TvContext> dbContextFa
             .Filter(p => p.ScheduleKind == PlayoutScheduleKind.Block ||
                          p.ScheduleKind == PlayoutScheduleKind.Sequential ||
                          p.ScheduleKind == PlayoutScheduleKind.Scripted)
-            .SelectOneAsync(p => p.Id, p => p.Id == request.PlayoutId);
+            .SelectOneAsync(p => p.Id, p => p.Id == request.PlayoutId, cancellationToken);
 
         foreach (Playout playout in maybePlayout)
         {

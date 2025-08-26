@@ -14,7 +14,7 @@ public class DeleteTemplateGroupHandler(IDbContextFactory<TvContext> dbContextFa
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         Option<TemplateGroup> maybeTemplateGroup = await dbContext.TemplateGroups
-            .SelectOneAsync(p => p.Id, p => p.Id == request.TemplateGroupId);
+            .SelectOneAsync(p => p.Id, p => p.Id == request.TemplateGroupId, cancellationToken);
 
         foreach (TemplateGroup templateGroup in maybeTemplateGroup)
         {

@@ -23,12 +23,12 @@ public class GetPlayoutAlternateSchedulesHandler :
         List<PlayoutAlternateScheduleViewModel> result = await dbContext.ProgramScheduleAlternates
             .Filter(psa => psa.PlayoutId == request.PlayoutId)
             .Include(psa => psa.ProgramSchedule)
-            .Map(psa => ProjectToViewModel(psa))
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken)
+            .Map(list => list.Map(ProjectToViewModel).ToList());
 
         Option<ProgramSchedule> maybeDefaultSchedule = await dbContext.Playouts
             .Include(p => p.ProgramSchedule)
-            .SelectOneAsync(p => p.Id, p => p.Id == request.PlayoutId)
+            .SelectOneAsync(p => p.Id, p => p.Id == request.PlayoutId, cancellationToken)
             .MapT(p => p.ProgramSchedule);
 
         foreach (ProgramSchedule defaultSchedule in maybeDefaultSchedule)

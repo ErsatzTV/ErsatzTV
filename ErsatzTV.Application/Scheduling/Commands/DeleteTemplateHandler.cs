@@ -14,7 +14,7 @@ public class DeleteTemplateHandler(IDbContextFactory<TvContext> dbContextFactory
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         Option<Template> maybeTemplate = await dbContext.Templates
-            .SelectOneAsync(p => p.Id, p => p.Id == request.TemplateId);
+            .SelectOneAsync(p => p.Id, p => p.Id == request.TemplateId, cancellationToken);
 
         foreach (Template template in maybeTemplate)
         {

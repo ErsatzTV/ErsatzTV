@@ -45,7 +45,8 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
         StreamingMode streamingMode,
         Channel channel,
         string preferredAudioLanguage,
-        string preferredAudioTitle)
+        string preferredAudioTitle,
+        CancellationToken cancellationToken)
     {
         if (streamingMode == StreamingMode.HttpLiveStreamingDirect &&
             string.IsNullOrWhiteSpace(preferredAudioLanguage) && string.IsNullOrWhiteSpace(preferredAudioTitle))
@@ -61,7 +62,8 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
         {
             _logger.LogDebug("Channel {Number} has no preferred audio language code", channel.Number);
             Option<string> maybeDefaultLanguage = await _configElementRepository.GetValue<string>(
-                ConfigElementKey.FFmpegPreferredLanguageCode);
+                ConfigElementKey.FFmpegPreferredLanguageCode,
+                cancellationToken);
             maybeDefaultLanguage.Match(
                 lang => language = lang.ToLowerInvariant(),
                 () =>
@@ -127,7 +129,8 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
         ImmutableList<Subtitle> subtitles,
         Channel channel,
         string preferredSubtitleLanguage,
-        ChannelSubtitleMode subtitleMode)
+        ChannelSubtitleMode subtitleMode,
+        CancellationToken cancellationToken)
     {
         if (channel.MusicVideoCreditsMode is ChannelMusicVideoCreditsMode.GenerateSubtitles &&
             subtitles.FirstOrDefault(s => s.SubtitleKind == SubtitleKind.Generated) is { } generatedSubtitle)
@@ -144,7 +147,7 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
         var candidateSubtitles = subtitles.ToList();
 
         bool useEmbeddedSubtitles = await _configElementRepository
-            .GetValue<bool>(ConfigElementKey.FFmpegUseEmbeddedSubtitles)
+            .GetValue<bool>(ConfigElementKey.FFmpegUseEmbeddedSubtitles, cancellationToken)
             .IfNoneAsync(true);
 
         if (!useEmbeddedSubtitles)

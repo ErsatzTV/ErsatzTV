@@ -40,7 +40,7 @@ public class ReplacePlayoutAlternateScheduleItemsHandler :
                 .Include(p => p.ProgramSchedule)
                 .Include(p => p.ProgramScheduleAlternates)
                 .ThenInclude(p => p.ProgramSchedule)
-                .SelectOneAsync(p => p.Id, p => p.Id == request.PlayoutId);
+                .SelectOneAsync(p => p.Id, p => p.Id == request.PlayoutId, cancellationToken);
 
             foreach (Playout playout in maybePlayout)
             {

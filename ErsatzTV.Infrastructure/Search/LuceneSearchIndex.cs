@@ -123,7 +123,8 @@ public sealed class LuceneSearchIndex : ISearchIndex
 
     public async Task<bool> Initialize(
         ILocalFileSystem localFileSystem,
-        IConfigElementRepository configElementRepository)
+        IConfigElementRepository configElementRepository,
+        CancellationToken cancellationToken)
     {
         if (!_initialized)
         {
@@ -132,7 +133,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
             if (!ValidateDirectory(FileSystemLayout.SearchIndexFolder))
             {
                 _logger.LogWarning("Search index failed to initialize; will delete and recreate");
-                await configElementRepository.Upsert(ConfigElementKey.SearchIndexVersion, 0);
+                await configElementRepository.Upsert(ConfigElementKey.SearchIndexVersion, 0, cancellationToken);
                 Directory.Delete(FileSystemLayout.SearchIndexFolder, true);
                 localFileSystem.EnsureFolderExists(FileSystemLayout.SearchIndexFolder);
             }
@@ -289,11 +290,12 @@ public sealed class LuceneSearchIndex : ISearchIndex
     public async Task<Unit> RebuildItems(
         ICachingSearchRepository searchRepository,
         IFallbackMetadataProvider fallbackMetadataProvider,
-        IEnumerable<int> itemIds)
+        IEnumerable<int> itemIds,
+        CancellationToken cancellationToken)
     {
         foreach (int id in itemIds)
         {
-            foreach (MediaItem mediaItem in await searchRepository.GetItemToIndex(id))
+            foreach (MediaItem mediaItem in await searchRepository.GetItemToIndex(id, cancellationToken))
             {
                 await RebuildItem(searchRepository, fallbackMetadataProvider, mediaItem);
             }

@@ -8,7 +8,7 @@ public interface IMediaSourceRepository
     Task<List<PlexMediaSource>> GetAllPlex();
     Task<List<PlexPathReplacement>> GetPlexPathReplacements(int plexMediaSourceId);
     Task<Option<PlexLibrary>> GetPlexLibrary(int plexLibraryId);
-    Task<Option<PlexMediaSource>> GetPlex(int id);
+    Task<Option<PlexMediaSource>> GetPlex(int id, CancellationToken cancellationToken);
     Task<Option<PlexMediaSource>> GetPlexByLibraryId(int plexLibraryId);
     Task<List<PlexPathReplacement>> GetPlexPathReplacementsByLibraryId(int plexLibraryPathId);
 
@@ -21,19 +21,22 @@ public interface IMediaSourceRepository
         int plexMediaSourceId,
         List<PlexLibrary> toAdd,
         List<PlexLibrary> toDelete,
-        List<PlexLibrary> toUpdate);
+        List<PlexLibrary> toUpdate,
+        CancellationToken cancellationToken);
 
     Task<List<int>> UpdateLibraries(
         int jellyfinMediaSourceId,
         List<JellyfinLibrary> toAdd,
         List<JellyfinLibrary> toDelete,
-        List<JellyfinLibrary> toUpdate);
+        List<JellyfinLibrary> toUpdate,
+        CancellationToken cancellationToken);
 
     Task<List<int>> UpdateLibraries(
         int embyMediaSourceId,
         List<EmbyLibrary> toAdd,
         List<EmbyLibrary> toDelete,
-        List<EmbyLibrary> toUpdate);
+        List<EmbyLibrary> toUpdate,
+        CancellationToken cancellationToken);
 
     Task<Unit> UpdatePathReplacements(
         int plexMediaSourceId,
@@ -67,9 +70,9 @@ public interface IMediaSourceRepository
 
     Task<Unit> UpsertEmby(string address, string serverName, string operatingSystem);
     Task<List<EmbyMediaSource>> GetAllEmby();
-    Task<Option<EmbyMediaSource>> GetEmby(int id);
+    Task<Option<EmbyMediaSource>> GetEmby(int id, CancellationToken cancellationToken);
     Task<Option<EmbyMediaSource>> GetEmbyByLibraryId(int embyLibraryId);
-    Task<Option<EmbyLibrary>> GetEmbyLibrary(int embyLibraryId);
+    Task<Option<EmbyLibrary>> GetEmbyLibrary(int embyLibraryId, CancellationToken cancellationToken);
     Task<List<EmbyLibrary>> GetEmbyLibraries(int embyMediaSourceId);
     Task<List<EmbyPathReplacement>> GetEmbyPathReplacements(int embyMediaSourceId);
     Task<List<EmbyPathReplacement>> GetEmbyPathReplacementsByLibraryId(int embyLibraryPathId);

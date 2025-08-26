@@ -44,9 +44,17 @@ public class PrepareTroubleshootingPlaybackHandler(
             await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
             Validation<BaseError, Tuple<MediaItem, string, string, FFmpegProfile>> validation = await Validate(
                 dbContext,
-                request);
+                request,
+                cancellationToken);
             return await validation.Match(
-                tuple => GetProcess(dbContext, request, tuple.Item1, tuple.Item2, tuple.Item3, tuple.Item4),
+                tuple => GetProcess(
+                    dbContext,
+                    request,
+                    tuple.Item1,
+                    tuple.Item2,
+                    tuple.Item3,
+                    tuple.Item4,
+                    cancellationToken),
                 error => Task.FromResult<Either<BaseError, PlayoutItemResult>>(error.Join()));
         }
         catch (Exception ex)
@@ -64,7 +72,8 @@ public class PrepareTroubleshootingPlaybackHandler(
         MediaItem mediaItem,
         string ffmpegPath,
         string ffprobePath,
-        FFmpegProfile ffmpegProfile)
+        FFmpegProfile ffmpegProfile,
+        CancellationToken cancellationToken)
     {
         if (entityLocker.IsTroubleshootingPlaybackLocked())
         {
@@ -105,7 +114,7 @@ public class PrepareTroubleshootingPlaybackHandler(
             List<ChannelWatermark> channelWatermarks = await dbContext.ChannelWatermarks
                 .AsNoTracking()
                 .Where(w => request.WatermarkIds.Contains(w.Id))
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
 
             foreach (var watermark in channelWatermarks)
             {
@@ -191,7 +200,7 @@ public class PrepareTroubleshootingPlaybackHandler(
 
         List<GraphicsElement> graphicsElements = await dbContext.GraphicsElements
             .Where(ge => request.GraphicsElementIds.Contains(ge.Id))
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         PlayoutItemResult playoutItemResult = await ffmpegProcessService.ForPlayoutItem(
             ffmpegPath,
@@ -225,7 +234,8 @@ public class PrepareTroubleshootingPlaybackHandler(
             0,
             None,
             FileSystemLayout.TranscodeTroubleshootingFolder,
-            _ => { });
+            _ => { },
+            cancellationToken);
 
         return playoutItemResult;
     }
@@ -274,17 +284,19 @@ public class PrepareTroubleshootingPlaybackHandler(
 
     private static async Task<Validation<BaseError, Tuple<MediaItem, string, string, FFmpegProfile>>> Validate(
         TvContext dbContext,
-        PrepareTroubleshootingPlayback request) =>
-        (await MediaItemMustExist(dbContext, request),
-            await FFmpegPathMustExist(dbContext),
-            await FFprobePathMustExist(dbContext),
-            await FFmpegProfileMustExist(dbContext, request))
+        PrepareTroubleshootingPlayback request,
+        CancellationToken cancellationToken) =>
+        (await MediaItemMustExist(dbContext, request, cancellationToken),
+            await FFmpegPathMustExist(dbContext, cancellationToken),
+            await FFprobePathMustExist(dbContext, cancellationToken),
+            await FFmpegProfileMustExist(dbContext, request, cancellationToken))
         .Apply((mediaItem, ffmpegPath, ffprobePath, ffmpegProfile) =>
             Tuple(mediaItem, ffmpegPath, ffprobePath, ffmpegProfile));
 
     private static async Task<Validation<BaseError, MediaItem>> MediaItemMustExist(
         TvContext dbContext,
-        PrepareTroubleshootingPlayback request) =>
+        PrepareTroubleshootingPlayback request,
+        CancellationToken cancellationToken) =>
         await dbContext.MediaItems
             .AsNoTracking()
             .Include(mi => (mi as Episode).EpisodeMetadata)
@@ -338,25 +350,30 @@ public class PrepareTroubleshootingPlaybackHandler(
             .Include(mi => (mi as RemoteStream).MediaVersions)
             .ThenInclude(mv => mv.Streams)
             .Include(mi => (mi as RemoteStream).RemoteStreamMetadata)
-            .SelectOneAsync(mi => mi.Id, mi => mi.Id == request.MediaItemId)
+            .SelectOneAsync(mi => mi.Id, mi => mi.Id == request.MediaItemId, cancellationToken)
             .Map(o => o.ToValidation<BaseError>(new UnableToLocatePlayoutItem()));
 
-    private static Task<Validation<BaseError, string>> FFmpegPathMustExist(TvContext dbContext) =>
-        dbContext.ConfigElements.GetValue<string>(ConfigElementKey.FFmpegPath)
+    private static Task<Validation<BaseError, string>> FFmpegPathMustExist(
+        TvContext dbContext,
+        CancellationToken cancellationToken) =>
+        dbContext.ConfigElements.GetValue<string>(ConfigElementKey.FFmpegPath, cancellationToken)
             .FilterT(File.Exists)
             .Map(maybePath => maybePath.ToValidation<BaseError>("FFmpeg path does not exist on filesystem"));
 
-    private static Task<Validation<BaseError, string>> FFprobePathMustExist(TvContext dbContext) =>
-        dbContext.ConfigElements.GetValue<string>(ConfigElementKey.FFprobePath)
+    private static Task<Validation<BaseError, string>> FFprobePathMustExist(
+        TvContext dbContext,
+        CancellationToken cancellationToken) =>
+        dbContext.ConfigElements.GetValue<string>(ConfigElementKey.FFprobePath, cancellationToken)
             .FilterT(File.Exists)
             .Map(maybePath => maybePath.ToValidation<BaseError>("FFprobe path does not exist on filesystem"));
 
     private static Task<Validation<BaseError, FFmpegProfile>> FFmpegProfileMustExist(
         TvContext dbContext,
-        PrepareTroubleshootingPlayback request) =>
+        PrepareTroubleshootingPlayback request,
+        CancellationToken cancellationToken) =>
         dbContext.FFmpegProfiles
             .Include(p => p.Resolution)
-            .SelectOneAsync(p => p.Id, p => p.Id == request.FFmpegProfileId)
+            .SelectOneAsync(p => p.Id, p => p.Id == request.FFmpegProfileId, cancellationToken)
             .Map(o => o.ToValidation<BaseError>($"FFmpegProfile {request.FFmpegProfileId} does not exist"));
 
     private async Task<string> GetMediaItemPath(

@@ -13,7 +13,7 @@ public class GetBlockByIdHandler(IDbContextFactory<TvContext> dbContextFactory)
         return await dbContext.Blocks
             .AsNoTracking()
             .Include(b => b.BlockGroup)
-            .SelectOneAsync(b => b.Id, b => b.Id == request.BlockId)
+            .SelectOneAsync(b => b.Id, b => b.Id == request.BlockId, cancellationToken)
             .MapT(Mapper.ProjectToViewModel);
     }
 }

@@ -120,7 +120,10 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
                     cancellationToken);
 
                 string movieFolder = folderQueue.Dequeue();
-                Option<int> maybeParentFolder = await _libraryRepository.GetParentFolderId(libraryPath, movieFolder);
+                Option<int> maybeParentFolder = await _libraryRepository.GetParentFolderId(
+                    libraryPath,
+                    movieFolder,
+                    cancellationToken);
                 foldersCompleted++;
 
                 var filesForEtag = _localFileSystem.ListFiles(movieFolder).ToList();
@@ -176,14 +179,14 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
                 {
                     // TODO: figure out how to rebuild playlists
                     Either<BaseError, MediaItemScanResult<Movie>> maybeMovie = await _movieRepository
-                        .GetOrAdd(libraryPath, knownFolder, file)
+                        .GetOrAdd(libraryPath, knownFolder, file, cancellationToken)
                         .BindT(movie => UpdateStatistics(movie, ffmpegPath, ffprobePath))
                         .BindT(video => UpdateLibraryFolderId(video, knownFolder))
                         .BindT(UpdateMetadata)
                         .BindT(movie => UpdateArtwork(movie, ArtworkKind.Poster, cancellationToken))
                         .BindT(movie => UpdateArtwork(movie, ArtworkKind.FanArt, cancellationToken))
-                        .BindT(UpdateSubtitles)
-                        .BindT(UpdateChapters)
+                        .BindT(movie => UpdateSubtitles(movie, cancellationToken))
+                        .BindT(movie => UpdateChapters(movie, cancellationToken))
                         .BindT(FlagNormal);
 
                     foreach (BaseError error in maybeMovie.LeftToSeq())
@@ -324,11 +327,13 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
         }
     }
 
-    private async Task<Either<BaseError, MediaItemScanResult<Movie>>> UpdateSubtitles(MediaItemScanResult<Movie> result)
+    private async Task<Either<BaseError, MediaItemScanResult<Movie>>> UpdateSubtitles(
+        MediaItemScanResult<Movie> result,
+        CancellationToken cancellationToken)
     {
         try
         {
-            await _localSubtitlesProvider.UpdateSubtitles(result.Item, None, true);
+            await _localSubtitlesProvider.UpdateSubtitles(result.Item, None, true, cancellationToken);
             return result;
         }
         catch (Exception ex)
@@ -338,11 +343,13 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
         }
     }
 
-    private async Task<Either<BaseError, MediaItemScanResult<Movie>>> UpdateChapters(MediaItemScanResult<Movie> result)
+    private async Task<Either<BaseError, MediaItemScanResult<Movie>>> UpdateChapters(
+        MediaItemScanResult<Movie> result,
+        CancellationToken cancellationToken)
     {
         try
         {
-            await _localChaptersProvider.UpdateChapters(result.Item, None);
+            await _localChaptersProvider.UpdateChapters(result.Item, None, cancellationToken);
             return result;
         }
         catch (Exception ex)
