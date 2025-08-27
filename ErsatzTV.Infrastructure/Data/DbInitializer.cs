@@ -13,6 +13,10 @@ public static class DbInitializer
         {
             await context.Connection.ExecuteAsync("PRAGMA journal_mode=WAL", cancellationToken);
         }
+        else
+        {
+            await context.Connection.ExecuteAsync("SET GLOBAL local_infile = true", cancellationToken);
+        }
 
         if (!context.LanguageCodes.Any())
         {
