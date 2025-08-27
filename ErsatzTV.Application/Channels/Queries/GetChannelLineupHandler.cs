@@ -10,7 +10,7 @@ public class GetChannelLineupHandler : IRequestHandler<GetChannelLineup, List<Li
     public GetChannelLineupHandler(IChannelRepository channelRepository) => _channelRepository = channelRepository;
 
     public Task<List<LineupItem>> Handle(GetChannelLineup request, CancellationToken cancellationToken) =>
-        _channelRepository.GetAll()
+        _channelRepository.GetAll(cancellationToken)
             .Map(channels => channels.Where(c => c.IsEnabled)
                 .Map(c => new LineupItem(request.Scheme, request.Host, c)).ToList());
 }

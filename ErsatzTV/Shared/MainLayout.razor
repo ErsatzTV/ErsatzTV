@@ -362,7 +362,17 @@
             .IfNoneAsync(true);
     }
 
-    protected async void OnSearchTargetsChanged(object sender, EventArgs e) => _searchTargets = await Mediator.Send(new QuerySearchTargets(), _cts.Token);
+    protected async void OnSearchTargetsChanged(object sender, EventArgs e)
+    {
+        try
+        {
+            _searchTargets = await Mediator.Send(new QuerySearchTargets(), _cts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
+        }
+    }
 
     private void PerformSearch()
     {

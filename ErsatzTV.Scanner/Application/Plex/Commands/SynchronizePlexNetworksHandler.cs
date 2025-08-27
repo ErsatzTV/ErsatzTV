@@ -107,7 +107,7 @@ public class SynchronizePlexNetworksHandler : IRequestHandler<SynchronizePlexNet
             if (result.IsRight)
             {
                 parameters.Library.LastNetworksScan = DateTime.UtcNow;
-                await _plexTelevisionRepository.UpdateLastNetworksScan(parameters.Library);
+                await _plexTelevisionRepository.UpdateLastNetworksScan(parameters.Library, cancellationToken);
             }
 
             return result;
