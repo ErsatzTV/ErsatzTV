@@ -72,17 +72,32 @@
 </MudForm>
 
 @code {
-    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource _cts;
 
-    private List<FFmpegProfileViewModel> _ffmpegProfiles = new();
+    private List<FFmpegProfileViewModel> _ffmpegProfiles = [];
 
     public void Dispose()
     {
-        _cts.Cancel();
-        _cts.Dispose();
+        _cts?.Cancel();
+        _cts?.Dispose();
     }
 
-    protected override async Task OnParametersSetAsync() => await LoadFFmpegProfilesAsync(_cts.Token);
+    protected override async Task OnParametersSetAsync()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
+
+        try
+        {
+            await LoadFFmpegProfilesAsync(token);
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
+        }
+    }
 
     private async Task LoadFFmpegProfilesAsync(CancellationToken cancellationToken) =>
         _ffmpegProfiles = await Mediator.Send(new GetAllFFmpegProfiles(), cancellationToken);

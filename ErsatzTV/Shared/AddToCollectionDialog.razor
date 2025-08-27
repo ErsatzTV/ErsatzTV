@@ -38,7 +38,7 @@
 
 
 @code {
-    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource _cts;
 
     [CascadingParameter]
     IMudDialogInstance MudDialog { get; set; }
@@ -64,7 +64,7 @@
 
     private string _newCollectionName;
 
-    private List<MediaCollectionViewModel> _collections = new();
+    private List<MediaCollectionViewModel> _collections = [];
 
     private MediaCollectionViewModel _selectedCollection;
 
@@ -74,8 +74,8 @@
 
     public void Dispose()
     {
-        _cts.Cancel();
-        _cts.Dispose();
+        _cts?.Cancel();
+        _cts?.Dispose();
     }
 
     private bool CanSubmit() =>
@@ -83,16 +83,28 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        _collections = await Mediator.Send(new GetAllCollections(), _cts.Token)
-            .Map(list => new[] { _newCollection }.Append(list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase)).ToList());
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
 
-        if (MemoryCache.TryGetValue("AddToCollectionDialog.SelectedCollectionId", out int id))
+        try
         {
-            _selectedCollection = _collections.SingleOrDefault(c => c.Id == id) ?? _newCollection;
+            _collections = await Mediator.Send(new GetAllCollections(), token)
+                .Map(list => new[] { _newCollection }.Append(list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase)).ToList());
+
+            if (MemoryCache.TryGetValue("AddToCollectionDialog.SelectedCollectionId", out int id))
+            {
+                _selectedCollection = _collections.SingleOrDefault(c => c.Id == id) ?? _newCollection;
+            }
+            else
+            {
+                _selectedCollection = _newCollection;
+            }
         }
-        else
+        catch (OperationCanceledException)
         {
-            _selectedCollection = _newCollection;
+            // do nothing
         }
     }
 

@@ -84,7 +84,7 @@
 </MudForm>
 
 @code {
-    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource _cts;
     private readonly List<TreeItemData<BlockTreeItemViewModel>> _treeItems = [];
     private List<BlockGroupViewModel> _blockGroups = [];
     private BlockGroupViewModel _selectedBlockGroup;
@@ -93,25 +93,31 @@
 
     public void Dispose()
     {
-        _cts.Cancel();
-        _cts.Dispose();
+        _cts?.Cancel();
+        _cts?.Dispose();
     }
 
     protected override async Task OnParametersSetAsync()
     {
-        await ReloadBlockTree();
-        await InvokeAsync(StateHasChanged);
-    }
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
 
-    private async Task ReloadBlockTree()
-    {
-        _blockGroups = await Mediator.Send(new GetAllBlockGroups(), _cts.Token);
-
-        _treeItems.Clear();
-        BlockTreeViewModel tree = await Mediator.Send(new GetBlockTree(), _cts.Token);
-        foreach (BlockTreeBlockGroupViewModel group in tree.Groups)
+        try
         {
-            _treeItems.Add(new TreeItemData<BlockTreeItemViewModel> { Value = new BlockTreeItemViewModel(group) });
+            _blockGroups = await Mediator.Send(new GetAllBlockGroups(), token);
+
+            _treeItems.Clear();
+            BlockTreeViewModel tree = await Mediator.Send(new GetBlockTree(), token);
+            foreach (BlockTreeBlockGroupViewModel group in tree.Groups)
+            {
+                _treeItems.Add(new TreeItemData<BlockTreeItemViewModel> { Value = new BlockTreeItemViewModel(group) });
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
         }
     }
 

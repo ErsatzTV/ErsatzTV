@@ -74,7 +74,7 @@ public class SynchronizeEmbyShowByIdHandler : IRequestHandler<SynchronizeEmbySho
         SynchronizeEmbyShowById request,
         CancellationToken cancellationToken) =>
         (await ValidateConnection(request), await EmbyLibraryMustExist(request, cancellationToken),
-            await EmbyShowMustExist(request))
+            await EmbyShowMustExist(request, cancellationToken))
         .Apply((connectionParameters, embyLibrary, showTitleItemId) =>
             new RequestParameters(
                 connectionParameters,
@@ -121,8 +121,9 @@ public class SynchronizeEmbyShowByIdHandler : IRequestHandler<SynchronizeEmbySho
             .Map(v => v.ToValidation<BaseError>($"Emby library {request.EmbyLibraryId} does not exist."));
 
     private Task<Validation<BaseError, EmbyShowTitleItemIdResult>> EmbyShowMustExist(
-        SynchronizeEmbyShowById request) =>
-        _embyTelevisionRepository.GetShowTitleItemId(request.EmbyLibraryId, request.ShowId)
+        SynchronizeEmbyShowById request,
+        CancellationToken cancellationToken) =>
+        _embyTelevisionRepository.GetShowTitleItemId(request.EmbyLibraryId, request.ShowId, cancellationToken)
             .Map(v => v.ToValidation<BaseError>(
                 $"Jellyfin show {request.ShowId} does not exist in library {request.EmbyLibraryId}."));
 

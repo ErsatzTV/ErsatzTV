@@ -1,7 +1,6 @@
 ﻿@page "/media/sources/plex/{Id:int}/paths"
 @using ErsatzTV.Application.MediaSources
 @using ErsatzTV.Application.Plex
-@implements IDisposable
 @inject IMediator Mediator
 
 <RemoteMediaSourcePathReplacementsEditor
@@ -12,23 +11,15 @@
     GetPathReplacementsBySourceId="GetPathReplacementsBySourceId"/>
 
 @code {
-    private readonly CancellationTokenSource _cts = new();
-
     [Parameter]
     public int Id { get; set; }
 
-    public void Dispose()
-    {
-        _cts.Cancel();
-        _cts.Dispose();
-    }
-
-    private async Task<Option<RemoteMediaSourceViewModel>> GetMediaSourceById(int id) =>
-        await Mediator.Send(new GetPlexMediaSourceById(Id), _cts.Token)
+    private async Task<Option<RemoteMediaSourceViewModel>> GetMediaSourceById(int id, CancellationToken cancellationToken) =>
+        await Mediator.Send(new GetPlexMediaSourceById(Id), cancellationToken)
             .MapT(vm => new RemoteMediaSourceViewModel(vm.Id, vm.Name, vm.Address));
 
-    private async Task<List<RemoteMediaSourcePathReplacementEditViewModel>> GetPathReplacementsBySourceId(int mediaSourceId) =>
-        await Mediator.Send(new GetPlexPathReplacementsBySourceId(Id), _cts.Token)
+    private async Task<List<RemoteMediaSourcePathReplacementEditViewModel>> GetPathReplacementsBySourceId(int mediaSourceId, CancellationToken cancellationToken) =>
+        await Mediator.Send(new GetPlexPathReplacementsBySourceId(Id), cancellationToken)
             .Map(list => list.Map(ProjectToEditViewModel).ToList());
 
     private RemoteMediaSourcePathReplacementEditViewModel ProjectToEditViewModel(PlexPathReplacementViewModel item) =>

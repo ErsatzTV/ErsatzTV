@@ -89,7 +89,7 @@
 </MudForm>
 
 @code {
-    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource _cts;
     private readonly List<TreeItemData<PlaylistTreeItemViewModel>> _treeItems = [];
     private List<PlaylistGroupViewModel> _playlistGroups = [];
     private PlaylistGroupViewModel _selectedPlaylistGroup;
@@ -98,22 +98,34 @@
 
     public void Dispose()
     {
-        _cts.Cancel();
-        _cts.Dispose();
+        _cts?.Cancel();
+        _cts?.Dispose();
     }
 
     protected override async Task OnParametersSetAsync()
     {
-        await ReloadPlaylistTree();
-        await InvokeAsync(StateHasChanged);
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
+
+        try
+        {
+            await ReloadPlaylistTree(token);
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
+        }
     }
 
-    private async Task ReloadPlaylistTree()
+    private async Task ReloadPlaylistTree(CancellationToken cancellationToken)
     {
-        _playlistGroups = await Mediator.Send(new GetAllPlaylistGroups(), _cts.Token);
+        _playlistGroups = await Mediator.Send(new GetAllPlaylistGroups(), cancellationToken);
 
         _treeItems.Clear();
-        TreeViewModel tree = await Mediator.Send(new GetPlaylistTree(), _cts.Token);
+        TreeViewModel tree = await Mediator.Send(new GetPlaylistTree(), cancellationToken);
         foreach (TreeGroupViewModel group in tree.Groups)
         {
             _treeItems.Add(new TreeItemData<PlaylistTreeItemViewModel> { Value = new PlaylistTreeItemViewModel(group) });
@@ -134,7 +146,7 @@
 
             foreach (PlaylistGroupViewModel _ in result.RightToSeq())
             {
-                await ReloadPlaylistTree();
+                await ReloadPlaylistTree(_cts.Token);
                 await InvokeAsync(StateHasChanged);
             }
         }

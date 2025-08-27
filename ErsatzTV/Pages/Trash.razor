@@ -481,11 +481,11 @@
                 LoadDataAsync("_seasons", () => Mediator.Send(new QuerySearchIndexSeasons($"type:season AND ({_query})", 1, 50), token), r => _seasons = r),
                 LoadDataAsync("_episodes", () => Mediator.Send(new QuerySearchIndexEpisodes($"type:episode AND ({_query})", 1, 50), token), r => _episodes = r),
                 LoadDataAsync("_musicVideos", () => Mediator.Send(new QuerySearchIndexMusicVideos($"type:music_video AND ({_query})", 1, 50), token), r => _musicVideos = r),
-                // LoadDataAsync("_otherVideos", () => Mediator.Send(new QuerySearchIndexOtherVideos($"type:other_video AND ({_query})", 1, 50), token), r => _otherVideos = r),
-                // LoadDataAsync("_songs", () => Mediator.Send(new QuerySearchIndexSongs($"type:song AND ({_query})", 1, 50), token), r => _songs = r),
-                // LoadDataAsync("_images", () => Mediator.Send(new QuerySearchIndexImages($"type:image AND ({_query})", 1, 50), token), r => _images = r),
-                // LoadDataAsync("_remoteStreams", () => Mediator.Send(new QuerySearchIndexRemoteStreams($"type:remote_stream AND ({_query})", 1, 50), token), r => _remoteStreams = r),
-                // LoadDataAsync("_artists", () => Mediator.Send(new QuerySearchIndexArtists($"type:artist AND ({_query})", 1, 50), token), r => _artists = r)
+                LoadDataAsync("_otherVideos", () => Mediator.Send(new QuerySearchIndexOtherVideos($"type:other_video AND ({_query})", 1, 50), token), r => _otherVideos = r),
+                LoadDataAsync("_songs", () => Mediator.Send(new QuerySearchIndexSongs($"type:song AND ({_query})", 1, 50), token), r => _songs = r),
+                LoadDataAsync("_images", () => Mediator.Send(new QuerySearchIndexImages($"type:image AND ({_query})", 1, 50), token), r => _images = r),
+                LoadDataAsync("_remoteStreams", () => Mediator.Send(new QuerySearchIndexRemoteStreams($"type:remote_stream AND ({_query})", 1, 50), token), r => _remoteStreams = r),
+                LoadDataAsync("_artists", () => Mediator.Send(new QuerySearchIndexArtists($"type:artist AND ({_query})", 1, 50), token), r => _artists = r)
             };
 
             await Task.WhenAll(loadingTasks);

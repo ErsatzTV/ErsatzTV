@@ -224,13 +224,13 @@ public class LocalMetadataProvider : ILocalMetadataProvider
         return await RefreshFallbackMetadata(image);
     }
 
-    public async Task<bool> RefreshTagMetadata(RemoteStream remoteStream) =>
+    public async Task<bool> RefreshTagMetadata(RemoteStream remoteStream, CancellationToken cancellationToken) =>
         // Option<RemoteStreamMetadata> maybeMetadata = LoadRemoteStreamMetadata(remoteStream);
         // foreach (RemoteStreamMetadata metadata in maybeMetadata)
         // {
         //     return await ApplyMetadataUpdate(remoteStream, metadata);
         // }
-        await RefreshFallbackMetadata(remoteStream);
+        await RefreshFallbackMetadata(remoteStream, cancellationToken);
 
     public Task<bool> RefreshFallbackMetadata(Movie movie) =>
         ApplyMetadataUpdate(movie, _fallbackMetadataProvider.GetFallbackMetadata(movie));
@@ -274,12 +274,12 @@ public class LocalMetadataProvider : ILocalMetadataProvider
         return false;
     }
 
-    public async Task<bool> RefreshFallbackMetadata(RemoteStream remoteStream)
+    public async Task<bool> RefreshFallbackMetadata(RemoteStream remoteStream, CancellationToken cancellationToken)
     {
         Option<RemoteStreamMetadata> maybeMetadata = _fallbackMetadataProvider.GetFallbackMetadata(remoteStream);
         foreach (RemoteStreamMetadata metadata in maybeMetadata)
         {
-            return await ApplyMetadataUpdate(remoteStream, metadata);
+            return await ApplyMetadataUpdate(remoteStream, metadata, cancellationToken);
         }
 
         return false;
@@ -1239,7 +1239,10 @@ public class LocalMetadataProvider : ILocalMetadataProvider
         return await _metadataRepository.Add(metadata);
     }
 
-    private async Task<bool> ApplyMetadataUpdate(RemoteStream remoteStream, RemoteStreamMetadata metadata)
+    private async Task<bool> ApplyMetadataUpdate(
+        RemoteStream remoteStream,
+        RemoteStreamMetadata metadata,
+        CancellationToken cancellationToken)
     {
         Option<RemoteStreamMetadata> maybeMetadata = Optional(remoteStream.RemoteStreamMetadata).Flatten().HeadOrNone();
         foreach (RemoteStreamMetadata existing in maybeMetadata)
@@ -1265,7 +1268,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
                 existing,
                 metadata,
                 (_, _) => Task.FromResult(false),
-                _remoteStreamRepository.AddTag,
+                (metadata1, tag) => _remoteStreamRepository.AddTag(metadata1, tag, cancellationToken),
                 (_, _) => Task.FromResult(false),
                 (_, _) => Task.FromResult(false));
 

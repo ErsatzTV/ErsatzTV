@@ -72,7 +72,7 @@
 </MudForm>
 
 @code {
-    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource _cts;
 
     private MudTable<FillerPresetViewModel> _fillerPresetsTable;
 
@@ -80,12 +80,27 @@
 
     public void Dispose()
     {
-        _cts.Cancel();
-        _cts.Dispose();
+        _cts?.Cancel();
+        _cts?.Dispose();
     }
 
-    protected override async Task OnParametersSetAsync() => _fillerPresetsRowsPerPage = await Mediator.Send(new GetConfigElementByKey(ConfigElementKey.FillerPresetsPageSize), _cts.Token)
-        .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
+    protected override async Task OnParametersSetAsync()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
+
+        try
+        {
+            _fillerPresetsRowsPerPage = await Mediator.Send(new GetConfigElementByKey(ConfigElementKey.FillerPresetsPageSize), token)
+                .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
+        }
+    }
 
     private async Task DeleteFillerPreset(FillerPresetViewModel fillerPreset)
     {
@@ -106,9 +121,9 @@
 
     private async Task<TableData<FillerPresetViewModel>> ServerReloadFillerPresets(TableState state, CancellationToken cancellationToken)
     {
-        await Mediator.Send(new SaveConfigElementByKey(ConfigElementKey.FillerPresetsPageSize, state.PageSize.ToString()), _cts.Token);
+        await Mediator.Send(new SaveConfigElementByKey(ConfigElementKey.FillerPresetsPageSize, state.PageSize.ToString()), cancellationToken);
 
-        PagedFillerPresetsViewModel data = await Mediator.Send(new GetPagedFillerPresets(state.Page, state.PageSize), _cts.Token);
+        PagedFillerPresetsViewModel data = await Mediator.Send(new GetPagedFillerPresets(state.Page, state.PageSize), cancellationToken);
         return new TableData<FillerPresetViewModel> { TotalItems = data.TotalCount, Items = data.Page };
     }
 

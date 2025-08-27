@@ -40,7 +40,7 @@
 </MudForm>
 
 @code {
-    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource _cts;
     private PlayoutNameViewModel _playout;
 
     [Parameter]
@@ -50,28 +50,40 @@
 
     public void Dispose()
     {
-        _cts.Cancel();
-        _cts.Dispose();
+        _cts?.Cancel();
+        _cts?.Dispose();
     }
 
     protected override async Task OnParametersSetAsync()
     {
-        Option<string> maybeName = await Mediator.Send(new GetChannelNameByPlayoutId(Id), _cts.Token);
-        if (maybeName.IsNone)
-        {
-            NavigationManager.NavigateTo("playouts");
-            return;
-        }
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
 
-        foreach (string name in maybeName)
+        try
         {
-            _channelName = name;
-        }
+            Option<string> maybeName = await Mediator.Send(new GetChannelNameByPlayoutId(Id), token);
+            if (maybeName.IsNone)
+            {
+                NavigationManager.NavigateTo("playouts");
+                return;
+            }
 
-        Option<PlayoutNameViewModel> maybePlayout = await Mediator.Send(new GetPlayoutById(Id), _cts.Token);
-        foreach (PlayoutNameViewModel playout in maybePlayout)
+            foreach (string name in maybeName)
+            {
+                _channelName = name;
+            }
+
+            Option<PlayoutNameViewModel> maybePlayout = await Mediator.Send(new GetPlayoutById(Id), token);
+            foreach (PlayoutNameViewModel playout in maybePlayout)
+            {
+                _playout = playout;
+            }
+        }
+        catch (OperationCanceledException)
         {
-            _playout = playout;
+            // do nothing
         }
     }
 

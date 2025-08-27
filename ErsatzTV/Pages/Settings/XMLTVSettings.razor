@@ -42,17 +42,32 @@
 </MudForm>
 
 @code {
-    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource _cts;
 
     private XmltvSettingsViewModel _xmltvSettings = new();
 
     public void Dispose()
     {
-        _cts.Cancel();
-        _cts.Dispose();
+        _cts?.Cancel();
+        _cts?.Dispose();
     }
 
-    protected override async Task OnParametersSetAsync() => _xmltvSettings = await Mediator.Send(new GetXmltvSettings(), _cts.Token);
+    protected override async Task OnParametersSetAsync()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
+
+        try
+        {
+            _xmltvSettings = await Mediator.Send(new GetXmltvSettings(), token);
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
+        }
+    }
 
     private static string ValidateXmltvDaysToBuild(int daysToBuild) => daysToBuild <= 0 ? "XMLTV days to build must be greater than zero" : null;
 

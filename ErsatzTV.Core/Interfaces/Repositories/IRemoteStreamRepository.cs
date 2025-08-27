@@ -11,8 +11,8 @@ public interface IRemoteStreamRepository
         string path,
         CancellationToken cancellationToken);
 
-    Task<IEnumerable<string>> FindRemoteStreamPaths(LibraryPath libraryPath);
-    Task<List<int>> DeleteByPath(LibraryPath libraryPath, string path);
-    Task<bool> AddTag(RemoteStreamMetadata metadata, Tag tag);
-    Task UpdateDefinition(RemoteStream remoteStream);
+    Task<IEnumerable<string>> FindRemoteStreamPaths(LibraryPath libraryPath, CancellationToken cancellationToken);
+    Task<List<int>> DeleteByPath(LibraryPath libraryPath, string path, CancellationToken cancellationToken);
+    Task<bool> AddTag(RemoteStreamMetadata metadata, Tag tag, CancellationToken cancellationToken);
+    Task UpdateDefinition(RemoteStream remoteStream, CancellationToken cancellationToken);
 }

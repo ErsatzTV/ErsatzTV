@@ -37,15 +37,15 @@ public class ChannelRepository : IChannelRepository
             .Map(Optional);
     }
 
-    public async Task<List<Channel>> GetAll()
+    public async Task<List<Channel>> GetAll(CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await dbContext.Channels
             .AsNoTracking()
             .Include(c => c.FFmpegProfile)
             .Include(c => c.Artwork)
             .Include(c => c.Playouts)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
     }
 
     public async Task<Option<ChannelWatermark>> GetWatermarkByName(string name)

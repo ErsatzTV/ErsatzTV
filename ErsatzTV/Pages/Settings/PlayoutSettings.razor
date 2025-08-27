@@ -32,7 +32,7 @@
 </MudForm>
 
 @code {
-    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource _cts;
 
     private MudForm _form;
     private bool _playoutSuccess;
@@ -40,14 +40,26 @@
 
     public void Dispose()
     {
-        _cts.Cancel();
-        _cts.Dispose();
+        _cts?.Cancel();
+        _cts?.Dispose();
     }
 
     protected override async Task OnParametersSetAsync()
     {
-        _playoutSettings = await Mediator.Send(new GetPlayoutSettings(), _cts.Token);
-        _playoutSuccess = _playoutSettings.DaysToBuild > 0;
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
+
+        try
+        {
+            _playoutSettings = await Mediator.Send(new GetPlayoutSettings(), token);
+            _playoutSuccess = _playoutSettings.DaysToBuild > 0;
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
+        }
     }
 
     private static string ValidatePlayoutDaysToBuild(int daysToBuild) => daysToBuild <= 0 ? "Playout days to build must be greater than zero" : null;

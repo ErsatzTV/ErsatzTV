@@ -152,7 +152,7 @@
 </MudForm>
 
 @code {
-    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource _cts;
 
     private MudForm _form;
     private bool _success;
@@ -165,22 +165,34 @@
 
     public void Dispose()
     {
-        _cts.Cancel();
-        _cts.Dispose();
+        _cts?.Cancel();
+        _cts?.Dispose();
     }
 
     protected override async Task OnParametersSetAsync()
     {
-        await LoadFFmpegProfilesAsync();
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
 
-        _ffmpegSettings = await Mediator.Send(new GetFFmpegSettings(), _cts.Token);
-        _success = File.Exists(_ffmpegSettings.FFmpegPath) && File.Exists(_ffmpegSettings.FFprobePath);
-        _availableCultures = await Mediator.Send(new GetAllLanguageCodes(), _cts.Token);
-        _watermarks = await Mediator.Send(new GetAllWatermarks(), _cts.Token);
-        _fillerPresets = await Mediator.Send(new GetAllFillerPresets(), _cts.Token)
-            .Map(list => list.Filter(fp => fp.FillerKind == FillerKind.Fallback).ToList());
+        try
+        {
+            _ffmpegProfiles = await Mediator.Send(new GetAllFFmpegProfiles(), token);
 
-        await RefreshCustomResolutions();
+            _ffmpegSettings = await Mediator.Send(new GetFFmpegSettings(), token);
+            _success = File.Exists(_ffmpegSettings.FFmpegPath) && File.Exists(_ffmpegSettings.FFprobePath);
+            _availableCultures = await Mediator.Send(new GetAllLanguageCodes(), token);
+            _watermarks = await Mediator.Send(new GetAllWatermarks(), token);
+            _fillerPresets = await Mediator.Send(new GetAllFillerPresets(), token)
+                .Map(list => list.Filter(fp => fp.FillerKind == FillerKind.Fallback).ToList());
+
+            await RefreshCustomResolutions(token);
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
+        }
     }
 
     private static string ValidatePathExists(string path) => !File.Exists(path) ? "Path does not exist" : null;
@@ -191,8 +203,6 @@
 
     private static string ValidateInitialSegmentCount(int count) => count < 1 ? "HLS Segmenter initial segment count must be greater than or equal to 1" : null;
 
-    private async Task LoadFFmpegProfilesAsync() =>
-        _ffmpegProfiles = await Mediator.Send(new GetAllFFmpegProfiles(), _cts.Token);
 
     private async Task SaveFFmpegSettings()
     {
@@ -214,8 +224,9 @@
         }
     }
 
-    private async Task RefreshCustomResolutions() => _customResolutions = await Mediator.Send(new GetAllResolutions(), _cts.Token)
-        .Map(list => list.Filter(r => r.IsCustom).ToList());
+    private async Task RefreshCustomResolutions(CancellationToken cancellationToken) =>
+        _customResolutions = await Mediator.Send(new GetAllResolutions(), cancellationToken)
+            .Map(list => list.Filter(r => r.IsCustom).ToList());
 
     private async Task AddCustomResolution()
     {
@@ -236,7 +247,7 @@
 
             if (saveResult.IsNone)
             {
-                await RefreshCustomResolutions();
+                await RefreshCustomResolutions(_cts.Token);
             }
         }
     }
@@ -252,7 +263,7 @@
 
         if (result.IsNone)
         {
-            await RefreshCustomResolutions();
+            await RefreshCustomResolutions(_cts.Token);
         }
     }
 

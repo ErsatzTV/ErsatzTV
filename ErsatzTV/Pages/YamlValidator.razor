@@ -88,15 +88,15 @@
 
     public void Dispose()
     {
-        _cts.Cancel();
-        _cts.Dispose();
+        _cts?.Cancel();
+        _cts?.Dispose();
     }
 
     private async Task ValidateYaml()
     {
         if (_exists)
         {
-            _yamlText = await File.ReadAllTextAsync(_yamlFile);
+            _yamlText = await File.ReadAllTextAsync(_yamlFile, _cts.Token);
             try
             {
                 _jsonText = SequentialScheduleValidator.ToJson(_yamlText);

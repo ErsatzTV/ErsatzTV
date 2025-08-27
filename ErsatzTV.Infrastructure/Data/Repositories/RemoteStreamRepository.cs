@@ -4,6 +4,7 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Metadata;
+using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -54,65 +55,76 @@ public class RemoteStreamRepository(
             async () => await AddRemoteStream(dbContext, libraryPath.Id, libraryFolder.Id, path, cancellationToken));
     }
 
-    public async Task<IEnumerable<string>> FindRemoteStreamPaths(LibraryPath libraryPath)
+    public async Task<IEnumerable<string>> FindRemoteStreamPaths(
+        LibraryPath libraryPath,
+        CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await dbContext.Connection.QueryAsync<string>(
-            @"SELECT MF.Path
+            new CommandDefinition(
+                @"SELECT MF.Path
                 FROM MediaFile MF
                 INNER JOIN MediaVersion MV on MF.MediaVersionId = MV.Id
                 INNER JOIN RemoteStream O on MV.RemoteStreamId = O.Id
                 INNER JOIN MediaItem MI on O.Id = MI.Id
                 WHERE MI.LibraryPathId = @LibraryPathId",
-            new { LibraryPathId = libraryPath.Id });
+                parameters: new { LibraryPathId = libraryPath.Id },
+                cancellationToken: cancellationToken));
     }
 
-    public async Task<List<int>> DeleteByPath(LibraryPath libraryPath, string path)
+    public async Task<List<int>> DeleteByPath(LibraryPath libraryPath, string path, CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         List<int> ids = await dbContext.Connection.QueryAsync<int>(
-            @"SELECT O.Id
-            FROM RemoteStream O
-            INNER JOIN MediaItem MI on O.Id = MI.Id
-            INNER JOIN MediaVersion MV on O.Id = MV.RemoteStreamId
-            INNER JOIN MediaFile MF on MV.Id = MF.MediaVersionId
-            WHERE MI.LibraryPathId = @LibraryPathId AND MF.Path = @Path",
-            new { LibraryPathId = libraryPath.Id, Path = path }).Map(result => result.ToList());
+            new CommandDefinition(
+                @"SELECT O.Id
+                    FROM RemoteStream O
+                    INNER JOIN MediaItem MI on O.Id = MI.Id
+                    INNER JOIN MediaVersion MV on O.Id = MV.RemoteStreamId
+                    INNER JOIN MediaFile MF on MV.Id = MF.MediaVersionId
+                    WHERE MI.LibraryPathId = @LibraryPathId AND MF.Path = @Path",
+                parameters: new { LibraryPathId = libraryPath.Id, Path = path },
+                cancellationToken: cancellationToken)).Map(result => result.ToList());
 
         foreach (int remoteStreamId in ids)
         {
-            RemoteStream remoteStream = await dbContext.RemoteStreams.FindAsync(remoteStreamId);
-            if (remoteStream != null)
+            Option<RemoteStream> maybeRemoteStream = await dbContext.RemoteStreams
+                .SelectOneAsync(rs => rs.Id, rs => rs.Id == remoteStreamId, cancellationToken);
+            foreach (var remoteStream in maybeRemoteStream)
             {
                 dbContext.RemoteStreams.Remove(remoteStream);
             }
         }
 
-        await dbContext.SaveChangesAsync();
+        await dbContext.SaveChangesAsync(cancellationToken);
 
         return ids;
     }
 
-    public async Task<bool> AddTag(RemoteStreamMetadata metadata, Tag tag)
+    public async Task<bool> AddTag(RemoteStreamMetadata metadata, Tag tag, CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await dbContext.Connection.ExecuteAsync(
-            "INSERT INTO Tag (Name, RemoteStreamMetadataId, ExternalCollectionId) VALUES (@Name, @MetadataId, @ExternalCollectionId)",
-            new { tag.Name, MetadataId = metadata.Id, tag.ExternalCollectionId }).Map(result => result > 0);
+            new CommandDefinition(
+                "INSERT INTO Tag (Name, RemoteStreamMetadataId, ExternalCollectionId) VALUES (@Name, @MetadataId, @ExternalCollectionId)",
+                parameters: new { tag.Name, MetadataId = metadata.Id, tag.ExternalCollectionId },
+                cancellationToken: cancellationToken)).Map(result => result > 0);
     }
 
-    public async Task UpdateDefinition(RemoteStream remoteStream)
+    public async Task UpdateDefinition(RemoteStream remoteStream, CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         await dbContext.RemoteStreams
             .Where(rs => rs.Id == remoteStream.Id)
-            .ExecuteUpdateAsync(setters => setters
-                .SetProperty(rs => rs.Url, remoteStream.Url)
-                .SetProperty(rs => rs.Script, remoteStream.Script)
-                .SetProperty(rs => rs.Duration, remoteStream.Duration)
-                .SetProperty(rs => rs.FallbackQuery, remoteStream.FallbackQuery)
-                .SetProperty(rs => rs.IsLive, remoteStream.IsLive));
+            .ExecuteUpdateAsync(
+                setters => setters
+                    .SetProperty(rs => rs.Url, remoteStream.Url)
+                    .SetProperty(rs => rs.Script, remoteStream.Script)
+                    .SetProperty(rs => rs.Duration, remoteStream.Duration)
+                    .SetProperty(rs => rs.FallbackQuery, remoteStream.FallbackQuery)
+                    .SetProperty(rs => rs.IsLive, remoteStream.IsLive),
+                cancellationToken);
     }
 
     private async Task<Either<BaseError, MediaItemScanResult<RemoteStream>>> AddRemoteStream(

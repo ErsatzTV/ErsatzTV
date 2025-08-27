@@ -150,6 +150,7 @@
         try
         {
             _ffmpegProfiles = await Mediator.Send(new GetAllFFmpegProfiles(), token);
+            token.ThrowIfCancellationRequested();
             _rowsPerPage = await Mediator.Send(new GetConfigElementByKey(ConfigElementKey.ChannelsPageSize), token)
                 .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
         }
@@ -245,9 +246,10 @@
 
     private async Task<TableData<ChannelViewModel>> ServerReload(TableState state, CancellationToken cancellationToken)
     {
-        await Mediator.Send(new SaveConfigElementByKey(ConfigElementKey.ChannelsPageSize, state.PageSize.ToString()), _cts.Token);
+        await Mediator.Send(new SaveConfigElementByKey(ConfigElementKey.ChannelsPageSize, state.PageSize.ToString()), cancellationToken);
+        cancellationToken.ThrowIfCancellationRequested();
 
-        List<ChannelViewModel> channels = await Mediator.Send(new GetAllChannels(), _cts.Token);
+        List<ChannelViewModel> channels = await Mediator.Send(new GetAllChannels(), cancellationToken);
         IOrderedEnumerable<ChannelViewModel> sorted = channels.OrderBy(c => decimal.Parse(c.Number, CultureInfo.InvariantCulture));
 
         CultureInfo[] allCultures = CultureInfo.GetCultures(CultureTypes.NeutralCultures);

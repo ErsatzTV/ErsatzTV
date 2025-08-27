@@ -2,55 +2,63 @@
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Infrastructure.Data;
+using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using static ErsatzTV.Application.Watermarks.Mapper;
 
 namespace ErsatzTV.Application.Watermarks;
 
-public class CopyWatermarkHandler :
-    IRequestHandler<CopyWatermark, Either<BaseError, WatermarkViewModel>>
+public class CopyWatermarkHandler(IDbContextFactory<TvContext> dbContextFactory, ISearchTargets searchTargets)
+    : IRequestHandler<CopyWatermark, Either<BaseError, WatermarkViewModel>>
 {
-    private readonly IDbContextFactory<TvContext> _dbContextFactory;
-    private readonly ISearchTargets _searchTargets;
-
-    public CopyWatermarkHandler(IDbContextFactory<TvContext> dbContextFactory, ISearchTargets searchTargets)
+    public async Task<Either<BaseError, WatermarkViewModel>> Handle(
+        CopyWatermark request,
+        CancellationToken cancellationToken)
     {
-        _dbContextFactory = dbContextFactory;
-        _searchTargets = searchTargets;
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        Validation<BaseError, CopyWatermarkParameters> validation = await Validate(dbContext, request, cancellationToken);
+        return await validation.Apply(c => PerformCopy(dbContext, c, cancellationToken));
     }
 
-    public Task<Either<BaseError, WatermarkViewModel>> Handle(
-        CopyWatermark request,
-        CancellationToken cancellationToken) =>
-        Validate(request)
-            .MapT(PerformCopy)
-            .Bind(v => v.ToEitherAsync());
-
-    private async Task<WatermarkViewModel> PerformCopy(CopyWatermark request)
+    private async Task<WatermarkViewModel> PerformCopy(
+        TvContext dbContext,
+        CopyWatermarkParameters parameters,
+        CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
-        ChannelWatermark channelWatermark = await dbContext.ChannelWatermarks.FindAsync(request.WatermarkId);
-
-        PropertyValues values = dbContext.Entry(channelWatermark).CurrentValues.Clone();
+        PropertyValues values = dbContext.Entry(parameters.Watermark).CurrentValues.Clone();
         values["Id"] = 0;
 
         var clone = new ChannelWatermark();
-        await dbContext.AddAsync(clone);
+        await dbContext.AddAsync(clone, cancellationToken);
         dbContext.Entry(clone).CurrentValues.SetValues(values);
-        clone.Name = request.Name;
+        clone.Name = parameters.Name;
 
-        await dbContext.SaveChangesAsync();
+        await dbContext.SaveChangesAsync(cancellationToken);
 
-        _searchTargets.SearchTargetsChanged();
+        searchTargets.SearchTargetsChanged();
 
         return ProjectToViewModel(clone);
     }
 
-    private static Task<Validation<BaseError, CopyWatermark>> Validate(CopyWatermark request) =>
-        ValidateName(request).AsTask().MapT(_ => request);
+    private static async Task<Validation<BaseError, CopyWatermarkParameters>> Validate(
+        TvContext dbContext,
+        CopyWatermark request,
+        CancellationToken cancellationToken) =>
+        (ValidateName(request), await WatermarkMustExist(dbContext, request, cancellationToken))
+        .Apply((name, watermark) => new CopyWatermarkParameters(name, watermark));
 
     private static Validation<BaseError, string> ValidateName(CopyWatermark request) =>
         request.NotEmpty(x => x.Name)
             .Bind(_ => request.NotLongerThan(50)(x => x.Name));
+
+    private static Task<Validation<BaseError, ChannelWatermark>> WatermarkMustExist(
+        TvContext dbContext,
+        CopyWatermark copyWatermark,
+        CancellationToken cancellationToken) =>
+        dbContext.ChannelWatermarks
+            .SelectOneAsync(wm => wm.Id, wm => wm.Id == copyWatermark.WatermarkId, cancellationToken)
+            .Map(o => o.ToValidation<BaseError>($"Watermark {copyWatermark.WatermarkId} does not exist."));
+
+    private sealed record CopyWatermarkParameters(string Name, ChannelWatermark Watermark);
 }

@@ -11,59 +11,62 @@ using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Infrastructure.Data.Repositories;
 
-public class EmbyTelevisionRepository : IEmbyTelevisionRepository
+public class EmbyTelevisionRepository(
+    IDbContextFactory<TvContext> dbContextFactory,
+    ILogger<EmbyTelevisionRepository> logger) : IEmbyTelevisionRepository
 {
-    private readonly IDbContextFactory<TvContext> _dbContextFactory;
-    private readonly ILogger<EmbyTelevisionRepository> _logger;
-
-    public EmbyTelevisionRepository(
-        IDbContextFactory<TvContext> dbContextFactory,
-        ILogger<EmbyTelevisionRepository> logger)
+    public async Task<List<EmbyItemEtag>> GetExistingShows(EmbyLibrary library, CancellationToken cancellationToken)
     {
-        _dbContextFactory = dbContextFactory;
-        _logger = logger;
-    }
-
-    public async Task<List<EmbyItemEtag>> GetExistingShows(EmbyLibrary library)
-    {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await dbContext.Connection.QueryAsync<EmbyItemEtag>(
-                @"SELECT ItemId, Etag, MI.State FROM EmbyShow
+                new CommandDefinition(
+                    @"SELECT ItemId, Etag, MI.State FROM EmbyShow
                       INNER JOIN `Show` S on EmbyShow.Id = S.Id
                       INNER JOIN MediaItem MI on S.Id = MI.Id
                       INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id
                       WHERE LP.LibraryId = @LibraryId",
-                new { LibraryId = library.Id })
+                    parameters: new { LibraryId = library.Id },
+                    cancellationToken: cancellationToken))
             .Map(result => result.ToList());
     }
 
-    public async Task<List<EmbyItemEtag>> GetExistingSeasons(EmbyLibrary library, EmbyShow show)
+    public async Task<List<EmbyItemEtag>> GetExistingSeasons(
+        EmbyLibrary library,
+        EmbyShow show,
+        CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await dbContext.Connection.QueryAsync<EmbyItemEtag>(
-                @"SELECT EmbySeason.ItemId, EmbySeason.Etag, MI.State FROM EmbySeason
+                new CommandDefinition(
+                    @"SELECT EmbySeason.ItemId, EmbySeason.Etag, MI.State FROM EmbySeason
                       INNER JOIN Season S on EmbySeason.Id = S.Id
                       INNER JOIN MediaItem MI on S.Id = MI.Id
                       INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id
                       INNER JOIN `Show` S2 on S.ShowId = S2.Id
                       INNER JOIN EmbyShow JS on S2.Id = JS.Id
                       WHERE LP.LibraryId = @LibraryId AND JS.ItemId = @ShowItemId",
-                new { LibraryId = library.Id, ShowItemId = show.ItemId })
+                    parameters: new { LibraryId = library.Id, ShowItemId = show.ItemId },
+                    cancellationToken: cancellationToken))
             .Map(result => result.ToList());
     }
 
-    public async Task<List<EmbyItemEtag>> GetExistingEpisodes(EmbyLibrary library, EmbySeason season)
+    public async Task<List<EmbyItemEtag>> GetExistingEpisodes(
+        EmbyLibrary library,
+        EmbySeason season,
+        CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await dbContext.Connection.QueryAsync<EmbyItemEtag>(
-                @"SELECT EmbyEpisode.ItemId, EmbyEpisode.Etag, MI.State FROM EmbyEpisode
+                new CommandDefinition(
+                    @"SELECT EmbyEpisode.ItemId, EmbyEpisode.Etag, MI.State FROM EmbyEpisode
                       INNER JOIN Episode E on EmbyEpisode.Id = E.Id
                       INNER JOIN MediaItem MI on E.Id = MI.Id
                       INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id
                       INNER JOIN Season S2 on E.SeasonId = S2.Id
                       INNER JOIN EmbySeason JS on S2.Id = JS.Id
                       WHERE LP.LibraryId = @LibraryId AND JS.ItemId = @SeasonItemId",
-                new { LibraryId = library.Id, SeasonItemId = season.ItemId })
+                    parameters: new { LibraryId = library.Id, SeasonItemId = season.ItemId },
+                    cancellationToken: cancellationToken))
             .Map(result => result.ToList());
     }
 
@@ -72,7 +75,7 @@ public class EmbyTelevisionRepository : IEmbyTelevisionRepository
         EmbyShow item,
         CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         Option<EmbyShow> maybeExisting = await dbContext.EmbyShows
             .Include(m => m.LibraryPath)
             .ThenInclude(lp => lp.Library)
@@ -97,14 +100,14 @@ public class EmbyTelevisionRepository : IEmbyTelevisionRepository
             var result = new MediaItemScanResult<EmbyShow>(embyShow) { IsAdded = false };
             if (embyShow.Etag != item.Etag)
             {
-                await UpdateShow(dbContext, embyShow, item);
+                await UpdateShow(dbContext, embyShow, item, cancellationToken);
                 result.IsUpdated = true;
             }
 
             return result;
         }
 
-        return await AddShow(dbContext, library, item);
+        return await AddShow(dbContext, library, item, cancellationToken);
     }
 
     public async Task<Either<BaseError, MediaItemScanResult<EmbySeason>>> GetOrAdd(
@@ -112,7 +115,7 @@ public class EmbyTelevisionRepository : IEmbyTelevisionRepository
         EmbySeason item,
         CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         Option<EmbySeason> maybeExisting = await dbContext.EmbySeasons
             .Include(m => m.LibraryPath)
             .Include(m => m.SeasonMetadata)
@@ -126,14 +129,14 @@ public class EmbyTelevisionRepository : IEmbyTelevisionRepository
             var result = new MediaItemScanResult<EmbySeason>(embySeason) { IsAdded = false };
             if (embySeason.Etag != item.Etag)
             {
-                await UpdateSeason(dbContext, embySeason, item);
+                await UpdateSeason(dbContext, embySeason, item, cancellationToken);
                 result.IsUpdated = true;
             }
 
             return result;
         }
 
-        return await AddSeason(dbContext, library, item);
+        return await AddSeason(dbContext, library, item, cancellationToken);
     }
 
     public async Task<Either<BaseError, MediaItemScanResult<EmbyEpisode>>> GetOrAdd(
@@ -142,7 +145,7 @@ public class EmbyTelevisionRepository : IEmbyTelevisionRepository
         bool deepScan,
         CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         Option<EmbyEpisode> maybeExisting = await dbContext.EmbyEpisodes
             .Include(m => m.LibraryPath)
             .ThenInclude(lp => lp.Library)
@@ -178,7 +181,7 @@ public class EmbyTelevisionRepository : IEmbyTelevisionRepository
             var result = new MediaItemScanResult<EmbyEpisode>(embyEpisode) { IsAdded = false };
             if (embyEpisode.Etag != item.Etag || deepScan)
             {
-                await UpdateEpisode(dbContext, embyEpisode, item);
+                await UpdateEpisode(dbContext, embyEpisode, item, cancellationToken);
                 result.IsUpdated = true;
             }
 
@@ -188,254 +191,316 @@ public class EmbyTelevisionRepository : IEmbyTelevisionRepository
         return await AddEpisode(dbContext, library, item, cancellationToken);
     }
 
-    public async Task<Unit> SetEtag(EmbyShow show, string etag)
+    public async Task<Unit> SetEtag(EmbyShow show, string etag, CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await dbContext.Connection.ExecuteAsync(
-            "UPDATE EmbyShow SET Etag = @Etag WHERE Id = @Id",
-            new { Etag = etag, show.Id }).Map(_ => Unit.Default);
+            new CommandDefinition(
+                "UPDATE EmbyShow SET Etag = @Etag WHERE Id = @Id",
+                parameters: new { Etag = etag, show.Id },
+                cancellationToken: cancellationToken)).Map(_ => Unit.Default);
     }
 
-    public async Task<Unit> SetEtag(EmbySeason season, string etag)
+    public async Task<Unit> SetEtag(EmbySeason season, string etag, CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await dbContext.Connection.ExecuteAsync(
-            "UPDATE EmbySeason SET Etag = @Etag WHERE Id = @Id",
-            new { Etag = etag, season.Id }).Map(_ => Unit.Default);
+            new CommandDefinition(
+                "UPDATE EmbySeason SET Etag = @Etag WHERE Id = @Id",
+                parameters: new { Etag = etag, season.Id },
+                cancellationToken: cancellationToken)).Map(_ => Unit.Default);
     }
 
-    public async Task<Unit> SetEtag(EmbyEpisode episode, string etag)
+    public async Task<Unit> SetEtag(EmbyEpisode episode, string etag, CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await dbContext.Connection.ExecuteAsync(
-            "UPDATE EmbyEpisode SET Etag = @Etag WHERE Id = @Id",
-            new { Etag = etag, episode.Id }).Map(_ => Unit.Default);
+            new CommandDefinition(
+                "UPDATE EmbyEpisode SET Etag = @Etag WHERE Id = @Id",
+                parameters: new { Etag = etag, episode.Id },
+                cancellationToken: cancellationToken)).Map(_ => Unit.Default);
     }
 
-    public async Task<Option<int>> FlagNormal(EmbyLibrary library, EmbyEpisode episode)
+    public async Task<Option<int>> FlagNormal(
+        EmbyLibrary library,
+        EmbyEpisode episode,
+        CancellationToken cancellationToken)
     {
         if (episode.State is MediaItemState.Normal)
         {
             return Option<int>.None;
         }
 
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         episode.State = MediaItemState.Normal;
 
         Option<int> maybeId = await dbContext.Connection.ExecuteScalarAsync<int>(
-            @"SELECT EmbyEpisode.Id FROM EmbyEpisode
-            INNER JOIN MediaItem MI ON MI.Id = EmbyEpisode.Id
-            INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id AND LibraryId = @LibraryId
-            WHERE EmbyEpisode.ItemId = @ItemId",
-            new { LibraryId = library.Id, episode.ItemId });
+            new CommandDefinition(
+                @"SELECT EmbyEpisode.Id FROM EmbyEpisode
+                    INNER JOIN MediaItem MI ON MI.Id = EmbyEpisode.Id
+                    INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id AND LibraryId = @LibraryId
+                    WHERE EmbyEpisode.ItemId = @ItemId",
+                parameters: new { LibraryId = library.Id, episode.ItemId },
+                cancellationToken: cancellationToken));
 
         foreach (int id in maybeId)
         {
             return await dbContext.Connection.ExecuteAsync(
-                "UPDATE MediaItem SET State = 0 WHERE Id = @Id AND State != 0",
-                new { Id = id }).Map(count => count > 0 ? Some(id) : None);
+                new CommandDefinition(
+                    "UPDATE MediaItem SET State = 0 WHERE Id = @Id AND State != 0",
+                    parameters: new { Id = id },
+                    cancellationToken: cancellationToken)).Map(count => count > 0 ? Some(id) : None);
         }
 
         return None;
     }
 
-    public async Task<Option<int>> FlagNormal(EmbyLibrary library, EmbySeason season)
+    public async Task<Option<int>> FlagNormal(
+        EmbyLibrary library,
+        EmbySeason season,
+        CancellationToken cancellationToken)
     {
         if (season.State is MediaItemState.Normal)
         {
             return Option<int>.None;
         }
 
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         season.State = MediaItemState.Normal;
 
         Option<int> maybeId = await dbContext.Connection.ExecuteScalarAsync<int>(
-            @"SELECT EmbySeason.Id FROM EmbySeason
-            INNER JOIN MediaItem MI ON MI.Id = EmbySeason.Id
-            INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id AND LibraryId = @LibraryId
-            WHERE EmbySeason.ItemId = @ItemId",
-            new { LibraryId = library.Id, season.ItemId });
+            new CommandDefinition(
+                @"SELECT EmbySeason.Id FROM EmbySeason
+                    INNER JOIN MediaItem MI ON MI.Id = EmbySeason.Id
+                    INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id AND LibraryId = @LibraryId
+                    WHERE EmbySeason.ItemId = @ItemId",
+                parameters: new { LibraryId = library.Id, season.ItemId },
+                cancellationToken: cancellationToken));
 
         foreach (int id in maybeId)
         {
             return await dbContext.Connection.ExecuteAsync(
-                "UPDATE MediaItem SET State = 0 WHERE Id = @Id AND State != 0",
-                new { Id = id }).Map(count => count > 0 ? Some(id) : None);
+                new CommandDefinition(
+                    "UPDATE MediaItem SET State = 0 WHERE Id = @Id AND State != 0",
+                    parameters: new { Id = id },
+                    cancellationToken: cancellationToken)).Map(count => count > 0 ? Some(id) : None);
         }
 
         return None;
     }
 
-    public async Task<Option<int>> FlagNormal(EmbyLibrary library, EmbyShow show)
+    public async Task<Option<int>> FlagNormal(EmbyLibrary library, EmbyShow show, CancellationToken cancellationToken)
     {
         if (show.State is MediaItemState.Normal)
         {
             return Option<int>.None;
         }
 
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         show.State = MediaItemState.Normal;
 
         Option<int> maybeId = await dbContext.Connection.ExecuteScalarAsync<int>(
-            @"SELECT EmbyShow.Id FROM EmbyShow
-            INNER JOIN MediaItem MI ON MI.Id = EmbyShow.Id
-            INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id AND LibraryId = @LibraryId
-            WHERE EmbyShow.ItemId = @ItemId",
-            new { LibraryId = library.Id, show.ItemId });
+            new CommandDefinition(
+                @"SELECT EmbyShow.Id FROM EmbyShow
+                    INNER JOIN MediaItem MI ON MI.Id = EmbyShow.Id
+                    INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id AND LibraryId = @LibraryId
+                    WHERE EmbyShow.ItemId = @ItemId",
+                parameters: new { LibraryId = library.Id, show.ItemId },
+                cancellationToken: cancellationToken));
 
         foreach (int id in maybeId)
         {
             return await dbContext.Connection.ExecuteAsync(
-                "UPDATE MediaItem SET State = 0 WHERE Id = @Id AND State != 0",
-                new { Id = id }).Map(count => count > 0 ? Some(id) : None);
+                new CommandDefinition(
+                    "UPDATE MediaItem SET State = 0 WHERE Id = @Id AND State != 0",
+                    parameters: new { Id = id },
+                    cancellationToken: cancellationToken)).Map(count => count > 0 ? Some(id) : None);
         }
 
         return None;
     }
 
-    public async Task<List<int>> FlagFileNotFoundShows(EmbyLibrary library, List<string> showItemIds)
+    public async Task<List<int>> FlagFileNotFoundShows(
+        EmbyLibrary library,
+        List<string> showItemIds,
+        CancellationToken cancellationToken)
     {
         if (showItemIds.Count == 0)
         {
             return [];
         }
 
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         List<int> ids = await dbContext.Connection.QueryAsync<int>(
-                @"SELECT M.Id
-                FROM MediaItem M
-                INNER JOIN EmbyShow ON EmbyShow.Id = M.Id
-                INNER JOIN LibraryPath LP on M.LibraryPathId = LP.Id AND LP.LibraryId = @LibraryId
-                WHERE EmbyShow.ItemId IN @ShowItemIds",
-                new { LibraryId = library.Id, ShowItemIds = showItemIds })
+                new CommandDefinition(
+                    @"SELECT M.Id
+                        FROM MediaItem M
+                        INNER JOIN EmbyShow ON EmbyShow.Id = M.Id
+                        INNER JOIN LibraryPath LP on M.LibraryPathId = LP.Id AND LP.LibraryId = @LibraryId
+                        WHERE EmbyShow.ItemId IN @ShowItemIds",
+                    parameters: new { LibraryId = library.Id, ShowItemIds = showItemIds },
+                    cancellationToken: cancellationToken))
             .Map(result => result.ToList());
 
         await dbContext.Connection.ExecuteAsync(
-            "UPDATE MediaItem SET State = 1 WHERE Id IN @Ids AND State != 1",
-            new { Ids = ids });
+            new CommandDefinition(
+                "UPDATE MediaItem SET State = 1 WHERE Id IN @Ids AND State != 1",
+                parameters: new { Ids = ids },
+                cancellationToken: cancellationToken));
 
         return ids;
     }
 
-    public async Task<List<int>> FlagFileNotFoundSeasons(EmbyLibrary library, List<string> seasonItemIds)
+    public async Task<List<int>> FlagFileNotFoundSeasons(
+        EmbyLibrary library,
+        List<string> seasonItemIds,
+        CancellationToken cancellationToken)
     {
         if (seasonItemIds.Count == 0)
         {
             return [];
         }
 
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         List<int> ids = await dbContext.Connection.QueryAsync<int>(
-                @"SELECT M.Id
-                FROM MediaItem M
-                INNER JOIN EmbySeason ON EmbySeason.Id = M.Id
-                INNER JOIN LibraryPath LP on M.LibraryPathId = LP.Id AND LP.LibraryId = @LibraryId
-                WHERE EmbySeason.ItemId IN @SeasonItemIds",
-                new { LibraryId = library.Id, SeasonItemIds = seasonItemIds })
+                new CommandDefinition(
+                    @"SELECT M.Id
+                        FROM MediaItem M
+                        INNER JOIN EmbySeason ON EmbySeason.Id = M.Id
+                        INNER JOIN LibraryPath LP on M.LibraryPathId = LP.Id AND LP.LibraryId = @LibraryId
+                        WHERE EmbySeason.ItemId IN @SeasonItemIds",
+                    parameters: new { LibraryId = library.Id, SeasonItemIds = seasonItemIds },
+                    cancellationToken: cancellationToken))
             .Map(result => result.ToList());
 
         await dbContext.Connection.ExecuteAsync(
-            "UPDATE MediaItem SET State = 1 WHERE Id IN @Ids AND State != 1",
-            new { Ids = ids });
+            new CommandDefinition(
+                "UPDATE MediaItem SET State = 1 WHERE Id IN @Ids AND State != 1",
+                parameters: new { Ids = ids },
+                cancellationToken: cancellationToken));
 
         return ids;
     }
 
-    public async Task<List<int>> FlagFileNotFoundEpisodes(EmbyLibrary library, List<string> episodeItemIds)
+    public async Task<List<int>> FlagFileNotFoundEpisodes(
+        EmbyLibrary library,
+        List<string> episodeItemIds,
+        CancellationToken cancellationToken)
     {
         if (episodeItemIds.Count == 0)
         {
             return [];
         }
 
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         List<int> ids = await dbContext.Connection.QueryAsync<int>(
-                @"SELECT M.Id
-                FROM MediaItem M
-                INNER JOIN EmbyEpisode ON EmbyEpisode.Id = M.Id
-                INNER JOIN LibraryPath LP on M.LibraryPathId = LP.Id AND LP.LibraryId = @LibraryId
-                WHERE EmbyEpisode.ItemId IN @EpisodeItemIds",
-                new { LibraryId = library.Id, EpisodeItemIds = episodeItemIds })
+                new CommandDefinition(
+                    @"SELECT M.Id
+                        FROM MediaItem M
+                        INNER JOIN EmbyEpisode ON EmbyEpisode.Id = M.Id
+                        INNER JOIN LibraryPath LP on M.LibraryPathId = LP.Id AND LP.LibraryId = @LibraryId
+                        WHERE EmbyEpisode.ItemId IN @EpisodeItemIds",
+                    parameters: new { LibraryId = library.Id, EpisodeItemIds = episodeItemIds },
+                    cancellationToken: cancellationToken))
             .Map(result => result.ToList());
 
         await dbContext.Connection.ExecuteAsync(
-            "UPDATE MediaItem SET State = 1 WHERE Id IN @Ids AND State != 1",
-            new { Ids = ids });
+            new CommandDefinition(
+                "UPDATE MediaItem SET State = 1 WHERE Id IN @Ids AND State != 1",
+                parameters: new { Ids = ids },
+                cancellationToken: cancellationToken));
 
         return ids;
     }
 
-    public async Task<Option<int>> FlagUnavailable(EmbyLibrary library, EmbyEpisode episode)
+    public async Task<Option<int>> FlagUnavailable(
+        EmbyLibrary library,
+        EmbyEpisode episode,
+        CancellationToken cancellationToken)
     {
         if (episode.State is MediaItemState.Unavailable)
         {
             return Option<int>.None;
         }
 
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         episode.State = MediaItemState.Unavailable;
 
         Option<int> maybeId = await dbContext.Connection.ExecuteScalarAsync<int>(
-            @"SELECT EmbyEpisode.Id FROM EmbyEpisode
-              INNER JOIN MediaItem MI ON MI.Id = EmbyEpisode.Id
-              INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id AND LibraryId = @LibraryId
-              WHERE EmbyEpisode.ItemId = @ItemId",
-            new { LibraryId = library.Id, episode.ItemId });
+            new CommandDefinition(
+                @"SELECT EmbyEpisode.Id FROM EmbyEpisode
+                  INNER JOIN MediaItem MI ON MI.Id = EmbyEpisode.Id
+                  INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id AND LibraryId = @LibraryId
+                  WHERE EmbyEpisode.ItemId = @ItemId",
+                parameters: new { LibraryId = library.Id, episode.ItemId },
+                cancellationToken: cancellationToken));
 
         foreach (int id in maybeId)
         {
             return await dbContext.Connection.ExecuteAsync(
-                "UPDATE MediaItem SET State = 2 WHERE Id = @Id AND State != 2",
-                new { Id = id }).Map(count => count > 0 ? Some(id) : None);
+                new CommandDefinition(
+                    "UPDATE MediaItem SET State = 2 WHERE Id = @Id AND State != 2",
+                    parameters: new { Id = id },
+                    cancellationToken: cancellationToken)).Map(count => count > 0 ? Some(id) : None);
         }
 
         return None;
     }
 
-    public async Task<Option<int>> FlagRemoteOnly(EmbyLibrary library, EmbyEpisode episode)
+    public async Task<Option<int>> FlagRemoteOnly(
+        EmbyLibrary library,
+        EmbyEpisode episode,
+        CancellationToken cancellationToken)
     {
         if (episode.State is MediaItemState.RemoteOnly)
         {
             return Option<int>.None;
         }
 
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         episode.State = MediaItemState.RemoteOnly;
 
         Option<int> maybeId = await dbContext.Connection.ExecuteScalarAsync<int>(
-            @"SELECT EmbyEpisode.Id FROM EmbyEpisode
-              INNER JOIN MediaItem MI ON MI.Id = EmbyEpisode.Id
-              INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id AND LibraryId = @LibraryId
-              WHERE EmbyEpisode.ItemId = @ItemId",
-            new { LibraryId = library.Id, episode.ItemId });
+            new CommandDefinition(
+                @"SELECT EmbyEpisode.Id FROM EmbyEpisode
+                  INNER JOIN MediaItem MI ON MI.Id = EmbyEpisode.Id
+                  INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id AND LibraryId = @LibraryId
+                  WHERE EmbyEpisode.ItemId = @ItemId",
+                parameters: new { LibraryId = library.Id, episode.ItemId },
+                cancellationToken: cancellationToken));
 
         foreach (int id in maybeId)
         {
             return await dbContext.Connection.ExecuteAsync(
-                "UPDATE MediaItem SET State = 3 WHERE Id = @Id AND State != 3",
-                new { Id = id }).Map(count => count > 0 ? Some(id) : None);
+                new CommandDefinition(
+                    "UPDATE MediaItem SET State = 3 WHERE Id = @Id AND State != 3",
+                    parameters: new { Id = id },
+                    cancellationToken: cancellationToken)).Map(count => count > 0 ? Some(id) : None);
         }
 
         return None;
     }
 
-    public async Task<Option<EmbyShowTitleItemIdResult>> GetShowTitleItemId(int libraryId, int showId)
+    public async Task<Option<EmbyShowTitleItemIdResult>> GetShowTitleItemId(
+        int libraryId,
+        int showId,
+        CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         Option<EmbyShow> maybeShow = await dbContext.EmbyShows
             .Where(s => s.Id == showId)
             .Where(s => s.LibraryPath.LibraryId == libraryId)
             .Include(s => s.ShowMetadata)
-            .FirstOrDefaultAsync()
+            .FirstOrDefaultAsync(cancellationToken)
             .Map(Optional);
 
         foreach (EmbyShow show in maybeShow)
@@ -448,7 +513,11 @@ public class EmbyTelevisionRepository : IEmbyTelevisionRepository
         return Option<EmbyShowTitleItemIdResult>.None;
     }
 
-    private static async Task UpdateShow(TvContext dbContext, EmbyShow existing, EmbyShow incoming)
+    private static async Task UpdateShow(
+        TvContext dbContext,
+        EmbyShow existing,
+        EmbyShow incoming,
+        CancellationToken cancellationToken)
     {
         // library path is used for search indexing later
         incoming.LibraryPath = existing.LibraryPath;
@@ -589,10 +658,14 @@ public class EmbyTelevisionRepository : IEmbyTelevisionRepository
             metadata.Artwork.Remove(artworkToRemove);
         }
 
-        await dbContext.SaveChangesAsync();
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    private static async Task UpdateSeason(TvContext dbContext, EmbySeason existing, EmbySeason incoming)
+    private static async Task UpdateSeason(
+        TvContext dbContext,
+        EmbySeason existing,
+        EmbySeason incoming,
+        CancellationToken cancellationToken)
     {
         // library path is used for search indexing later
         incoming.LibraryPath = existing.LibraryPath;
@@ -684,10 +757,14 @@ public class EmbyTelevisionRepository : IEmbyTelevisionRepository
             metadata.Artwork.Remove(artworkToRemove);
         }
 
-        await dbContext.SaveChangesAsync();
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    private static async Task UpdateEpisode(TvContext dbContext, EmbyEpisode existing, EmbyEpisode incoming)
+    private static async Task UpdateEpisode(
+        TvContext dbContext,
+        EmbyEpisode existing,
+        EmbyEpisode incoming,
+        CancellationToken cancellationToken)
     {
         // library path is used for search indexing later
         incoming.LibraryPath = existing.LibraryPath;
@@ -819,13 +896,14 @@ public class EmbyTelevisionRepository : IEmbyTelevisionRepository
         MediaFile incomingFile = incomingVersion.MediaFiles.Head();
         file.Path = incomingFile.Path;
 
-        await dbContext.SaveChangesAsync();
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
     private static async Task<Either<BaseError, MediaItemScanResult<EmbyShow>>> AddShow(
         TvContext dbContext,
         EmbyLibrary library,
-        EmbyShow show)
+        EmbyShow show,
+        CancellationToken cancellationToken)
     {
         try
         {
@@ -835,14 +913,14 @@ public class EmbyTelevisionRepository : IEmbyTelevisionRepository
 
             show.LibraryPathId = library.Paths.Head().Id;
 
-            await dbContext.AddAsync(show);
-            await dbContext.SaveChangesAsync();
+            await dbContext.AddAsync(show, cancellationToken);
+            await dbContext.SaveChangesAsync(cancellationToken);
 
             // restore etag
             show.Etag = etag;
 
-            await dbContext.Entry(show).Reference(m => m.LibraryPath).LoadAsync();
-            await dbContext.Entry(show.LibraryPath).Reference(lp => lp.Library).LoadAsync();
+            await dbContext.Entry(show).Reference(m => m.LibraryPath).LoadAsync(cancellationToken);
+            await dbContext.Entry(show.LibraryPath).Reference(lp => lp.Library).LoadAsync(cancellationToken);
             return new MediaItemScanResult<EmbyShow>(show) { IsAdded = true };
         }
         catch (Exception ex)
@@ -854,7 +932,8 @@ public class EmbyTelevisionRepository : IEmbyTelevisionRepository
     private static async Task<Either<BaseError, MediaItemScanResult<EmbySeason>>> AddSeason(
         TvContext dbContext,
         EmbyLibrary library,
-        EmbySeason season)
+        EmbySeason season,
+        CancellationToken cancellationToken)
     {
         try
         {
@@ -864,14 +943,14 @@ public class EmbyTelevisionRepository : IEmbyTelevisionRepository
 
             season.LibraryPathId = library.Paths.Head().Id;
 
-            await dbContext.AddAsync(season);
-            await dbContext.SaveChangesAsync();
+            await dbContext.AddAsync(season, cancellationToken);
+            await dbContext.SaveChangesAsync(cancellationToken);
 
             // restore etag
             season.Etag = etag;
 
-            await dbContext.Entry(season).Reference(m => m.LibraryPath).LoadAsync();
-            await dbContext.Entry(season.LibraryPath).Reference(lp => lp.Library).LoadAsync();
+            await dbContext.Entry(season).Reference(m => m.LibraryPath).LoadAsync(cancellationToken);
+            await dbContext.Entry(season.LibraryPath).Reference(lp => lp.Library).LoadAsync(cancellationToken);
             return new MediaItemScanResult<EmbySeason>(season) { IsAdded = true };
         }
         catch (Exception ex)
@@ -892,7 +971,7 @@ public class EmbyTelevisionRepository : IEmbyTelevisionRepository
                     episode,
                     library.Paths.Head().Id,
                     dbContext,
-                    _logger,
+                    logger,
                     cancellationToken))
             {
                 return new MediaFileAlreadyExists();

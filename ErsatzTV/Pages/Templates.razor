@@ -79,7 +79,7 @@
 </MudForm>
 
 @code {
-    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource _cts;
     private readonly List<TreeItemData<TemplateTreeItemViewModel>> _treeItems = [];
     private List<TemplateGroupViewModel> _templateGroups = [];
     private TemplateGroupViewModel _selectedTemplateGroup;
@@ -88,25 +88,31 @@
 
     public void Dispose()
     {
-        _cts.Cancel();
-        _cts.Dispose();
+        _cts?.Cancel();
+        _cts?.Dispose();
     }
 
     protected override async Task OnParametersSetAsync()
     {
-        await ReloadTemplateTree();
-        await InvokeAsync(StateHasChanged);
-    }
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
 
-    private async Task ReloadTemplateTree()
-    {
-        _templateGroups = await Mediator.Send(new GetAllTemplateGroups(), _cts.Token);
-
-        _treeItems.Clear();
-        TreeViewModel tree = await Mediator.Send(new GetTemplateTree(), _cts.Token);
-        foreach (TreeGroupViewModel group in tree.Groups)
+        try
         {
-            _treeItems.Add(new TreeItemData<TemplateTreeItemViewModel> { Value = new TemplateTreeItemViewModel(group) });
+            _templateGroups = await Mediator.Send(new GetAllTemplateGroups(), token);
+
+            _treeItems.Clear();
+            TreeViewModel tree = await Mediator.Send(new GetTemplateTree(), token);
+            foreach (TreeGroupViewModel group in tree.Groups)
+            {
+                _treeItems.Add(new TreeItemData<TemplateTreeItemViewModel> { Value = new TemplateTreeItemViewModel(group) });
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
         }
     }
 

@@ -79,7 +79,7 @@
 </MudForm>
 
 @code {
-    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource _cts;
     private readonly List<TreeItemData<DecoTreeItemViewModel>> _treeItems = [];
     private List<DecoGroupViewModel> _decoGroups = [];
     private DecoGroupViewModel _selectedDecoGroup;
@@ -88,25 +88,31 @@
 
     public void Dispose()
     {
-        _cts.Cancel();
-        _cts.Dispose();
+        _cts?.Cancel();
+        _cts?.Dispose();
     }
 
     protected override async Task OnParametersSetAsync()
     {
-        await ReloadDecoTree();
-        await InvokeAsync(StateHasChanged);
-    }
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
 
-    private async Task ReloadDecoTree()
-    {
-        _decoGroups = await Mediator.Send(new GetAllDecoGroups(), _cts.Token);
-
-        _treeItems.Clear();
-        TreeViewModel tree = await Mediator.Send(new GetDecoTree(), _cts.Token);
-        foreach (TreeGroupViewModel group in tree.Groups)
+        try
         {
-            _treeItems.Add(new TreeItemData<DecoTreeItemViewModel> { Value = new DecoTreeItemViewModel(group) });
+            _decoGroups = await Mediator.Send(new GetAllDecoGroups(), token);
+
+            _treeItems.Clear();
+            TreeViewModel tree = await Mediator.Send(new GetDecoTree(), token);
+            foreach (TreeGroupViewModel group in tree.Groups)
+            {
+                _treeItems.Add(new TreeItemData<DecoTreeItemViewModel> { Value = new DecoTreeItemViewModel(group) });
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
         }
     }
 

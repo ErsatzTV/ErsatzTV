@@ -34,7 +34,7 @@ public class
         SynchronizeJellyfinShowById request,
         CancellationToken cancellationToken)
     {
-        Validation<BaseError, RequestParameters> validation = await Validate(request);
+        Validation<BaseError, RequestParameters> validation = await Validate(request, cancellationToken);
         return await validation.Match(
             parameters => Synchronize(parameters, cancellationToken),
             error => Task.FromResult<Either<BaseError, string>>(error.Join()));
@@ -71,9 +71,11 @@ public class
         return result.Map(_ => $"Show '{parameters.ShowTitle}' in {parameters.Library.Name}");
     }
 
-    private async Task<Validation<BaseError, RequestParameters>> Validate(SynchronizeJellyfinShowById request) =>
+    private async Task<Validation<BaseError, RequestParameters>> Validate(
+        SynchronizeJellyfinShowById request,
+        CancellationToken cancellationToken) =>
         (await ValidateConnection(request), await JellyfinLibraryMustExist(request),
-            await JellyfinShowMustExist(request))
+            await JellyfinShowMustExist(request, cancellationToken))
         .Apply((connectionParameters, jellyfinLibrary, showTitleItemId) =>
             new RequestParameters(
                 connectionParameters,
@@ -119,8 +121,9 @@ public class
             .Map(v => v.ToValidation<BaseError>($"Jellyfin library {request.JellyfinLibraryId} does not exist."));
 
     private Task<Validation<BaseError, JellyfinShowTitleItemIdResult>> JellyfinShowMustExist(
-        SynchronizeJellyfinShowById request) =>
-        _jellyfinTelevisionRepository.GetShowTitleItemId(request.JellyfinLibraryId, request.ShowId)
+        SynchronizeJellyfinShowById request,
+        CancellationToken cancellationToken) =>
+        _jellyfinTelevisionRepository.GetShowTitleItemId(request.JellyfinLibraryId, request.ShowId, cancellationToken)
             .Map(v => v.ToValidation<BaseError>(
                 $"Jellyfin show {request.ShowId} does not exist in library {request.JellyfinLibraryId}."));
 

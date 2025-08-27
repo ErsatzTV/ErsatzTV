@@ -72,7 +72,7 @@
                         <MudElement HtmlTag="img" src="@($"artwork/watermarks/{_model.Image.UrlWithContentType}")"/>
                     </div>
                 }
-                else
+                else if (_model.Image is not null)
                 {
                     <MudTextField Disabled="true" For="@(() => _model.Image.Path)"/>
                 }
@@ -203,7 +203,7 @@
 </MudForm>
 
 @code {
-    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource _cts;
 
     [Parameter]
     public int Id { get; set; }
@@ -214,18 +214,30 @@
 
     public void Dispose()
     {
-        _cts.Cancel();
-        _cts.Dispose();
+        _cts?.Cancel();
+        _cts?.Dispose();
     }
 
     protected override async Task OnParametersSetAsync()
     {
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
+
         if (IsEdit)
         {
-            Option<WatermarkViewModel> watermark = await Mediator.Send(new GetWatermarkById(Id), _cts.Token);
-            watermark.Match(
-                watermarkViewModel => _model = new WatermarkEditViewModel(watermarkViewModel),
-                () => NavigationManager.NavigateTo("404"));
+            try
+            {
+                Option<WatermarkViewModel> watermark = await Mediator.Send(new GetWatermarkById(Id), token);
+                watermark.Match(
+                    watermarkViewModel => _model = new WatermarkEditViewModel(watermarkViewModel),
+                    () => NavigationManager.NavigateTo("404"));
+            }
+            catch (OperationCanceledException)
+            {
+                // do nothing
+            }
         }
         else
         {
@@ -254,18 +266,34 @@
     private async Task HandleSubmitAsync()
     {
         await _form.Validate();
-        ValidationResult result = await _validator.ValidateAsync(_model, _cts.Token);
-        if (result.IsValid)
+        if (!_form.IsValid)
         {
-            Seq<BaseError> errorMessage = IsEdit ? (await Mediator.Send(_model.ToUpdate(), _cts.Token)).LeftToSeq() : (await Mediator.Send(_model.ToCreate(), _cts.Token)).LeftToSeq();
+            return;
+        }
 
-            errorMessage.HeadOrNone().Match(
-                error =>
-                {
-                    Snackbar.Add("Unexpected error saving watermark");
-                    Logger.LogError("Unexpected error saving watermark: {Error}", error.Value);
-                },
-                () => NavigationManager.NavigateTo("watermarks"));
+        try
+        {
+            var token = _cts?.Token ?? CancellationToken.None;
+
+            ValidationResult result = await _validator.ValidateAsync(_model, token);
+            if (result.IsValid)
+            {
+                Seq<BaseError> errorMessage = IsEdit
+                    ? (await Mediator.Send(_model.ToUpdate(), token)).LeftToSeq()
+                    : (await Mediator.Send(_model.ToCreate(), token)).LeftToSeq();
+
+                errorMessage.HeadOrNone().Match(
+                    error =>
+                    {
+                        Snackbar.Add("Unexpected error saving watermark");
+                        Logger.LogError("Unexpected error saving watermark: {Error}", error.Value);
+                    },
+                    () => NavigationManager.NavigateTo("watermarks"));
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
         }
     }
 
@@ -273,9 +301,11 @@
     {
         try
         {
+            var token = _cts?.Token ?? CancellationToken.None;
+
             Either<BaseError, string> maybeCacheFileName = await Mediator.Send(
                 new SaveArtworkToDisk(e.File.OpenReadStream(SystemEnvironment.MaximumUploadMb * 1024 * 1024), ArtworkKind.Watermark, e.File.ContentType),
-                _cts.Token);
+                token);
             maybeCacheFileName.Match(
                 relativeFileName =>
                 {
@@ -287,6 +317,10 @@
                     Snackbar.Add($"Unexpected error saving watermark: {error.Value}", Severity.Error);
                     Logger.LogError("Unexpected error saving watermark: {Error}", error.Value);
                 });
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
         }
         catch (IOException)
         {

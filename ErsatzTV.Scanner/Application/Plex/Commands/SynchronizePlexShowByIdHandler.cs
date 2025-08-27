@@ -33,7 +33,7 @@ public class SynchronizePlexShowByIdHandler : IRequestHandler<SynchronizePlexSho
         SynchronizePlexShowById request,
         CancellationToken cancellationToken)
     {
-        Validation<BaseError, RequestParameters> validation = await Validate(request);
+        Validation<BaseError, RequestParameters> validation = await Validate(request, cancellationToken);
         return await validation.Match(
             parameters => Synchronize(parameters, cancellationToken),
             error => Task.FromResult<Either<BaseError, string>>(error.Join()));
@@ -70,8 +70,11 @@ public class SynchronizePlexShowByIdHandler : IRequestHandler<SynchronizePlexSho
         return result.Map(_ => $"Show '{parameters.ShowTitle}' in {parameters.Library.Name}");
     }
 
-    private async Task<Validation<BaseError, RequestParameters>> Validate(SynchronizePlexShowById request) =>
-        (await ValidateConnection(request), await PlexLibraryMustExist(request), await PlexShowMustExist(request))
+    private async Task<Validation<BaseError, RequestParameters>> Validate(
+        SynchronizePlexShowById request,
+        CancellationToken cancellationToken) =>
+        (await ValidateConnection(request), await PlexLibraryMustExist(request),
+            await PlexShowMustExist(request, cancellationToken))
         .Apply((connectionParameters, plexLibrary, titleKey) =>
             new RequestParameters(
                 connectionParameters,
@@ -117,8 +120,9 @@ public class SynchronizePlexShowByIdHandler : IRequestHandler<SynchronizePlexSho
             .Map(v => v.ToValidation<BaseError>($"Plex library {request.PlexLibraryId} does not exist."));
 
     private Task<Validation<BaseError, PlexShowTitleKeyResult>> PlexShowMustExist(
-        SynchronizePlexShowById request) =>
-        _plexTelevisionRepository.GetShowTitleKey(request.PlexLibraryId, request.ShowId)
+        SynchronizePlexShowById request,
+        CancellationToken cancellationToken) =>
+        _plexTelevisionRepository.GetShowTitleKey(request.PlexLibraryId, request.ShowId, cancellationToken)
             .Map(v => v.ToValidation<BaseError>(
                 $"Plex show {request.ShowId} does not exist in library {request.PlexLibraryId}."));
 
