@@ -18,14 +18,15 @@ public class UpdatePlayoutHandler : IRequestHandler<UpdatePlayout, Either<BaseEr
         CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        Validation<BaseError, Playout> validation = await Validate(dbContext, request);
-        return await validation.Apply(playout => ApplyUpdateRequest(dbContext, request, playout));
+        Validation<BaseError, Playout> validation = await Validate(dbContext, request, cancellationToken);
+        return await validation.Apply(playout => ApplyUpdateRequest(dbContext, request, playout, cancellationToken));
     }
 
     private static async Task<PlayoutNameViewModel> ApplyUpdateRequest(
         TvContext dbContext,
         UpdatePlayout request,
-        Playout playout)
+        Playout playout,
+        CancellationToken cancellationToken)
     {
         playout.DailyRebuildTime = null;
 
@@ -34,7 +35,7 @@ public class UpdatePlayoutHandler : IRequestHandler<UpdatePlayout, Either<BaseEr
             playout.DailyRebuildTime = dailyRebuildTime;
         }
 
-        await dbContext.SaveChangesAsync();
+        await dbContext.SaveChangesAsync(cancellationToken);
 
         return new PlayoutNameViewModel(
             playout.Id,
@@ -47,15 +48,19 @@ public class UpdatePlayoutHandler : IRequestHandler<UpdatePlayout, Either<BaseEr
             playout.DailyRebuildTime);
     }
 
-    private static Task<Validation<BaseError, Playout>> Validate(TvContext dbContext, UpdatePlayout request) =>
-        PlayoutMustExist(dbContext, request);
+    private static Task<Validation<BaseError, Playout>> Validate(
+        TvContext dbContext,
+        UpdatePlayout request,
+        CancellationToken cancellationToken) =>
+        PlayoutMustExist(dbContext, request, cancellationToken);
 
     private static Task<Validation<BaseError, Playout>> PlayoutMustExist(
         TvContext dbContext,
-        UpdatePlayout updatePlayout) =>
+        UpdatePlayout updatePlayout,
+        CancellationToken cancellationToken) =>
         dbContext.Playouts
             .Include(p => p.Channel)
             .Include(p => p.ProgramSchedule)
-            .SelectOneAsync(p => p.Id, p => p.Id == updatePlayout.PlayoutId)
+            .SelectOneAsync(p => p.Id, p => p.Id == updatePlayout.PlayoutId, cancellationToken)
             .Map(o => o.ToValidation<BaseError>("Playout does not exist."));
 }

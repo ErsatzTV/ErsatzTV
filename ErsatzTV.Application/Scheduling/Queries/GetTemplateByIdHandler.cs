@@ -13,7 +13,7 @@ public class GetTemplateByIdHandler(IDbContextFactory<TvContext> dbContextFactor
         return await dbContext.Templates
             .AsNoTracking()
             .Include(t => t.TemplateGroup)
-            .SelectOneAsync(b => b.Id, b => b.Id == request.TemplateId)
+            .SelectOneAsync(b => b.Id, b => b.Id == request.TemplateId, cancellationToken)
             .MapT(Mapper.ProjectToViewModel);
     }
 }

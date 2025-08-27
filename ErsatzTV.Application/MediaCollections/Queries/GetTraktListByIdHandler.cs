@@ -11,8 +11,9 @@ public class GetTraktListByIdHandler(IDbContextFactory<TvContext> dbContextFacto
     {
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await dbContext.TraktLists
+            .AsNoTracking()
             .Include(tl => tl.Items)
-            .SelectOneAsync(tl => tl.Id, tl => tl.Id == request.Id)
+            .SelectOneAsync(tl => tl.Id, tl => tl.Id == request.Id, cancellationToken)
             .MapT(Mapper.ProjectToViewModel);
     }
 }

@@ -120,10 +120,10 @@
 </MudForm>
 
 @code {
-    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource _cts;
 
     private MudTable<ChannelViewModel> _table;
-    private List<FFmpegProfileViewModel> _ffmpegProfiles = new();
+    private List<FFmpegProfileViewModel> _ffmpegProfiles = [];
 
     private int _rowsPerPage = 10;
 
@@ -136,18 +136,34 @@
     {
         SegmenterService.OnWorkersChanged -= WorkersChanged;
 
-        _cts.Cancel();
-        _cts.Dispose();
+        _cts?.Cancel();
+        _cts?.Dispose();
     }
 
     protected override async Task OnParametersSetAsync()
     {
-        _ffmpegProfiles = await Mediator.Send(new GetAllFFmpegProfiles(), _cts.Token);
-        _rowsPerPage = await Mediator.Send(new GetConfigElementByKey(ConfigElementKey.ChannelsPageSize), _cts.Token)
-            .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
+
+        try
+        {
+            _ffmpegProfiles = await Mediator.Send(new GetAllFFmpegProfiles(), token);
+            _rowsPerPage = await Mediator.Send(new GetConfigElementByKey(ConfigElementKey.ChannelsPageSize), token)
+                .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
+        }
     }
 
-    private async Task StopChannel(ChannelViewModel channel) => await SegmenterService.StopChannel(channel.Number, _cts.Token);
+    private async Task StopChannel(ChannelViewModel channel)
+    {
+        using var cts = new CancellationTokenSource();
+        await SegmenterService.StopChannel(channel.Number, cts.Token);
+    }
 
     private bool CanPreviewChannel(ChannelViewModel channel)
     {
@@ -218,7 +234,8 @@
         DialogResult result = await dialog.Result;
         if (result is { Canceled: false })
         {
-            await Mediator.Send(new DeleteChannel(channel.Id), _cts.Token);
+            using var cts = new CancellationTokenSource();
+            await Mediator.Send(new DeleteChannel(channel.Id), cts.Token);
             if (_table != null)
             {
                 await _table.ReloadServerData();

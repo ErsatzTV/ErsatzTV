@@ -17,9 +17,10 @@ public class RemoteStreamRepository(
     public async Task<Either<BaseError, MediaItemScanResult<RemoteStream>>> GetOrAdd(
         LibraryPath libraryPath,
         LibraryFolder libraryFolder,
-        string path)
+        string path,
+        CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         Option<RemoteStream> maybeExisting = await dbContext.RemoteStreams
             .AsNoTracking()
             .Include(i => i.RemoteStreamMetadata)
@@ -44,13 +45,13 @@ public class RemoteStreamRepository(
             .Include(ov => ov.TraktListItems)
             .ThenInclude(tli => tli.TraktList)
             .OrderBy(i => i.MediaVersions.First().MediaFiles.First().Path)
-            .SingleOrDefaultAsync(i => i.MediaVersions.First().MediaFiles.First().Path == path);
+            .SingleOrDefaultAsync(i => i.MediaVersions.First().MediaFiles.First().Path == path, cancellationToken);
 
         return await maybeExisting.Match(
             mediaItem =>
                 Right<BaseError, MediaItemScanResult<RemoteStream>>(
                     new MediaItemScanResult<RemoteStream>(mediaItem) { IsAdded = false }).AsTask(),
-            async () => await AddRemoteStream(dbContext, libraryPath.Id, libraryFolder.Id, path));
+            async () => await AddRemoteStream(dbContext, libraryPath.Id, libraryFolder.Id, path, cancellationToken));
     }
 
     public async Task<IEnumerable<string>> FindRemoteStreamPaths(LibraryPath libraryPath)
@@ -101,21 +102,6 @@ public class RemoteStreamRepository(
             new { tag.Name, MetadataId = metadata.Id, tag.ExternalCollectionId }).Map(result => result > 0);
     }
 
-    public async Task<List<RemoteStreamMetadata>> GetRemoteStreamsForCards(List<int> ids)
-    {
-        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
-        return await dbContext.RemoteStreamMetadata
-            .AsNoTracking()
-            .Filter(im => ids.Contains(im.RemoteStreamId))
-            .Include(im => im.RemoteStream)
-            .Include(im => im.Artwork)
-            .Include(im => im.RemoteStream)
-            .ThenInclude(s => s.MediaVersions)
-            .ThenInclude(mv => mv.MediaFiles)
-            .OrderBy(im => im.SortTitle)
-            .ToListAsync();
-    }
-
     public async Task UpdateDefinition(RemoteStream remoteStream)
     {
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
@@ -133,11 +119,17 @@ public class RemoteStreamRepository(
         TvContext dbContext,
         int libraryPathId,
         int libraryFolderId,
-        string path)
+        string path,
+        CancellationToken cancellationToken)
     {
         try
         {
-            if (await MediaItemRepository.MediaFileAlreadyExists(path, libraryPathId, dbContext, logger))
+            if (await MediaItemRepository.MediaFileAlreadyExists(
+                    path,
+                    libraryPathId,
+                    dbContext,
+                    logger,
+                    cancellationToken))
             {
                 return new MediaFileAlreadyExists();
             }
@@ -165,10 +157,10 @@ public class RemoteStreamRepository(
                 }
             };
 
-            await dbContext.RemoteStreams.AddAsync(remoteStream);
-            await dbContext.SaveChangesAsync();
-            await dbContext.Entry(remoteStream).Reference(m => m.LibraryPath).LoadAsync();
-            await dbContext.Entry(remoteStream.LibraryPath).Reference(lp => lp.Library).LoadAsync();
+            await dbContext.RemoteStreams.AddAsync(remoteStream, cancellationToken);
+            await dbContext.SaveChangesAsync(cancellationToken);
+            await dbContext.Entry(remoteStream).Reference(m => m.LibraryPath).LoadAsync(cancellationToken);
+            await dbContext.Entry(remoteStream.LibraryPath).Reference(lp => lp.Library).LoadAsync(cancellationToken);
             return new MediaItemScanResult<RemoteStream>(remoteStream) { IsAdded = true };
         }
         catch (Exception ex)

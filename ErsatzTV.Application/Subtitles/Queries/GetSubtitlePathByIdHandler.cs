@@ -18,7 +18,7 @@ public class GetSubtitlePathByIdHandler(IDbContextFactory<TvContext> dbContextFa
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         Option<Subtitle> maybeSubtitle = await dbContext.Subtitles
             .AsNoTracking()
-            .SelectOneAsync(s => s.Id, s => s.Id == request.Id);
+            .SelectOneAsync(s => s.Id, s => s.Id == request.Id, cancellationToken);
 
         foreach (var subtitle in maybeSubtitle)
         {

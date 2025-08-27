@@ -27,7 +27,10 @@ public partial class LocalChaptersProvider : ILocalChaptersProvider
         _logger = logger;
     }
 
-    public async Task<bool> UpdateChapters(MediaItem mediaItem, Option<string> localPath)
+    public async Task<bool> UpdateChapters(
+        MediaItem mediaItem,
+        Option<string> localPath,
+        CancellationToken cancellationToken)
     {
         try
         {
@@ -39,7 +42,7 @@ public partial class LocalChaptersProvider : ILocalChaptersProvider
             if (chapters.Count > 0)
             {
                 _logger.LogDebug("Located {Count} external chapters for {Path}", chapters.Count, mediaItemPath);
-                return await _metadataRepository.UpdateChapters(version, chapters);
+                return await _metadataRepository.UpdateChapters(version, chapters, cancellationToken);
             }
 
             return false;

@@ -11,7 +11,7 @@ public class GetPlaylistByIdHandler(IDbContextFactory<TvContext> dbContextFactor
     {
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await dbContext.Playlists
-            .SelectOneAsync(b => b.Id, b => b.Id == request.PlaylistId)
+            .SelectOneAsync(b => b.Id, b => b.Id == request.PlaylistId, cancellationToken)
             .MapT(Mapper.ProjectToViewModel);
     }
 }

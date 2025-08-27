@@ -26,7 +26,13 @@ public class EmptyTrashHandler : IRequestHandler<EmptyTrash, Either<BaseError, U
         EmptyTrash request,
         CancellationToken cancellationToken)
     {
-        SearchResult result = await _searchIndex.Search(_client, "state:FileNotFound", string.Empty, 0, 10_000);
+        SearchResult result = await _searchIndex.Search(
+            _client,
+            "state:FileNotFound",
+            string.Empty,
+            0,
+            10_000,
+            cancellationToken);
         var ids = result.Items.Map(i => i.Id).ToList();
 
         // ElasticSearch remove items may fail, so do that first

@@ -60,9 +60,10 @@ public class MovieRepository : IMovieRepository
     public async Task<Either<BaseError, MediaItemScanResult<Movie>>> GetOrAdd(
         LibraryPath libraryPath,
         LibraryFolder libraryFolder,
-        string path)
+        string path,
+        CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Option<Movie> maybeExisting = await dbContext.Movies
             .Filter(m => !(m is PlexMovie) && !(m is JellyfinMovie) && !(m is EmbyMovie))
             .Include(i => i.MovieMetadata)
@@ -93,27 +94,13 @@ public class MovieRepository : IMovieRepository
             .Include(i => i.TraktListItems)
             .ThenInclude(tli => tli.TraktList)
             .OrderBy(i => i.MediaVersions.First().MediaFiles.First().Path)
-            .SingleOrDefaultAsync(i => i.MediaVersions.First().MediaFiles.First().Path == path);
+            .SingleOrDefaultAsync(i => i.MediaVersions.First().MediaFiles.First().Path == path, cancellationToken);
 
         return await maybeExisting.Match(
             mediaItem =>
                 Right<BaseError, MediaItemScanResult<Movie>>(
                     new MediaItemScanResult<Movie>(mediaItem) { IsAdded = false }).AsTask(),
-            async () => await AddMovie(dbContext, libraryPath.Id, libraryFolder.Id, path));
-    }
-
-    public async Task<List<MovieMetadata>> GetMoviesForCards(List<int> ids)
-    {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
-        return await dbContext.MovieMetadata
-            .AsNoTracking()
-            .Filter(mm => ids.Contains(mm.MovieId))
-            .Include(mm => mm.Artwork)
-            .Include(mm => mm.Movie)
-            .ThenInclude(m => m.MediaVersions)
-            .ThenInclude(mv => mv.MediaFiles)
-            .OrderBy(mm => mm.SortTitle)
-            .ToListAsync();
+            async () => await AddMovie(dbContext, libraryPath.Id, libraryFolder.Id, path, cancellationToken));
     }
 
     public async Task<IEnumerable<string>> FindMoviePaths(LibraryPath libraryPath)
@@ -236,11 +223,17 @@ public class MovieRepository : IMovieRepository
         TvContext dbContext,
         int libraryPathId,
         int libraryFolderId,
-        string path)
+        string path,
+        CancellationToken cancellationToken)
     {
         try
         {
-            if (await MediaItemRepository.MediaFileAlreadyExists(path, libraryPathId, dbContext, _logger))
+            if (await MediaItemRepository.MediaFileAlreadyExists(
+                    path,
+                    libraryPathId,
+                    dbContext,
+                    _logger,
+                    cancellationToken))
             {
                 return new MediaFileAlreadyExists();
             }
@@ -264,10 +257,10 @@ public class MovieRepository : IMovieRepository
                 ],
                 TraktListItems = []
             };
-            await dbContext.Movies.AddAsync(movie);
-            await dbContext.SaveChangesAsync();
-            await dbContext.Entry(movie).Reference(m => m.LibraryPath).LoadAsync();
-            await dbContext.Entry(movie.LibraryPath).Reference(lp => lp.Library).LoadAsync();
+            await dbContext.Movies.AddAsync(movie, cancellationToken);
+            await dbContext.SaveChangesAsync(cancellationToken);
+            await dbContext.Entry(movie).Reference(m => m.LibraryPath).LoadAsync(cancellationToken);
+            await dbContext.Entry(movie.LibraryPath).Reference(lp => lp.Library).LoadAsync(cancellationToken);
             return new MediaItemScanResult<Movie>(movie) { IsAdded = true };
         }
         catch (Exception ex)

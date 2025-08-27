@@ -26,14 +26,14 @@ public class FFmpegVersionHealthCheck : BaseHealthCheck, IFFmpegVersionHealthChe
         var link = new HealthCheckLink("https://github.com/ErsatzTV/ErsatzTV-ffmpeg/releases/tag/7.1.1");
 
         Option<ConfigElement> maybeFFmpegPath =
-            await _configElementRepository.GetConfigElement(ConfigElementKey.FFmpegPath);
+            await _configElementRepository.GetConfigElement(ConfigElementKey.FFmpegPath, cancellationToken);
         if (maybeFFmpegPath.IsNone)
         {
             return FailResult("Unable to locate ffmpeg", "Unable to locate ffmpeg", link);
         }
 
         Option<ConfigElement> maybeFFprobePath =
-            await _configElementRepository.GetConfigElement(ConfigElementKey.FFprobePath);
+            await _configElementRepository.GetConfigElement(ConfigElementKey.FFprobePath, cancellationToken);
         if (maybeFFprobePath.IsNone)
         {
             return FailResult("Unable to locate ffprobe", "Unable to locate ffprobe", link);

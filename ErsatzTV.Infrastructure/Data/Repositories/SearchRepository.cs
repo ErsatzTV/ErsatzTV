@@ -12,9 +12,9 @@ public class SearchRepository : ISearchRepository
 
     public SearchRepository(IDbContextFactory<TvContext> dbContextFactory) => _dbContextFactory = dbContextFactory;
 
-    public async Task<Option<MediaItem>> GetItemToIndex(int id)
+    public async Task<Option<MediaItem>> GetItemToIndex(int id, CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await dbContext.MediaItems
             .AsNoTracking()
             .Include(mi => mi.Collections)
@@ -177,7 +177,7 @@ public class SearchRepository : ISearchRepository
             .ThenInclude(mm => mm.MediaFiles)
             .Include(mi => mi.TraktListItems)
             .ThenInclude(tli => tli.TraktList)
-            .SelectOneAsync(mi => mi.Id, mi => mi.Id == id);
+            .SelectOneAsync(mi => mi.Id, mi => mi.Id == id, cancellationToken);
     }
 
     public async Task<List<string>> GetLanguagesForShow(Show show)

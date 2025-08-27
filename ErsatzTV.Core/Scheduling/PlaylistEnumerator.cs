@@ -149,14 +149,16 @@ public class PlaylistEnumerator : IMediaCollectionEnumerator
                             // TODO: fix this
                             new ProgramSchedule { KeepMultiPartEpisodesTogether = false },
                             items,
-                            CollectionKey.ForPlaylistItem(playlistItem));
+                            CollectionKey.ForPlaylistItem(playlistItem),
+                            cancellationToken);
                         enumerator = new ShuffledMediaCollectionEnumerator(i, initState, cancellationToken);
                         break;
                     case PlaybackOrder.ShuffleInOrder:
                         enumerator = new ShuffleInOrderCollectionEnumerator(
                             await PlayoutBuilder.GetCollectionItemsForShuffleInOrder(
                                 mediaCollectionRepository,
-                                CollectionKey.ForPlaylistItem(playlistItem)),
+                                CollectionKey.ForPlaylistItem(playlistItem),
+                                cancellationToken),
                             initState,
                             // TODO: fix this
                             false,

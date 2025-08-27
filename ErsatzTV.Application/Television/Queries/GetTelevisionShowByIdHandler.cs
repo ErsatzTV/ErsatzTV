@@ -46,14 +46,14 @@ public class GetTelevisionShowByIdHandler : IRequestHandler<GetTelevisionShowByI
             .ThenInclude(a => a.Artwork)
             .Include(s => s.ShowMetadata)
             .ThenInclude(sm => sm.Guids)
-            .SelectOneAsync(s => s.Id, s => s.Id == request.Id);
+            .SelectOneAsync(s => s.Id, s => s.Id == request.Id, cancellationToken);
 
         foreach (Show show in maybeShow)
         {
-            Option<JellyfinMediaSource> maybeJellyfin = await _mediaSourceRepository.GetAllJellyfin()
+            Option<JellyfinMediaSource> maybeJellyfin = await _mediaSourceRepository.GetAllJellyfin(cancellationToken)
                 .Map(list => list.HeadOrNone());
 
-            Option<EmbyMediaSource> maybeEmby = await _mediaSourceRepository.GetAllEmby()
+            Option<EmbyMediaSource> maybeEmby = await _mediaSourceRepository.GetAllEmby(cancellationToken)
                 .Map(list => list.HeadOrNone());
 
             List<string> mediaCodes = await _searchRepository.GetLanguagesForShow(show);

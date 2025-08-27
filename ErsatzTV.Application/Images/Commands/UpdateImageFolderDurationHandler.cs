@@ -28,7 +28,7 @@ public class UpdateImageFolderDurationHandler(IDbContextFactory<TvContext> dbCon
         else
         {
             Option<ImageFolderDuration> maybeExisting = await dbContext.ImageFolderDurations
-                .SelectOneAsync(ifd => ifd.LibraryFolderId, ifd => ifd.LibraryFolderId == request.LibraryFolderId);
+                .SelectOneAsync(ifd => ifd.LibraryFolderId, ifd => ifd.LibraryFolderId == request.LibraryFolderId, cancellationToken);
 
             if (maybeExisting.IsNone)
             {
@@ -53,7 +53,7 @@ public class UpdateImageFolderDurationHandler(IDbContextFactory<TvContext> dbCon
         Option<LibraryFolder> maybeFolder = await dbContext.LibraryFolders
             .AsNoTracking()
             .Include(lf => lf.ImageFolderDuration)
-            .SelectOneAsync(lf => lf.Id, lf => lf.Id == request.LibraryFolderId);
+            .SelectOneAsync(lf => lf.Id, lf => lf.Id == request.LibraryFolderId, cancellationToken);
 
         var queue = new Queue<FolderWithParentDuration>();
         foreach (LibraryFolder libraryFolder in maybeFolder)
@@ -67,7 +67,7 @@ public class UpdateImageFolderDurationHandler(IDbContextFactory<TvContext> dbCon
                 Option<LibraryFolder> maybeParent = await dbContext.LibraryFolders
                     .AsNoTracking()
                     .Include(lf => lf.ImageFolderDuration)
-                    .SelectOneAsync(lf => lf.Id, lf => lf.Id == currentFolder.ParentId);
+                    .SelectOneAsync(lf => lf.Id, lf => lf.Id == currentFolder.ParentId, cancellationToken);
 
                 if (maybeParent.IsNone)
                 {

@@ -74,7 +74,7 @@ public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Eit
     private async Task<Unit> StartProcess(StartFFmpegSession request, CancellationToken cancellationToken)
     {
         Option<TimeSpan> idleTimeout = await _configElementRepository
-            .GetValue<int>(ConfigElementKey.FFmpegSegmenterTimeout)
+            .GetValue<int>(ConfigElementKey.FFmpegSegmenterTimeout, cancellationToken)
             .Map(maybeTimeout => maybeTimeout.Match(i => TimeSpan.FromSeconds(i), () => TimeSpan.FromMinutes(1)));
 
         Option<int> targetFramerate = await _mediator.Send(
@@ -109,7 +109,7 @@ public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Eit
                 TaskScheduler.Default);
 
         int initialSegmentCount = await _configElementRepository
-            .GetValue<int>(ConfigElementKey.FFmpegInitialSegmentCount)
+            .GetValue<int>(ConfigElementKey.FFmpegInitialSegmentCount, cancellationToken)
             .Map(maybeCount => maybeCount.Match(identity, () => 1));
 
         await worker.WaitForPlaylistSegments(initialSegmentCount, cancellationToken);

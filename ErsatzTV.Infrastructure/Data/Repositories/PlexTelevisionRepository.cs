@@ -205,9 +205,12 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
             .Map(result => result.ToList());
     }
 
-    public async Task<Either<BaseError, MediaItemScanResult<PlexShow>>> GetOrAdd(PlexLibrary library, PlexShow item)
+    public async Task<Either<BaseError, MediaItemScanResult<PlexShow>>> GetOrAdd(
+        PlexLibrary library,
+        PlexShow item,
+        CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Option<PlexShow> maybeExisting = await dbContext.PlexShows
             .AsNoTracking()
             .Where(ps => ps.LibraryPath.LibraryId == library.Id)
@@ -228,7 +231,7 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
             .ThenInclude(lp => lp.Library)
             .Include(i => i.TraktListItems)
             .ThenInclude(tli => tli.TraktList)
-            .SelectOneAsync(i => i.Key, i => i.Key == item.Key);
+            .SelectOneAsync(i => i.Key, i => i.Key == item.Key, cancellationToken);
 
         foreach (PlexShow plexShow in maybeExisting)
         {
@@ -238,9 +241,12 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
         return await AddShow(dbContext, library, item);
     }
 
-    public async Task<Either<BaseError, MediaItemScanResult<PlexSeason>>> GetOrAdd(PlexLibrary library, PlexSeason item)
+    public async Task<Either<BaseError, MediaItemScanResult<PlexSeason>>> GetOrAdd(
+        PlexLibrary library,
+        PlexSeason item,
+        CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Option<PlexSeason> maybeExisting = await dbContext.PlexSeasons
             .AsNoTracking()
             .Where(ps => ps.LibraryPath.LibraryId == library.Id)
@@ -254,7 +260,7 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
             .ThenInclude(l => l.Library)
             .Include(s => s.TraktListItems)
             .ThenInclude(tli => tli.TraktList)
-            .SelectOneAsync(i => i.Key, i => i.Key == item.Key);
+            .SelectOneAsync(i => i.Key, i => i.Key == item.Key, cancellationToken);
 
         foreach (PlexSeason plexSeason in maybeExisting)
         {
@@ -267,9 +273,10 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
     public async Task<Either<BaseError, MediaItemScanResult<PlexEpisode>>> GetOrAdd(
         PlexLibrary library,
         PlexEpisode item,
-        bool deepScan)
+        bool deepScan,
+        CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Option<PlexEpisode> maybeExisting = await dbContext.PlexEpisodes
             .AsNoTracking()
             .Where(pe => pe.LibraryPath.LibraryId == library.Id)
@@ -299,7 +306,7 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
             .Include(e => e.Season)
             .Include(e => e.TraktListItems)
             .ThenInclude(tli => tli.TraktList)
-            .SelectOneAsync(i => i.Key, i => i.Key == item.Key);
+            .SelectOneAsync(i => i.Key, i => i.Key == item.Key, cancellationToken);
 
         foreach (PlexEpisode plexEpisode in maybeExisting)
         {
@@ -317,7 +324,7 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
             return result;
         }
 
-        return await AddEpisode(dbContext, library, item);
+        return await AddEpisode(dbContext, library, item, cancellationToken);
     }
 
     public async Task<Unit> SetEtag(PlexShow show, string etag)
@@ -575,11 +582,17 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
     private async Task<Either<BaseError, MediaItemScanResult<PlexEpisode>>> AddEpisode(
         TvContext dbContext,
         PlexLibrary library,
-        PlexEpisode item)
+        PlexEpisode item,
+        CancellationToken cancellationToken)
     {
         try
         {
-            if (await MediaItemRepository.MediaFileAlreadyExists(item, library.Paths.Head().Id, dbContext, _logger))
+            if (await MediaItemRepository.MediaFileAlreadyExists(
+                    item,
+                    library.Paths.Head().Id,
+                    dbContext,
+                    _logger,
+                    cancellationToken))
             {
                 return new MediaFileAlreadyExists();
             }
@@ -599,15 +612,15 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
                 metadata.Writers ??= [];
             }
 
-            await dbContext.PlexEpisodes.AddAsync(item);
-            await dbContext.SaveChangesAsync();
+            await dbContext.PlexEpisodes.AddAsync(item, cancellationToken);
+            await dbContext.SaveChangesAsync(cancellationToken);
 
             // restore etag
             item.Etag = etag;
 
-            await dbContext.Entry(item).Reference(i => i.LibraryPath).LoadAsync();
-            await dbContext.Entry(item.LibraryPath).Reference(lp => lp.Library).LoadAsync();
-            await dbContext.Entry(item).Reference(e => e.Season).LoadAsync();
+            await dbContext.Entry(item).Reference(i => i.LibraryPath).LoadAsync(cancellationToken);
+            await dbContext.Entry(item.LibraryPath).Reference(lp => lp.Library).LoadAsync(cancellationToken);
+            await dbContext.Entry(item).Reference(e => e.Season).LoadAsync(cancellationToken);
             return new MediaItemScanResult<PlexEpisode>(item) { IsAdded = true };
         }
         catch (Exception ex)

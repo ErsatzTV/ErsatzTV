@@ -388,7 +388,8 @@ public class TranscodingTests
             0,
             None,
             Option<string>.None,
-            _ => { });
+            _ => { },
+            CancellationToken.None);
 
         // Console.WriteLine($"ffmpeg arguments {process.Arguments}");
 
@@ -692,7 +693,8 @@ public class TranscodingTests
             0,
             None,
             Option<string>.None,
-            PipelineAction);
+            PipelineAction,
+            CancellationToken.None);
 
         // Console.WriteLine($"ffmpeg arguments {string.Join(" ", process.StartInfo.ArgumentList)}");
 
@@ -1101,7 +1103,8 @@ public class TranscodingTests
             StreamingMode streamingMode,
             Channel channel,
             string preferredAudioLanguage,
-            string preferredAudioTitle) =>
+            string preferredAudioTitle,
+            CancellationToken cancellationToken) =>
             Optional(version.MediaVersion.Streams.FirstOrDefault(s => s.MediaStreamKind == MediaStreamKind.Audio))
                 .AsTask();
 
@@ -1109,7 +1112,8 @@ public class TranscodingTests
             ImmutableList<ErsatzTV.Core.Domain.Subtitle> subtitles,
             Channel channel,
             string preferredSubtitleLanguage,
-            ChannelSubtitleMode subtitleMode) =>
+            ChannelSubtitleMode subtitleMode,
+            CancellationToken cancellationToken) =>
             subtitles.HeadOrNone().AsTask();
     }
 

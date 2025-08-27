@@ -9,7 +9,7 @@ namespace ErsatzTV.Core.Scheduling.ScriptedScheduling.Modules;
 [SuppressMessage("Usage", "VSTHRD002:Avoid problematic synchronous waits")]
 [SuppressMessage("ReSharper", "InconsistentNaming")]
 [SuppressMessage("ReSharper", "UnusedMember.Global")]
-public class PlayoutModule(ISchedulingEngine schedulingEngine)
+public class PlayoutModule(ISchedulingEngine schedulingEngine, CancellationToken cancellationToken)
 {
     public int FailureCount { get; private set; }
 
@@ -202,7 +202,7 @@ public class PlayoutModule(ISchedulingEngine schedulingEngine)
         }
 
         schedulingEngine
-            .GraphicsOn([graphics], maybeVariables)
+            .GraphicsOn([graphics], maybeVariables, cancellationToken)
             .GetAwaiter()
             .GetResult();
     }
@@ -218,7 +218,8 @@ public class PlayoutModule(ISchedulingEngine schedulingEngine)
         schedulingEngine
             .GraphicsOn(
                 graphics.Select(g => g.ToString()).ToList(),
-                maybeVariables)
+                maybeVariables,
+                cancellationToken)
             .GetAwaiter()
             .GetResult();
     }
@@ -227,17 +228,20 @@ public class PlayoutModule(ISchedulingEngine schedulingEngine)
     {
         if (string.IsNullOrWhiteSpace(graphics))
         {
-            schedulingEngine.GraphicsOff([]).GetAwaiter().GetResult();
+            schedulingEngine.GraphicsOff([], cancellationToken).GetAwaiter().GetResult();
         }
         else
         {
-            schedulingEngine.GraphicsOff([graphics]).GetAwaiter().GetResult();
+            schedulingEngine.GraphicsOff([graphics], cancellationToken).GetAwaiter().GetResult();
         }
     }
 
     public void graphics_off(PythonList graphics)
     {
-        schedulingEngine.GraphicsOff(graphics.Select(g => g.ToString()).ToList()).GetAwaiter().GetResult();
+        schedulingEngine
+            .GraphicsOff(graphics.Select(g => g.ToString()).ToList(), cancellationToken)
+            .GetAwaiter()
+            .GetResult();
     }
 
     public void watermark_on(string watermark)

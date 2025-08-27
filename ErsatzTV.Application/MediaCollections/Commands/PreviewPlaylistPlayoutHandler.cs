@@ -63,7 +63,9 @@ public class PreviewPlaylistPlayoutHandler(
 
         var maxItems = 0;
         Dictionary<PlaylistItem, List<MediaItem>> map =
-            await mediaCollectionRepository.GetPlaylistItemMap(playout.ProgramSchedule.Items[0].Playlist);
+            await mediaCollectionRepository.GetPlaylistItemMap(
+                playout.ProgramSchedule.Items[0].Playlist,
+                cancellationToken);
         foreach (PlaylistItem item in playout.ProgramSchedule.Items[0].Playlist.Items)
         {
             if (item.PlayAll)
@@ -102,7 +104,7 @@ public class PreviewPlaylistPlayoutHandler(
                 .Include(mi => (mi as Song).MediaVersions)
                 .Include(mi => (mi as Image).ImageMetadata)
                 .Include(mi => (mi as Image).MediaVersions)
-                .SelectOneAsync(mi => mi.Id, mi => mi.Id == playoutItem.MediaItemId);
+                .SelectOneAsync(mi => mi.Id, mi => mi.Id == playoutItem.MediaItemId, cancellationToken);
 
             foreach (MediaItem mediaItem in maybeMediaItem)
             {

@@ -15,14 +15,14 @@ public class PlayoutTimeShifter(
     ILogger<PlayoutTimeShifter> logger)
     : IPlayoutTimeShifter
 {
-    public async Task TimeShift(int playoutId, DateTimeOffset now, bool force)
+    public async Task TimeShift(int playoutId, DateTimeOffset now, bool force, CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         Option<Channel> maybeChannel = await dbContext.Playouts
             .AsNoTracking()
             .Include(p => p.Channel)
-            .SelectOneAsync(p => p.Id, p => p.Id == playoutId)
+            .SelectOneAsync(p => p.Id, p => p.Id == playoutId, cancellationToken)
             .MapT(p => p.Channel);
 
         foreach (Channel channel in maybeChannel.Where(c => c.PlayoutMode is ChannelPlayoutMode.OnDemand))
@@ -33,7 +33,7 @@ public class PlayoutTimeShifter(
                 .Include(p => p.Anchor)
                 .Include(p => p.ProgramScheduleAnchors)
                 .Include(p => p.PlayoutHistory)
-                .SelectOneAsync(p => p.ChannelId, p => p.ChannelId == channel.Id);
+                .SelectOneAsync(p => p.ChannelId, p => p.ChannelId == channel.Id, cancellationToken);
 
             foreach (Playout playout in maybePlayout)
             {
@@ -121,7 +121,7 @@ public class PlayoutTimeShifter(
 
                 playout.OnDemandCheckpoint = now;
 
-                await dbContext.SaveChangesAsync();
+                await dbContext.SaveChangesAsync(cancellationToken);
             }
         }
     }

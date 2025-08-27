@@ -42,14 +42,15 @@ public class AddItemsToCollectionHandler :
         CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        Validation<BaseError, Collection> validation = await Validate(dbContext, request);
-        return await validation.Apply(c => ApplyAddItemsRequest(dbContext, c, request));
+        Validation<BaseError, Collection> validation = await Validate(dbContext, request, cancellationToken);
+        return await validation.Apply(c => ApplyAddItemsRequest(dbContext, c, request, cancellationToken));
     }
 
     private async Task<Unit> ApplyAddItemsRequest(
         TvContext dbContext,
         Collection collection,
-        AddItemsToCollection request)
+        AddItemsToCollection request,
+        CancellationToken cancellationToken)
     {
         var allItems = request.MovieIds
             .Append(request.ShowIds)
@@ -66,19 +67,19 @@ public class AddItemsToCollectionHandler :
         var toAddIds = allItems.Where(item => collection.MediaItems.All(mi => mi.Id != item)).ToList();
         List<MediaItem> toAdd = await dbContext.MediaItems
             .Filter(mi => toAddIds.Contains(mi.Id))
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         collection.MediaItems.AddRange(toAdd);
 
-        if (await dbContext.SaveChangesAsync() > 0)
+        if (await dbContext.SaveChangesAsync(cancellationToken) > 0)
         {
-            await _searchChannel.WriteAsync(new ReindexMediaItems(toAddIds.ToArray()));
+            await _searchChannel.WriteAsync(new ReindexMediaItems(toAddIds.ToArray()), cancellationToken);
 
             // refresh all playouts that use this collection
             foreach (int playoutId in await _mediaCollectionRepository
                          .PlayoutIdsUsingCollection(request.CollectionId))
             {
-                await _channel.WriteAsync(new BuildPlayout(playoutId, PlayoutBuildMode.Refresh));
+                await _channel.WriteAsync(new BuildPlayout(playoutId, PlayoutBuildMode.Refresh), cancellationToken);
             }
         }
 
@@ -87,8 +88,9 @@ public class AddItemsToCollectionHandler :
 
     private async Task<Validation<BaseError, Collection>> Validate(
         TvContext dbContext,
-        AddItemsToCollection request) =>
-        (await CollectionMustExist(dbContext, request),
+        AddItemsToCollection request,
+        CancellationToken cancellationToken) =>
+        (await CollectionMustExist(dbContext, request, cancellationToken),
             await ValidateMovies(request),
             await ValidateShows(request),
             await ValidateSeasons(request),
@@ -97,10 +99,11 @@ public class AddItemsToCollectionHandler :
 
     private static Task<Validation<BaseError, Collection>> CollectionMustExist(
         TvContext dbContext,
-        AddItemsToCollection request) =>
+        AddItemsToCollection request,
+        CancellationToken cancellationToken) =>
         dbContext.Collections
             .Include(c => c.MediaItems)
-            .SelectOneAsync(c => c.Id, c => c.Id == request.CollectionId)
+            .SelectOneAsync(c => c.Id, c => c.Id == request.CollectionId, cancellationToken)
             .Map(o => o.ToValidation<BaseError>("Collection does not exist."));
 
     private Task<Validation<BaseError, Unit>> ValidateMovies(AddItemsToCollection request) =>

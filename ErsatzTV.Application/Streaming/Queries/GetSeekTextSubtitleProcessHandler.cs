@@ -19,7 +19,7 @@ public class GetSeekTextSubtitleProcessHandler(
         CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
-        Validation<BaseError, string> validation = await Validate(dbContext);
+        Validation<BaseError, string> validation = await Validate(dbContext, cancellationToken);
         return await validation.Match(
             ffmpegPath => GetProcess(request, ffmpegPath),
             error => Task.FromResult<Either<BaseError, SeekTextSubtitleProcess>>(error.Join()));
@@ -37,11 +37,15 @@ public class GetSeekTextSubtitleProcessHandler(
         return new SeekTextSubtitleProcess(process);
     }
 
-    private static async Task<Validation<BaseError, string>> Validate(TvContext dbContext) =>
-        await FFmpegPathMustExist(dbContext);
+    private static async Task<Validation<BaseError, string>> Validate(
+        TvContext dbContext,
+        CancellationToken cancellationToken) =>
+        await FFmpegPathMustExist(dbContext, cancellationToken);
 
-    private static Task<Validation<BaseError, string>> FFmpegPathMustExist(TvContext dbContext) =>
-        dbContext.ConfigElements.GetValue<string>(ConfigElementKey.FFmpegPath)
+    private static Task<Validation<BaseError, string>> FFmpegPathMustExist(
+        TvContext dbContext,
+        CancellationToken cancellationToken) =>
+        dbContext.ConfigElements.GetValue<string>(ConfigElementKey.FFmpegPath, cancellationToken)
             .FilterT(File.Exists)
             .Map(maybePath => maybePath.ToValidation<BaseError>("FFmpeg path does not exist on filesystem"));
 }

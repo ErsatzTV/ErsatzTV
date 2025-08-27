@@ -62,13 +62,13 @@
 
         _query = NavigationManager.Uri.GetSearchQuery();
 
-        await RefreshData();
+        await RefreshData(CancellationToken);
     }
 
-    protected override async Task RefreshData()
+    protected override async Task RefreshData(CancellationToken cancellationToken)
     {
         string searchQuery = string.IsNullOrWhiteSpace(_query) ? "type:image" : $"type:image AND ({_query})";
-        _data = await Mediator.Send(new QuerySearchIndexImages(searchQuery, PageNumber, PageSize), CancellationToken);
+        _data = await Mediator.Send(new QuerySearchIndexImages(searchQuery, PageNumber, PageSize), cancellationToken);
     }
 
     private void PrevPage()

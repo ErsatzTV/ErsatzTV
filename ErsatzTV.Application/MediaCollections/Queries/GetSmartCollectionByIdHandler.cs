@@ -14,7 +14,8 @@ public class GetSmartCollectionByIdHandler(IDbContextFactory<TvContext> dbContex
     {
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await dbContext.SmartCollections
-            .SelectOneAsync(c => c.Id, c => c.Id == request.Id)
+            .AsNoTracking()
+            .SelectOneAsync(c => c.Id, c => c.Id == request.Id, cancellationToken)
             .MapT(ProjectToViewModel);
     }
 }

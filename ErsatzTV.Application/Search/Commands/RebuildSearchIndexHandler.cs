@@ -44,7 +44,7 @@ public class RebuildSearchIndexHandler : IRequestHandler<RebuildSearchIndex>
 
         bool indexExists = await _searchIndex.IndexExists();
 
-        if (!await _searchIndex.Initialize(_localFileSystem, _configElementRepository))
+        if (!await _searchIndex.Initialize(_localFileSystem, _configElementRepository, cancellationToken))
         {
             indexExists = false;
         }
@@ -52,15 +52,18 @@ public class RebuildSearchIndexHandler : IRequestHandler<RebuildSearchIndex>
         _logger.LogInformation("Done initializing search index");
 
         if (!indexExists ||
-            await _configElementRepository.GetValue<int>(ConfigElementKey.SearchIndexVersion) <
+            await _configElementRepository.GetValue<int>(ConfigElementKey.SearchIndexVersion, cancellationToken) <
             _searchIndex.Version)
         {
             _logger.LogInformation("Migrating search index to version {Version}", _searchIndex.Version);
 
             var sw = Stopwatch.StartNew();
-            await _searchIndex.Rebuild(_searchRepository, _fallbackMetadataProvider);
+            await _searchIndex.Rebuild(_searchRepository, _fallbackMetadataProvider, cancellationToken);
 
-            await _configElementRepository.Upsert(ConfigElementKey.SearchIndexVersion, _searchIndex.Version);
+            await _configElementRepository.Upsert(
+                ConfigElementKey.SearchIndexVersion,
+                _searchIndex.Version,
+                cancellationToken);
             sw.Stop();
 
             _logger.LogInformation("Done migrating search index in {Duration}", sw.Elapsed.Humanize());

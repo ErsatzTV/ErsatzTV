@@ -35,7 +35,7 @@ public class CallLocalLibraryScannerHandler : CallLibraryScannerHandler<IScanLoc
 
     private async Task<Either<BaseError, string>> Handle(IScanLocalLibrary request, CancellationToken cancellationToken)
     {
-        Validation<BaseError, string> validation = await Validate(request);
+        Validation<BaseError, string> validation = await Validate(request, cancellationToken);
         return await validation.Match(
             scanner => PerformScan(scanner, request, cancellationToken),
             error =>
@@ -67,11 +67,14 @@ public class CallLocalLibraryScannerHandler : CallLibraryScannerHandler<IScanLoc
         return await base.PerformScan(scanner, arguments, cancellationToken);
     }
 
-    protected override async Task<DateTimeOffset> GetLastScan(TvContext dbContext, IScanLocalLibrary request)
+    protected override async Task<DateTimeOffset> GetLastScan(
+        TvContext dbContext,
+        IScanLocalLibrary request,
+        CancellationToken cancellationToken)
     {
         List<LibraryPath> libraryPaths = await dbContext.LibraryPaths
             .Filter(lp => lp.LibraryId == request.LibraryId)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         DateTime minDateTime = libraryPaths.Count != 0
             ? libraryPaths.Min(lp => lp.LastScan ?? SystemTime.MinValueUtc)

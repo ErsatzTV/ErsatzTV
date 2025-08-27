@@ -236,7 +236,8 @@ public class JellyfinTelevisionLibraryScanner : MediaServerTelevisionLibraryScan
 
     protected override Task<Either<BaseError, MediaItemScanResult<JellyfinEpisode>>> UpdateMetadata(
         MediaItemScanResult<JellyfinEpisode> result,
-        EpisodeMetadata fullMetadata) =>
+        EpisodeMetadata fullMetadata,
+        CancellationToken cancellationToken) =>
         Task.FromResult<Either<BaseError, MediaItemScanResult<JellyfinEpisode>>>(result);
 
     private async Task<Either<BaseError, Unit>> ScanSingleShowInternal(

@@ -8,9 +8,11 @@ namespace ErsatzTV.Infrastructure.Data.Repositories;
 
 public class GraphicsElementRepository(IDbContextFactory<TvContext> dbContextFactory) : IGraphicsElementRepository
 {
-    public async Task<Option<GraphicsElement>> GetGraphicsElementByPath(string path)
+    public async Task<Option<GraphicsElement>> GetGraphicsElementByPath(
+        string path,
+        CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         if (!path.StartsWith(FileSystemLayout.GraphicsElementsTemplatesFolder, StringComparison.Ordinal))
         {
@@ -19,6 +21,6 @@ public class GraphicsElementRepository(IDbContextFactory<TvContext> dbContextFac
 
         return await dbContext.GraphicsElements
             .AsNoTracking()
-            .SelectOneAsync(ge => ge.Path, ge => ge.Path == path);
+            .SelectOneAsync(ge => ge.Path, ge => ge.Path == path, cancellationToken);
     }
 }

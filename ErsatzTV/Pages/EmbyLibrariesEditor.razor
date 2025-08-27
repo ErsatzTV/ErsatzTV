@@ -1,7 +1,6 @@
 ﻿@page "/media/sources/emby/{Id:int}/libraries"
 @using ErsatzTV.Application.Emby
 @using ErsatzTV.Application.MediaSources
-@implements IDisposable
 @inject IMediator Mediator
 @inject ChannelWriter<IScannerBackgroundServiceRequest> ScannerWorkerChannel
 
@@ -14,27 +13,19 @@
     SynchronizeLibraryByIdIfNeeded="SynchronizeLibraryByIdIfNeeded"/>
 
 @code {
-    private readonly CancellationTokenSource _cts = new();
-
     [Parameter]
     public int Id { get; set; }
-
-    public void Dispose()
-    {
-        _cts.Cancel();
-        _cts.Dispose();
-    }
 
     private IRequest<Either<BaseError, Unit>> GetUpdateLibraryRequest(List<RemoteMediaSourceLibraryEditViewModel> libraries) =>
         new UpdateEmbyLibraryPreferences(
             libraries.Map(l => new EmbyLibraryPreference(l.Id, l.ShouldSyncItems)).ToList());
 
-    private Task<List<RemoteMediaSourceLibraryEditViewModel>> GetLibrariesBySourceId(int mediaSourceId) =>
-        Mediator.Send(new GetEmbyLibrariesBySourceId(Id))
+    private Task<List<RemoteMediaSourceLibraryEditViewModel>> GetLibrariesBySourceId(int mediaSourceId, CancellationToken cancellationToken) =>
+        Mediator.Send(new GetEmbyLibrariesBySourceId(Id), cancellationToken)
             .Map(list => list.Map(ProjectToEditViewModel).OrderBy(x => x.MediaKind).ThenBy(x => x.Name).ToList());
 
-    private Task<Option<RemoteMediaSourceViewModel>> GetMediaSourceById(int mediaSourceId) =>
-        Mediator.Send(new GetEmbyMediaSourceById(Id))
+    private Task<Option<RemoteMediaSourceViewModel>> GetMediaSourceById(int mediaSourceId, CancellationToken cancellationToken) =>
+        Mediator.Send(new GetEmbyMediaSourceById(Id), cancellationToken)
             .MapT(vm => new RemoteMediaSourceViewModel(vm.Id, vm.Name, vm.Address));
 
     private RemoteMediaSourceLibraryEditViewModel ProjectToEditViewModel(EmbyLibraryViewModel library) => new()
@@ -45,10 +36,10 @@
         ShouldSyncItems = library.ShouldSyncItems
     };
 
-    private async Task<Unit> SynchronizeLibraryByIdIfNeeded(RemoteMediaSourceLibrariesEditor.SynchronizeParameters parameters)
+    private async Task<Unit> SynchronizeLibraryByIdIfNeeded(RemoteMediaSourceLibrariesEditor.SynchronizeParameters parameters, CancellationToken cancellationToken)
     {
-        await ScannerWorkerChannel.WriteAsync(new SynchronizeEmbyLibraries(parameters.MediaSourceId), _cts.Token);
-        await ScannerWorkerChannel.WriteAsync(new SynchronizeEmbyLibraryByIdIfNeeded(parameters.LibraryId), _cts.Token);
+        await ScannerWorkerChannel.WriteAsync(new SynchronizeEmbyLibraries(parameters.MediaSourceId), cancellationToken);
+        await ScannerWorkerChannel.WriteAsync(new SynchronizeEmbyLibraryByIdIfNeeded(parameters.LibraryId), cancellationToken);
         return Unit.Default;
     }
 

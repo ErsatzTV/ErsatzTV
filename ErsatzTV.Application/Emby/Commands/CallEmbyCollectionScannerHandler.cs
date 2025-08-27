@@ -26,7 +26,7 @@ public class CallEmbyCollectionScannerHandler : CallLibraryScannerHandler<Synchr
     public async Task<Either<BaseError, Unit>>
         Handle(SynchronizeEmbyCollections request, CancellationToken cancellationToken)
     {
-        Validation<BaseError, string> validation = await Validate(request);
+        Validation<BaseError, string> validation = await Validate(request, cancellationToken);
         return await validation.Match(
             scanner => PerformScan(scanner, request, cancellationToken),
             error =>
@@ -40,10 +40,13 @@ public class CallEmbyCollectionScannerHandler : CallLibraryScannerHandler<Synchr
             });
     }
 
-    protected override async Task<DateTimeOffset> GetLastScan(TvContext dbContext, SynchronizeEmbyCollections request)
+    protected override async Task<DateTimeOffset> GetLastScan(
+        TvContext dbContext,
+        SynchronizeEmbyCollections request,
+        CancellationToken cancellationToken)
     {
         DateTime minDateTime = await dbContext.EmbyMediaSources
-            .SelectOneAsync(l => l.Id, l => l.Id == request.EmbyMediaSourceId)
+            .SelectOneAsync(l => l.Id, l => l.Id == request.EmbyMediaSourceId, cancellationToken)
             .Match(l => l.LastCollectionsScan ?? SystemTime.MinValueUtc, () => SystemTime.MaxValueUtc);
 
         return new DateTimeOffset(minDateTime, TimeSpan.Zero);

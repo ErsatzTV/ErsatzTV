@@ -15,7 +15,7 @@ public class UpdateEmbyPathReplacementsHandler : IRequestHandler<UpdateEmbyPathR
     public Task<Either<BaseError, Unit>> Handle(
         UpdateEmbyPathReplacements request,
         CancellationToken cancellationToken) =>
-        Validate(request)
+        Validate(request, cancellationToken)
             .MapT(pms => MergePathReplacements(request, pms))
             .Bind(v => v.ToEitherAsync());
 
@@ -37,12 +37,12 @@ public class UpdateEmbyPathReplacementsHandler : IRequestHandler<UpdateEmbyPathR
     private static EmbyPathReplacement Project(EmbyPathReplacementItem vm) =>
         new() { Id = vm.Id, EmbyPath = vm.EmbyPath, LocalPath = vm.LocalPath };
 
-    private Task<Validation<BaseError, EmbyMediaSource>> Validate(UpdateEmbyPathReplacements request) =>
-        EmbyMediaSourceMustExist(request);
+    private Task<Validation<BaseError, EmbyMediaSource>> Validate(UpdateEmbyPathReplacements request, CancellationToken cancellationToken) =>
+        EmbyMediaSourceMustExist(request, cancellationToken);
 
     private Task<Validation<BaseError, EmbyMediaSource>> EmbyMediaSourceMustExist(
-        UpdateEmbyPathReplacements request) =>
-        _mediaSourceRepository.GetEmby(request.EmbyMediaSourceId)
+        UpdateEmbyPathReplacements request, CancellationToken cancellationToken) =>
+        _mediaSourceRepository.GetEmby(request.EmbyMediaSourceId, cancellationToken)
             .Map(v => v.ToValidation<BaseError>(
                 $"Emby media source {request.EmbyMediaSourceId} does not exist."));
 }

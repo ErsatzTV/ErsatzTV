@@ -147,9 +147,10 @@ public class EmbyMovieRepository : IEmbyMovieRepository
     public async Task<Either<BaseError, MediaItemScanResult<EmbyMovie>>> GetOrAdd(
         EmbyLibrary library,
         EmbyMovie item,
-        bool deepScan)
+        bool deepScan,
+        CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Option<EmbyMovie> maybeExisting = await dbContext.EmbyMovies
             .Include(m => m.LibraryPath)
             .ThenInclude(lp => lp.Library)
@@ -177,7 +178,7 @@ public class EmbyMovieRepository : IEmbyMovieRepository
             .ThenInclude(mm => mm.Guids)
             .Include(m => m.TraktListItems)
             .ThenInclude(tli => tli.TraktList)
-            .SelectOneAsync(m => m.ItemId, m => m.ItemId == item.ItemId);
+            .SelectOneAsync(m => m.ItemId, m => m.ItemId == item.ItemId, cancellationToken);
 
         foreach (EmbyMovie embyMovie in maybeExisting)
         {
@@ -191,7 +192,7 @@ public class EmbyMovieRepository : IEmbyMovieRepository
             return result;
         }
 
-        return await AddMovie(dbContext, library, item);
+        return await AddMovie(dbContext, library, item, cancellationToken);
     }
 
     public async Task<Unit> SetEtag(EmbyMovie movie, string etag)
@@ -205,11 +206,17 @@ public class EmbyMovieRepository : IEmbyMovieRepository
     private async Task<Either<BaseError, MediaItemScanResult<EmbyMovie>>> AddMovie(
         TvContext dbContext,
         EmbyLibrary library,
-        EmbyMovie movie)
+        EmbyMovie movie,
+        CancellationToken cancellationToken)
     {
         try
         {
-            if (await MediaItemRepository.MediaFileAlreadyExists(movie, library.Paths.Head().Id, dbContext, _logger))
+            if (await MediaItemRepository.MediaFileAlreadyExists(
+                    movie,
+                    library.Paths.Head().Id,
+                    dbContext,
+                    _logger,
+                    cancellationToken))
             {
                 return new MediaFileAlreadyExists();
             }
@@ -220,14 +227,14 @@ public class EmbyMovieRepository : IEmbyMovieRepository
 
             movie.LibraryPathId = library.Paths.Head().Id;
 
-            await dbContext.AddAsync(movie);
-            await dbContext.SaveChangesAsync();
+            await dbContext.AddAsync(movie, cancellationToken);
+            await dbContext.SaveChangesAsync(cancellationToken);
 
             // restore etag
             movie.Etag = etag;
 
-            await dbContext.Entry(movie).Reference(m => m.LibraryPath).LoadAsync();
-            await dbContext.Entry(movie.LibraryPath).Reference(lp => lp.Library).LoadAsync();
+            await dbContext.Entry(movie).Reference(m => m.LibraryPath).LoadAsync(cancellationToken);
+            await dbContext.Entry(movie.LibraryPath).Reference(lp => lp.Library).LoadAsync(cancellationToken);
             return new MediaItemScanResult<EmbyMovie>(movie) { IsAdded = true };
         }
         catch (Exception ex)

@@ -18,7 +18,7 @@ public class NewFFmpegProfileHandler : IRequestHandler<NewFFmpegProfile, FFmpegP
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         int defaultResolutionId = await dbContext.ConfigElements
-            .GetValue<int>(ConfigElementKey.FFmpegDefaultResolutionId)
+            .GetValue<int>(ConfigElementKey.FFmpegDefaultResolutionId, cancellationToken)
             .IfNoneAsync(0);
 
         List<Resolution> allResolutions = await dbContext.Resolutions

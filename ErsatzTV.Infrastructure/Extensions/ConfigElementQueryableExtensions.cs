@@ -7,8 +7,9 @@ public static class ConfigElementQueryableExtensions
 {
     public static Task<Option<T>> GetValue<T>(
         this IQueryable<ConfigElement> configElements,
-        ConfigElementKey key) =>
+        ConfigElementKey key,
+        CancellationToken cancellationToken) =>
         configElements
-            .SelectOneAsync(ce => ce.Key, ce => ce.Key == key.Key)
+            .SelectOneAsync(ce => ce.Key, ce => ce.Key == key.Key, cancellationToken)
             .MapT(ce => (T)Convert.ChangeType(ce.Value, typeof(T), CultureInfo.InvariantCulture));
 }

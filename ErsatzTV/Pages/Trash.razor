@@ -2,6 +2,7 @@
 @using ErsatzTV.Application.Maintenance
 @using ErsatzTV.Application.MediaCards
 @using ErsatzTV.Application.Search
+@using ErsatzTV.Core.Search
 @using ErsatzTV.Extensions
 @inherits MultiSelectBase<Search>
 @inject NavigationManager NavigationManager
@@ -401,19 +402,19 @@
 </MudForm>
 
 @code {
-    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource _cts;
 
     private string _query;
-    private MovieCardResultsViewModel _movies;
-    private TelevisionShowCardResultsViewModel _shows;
-    private TelevisionSeasonCardResultsViewModel _seasons;
-    private TelevisionEpisodeCardResultsViewModel _episodes;
-    private MusicVideoCardResultsViewModel _musicVideos;
-    private OtherVideoCardResultsViewModel _otherVideos;
-    private SongCardResultsViewModel _songs;
-    private ImageCardResultsViewModel _images;
-    private RemoteStreamCardResultsViewModel _remoteStreams;
-    private ArtistCardResultsViewModel _artists;
+    private MovieCardResultsViewModel _movies = new(0, [], new SearchPageMap([]));
+    private TelevisionShowCardResultsViewModel _shows = new(0, [], new SearchPageMap([]));
+    private TelevisionSeasonCardResultsViewModel _seasons = new(0, [], new SearchPageMap([]));
+    private TelevisionEpisodeCardResultsViewModel _episodes = new(0, [], new SearchPageMap([]));
+    private MusicVideoCardResultsViewModel _musicVideos = new(0, [], new SearchPageMap([]));
+    private OtherVideoCardResultsViewModel _otherVideos = new(0, [], new SearchPageMap([]));
+    private SongCardResultsViewModel _songs = new(0, [], new SearchPageMap([]));
+    private ImageCardResultsViewModel _images = new(0, [], new SearchPageMap([]));
+    private RemoteStreamCardResultsViewModel _remoteStreams = new(0, [], new SearchPageMap([]));
+    private ArtistCardResultsViewModel _artists = new(0, [], new SearchPageMap([]));
 
     private PersistingComponentStateSubscription _persistingSubscription;
 
@@ -423,8 +424,8 @@
         {
             _persistingSubscription.Dispose();
 
-            _cts.Cancel();
-            _cts.Dispose();
+            _cts?.Cancel();
+            _cts?.Dispose();
         }
 
         base.Dispose(disposing);
@@ -454,64 +455,56 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        await RefreshData();
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
+
+        await RefreshData(token);
         await InvokeAsync(StateHasChanged);
     }
 
-    protected override async Task RefreshData()
+    protected override async Task RefreshData(CancellationToken token)
     {
-        _query = "state:FileNotFound";
-        if (!string.IsNullOrWhiteSpace(_query))
+        try
         {
-            if (!ApplicationState.TryTakeFromJson("_movies", out _movies))
+            _query = "state:FileNotFound";
+            if (string.IsNullOrWhiteSpace(_query))
             {
-                _movies = await Mediator.Send(new QuerySearchIndexMovies($"type:movie AND ({_query})", 1, 50), _cts.Token);
+                return;
             }
 
-            if (!ApplicationState.TryTakeFromJson("_shows", out _shows))
+            var loadingTasks = new List<Task>
             {
-                _shows = await Mediator.Send(new QuerySearchIndexShows($"type:show AND ({_query})", 1, 50), _cts.Token);
-            }
+                LoadDataAsync("_movies", () => Mediator.Send(new QuerySearchIndexMovies($"type:movie AND ({_query})", 1, 50), token), r => _movies = r),
+                LoadDataAsync("_shows", () => Mediator.Send(new QuerySearchIndexShows($"type:show AND ({_query})", 1, 50), token), r => _shows = r),
+                LoadDataAsync("_seasons", () => Mediator.Send(new QuerySearchIndexSeasons($"type:season AND ({_query})", 1, 50), token), r => _seasons = r),
+                LoadDataAsync("_episodes", () => Mediator.Send(new QuerySearchIndexEpisodes($"type:episode AND ({_query})", 1, 50), token), r => _episodes = r),
+                LoadDataAsync("_musicVideos", () => Mediator.Send(new QuerySearchIndexMusicVideos($"type:music_video AND ({_query})", 1, 50), token), r => _musicVideos = r),
+                // LoadDataAsync("_otherVideos", () => Mediator.Send(new QuerySearchIndexOtherVideos($"type:other_video AND ({_query})", 1, 50), token), r => _otherVideos = r),
+                // LoadDataAsync("_songs", () => Mediator.Send(new QuerySearchIndexSongs($"type:song AND ({_query})", 1, 50), token), r => _songs = r),
+                // LoadDataAsync("_images", () => Mediator.Send(new QuerySearchIndexImages($"type:image AND ({_query})", 1, 50), token), r => _images = r),
+                // LoadDataAsync("_remoteStreams", () => Mediator.Send(new QuerySearchIndexRemoteStreams($"type:remote_stream AND ({_query})", 1, 50), token), r => _remoteStreams = r),
+                // LoadDataAsync("_artists", () => Mediator.Send(new QuerySearchIndexArtists($"type:artist AND ({_query})", 1, 50), token), r => _artists = r)
+            };
 
-            if (!ApplicationState.TryTakeFromJson("_seasons", out _seasons))
-            {
-                _seasons = await Mediator.Send(new QuerySearchIndexSeasons($"type:season AND ({_query})", 1, 50), _cts.Token);
-            }
+            await Task.WhenAll(loadingTasks);
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
+        }
+    }
 
-            if (!ApplicationState.TryTakeFromJson("_episodes", out _episodes))
-            {
-                _episodes = await Mediator.Send(new QuerySearchIndexEpisodes($"type:episode AND ({_query})", 1, 50), _cts.Token);
-            }
-
-            if (!ApplicationState.TryTakeFromJson("_musicVideos", out _musicVideos))
-            {
-                _musicVideos = await Mediator.Send(new QuerySearchIndexMusicVideos($"type:music_video AND ({_query})", 1, 50), _cts.Token);
-            }
-
-            if (!ApplicationState.TryTakeFromJson("_otherVideos", out _otherVideos))
-            {
-                _otherVideos = await Mediator.Send(new QuerySearchIndexOtherVideos($"type:other_video AND ({_query})", 1, 50), _cts.Token);
-            }
-
-            if (!ApplicationState.TryTakeFromJson("_songs", out _songs))
-            {
-                _songs = await Mediator.Send(new QuerySearchIndexSongs($"type:song AND ({_query})", 1, 50), _cts.Token);
-            }
-
-            if (!ApplicationState.TryTakeFromJson("_images", out _images))
-            {
-                _images = await Mediator.Send(new QuerySearchIndexImages($"type:image AND ({_query})", 1, 50), _cts.Token);
-            }
-
-            if (!ApplicationState.TryTakeFromJson("_remoteStreams", out _remoteStreams))
-            {
-                _remoteStreams = await Mediator.Send(new QuerySearchIndexRemoteStreams($"type:remote_stream AND ({_query})", 1, 50), _cts.Token);
-            }
-
-            if (!ApplicationState.TryTakeFromJson("_artists", out _artists))
-            {
-                _artists = await Mediator.Send(new QuerySearchIndexArtists($"type:artist AND ({_query})", 1, 50), _cts.Token);
-            }
+    private async Task LoadDataAsync<T>(string key, Func<Task<T>> fetch, Action<T> assign)
+    {
+        if (!ApplicationState.TryTakeFromJson(key, out T restored))
+        {
+            assign(await fetch());
+        }
+        else
+        {
+            assign(restored);
         }
     }
 
@@ -706,7 +699,9 @@
                     .Append(remoteStreamIds)
                     .ToList());
 
-            Either<BaseError, Unit> addResult = await Mediator.Send(request, _cts.Token);
+            using var cts = new CancellationTokenSource();
+
+            Either<BaseError, Unit> addResult = await Mediator.Send(request, cts.Token);
             await addResult.Match(
                 Left: error =>
                 {
@@ -718,7 +713,7 @@
                 {
                     Snackbar.Add($"Deleted {count} items from the database", Severity.Success);
                     ClearSelection();
-                    await RefreshData();
+                    await RefreshData(cts.Token);
                 });
         }
     }
@@ -784,8 +779,10 @@
         DialogResult result = await dialog.Result;
         if (result is not null && !result.Canceled)
         {
-            await Mediator.Send(request, _cts.Token);
-            await RefreshData();
+            var token = _cts?.Token ?? CancellationToken.None;
+
+            await Mediator.Send(request, token);
+            await RefreshData(token);
         }
     }
 
@@ -801,7 +798,9 @@
         DialogResult result = await dialog.Result;
         if (result is not null && !result.Canceled)
         {
-            Either<BaseError, Unit> emptyTrashResult = await Mediator.Send(new EmptyTrash(), _cts.Token);
+            var token = _cts?.Token ?? CancellationToken.None;
+
+            Either<BaseError, Unit> emptyTrashResult = await Mediator.Send(new EmptyTrash(), token);
             foreach (BaseError error in emptyTrashResult.LeftToSeq())
             {
                 Snackbar.Add(error.Value, Severity.Error);
@@ -810,7 +809,7 @@
 
             if (emptyTrashResult.IsRight)
             {
-                await RefreshData();
+                await RefreshData(token);
                 await InvokeAsync(StateHasChanged);
             }
         }

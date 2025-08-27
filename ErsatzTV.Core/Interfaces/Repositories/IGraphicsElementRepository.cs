@@ -4,5 +4,5 @@ namespace ErsatzTV.Core.Interfaces.Repositories;
 
 public interface IGraphicsElementRepository
 {
-    Task<Option<GraphicsElement>> GetGraphicsElementByPath(string path);
+    Task<Option<GraphicsElement>> GetGraphicsElementByPath(string path, CancellationToken cancellationToken);
 }

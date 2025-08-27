@@ -76,7 +76,7 @@ public class GetMediaItemInfoHandler : IRequestHandler<GetMediaItemInfo, Either<
                 .ThenInclude(mv => mv.Streams)
                 .Include(i => (i as MusicVideo).Artist)
                 .ThenInclude(a => a.ArtistMetadata)
-                .SelectOneAsync(i => i.Id, i => i.Id == request.Id)
+                .SelectOneAsync(i => i.Id, i => i.Id == request.Id, cancellationToken)
                 .MapT(Project);
 
             return mediaItem.ToEither<BaseError>(new UnableToLocateMediaItem());

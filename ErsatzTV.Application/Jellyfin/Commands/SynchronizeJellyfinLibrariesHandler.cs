@@ -35,7 +35,7 @@ public class
         SynchronizeJellyfinLibraries request,
         CancellationToken cancellationToken) =>
         Validate(request)
-            .MapT(SynchronizeLibraries)
+            .MapT(p => SynchronizeLibraries(p, cancellationToken))
             .Bind(v => v.ToEitherAsync());
 
     private Task<Validation<BaseError, ConnectionParameters>> Validate(SynchronizeJellyfinLibraries request) =>
@@ -66,7 +66,9 @@ public class
             .ToValidation<BaseError>("Jellyfin media source requires an api key");
     }
 
-    private async Task<Unit> SynchronizeLibraries(ConnectionParameters connectionParameters)
+    private async Task<Unit> SynchronizeLibraries(
+        ConnectionParameters connectionParameters,
+        CancellationToken cancellationToken)
     {
         Either<BaseError, List<JellyfinLibrary>> maybeLibraries = await _jellyfinApiClient.GetLibraries(
             connectionParameters.ActiveConnection.Address,
@@ -93,7 +95,8 @@ public class
                 connectionParameters.JellyfinMediaSource.Id,
                 toAdd,
                 toRemove,
-                toUpdate);
+                toUpdate,
+                cancellationToken);
             if (ids.Count != 0)
             {
                 await _searchIndex.RemoveItems(ids);

@@ -44,6 +44,7 @@ public class GetMusicVideoCardsHandler : IRequestHandler<GetMusicVideoCards, Mus
                 _plexPathReplacementService,
                 _jellyfinPathReplacementService,
                 _embyPathReplacementService,
+                cancellationToken,
                 false);
 
             results.Add(ProjectToViewModel(musicVideoMetadata, localPath));

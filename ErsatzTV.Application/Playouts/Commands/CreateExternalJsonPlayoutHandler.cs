@@ -33,7 +33,7 @@ public class CreateExternalJsonPlayoutHandler
         CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        Validation<BaseError, Playout> validation = await Validate(dbContext, request);
+        Validation<BaseError, Playout> validation = await Validate(dbContext, request, cancellationToken);
         return await validation.Apply(playout => PersistPlayout(dbContext, playout));
     }
 
@@ -48,8 +48,9 @@ public class CreateExternalJsonPlayoutHandler
 
     private async Task<Validation<BaseError, Playout>> Validate(
         TvContext dbContext,
-        CreateExternalJsonPlayout request) =>
-        (await ValidateChannel(dbContext, request), ValidateExternalJsonFile(request), ValidateScheduleKind(request))
+        CreateExternalJsonPlayout request,
+        CancellationToken cancellationToken) =>
+        (await ValidateChannel(dbContext, request, cancellationToken), ValidateExternalJsonFile(request), ValidateScheduleKind(request))
         .Apply((channel, externalJsonFile, scheduleKind) => new Playout
         {
             ChannelId = channel.Id,
@@ -59,10 +60,11 @@ public class CreateExternalJsonPlayoutHandler
 
     private static Task<Validation<BaseError, Channel>> ValidateChannel(
         TvContext dbContext,
-        CreateExternalJsonPlayout createExternalJsonPlayout) =>
+        CreateExternalJsonPlayout createExternalJsonPlayout,
+        CancellationToken cancellationToken) =>
         dbContext.Channels
             .Include(c => c.Playouts)
-            .SelectOneAsync(c => c.Id, c => c.Id == createExternalJsonPlayout.ChannelId)
+            .SelectOneAsync(c => c.Id, c => c.Id == createExternalJsonPlayout.ChannelId, cancellationToken)
             .Map(o => o.ToValidation<BaseError>("Channel does not exist"))
             .BindT(ChannelMustNotHavePlayouts);
 

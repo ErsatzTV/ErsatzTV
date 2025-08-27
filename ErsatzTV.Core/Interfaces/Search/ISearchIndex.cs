@@ -11,13 +11,22 @@ public interface ISearchIndex : IDisposable
 {
     int Version { get; }
     Task<bool> IndexExists();
-    Task<bool> Initialize(ILocalFileSystem localFileSystem, IConfigElementRepository configElementRepository);
-    Task<Unit> Rebuild(ICachingSearchRepository searchRepository, IFallbackMetadataProvider fallbackMetadataProvider);
+
+    Task<bool> Initialize(
+        ILocalFileSystem localFileSystem,
+        IConfigElementRepository configElementRepository,
+        CancellationToken cancellationToken);
+
+    Task<Unit> Rebuild(
+        ICachingSearchRepository searchRepository,
+        IFallbackMetadataProvider fallbackMetadataProvider,
+        CancellationToken cancellationToken);
 
     Task<Unit> RebuildItems(
         ICachingSearchRepository searchRepository,
         IFallbackMetadataProvider fallbackMetadataProvider,
-        IEnumerable<int> itemIds);
+        IEnumerable<int> itemIds,
+        CancellationToken cancellationToken);
 
     Task<Unit> UpdateItems(
         ICachingSearchRepository searchRepository,
@@ -25,6 +34,14 @@ public interface ISearchIndex : IDisposable
         List<MediaItem> items);
 
     Task<bool> RemoveItems(IEnumerable<int> ids);
-    Task<SearchResult> Search(IClient client, string query, string smartCollectionName, int skip, int limit);
+
+    Task<SearchResult> Search(
+        IClient client,
+        string query,
+        string smartCollectionName,
+        int skip,
+        int limit,
+        CancellationToken cancellationToken);
+
     void Commit();
 }

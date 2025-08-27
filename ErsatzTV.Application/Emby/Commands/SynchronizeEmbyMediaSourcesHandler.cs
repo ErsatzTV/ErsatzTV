@@ -23,7 +23,7 @@ public class SynchronizeEmbyMediaSourcesHandler : IRequestHandler<SynchronizeEmb
         SynchronizeEmbyMediaSources request,
         CancellationToken cancellationToken)
     {
-        List<EmbyMediaSource> mediaSources = await _mediaSourceRepository.GetAllEmby();
+        List<EmbyMediaSource> mediaSources = await _mediaSourceRepository.GetAllEmby(cancellationToken);
         foreach (EmbyMediaSource mediaSource in mediaSources)
         {
             await _scannerWorkerChannel.WriteAsync(new SynchronizeEmbyLibraries(mediaSource.Id), cancellationToken);

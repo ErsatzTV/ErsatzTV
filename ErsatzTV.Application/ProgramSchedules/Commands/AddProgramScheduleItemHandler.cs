@@ -28,26 +28,27 @@ public class AddProgramScheduleItemHandler : ProgramScheduleItemCommandBase,
         CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        Validation<BaseError, ProgramSchedule> validation = await Validate(dbContext, request);
-        return await validation.Apply(ps => PersistItem(dbContext, request, ps));
+        Validation<BaseError, ProgramSchedule> validation = await Validate(dbContext, request, cancellationToken);
+        return await validation.Apply(ps => PersistItem(dbContext, request, ps, cancellationToken));
     }
 
     private async Task<ProgramScheduleItemViewModel> PersistItem(
         TvContext dbContext,
         AddProgramScheduleItem request,
-        ProgramSchedule programSchedule)
+        ProgramSchedule programSchedule,
+        CancellationToken cancellationToken)
     {
         int nextIndex = programSchedule.Items.Select(i => i.Index).DefaultIfEmpty(0).Max() + 1;
 
         ProgramScheduleItem item = BuildItem(programSchedule, nextIndex, request);
         programSchedule.Items.Add(item);
 
-        await dbContext.SaveChangesAsync();
+        await dbContext.SaveChangesAsync(cancellationToken);
 
         // refresh any playouts that use this schedule
         foreach (Playout playout in programSchedule.Playouts)
         {
-            await _channel.WriteAsync(new BuildPlayout(playout.Id, PlayoutBuildMode.Refresh));
+            await _channel.WriteAsync(new BuildPlayout(playout.Id, PlayoutBuildMode.Refresh), cancellationToken);
         }
 
         return ProjectToViewModel(item);
@@ -55,7 +56,8 @@ public class AddProgramScheduleItemHandler : ProgramScheduleItemCommandBase,
 
     private static Task<Validation<BaseError, ProgramSchedule>> Validate(
         TvContext dbContext,
-        AddProgramScheduleItem request) =>
-        ProgramScheduleMustExist(dbContext, request.ProgramScheduleId)
+        AddProgramScheduleItem request,
+        CancellationToken cancellationToken) =>
+        ProgramScheduleMustExist(dbContext, request.ProgramScheduleId, cancellationToken)
             .BindT(programSchedule => PlayoutModeMustBeValid(request, programSchedule));
 }

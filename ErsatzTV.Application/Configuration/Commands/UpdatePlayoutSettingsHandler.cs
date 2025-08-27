@@ -32,24 +32,24 @@ public class UpdatePlayoutSettingsHandler : IRequestHandler<UpdatePlayoutSetting
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, Unit> validation = await Validate(request);
-        return await validation.Apply<Unit, Unit>(_ => ApplyUpdate(dbContext, request.PlayoutSettings));
+        return await validation.Apply<Unit, Unit>(_ => ApplyUpdate(dbContext, request.PlayoutSettings, cancellationToken));
     }
 
-    private async Task<Unit> ApplyUpdate(TvContext dbContext, PlayoutSettingsViewModel playoutSettings)
+    private async Task<Unit> ApplyUpdate(TvContext dbContext, PlayoutSettingsViewModel playoutSettings, CancellationToken cancellationToken)
     {
-        await _configElementRepository.Upsert(ConfigElementKey.PlayoutDaysToBuild, playoutSettings.DaysToBuild);
+        await _configElementRepository.Upsert(ConfigElementKey.PlayoutDaysToBuild, playoutSettings.DaysToBuild, cancellationToken);
         await _configElementRepository.Upsert(
             ConfigElementKey.PlayoutSkipMissingItems,
-            playoutSettings.SkipMissingItems);
+            playoutSettings.SkipMissingItems, cancellationToken);
 
         // continue all playouts to proper number of days
         List<Playout> playouts = await dbContext.Playouts
             .Include(p => p.Channel)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
         foreach (int playoutId in playouts.OrderBy(p => decimal.Parse(p.Channel.Number, CultureInfo.InvariantCulture))
                      .Map(p => p.Id))
         {
-            await _workerChannel.WriteAsync(new BuildPlayout(playoutId, PlayoutBuildMode.Continue));
+            await _workerChannel.WriteAsync(new BuildPlayout(playoutId, PlayoutBuildMode.Continue), cancellationToken);
         }
 
         return Unit.Default;

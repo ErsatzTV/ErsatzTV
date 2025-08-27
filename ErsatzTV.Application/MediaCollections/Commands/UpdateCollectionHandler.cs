@@ -35,11 +35,15 @@ public class UpdateCollectionHandler : IRequestHandler<UpdateCollection, Either<
         CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        Validation<BaseError, Collection> validation = await Validate(dbContext, request);
-        return await validation.Apply(c => ApplyUpdateRequest(dbContext, c, request));
+        Validation<BaseError, Collection> validation = await Validate(dbContext, request, cancellationToken);
+        return await validation.Apply(c => ApplyUpdateRequest(dbContext, c, request, cancellationToken));
     }
 
-    private async Task<Unit> ApplyUpdateRequest(TvContext dbContext, Collection c, UpdateCollection request)
+    private async Task<Unit> ApplyUpdateRequest(
+        TvContext dbContext,
+        Collection c,
+        UpdateCollection request,
+        CancellationToken cancellationToken)
     {
         c.Name = request.Name;
         foreach (bool useCustomPlaybackOrder in request.UseCustomPlaybackOrder)
@@ -47,13 +51,13 @@ public class UpdateCollectionHandler : IRequestHandler<UpdateCollection, Either<
             c.UseCustomPlaybackOrder = useCustomPlaybackOrder;
         }
 
-        if (await dbContext.SaveChangesAsync() > 0 && request.UseCustomPlaybackOrder.IsSome)
+        if (await dbContext.SaveChangesAsync(cancellationToken) > 0 && request.UseCustomPlaybackOrder.IsSome)
         {
             // refresh all playouts that use this collection
             foreach (int playoutId in await _mediaCollectionRepository.PlayoutIdsUsingCollection(
                          request.CollectionId))
             {
-                await _channel.WriteAsync(new BuildPlayout(playoutId, PlayoutBuildMode.Refresh));
+                await _channel.WriteAsync(new BuildPlayout(playoutId, PlayoutBuildMode.Refresh), cancellationToken);
             }
         }
 
@@ -64,15 +68,17 @@ public class UpdateCollectionHandler : IRequestHandler<UpdateCollection, Either<
 
     private static async Task<Validation<BaseError, Collection>> Validate(
         TvContext dbContext,
-        UpdateCollection request) =>
-        (await CollectionMustExist(dbContext, request), ValidateName(request))
+        UpdateCollection request,
+        CancellationToken cancellationToken) =>
+        (await CollectionMustExist(dbContext, request, cancellationToken), ValidateName(request))
         .Apply((collectionToUpdate, _) => collectionToUpdate);
 
     private static Task<Validation<BaseError, Collection>> CollectionMustExist(
         TvContext dbContext,
-        UpdateCollection updateCollection) =>
+        UpdateCollection updateCollection,
+        CancellationToken cancellationToken) =>
         dbContext.Collections
-            .SelectOneAsync(c => c.Id, c => c.Id == updateCollection.CollectionId)
+            .SelectOneAsync(c => c.Id, c => c.Id == updateCollection.CollectionId, cancellationToken)
             .Map(o => o.ToValidation<BaseError>("Collection does not exist."));
 
     private static Validation<BaseError, string> ValidateName(UpdateCollection updateSimpleMediaCollection) =>

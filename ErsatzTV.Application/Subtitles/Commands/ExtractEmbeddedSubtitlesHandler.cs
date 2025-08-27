@@ -51,7 +51,7 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
         CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        Validation<BaseError, string> validation = await FFmpegPathMustExist(dbContext);
+        Validation<BaseError, string> validation = await FFmpegPathMustExist(dbContext, cancellationToken);
         return await validation.Match(
             async ffmpegPath =>
             {
@@ -71,7 +71,7 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
         try
         {
             bool useEmbeddedSubtitles = await _configElementRepository
-                .GetValue<bool>(ConfigElementKey.FFmpegUseEmbeddedSubtitles)
+                .GetValue<bool>(ConfigElementKey.FFmpegUseEmbeddedSubtitles, cancellationToken)
                 .IfNoneAsync(true);
 
             if (!useEmbeddedSubtitles)
@@ -81,7 +81,7 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
             }
 
             bool extractEmbeddedSubtitles = await _configElementRepository
-                .GetValue<bool>(ConfigElementKey.FFmpegExtractEmbeddedSubtitles)
+                .GetValue<bool>(ConfigElementKey.FFmpegExtractEmbeddedSubtitles, cancellationToken)
                 .IfNoneAsync(false);
 
             if (!extractEmbeddedSubtitles)
@@ -101,7 +101,7 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
                 .Filter(p => p.Channel.SubtitleMode != ChannelSubtitleMode.None ||
                              p.ProgramSchedule.Items.Any(psi =>
                                  psi.SubtitleMode != null && psi.SubtitleMode != ChannelSubtitleMode.None))
-                .SelectOneAsync(p => p.Id, p => p.Id == request.PlayoutId.IfNone(-1));
+                .SelectOneAsync(p => p.Id, p => p.Id == request.PlayoutId.IfNone(-1), cancellationToken);
 
             playoutIdsToCheck.AddRange(requestedPlayout.Map(p => p.Id));
 
@@ -269,7 +269,7 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
         string ffmpegPath,
         CancellationToken cancellationToken)
     {
-        foreach (MediaItem mediaItem in await GetMediaItem(dbContext, mediaItemId))
+        foreach (MediaItem mediaItem in await GetMediaItem(dbContext, mediaItemId, cancellationToken))
         {
             foreach (List<Subtitle> allSubtitles in GetSubtitles(mediaItem))
             {
@@ -353,7 +353,10 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
         return false;
     }
 
-    private static async Task<Option<MediaItem>> GetMediaItem(TvContext dbContext, int mediaItemId) =>
+    private static async Task<Option<MediaItem>> GetMediaItem(
+        TvContext dbContext,
+        int mediaItemId,
+        CancellationToken cancellationToken) =>
         await dbContext.MediaItems
             .Include(mi => (mi as Episode).MediaVersions)
             .ThenInclude(mv => mv.MediaFiles)
@@ -379,7 +382,7 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
             .ThenInclude(mv => mv.Streams)
             .Include(mi => (mi as OtherVideo).OtherVideoMetadata)
             .ThenInclude(em => em.Subtitles)
-            .SelectOneAsync(e => e.Id, e => e.Id == mediaItemId);
+            .SelectOneAsync(e => e.Id, e => e.Id == mediaItemId, cancellationToken);
 
     private static Option<List<Subtitle>> GetSubtitles(MediaItem mediaItem) =>
         mediaItem switch
@@ -397,7 +400,7 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
         string ffmpegPath,
         CancellationToken cancellationToken)
     {
-        foreach (MediaItem mediaItem in await GetMediaItem(dbContext, mediaItemId))
+        foreach (MediaItem mediaItem in await GetMediaItem(dbContext, mediaItemId, cancellationToken))
         {
             MediaVersion headVersion = mediaItem.GetHeadVersion();
             var attachments = headVersion.Streams
@@ -451,8 +454,10 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
         }
     }
 
-    private static Task<Validation<BaseError, string>> FFmpegPathMustExist(TvContext dbContext) =>
-        dbContext.ConfigElements.GetValue<string>(ConfigElementKey.FFmpegPath)
+    private static Task<Validation<BaseError, string>> FFmpegPathMustExist(
+        TvContext dbContext,
+        CancellationToken cancellationToken) =>
+        dbContext.ConfigElements.GetValue<string>(ConfigElementKey.FFmpegPath, cancellationToken)
             .FilterT(File.Exists)
             .Map(maybePath => maybePath.ToValidation<BaseError>("FFmpeg path does not exist on filesystem"));
 

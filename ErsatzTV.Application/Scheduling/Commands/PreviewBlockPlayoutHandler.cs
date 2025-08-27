@@ -100,7 +100,7 @@ public class PreviewBlockPlayoutHandler(
                 .Include(mi => (mi as Image).MediaVersions)
                 .Include(mi => (mi as RemoteStream).RemoteStreamMetadata)
                 .Include(mi => (mi as RemoteStream).MediaVersions)
-                .SelectOneAsync(mi => mi.Id, mi => mi.Id == playoutItem.MediaItemId);
+                .SelectOneAsync(mi => mi.Id, mi => mi.Id == playoutItem.MediaItemId, cancellationToken);
 
             foreach (MediaItem mediaItem in maybeMediaItem)
             {

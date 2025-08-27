@@ -21,7 +21,7 @@ public class GetArtworkHandler(IDbContextFactory<TvContext> dbContextFactory)
 
             Option<Artwork> artwork = await dbContext.Artwork
                 .AsNoTracking()
-                .SelectOneAsync(a => a.Id, a => a.Id == request.Id)
+                .SelectOneAsync(a => a.Id, a => a.Id == request.Id, cancellationToken)
                 .MapT(Project);
 
             return artwork.ToEither(BaseError.New("Artwork not found"));

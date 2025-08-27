@@ -169,20 +169,23 @@ public abstract class CallLibraryScannerHandler<TRequest>
         }
     }
 
-    protected abstract Task<DateTimeOffset> GetLastScan(TvContext dbContext, TRequest request);
+    protected abstract Task<DateTimeOffset> GetLastScan(
+        TvContext dbContext,
+        TRequest request,
+        CancellationToken cancellationToken);
     protected abstract bool ScanIsRequired(DateTimeOffset lastScan, int libraryRefreshInterval, TRequest request);
 
-    protected async Task<Validation<BaseError, string>> Validate(TRequest request)
+    protected async Task<Validation<BaseError, string>> Validate(TRequest request, CancellationToken cancellationToken)
     {
         int libraryRefreshInterval = await _configElementRepository
-            .GetValue<int>(ConfigElementKey.LibraryRefreshInterval)
+            .GetValue<int>(ConfigElementKey.LibraryRefreshInterval, cancellationToken)
             .IfNoneAsync(0);
 
         libraryRefreshInterval = Math.Clamp(libraryRefreshInterval, 0, 999_999);
 
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
-        DateTimeOffset lastScan = await GetLastScan(dbContext, request);
+        DateTimeOffset lastScan = await GetLastScan(dbContext, request, cancellationToken);
         if (!ScanIsRequired(lastScan, libraryRefreshInterval, request))
         {
             return new ScanIsNotRequired();

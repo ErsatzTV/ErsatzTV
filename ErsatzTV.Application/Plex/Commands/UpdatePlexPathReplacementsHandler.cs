@@ -15,13 +15,13 @@ public class
     public Task<Either<BaseError, Unit>> Handle(
         UpdatePlexPathReplacements request,
         CancellationToken cancellationToken) =>
-        Validate(request)
+        Validate(request, cancellationToken)
             .MapT(pms => MergePathReplacements(request, pms))
             .Bind(v => v.ToEitherAsync());
 
     private Task<Unit> MergePathReplacements(UpdatePlexPathReplacements request, PlexMediaSource plexMediaSource)
     {
-        plexMediaSource.PathReplacements ??= new List<PlexPathReplacement>();
+        plexMediaSource.PathReplacements ??= [];
 
         var incoming = request.PathReplacements.Map(Project).ToList();
 
@@ -35,11 +35,14 @@ public class
     private static PlexPathReplacement Project(PlexPathReplacementItem vm) =>
         new() { Id = vm.Id, PlexPath = vm.PlexPath, LocalPath = vm.LocalPath };
 
-    private Task<Validation<BaseError, PlexMediaSource>> Validate(UpdatePlexPathReplacements request) =>
-        PlexMediaSourceMustExist(request);
+    private Task<Validation<BaseError, PlexMediaSource>> Validate(
+        UpdatePlexPathReplacements request,
+        CancellationToken cancellationToken) =>
+        PlexMediaSourceMustExist(request, cancellationToken);
 
     private Task<Validation<BaseError, PlexMediaSource>> PlexMediaSourceMustExist(
-        UpdatePlexPathReplacements request) =>
-        _mediaSourceRepository.GetPlex(request.PlexMediaSourceId)
+        UpdatePlexPathReplacements request,
+        CancellationToken cancellationToken) =>
+        _mediaSourceRepository.GetPlex(request.PlexMediaSourceId, cancellationToken)
             .Map(v => v.ToValidation<BaseError>($"Plex media source {request.PlexMediaSourceId} does not exist."));
 }

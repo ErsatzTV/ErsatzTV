@@ -37,7 +37,7 @@ public partial class AddTraktListHandler : TraktCommandBase, IRequestHandler<Add
         {
             Validation<BaseError, Parameters> validation = ValidateUrl(request);
             return await validation.Match(
-                DoAdd,
+                p => DoAdd(p, cancellationToken),
                 error => Task.FromResult<Either<BaseError, Unit>>(error.Join()));
         }
         finally
@@ -82,9 +82,9 @@ public partial class AddTraktListHandler : TraktCommandBase, IRequestHandler<Add
         return match;
     }
 
-    private async Task<Either<BaseError, Unit>> DoAdd(Parameters parameters)
+    private async Task<Either<BaseError, Unit>> DoAdd(Parameters parameters, CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         Logger.LogDebug("Searching for trakt list: {User}/{List}", parameters.User, parameters.List);
         Either<BaseError, TraktList> maybeList = await TraktApiClient.GetUserList(parameters.User, parameters.List);
@@ -92,7 +92,7 @@ public partial class AddTraktListHandler : TraktCommandBase, IRequestHandler<Add
         foreach (TraktList list in maybeList.RightToSeq())
         {
             list.User = parameters.User.ToLowerInvariant();
-            maybeList = await SaveList(dbContext, list);
+            maybeList = await SaveList(dbContext, list, cancellationToken);
         }
 
         foreach (TraktList list in maybeList.RightToSeq())
@@ -103,7 +103,7 @@ public partial class AddTraktListHandler : TraktCommandBase, IRequestHandler<Add
         foreach (TraktList list in maybeList.RightToSeq())
         {
             // match list items (and update in search index)
-            maybeList = await MatchListItems(dbContext, list);
+            maybeList = await MatchListItems(dbContext, list, cancellationToken);
         }
 
         return maybeList.Map(_ => Unit.Default);

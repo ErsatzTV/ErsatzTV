@@ -79,7 +79,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         long ptsOffset,
         Option<int> targetFramerate,
         Option<string> customReportsFolder,
-        Action<FFmpegPipeline> pipelineAction)
+        Action<FFmpegPipeline> pipelineAction,
+        CancellationToken cancellationToken)
     {
         MediaStream videoStream = await _ffmpegStreamSelector.SelectVideoStream(videoVersion);
 
@@ -130,14 +131,16 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                     channel.StreamingMode,
                     channel,
                     preferredAudioLanguage,
-                    preferredAudioTitle);
+                    preferredAudioTitle,
+                    cancellationToken);
 
             maybeSubtitle =
                 await _ffmpegStreamSelector.SelectSubtitleStream(
                     allSubtitles.ToImmutableList(),
                     channel,
                     preferredSubtitleLanguage,
-                    subtitleMode);
+                    subtitleMode,
+                    cancellationToken);
         }
 
         if (channel.StreamSelectorMode is ChannelStreamSelectorMode.Troubleshooting && maybeSubtitle.IsNone)
@@ -248,7 +251,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
 
                 // override with setting if applicable
                 Option<OutputFormatKind> maybeOutputFormat = await _configElementRepository
-                    .GetValue<OutputFormatKind>(ConfigElementKey.FFmpegHlsDirectOutputFormat);
+                    .GetValue<OutputFormatKind>(ConfigElementKey.FFmpegHlsDirectOutputFormat, cancellationToken);
                 foreach (OutputFormatKind of in maybeOutputFormat)
                 {
                     outputFormat = of;

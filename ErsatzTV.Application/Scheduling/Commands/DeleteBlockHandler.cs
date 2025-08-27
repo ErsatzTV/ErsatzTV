@@ -14,7 +14,7 @@ public class DeleteBlockHandler(IDbContextFactory<TvContext> dbContextFactory)
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         Option<Block> maybeBlock = await dbContext.Blocks
-            .SelectOneAsync(p => p.Id, p => p.Id == request.BlockId);
+            .SelectOneAsync(p => p.Id, p => p.Id == request.BlockId, cancellationToken);
 
         foreach (Block block in maybeBlock)
         {

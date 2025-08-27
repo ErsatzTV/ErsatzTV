@@ -15,16 +15,16 @@ public sealed class SmartCollectionCache(IDbContextFactory<TvContext> dbContextF
 
     public void Dispose() => _semaphoreSlim.Dispose();
 
-    public async Task Refresh()
+    public async Task Refresh(CancellationToken cancellationToken)
     {
-        await _semaphoreSlim.WaitAsync();
+        await _semaphoreSlim.WaitAsync(cancellationToken);
 
         try
         {
-            await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
+            await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
             List<SmartCollection> smartCollections = await dbContext.SmartCollections
                 .AsNoTracking()
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
 
             _data.Clear();
             _graph.Clear();
@@ -53,9 +53,9 @@ public sealed class SmartCollectionCache(IDbContextFactory<TvContext> dbContextF
         }
     }
 
-    public async Task<bool> HasCycle(string name)
+    public async Task<bool> HasCycle(string name, CancellationToken cancellationToken)
     {
-        await _semaphoreSlim.WaitAsync();
+        await _semaphoreSlim.WaitAsync(cancellationToken);
 
         try
         {
@@ -67,9 +67,9 @@ public sealed class SmartCollectionCache(IDbContextFactory<TvContext> dbContextF
         }
     }
 
-    public async Task<Option<string>> GetQuery(string name)
+    public async Task<Option<string>> GetQuery(string name, CancellationToken cancellationToken)
     {
-        await _semaphoreSlim.WaitAsync();
+        await _semaphoreSlim.WaitAsync(cancellationToken);
 
         try
         {

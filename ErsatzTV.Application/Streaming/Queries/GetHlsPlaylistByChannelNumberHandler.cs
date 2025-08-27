@@ -27,10 +27,8 @@ public class GetHlsPlaylistByChannelNumberHandler :
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         DateTimeOffset now = DateTimeOffset.Now;
-        Validation<BaseError, Parameters> validation = await Validate(dbContext, request, now);
-        return await LanguageExtensions.Apply(
-            validation,
-            parameters => GetPlaylist(dbContext, request, parameters, now));
+        Validation<BaseError, Parameters> validation = await Validate(dbContext, request, now, cancellationToken);
+        return await validation.Apply(parameters => GetPlaylist(dbContext, request, parameters, now));
     }
 
     private Task<string> GetPlaylist(
@@ -58,15 +56,17 @@ public class GetHlsPlaylistByChannelNumberHandler :
     private static Task<Validation<BaseError, Parameters>> Validate(
         TvContext dbContext,
         GetHlsPlaylistByChannelNumber request,
-        DateTimeOffset now) =>
-        ChannelMustExist(dbContext, request)
+        DateTimeOffset now,
+        CancellationToken cancellationToken) =>
+        ChannelMustExist(dbContext, request, cancellationToken)
             .BindT(channel => PlayoutItemMustExist(dbContext, channel, now));
 
     private static Task<Validation<BaseError, Channel>> ChannelMustExist(
         TvContext dbContext,
-        GetHlsPlaylistByChannelNumber request) =>
+        GetHlsPlaylistByChannelNumber request,
+        CancellationToken cancellationToken) =>
         dbContext.Channels
-            .SelectOneAsync(c => c.Number, c => c.Number == request.ChannelNumber)
+            .SelectOneAsync(c => c.Number, c => c.Number == request.ChannelNumber, cancellationToken)
             .Map(o => o.ToValidation<BaseError>($"Channel number {request.ChannelNumber} does not exist."));
 
     private static Task<Validation<BaseError, Parameters>> PlayoutItemMustExist(

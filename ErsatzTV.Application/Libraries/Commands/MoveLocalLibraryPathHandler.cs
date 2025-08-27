@@ -38,17 +38,17 @@ public class MoveLocalLibraryPathHandler : IRequestHandler<MoveLocalLibraryPath,
         CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        Validation<BaseError, Parameters> validation = await Validate(dbContext, request);
-        return await validation.Apply(parameters => MovePath(dbContext, parameters));
+        Validation<BaseError, Parameters> validation = await Validate(dbContext, request, cancellationToken);
+        return await validation.Apply(parameters => MovePath(dbContext, parameters, cancellationToken));
     }
 
-    private async Task<Unit> MovePath(TvContext dbContext, Parameters parameters)
+    private async Task<Unit> MovePath(TvContext dbContext, Parameters parameters, CancellationToken cancellationToken)
     {
         LibraryPath path = parameters.LibraryPath;
         LocalLibrary newLibrary = parameters.Library;
 
         path.LibraryId = newLibrary.Id;
-        if (await dbContext.SaveChangesAsync() > 0)
+        if (await dbContext.SaveChangesAsync(cancellationToken) > 0)
         {
             List<int> ids = await dbContext.Connection.QueryAsync<int>(
                     @"SELECT MediaItem.Id FROM MediaItem WHERE LibraryPathId = @LibraryPathId",
@@ -57,14 +57,14 @@ public class MoveLocalLibraryPathHandler : IRequestHandler<MoveLocalLibraryPath,
 
             foreach (int id in ids)
             {
-                Option<MediaItem> maybeMediaItem = await _searchRepository.GetItemToIndex(id);
+                Option<MediaItem> maybeMediaItem = await _searchRepository.GetItemToIndex(id, cancellationToken);
                 foreach (MediaItem mediaItem in maybeMediaItem)
                 {
                     _logger.LogInformation("Moving item at {Path}", await GetPath(dbContext, mediaItem));
                     await _searchIndex.UpdateItems(
                         _searchRepository,
                         _fallbackMetadataProvider,
-                        new List<MediaItem> { mediaItem });
+                        [mediaItem]);
                 }
             }
         }
@@ -74,24 +74,28 @@ public class MoveLocalLibraryPathHandler : IRequestHandler<MoveLocalLibraryPath,
 
     private static async Task<Validation<BaseError, Parameters>> Validate(
         TvContext dbContext,
-        MoveLocalLibraryPath request) =>
-        (await LibraryPathMustExist(dbContext, request), await LocalLibraryMustExist(dbContext, request))
+        MoveLocalLibraryPath request,
+        CancellationToken cancellationToken) =>
+        (await LibraryPathMustExist(dbContext, request, cancellationToken),
+            await LocalLibraryMustExist(dbContext, request, cancellationToken))
         .Apply((libraryPath, localLibrary) => new Parameters(libraryPath, localLibrary));
 
     private static Task<Validation<BaseError, LibraryPath>> LibraryPathMustExist(
         TvContext dbContext,
-        MoveLocalLibraryPath request) =>
+        MoveLocalLibraryPath request,
+        CancellationToken cancellationToken) =>
         dbContext.LibraryPaths
             .Include(lp => lp.Library)
-            .SelectOneAsync(c => c.Id, c => c.Id == request.LibraryPathId)
+            .SelectOneAsync(c => c.Id, c => c.Id == request.LibraryPathId, cancellationToken)
             .Map(o => o.ToValidation<BaseError>("LibraryPath does not exist."));
 
     private static Task<Validation<BaseError, LocalLibrary>> LocalLibraryMustExist(
         TvContext dbContext,
-        MoveLocalLibraryPath request) =>
+        MoveLocalLibraryPath request,
+        CancellationToken cancellationToken) =>
         dbContext.LocalLibraries
             .Include(ll => ll.Paths)
-            .SelectOneAsync(a => a.Id, a => a.Id == request.TargetLibraryId)
+            .SelectOneAsync(a => a.Id, a => a.Id == request.TargetLibraryId, cancellationToken)
             .Map(o => o.ToValidation<BaseError>("LocalLibrary does not exist"));
 
     private static async Task<string> GetPath(TvContext dbContext, MediaItem mediaItem) =>

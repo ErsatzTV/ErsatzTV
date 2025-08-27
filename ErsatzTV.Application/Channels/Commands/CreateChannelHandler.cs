@@ -22,7 +22,7 @@ public class CreateChannelHandler(
         CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
-        Validation<BaseError, Channel> validation = await Validate(dbContext, request);
+        Validation<BaseError, Channel> validation = await Validate(dbContext, request, cancellationToken);
         return await validation.Apply(c => PersistChannel(dbContext, c));
     }
 
@@ -35,11 +35,11 @@ public class CreateChannelHandler(
         return new CreateChannelResult(channel.Id);
     }
 
-    private static async Task<Validation<BaseError, Channel>> Validate(TvContext dbContext, CreateChannel request) =>
-        (ValidateName(request), await ValidateNumber(dbContext, request),
-            await FFmpegProfileMustExist(dbContext, request),
-            await WatermarkMustExist(dbContext, request),
-            await FillerPresetMustExist(dbContext, request))
+    private static async Task<Validation<BaseError, Channel>> Validate(TvContext dbContext, CreateChannel request, CancellationToken cancellationToken) =>
+        (ValidateName(request), await ValidateNumber(dbContext, request, cancellationToken),
+            await FFmpegProfileMustExist(dbContext, request, cancellationToken),
+            await WatermarkMustExist(dbContext, request, cancellationToken),
+            await FillerPresetMustExist(dbContext, request, cancellationToken))
         .Apply((
             name,
             number,
@@ -113,10 +113,11 @@ public class CreateChannelHandler(
 
     private static async Task<Validation<BaseError, string>> ValidateNumber(
         TvContext dbContext,
-        CreateChannel createChannel)
+        CreateChannel createChannel,
+        CancellationToken cancellationToken)
     {
         Option<Channel> maybeExistingChannel = await dbContext.Channels
-            .SelectOneAsync(c => c.Number, c => c.Number == createChannel.Number);
+            .SelectOneAsync(c => c.Number, c => c.Number == createChannel.Number, cancellationToken);
         return maybeExistingChannel.Match<Validation<BaseError, string>>(
             _ => BaseError.New("Channel number must be unique"),
             () =>
@@ -132,9 +133,10 @@ public class CreateChannelHandler(
 
     private static Task<Validation<BaseError, int>> FFmpegProfileMustExist(
         TvContext dbContext,
-        CreateChannel createChannel) =>
+        CreateChannel createChannel,
+        CancellationToken cancellationToken) =>
         dbContext.FFmpegProfiles
-            .CountAsync(p => p.Id == createChannel.FFmpegProfileId)
+            .CountAsync(p => p.Id == createChannel.FFmpegProfileId, cancellationToken)
             .Map(Optional)
             .Filter(c => c > 0)
             .MapT(_ => createChannel.FFmpegProfileId)
@@ -142,7 +144,8 @@ public class CreateChannelHandler(
 
     private static async Task<Validation<BaseError, Option<int>>> WatermarkMustExist(
         TvContext dbContext,
-        CreateChannel createChannel)
+        CreateChannel createChannel,
+        CancellationToken cancellationToken)
     {
         if (createChannel.WatermarkId is null)
         {
@@ -150,7 +153,7 @@ public class CreateChannelHandler(
         }
 
         return await dbContext.ChannelWatermarks
-            .CountAsync(w => w.Id == createChannel.WatermarkId)
+            .CountAsync(w => w.Id == createChannel.WatermarkId, cancellationToken)
             .Map(Optional)
             .Filter(c => c > 0)
             .MapT(_ => Optional(createChannel.WatermarkId))
@@ -159,7 +162,8 @@ public class CreateChannelHandler(
 
     private static async Task<Validation<BaseError, Option<int>>> FillerPresetMustExist(
         TvContext dbContext,
-        CreateChannel createChannel)
+        CreateChannel createChannel,
+        CancellationToken cancellationToken)
     {
         if (createChannel.FallbackFillerId is null)
         {
@@ -168,7 +172,7 @@ public class CreateChannelHandler(
 
         return await dbContext.FillerPresets
             .Filter(fp => fp.FillerKind == FillerKind.Fallback)
-            .CountAsync(w => w.Id == createChannel.FallbackFillerId)
+            .CountAsync(w => w.Id == createChannel.FallbackFillerId, cancellationToken)
             .Map(Optional)
             .Filter(c => c > 0)
             .MapT(_ => Optional(createChannel.FallbackFillerId))

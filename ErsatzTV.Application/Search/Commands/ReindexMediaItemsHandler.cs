@@ -22,7 +22,7 @@ public class ReindexMediaItemsHandler : IRequestHandler<ReindexMediaItems>
 
     public async Task Handle(ReindexMediaItems request, CancellationToken cancellationToken)
     {
-        await _searchIndex.RebuildItems(_cachingSearchRepository, _fallbackMetadataProvider, request.MediaItemIds);
+        await _searchIndex.RebuildItems(_cachingSearchRepository, _fallbackMetadataProvider, request.MediaItemIds, cancellationToken);
         _searchIndex.Commit();
     }
 }

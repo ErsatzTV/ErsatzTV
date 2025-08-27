@@ -36,7 +36,7 @@ public class AddMediaItemToCollectionHandler :
         CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        Validation<BaseError, Parameters> validation = await Validate(dbContext, request);
+        Validation<BaseError, Parameters> validation = await Validate(dbContext, request, cancellationToken);
         return await validation.Apply(parameters => ApplyAddMediaItemRequest(dbContext, parameters));
     }
 
@@ -60,23 +60,27 @@ public class AddMediaItemToCollectionHandler :
 
     private static async Task<Validation<BaseError, Parameters>> Validate(
         TvContext dbContext,
-        AddMediaItemToCollection request) =>
-        (await CollectionMustExist(dbContext, request), await ValidateMediaItem(dbContext, request))
+        AddMediaItemToCollection request,
+        CancellationToken cancellationToken) =>
+        (await CollectionMustExist(dbContext, request, cancellationToken),
+            await ValidateMediaItem(dbContext, request, cancellationToken))
         .Apply((collection, episode) => new Parameters(collection, episode));
 
     private static Task<Validation<BaseError, Collection>> CollectionMustExist(
         TvContext dbContext,
-        AddMediaItemToCollection request) =>
+        AddMediaItemToCollection request,
+        CancellationToken cancellationToken) =>
         dbContext.Collections
             .Include(c => c.MediaItems)
-            .SelectOneAsync(c => c.Id, c => c.Id == request.CollectionId)
+            .SelectOneAsync(c => c.Id, c => c.Id == request.CollectionId, cancellationToken)
             .Map(o => o.ToValidation<BaseError>("Collection does not exist."));
 
     private static Task<Validation<BaseError, MediaItem>> ValidateMediaItem(
         TvContext dbContext,
-        AddMediaItemToCollection request) =>
+        AddMediaItemToCollection request,
+        CancellationToken cancellationToken) =>
         dbContext.MediaItems
-            .SelectOneAsync(m => m.Id, e => e.Id == request.MediaItemId)
+            .SelectOneAsync(m => m.Id, e => e.Id == request.MediaItemId, cancellationToken)
             .Map(o => o.ToValidation<BaseError>("MediaItem does not exist"));
 
     private sealed record Parameters(Collection Collection, MediaItem MediaItem);

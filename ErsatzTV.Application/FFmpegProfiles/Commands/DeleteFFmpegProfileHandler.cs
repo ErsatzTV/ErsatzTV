@@ -23,7 +23,7 @@ public class DeleteFFmpegProfileHandler : IRequestHandler<DeleteFFmpegProfile, E
         CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        Validation<BaseError, FFmpegProfile> validation = await FFmpegProfileMustExist(dbContext, request);
+        Validation<BaseError, FFmpegProfile> validation = await FFmpegProfileMustExist(dbContext, request, cancellationToken);
         return await validation.Apply(p => DoDeletion(dbContext, p));
     }
 
@@ -37,8 +37,9 @@ public class DeleteFFmpegProfileHandler : IRequestHandler<DeleteFFmpegProfile, E
 
     private static Task<Validation<BaseError, FFmpegProfile>> FFmpegProfileMustExist(
         TvContext dbContext,
-        DeleteFFmpegProfile request) =>
+        DeleteFFmpegProfile request,
+        CancellationToken cancellationToken) =>
         dbContext.FFmpegProfiles
-            .SelectOneAsync(p => p.Id, p => p.Id == request.FFmpegProfileId)
+            .SelectOneAsync(p => p.Id, p => p.Id == request.FFmpegProfileId, cancellationToken)
             .Map(o => o.ToValidation<BaseError>($"FFmpegProfile {request.FFmpegProfileId} does not exist"));
 }

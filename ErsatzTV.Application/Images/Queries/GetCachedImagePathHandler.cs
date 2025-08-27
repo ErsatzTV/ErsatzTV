@@ -30,15 +30,16 @@ public class
         GetCachedImagePath request,
         CancellationToken cancellationToken)
     {
-        Validation<BaseError, string> validation = await Validate();
+        Validation<BaseError, string> validation = await Validate(cancellationToken);
         return await validation.Match(
-            ffmpegPath => Handle(ffmpegPath, request),
+            ffmpegPath => Handle(ffmpegPath, request, cancellationToken),
             error => Task.FromResult<Either<BaseError, CachedImagePathViewModel>>(error.Join()));
     }
 
     private async Task<Either<BaseError, CachedImagePathViewModel>> Handle(
         string ffmpegPath,
-        GetCachedImagePath request)
+        GetCachedImagePath request,
+        CancellationToken cancellationToken)
     {
         try
         {
@@ -75,7 +76,7 @@ public class
                         withExtension,
                         request.MaxHeight.Value);
 
-                    CommandResult resize = await process.ExecuteAsync();
+                    CommandResult resize = await process.ExecuteAsync(cancellationToken);
 
                     if (resize.ExitCode != 0)
                     {
@@ -106,11 +107,11 @@ public class
         }
     }
 
-    private async Task<Validation<BaseError, string>> Validate() =>
-        await ValidateFFmpegPath();
+    private async Task<Validation<BaseError, string>> Validate(CancellationToken cancellationToken) =>
+        await ValidateFFmpegPath(cancellationToken);
 
-    private Task<Validation<BaseError, string>> ValidateFFmpegPath() =>
-        _configElementRepository.GetValue<string>(ConfigElementKey.FFmpegPath)
+    private Task<Validation<BaseError, string>> ValidateFFmpegPath(CancellationToken cancellationToken) =>
+        _configElementRepository.GetValue<string>(ConfigElementKey.FFmpegPath, cancellationToken)
             .FilterT(File.Exists)
             .Map(ffmpegPath => ffmpegPath.ToValidation<BaseError>("FFmpeg path does not exist on the file system"));
 }

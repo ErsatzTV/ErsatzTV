@@ -28,7 +28,7 @@ public class CreateClassicPlayoutHandler : IRequestHandler<CreateClassicPlayout,
         CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        Validation<BaseError, Playout> validation = await Validate(dbContext, request);
+        Validation<BaseError, Playout> validation = await Validate(dbContext, request, cancellationToken);
         return await validation.Apply(playout => PersistPlayout(dbContext, playout));
     }
 
@@ -48,8 +48,10 @@ public class CreateClassicPlayoutHandler : IRequestHandler<CreateClassicPlayout,
 
     private static async Task<Validation<BaseError, Playout>> Validate(
         TvContext dbContext,
-        CreateClassicPlayout request) =>
-        (await ValidateChannel(dbContext, request), await ValidateProgramSchedule(dbContext, request),
+        CreateClassicPlayout request,
+        CancellationToken cancellationToken) =>
+        (await ValidateChannel(dbContext, request, cancellationToken),
+            await ValidateProgramSchedule(dbContext, request, cancellationToken),
             ValidateScheduleKind(request))
         .Apply((channel, programSchedule, scheduleKind) => new Playout
         {
@@ -60,10 +62,11 @@ public class CreateClassicPlayoutHandler : IRequestHandler<CreateClassicPlayout,
 
     private static Task<Validation<BaseError, Channel>> ValidateChannel(
         TvContext dbContext,
-        CreateClassicPlayout createClassicPlayout) =>
+        CreateClassicPlayout createClassicPlayout,
+        CancellationToken cancellationToken) =>
         dbContext.Channels
             .Include(c => c.Playouts)
-            .SelectOneAsync(c => c.Id, c => c.Id == createClassicPlayout.ChannelId)
+            .SelectOneAsync(c => c.Id, c => c.Id == createClassicPlayout.ChannelId, cancellationToken)
             .Map(o => o.ToValidation<BaseError>("Channel does not exist"))
             .BindT(ChannelMustNotHavePlayouts);
 
@@ -75,10 +78,11 @@ public class CreateClassicPlayoutHandler : IRequestHandler<CreateClassicPlayout,
 
     private static Task<Validation<BaseError, ProgramSchedule>> ValidateProgramSchedule(
         TvContext dbContext,
-        CreateClassicPlayout createClassicPlayout) =>
+        CreateClassicPlayout createClassicPlayout,
+        CancellationToken cancellationToken) =>
         dbContext.ProgramSchedules
             .Include(ps => ps.Items)
-            .SelectOneAsync(ps => ps.Id, ps => ps.Id == createClassicPlayout.ProgramScheduleId)
+            .SelectOneAsync(ps => ps.Id, ps => ps.Id == createClassicPlayout.ProgramScheduleId, cancellationToken)
             .Map(o => o.ToValidation<BaseError>("Program schedule does not exist"))
             .BindT(ProgramScheduleMustHaveItems);
 

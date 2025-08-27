@@ -14,7 +14,7 @@ public class DeletePlaylistHandler(IDbContextFactory<TvContext> dbContextFactory
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         Option<Playlist> maybePlaylist = await dbContext.Playlists
-            .SelectOneAsync(p => p.Id, p => p.Id == request.PlaylistId);
+            .SelectOneAsync(p => p.Id, p => p.Id == request.PlaylistId, cancellationToken);
 
         foreach (Playlist playlist in maybePlaylist)
         {

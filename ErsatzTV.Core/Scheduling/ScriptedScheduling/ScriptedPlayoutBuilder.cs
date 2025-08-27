@@ -39,7 +39,7 @@ public class ScriptedPlayoutBuilder(
 
             logger.LogInformation("Building scripted playout...");
 
-            int daysToBuild = await GetDaysToBuild();
+            int daysToBuild = await GetDaysToBuild(cancellationToken);
             DateTimeOffset finish = start.AddDays(daysToBuild);
 
             schedulingEngine.WithPlayoutId(playout.Id);
@@ -72,8 +72,8 @@ public class ScriptedPlayoutBuilder(
                 engine.SetSearchPaths(paths);
             }
 
-            var contentModule = new ContentModule(schedulingEngine);
-            var playoutModule = new PlayoutModule(schedulingEngine);
+            var contentModule = new ContentModule(schedulingEngine, token);
+            var playoutModule = new PlayoutModule(schedulingEngine, token);
 
             engine.ExecuteFile(playout.ScheduleFile, scope);
 
@@ -145,9 +145,9 @@ public class ScriptedPlayoutBuilder(
         return result;
     }
 
-    private async Task<int> GetDaysToBuild() =>
+    private async Task<int> GetDaysToBuild(CancellationToken cancellationToken) =>
         await configElementRepository
-            .GetValue<int>(ConfigElementKey.PlayoutDaysToBuild)
+            .GetValue<int>(ConfigElementKey.PlayoutDaysToBuild, cancellationToken)
             .IfNoneAsync(2);
 
     private static PlayoutBuildResult MergeResult(PlayoutBuildResult result, ISchedulingEngineState state) =>

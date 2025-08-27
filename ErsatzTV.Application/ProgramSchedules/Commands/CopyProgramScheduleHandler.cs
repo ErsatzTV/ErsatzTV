@@ -22,7 +22,7 @@ public class
         try
         {
             await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-            Validation<BaseError, ProgramSchedule> validation = await Validate(dbContext, request);
+            Validation<BaseError, ProgramSchedule> validation = await Validate(dbContext, request, cancellationToken);
             return await validation.Apply(p => PerformCopy(dbContext, p, request, cancellationToken));
         }
         catch (Exception ex)
@@ -68,18 +68,20 @@ public class
 
     private static async Task<Validation<BaseError, ProgramSchedule>> Validate(
         TvContext dbContext,
-        CopyProgramSchedule request) =>
-        (await ScheduleMustExist(dbContext, request), await ValidateName(dbContext, request))
+        CopyProgramSchedule request,
+        CancellationToken cancellationToken) =>
+        (await ScheduleMustExist(dbContext, request, cancellationToken), await ValidateName(dbContext, request))
         .Apply((programSchedule, _) => programSchedule);
 
     private static Task<Validation<BaseError, ProgramSchedule>> ScheduleMustExist(
         TvContext dbContext,
-        CopyProgramSchedule request) =>
+        CopyProgramSchedule request,
+        CancellationToken cancellationToken) =>
         dbContext.ProgramSchedules
             .AsNoTracking()
             .Include(ps => ps.Items)
             .ThenInclude(ps => ps.ProgramScheduleItemWatermarks)
-            .SelectOneAsync(p => p.Id, p => p.Id == request.ProgramScheduleId)
+            .SelectOneAsync(p => p.Id, p => p.Id == request.ProgramScheduleId, cancellationToken)
             .Map(o => o.ToValidation<BaseError>("Schedule does not exist."));
 
     private static async Task<Validation<BaseError, string>> ValidateName(

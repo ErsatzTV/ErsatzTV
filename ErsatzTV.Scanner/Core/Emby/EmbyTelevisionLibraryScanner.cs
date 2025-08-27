@@ -237,7 +237,8 @@ public class EmbyTelevisionLibraryScanner : MediaServerTelevisionLibraryScanner<
 
     protected override Task<Either<BaseError, MediaItemScanResult<EmbyEpisode>>> UpdateMetadata(
         MediaItemScanResult<EmbyEpisode> result,
-        EpisodeMetadata fullMetadata) =>
+        EpisodeMetadata fullMetadata,
+        CancellationToken cancellationToken) =>
         Task.FromResult<Either<BaseError, MediaItemScanResult<EmbyEpisode>>>(result);
 
     private async Task<Either<BaseError, Unit>> ScanSingleShowInternal(

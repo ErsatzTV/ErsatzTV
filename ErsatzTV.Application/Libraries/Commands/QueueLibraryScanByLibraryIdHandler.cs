@@ -25,7 +25,7 @@ public class QueueLibraryScanByLibraryIdHandler(
 
         Option<Library> maybeLibrary = await dbContext.Libraries
             .AsNoTracking()
-            .SelectOneAsync(l => l.Id, l => l.Id == request.LibraryId);
+            .SelectOneAsync(l => l.Id, l => l.Id == request.LibraryId, cancellationToken);
 
         foreach (Library library in maybeLibrary)
         {

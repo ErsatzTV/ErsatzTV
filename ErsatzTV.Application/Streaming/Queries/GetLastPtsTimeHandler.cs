@@ -38,14 +38,17 @@ public class GetLastPtsTimeHandler : IRequestHandler<GetLastPtsTime, Either<Base
         GetLastPtsTime request,
         CancellationToken cancellationToken)
     {
-        Validation<BaseError, RequestParameters> validation = await Validate(request);
+        Validation<BaseError, RequestParameters> validation = await Validate(request, cancellationToken);
         return await validation.Match(
             parameters => Handle(parameters, cancellationToken),
             error => Task.FromResult<Either<BaseError, PtsTime>>(error.Join()));
     }
 
-    private async Task<Validation<BaseError, RequestParameters>> Validate(GetLastPtsTime request) =>
-        await ValidateFFprobePath().MapT(ffprobePath => new RequestParameters(request.ChannelNumber, ffprobePath));
+    private async Task<Validation<BaseError, RequestParameters>> Validate(
+        GetLastPtsTime request,
+        CancellationToken cancellationToken) =>
+        await ValidateFFprobePath(cancellationToken)
+            .MapT(ffprobePath => new RequestParameters(request.ChannelNumber, ffprobePath));
 
     private async Task<Either<BaseError, PtsTime>> Handle(
         RequestParameters parameters,
@@ -113,8 +116,8 @@ public class GetLastPtsTimeHandler : IRequestHandler<GetLastPtsTime, Either<Base
         return Optional(directory.GetFiles("*.ts").OrderByDescending(f => f.Name).FirstOrDefault());
     }
 
-    private Task<Validation<BaseError, string>> ValidateFFprobePath() =>
-        _configElementRepository.GetValue<string>(ConfigElementKey.FFprobePath)
+    private Task<Validation<BaseError, string>> ValidateFFprobePath(CancellationToken cancellationToken) =>
+        _configElementRepository.GetValue<string>(ConfigElementKey.FFprobePath, cancellationToken)
             .FilterT(File.Exists)
             .Map(ffprobePath => ffprobePath.ToValidation<BaseError>("FFprobe path does not exist on the file system"));
 

@@ -23,11 +23,15 @@ public class UpdateChannelHandler(
         CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
-        Validation<BaseError, Channel> validation = await Validate(dbContext, request);
-        return await validation.Apply(c => ApplyUpdateRequest(dbContext, c, request));
+        Validation<BaseError, Channel> validation = await Validate(dbContext, request, cancellationToken);
+        return await validation.Apply(c => ApplyUpdateRequest(dbContext, c, request, cancellationToken));
     }
 
-    private async Task<ChannelViewModel> ApplyUpdateRequest(TvContext dbContext, Channel c, UpdateChannel update)
+    private async Task<ChannelViewModel> ApplyUpdateRequest(
+        TvContext dbContext,
+        Channel c,
+        UpdateChannel update,
+        CancellationToken cancellationToken)
     {
         c.Name = update.Name;
         c.Number = update.Number;
@@ -86,7 +90,7 @@ public class UpdateChannelHandler(
         {
             await dbContext.Entry(c)
                 .Collection(channel => channel.Artwork)
-                .LoadAsync();
+                .LoadAsync(cancellationToken);
 
             foreach (Artwork artwork in c.Artwork.Where(x => x.ArtworkKind is ArtworkKind.Logo).ToList())
             {
@@ -99,38 +103,42 @@ public class UpdateChannelHandler(
         c.StreamingMode = update.StreamingMode;
         c.WatermarkId = update.WatermarkId;
         c.FallbackFillerId = update.FallbackFillerId;
-        await dbContext.SaveChangesAsync();
+        await dbContext.SaveChangesAsync(cancellationToken);
 
         searchTargets.SearchTargetsChanged();
 
         if (c.SubtitleMode != ChannelSubtitleMode.None)
         {
             Option<Playout> maybePlayout = await dbContext.Playouts
-                .SelectOneAsync(p => p.ChannelId, p => p.ChannelId == c.Id);
+                .SelectOneAsync(p => p.ChannelId, p => p.ChannelId == c.Id, cancellationToken);
 
             foreach (Playout playout in maybePlayout)
             {
-                await workerChannel.WriteAsync(new ExtractEmbeddedSubtitles(playout.Id));
+                await workerChannel.WriteAsync(new ExtractEmbeddedSubtitles(playout.Id), cancellationToken);
             }
         }
 
-        await workerChannel.WriteAsync(new RefreshChannelList());
+        await workerChannel.WriteAsync(new RefreshChannelList(), cancellationToken);
 
         return ProjectToViewModel(c);
     }
 
-    private static async Task<Validation<BaseError, Channel>> Validate(TvContext dbContext, UpdateChannel request) =>
-        (await ChannelMustExist(dbContext, request), ValidateName(request),
-            await ValidateNumber(dbContext, request))
+    private static async Task<Validation<BaseError, Channel>> Validate(
+        TvContext dbContext,
+        UpdateChannel request,
+        CancellationToken cancellationToken) =>
+        (await ChannelMustExist(dbContext, request, cancellationToken), ValidateName(request),
+            await ValidateNumber(dbContext, request, cancellationToken))
         .Apply((channelToUpdate, _, _) => channelToUpdate);
 
     private static Task<Validation<BaseError, Channel>> ChannelMustExist(
         TvContext dbContext,
-        UpdateChannel updateChannel) =>
+        UpdateChannel updateChannel,
+        CancellationToken cancellationToken) =>
         dbContext.Channels
             .Include(c => c.Artwork)
             .Include(c => c.Watermark)
-            .SelectOneAsync(c => c.Id, c => c.Id == updateChannel.ChannelId)
+            .SelectOneAsync(c => c.Id, c => c.Id == updateChannel.ChannelId, cancellationToken)
             .Map(o => o.ToValidation<BaseError>("Channel does not exist."));
 
     private static Validation<BaseError, string> ValidateName(UpdateChannel updateChannel) =>
@@ -139,10 +147,11 @@ public class UpdateChannelHandler(
 
     private static async Task<Validation<BaseError, string>> ValidateNumber(
         TvContext dbContext,
-        UpdateChannel updateChannel)
+        UpdateChannel updateChannel,
+        CancellationToken cancellationToken)
     {
         int matchId = await dbContext.Channels
-            .SelectOneAsync(c => c.Number, c => c.Number == updateChannel.Number)
+            .SelectOneAsync(c => c.Number, c => c.Number == updateChannel.Number, cancellationToken)
             .Match(c => c.Id, () => updateChannel.ChannelId);
 
         if (matchId == updateChannel.ChannelId)

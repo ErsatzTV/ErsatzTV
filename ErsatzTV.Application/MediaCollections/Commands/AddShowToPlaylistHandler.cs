@@ -14,7 +14,7 @@ public class AddShowToPlaylistHandler(IDbContextFactory<TvContext> dbContextFact
         CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
-        Validation<BaseError, Parameters> validation = await Validate(dbContext, request);
+        Validation<BaseError, Parameters> validation = await Validate(dbContext, request, cancellationToken);
         return await validation.Apply(parameters => ApplyAddShowRequest(dbContext, parameters));
     }
 
@@ -36,23 +36,27 @@ public class AddShowToPlaylistHandler(IDbContextFactory<TvContext> dbContextFact
 
     private static async Task<Validation<BaseError, Parameters>> Validate(
         TvContext dbContext,
-        AddShowToPlaylist request) =>
-        (await PlaylistMustExist(dbContext, request), await ValidateShow(dbContext, request))
+        AddShowToPlaylist request,
+        CancellationToken cancellationToken) =>
+        (await PlaylistMustExist(dbContext, request, cancellationToken),
+            await ValidateShow(dbContext, request, cancellationToken))
         .Apply((collection, episode) => new Parameters(collection, episode));
 
     private static Task<Validation<BaseError, Playlist>> PlaylistMustExist(
         TvContext dbContext,
-        AddShowToPlaylist request) =>
+        AddShowToPlaylist request,
+        CancellationToken cancellationToken) =>
         dbContext.Playlists
             .Include(c => c.Items)
-            .SelectOneAsync(c => c.Id, c => c.Id == request.PlaylistId)
+            .SelectOneAsync(c => c.Id, c => c.Id == request.PlaylistId, cancellationToken)
             .Map(o => o.ToValidation<BaseError>("Playlist does not exist."));
 
     private static Task<Validation<BaseError, Show>> ValidateShow(
         TvContext dbContext,
-        AddShowToPlaylist request) =>
+        AddShowToPlaylist request,
+        CancellationToken cancellationToken) =>
         dbContext.Shows
-            .SelectOneAsync(m => m.Id, e => e.Id == request.ShowId)
+            .SelectOneAsync(m => m.Id, e => e.Id == request.ShowId, cancellationToken)
             .Map(o => o.ToValidation<BaseError>("Show does not exist"));
 
     private sealed record Parameters(Playlist Playlist, Show Show);

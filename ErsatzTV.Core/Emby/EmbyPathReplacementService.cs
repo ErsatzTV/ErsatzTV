@@ -24,18 +24,19 @@ public class EmbyPathReplacementService : IEmbyPathReplacementService
         _logger = logger;
     }
 
-    public async Task<string> GetReplacementEmbyPath(int libraryPathId, string path, bool log = true)
+    public async Task<string> GetReplacementEmbyPath(
+        int libraryPathId,
+        string path,
+        CancellationToken cancellationToken,
+        bool log = true)
     {
         List<EmbyPathReplacement> replacements =
-            await _mediaSourceRepository.GetEmbyPathReplacementsByLibraryId(libraryPathId);
+            await _mediaSourceRepository.GetEmbyPathReplacementsByLibraryId(libraryPathId, cancellationToken);
 
         return GetReplacementEmbyPath(replacements, path, log);
     }
 
-    public string GetReplacementEmbyPath(
-        List<EmbyPathReplacement> pathReplacements,
-        string path,
-        bool log = true) =>
+    public string GetReplacementEmbyPath(List<EmbyPathReplacement> pathReplacements, string path, bool log = true) =>
         GetReplacementEmbyPath(pathReplacements, path, _runtimeInfo.IsOSPlatform(OSPlatform.Windows), log);
 
     public string ReplaceNetworkPath(

@@ -71,20 +71,26 @@ public class EnumeratorCache(IMediaCollectionRepository mediaCollectionRepositor
         switch (content)
         {
             case YamlPlayoutContentSearchItem search:
-                items = await mediaCollectionRepository.GetSmartCollectionItems(search.Query, string.Empty);
+                items = await mediaCollectionRepository.GetSmartCollectionItems(search.Query, string.Empty, cancellationToken);
                 break;
             case YamlPlayoutContentShowItem show:
                 items = await mediaCollectionRepository.GetShowItemsByShowGuids(
                     show.Guids.Map(g => $"{g.Source}://{g.Value}").ToList());
                 break;
             case YamlPlayoutContentCollectionItem collection:
-                items = await mediaCollectionRepository.GetCollectionItemsByName(collection.Collection);
+                items = await mediaCollectionRepository.GetCollectionItemsByName(
+                    collection.Collection,
+                    cancellationToken);
                 break;
             case YamlPlayoutContentSmartCollectionItem smartCollection:
-                items = await mediaCollectionRepository.GetSmartCollectionItemsByName(smartCollection.SmartCollection);
+                items = await mediaCollectionRepository.GetSmartCollectionItemsByName(
+                    smartCollection.SmartCollection,
+                    cancellationToken);
                 break;
             case YamlPlayoutContentMultiCollectionItem multiCollection:
-                items = await mediaCollectionRepository.GetMultiCollectionItemsByName(multiCollection.MultiCollection);
+                items = await mediaCollectionRepository.GetMultiCollectionItemsByName(
+                    multiCollection.MultiCollection,
+                    cancellationToken);
                 break;
 
             // playlist is handled later
@@ -151,7 +157,10 @@ public class EnumeratorCache(IMediaCollectionRepository mediaCollectionRepositor
             }
 
             Dictionary<PlaylistItem, List<MediaItem>> itemMap =
-                await mediaCollectionRepository.GetPlaylistItemMap(playlist.PlaylistGroup, playlist.Playlist);
+                await mediaCollectionRepository.GetPlaylistItemMap(
+                    playlist.PlaylistGroup,
+                    playlist.Playlist,
+                    cancellationToken);
 
             foreach ((PlaylistItem playlistItem, List<MediaItem> mediaItems) in itemMap)
             {

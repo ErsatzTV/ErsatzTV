@@ -123,7 +123,8 @@ public sealed class LuceneSearchIndex : ISearchIndex
 
     public async Task<bool> Initialize(
         ILocalFileSystem localFileSystem,
-        IConfigElementRepository configElementRepository)
+        IConfigElementRepository configElementRepository,
+        CancellationToken cancellationToken)
     {
         if (!_initialized)
         {
@@ -132,7 +133,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
             if (!ValidateDirectory(FileSystemLayout.SearchIndexFolder))
             {
                 _logger.LogWarning("Search index failed to initialize; will delete and recreate");
-                await configElementRepository.Upsert(ConfigElementKey.SearchIndexVersion, 0);
+                await configElementRepository.Upsert(ConfigElementKey.SearchIndexVersion, 0, cancellationToken);
                 Directory.Delete(FileSystemLayout.SearchIndexFolder, true);
                 localFileSystem.EnsureFolderExists(FileSystemLayout.SearchIndexFolder);
             }
@@ -213,7 +214,8 @@ public sealed class LuceneSearchIndex : ISearchIndex
         string query,
         string smartCollectionName,
         int skip,
-        int limit)
+        int limit,
+        CancellationToken cancellationToken)
     {
         var metadata = new Dictionary<string, string>
         {
@@ -233,7 +235,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
         using DirectoryReader reader = _writer.GetReader(true);
         var searcher = new IndexSearcher(reader);
         int hitsLimit = limit == 0 ? searcher.IndexReader.MaxDoc : skip + limit;
-        Query parsedQuery = await _searchQueryParser.ParseQuery(query, smartCollectionName);
+        Query parsedQuery = await _searchQueryParser.ParseQuery(query, smartCollectionName, cancellationToken);
         // TODO: figure out if this is actually needed
         // var filter = new DuplicateFilter(TitleAndYearField);
         var sort = new Sort(new SortField(SortTitleField, SortFieldType.STRING));
@@ -272,12 +274,13 @@ public sealed class LuceneSearchIndex : ISearchIndex
 
     public async Task<Unit> Rebuild(
         ICachingSearchRepository searchRepository,
-        IFallbackMetadataProvider fallbackMetadataProvider)
+        IFallbackMetadataProvider fallbackMetadataProvider,
+        CancellationToken cancellationToken)
     {
         _writer.DeleteAll();
         _writer.Commit();
 
-        await foreach (MediaItem mediaItem in searchRepository.GetAllMediaItems())
+        await foreach (MediaItem mediaItem in searchRepository.GetAllMediaItems().WithCancellation(cancellationToken))
         {
             await RebuildItem(searchRepository, fallbackMetadataProvider, mediaItem);
         }
@@ -289,11 +292,12 @@ public sealed class LuceneSearchIndex : ISearchIndex
     public async Task<Unit> RebuildItems(
         ICachingSearchRepository searchRepository,
         IFallbackMetadataProvider fallbackMetadataProvider,
-        IEnumerable<int> itemIds)
+        IEnumerable<int> itemIds,
+        CancellationToken cancellationToken)
     {
         foreach (int id in itemIds)
         {
-            foreach (MediaItem mediaItem in await searchRepository.GetItemToIndex(id))
+            foreach (MediaItem mediaItem in await searchRepository.GetItemToIndex(id, cancellationToken))
             {
                 await RebuildItem(searchRepository, fallbackMetadataProvider, mediaItem);
             }

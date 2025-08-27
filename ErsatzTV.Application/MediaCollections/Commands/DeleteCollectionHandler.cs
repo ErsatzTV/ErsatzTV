@@ -23,22 +23,23 @@ public class DeleteCollectionHandler : IRequestHandler<DeleteCollection, Either<
         CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        Validation<BaseError, Collection> validation = await CollectionMustExist(dbContext, request);
-        return await validation.Apply(c => DoDeletion(dbContext, c));
+        Validation<BaseError, Collection> validation = await CollectionMustExist(dbContext, request, cancellationToken);
+        return await validation.Apply(c => DoDeletion(dbContext, c, cancellationToken));
     }
 
-    private async Task<Unit> DoDeletion(TvContext dbContext, Collection collection)
+    private async Task<Unit> DoDeletion(TvContext dbContext, Collection collection, CancellationToken cancellationToken)
     {
         dbContext.Collections.Remove(collection);
-        await dbContext.SaveChangesAsync();
+        await dbContext.SaveChangesAsync(cancellationToken);
         _searchTargets.SearchTargetsChanged();
         return Unit.Default;
     }
 
     private static Task<Validation<BaseError, Collection>> CollectionMustExist(
         TvContext dbContext,
-        DeleteCollection request) =>
+        DeleteCollection request,
+        CancellationToken cancellationToken) =>
         dbContext.Collections
-            .SelectOneAsync(c => c.Id, c => c.Id == request.CollectionId)
+            .SelectOneAsync(c => c.Id, c => c.Id == request.CollectionId, cancellationToken)
             .Map(o => o.ToValidation<BaseError>($"Collection {request.CollectionId} does not exist."));
 }

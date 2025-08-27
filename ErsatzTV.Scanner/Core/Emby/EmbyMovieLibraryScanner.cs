@@ -131,6 +131,7 @@ public class EmbyMovieLibraryScanner :
 
     protected override Task<Either<BaseError, MediaItemScanResult<EmbyMovie>>> UpdateMetadata(
         MediaItemScanResult<EmbyMovie> result,
-        MovieMetadata fullMetadata) =>
+        MovieMetadata fullMetadata,
+        CancellationToken cancellationToken) =>
         Task.FromResult<Either<BaseError, MediaItemScanResult<EmbyMovie>>>(result);
 }

@@ -20,7 +20,7 @@ public class GetPlexLibrariesBySourceIdHandler : IRequestHandler<GetPlexLibrarie
         return await context.PlexLibraries
             .AsNoTracking()
             .Where(l => l.MediaSourceId == request.PlexMediaSourceId)
-            .Map(pl => ProjectToViewModel(pl))
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken)
+            .Map(list =>  list.Map(ProjectToViewModel).ToList());
     }
 }

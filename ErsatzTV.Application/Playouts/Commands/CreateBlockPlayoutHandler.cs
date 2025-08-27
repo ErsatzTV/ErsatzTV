@@ -20,7 +20,7 @@ public class CreateBlockPlayoutHandler(
         CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
-        Validation<BaseError, Playout> validation = await Validate(dbContext, request);
+        Validation<BaseError, Playout> validation = await Validate(dbContext, request, cancellationToken);
         return await validation.Apply(playout => PersistPlayout(dbContext, playout));
     }
 
@@ -40,8 +40,9 @@ public class CreateBlockPlayoutHandler(
 
     private static async Task<Validation<BaseError, Playout>> Validate(
         TvContext dbContext,
-        CreateBlockPlayout request) =>
-        (await ValidateChannel(dbContext, request), ValidateScheduleKind(request))
+        CreateBlockPlayout request,
+        CancellationToken cancellationToken) =>
+        (await ValidateChannel(dbContext, request, cancellationToken), ValidateScheduleKind(request))
         .Apply((channel, scheduleKind) => new Playout
         {
             ChannelId = channel.Id,
@@ -51,10 +52,11 @@ public class CreateBlockPlayoutHandler(
 
     private static Task<Validation<BaseError, Channel>> ValidateChannel(
         TvContext dbContext,
-        CreateBlockPlayout createBlockPlayout) =>
+        CreateBlockPlayout createBlockPlayout,
+        CancellationToken cancellationToken) =>
         dbContext.Channels
             .Include(c => c.Playouts)
-            .SelectOneAsync(c => c.Id, c => c.Id == createBlockPlayout.ChannelId)
+            .SelectOneAsync(c => c.Id, c => c.Id == createBlockPlayout.ChannelId, cancellationToken)
             .Map(o => o.ToValidation<BaseError>("Channel does not exist"))
             .BindT(ChannelMustNotHavePlayouts);
 

@@ -9,15 +9,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Infrastructure.Data.Repositories;
 
-public class MediaSourceRepository : IMediaSourceRepository
+public class MediaSourceRepository(IDbContextFactory<TvContext> dbContextFactory) : IMediaSourceRepository
 {
-    private readonly IDbContextFactory<TvContext> _dbContextFactory;
-
-    public MediaSourceRepository(IDbContextFactory<TvContext> dbContextFactory) => _dbContextFactory = dbContextFactory;
-
     public async Task<PlexMediaSource> Add(PlexMediaSource plexMediaSource)
     {
-        await using TvContext context = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext context = await dbContextFactory.CreateDbContextAsync();
         await context.PlexMediaSources.AddAsync(plexMediaSource);
         await context.SaveChangesAsync();
         return plexMediaSource;
@@ -25,15 +21,16 @@ public class MediaSourceRepository : IMediaSourceRepository
 
     public async Task<List<PlexMediaSource>> GetAllPlex()
     {
-        await using TvContext context = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext context = await dbContextFactory.CreateDbContextAsync();
         return await context.PlexMediaSources
+            .AsNoTracking()
             .Include(p => p.Connections)
             .ToListAsync();
     }
 
     public async Task<List<PlexPathReplacement>> GetPlexPathReplacements(int plexMediaSourceId)
     {
-        await using TvContext context = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext context = await dbContextFactory.CreateDbContextAsync();
         return await context.PlexPathReplacements
             .Include(ppr => ppr.PlexMediaSource)
             .Filter(r => r.PlexMediaSourceId == plexMediaSourceId)
@@ -42,7 +39,7 @@ public class MediaSourceRepository : IMediaSourceRepository
 
     public async Task<Option<PlexLibrary>> GetPlexLibrary(int plexLibraryId)
     {
-        await using TvContext context = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext context = await dbContextFactory.CreateDbContextAsync();
         return await context.PlexLibraries
             .Include(l => l.Paths)
             .OrderBy(l => l.Id) // https://github.com/dotnet/efcore/issues/22579
@@ -50,21 +47,20 @@ public class MediaSourceRepository : IMediaSourceRepository
             .Map(Optional);
     }
 
-    public async Task<Option<PlexMediaSource>> GetPlex(int id)
+    public async Task<Option<PlexMediaSource>> GetPlex(int id, CancellationToken cancellationToken)
     {
-        await using TvContext context = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await context.PlexMediaSources
+            .AsNoTracking()
             .Include(p => p.Connections)
             .Include(p => p.Libraries)
             .Include(p => p.PathReplacements)
-            .OrderBy(s => s.Id) // https://github.com/dotnet/efcore/issues/22579
-            .SingleOrDefaultAsync(p => p.Id == id)
-            .Map(Optional);
+            .SelectOneAsync(s => s.Id, s => s.Id == id, cancellationToken);
     }
 
     public async Task<Option<PlexMediaSource>> GetPlexByLibraryId(int plexLibraryId)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
 
         int? id = await dbContext.Connection.QuerySingleOrDefaultAsync<int?>(
             @"SELECT L.MediaSourceId FROM Library L
@@ -80,9 +76,11 @@ public class MediaSourceRepository : IMediaSourceRepository
             .Map(Optional);
     }
 
-    public async Task<List<PlexPathReplacement>> GetPlexPathReplacementsByLibraryId(int plexLibraryPathId)
+    public async Task<List<PlexPathReplacement>> GetPlexPathReplacementsByLibraryId(
+        int plexLibraryPathId,
+        CancellationToken cancellationToken)
     {
-        await using TvContext context = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await context.PlexPathReplacements
             .FromSqlRaw(
                 @"select ppr.* from LibraryPath lp
@@ -92,7 +90,7 @@ public class MediaSourceRepository : IMediaSourceRepository
                     where lp.Id = {0}",
                 plexLibraryPathId)
             .Include(ppr => ppr.PlexMediaSource)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
     }
 
     public async Task Update(
@@ -100,7 +98,7 @@ public class MediaSourceRepository : IMediaSourceRepository
         List<PlexConnection> toAdd,
         List<PlexConnection> toDelete)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
 
         dbContext.Entry(plexMediaSource).State = EntityState.Modified;
 
@@ -142,9 +140,10 @@ public class MediaSourceRepository : IMediaSourceRepository
         int plexMediaSourceId,
         List<PlexLibrary> toAdd,
         List<PlexLibrary> toDelete,
-        List<PlexLibrary> toUpdate)
+        List<PlexLibrary> toUpdate,
+        CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         foreach (PlexLibrary add in toAdd)
         {
@@ -160,7 +159,7 @@ public class MediaSourceRepository : IMediaSourceRepository
         List<int> deletedMediaIds = await dbContext.MediaItems
             .Filter(mi => libraryIds.Contains(mi.LibraryPath.LibraryId))
             .Map(mi => mi.Id)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         foreach (PlexLibrary delete in toDelete)
         {
@@ -172,7 +171,7 @@ public class MediaSourceRepository : IMediaSourceRepository
         {
             Option<PlexLibrary> maybeExisting = await dbContext.PlexLibraries
                 .Include(l => l.Paths)
-                .SelectOneAsync(l => l.Key, l => l.Key == incoming.Key);
+                .SelectOneAsync(l => l.Key, l => l.Key == incoming.Key, cancellationToken);
 
             foreach (LibraryPath existing in maybeExisting.Map(l => l.Paths.HeadOrNone()))
             {
@@ -184,7 +183,7 @@ public class MediaSourceRepository : IMediaSourceRepository
         }
 
 
-        await dbContext.SaveChangesAsync();
+        await dbContext.SaveChangesAsync(cancellationToken);
 
         return deletedMediaIds;
     }
@@ -193,9 +192,10 @@ public class MediaSourceRepository : IMediaSourceRepository
         int jellyfinMediaSourceId,
         List<JellyfinLibrary> toAdd,
         List<JellyfinLibrary> toDelete,
-        List<JellyfinLibrary> toUpdate)
+        List<JellyfinLibrary> toUpdate,
+        CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         foreach (JellyfinLibrary add in toAdd)
         {
@@ -207,7 +207,7 @@ public class MediaSourceRepository : IMediaSourceRepository
         List<int> deletedMediaIds = await dbContext.MediaItems
             .Filter(mi => libraryIds.Contains(mi.LibraryPath.LibraryId))
             .Map(mi => mi.Id)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         foreach (JellyfinLibrary delete in toDelete)
         {
@@ -218,7 +218,7 @@ public class MediaSourceRepository : IMediaSourceRepository
         {
             Option<JellyfinLibrary> maybeExisting = await dbContext.JellyfinLibraries
                 .Include(l => l.PathInfos)
-                .SelectOneAsync(l => l.ItemId, l => l.ItemId == incoming.ItemId);
+                .SelectOneAsync(l => l.ItemId, l => l.ItemId == incoming.ItemId, cancellationToken);
 
             foreach (JellyfinLibrary existing in maybeExisting)
             {
@@ -244,7 +244,7 @@ public class MediaSourceRepository : IMediaSourceRepository
             }
         }
 
-        await dbContext.SaveChangesAsync();
+        await dbContext.SaveChangesAsync(cancellationToken);
 
         return deletedMediaIds;
     }
@@ -253,9 +253,10 @@ public class MediaSourceRepository : IMediaSourceRepository
         int embyMediaSourceId,
         List<EmbyLibrary> toAdd,
         List<EmbyLibrary> toDelete,
-        List<EmbyLibrary> toUpdate)
+        List<EmbyLibrary> toUpdate,
+        CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         foreach (EmbyLibrary add in toAdd)
         {
@@ -267,7 +268,7 @@ public class MediaSourceRepository : IMediaSourceRepository
         List<int> deletedMediaIds = await dbContext.MediaItems
             .Filter(mi => libraryIds.Contains(mi.LibraryPath.LibraryId))
             .Map(mi => mi.Id)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         foreach (EmbyLibrary delete in toDelete)
         {
@@ -278,7 +279,7 @@ public class MediaSourceRepository : IMediaSourceRepository
         {
             Option<EmbyLibrary> maybeExisting = await dbContext.EmbyLibraries
                 .Include(l => l.PathInfos)
-                .SelectOneAsync(l => l.ItemId, l => l.ItemId == incoming.ItemId);
+                .SelectOneAsync(l => l.ItemId, l => l.ItemId == incoming.ItemId, cancellationToken);
 
             foreach (EmbyLibrary existing in maybeExisting)
             {
@@ -304,7 +305,7 @@ public class MediaSourceRepository : IMediaSourceRepository
             }
         }
 
-        await dbContext.SaveChangesAsync();
+        await dbContext.SaveChangesAsync(cancellationToken);
 
         return deletedMediaIds;
     }
@@ -315,7 +316,7 @@ public class MediaSourceRepository : IMediaSourceRepository
         List<PlexPathReplacement> toUpdate,
         List<PlexPathReplacement> toDelete)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
 
         foreach (PlexPathReplacement add in toAdd)
         {
@@ -347,7 +348,7 @@ public class MediaSourceRepository : IMediaSourceRepository
 
     public async Task<List<int>> DeleteAllPlex()
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
 
         List<PlexMediaSource> allMediaSources = await dbContext.PlexMediaSources.ToListAsync();
         dbContext.PlexMediaSources.RemoveRange(allMediaSources);
@@ -368,7 +369,7 @@ public class MediaSourceRepository : IMediaSourceRepository
 
     public async Task<List<int>> DeletePlex(PlexMediaSource plexMediaSource)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
 
         List<int> mediaItemIds = await dbContext.Connection.QueryAsync<int>(
                 @"SELECT MediaItem.Id FROM MediaItem
@@ -387,7 +388,7 @@ public class MediaSourceRepository : IMediaSourceRepository
 
     public async Task<List<int>> DisablePlexLibrarySync(List<int> libraryIds)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
 
         List<int> deletedMediaIds = await dbContext.MediaItems
             .Filter(mi => libraryIds.Contains(mi.LibraryPath.LibraryId))
@@ -417,7 +418,7 @@ public class MediaSourceRepository : IMediaSourceRepository
 
     public async Task EnablePlexLibrarySync(IEnumerable<int> libraryIds)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
         await dbContext.Connection.ExecuteAsync(
             "UPDATE PlexLibrary SET ShouldSyncItems = 1 WHERE Id IN @ids",
             new { ids = libraryIds });
@@ -425,7 +426,7 @@ public class MediaSourceRepository : IMediaSourceRepository
 
     public async Task<Unit> UpsertJellyfin(string address, string serverName, string operatingSystem)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
         Option<JellyfinMediaSource> maybeExisting = dbContext.JellyfinMediaSources
             .Include(ms => ms.Connections)
             .OrderBy(ms => ms.Id)
@@ -477,17 +478,18 @@ public class MediaSourceRepository : IMediaSourceRepository
             });
     }
 
-    public async Task<List<JellyfinMediaSource>> GetAllJellyfin()
+    public async Task<List<JellyfinMediaSource>> GetAllJellyfin(CancellationToken cancellationToken)
     {
-        await using TvContext context = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await context.JellyfinMediaSources
+            .AsNoTracking()
             .Include(p => p.Connections)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
     }
 
     public async Task<Option<JellyfinMediaSource>> GetJellyfin(int id)
     {
-        await using TvContext context = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext context = await dbContextFactory.CreateDbContextAsync();
         return await context.JellyfinMediaSources
             .Include(p => p.Connections)
             .Include(p => p.Libraries)
@@ -500,7 +502,7 @@ public class MediaSourceRepository : IMediaSourceRepository
 
     public async Task<List<JellyfinLibrary>> GetJellyfinLibraries(int jellyfinMediaSourceId)
     {
-        await using TvContext context = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext context = await dbContextFactory.CreateDbContextAsync();
         return await context.JellyfinLibraries
             .Filter(l => l.MediaSourceId == jellyfinMediaSourceId)
             .ToListAsync();
@@ -508,7 +510,7 @@ public class MediaSourceRepository : IMediaSourceRepository
 
     public async Task<Unit> EnableJellyfinLibrarySync(IEnumerable<int> libraryIds)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
         return await dbContext.Connection.ExecuteAsync(
             "UPDATE JellyfinLibrary SET ShouldSyncItems = 1 WHERE Id IN @ids",
             new { ids = libraryIds }).ToUnit();
@@ -516,7 +518,7 @@ public class MediaSourceRepository : IMediaSourceRepository
 
     public async Task<List<int>> DisableJellyfinLibrarySync(List<int> libraryIds)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
 
         List<int> deletedMediaIds = await dbContext.MediaItems
             .Filter(mi => libraryIds.Contains(mi.LibraryPath.LibraryId))
@@ -547,7 +549,7 @@ public class MediaSourceRepository : IMediaSourceRepository
 
     public async Task<Option<JellyfinLibrary>> GetJellyfinLibrary(int jellyfinLibraryId)
     {
-        await using TvContext context = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext context = await dbContextFactory.CreateDbContextAsync();
         return await context.JellyfinLibraries
             .Include(l => l.Paths)
             .Include(l => l.PathInfos)
@@ -559,7 +561,7 @@ public class MediaSourceRepository : IMediaSourceRepository
 
     public async Task<Option<JellyfinMediaSource>> GetJellyfinByLibraryId(int jellyfinLibraryId)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
 
         int? id = await dbContext.Connection.QuerySingleOrDefaultAsync<int?>(
             @"SELECT L.MediaSourceId FROM Library L
@@ -577,16 +579,18 @@ public class MediaSourceRepository : IMediaSourceRepository
 
     public async Task<List<JellyfinPathReplacement>> GetJellyfinPathReplacements(int jellyfinMediaSourceId)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
         return await dbContext.JellyfinPathReplacements
             .Filter(r => r.JellyfinMediaSourceId == jellyfinMediaSourceId)
             .Include(jpr => jpr.JellyfinMediaSource)
             .ToListAsync();
     }
 
-    public async Task<List<JellyfinPathReplacement>> GetJellyfinPathReplacementsByLibraryId(int jellyfinLibraryPathId)
+    public async Task<List<JellyfinPathReplacement>> GetJellyfinPathReplacementsByLibraryId(
+        int jellyfinLibraryPathId,
+        CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await dbContext.JellyfinPathReplacements
             .FromSqlRaw(
                 @"select jpr.* from LibraryPath lp
@@ -596,7 +600,7 @@ public class MediaSourceRepository : IMediaSourceRepository
                     where lp.Id = {0}",
                 jellyfinLibraryPathId)
             .Include(jpr => jpr.JellyfinMediaSource)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
     }
 
     public async Task<Unit> UpdatePathReplacements(
@@ -605,7 +609,7 @@ public class MediaSourceRepository : IMediaSourceRepository
         List<JellyfinPathReplacement> toUpdate,
         List<JellyfinPathReplacement> toDelete)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
 
         foreach (JellyfinPathReplacement add in toAdd)
         {
@@ -637,7 +641,7 @@ public class MediaSourceRepository : IMediaSourceRepository
 
     public async Task<List<int>> DeleteAllJellyfin()
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
 
         List<JellyfinMediaSource> allMediaSources = await dbContext.JellyfinMediaSources.ToListAsync();
         var mediaSourceIds = allMediaSources.Map(ms => ms.Id).ToList();
@@ -661,7 +665,7 @@ public class MediaSourceRepository : IMediaSourceRepository
 
     public async Task<Unit> UpsertEmby(string address, string serverName, string operatingSystem)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
         Option<EmbyMediaSource> maybeExisting = dbContext.EmbyMediaSources
             .Include(ms => ms.Connections)
             .OrderBy(ms => ms.Id)
@@ -713,28 +717,30 @@ public class MediaSourceRepository : IMediaSourceRepository
             });
     }
 
-    public async Task<List<EmbyMediaSource>> GetAllEmby()
+    public async Task<List<EmbyMediaSource>> GetAllEmby(CancellationToken cancellationToken)
     {
-        await using TvContext context = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await context.EmbyMediaSources
+            .AsNoTracking()
             .Include(p => p.Connections)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
     }
 
-    public async Task<Option<EmbyMediaSource>> GetEmby(int id)
+    public async Task<Option<EmbyMediaSource>> GetEmby(int id, CancellationToken cancellationToken)
     {
-        await using TvContext context = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await context.EmbyMediaSources
+            .AsNoTracking()
             .Include(p => p.Connections)
             .Include(p => p.Libraries)
             .ThenInclude(l => (l as EmbyLibrary).PathInfos)
             .Include(p => p.PathReplacements)
-            .SelectOneAsync(s => s.Id, s => s.Id == id);
+            .SelectOneAsync(s => s.Id, s => s.Id == id, cancellationToken);
     }
 
     public async Task<Option<EmbyMediaSource>> GetEmbyByLibraryId(int embyLibraryId)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
 
         int? id = await dbContext.Connection.QuerySingleOrDefaultAsync<int?>(
             @"SELECT L.MediaSourceId FROM Library L
@@ -750,19 +756,20 @@ public class MediaSourceRepository : IMediaSourceRepository
             .Map(Optional);
     }
 
-    public async Task<Option<EmbyLibrary>> GetEmbyLibrary(int embyLibraryId)
+    public async Task<Option<EmbyLibrary>> GetEmbyLibrary(int embyLibraryId, CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await dbContext.EmbyLibraries
+            .AsNoTracking()
             .Include(l => l.Paths)
             .Include(l => l.PathInfos)
             .Include(l => l.MediaSource)
-            .SelectOneAsync(l => l.Id, l => l.Id == embyLibraryId);
+            .SelectOneAsync(l => l.Id, l => l.Id == embyLibraryId, cancellationToken);
     }
 
     public async Task<List<EmbyLibrary>> GetEmbyLibraries(int embyMediaSourceId)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
         return await dbContext.EmbyLibraries
             .Filter(l => l.MediaSourceId == embyMediaSourceId)
             .ToListAsync();
@@ -770,16 +777,18 @@ public class MediaSourceRepository : IMediaSourceRepository
 
     public async Task<List<EmbyPathReplacement>> GetEmbyPathReplacements(int embyMediaSourceId)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
         return await dbContext.EmbyPathReplacements
             .Filter(r => r.EmbyMediaSourceId == embyMediaSourceId)
             .Include(jpr => jpr.EmbyMediaSource)
             .ToListAsync();
     }
 
-    public async Task<List<EmbyPathReplacement>> GetEmbyPathReplacementsByLibraryId(int embyLibraryPathId)
+    public async Task<List<EmbyPathReplacement>> GetEmbyPathReplacementsByLibraryId(
+        int embyLibraryPathId,
+        CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await dbContext.EmbyPathReplacements
             .FromSqlRaw(
                 @"select epr.* from LibraryPath lp
@@ -789,7 +798,7 @@ public class MediaSourceRepository : IMediaSourceRepository
                     where lp.Id = {0}",
                 embyLibraryPathId)
             .Include(jpr => jpr.EmbyMediaSource)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
     }
 
     public async Task<Unit> UpdatePathReplacements(
@@ -798,7 +807,7 @@ public class MediaSourceRepository : IMediaSourceRepository
         List<EmbyPathReplacement> toUpdate,
         List<EmbyPathReplacement> toDelete)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
 
         foreach (EmbyPathReplacement add in toAdd)
         {
@@ -830,7 +839,7 @@ public class MediaSourceRepository : IMediaSourceRepository
 
     public async Task<List<int>> DeleteAllEmby()
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
 
         List<EmbyMediaSource> allMediaSources = await dbContext.EmbyMediaSources.ToListAsync();
         var mediaSourceIds = allMediaSources.Map(ms => ms.Id).ToList();
@@ -854,7 +863,7 @@ public class MediaSourceRepository : IMediaSourceRepository
 
     public async Task<Unit> EnableEmbyLibrarySync(IEnumerable<int> libraryIds)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
         return await dbContext.Connection.ExecuteAsync(
             "UPDATE EmbyLibrary SET ShouldSyncItems = 1 WHERE Id IN @ids",
             new { ids = libraryIds }).Map(_ => Unit.Default);
@@ -862,7 +871,7 @@ public class MediaSourceRepository : IMediaSourceRepository
 
     public async Task<List<int>> DisableEmbyLibrarySync(List<int> libraryIds)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
 
         List<int> deletedMediaIds = await dbContext.MediaItems
             .Filter(mi => libraryIds.Contains(mi.LibraryPath.LibraryId))
@@ -893,7 +902,7 @@ public class MediaSourceRepository : IMediaSourceRepository
 
     public async Task<Unit> UpdateLastCollectionScan(EmbyMediaSource embyMediaSource)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
         return await dbContext.Connection.ExecuteAsync(
             "UPDATE EmbyMediaSource SET LastCollectionsScan = @LastCollectionsScan WHERE Id = @Id",
             new { embyMediaSource.LastCollectionsScan, embyMediaSource.Id }).ToUnit();
@@ -901,7 +910,7 @@ public class MediaSourceRepository : IMediaSourceRepository
 
     public async Task<Unit> UpdateLastCollectionScan(JellyfinMediaSource jellyfinMediaSource)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
         return await dbContext.Connection.ExecuteAsync(
             "UPDATE JellyfinMediaSource SET LastCollectionsScan = @LastCollectionsScan WHERE Id = @Id",
             new { jellyfinMediaSource.LastCollectionsScan, jellyfinMediaSource.Id }).ToUnit();
@@ -909,7 +918,7 @@ public class MediaSourceRepository : IMediaSourceRepository
 
     public async Task<Unit> UpdateLastCollectionScan(PlexMediaSource plexMediaSource)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
         return await dbContext.Connection.ExecuteAsync(
             "UPDATE PlexMediaSource SET LastCollectionsScan = @LastCollectionsScan WHERE Id = @Id",
             new { plexMediaSource.LastCollectionsScan, plexMediaSource.Id }).ToUnit();

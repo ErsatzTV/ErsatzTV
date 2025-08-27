@@ -19,7 +19,8 @@ public class GetCollectionByIdHandler :
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await dbContext.Collections
-            .SelectOneAsync(c => c.Id, c => c.Id == request.Id)
+            .AsNoTracking()
+            .SelectOneAsync(c => c.Id, c => c.Id == request.Id, cancellationToken)
             .MapT(ProjectToViewModel);
     }
 }

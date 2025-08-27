@@ -24,10 +24,14 @@ public class PlexPathReplacementService : IPlexPathReplacementService
         _logger = logger;
     }
 
-    public async Task<string> GetReplacementPlexPath(int libraryPathId, string path, bool log = true)
+    public async Task<string> GetReplacementPlexPath(
+        int libraryPathId,
+        string path,
+        CancellationToken cancellationToken,
+        bool log = true)
     {
         List<PlexPathReplacement> replacements =
-            await _mediaSourceRepository.GetPlexPathReplacementsByLibraryId(libraryPathId);
+            await _mediaSourceRepository.GetPlexPathReplacementsByLibraryId(libraryPathId, cancellationToken);
 
         return GetReplacementPlexPath(replacements, path, log);
     }

@@ -33,7 +33,7 @@ public class SynchronizeEmbyShowByIdHandler : IRequestHandler<SynchronizeEmbySho
         SynchronizeEmbyShowById request,
         CancellationToken cancellationToken)
     {
-        Validation<BaseError, RequestParameters> validation = await Validate(request);
+        Validation<BaseError, RequestParameters> validation = await Validate(request, cancellationToken);
         return await validation.Match(
             parameters => Synchronize(parameters, cancellationToken),
             error => Task.FromResult<Either<BaseError, string>>(error.Join()));
@@ -70,8 +70,11 @@ public class SynchronizeEmbyShowByIdHandler : IRequestHandler<SynchronizeEmbySho
         return result.Map(_ => $"Show '{parameters.ShowTitle}' in {parameters.Library.Name}");
     }
 
-    private async Task<Validation<BaseError, RequestParameters>> Validate(SynchronizeEmbyShowById request) =>
-        (await ValidateConnection(request), await EmbyLibraryMustExist(request), await EmbyShowMustExist(request))
+    private async Task<Validation<BaseError, RequestParameters>> Validate(
+        SynchronizeEmbyShowById request,
+        CancellationToken cancellationToken) =>
+        (await ValidateConnection(request), await EmbyLibraryMustExist(request, cancellationToken),
+            await EmbyShowMustExist(request))
         .Apply((connectionParameters, embyLibrary, showTitleItemId) =>
             new RequestParameters(
                 connectionParameters,
@@ -112,8 +115,9 @@ public class SynchronizeEmbyShowByIdHandler : IRequestHandler<SynchronizeEmbySho
     }
 
     private Task<Validation<BaseError, EmbyLibrary>> EmbyLibraryMustExist(
-        SynchronizeEmbyShowById request) =>
-        _mediaSourceRepository.GetEmbyLibrary(request.EmbyLibraryId)
+        SynchronizeEmbyShowById request,
+        CancellationToken cancellationToken) =>
+        _mediaSourceRepository.GetEmbyLibrary(request.EmbyLibraryId, cancellationToken)
             .Map(v => v.ToValidation<BaseError>($"Emby library {request.EmbyLibraryId} does not exist."));
 
     private Task<Validation<BaseError, EmbyShowTitleItemIdResult>> EmbyShowMustExist(

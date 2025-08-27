@@ -19,7 +19,8 @@ public class GetProgramScheduleByIdHandler :
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await dbContext.ProgramSchedules
-            .SelectOneAsync(ps => ps.Id, ps => ps.Id == request.Id)
+            .AsNoTracking()
+            .SelectOneAsync(ps => ps.Id, ps => ps.Id == request.Id, cancellationToken)
             .MapT(ProjectToViewModel);
     }
 }

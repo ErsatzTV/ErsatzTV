@@ -373,12 +373,12 @@
     private bool SupportsCustomOrdering() =>
         _data is not null && _data.MovieCards.Any() && !_data.ShowCards.Any() && !_data.SeasonCards.Any() && !_data.EpisodeCards.Any();
 
-    protected override async Task OnParametersSetAsync() => await RefreshData();
+    protected override async Task OnParametersSetAsync() => await RefreshData(CancellationToken);
 
-    protected override async Task RefreshData()
+    protected override async Task RefreshData(CancellationToken cancellationToken)
     {
         Either<BaseError, CollectionCardResultsViewModel> maybeResult =
-            await Mediator.Send(new GetCollectionCards(Id), CancellationToken);
+            await Mediator.Send(new GetCollectionCards(Id), cancellationToken);
 
         maybeResult.Match(
             result => _data = result,
@@ -578,7 +578,7 @@
         if (result is { Canceled: false })
         {
             await Mediator.Send(request, CancellationToken);
-            await RefreshData();
+            await RefreshData(CancellationToken);
         }
     }
 

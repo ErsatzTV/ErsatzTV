@@ -15,5 +15,5 @@ public class
     public Task<List<JellyfinMediaSourceViewModel>> Handle(
         GetAllJellyfinMediaSources request,
         CancellationToken cancellationToken) =>
-        _mediaSourceRepository.GetAllJellyfin().Map(list => list.Map(ProjectToViewModel).ToList());
+        _mediaSourceRepository.GetAllJellyfin(cancellationToken).Map(list => list.Map(ProjectToViewModel).ToList());
 }

@@ -28,7 +28,7 @@ public class GetWrappedProcessByChannelNumberHandler : FFmpegProcessHandler<GetW
         CancellationToken cancellationToken)
     {
         bool saveReports = await dbContext.ConfigElements
-            .GetValue<bool>(ConfigElementKey.FFmpegSaveReports)
+            .GetValue<bool>(ConfigElementKey.FFmpegSaveReports, cancellationToken)
             .Map(result => result.IfNone(false));
 
         Command process = await _ffmpegProcessService.WrapSegmenter(

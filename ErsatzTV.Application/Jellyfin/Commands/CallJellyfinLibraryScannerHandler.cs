@@ -39,7 +39,7 @@ public class CallJellyfinLibraryScannerHandler : CallLibraryScannerHandler<ISync
         ISynchronizeJellyfinLibraryById request,
         CancellationToken cancellationToken)
     {
-        Validation<BaseError, string> validation = await Validate(request);
+        Validation<BaseError, string> validation = await Validate(request, cancellationToken);
         return await validation.Match(
             scanner => PerformScan(scanner, request, cancellationToken),
             error =>
@@ -78,10 +78,11 @@ public class CallJellyfinLibraryScannerHandler : CallLibraryScannerHandler<ISync
 
     protected override async Task<DateTimeOffset> GetLastScan(
         TvContext dbContext,
-        ISynchronizeJellyfinLibraryById request)
+        ISynchronizeJellyfinLibraryById request,
+        CancellationToken cancellationToken)
     {
         DateTime minDateTime = await dbContext.JellyfinLibraries
-            .SelectOneAsync(l => l.Id, l => l.Id == request.JellyfinLibraryId)
+            .SelectOneAsync(l => l.Id, l => l.Id == request.JellyfinLibraryId, cancellationToken)
             .Match(l => l.LastScan ?? SystemTime.MinValueUtc, () => SystemTime.MaxValueUtc);
 
         return new DateTimeOffset(minDateTime, TimeSpan.Zero);
