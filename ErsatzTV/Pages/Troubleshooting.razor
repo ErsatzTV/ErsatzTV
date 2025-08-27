@@ -111,7 +111,7 @@
 </MudForm>
 
 @code {
-    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource _cts;
     private string _troubleshootingInfo;
     private string _nvidiaCapabilities;
     private string _qsvCapabilities;
@@ -125,15 +125,20 @@
 
     public void Dispose()
     {
-        _cts.Cancel();
-        _cts.Dispose();
+        _cts?.Cancel();
+        _cts?.Dispose();
     }
 
     protected override async Task OnParametersSetAsync()
     {
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
+
         try
         {
-            TroubleshootingInfo info = await Mediator.Send(new GetTroubleshootingInfo(), _cts.Token);
+            TroubleshootingInfo info = await Mediator.Send(new GetTroubleshootingInfo(), token);
 
             _troubleshootingInfo = JsonSerializer.Serialize(
                 new
@@ -158,6 +163,10 @@
             _qsvCapabilities = info.QsvCapabilities;
             _vaapiCapabilities = info.VaapiCapabilities;
             _videoToolboxCapabilities = info.VideoToolboxCapabilities;
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
         }
         catch (Exception ex)
         {

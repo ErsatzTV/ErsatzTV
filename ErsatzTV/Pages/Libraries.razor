@@ -160,7 +160,7 @@
 </MudForm>
 
 @code {
-    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource _cts;
 
     private IList<LibraryViewModel> _libraries = new List<LibraryViewModel>();
     private IList<LibraryViewModel> _externalCollections = new List<LibraryViewModel>();
@@ -176,38 +176,51 @@
         Courier.Subscribe<LibraryScanProgress>(HandleScanProgress);
     }
 
-    protected override async Task OnParametersSetAsync() => await LoadLibraries(_cts.Token);
-
-    private async Task LoadLibraries(CancellationToken cancellationToken)
+    protected override async Task OnParametersSetAsync()
     {
-        _libraries = await Mediator.Send(new GetConfiguredLibraries(), cancellationToken);
-        _showServerNames = _libraries.Any(l => l is PlexLibraryViewModel);
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
 
-        _externalCollections = await Mediator.Send(new GetExternalCollections(), cancellationToken);
-        _progressByLibrary = _libraries.ToDictionary(vm => vm.Id, _ => 0);
+        try
+        {
+            _libraries = await Mediator.Send(new GetConfiguredLibraries(), token);
+            _showServerNames = _libraries.Any(l => l is PlexLibraryViewModel);
+            token.ThrowIfCancellationRequested();
+
+            _externalCollections = await Mediator.Send(new GetExternalCollections(), token);
+            _progressByLibrary = _libraries.ToDictionary(vm => vm.Id, _ => 0);
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
+        }
     }
 
     private async Task ScanLibrary(LibraryViewModel library, bool deepScan = false)
     {
         if (Locker.LockLibrary(library.Id))
         {
+            var token = _cts?.Token ?? CancellationToken.None;
+
             switch (library)
             {
                 case LocalLibraryViewModel:
-                    await ScannerWorkerChannel.WriteAsync(new ForceScanLocalLibrary(library.Id), _cts.Token);
+                    await ScannerWorkerChannel.WriteAsync(new ForceScanLocalLibrary(library.Id), token);
                     break;
                 case PlexLibraryViewModel:
-                    await ScannerWorkerChannel.WriteAsync(new SynchronizePlexLibraries(library.MediaSourceId), _cts.Token);
-                    await ScannerWorkerChannel.WriteAsync(new ForceSynchronizePlexLibraryById(library.Id, deepScan), _cts.Token);
-                    await ScannerWorkerChannel.WriteAsync(new SynchronizePlexNetworks(library.Id, true), _cts.Token);
+                    await ScannerWorkerChannel.WriteAsync(new SynchronizePlexLibraries(library.MediaSourceId), token);
+                    await ScannerWorkerChannel.WriteAsync(new ForceSynchronizePlexLibraryById(library.Id, deepScan), token);
+                    await ScannerWorkerChannel.WriteAsync(new SynchronizePlexNetworks(library.Id, true), token);
                     break;
                 case JellyfinLibraryViewModel:
-                    await ScannerWorkerChannel.WriteAsync(new SynchronizeJellyfinLibraries(library.MediaSourceId), _cts.Token);
-                    await ScannerWorkerChannel.WriteAsync(new ForceSynchronizeJellyfinLibraryById(library.Id, deepScan), _cts.Token);
+                    await ScannerWorkerChannel.WriteAsync(new SynchronizeJellyfinLibraries(library.MediaSourceId), token);
+                    await ScannerWorkerChannel.WriteAsync(new ForceSynchronizeJellyfinLibraryById(library.Id, deepScan), token);
                     break;
                 case EmbyLibraryViewModel:
-                    await ScannerWorkerChannel.WriteAsync(new SynchronizeEmbyLibraries(library.MediaSourceId), _cts.Token);
-                    await ScannerWorkerChannel.WriteAsync(new ForceSynchronizeEmbyLibraryById(library.Id, deepScan), _cts.Token);
+                    await ScannerWorkerChannel.WriteAsync(new SynchronizeEmbyLibraries(library.MediaSourceId), token);
+                    await ScannerWorkerChannel.WriteAsync(new ForceSynchronizeEmbyLibraryById(library.Id, deepScan), token);
                     break;
             }
 
@@ -217,26 +230,27 @@
 
     private async Task ScanExternalCollections(LibraryViewModel library)
     {
+        var token = _cts?.Token ?? CancellationToken.None;
         switch (library.LibraryKind.ToLowerInvariant())
         {
             case "emby":
                 if (Locker.LockEmbyCollections())
                 {
-                    await ScannerWorkerChannel.WriteAsync(new SynchronizeEmbyCollections(library.MediaSourceId, true));
+                    await ScannerWorkerChannel.WriteAsync(new SynchronizeEmbyCollections(library.MediaSourceId, true), token);
                 }
 
                 break;
             case "jellyfin":
                 if (Locker.LockJellyfinCollections())
                 {
-                    await ScannerWorkerChannel.WriteAsync(new SynchronizeJellyfinCollections(library.MediaSourceId, true));
+                    await ScannerWorkerChannel.WriteAsync(new SynchronizeJellyfinCollections(library.MediaSourceId, true), token);
                 }
 
                 break;
             case "plex":
                 if (Locker.LockPlexCollections())
                 {
-                    await ScannerWorkerChannel.WriteAsync(new SynchronizePlexCollections(library.MediaSourceId, true));
+                    await ScannerWorkerChannel.WriteAsync(new SynchronizePlexCollections(library.MediaSourceId, true), token);
                 }
 
                 break;
@@ -285,8 +299,7 @@
         Locker.OnPlexCollectionsChanged -= LockChanged;
         Courier.UnSubscribe<LibraryScanProgress>(HandleScanProgress);
 
-        _cts.Cancel();
-        _cts.Dispose();
+        _cts?.Cancel();
+        _cts?.Dispose();
     }
-
 }

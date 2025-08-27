@@ -103,7 +103,7 @@
 </MudForm>
 
 @code {
-    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource _cts;
 
     private MudTable<ProgramScheduleViewModel> _table;
     private MudTable<ProgramScheduleItemViewModel> _detailTable;
@@ -113,16 +113,28 @@
 
     public void Dispose()
     {
-        _cts.Cancel();
-        _cts.Dispose();
+        _cts?.Cancel();
+        _cts?.Dispose();
     }
 
     protected override async Task OnParametersSetAsync()
     {
-        _rowsPerPage = await Mediator.Send(new GetConfigElementByKey(ConfigElementKey.SchedulesPageSize), _cts.Token)
-            .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
-        _detailRowsPerPage = await Mediator.Send(new GetConfigElementByKey(ConfigElementKey.SchedulesDetailPageSize), _cts.Token)
-            .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
+
+        try
+        {
+            _rowsPerPage = await Mediator.Send(new GetConfigElementByKey(ConfigElementKey.SchedulesPageSize), token)
+                .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
+            _detailRowsPerPage = await Mediator.Send(new GetConfigElementByKey(ConfigElementKey.SchedulesDetailPageSize), token)
+                .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
+        }
     }
 
     private async Task ScheduleSelected(ProgramScheduleViewModel schedule)
@@ -171,9 +183,9 @@
 
     private async Task<TableData<ProgramScheduleViewModel>> ServerReload(TableState state, CancellationToken cancellationToken)
     {
-        await Mediator.Send(new SaveConfigElementByKey(ConfigElementKey.SchedulesPageSize, state.PageSize.ToString()), _cts.Token);
+        await Mediator.Send(new SaveConfigElementByKey(ConfigElementKey.SchedulesPageSize, state.PageSize.ToString()), cancellationToken);
 
-        List<ProgramScheduleViewModel> schedules = await Mediator.Send(new GetAllProgramSchedules(), _cts.Token);
+        List<ProgramScheduleViewModel> schedules = await Mediator.Send(new GetAllProgramSchedules(), cancellationToken);
         IOrderedEnumerable<ProgramScheduleViewModel> sorted = schedules.OrderBy(s => s.Name, new NaturalSortComparer(StringComparison.CurrentCultureIgnoreCase));
 
         // TODO: properly page this data
@@ -186,9 +198,9 @@
 
     private async Task<TableData<ProgramScheduleItemViewModel>> DetailServerReload(TableState state, CancellationToken cancellationToken)
     {
-        await Mediator.Send(new SaveConfigElementByKey(ConfigElementKey.SchedulesDetailPageSize, state.PageSize.ToString()), _cts.Token);
+        await Mediator.Send(new SaveConfigElementByKey(ConfigElementKey.SchedulesDetailPageSize, state.PageSize.ToString()), cancellationToken);
 
-        List<ProgramScheduleItemViewModel> scheduleItems = await Mediator.Send(new GetProgramScheduleItems(_selectedSchedule.Id), _cts.Token);
+        List<ProgramScheduleItemViewModel> scheduleItems = await Mediator.Send(new GetProgramScheduleItems(_selectedSchedule.Id), cancellationToken);
         IOrderedEnumerable<ProgramScheduleItemViewModel> sorted = scheduleItems.OrderBy(s => s.Index);
 
         // TODO: properly page this data

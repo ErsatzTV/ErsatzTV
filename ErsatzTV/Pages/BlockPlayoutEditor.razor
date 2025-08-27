@@ -84,7 +84,7 @@
 </MudForm>
 
 @code {
-    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource _cts;
 
     [Parameter]
     public int Id { get; set; }
@@ -99,34 +99,46 @@
 
     public void Dispose()
     {
-        _cts.Cancel();
-        _cts.Dispose();
+        _cts?.Cancel();
+        _cts?.Dispose();
     }
 
     protected override async Task OnParametersSetAsync()
     {
-        Option<string> maybeName = await Mediator.Send(new GetChannelNameByPlayoutId(Id), _cts.Token);
-        if (maybeName.IsNone)
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
+
+        try
         {
-            NavigationManager.NavigateTo("playouts");
-            return;
+            Option<string> maybeName = await Mediator.Send(new GetChannelNameByPlayoutId(Id), token);
+            if (maybeName.IsNone)
+            {
+                NavigationManager.NavigateTo("playouts");
+                return;
+            }
+
+            foreach (string name in maybeName)
+            {
+                _channelName = name;
+            }
+
+            _decoGroups.Clear();
+            _decoGroups.AddRange(await Mediator.Send(new GetAllDecoGroups(), token));
+
+            Option<DecoViewModel> maybeDefaultDeco = await Mediator.Send(new GetDecoByPlayoutId(Id), token);
+            foreach (DecoViewModel defaultDeco in maybeDefaultDeco)
+            {
+                _enableDefaultDeco = true;
+                _selectedDefaultDecoGroup = _decoGroups.SingleOrDefault(dg => dg.Id == defaultDeco.DecoGroupId);
+                await UpdateDefaultDecoTemplateGroupItems(_selectedDefaultDecoGroup);
+                _defaultDeco = defaultDeco;
+            }
         }
-
-        foreach (string name in maybeName)
+        catch (OperationCanceledException)
         {
-            _channelName = name;
-        }
-
-        _decoGroups.Clear();
-        _decoGroups.AddRange(await Mediator.Send(new GetAllDecoGroups(), _cts.Token));
-
-        Option<DecoViewModel> maybeDefaultDeco = await Mediator.Send(new GetDecoByPlayoutId(Id), _cts.Token);
-        foreach (DecoViewModel defaultDeco in maybeDefaultDeco)
-        {
-            _enableDefaultDeco = true;
-            _selectedDefaultDecoGroup = _decoGroups.SingleOrDefault(dg => dg.Id == defaultDeco.DecoGroupId);
-            await UpdateDefaultDecoTemplateGroupItems(_selectedDefaultDecoGroup);
-            _defaultDeco = defaultDeco;
+            // do nothing
         }
     }
 

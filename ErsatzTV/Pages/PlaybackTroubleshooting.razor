@@ -34,7 +34,7 @@
                 <div class="d-flex">
                     <MudText>Media Item ID</MudText>
                 </div>
-                <MudTextField T="int?" Value="MediaItemId" ValueChanged="@(async x => await OnMediaItemIdChanged(x))"/>
+                <MudTextField T="int?" Value="MediaItemId" ValueChanged="@(async x => await OnMediaItemIdChanged(x, CancellationToken.None))"/>
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                 <div class="d-flex">
@@ -137,7 +137,7 @@
 </MudForm>
 
 @code {
-    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource _cts;
 
     private readonly List<FFmpegProfileViewModel> _ffmpegProfiles = [];
     private readonly List<WatermarkViewModel> _watermarks = [];
@@ -157,8 +157,8 @@
 
     public void Dispose()
     {
-        _cts.Cancel();
-        _cts.Dispose();
+        _cts?.Cancel();
+        _cts?.Dispose();
     }
 
     protected override void OnInitialized()
@@ -169,23 +169,35 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        _ffmpegProfiles.Clear();
-        _ffmpegProfiles.AddRange(await Mediator.Send(new GetAllFFmpegProfiles(), _cts.Token));
-        if (_ffmpegProfiles.Count > 0)
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
+
+        try
         {
-            _ffmpegProfileId = _ffmpegProfiles.Map(f => f.Id).Head();
+            _ffmpegProfiles.Clear();
+            _ffmpegProfiles.AddRange(await Mediator.Send(new GetAllFFmpegProfiles(), token));
+            if (_ffmpegProfiles.Count > 0)
+            {
+                _ffmpegProfileId = _ffmpegProfiles.Map(f => f.Id).Head();
+            }
+
+            _watermarks.Clear();
+            _watermarks.AddRange(await Mediator.Send(new GetAllWatermarks(), token));
+
+            await Mediator.Send(new RefreshGraphicsElements(), token);
+            _graphicsElements.Clear();
+            _graphicsElements.AddRange(await Mediator.Send(new GetAllGraphicsElements(), token));
+
+            if (MediaItemId is not null)
+            {
+                await OnMediaItemIdChanged(MediaItemId, token);
+            }
         }
-
-        _watermarks.Clear();
-        _watermarks.AddRange(await Mediator.Send(new GetAllWatermarks(), _cts.Token));
-
-        await Mediator.Send(new RefreshGraphicsElements(), _cts.Token);
-        _graphicsElements.Clear();
-        _graphicsElements.AddRange(await Mediator.Send(new GetAllGraphicsElements(), _cts.Token));
-
-        if (MediaItemId is not null)
+        catch (OperationCanceledException)
         {
-            await OnMediaItemIdChanged(MediaItemId);
+            // do nothing
         }
     }
 
@@ -230,14 +242,14 @@
         _hasPlayed = true;
     }
 
-    private async Task OnMediaItemIdChanged(int? mediaItemId)
+    private async Task OnMediaItemIdChanged(int? mediaItemId, CancellationToken cancellationToken)
     {
         MediaItemId = mediaItemId;
         _hasPlayed = false;
 
         foreach (int id in Optional(mediaItemId))
         {
-            Either<BaseError, MediaItemInfo> maybeInfo = await Mediator.Send(new GetMediaItemInfo(id));
+            Either<BaseError, MediaItemInfo> maybeInfo = await Mediator.Send(new GetMediaItemInfo(id), cancellationToken);
             foreach (MediaItemInfo info in maybeInfo.RightToSeq())
             {
                 _info = info;
@@ -245,7 +257,7 @@
 
                 _subtitleId = null;
                 _subtitleStreams.Clear();
-                _subtitleStreams.AddRange(await Mediator.Send(new GetTroubleshootingSubtitles(id)));
+                _subtitleStreams.AddRange(await Mediator.Send(new GetTroubleshootingSubtitles(id), cancellationToken));
             }
 
             if (maybeInfo.IsLeft)

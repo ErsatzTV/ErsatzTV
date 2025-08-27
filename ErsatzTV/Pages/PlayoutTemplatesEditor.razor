@@ -253,7 +253,7 @@
 </MudForm>
 
 @code {
-    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource _cts;
 
     private readonly DateTimeFormatInfo _dtf = CultureInfo.CurrentUICulture.DateTimeFormat;
 
@@ -275,27 +275,37 @@
 
     public void Dispose()
     {
-        _cts.Cancel();
-        _cts.Dispose();
+        _cts?.Cancel();
+        _cts?.Dispose();
     }
 
-    protected override async Task OnParametersSetAsync() => await LoadTemplates();
-
-    private async Task LoadTemplates()
+    protected override async Task OnParametersSetAsync()
     {
-        _channelName = (await Mediator.Send(new GetChannelNameByPlayoutId(Id), _cts.Token)).IfNone(string.Empty);
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
 
-        _templateGroups.Clear();
-        _templateGroups.AddRange(await Mediator.Send(new GetAllTemplateGroups(), _cts.Token));
-
-        _decoTemplateGroups.Clear();
-        _decoTemplateGroups.AddRange(await Mediator.Send(new GetAllDecoTemplateGroups(), _cts.Token));
-
-        List<PlayoutTemplateViewModel> results = await Mediator.Send(new GetPlayoutTemplates(Id), _cts.Token);
-        _items = results.Map(ProjectToEditViewModel).ToList();
-        if (_items.Count == 1)
+        try
         {
-            await SelectedItemChanged(_items.Head());
+            _channelName = (await Mediator.Send(new GetChannelNameByPlayoutId(Id), token)).IfNone(string.Empty);
+
+            _templateGroups.Clear();
+            _templateGroups.AddRange(await Mediator.Send(new GetAllTemplateGroups(), token));
+
+            _decoTemplateGroups.Clear();
+            _decoTemplateGroups.AddRange(await Mediator.Send(new GetAllDecoTemplateGroups(), token));
+
+            List<PlayoutTemplateViewModel> results = await Mediator.Send(new GetPlayoutTemplates(Id), token);
+            _items = results.Map(ProjectToEditViewModel).ToList();
+            if (_items.Count == 1)
+            {
+                await SelectedItemChanged(_items.Head());
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
         }
     }
 

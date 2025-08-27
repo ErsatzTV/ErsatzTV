@@ -215,7 +215,7 @@
 @code {
     private static readonly string InfoVersion = Assembly.GetEntryAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? "unknown";
 
-    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource _cts;
 
     private string _query;
 
@@ -266,8 +266,8 @@
 
         Courier.UnSubscribe<HealthCheckSummary>(HandleHealthCheckSummary);
 
-        _cts.Cancel();
-        _cts.Dispose();
+        _cts?.Cancel();
+        _cts?.Dispose();
     }
 
     private static MudTheme ErsatzTvTheme => new()
@@ -349,17 +349,29 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        await base.OnParametersSetAsync();
-        _query = NavigationManager.Uri.GetSearchQuery();
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
 
-        if (SystemStartup.IsDatabaseReady && _searchTargets is null)
+        try
         {
-            _searchTargets = await Mediator.Send(new QuerySearchTargets(), _cts.Token);
-        }
+            await base.OnParametersSetAsync();
+            _query = NavigationManager.Uri.GetSearchQuery();
 
-        _isDarkMode = await Mediator.Send(new GetConfigElementByKey(ConfigElementKey.PagesIsDarkMode), _cts.Token)
-            .MapT(result => !bool.TryParse(result.Value, out bool value) || value)
-            .IfNoneAsync(true);
+            if (SystemStartup.IsDatabaseReady && _searchTargets is null)
+            {
+                _searchTargets = await Mediator.Send(new QuerySearchTargets(), token);
+            }
+
+            _isDarkMode = await Mediator.Send(new GetConfigElementByKey(ConfigElementKey.PagesIsDarkMode), token)
+                .MapT(result => !bool.TryParse(result.Value, out bool value) || value)
+                .IfNoneAsync(true);
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
+        }
     }
 
     protected async void OnSearchTargetsChanged(object sender, EventArgs e)
@@ -368,7 +380,7 @@
         {
             _searchTargets = await Mediator.Send(new QuerySearchTargets(), _cts.Token);
         }
-        catch (OperationCanceledException)
+        catch (Exception)
         {
             // do nothing
         }

@@ -85,7 +85,7 @@
 </MudForm>
 
 @code {
-    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource _cts;
 
     private readonly PlayoutEditViewModel _model = new();
     private readonly PlayoutEditViewModelValidator _validator = new();
@@ -99,21 +99,33 @@
 
     public void Dispose()
     {
-        _cts.Cancel();
-        _cts.Dispose();
+        _cts?.Cancel();
+        _cts?.Dispose();
     }
 
     protected override async Task OnParametersSetAsync()
     {
-        _model.Kind = Kind;
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
 
-        _channels = await Mediator.Send(new GetAllChannels(), _cts.Token)
-            .Map(list => list.OrderBy(vm => decimal.Parse(vm.Number, CultureInfo.InvariantCulture)).ToList());
-
-        if (string.IsNullOrWhiteSpace(Kind))
+        try
         {
-            _programSchedules = await Mediator.Send(new GetAllProgramSchedules(), _cts.Token)
-                .Map(list => list.OrderBy(vm => vm.Name).ToList());
+            _model.Kind = Kind;
+
+            _channels = await Mediator.Send(new GetAllChannels(), token)
+                .Map(list => list.OrderBy(vm => decimal.Parse(vm.Number, CultureInfo.InvariantCulture)).ToList());
+
+            if (string.IsNullOrWhiteSpace(Kind))
+            {
+                _programSchedules = await Mediator.Send(new GetAllProgramSchedules(), token)
+                    .Map(list => list.OrderBy(vm => vm.Name).ToList());
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
         }
     }
 

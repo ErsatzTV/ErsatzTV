@@ -63,7 +63,7 @@
                             <MudTooltip Text="Refresh Libraries">
                                 <MudIconButton Icon="@Icons.Material.Filled.Refresh"
                                                Disabled="@(Locker.IsRemoteMediaSourceLocked<TMediaSource>())"
-                                               OnClick="@(_ => RefreshLibraries(context.Id))">
+                                               OnClick="@(_ => RefreshLibraries(context.Id, _cts?.Token ?? CancellationToken.None))">
                                 </MudIconButton>
                             </MudTooltip>
                             <MudTooltip Text="Edit Libraries">
@@ -85,7 +85,7 @@
 </MudForm>
 
 @code {
-    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource _cts;
 
     [Parameter]
     public string Name { get; set; }
@@ -97,28 +97,43 @@
     public IRequest<Either<BaseError, Unit>> DisconnectCommand { get; set; }
 
     [Parameter]
-    public Func<int, Task> RefreshLibrariesCommand { get; set; }
+    public Func<int, CancellationToken, Task> RefreshLibrariesCommand { get; set; }
 
     [Parameter]
     public IRemoteMediaSourceSecretStore<TSecrets> SecretStore { get; set; }
 
-    private List<TViewModel> _mediaSources = new();
+    private List<TViewModel> _mediaSources = [];
 
     private bool _isAuthorized;
 
     public void Dispose()
     {
-        _cts.Cancel();
-        _cts.Dispose();
+        _cts?.Cancel();
+        _cts?.Dispose();
     }
 
-    protected override async Task OnParametersSetAsync() => await LoadMediaSources();
+    protected override async Task OnParametersSetAsync()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
 
-    private async Task LoadMediaSources()
+        try
+        {
+            await LoadMediaSources(token);
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
+        }
+    }
+
+    private async Task LoadMediaSources(CancellationToken cancellationToken)
     {
         _isAuthorized = await SecretStore.ReadSecrets()
             .Map(secrets => !string.IsNullOrWhiteSpace(secrets.Address) && !string.IsNullOrWhiteSpace(secrets.ApiKey));
-        _mediaSources = await Mediator.Send(GetAllMediaSourcesCommand, _cts.Token);
+        _mediaSources = await Mediator.Send(GetAllMediaSourcesCommand, cancellationToken);
     }
 
     private async Task Disconnect()
@@ -132,11 +147,12 @@
             if (Locker.LockRemoteMediaSource<TMediaSource>())
             {
                 await Mediator.Send(DisconnectCommand, _cts.Token);
-                await LoadMediaSources();
+                await LoadMediaSources(_cts.Token);
             }
         }
     }
 
-    private async Task RefreshLibraries(int mediaSourceId) => await RefreshLibrariesCommand(mediaSourceId);
+    private async Task RefreshLibraries(int mediaSourceId, CancellationToken cancellationToken) =>
+        await RefreshLibrariesCommand(mediaSourceId, cancellationToken);
 
 }

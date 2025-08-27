@@ -243,7 +243,7 @@
 </MudContainer>
 
 @code {
-    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource _cts;
 
     [Parameter]
     public int ArtistId { get; set; }
@@ -257,24 +257,34 @@
 
     public void Dispose()
     {
-        _cts.Cancel();
-        _cts.Dispose();
+        _cts?.Cancel();
+        _cts?.Dispose();
     }
 
-    protected override Task OnParametersSetAsync() => RefreshData();
-
-    private async Task RefreshData()
+    protected override async Task OnParametersSetAsync()
     {
-        await Mediator.Send(new GetArtistById(ArtistId), _cts.Token).IfSomeAsync(vm =>
-        {
-            _artist = vm;
-            _sortedLanguages = _artist.Languages.OrderBy(ci => ci.EnglishName).ToList();
-            _sortedGenres = _artist.Genres.OrderBy(g => g).ToList();
-            _sortedStyles = _artist.Styles.OrderBy(s => s).ToList();
-            _sortedMoods = _artist.Moods.OrderBy(m => m).ToList();
-        });
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
 
-        _musicVideos = await Mediator.Send(new GetMusicVideoCards(ArtistId, 1, 100), _cts.Token);
+        try
+        {
+            await Mediator.Send(new GetArtistById(ArtistId), token).IfSomeAsync(vm =>
+            {
+                _artist = vm;
+                _sortedLanguages = _artist.Languages.OrderBy(ci => ci.EnglishName).ToList();
+                _sortedGenres = _artist.Genres.OrderBy(g => g).ToList();
+                _sortedStyles = _artist.Styles.OrderBy(s => s).ToList();
+                _sortedMoods = _artist.Moods.OrderBy(m => m).ToList();
+            });
+
+            _musicVideos = await Mediator.Send(new GetMusicVideoCards(ArtistId, 1, 100), token);
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
+        }
     }
 
     private async Task AddToCollection()

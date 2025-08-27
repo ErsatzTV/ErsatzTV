@@ -248,7 +248,7 @@
 </MudForm>
 
 @code {
-    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource _cts;
 
     private readonly DateTimeFormatInfo _dtf = CultureInfo.CurrentUICulture.DateTimeFormat;
 
@@ -281,8 +281,8 @@
     {
         Courier.UnSubscribe<PlayoutUpdatedNotification>(HandlePlayoutUpdated);
 
-        _cts.Cancel();
-        _cts.Dispose();
+        _cts?.Cancel();
+        _cts?.Dispose();
     }
 
     public async Task HandlePlayoutUpdated(PlayoutUpdatedNotification notification, CancellationToken cancellationToken)
@@ -301,12 +301,24 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        _rowsPerPage = await Mediator.Send(new GetConfigElementByKey(ConfigElementKey.PlayoutsPageSize), _cts.Token)
-            .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
-        _detailRowsPerPage = await Mediator.Send(new GetConfigElementByKey(ConfigElementKey.PlayoutsDetailPageSize), _cts.Token)
-            .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
-        _showFiller = await Mediator.Send(new GetConfigElementByKey(ConfigElementKey.PlayoutsDetailShowFiller), _cts.Token)
-            .Map(maybeShow => maybeShow.Match(ce => bool.TryParse(ce.Value, out bool show) && show, () => false));
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
+
+        try
+        {
+            _rowsPerPage = await Mediator.Send(new GetConfigElementByKey(ConfigElementKey.PlayoutsPageSize), token)
+                .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
+            _detailRowsPerPage = await Mediator.Send(new GetConfigElementByKey(ConfigElementKey.PlayoutsDetailPageSize), token)
+                .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
+            _showFiller = await Mediator.Send(new GetConfigElementByKey(ConfigElementKey.PlayoutsDetailShowFiller), token)
+                .Map(maybeShow => maybeShow.Match(ce => bool.TryParse(ce.Value, out bool show) && show, () => false));
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
+        }
     }
 
     private async Task PlayoutSelected(PlayoutNameViewModel playout)
@@ -393,9 +405,9 @@
 
     private async Task<TableData<PlayoutNameViewModel>> ServerReload(TableState state, CancellationToken cancellationToken)
     {
-        await Mediator.Send(new SaveConfigElementByKey(ConfigElementKey.PlayoutsPageSize, state.PageSize.ToString()), _cts.Token);
+        await Mediator.Send(new SaveConfigElementByKey(ConfigElementKey.PlayoutsPageSize, state.PageSize.ToString()), cancellationToken);
 
-        List<PlayoutNameViewModel> playouts = await Mediator.Send(new GetAllPlayouts(), _cts.Token);
+        List<PlayoutNameViewModel> playouts = await Mediator.Send(new GetAllPlayouts(), cancellationToken);
         IOrderedEnumerable<PlayoutNameViewModel> sorted = playouts.OrderBy(p => decimal.Parse(p.ChannelNumber, CultureInfo.InvariantCulture));
 
         // TODO: properly page this data
@@ -408,13 +420,13 @@
 
     private async Task<TableData<PlayoutItemViewModel>> DetailServerReload(TableState state, CancellationToken cancellationToken)
     {
-        await Mediator.Send(new SaveConfigElementByKey(ConfigElementKey.PlayoutsDetailPageSize, state.PageSize.ToString()), _cts.Token);
-        await Mediator.Send(new SaveConfigElementByKey(ConfigElementKey.PlayoutsDetailShowFiller, _showFiller.ToString()), _cts.Token);
+        await Mediator.Send(new SaveConfigElementByKey(ConfigElementKey.PlayoutsDetailPageSize, state.PageSize.ToString()), cancellationToken);
+        await Mediator.Send(new SaveConfigElementByKey(ConfigElementKey.PlayoutsDetailShowFiller, _showFiller.ToString()), cancellationToken);
 
         if (_selectedPlayoutId.HasValue)
         {
             PagedPlayoutItemsViewModel data =
-                await Mediator.Send(new GetFuturePlayoutItemsById(_selectedPlayoutId.Value, _showFiller, state.Page, state.PageSize), _cts.Token);
+                await Mediator.Send(new GetFuturePlayoutItemsById(_selectedPlayoutId.Value, _showFiller, state.Page, state.PageSize), cancellationToken);
             return new TableData<PlayoutItemViewModel>
             {
                 TotalItems = data.TotalCount,

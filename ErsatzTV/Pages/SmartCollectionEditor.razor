@@ -27,7 +27,7 @@
 </MudForm>
 
 @code {
-    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource _cts;
 
     [Parameter]
     public int Id { get; set; }
@@ -38,18 +38,30 @@
 
     public void Dispose()
     {
-        _cts.Cancel();
-        _cts.Dispose();
+        _cts?.Cancel();
+        _cts?.Dispose();
     }
 
     protected override async Task OnParametersSetAsync()
     {
-        Option<SmartCollectionViewModel> maybeSmartCollection = await Mediator.Send(new GetSmartCollectionById(Id), _cts.Token);
-        foreach (SmartCollectionViewModel smartCollection in maybeSmartCollection)
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
+
+        try
         {
-            _model.Id = smartCollection.Id;
-            _model.Name = smartCollection.Name;
-            _model.Query = smartCollection.Query;
+            Option<SmartCollectionViewModel> maybeSmartCollection = await Mediator.Send(new GetSmartCollectionById(Id), token);
+            foreach (SmartCollectionViewModel smartCollection in maybeSmartCollection)
+            {
+                _model.Id = smartCollection.Id;
+                _model.Name = smartCollection.Name;
+                _model.Query = smartCollection.Query;
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
         }
     }
 

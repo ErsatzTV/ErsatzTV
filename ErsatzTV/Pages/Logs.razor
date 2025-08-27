@@ -56,7 +56,7 @@
 </MudForm>
 
 @code {
-    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource _cts;
 
     private readonly DateTimeFormatInfo _dtf = CultureInfo.CurrentUICulture.DateTimeFormat;
 
@@ -66,17 +66,31 @@
 
     public void Dispose()
     {
-        _cts.Cancel();
-        _cts.Dispose();
+        _cts?.Cancel();
+        _cts?.Dispose();
     }
 
-    protected override async Task OnParametersSetAsync() => _rowsPerPage =
-        await Mediator.Send(new GetConfigElementByKey(ConfigElementKey.LogsPageSize), _cts.Token)
-            .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
+    protected override async Task OnParametersSetAsync()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
+
+        try
+        {
+            _rowsPerPage = await Mediator.Send(new GetConfigElementByKey(ConfigElementKey.LogsPageSize), token)
+                .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
+        }
+    }
 
     private async Task<TableData<LogEntryViewModel>> ServerReload(TableState state, CancellationToken cancellationToken)
     {
-        await Mediator.Send(new SaveConfigElementByKey(ConfigElementKey.LogsPageSize, state.PageSize.ToString()), _cts.Token);
+        await Mediator.Send(new SaveConfigElementByKey(ConfigElementKey.LogsPageSize, state.PageSize.ToString()), cancellationToken);
 
         PagedLogEntriesViewModel data;
 
@@ -91,7 +105,7 @@
                             ? Option<bool>.None
                             : state.SortDirection == SortDirection.Descending
                     },
-                    _cts.Token);
+                    cancellationToken);
                 break;
             case "level":
                 data = await Mediator.Send(
@@ -102,7 +116,7 @@
                             ? Option<bool>.None
                             : state.SortDirection == SortDirection.Descending
                     },
-                    _cts.Token);
+                    cancellationToken);
                 break;
             default:
                 data = await Mediator.Send(
@@ -110,7 +124,7 @@
                     {
                         SortDescending = Option<bool>.None
                     },
-                    _cts.Token);
+                    cancellationToken);
                 break;
         }
 

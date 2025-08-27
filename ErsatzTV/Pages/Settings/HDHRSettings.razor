@@ -31,7 +31,7 @@
 </MudForm>
 
 @code {
-    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource _cts;
 
     private MudForm _form;
     private bool _hdhrSuccess;
@@ -42,15 +42,27 @@
 
     public void Dispose()
     {
-        _cts.Cancel();
-        _cts.Dispose();
+        _cts?.Cancel();
+        _cts?.Dispose();
     }
 
     protected override async Task OnParametersSetAsync()
     {
-        _tunerCount = await Mediator.Send(new GetHDHRTunerCount(), _cts.Token);
-        _uuid = await Mediator.Send(new GetHDHRUUID(), _cts.Token);
-        _hdhrSuccess = string.IsNullOrWhiteSpace(ValidateTunerCount(_tunerCount));
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
+
+        try
+        {
+            _tunerCount = await Mediator.Send(new GetHDHRTunerCount(), token);
+            _uuid = await Mediator.Send(new GetHDHRUUID(), token);
+            _hdhrSuccess = string.IsNullOrWhiteSpace(ValidateTunerCount(_tunerCount));
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
+        }
     }
 
     private static string ValidateTunerCount(int tunerCount) => tunerCount <= 0 ? "Tuner count must be greater than zero" : null;

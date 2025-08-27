@@ -179,7 +179,7 @@
 </MudContainer>
 
 @code {
-    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource _cts;
 
     [Parameter]
     public int SeasonId { get; set; }
@@ -193,8 +193,8 @@
 
     public void Dispose()
     {
-        _cts.Cancel();
-        _cts.Dispose();
+        _cts?.Cancel();
+        _cts?.Dispose();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -212,14 +212,22 @@
         }
     }
 
-    protected override Task OnParametersSetAsync() => RefreshData();
-
-    private async Task RefreshData()
+    protected override async Task OnParametersSetAsync()
     {
-        await Mediator.Send(new GetTelevisionSeasonById(SeasonId), _cts.Token)
-            .IfSomeAsync(vm => _season = vm);
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
 
-        _data = await Mediator.Send(new GetTelevisionEpisodeCards(SeasonId, PageNumber, PageSize), _cts.Token);
+        try
+        {
+            await Mediator.Send(new GetTelevisionSeasonById(SeasonId), token).IfSomeAsync(vm => _season = vm);
+            _data = await Mediator.Send(new GetTelevisionEpisodeCards(SeasonId, PageNumber, PageSize), token);
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
+        }
     }
 
     private async Task AddToCollection()

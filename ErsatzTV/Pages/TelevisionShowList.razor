@@ -70,13 +70,20 @@
             PageNumber = 1;
         }
 
-        if (!ApplicationState.TryTakeFromJson("_data", out TelevisionShowCardResultsViewModel restored))
+        try
         {
-            _data = await RefreshData(CancellationToken);
+            if (!ApplicationState.TryTakeFromJson("_data", out TelevisionShowCardResultsViewModel restored))
+            {
+                _data = await RefreshData(CancellationToken);
+            }
+            else
+            {
+                _data = restored;
+            }
         }
-        else
+        catch (OperationCanceledException)
         {
-            _data = restored;
+            // do nothing
         }
     }
 

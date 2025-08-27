@@ -1,7 +1,6 @@
 ﻿@page "/media/sources/jellyfin/edit"
 @using ErsatzTV.Application.Jellyfin
 @using ErsatzTV.Core.Jellyfin
-@implements IDisposable
 @inject IMediator Mediator
 
 <RemoteMediaSourceEditor
@@ -10,26 +9,18 @@
     SaveSecrets="SaveSecrets"/>
 
 @code {
-    private readonly CancellationTokenSource _cts = new();
-
-    public void Dispose()
+    private async Task<Unit> LoadSecrets(RemoteMediaSourceEditViewModel viewModel, CancellationToken cancellationToken)
     {
-        _cts.Cancel();
-        _cts.Dispose();
-    }
-
-    private async Task<Unit> LoadSecrets(RemoteMediaSourceEditViewModel viewModel)
-    {
-        JellyfinSecrets secrets = await Mediator.Send(new GetJellyfinSecrets(), _cts.Token);
+        JellyfinSecrets secrets = await Mediator.Send(new GetJellyfinSecrets(), cancellationToken);
         viewModel.Address = secrets.Address;
         viewModel.ApiKey = secrets.ApiKey;
         return Unit.Default;
     }
 
-    private async Task<Either<BaseError, Unit>> SaveSecrets(RemoteMediaSourceEditViewModel viewModel)
+    private async Task<Either<BaseError, Unit>> SaveSecrets(RemoteMediaSourceEditViewModel viewModel, CancellationToken cancellationToken)
     {
         var secrets = new JellyfinSecrets { Address = viewModel.Address, ApiKey = viewModel.ApiKey };
-        return await Mediator.Send(new SaveJellyfinSecrets(secrets), _cts.Token);
+        return await Mediator.Send(new SaveJellyfinSecrets(secrets), cancellationToken);
     }
 
 }

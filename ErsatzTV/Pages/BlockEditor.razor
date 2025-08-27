@@ -314,7 +314,7 @@ else if (_previewItems != null)
 </MudForm>
 
 @code {
-    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource _cts;
 
     [Parameter]
     public int Id { get; set; }
@@ -327,45 +327,55 @@ else if (_previewItems != null)
 
     public void Dispose()
     {
-        _cts.Cancel();
-        _cts.Dispose();
+        _cts?.Cancel();
+        _cts?.Dispose();
     }
 
-    protected override async Task OnParametersSetAsync() => await LoadBlockItems();
-
-    private async Task LoadBlockItems()
+    protected override async Task OnParametersSetAsync()
     {
-        Option<BlockViewModel> maybeBlock = await Mediator.Send(new GetBlockById(Id), _cts.Token);
-        if (maybeBlock.IsNone)
-        {
-            NavigationManager.NavigateTo("blocks");
-            return;
-        }
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
 
-        foreach (BlockViewModel block in maybeBlock)
+        try
         {
-            _block = new BlockItemsEditViewModel
+            Option<BlockViewModel> maybeBlock = await Mediator.Send(new GetBlockById(Id), token);
+            if (maybeBlock.IsNone)
             {
-                GroupId = block.GroupId,
-                GroupName = block.GroupName,
-                Name = block.Name,
-                Minutes = block.Minutes,
-                StopScheduling = block.StopScheduling,
-                Items = []
-            };
-
-            _durationHours = _block.Minutes / 60;
-            _durationMinutes = _block.Minutes % 60;
-        }
-
-        Option<IEnumerable<BlockItemViewModel>> maybeResults = await Mediator.Send(new GetBlockItems(Id), _cts.Token);
-        foreach (IEnumerable<BlockItemViewModel> items in maybeResults)
-        {
-            _block.Items.AddRange(items.Map(ProjectToEditViewModel));
-            if (_block.Items.Count == 1)
-            {
-                _selectedItem = _block.Items.Head();
+                NavigationManager.NavigateTo("blocks");
+                return;
             }
+
+            foreach (BlockViewModel block in maybeBlock)
+            {
+                _block = new BlockItemsEditViewModel
+                {
+                    GroupId = block.GroupId,
+                    GroupName = block.GroupName,
+                    Name = block.Name,
+                    Minutes = block.Minutes,
+                    StopScheduling = block.StopScheduling,
+                    Items = []
+                };
+
+                _durationHours = _block.Minutes / 60;
+                _durationMinutes = _block.Minutes % 60;
+            }
+
+            Option<IEnumerable<BlockItemViewModel>> maybeResults = await Mediator.Send(new GetBlockItems(Id), token);
+            foreach (IEnumerable<BlockItemViewModel> items in maybeResults)
+            {
+                _block.Items.AddRange(items.Map(ProjectToEditViewModel));
+                if (_block.Items.Count == 1)
+                {
+                    _selectedItem = _block.Items.Head();
+                }
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
         }
     }
 

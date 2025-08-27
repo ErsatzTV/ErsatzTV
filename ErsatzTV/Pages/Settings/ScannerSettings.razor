@@ -24,7 +24,7 @@
 </MudForm>
 
 @code {
-    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource _cts;
 
     private MudForm _form;
     private bool _scannerSuccess;
@@ -32,14 +32,26 @@
 
     public void Dispose()
     {
-        _cts.Cancel();
-        _cts.Dispose();
+        _cts?.Cancel();
+        _cts?.Dispose();
     }
 
     protected override async Task OnParametersSetAsync()
     {
-        _libraryRefreshInterval = await Mediator.Send(new GetLibraryRefreshInterval(), _cts.Token);
-        _scannerSuccess = _libraryRefreshInterval is >= 0 and < 1_000_000;
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
+
+        try
+        {
+            _libraryRefreshInterval = await Mediator.Send(new GetLibraryRefreshInterval(), token);
+            _scannerSuccess = _libraryRefreshInterval is >= 0 and < 1_000_000;
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
+        }
     }
 
     private static string ValidateLibraryRefreshInterval(int libraryRefreshInterval) => libraryRefreshInterval switch

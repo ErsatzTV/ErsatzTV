@@ -157,7 +157,7 @@
 </MudForm>
 
 @code {
-    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource _cts;
 
     private readonly DateTimeFormatInfo _dtf = CultureInfo.CurrentUICulture.DateTimeFormat;
 
@@ -172,24 +172,34 @@
 
     public void Dispose()
     {
-        _cts.Cancel();
-        _cts.Dispose();
+        _cts?.Cancel();
+        _cts?.Dispose();
     }
 
-    protected override async Task OnParametersSetAsync() => await LoadScheduleItems();
-
-    private async Task LoadScheduleItems()
+    protected override async Task OnParametersSetAsync()
     {
-        _schedules = await Mediator.Send(new GetAllProgramSchedules(), _cts.Token)
-            .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
 
-        _channelName = (await Mediator.Send(new GetChannelNameByPlayoutId(Id), _cts.Token)).IfNone(string.Empty);
-
-        List<PlayoutAlternateScheduleViewModel> results = await Mediator.Send(new GetPlayoutAlternateSchedules(Id), _cts.Token);
-        _items = results.Map(ProjectToEditViewModel).ToList();
-        if (_items.Count == 1)
+        try
         {
-            _selectedItem = _items.Head();
+            _schedules = await Mediator.Send(new GetAllProgramSchedules(), token)
+                .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
+
+            _channelName = (await Mediator.Send(new GetChannelNameByPlayoutId(Id), token)).IfNone(string.Empty);
+
+            List<PlayoutAlternateScheduleViewModel> results = await Mediator.Send(new GetPlayoutAlternateSchedules(Id), token);
+            _items = results.Map(ProjectToEditViewModel).ToList();
+            if (_items.Count == 1)
+            {
+                _selectedItem = _items.Head();
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
         }
     }
 

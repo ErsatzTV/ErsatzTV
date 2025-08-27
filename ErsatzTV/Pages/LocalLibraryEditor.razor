@@ -84,7 +84,7 @@
 </MudForm>
 
 @code {
-    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource _cts;
 
     [Parameter]
     public int Id { get; set; }
@@ -98,30 +98,42 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        if (IsEdit)
-        {
-            Option<LocalLibraryViewModel> maybeLibrary = await Mediator.Send(new GetLocalLibraryById(Id), _cts.Token);
-            await maybeLibrary.Match(
-                async library =>
-                {
-                    _model.Id = library.Id;
-                    _model.Name = library.Name;
-                    _model.MediaKind = library.MediaKind;
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
 
-                    await LoadLibraryPaths();
-                },
-                () =>
-                {
-                    NavigationManager.NavigateTo("404");
-                    return Task.CompletedTask;
-                });
-        }
-        else
+        try
         {
-            _model.HasChanges = true;
-            _model.Name = "New Local Library";
-            _model.MediaKind = LibraryMediaKind.Movies;
-            _model.Paths = [];
+            if (IsEdit)
+            {
+                Option<LocalLibraryViewModel> maybeLibrary = await Mediator.Send(new GetLocalLibraryById(Id), token);
+                await maybeLibrary.Match(
+                    async library =>
+                    {
+                        _model.Id = library.Id;
+                        _model.Name = library.Name;
+                        _model.MediaKind = library.MediaKind;
+
+                        await LoadLibraryPaths();
+                    },
+                    () =>
+                    {
+                        NavigationManager.NavigateTo("404");
+                        return Task.CompletedTask;
+                    });
+            }
+            else
+            {
+                _model.HasChanges = true;
+                _model.Name = "New Local Library";
+                _model.MediaKind = LibraryMediaKind.Movies;
+                _model.Paths = [];
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
         }
     }
 
@@ -252,8 +264,8 @@
     {
         Locker.OnLibraryChanged -= LockChanged;
 
-        _cts.Cancel();
-        _cts.Dispose();
+        _cts?.Cancel();
+        _cts?.Dispose();
     }
 
 }
