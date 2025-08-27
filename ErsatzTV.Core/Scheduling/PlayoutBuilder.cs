@@ -397,6 +397,12 @@ public class PlayoutBuilder : IPlayoutBuilder
         //     finish,
         //     playoutFinish);
 
+        if (playout.Anchor is not null && playout.Anchor.NextStartOffset > playoutFinish)
+        {
+            // nothing to do
+            return result;
+        }
+
         // build each day with "continue" anchors
         while (finish < playoutFinish)
         {
@@ -420,7 +426,7 @@ public class PlayoutBuilder : IPlayoutBuilder
             // only randomize once (at the start of the playout)
             randomStartPoint = false;
 
-            start = playout.Anchor.NextStartOffset;
+            start = playout.Anchor?.NextStartOffset ?? start;
             finish = finish.AddDays(1);
         }
 
@@ -668,14 +674,17 @@ public class PlayoutBuilder : IPlayoutBuilder
         // _logger.LogDebug(
         //     "Starting playout ({PlayoutId}) for channel {ChannelNumber} - {ChannelName} at {StartTime}",
         //     playout.Id,
-        //     playout.Channel.Number,
-        //     playout.Channel.Name,
+        //     referenceData.Channel.Number,
+        //     referenceData.Channel.Name,
         //     currentTime);
 
         // removing any items scheduled past the start anchor
         // this could happen if the app was closed after scheduling items
         // but before saving the anchor
-        result = result with { RemoveAfter = currentTime };
+        foreach (var item in referenceData.ExistingItems.Where(i => i.Start >= currentTime))
+        {
+            result.ItemsToRemove.Add(item.Id);
+        }
 
         // start with the previously-decided schedule item
         // start with the previous multiple/duration states
@@ -822,7 +831,7 @@ public class PlayoutBuilder : IPlayoutBuilder
             playoutBuilderState.CurrentTime);
 
         // if we ended in a different alternate schedule, fix the anchor data
-        if (playoutBuilderState.CurrentTime > playoutFinish && activeScheduleAtAnchor.Id != activeSchedule.Id &&
+        if (playoutBuilderState.CurrentTime >= playoutFinish && activeScheduleAtAnchor.Id != activeSchedule.Id &&
             activeScheduleAtAnchor.Items.Count > 0)
         {
             PlayoutBuilderState cleanState = playoutBuilderState with
@@ -834,11 +843,14 @@ public class PlayoutBuilder : IPlayoutBuilder
             };
 
             DateTimeOffset nextStart = PlayoutModeSchedulerBase<ProgramScheduleItem>
-                .GetStartTimeAfter(cleanState, activeScheduleAtAnchor.Items.Head());
+                .GetStartTimeAfter(cleanState, activeScheduleAtAnchor.Items.OrderBy(i => i.Index).Head());
 
-            _logger.LogWarning(
-                "Playout build went beyond midnight ({Time}) into a different alternate schedule; this may cause issues with start times on the next day",
-                playoutBuilderState.CurrentTime);
+            if (playoutBuilderState.CurrentTime.TimeOfDay > TimeSpan.Zero)
+            {
+                _logger.LogWarning(
+                    "Playout build went beyond midnight ({Time}) into a different alternate schedule; this may cause issues with start times on the next day",
+                    playoutBuilderState.CurrentTime);
+            }
 
             playout.Anchor.NextStart = nextStart.UtcDateTime;
             playout.Anchor.InFlood = false;

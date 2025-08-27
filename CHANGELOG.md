@@ -84,6 +84,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix seeking into extracted text subtitles
 - Fix error when changing default (lowest priority) alternate schedule
 - Fix remote library editing, tv shows, artists with MySql/MariaDB
+- Classic schedules: fix alternate schedule transitions (some edge cases would cause days to be skipped completely)
 
 ### Changed
 - Rename some schedule and playout terms for clarity
