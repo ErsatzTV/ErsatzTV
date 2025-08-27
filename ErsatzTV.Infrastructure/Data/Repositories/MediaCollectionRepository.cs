@@ -439,7 +439,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
         foreach (SmartCollection collection in maybeCollection)
         {
-            return await GetSmartCollectionItems(collection.Query, collection.Name);
+            return await GetSmartCollectionItems(collection.Query, collection.Name, cancellationToken);
         }
 
         return [];
@@ -458,20 +458,29 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
         foreach (SmartCollection collection in maybeCollection)
         {
-            return await GetSmartCollectionItems(collection.Query, collection.Name);
+            return await GetSmartCollectionItems(collection.Query, collection.Name, cancellationToken);
         }
 
         return [];
     }
 
-    public async Task<List<MediaItem>> GetSmartCollectionItems(string query, string smartCollectionName)
+    public async Task<List<MediaItem>> GetSmartCollectionItems(
+        string query,
+        string smartCollectionName,
+        CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         var result = new List<MediaItem>();
 
         // elasticsearch doesn't like when we ask for a limit of zero, so use 10,000
-        SearchResult searchResults = await _searchIndex.Search(_client, query, smartCollectionName, 0, 10_000);
+        SearchResult searchResults = await _searchIndex.Search(
+            _client,
+            query,
+            smartCollectionName,
+            0,
+            10_000,
+            cancellationToken);
 
         var movieIds = searchResults.Items
             .Filter(i => i.Type == LuceneSearchIndex.MovieType)

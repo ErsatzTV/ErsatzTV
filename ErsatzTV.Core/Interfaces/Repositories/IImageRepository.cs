@@ -14,5 +14,4 @@ public interface IImageRepository
     Task<IEnumerable<string>> FindImagePaths(LibraryPath libraryPath);
     Task<List<int>> DeleteByPath(LibraryPath libraryPath, string path);
     Task<bool> AddTag(ImageMetadata metadata, Tag tag);
-    Task<List<ImageMetadata>> GetImagesForCards(List<int> ids);
 }

@@ -72,7 +72,7 @@
 
         if (!ApplicationState.TryTakeFromJson("_data", out TelevisionShowCardResultsViewModel restored))
         {
-            _data = await RefreshData();
+            _data = await RefreshData(CancellationToken);
         }
         else
         {
@@ -93,10 +93,10 @@
         base.Dispose();
     }
 
-    protected override async Task<TelevisionShowCardResultsViewModel> RefreshData()
+    protected override async Task<TelevisionShowCardResultsViewModel> RefreshData(CancellationToken cancellationToken)
     {
         string searchQuery = string.IsNullOrWhiteSpace(_query) ? "type:show" : $"type:show AND ({_query})";
-        return await Mediator.Send(new QuerySearchIndexShows(searchQuery, PageNumber, PageSize), CancellationToken);
+        return await Mediator.Send(new QuerySearchIndexShows(searchQuery, PageNumber, PageSize), cancellationToken);
     }
 
     private void PrevPage()

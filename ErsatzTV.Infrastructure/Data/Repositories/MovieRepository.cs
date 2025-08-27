@@ -103,20 +103,6 @@ public class MovieRepository : IMovieRepository
             async () => await AddMovie(dbContext, libraryPath.Id, libraryFolder.Id, path, cancellationToken));
     }
 
-    public async Task<List<MovieMetadata>> GetMoviesForCards(List<int> ids)
-    {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
-        return await dbContext.MovieMetadata
-            .AsNoTracking()
-            .Filter(mm => ids.Contains(mm.MovieId))
-            .Include(mm => mm.Artwork)
-            .Include(mm => mm.Movie)
-            .ThenInclude(m => m.MediaVersions)
-            .ThenInclude(mv => mv.MediaFiles)
-            .OrderBy(mm => mm.SortTitle)
-            .ToListAsync();
-    }
-
     public async Task<IEnumerable<string>> FindMoviePaths(LibraryPath libraryPath)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();

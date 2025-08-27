@@ -48,11 +48,12 @@ public partial class SearchQueryParser(ISmartCollectionCache smartCollectionCach
         return new PerFieldAnalyzerWrapper(defaultAnalyzer, customAnalyzers);
     }
 
-    public async Task<Query> ParseQuery(string query, string smartCollectionName)
+    public async Task<Query> ParseQuery(string query, string smartCollectionName, CancellationToken cancellationToken)
     {
         string parsedQuery = query;
 
-        if (!string.IsNullOrWhiteSpace(smartCollectionName) && await smartCollectionCache.HasCycle(smartCollectionName))
+        if (!string.IsNullOrWhiteSpace(smartCollectionName) &&
+            await smartCollectionCache.HasCycle(smartCollectionName, cancellationToken))
         {
             logger.LogError("Smart collection {Name} contains a cycle; will not evaluate", smartCollectionName);
         }
@@ -67,7 +68,7 @@ public partial class SearchQueryParser(ISmartCollectionCache smartCollectionCach
                     break;
                 }
 
-                ReplaceResult replaceResult = await ReplaceSmartCollections(parsedQuery);
+                ReplaceResult replaceResult = await ReplaceSmartCollections(parsedQuery, cancellationToken);
                 if (replaceResult.Fatal)
                 {
                     break;
@@ -102,7 +103,7 @@ public partial class SearchQueryParser(ISmartCollectionCache smartCollectionCach
         return result;
     }
 
-    private async Task<ReplaceResult> ReplaceSmartCollections(string query)
+    private async Task<ReplaceResult> ReplaceSmartCollections(string query, CancellationToken cancellationToken)
     {
         try
         {
@@ -111,7 +112,7 @@ public partial class SearchQueryParser(ISmartCollectionCache smartCollectionCach
             foreach (Match match in SmartCollectionRegex().Matches(query))
             {
                 string smartCollectionName = match.Groups[1].Value;
-                if (await smartCollectionCache.HasCycle(smartCollectionName))
+                if (await smartCollectionCache.HasCycle(smartCollectionName, cancellationToken))
                 {
                     logger.LogError(
                         "Smart collection {Name} contains a cycle; will not evaluate",
@@ -119,7 +120,7 @@ public partial class SearchQueryParser(ISmartCollectionCache smartCollectionCach
                     return new ReplaceResult(query, true);
                 }
 
-                Option<string> maybeQuery = await smartCollectionCache.GetQuery(smartCollectionName);
+                Option<string> maybeQuery = await smartCollectionCache.GetQuery(smartCollectionName, cancellationToken);
                 foreach (string smartCollectionQuery in maybeQuery)
                 {
                     result = result.Replace(match.Value, $"({smartCollectionQuery})");

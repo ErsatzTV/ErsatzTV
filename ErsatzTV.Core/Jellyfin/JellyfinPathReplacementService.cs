@@ -24,10 +24,14 @@ public class JellyfinPathReplacementService : IJellyfinPathReplacementService
         _logger = logger;
     }
 
-    public async Task<string> GetReplacementJellyfinPath(int libraryPathId, string path, bool log = true)
+    public async Task<string> GetReplacementJellyfinPath(
+        int libraryPathId,
+        string path,
+        CancellationToken cancellationToken,
+        bool log = true)
     {
         List<JellyfinPathReplacement> replacements =
-            await _mediaSourceRepository.GetJellyfinPathReplacementsByLibraryId(libraryPathId);
+            await _mediaSourceRepository.GetJellyfinPathReplacementsByLibraryId(libraryPathId, cancellationToken);
 
         return GetReplacementJellyfinPath(replacements, path, log);
     }

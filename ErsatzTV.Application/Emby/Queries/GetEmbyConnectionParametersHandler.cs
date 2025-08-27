@@ -34,7 +34,7 @@ public class GetEmbyConnectionParametersHandler : IRequestHandler<GetEmbyConnect
         }
 
         Either<BaseError, EmbyConnectionParametersViewModel> maybeParameters =
-            await Validate()
+            await Validate(cancellationToken)
                 .MapT(cp => new EmbyConnectionParametersViewModel(cp.ActiveConnection.Address, cp.ApiKey))
                 .Map(v => v.ToEither<EmbyConnectionParametersViewModel>());
 
@@ -47,13 +47,14 @@ public class GetEmbyConnectionParametersHandler : IRequestHandler<GetEmbyConnect
             error => error);
     }
 
-    private Task<Validation<BaseError, ConnectionParameters>> Validate() =>
-        EmbyMediaSourceMustExist()
+    private Task<Validation<BaseError, ConnectionParameters>> Validate(CancellationToken cancellationToken) =>
+        EmbyMediaSourceMustExist(cancellationToken)
             .BindT(MediaSourceMustHaveActiveConnection)
             .BindT(MediaSourceMustHaveApiKey);
 
-    private Task<Validation<BaseError, EmbyMediaSource>> EmbyMediaSourceMustExist() =>
-        _mediaSourceRepository.GetAllEmby().Map(list => list.HeadOrNone())
+    private Task<Validation<BaseError, EmbyMediaSource>>
+        EmbyMediaSourceMustExist(CancellationToken cancellationToken) =>
+        _mediaSourceRepository.GetAllEmby(cancellationToken).Map(list => list.HeadOrNone())
             .Map(v => v.ToValidation<BaseError>(
                 "Emby media source does not exist."));
 

@@ -70,9 +70,10 @@ public class ElasticSearchIndex : ISearchIndex
 
     public async Task<Unit> Rebuild(
         ICachingSearchRepository searchRepository,
-        IFallbackMetadataProvider fallbackMetadataProvider)
+        IFallbackMetadataProvider fallbackMetadataProvider,
+        CancellationToken cancellationToken)
     {
-        DeleteIndexResponse deleteResponse = await _client.Indices.DeleteAsync(IndexName);
+        DeleteIndexResponse deleteResponse = await _client.Indices.DeleteAsync(IndexName, cancellationToken);
         if (!deleteResponse.IsValidResponse)
         {
             return Unit.Default;
@@ -84,7 +85,7 @@ public class ElasticSearchIndex : ISearchIndex
             return Unit.Default;
         }
 
-        await foreach (MediaItem mediaItem in searchRepository.GetAllMediaItems())
+        await foreach (MediaItem mediaItem in searchRepository.GetAllMediaItems().WithCancellation(cancellationToken))
         {
             await RebuildItem(searchRepository, fallbackMetadataProvider, mediaItem);
         }
@@ -169,20 +170,21 @@ public class ElasticSearchIndex : ISearchIndex
         string query,
         string smartCollectionName,
         int skip,
-        int limit)
+        int limit,
+        CancellationToken cancellationToken)
     {
         var items = new List<MinimalElasticSearchItem>();
         var totalCount = 0;
 
-        Query parsedQuery = await _searchQueryParser.ParseQuery(query, smartCollectionName);
+        Query parsedQuery = await _searchQueryParser.ParseQuery(query, smartCollectionName, cancellationToken);
 
-        ES.SearchResponse<MinimalElasticSearchItem> response = await _client.SearchAsync<MinimalElasticSearchItem>(s =>
-            s
-                .Indices(IndexName)
+        ES.SearchResponse<MinimalElasticSearchItem> response = await _client.SearchAsync<MinimalElasticSearchItem>(
+            s => s.Indices(IndexName)
                 .Sort(ss => ss.Field(f => f.SortTitle, fs => fs.Order(ES.SortOrder.Asc)))
                 .From(skip)
                 .Size(limit)
-                .QueryLuceneSyntax(parsedQuery.ToString()));
+                .QueryLuceneSyntax(parsedQuery.ToString()),
+            cancellationToken);
 
         if (response.IsValidResponse)
         {

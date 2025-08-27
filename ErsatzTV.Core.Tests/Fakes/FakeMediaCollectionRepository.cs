@@ -36,7 +36,10 @@ public class FakeMediaCollectionRepository : IMediaCollectionRepository
     public Task<List<MediaItem>> GetSmartCollectionItems(int id, CancellationToken cancellationToken) => _data[id].ToList().AsTask();
     public Task<List<MediaItem>> GetSmartCollectionItemsByName(string name, CancellationToken cancellationToken) => throw new NotSupportedException();
 
-    public Task<List<MediaItem>> GetSmartCollectionItems(string query, string smartCollectionName) =>
+    public Task<List<MediaItem>> GetSmartCollectionItems(
+        string query,
+        string smartCollectionName,
+        CancellationToken cancellationToken) =>
         throw new NotSupportedException();
 
     public Task<List<MediaItem>> GetShowItemsByShowGuids(List<string> guids) => throw new NotSupportedException();

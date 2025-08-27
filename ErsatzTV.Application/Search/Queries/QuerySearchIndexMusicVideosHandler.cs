@@ -5,61 +5,61 @@ using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Emby;
 using ErsatzTV.Core.Interfaces.Jellyfin;
 using ErsatzTV.Core.Interfaces.Plex;
-using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Search;
+using ErsatzTV.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 using static ErsatzTV.Application.MediaCards.Mapper;
 
 namespace ErsatzTV.Application.Search;
 
 public class
-    QuerySearchIndexMusicVideosHandler : IRequestHandler<QuerySearchIndexMusicVideos, MusicVideoCardResultsViewModel>
-{
-    private readonly IClient _client;
-    private readonly IEmbyPathReplacementService _embyPathReplacementService;
-    private readonly IJellyfinPathReplacementService _jellyfinPathReplacementService;
-    private readonly IMusicVideoRepository _musicVideoRepository;
-    private readonly IPlexPathReplacementService _plexPathReplacementService;
-    private readonly ISearchIndex _searchIndex;
-
-    public QuerySearchIndexMusicVideosHandler(
+    QuerySearchIndexMusicVideosHandler(
         IClient client,
         ISearchIndex searchIndex,
-        IMusicVideoRepository musicVideoRepository,
         IPlexPathReplacementService plexPathReplacementService,
         IJellyfinPathReplacementService jellyfinPathReplacementService,
-        IEmbyPathReplacementService embyPathReplacementService)
-    {
-        _client = client;
-        _searchIndex = searchIndex;
-        _musicVideoRepository = musicVideoRepository;
-        _plexPathReplacementService = plexPathReplacementService;
-        _jellyfinPathReplacementService = jellyfinPathReplacementService;
-        _embyPathReplacementService = embyPathReplacementService;
-    }
-
+        IEmbyPathReplacementService embyPathReplacementService,
+        IDbContextFactory<TvContext> dbContextFactory)
+    : IRequestHandler<QuerySearchIndexMusicVideos, MusicVideoCardResultsViewModel>
+{
     public async Task<MusicVideoCardResultsViewModel> Handle(
         QuerySearchIndexMusicVideos request,
         CancellationToken cancellationToken)
     {
-        SearchResult searchResult = await _searchIndex.Search(
-            _client,
+        SearchResult searchResult = await searchIndex.Search(
+            client,
             request.Query,
             string.Empty,
             (request.PageNumber - 1) * request.PageSize,
-            request.PageSize);
+            request.PageSize,
+            cancellationToken);
 
-        List<MusicVideoMetadata> musicVideos = await _musicVideoRepository
-            .GetMusicVideosForCards(searchResult.Items.Map(i => i.Id).ToList());
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+
+        var ids = searchResult.Items.Map(i => i.Id).ToHashSet();
+        List<MusicVideoMetadata> musicVideos = await dbContext.MusicVideoMetadata
+            .AsNoTracking()
+            .Filter(mvm => ids.Contains(mvm.MusicVideoId))
+            .Include(mvm => mvm.MusicVideo)
+            .ThenInclude(mv => mv.Artist)
+            .ThenInclude(a => a.ArtistMetadata)
+            .Include(mvm => mvm.MusicVideo)
+            .ThenInclude(e => e.MediaVersions)
+            .ThenInclude(mv => mv.MediaFiles)
+            .Include(mvm => mvm.Artwork)
+            .OrderBy(mvm => mvm.SortTitle)
+            .ToListAsync(cancellationToken);
 
         var items = new List<MusicVideoCardViewModel>();
 
         foreach (MusicVideoMetadata musicVideoMetadata in musicVideos)
         {
             string localPath = await musicVideoMetadata.MusicVideo.GetLocalPath(
-                _plexPathReplacementService,
-                _jellyfinPathReplacementService,
-                _embyPathReplacementService,
+                plexPathReplacementService,
+                jellyfinPathReplacementService,
+                embyPathReplacementService,
+                cancellationToken,
                 false);
 
             items.Add(ProjectToViewModel(musicVideoMetadata, localPath));

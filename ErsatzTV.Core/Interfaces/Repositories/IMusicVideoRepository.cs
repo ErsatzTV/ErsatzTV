@@ -19,7 +19,6 @@ public interface IMusicVideoRepository
     Task<bool> AddStudio(MusicVideoMetadata metadata, Studio studio);
     Task<bool> AddDirector(MusicVideoMetadata metadata, Director director);
     Task<bool> RemoveArtist(MusicVideoArtist artist);
-    Task<List<MusicVideoMetadata>> GetMusicVideosForCards(List<int> ids);
     Task<IEnumerable<string>> FindOrphanPaths(LibraryPath libraryPath);
     Task<int> GetMusicVideoCount(int artistId);
     Task<List<MusicVideoMetadata>> GetPagedMusicVideos(int artistId, int pageNumber, int pageSize);

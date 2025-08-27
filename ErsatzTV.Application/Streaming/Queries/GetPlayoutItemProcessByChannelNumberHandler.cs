@@ -185,7 +185,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
             .Include(i => i.Watermarks)
             .ForChannelAndTime(channel.Id, now)
             .Map(o => o.ToEither<BaseError>(new UnableToLocatePlayoutItem()))
-            .BindT(item => ValidatePlayoutItemPath(dbContext, item));
+            .BindT(item => ValidatePlayoutItemPath(dbContext, item, cancellationToken));
 
         if (maybePlayoutItem.LeftAsEnumerable().Any(e => e is UnableToLocatePlayoutItem))
         {
@@ -643,7 +643,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 PlayoutItemGraphicsElements = []
             };
 
-            return await ValidatePlayoutItemPath(dbContext, playoutItem);
+            return await ValidatePlayoutItemPath(dbContext, playoutItem, cancellationToken);
         }
 
         return new UnableToLocatePlayoutItem();
@@ -651,9 +651,10 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
 
     private async Task<Either<BaseError, PlayoutItemWithPath>> ValidatePlayoutItemPath(
         TvContext dbContext,
-        PlayoutItem playoutItem)
+        PlayoutItem playoutItem,
+        CancellationToken cancellationToken)
     {
-        string path = await GetPlayoutItemPath(playoutItem);
+        string path = await GetPlayoutItemPath(playoutItem, cancellationToken);
 
         // check filesystem first
         if (_localFileSystem.FileExists(path))
@@ -729,7 +730,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
         return new PlayoutItemDoesNotExistOnDisk(path);
     }
 
-    private async Task<string> GetPlayoutItemPath(PlayoutItem playoutItem)
+    private async Task<string> GetPlayoutItemPath(PlayoutItem playoutItem, CancellationToken cancellationToken)
     {
         MediaVersion version = playoutItem.MediaItem.GetHeadVersion();
         MediaFile file = version.MediaFiles.Head();
@@ -739,22 +740,28 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
         {
             PlexMovie plexMovie => await _plexPathReplacementService.GetReplacementPlexPath(
                 plexMovie.LibraryPathId,
-                path),
+                path,
+                cancellationToken),
             PlexEpisode plexEpisode => await _plexPathReplacementService.GetReplacementPlexPath(
                 plexEpisode.LibraryPathId,
-                path),
+                path,
+                cancellationToken),
             JellyfinMovie jellyfinMovie => await _jellyfinPathReplacementService.GetReplacementJellyfinPath(
                 jellyfinMovie.LibraryPathId,
-                path),
+                path,
+                cancellationToken),
             JellyfinEpisode jellyfinEpisode => await _jellyfinPathReplacementService.GetReplacementJellyfinPath(
                 jellyfinEpisode.LibraryPathId,
-                path),
+                path,
+                cancellationToken),
             EmbyMovie embyMovie => await _embyPathReplacementService.GetReplacementEmbyPath(
                 embyMovie.LibraryPathId,
-                path),
+                path,
+                cancellationToken),
             EmbyEpisode embyEpisode => await _embyPathReplacementService.GetReplacementEmbyPath(
                 embyEpisode.LibraryPathId,
-                path),
+                path,
+                cancellationToken),
             _ => path
         };
     }

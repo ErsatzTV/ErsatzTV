@@ -89,7 +89,7 @@ public class PrepareTroubleshootingPlaybackHandler(
 
         MediaVersion version = mediaItem.GetHeadVersion();
 
-        string mediaPath = await GetMediaItemPath(dbContext, mediaItem);
+        string mediaPath = await GetMediaItemPath(dbContext, mediaItem, cancellationToken);
         if (string.IsNullOrEmpty(mediaPath))
         {
             logger.LogWarning("Media item {MediaItemId} does not exist on disk; cannot troubleshoot.", mediaItem.Id);
@@ -378,9 +378,10 @@ public class PrepareTroubleshootingPlaybackHandler(
 
     private async Task<string> GetMediaItemPath(
         TvContext dbContext,
-        MediaItem mediaItem)
+        MediaItem mediaItem,
+        CancellationToken cancellationToken)
     {
-        string path = await GetLocalPath(mediaItem);
+        string path = await GetLocalPath(mediaItem, cancellationToken);
 
         // check filesystem first
         if (localFileSystem.FileExists(path))
@@ -450,7 +451,7 @@ public class PrepareTroubleshootingPlaybackHandler(
         return null;
     }
 
-    private async Task<string> GetLocalPath(MediaItem mediaItem)
+    private async Task<string> GetLocalPath(MediaItem mediaItem, CancellationToken cancellationToken)
     {
         MediaVersion version = mediaItem.GetHeadVersion();
         MediaFile file = version.MediaFiles.Head();
@@ -460,22 +461,28 @@ public class PrepareTroubleshootingPlaybackHandler(
         {
             PlexMovie plexMovie => await plexPathReplacementService.GetReplacementPlexPath(
                 plexMovie.LibraryPathId,
-                path),
+                path,
+                cancellationToken),
             PlexEpisode plexEpisode => await plexPathReplacementService.GetReplacementPlexPath(
                 plexEpisode.LibraryPathId,
-                path),
+                path,
+                cancellationToken),
             JellyfinMovie jellyfinMovie => await jellyfinPathReplacementService.GetReplacementJellyfinPath(
                 jellyfinMovie.LibraryPathId,
-                path),
+                path,
+                cancellationToken),
             JellyfinEpisode jellyfinEpisode => await jellyfinPathReplacementService.GetReplacementJellyfinPath(
                 jellyfinEpisode.LibraryPathId,
-                path),
+                path,
+                cancellationToken),
             EmbyMovie embyMovie => await embyPathReplacementService.GetReplacementEmbyPath(
                 embyMovie.LibraryPathId,
-                path),
+                path,
+                cancellationToken),
             EmbyEpisode embyEpisode => await embyPathReplacementService.GetReplacementEmbyPath(
                 embyEpisode.LibraryPathId,
-                path),
+                path,
+                cancellationToken),
             _ => path
         };
     }

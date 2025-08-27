@@ -49,7 +49,7 @@ public interface ISchedulingEngine
         PlaybackOrder playbackOrder,
         CancellationToken cancellationToken);
 
-    Task AddSearch(string key, string query, PlaybackOrder playbackOrder);
+    Task AddSearch(string key, string query, PlaybackOrder playbackOrder, CancellationToken cancellationToken);
     Task AddShow(string key, Dictionary<string, string> guids, PlaybackOrder playbackOrder);
 
     // content instructions

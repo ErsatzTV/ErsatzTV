@@ -37,10 +37,10 @@ public class
     {
         int count = await _televisionRepository.GetEpisodeCount(request.TelevisionSeasonId);
 
-        Option<JellyfinMediaSource> maybeJellyfin = await _mediaSourceRepository.GetAllJellyfin()
+        Option<JellyfinMediaSource> maybeJellyfin = await _mediaSourceRepository.GetAllJellyfin(cancellationToken)
             .Map(list => list.HeadOrNone());
 
-        Option<EmbyMediaSource> maybeEmby = await _mediaSourceRepository.GetAllEmby()
+        Option<EmbyMediaSource> maybeEmby = await _mediaSourceRepository.GetAllEmby(cancellationToken)
             .Map(list => list.HeadOrNone());
 
         List<EpisodeMetadata> episodes = await _televisionRepository
@@ -53,6 +53,7 @@ public class
                 _plexPathReplacementService,
                 _jellyfinPathReplacementService,
                 _embyPathReplacementService,
+                cancellationToken,
                 false);
 
             results.Add(ProjectToViewModel(episodeMetadata, maybeJellyfin, maybeEmby, false, localPath));

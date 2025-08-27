@@ -11,9 +11,6 @@ public interface ITelevisionRepository
     Task<List<Show>> GetAllShows();
     Task<Option<Show>> GetShow(int showId, CancellationToken cancellationToken);
     Task<Option<int>> GetShowIdByTitle(int libraryId, string title);
-    Task<List<ShowMetadata>> GetShowsForCards(List<int> ids);
-    Task<List<SeasonMetadata>> GetSeasonsForCards(List<int> ids);
-    Task<List<EpisodeMetadata>> GetEpisodesForCards(List<int> ids);
     Task<List<Episode>> GetShowItems(int showId);
     Task<List<int>> GetEpisodeIdsForShow(int showId);
     Task<List<Season>> GetAllSeasons();

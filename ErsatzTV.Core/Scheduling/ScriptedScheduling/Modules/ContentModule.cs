@@ -18,7 +18,7 @@ public class ContentModule(ISchedulingEngine schedulingEngine, CancellationToken
             return;
         }
 
-        schedulingEngine.AddSearch(key, query, playbackOrder).GetAwaiter().GetResult();
+        schedulingEngine.AddSearch(key, query, playbackOrder, cancellationToken).GetAwaiter().GetResult();
     }
 
     public void add_collection(string key, string collection, string order)

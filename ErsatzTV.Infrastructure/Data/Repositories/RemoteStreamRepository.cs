@@ -102,21 +102,6 @@ public class RemoteStreamRepository(
             new { tag.Name, MetadataId = metadata.Id, tag.ExternalCollectionId }).Map(result => result > 0);
     }
 
-    public async Task<List<RemoteStreamMetadata>> GetRemoteStreamsForCards(List<int> ids)
-    {
-        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
-        return await dbContext.RemoteStreamMetadata
-            .AsNoTracking()
-            .Filter(im => ids.Contains(im.RemoteStreamId))
-            .Include(im => im.RemoteStream)
-            .Include(im => im.Artwork)
-            .Include(im => im.RemoteStream)
-            .ThenInclude(s => s.MediaVersions)
-            .ThenInclude(mv => mv.MediaFiles)
-            .OrderBy(im => im.SortTitle)
-            .ToListAsync();
-    }
-
     public async Task UpdateDefinition(RemoteStream remoteStream)
     {
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();

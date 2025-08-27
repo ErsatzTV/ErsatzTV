@@ -54,22 +54,42 @@
 </MudForm>
 
 @code {
-    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource _cts;
 
     private IList<LocalLibraryViewModel> _libraries;
 
     protected override void OnInitialized() => Locker.OnLibraryChanged += LockChanged;
 
-    protected override async Task OnParametersSetAsync() => await LoadLibraries(_cts.Token);
+    protected override async Task OnParametersSetAsync()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
 
-    private async Task LoadLibraries(CancellationToken cancellationToken) => _libraries = await Mediator.Send(new GetAllLocalLibraries(), cancellationToken);
+        try
+        {
+            await LoadLibraries(token);
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
+        }
+    }
+
+    private async Task LoadLibraries(CancellationToken cancellationToken)
+    {
+        _libraries = await Mediator.Send(new GetAllLocalLibraries(), cancellationToken);
+    }
 
     private void LockChanged(object sender, EventArgs e) =>
         InvokeAsync(StateHasChanged);
 
     private async Task DeleteLibrary(LocalLibraryViewModel library)
     {
-        int count = await Mediator.Send(new CountMediaItemsByLibrary(library.Id), _cts.Token);
+        using var cts = new CancellationTokenSource();
+
+        int count = await Mediator.Send(new CountMediaItemsByLibrary(library.Id), cts.Token);
         var parameters = new DialogParameters
         {
             { "EntityType", "library" },
@@ -83,8 +103,8 @@
         DialogResult result = await dialog.Result;
         if (result is { Canceled: false })
         {
-            await Mediator.Send(new DeleteLocalLibrary(library.Id), _cts.Token);
-            await LoadLibraries(_cts.Token);
+            await Mediator.Send(new DeleteLocalLibrary(library.Id), cts.Token);
+            await LoadLibraries(cts.Token);
         }
     }
 
@@ -105,9 +125,7 @@
     {
         Locker.OnLibraryChanged -= LockChanged;
 
-        _cts.Cancel();
-        _cts.Dispose();
+        _cts?.Cancel();
+        _cts?.Dispose();
     }
-
-
 }

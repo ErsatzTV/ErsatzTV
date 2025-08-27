@@ -115,7 +115,8 @@ public class ScheduleIntegrationTests
 
         await searchIndex.Rebuild(
             provider.GetRequiredService<ICachingSearchRepository>(),
-            provider.GetRequiredService<IFallbackMetadataProvider>());
+            provider.GetRequiredService<IFallbackMetadataProvider>(),
+            _cancellationToken);
 
         var builder = new PlayoutBuilder(
             new ConfigElementRepository(factory),

@@ -6,18 +6,14 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Application.Search;
 
-public class SearchTelevisionShowsHandler : IRequestHandler<SearchTelevisionShows, List<NamedMediaItemViewModel>>
+public class SearchTelevisionShowsHandler(IDbContextFactory<TvContext> dbContextFactory)
+    : IRequestHandler<SearchTelevisionShows, List<NamedMediaItemViewModel>>
 {
-    private readonly IDbContextFactory<TvContext> _dbContextFactory;
-
-    public SearchTelevisionShowsHandler(IDbContextFactory<TvContext> dbContextFactory) =>
-        _dbContextFactory = dbContextFactory;
-
     public async Task<List<NamedMediaItemViewModel>> Handle(
         SearchTelevisionShows request,
         CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await dbContext.ShowMetadata
             .AsNoTracking()
             .Where(s => EF.Functions.Like(

@@ -17,7 +17,10 @@ public interface ISearchIndex : IDisposable
         IConfigElementRepository configElementRepository,
         CancellationToken cancellationToken);
 
-    Task<Unit> Rebuild(ICachingSearchRepository searchRepository, IFallbackMetadataProvider fallbackMetadataProvider);
+    Task<Unit> Rebuild(
+        ICachingSearchRepository searchRepository,
+        IFallbackMetadataProvider fallbackMetadataProvider,
+        CancellationToken cancellationToken);
 
     Task<Unit> RebuildItems(
         ICachingSearchRepository searchRepository,
@@ -31,6 +34,14 @@ public interface ISearchIndex : IDisposable
         List<MediaItem> items);
 
     Task<bool> RemoveItems(IEnumerable<int> ids);
-    Task<SearchResult> Search(IClient client, string query, string smartCollectionName, int skip, int limit);
+
+    Task<SearchResult> Search(
+        IClient client,
+        string query,
+        string smartCollectionName,
+        int skip,
+        int limit,
+        CancellationToken cancellationToken);
+
     void Commit();
 }

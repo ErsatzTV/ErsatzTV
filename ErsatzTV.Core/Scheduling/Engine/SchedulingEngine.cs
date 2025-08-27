@@ -301,12 +301,17 @@ public class SchedulingEngine(
         }
     }
 
-    public async Task AddSearch(string key, string query, PlaybackOrder playbackOrder)
+    public async Task AddSearch(
+        string key,
+        string query,
+        PlaybackOrder playbackOrder,
+        CancellationToken cancellationToken)
     {
         if (!_enumerators.ContainsKey(key))
         {
             int index = _enumerators.Count;
-            List<MediaItem> items = await mediaCollectionRepository.GetSmartCollectionItems(query, string.Empty);
+            List<MediaItem> items =
+                await mediaCollectionRepository.GetSmartCollectionItems(query, string.Empty, cancellationToken);
             if (items.Count == 0)
             {
                 logger.LogWarning("Skipping invalid or empty search query {Query}", query);

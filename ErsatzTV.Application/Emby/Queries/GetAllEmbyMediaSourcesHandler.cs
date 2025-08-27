@@ -13,5 +13,5 @@ public class GetAllEmbyMediaSourcesHandler : IRequestHandler<GetAllEmbyMediaSour
     public Task<List<EmbyMediaSourceViewModel>> Handle(
         GetAllEmbyMediaSources request,
         CancellationToken cancellationToken) =>
-        _mediaSourceRepository.GetAllEmby().Map(list => list.Map(ProjectToViewModel).ToList());
+        _mediaSourceRepository.GetAllEmby(cancellationToken).Map(list => list.Map(ProjectToViewModel).ToList());
 }

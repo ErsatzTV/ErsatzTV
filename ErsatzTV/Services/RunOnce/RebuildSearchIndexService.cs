@@ -37,6 +37,6 @@ public class RebuildSearchIndexService : BackgroundService
         await mediator.Send(new RebuildSearchIndex(), stoppingToken);
 
         ISmartCollectionCache cache = scope.ServiceProvider.GetRequiredService<ISmartCollectionCache>();
-        await cache.Refresh();
+        await cache.Refresh(stoppingToken);
     }
 }

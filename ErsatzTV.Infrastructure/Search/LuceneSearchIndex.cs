@@ -214,7 +214,8 @@ public sealed class LuceneSearchIndex : ISearchIndex
         string query,
         string smartCollectionName,
         int skip,
-        int limit)
+        int limit,
+        CancellationToken cancellationToken)
     {
         var metadata = new Dictionary<string, string>
         {
@@ -234,7 +235,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
         using DirectoryReader reader = _writer.GetReader(true);
         var searcher = new IndexSearcher(reader);
         int hitsLimit = limit == 0 ? searcher.IndexReader.MaxDoc : skip + limit;
-        Query parsedQuery = await _searchQueryParser.ParseQuery(query, smartCollectionName);
+        Query parsedQuery = await _searchQueryParser.ParseQuery(query, smartCollectionName, cancellationToken);
         // TODO: figure out if this is actually needed
         // var filter = new DuplicateFilter(TitleAndYearField);
         var sort = new Sort(new SortField(SortTitleField, SortFieldType.STRING));
@@ -273,12 +274,13 @@ public sealed class LuceneSearchIndex : ISearchIndex
 
     public async Task<Unit> Rebuild(
         ICachingSearchRepository searchRepository,
-        IFallbackMetadataProvider fallbackMetadataProvider)
+        IFallbackMetadataProvider fallbackMetadataProvider,
+        CancellationToken cancellationToken)
     {
         _writer.DeleteAll();
         _writer.Commit();
 
-        await foreach (MediaItem mediaItem in searchRepository.GetAllMediaItems())
+        await foreach (MediaItem mediaItem in searchRepository.GetAllMediaItems().WithCancellation(cancellationToken))
         {
             await RebuildItem(searchRepository, fallbackMetadataProvider, mediaItem);
         }

@@ -15,10 +15,6 @@ public class FakeTelevisionRepository : ITelevisionRepository
 
     public Task<Option<Show>> GetShow(int showId, CancellationToken cancellationToken) => throw new NotSupportedException();
     public Task<Option<int>> GetShowIdByTitle(int libraryId, string title) => throw new NotSupportedException();
-    public Task<List<ShowMetadata>> GetShowsForCards(List<int> ids) => throw new NotSupportedException();
-    public Task<List<SeasonMetadata>> GetSeasonsForCards(List<int> ids) => throw new NotSupportedException();
-
-    public Task<List<EpisodeMetadata>> GetEpisodesForCards(List<int> ids) => throw new NotSupportedException();
 
     public Task<List<Episode>> GetShowItems(int showId) => throw new NotSupportedException();
     public Task<List<int>> GetEpisodeIdsForShow(int showId) => throw new NotSupportedException();

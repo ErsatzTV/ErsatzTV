@@ -136,7 +136,8 @@ public class ExternalJsonPlayoutItemProvider : IExternalJsonPlayoutItemProvider
         {
             string localPath = await _plexPathReplacementService.GetReplacementPlexPath(
                 libraryPath.Id,
-                program.File);
+                program.File,
+                cancellationToken);
 
             if (_localFileSystem.FileExists(localPath))
             {

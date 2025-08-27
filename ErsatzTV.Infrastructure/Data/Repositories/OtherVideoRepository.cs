@@ -173,21 +173,6 @@ public class OtherVideoRepository : IOtherVideoRepository
             new { writer.Name, MetadataId = metadata.Id }).Map(result => result > 0);
     }
 
-    public async Task<List<OtherVideoMetadata>> GetOtherVideosForCards(List<int> ids)
-    {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
-        return await dbContext.OtherVideoMetadata
-            .AsNoTracking()
-            .Filter(ovm => ids.Contains(ovm.OtherVideoId))
-            .Include(ovm => ovm.OtherVideo)
-            .Include(ovm => ovm.Artwork)
-            .Include(ovm => ovm.OtherVideo)
-            .ThenInclude(ov => ov.MediaVersions)
-            .ThenInclude(mv => mv.MediaFiles)
-            .OrderBy(ovm => ovm.SortTitle)
-            .ToListAsync();
-    }
-
     private async Task<Either<BaseError, MediaItemScanResult<OtherVideo>>> AddOtherVideo(
         TvContext dbContext,
         int libraryPathId,

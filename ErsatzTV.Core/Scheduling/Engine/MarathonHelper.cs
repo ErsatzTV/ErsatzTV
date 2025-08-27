@@ -28,7 +28,7 @@ public class MarathonHelper(IMediaCollectionRepository mediaCollectionRepository
         // grab items from each search
         foreach (string query in searches)
         {
-            allMediaItems.AddRange(await mediaCollectionRepository.GetSmartCollectionItems(query, string.Empty));
+            allMediaItems.AddRange(await mediaCollectionRepository.GetSmartCollectionItems(query, string.Empty, cancellationToken));
         }
 
         List<IGrouping<GroupKey, MediaItem>> groups = [];

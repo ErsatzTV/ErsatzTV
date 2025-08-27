@@ -40,24 +40,28 @@ public class UpdateSmartCollectionHandler : IRequestHandler<UpdateSmartCollectio
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, SmartCollection> validation = await Validate(dbContext, request, cancellationToken);
-        return await validation.Apply(c => ApplyUpdateRequest(dbContext, c, request));
+        return await validation.Apply(c => ApplyUpdateRequest(dbContext, c, request, cancellationToken));
     }
 
-    private async Task<Unit> ApplyUpdateRequest(TvContext dbContext, SmartCollection c, UpdateSmartCollection request)
+    private async Task<Unit> ApplyUpdateRequest(
+        TvContext dbContext,
+        SmartCollection c,
+        UpdateSmartCollection request,
+        CancellationToken cancellationToken)
     {
         c.Query = request.Query;
         c.Name = request.Name;
 
         // rebuild playouts
-        if (await dbContext.SaveChangesAsync() > 0)
+        if (await dbContext.SaveChangesAsync(cancellationToken) > 0)
         {
             _searchTargets.SearchTargetsChanged();
-            await _smartCollectionCache.Refresh();
+            await _smartCollectionCache.Refresh(cancellationToken);
 
             // refresh all playouts that use this smart collection
             foreach (int playoutId in await _mediaCollectionRepository.PlayoutIdsUsingSmartCollection(request.Id))
             {
-                await _channel.WriteAsync(new BuildPlayout(playoutId, PlayoutBuildMode.Refresh));
+                await _channel.WriteAsync(new BuildPlayout(playoutId, PlayoutBuildMode.Refresh), cancellationToken);
             }
         }
 

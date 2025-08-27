@@ -44,7 +44,7 @@ public class DeleteSmartCollectionHandler : IRequestHandler<DeleteSmartCollectio
         dbContext.SmartCollections.Remove(smartCollection);
         await dbContext.SaveChangesAsync(cancellationToken);
         _searchTargets.SearchTargetsChanged();
-        await _smartCollectionCache.Refresh();
+        await _smartCollectionCache.Refresh(cancellationToken);
         return Unit.Default;
     }
 

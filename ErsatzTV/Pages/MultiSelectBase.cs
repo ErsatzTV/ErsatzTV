@@ -45,7 +45,7 @@ public class MultiSelectBase<T> : FragmentNavigationBase
         StateHasChanged();
     }
 
-    protected virtual Task RefreshData() => Task.CompletedTask;
+    protected virtual Task RefreshData(CancellationToken cancellationToken) => Task.CompletedTask;
 
     protected void SelectClicked(
         Func<List<MediaCardViewModel>> getSortedItems,
@@ -180,7 +180,7 @@ public class MultiSelectBase<T> : FragmentNavigationBase
                 },
                 CancellationToken);
 
-            await RefreshData();
+            await RefreshData(CancellationToken);
             ClearSelection();
         }
     }

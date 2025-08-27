@@ -94,59 +94,6 @@ public class TelevisionRepository : ITelevisionRepository
             .Map(showId => showId > 0 ? Option<int>.Some(showId) : Option<int>.None);
     }
 
-    public async Task<List<ShowMetadata>> GetShowsForCards(List<int> ids)
-    {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
-        return await dbContext.ShowMetadata
-            .AsNoTracking()
-            .Filter(sm => ids.Contains(sm.ShowId))
-            .Include(sm => sm.Artwork)
-            .Include(sm => sm.Show)
-            .OrderBy(sm => sm.SortTitle)
-            .ToListAsync();
-    }
-
-    public async Task<List<SeasonMetadata>> GetSeasonsForCards(List<int> ids)
-    {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
-        return await dbContext.SeasonMetadata
-            .AsNoTracking()
-            .Filter(s => ids.Contains(s.SeasonId))
-            .Include(s => s.Season.Show)
-            .ThenInclude(s => s.ShowMetadata)
-            .Include(sm => sm.Artwork)
-            .ToListAsync()
-            .Map(list => list
-                .OrderBy(s => s.Season.Show.ShowMetadata.HeadOrNone().Match(sm => sm.SortTitle, () => string.Empty))
-                .ThenBy(s => s.Season.SeasonNumber)
-                .ToList());
-    }
-
-    public async Task<List<EpisodeMetadata>> GetEpisodesForCards(List<int> ids)
-    {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
-        return await dbContext.EpisodeMetadata
-            .AsNoTracking()
-            .Filter(em => ids.Contains(em.EpisodeId))
-            .Include(em => em.Artwork)
-            .Include(em => em.Directors)
-            .Include(em => em.Writers)
-            .Include(em => em.Episode)
-            .ThenInclude(e => e.Season)
-            .ThenInclude(s => s.SeasonMetadata)
-            .ThenInclude(sm => sm.Artwork)
-            .Include(em => em.Episode)
-            .ThenInclude(e => e.Season)
-            .ThenInclude(s => s.Show)
-            .ThenInclude(s => s.ShowMetadata)
-            .ThenInclude(sm => sm.Artwork)
-            .Include(em => em.Episode)
-            .ThenInclude(e => e.MediaVersions)
-            .ThenInclude(mv => mv.MediaFiles)
-            .OrderBy(em => em.SortTitle)
-            .ToListAsync();
-    }
-
     public async Task<List<int>> GetEpisodeIdsForShow(int showId)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();

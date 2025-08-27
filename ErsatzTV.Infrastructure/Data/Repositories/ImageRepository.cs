@@ -108,21 +108,6 @@ public class ImageRepository : IImageRepository
             new { tag.Name, MetadataId = metadata.Id, tag.ExternalCollectionId }).Map(result => result > 0);
     }
 
-    public async Task<List<ImageMetadata>> GetImagesForCards(List<int> ids)
-    {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
-        return await dbContext.ImageMetadata
-            .AsNoTracking()
-            .Filter(im => ids.Contains(im.ImageId))
-            .Include(im => im.Image)
-            .Include(im => im.Artwork)
-            .Include(im => im.Image)
-            .ThenInclude(s => s.MediaVersions)
-            .ThenInclude(mv => mv.MediaFiles)
-            .OrderBy(im => im.SortTitle)
-            .ToListAsync();
-    }
-
     private async Task<Either<BaseError, MediaItemScanResult<Image>>> AddImage(
         TvContext dbContext,
         int libraryPathId,
