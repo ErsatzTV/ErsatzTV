@@ -51,7 +51,7 @@ public class PlayoutModeSchedulerDuration : PlayoutModeSchedulerBase<ProgramSche
             MediaItem mediaItem = contentEnumerator.Current.ValueUnsafe();
 
             // find when we should start this item, based on the current time
-            DateTimeOffset itemStartTime = GetStartTimeAfter(nextState, scheduleItem);
+            DateTimeOffset itemStartTime = GetStartTimeAfter(nextState, scheduleItem, Option<ILogger>.Some(Logger));
 
             if (itemStartTime >= nextState.DurationFinish.IfNone(SystemTime.MaxValueUtc) ||
                 // don't start if the first item will already be after the hard stop

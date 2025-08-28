@@ -86,6 +86,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix remote library editing, tv shows, artists with MySql/MariaDB
 - Classic schedules: fix alternate schedule transitions (some edge cases would cause days to be skipped completely)
 - Classic schedules: always start new alternate schedules with the first schedule item
+- Classic Schedules: log offline gaps longer than 1 hour due to strict fixed start times
 
 ### Changed
 - Rename some schedule and playout terms for clarity

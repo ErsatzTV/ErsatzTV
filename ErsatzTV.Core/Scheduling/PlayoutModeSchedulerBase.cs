@@ -3,6 +3,7 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Scheduling;
+using Humanizer;
 using LanguageExt.UnsafeValueAccess;
 using Microsoft.Extensions.Logging;
 
@@ -29,7 +30,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
         ProgramScheduleItem scheduleItem,
         DateTimeOffset hardStop)
     {
-        DateTimeOffset startTime = GetStartTimeAfter(state, scheduleItem);
+        DateTimeOffset startTime = GetStartTimeAfter(state, scheduleItem, Option<ILogger>.None);
 
         // filler should always stop at the hard stop
         if (hardStop < startTime)
@@ -40,7 +41,10 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
         return startTime;
     }
 
-    public static DateTimeOffset GetStartTimeAfter(PlayoutBuilderState state, ProgramScheduleItem scheduleItem)
+    public static DateTimeOffset GetStartTimeAfter(
+        PlayoutBuilderState state,
+        ProgramScheduleItem scheduleItem,
+        Option<ILogger> maybeLogger)
     {
         DateTimeOffset startTime = state.CurrentTime.ToLocalTime();
 
@@ -91,6 +95,21 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                 default:
                     startTime = startTime.TimeOfDay > itemStartTime ? result.AddDays(1) : result;
                     break;
+            }
+
+            TimeSpan gap = startTime - state.CurrentTime;
+            if (gap > TimeSpan.FromHours(1) && fixedStartTimeBehavior == FixedStartTimeBehavior.Strict &&
+                result.TimeOfDay < state.CurrentTime.ToLocalTime().TimeOfDay)
+            {
+                foreach (ILogger logger in maybeLogger)
+                {
+                    logger.LogWarning(
+                        "Offline playout gap of {Gap} caused by strict fixed start time {StartTime} before current time {CurrentTime} on schedule {Name}",
+                        gap.Humanize(),
+                        result.TimeOfDay,
+                        state.CurrentTime.TimeOfDay,
+                        scheduleItem.ProgramSchedule?.Name ?? "unknown");
+                }
             }
         }
 

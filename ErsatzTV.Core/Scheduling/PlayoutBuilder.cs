@@ -825,7 +825,7 @@ public class PlayoutBuilder : IPlayoutBuilder
         {
             ScheduleItemsEnumeratorState = playoutBuilderState.ScheduleItemsEnumerator.State,
             NextStart = PlayoutModeSchedulerBase<ProgramScheduleItem>
-                .GetStartTimeAfter(playoutBuilderState, anchorScheduleItem)
+                .GetStartTimeAfter(playoutBuilderState, anchorScheduleItem, Option<ILogger>.None)
                 .UtcDateTime,
             InFlood = playoutBuilderState.InFlood,
             InDurationFiller = playoutBuilderState.InDurationFiller,
@@ -864,7 +864,10 @@ public class PlayoutBuilder : IPlayoutBuilder
             };
 
             var firstItem = activeScheduleAtAnchor.Items.OrderBy(i => i.Index).Head();
-            DateTimeOffset nextStart = PlayoutModeSchedulerBase<ProgramScheduleItem>.GetStartTimeAfter(cleanState, firstItem);
+            DateTimeOffset nextStart = PlayoutModeSchedulerBase<ProgramScheduleItem>.GetStartTimeAfter(
+                cleanState,
+                firstItem,
+                Option<ILogger>.Some(_logger));
 
             if (playoutBuilderState.CurrentTime.TimeOfDay > TimeSpan.Zero)
             {
@@ -873,19 +876,19 @@ public class PlayoutBuilder : IPlayoutBuilder
                     playoutBuilderState.CurrentTime);
             }
 
-            TimeSpan gap = nextStart - playoutBuilderState.CurrentTime;
-            var fixedStartTimeBehavior =
-                firstItem.FixedStartTimeBehavior ?? activeScheduleAtAnchor.FixedStartTimeBehavior;
-
-            if (gap > TimeSpan.FromHours(1) && firstItem.StartTime.HasValue && fixedStartTimeBehavior == FixedStartTimeBehavior.Strict)
-            {
-                _logger.LogWarning(
-                    "Offline playout gap of {Gap} caused by strict fixed start time {StartTime} before current time {CurrentTime} on schedule {Name}",
-                    gap.Humanize(),
-                    firstItem.StartTime.Value,
-                    playoutBuilderState.CurrentTime.TimeOfDay,
-                    activeScheduleAtAnchor.Name);
-            }
+            // TimeSpan gap = nextStart - playoutBuilderState.CurrentTime;
+            // var fixedStartTimeBehavior =
+            //     firstItem.FixedStartTimeBehavior ?? activeScheduleAtAnchor.FixedStartTimeBehavior;
+            //
+            // if (gap > TimeSpan.FromHours(1) && firstItem.StartTime.HasValue && fixedStartTimeBehavior == FixedStartTimeBehavior.Strict)
+            // {
+            //     _logger.LogWarning(
+            //         "Offline playout gap of {Gap} caused by strict fixed start time {StartTime} before current time {CurrentTime} on schedule {Name}",
+            //         gap.Humanize(),
+            //         firstItem.StartTime.Value,
+            //         playoutBuilderState.CurrentTime.TimeOfDay,
+            //         activeScheduleAtAnchor.Name);
+            // }
 
             playout.Anchor.NextStart = nextStart.UtcDateTime;
             playout.Anchor.InFlood = false;
