@@ -39,7 +39,14 @@ public class ReplaceProgramScheduleItemsHandler : ProgramScheduleItemCommandBase
         CancellationToken cancellationToken)
     {
         dbContext.RemoveRange(programSchedule.Items);
-        programSchedule.Items = request.Items.Map(i => BuildItem(programSchedule, i.Index, i)).ToList();
+
+        // reset index starting with zero
+        programSchedule.Items = [];
+        var orderedItems = request.Items.OrderBy(i => i.Index).ToList();
+        for (var i = 0; i < orderedItems.Count; i++)
+        {
+            programSchedule.Items.Add(BuildItem(programSchedule, i, orderedItems[i]));
+        }
 
         await dbContext.SaveChangesAsync(cancellationToken);
 
