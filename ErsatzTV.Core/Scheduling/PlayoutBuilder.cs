@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Newtonsoft.Json;
 using Map = LanguageExt.Map;
+using Humanizer;
 
 namespace ErsatzTV.Core.Scheduling;
 
@@ -783,6 +784,26 @@ public class PlayoutBuilder : IPlayoutBuilder
                 }
             }
 
+            // if (playoutItems.Count > 0 && result.AddedItems.Count > 0)
+            // {
+            //     var gap = playoutItems.Min(pi => pi.StartOffset) - result.AddedItems.Max(pi => pi.FinishOffset);
+            //     if (gap > TimeSpan.FromHours(1))
+            //     {
+            //         _logger.LogWarning(
+            //             "Large gap at {CurrentTime} ({Gap}) when scheduling item from schedule {Name} index {Index}",
+            //             playoutBuilderState.CurrentTime,
+            //             gap,
+            //             activeSchedule.Name,
+            //             scheduleItem.Index);
+            //
+            //         _logger.LogWarning(
+            //             "Start type: {StartType}, start time: {StartTime}, fixed start time behavior: {FixedStartTimeBehavior}",
+            //             scheduleItem.StartType,
+            //             scheduleItem.StartTime,
+            //             scheduleItem.FixedStartTimeBehavior ?? activeSchedule.FixedStartTimeBehavior);
+            //     }
+            // }
+
             result.AddedItems.AddRange(playoutItems);
 
             playoutBuilderState = nextState;
@@ -842,14 +863,28 @@ public class PlayoutBuilder : IPlayoutBuilder
                 DurationFinish = Option<DateTimeOffset>.None
             };
 
-            DateTimeOffset nextStart = PlayoutModeSchedulerBase<ProgramScheduleItem>
-                .GetStartTimeAfter(cleanState, activeScheduleAtAnchor.Items.OrderBy(i => i.Index).Head());
+            var firstItem = activeScheduleAtAnchor.Items.OrderBy(i => i.Index).Head();
+            DateTimeOffset nextStart = PlayoutModeSchedulerBase<ProgramScheduleItem>.GetStartTimeAfter(cleanState, firstItem);
 
             if (playoutBuilderState.CurrentTime.TimeOfDay > TimeSpan.Zero)
             {
-                _logger.LogWarning(
+                _logger.LogDebug(
                     "Playout build went beyond midnight ({Time}) into a different alternate schedule; this may cause issues with start times on the next day",
                     playoutBuilderState.CurrentTime);
+            }
+
+            TimeSpan gap = nextStart - playoutBuilderState.CurrentTime;
+            var fixedStartTimeBehavior =
+                firstItem.FixedStartTimeBehavior ?? activeScheduleAtAnchor.FixedStartTimeBehavior;
+
+            if (gap > TimeSpan.FromHours(1) && firstItem.StartTime.HasValue && fixedStartTimeBehavior == FixedStartTimeBehavior.Strict)
+            {
+                _logger.LogWarning(
+                    "Offline playout gap of {Gap} caused by strict fixed start time {StartTime} before current time {CurrentTime} on schedule {Name}",
+                    gap.Humanize(),
+                    firstItem.StartTime.Value,
+                    playoutBuilderState.CurrentTime.TimeOfDay,
+                    activeScheduleAtAnchor.Name);
             }
 
             playout.Anchor.NextStart = nextStart.UtcDateTime;
@@ -857,6 +892,11 @@ public class PlayoutBuilder : IPlayoutBuilder
             playout.Anchor.InDurationFiller = false;
             playout.Anchor.MultipleRemaining = null;
             playout.Anchor.DurationFinish = null;
+            playout.Anchor.ScheduleItemsEnumeratorState = new CollectionEnumeratorState
+            {
+                Seed = playoutBuilderState.ScheduleItemsEnumerator.State.Seed,
+                Index = 0
+            };
         }
 
         // build program schedule anchors
