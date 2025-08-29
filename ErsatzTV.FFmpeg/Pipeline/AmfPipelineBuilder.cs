@@ -3,6 +3,7 @@ using ErsatzTV.FFmpeg.Encoder;
 using ErsatzTV.FFmpeg.Encoder.Amf;
 using ErsatzTV.FFmpeg.Filter;
 using ErsatzTV.FFmpeg.Format;
+using ErsatzTV.FFmpeg.OutputFormat;
 using ErsatzTV.FFmpeg.OutputOption;
 using Microsoft.Extensions.Logging;
 
@@ -58,6 +59,12 @@ public class AmfPipelineBuilder : SoftwarePipelineBuilder
             desiredState.VideoFormat,
             desiredState.VideoProfile,
             desiredState.PixelFormat);
+
+        // use software encoding (rawvideo) when piping to parent hls segmenter
+        if (ffmpegState.OutputFormat is OutputFormatKind.Nut)
+        {
+            encodeCapability = FFmpegCapability.Software;
+        }
 
         // disable hw accel if decoder/encoder isn't supported
         return ffmpegState with
