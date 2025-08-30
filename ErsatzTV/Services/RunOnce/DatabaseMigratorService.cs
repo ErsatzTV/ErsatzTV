@@ -31,6 +31,12 @@ public class DatabaseMigratorService : BackgroundService
         using IServiceScope scope = _serviceScopeFactory.CreateScope();
         await using TvContext dbContext = scope.ServiceProvider.GetRequiredService<TvContext>();
 
+        if (TvContext.IsSqlite)
+        {
+            // sqlite migrations lock is always stale since mutex ensures single instance of etv
+            await dbContext.Database.ExecuteSqlRawAsync("DROP TABLE IF EXISTS `__EFMigrationsLock`", stoppingToken);
+        }
+
         List<string> pendingMigrations = await dbContext.Database
             .GetPendingMigrationsAsync(stoppingToken)
             .Map(l => l.ToList());

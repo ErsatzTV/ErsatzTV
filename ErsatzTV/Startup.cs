@@ -325,7 +325,7 @@ public class Startup
         Log.Logger.Warning(
             "Give feedback at {GitHub} or {Discord}",
             "https://github.com/ErsatzTV/ErsatzTV",
-            "https://discord.gg/hHaJm3yGy6");
+            "https://discord.ersatztv.org");
 
         CopyMacOsConfigFolderIfNeeded();
 
