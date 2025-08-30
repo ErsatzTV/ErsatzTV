@@ -88,6 +88,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Classic schedules: always start new alternate schedules with the first schedule item
 - Classic Schedules: log offline gaps longer than 1 hour due to strict fixed start times
 - Fix `HLS Segmenter V2` streaming mode with AMF acceleration
+- Fix startup process for database and search index initialization
+  - All pages will redirect to home page when initializing to prevent interfering
 
 ### Changed
 - Rename some schedule and playout terms for clarity

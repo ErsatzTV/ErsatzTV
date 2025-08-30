@@ -21,7 +21,10 @@
 
 <MudLayout @onclick="@(() => _isOpen = false)" Class="@(_isDarkMode ? "d-flex d-flex-column ersatztv-dark" : "d-flex d-flex-column ersatztv-light")" Style="height: 100vh">
     <MudAppBar Elevation="1" Class="app-bar">
-        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@ToggleDrawer"/>
+        @if (SystemStartup.IsDatabaseReady && SystemStartup.IsSearchIndexReady)
+        {
+            <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@ToggleDrawer"/>
+        }
         <div style="min-width: 240px" class="ml-3 d-none d-md-flex">
             <a href="">
                 <img src="images/ersatztv.png" alt="ErsatzTV"/>
@@ -39,7 +42,7 @@
                                   Immediate="true"
                                   Class="search-bar"
                                   @onclick="@(() => _isOpen = true)"
-                                  OnKeyUp="OnKeyUp">
+                                  OnKeyUp="@OnKeyUp">
                     </MudTextField>
                     <MudPopover Open="@_isOpen" MaxHeight="300" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter" RelativeWidth="DropdownWidth.Relative">
                         @if (!string.IsNullOrWhiteSpace(_query) && _query.Length >= 3)
@@ -88,7 +91,7 @@
                 <MudIconButton Icon="@Icons.Material.Filled.Help" Color="Color.Primary" Href="https://ersatztv.org" Target="_blank"/>
             </MudTooltip>
             <MudTooltip Text="Discord">
-                <MudIconButton Icon="fab fa-discord" Color="Color.Primary" Href="https://discord.gg/hHaJm3yGy6" Target="_blank"/>
+                <MudIconButton Icon="fab fa-discord" Color="Color.Primary" Href="https://discord.ersatztv.org" Target="_blank"/>
             </MudTooltip>
             <MudTooltip Text="GitHub">
                 <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Primary" Href="https://github.com/ErsatzTV/ErsatzTV" Target="_blank"/>
@@ -349,6 +352,16 @@
 
     protected override async Task OnParametersSetAsync()
     {
+        if (!SystemStartup.IsDatabaseReady || !SystemStartup.IsSearchIndexReady)
+        {
+            string currentUri = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+            if (!string.IsNullOrEmpty(currentUri))
+            {
+                NavigationManager.NavigateTo(string.Empty);
+                return;
+            }
+        }
+
         _cts?.Cancel();
         _cts?.Dispose();
         _cts = new CancellationTokenSource();
