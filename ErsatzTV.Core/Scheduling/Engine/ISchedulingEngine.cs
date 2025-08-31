@@ -84,6 +84,8 @@ public interface ISchedulingEngine
         string fallback,
         bool trim,
         int discardAttempts,
+        bool stopBeforeEnd,
+        bool offlineTail,
         Option<FillerKind> maybeFillerKind,
         string customTitle,
         bool disableWatermarks);

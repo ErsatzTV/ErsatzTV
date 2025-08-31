@@ -108,6 +108,8 @@ public class PlayoutModule(ISchedulingEngine schedulingEngine, CancellationToken
         string fallback = null,
         bool trim = false,
         int discard_attempts = 0,
+        bool stop_before_end = true,
+        bool offline_tail = true,
         string filler_kind = null,
         string custom_title = null,
         bool disable_watermarks = false)
@@ -124,6 +126,8 @@ public class PlayoutModule(ISchedulingEngine schedulingEngine, CancellationToken
             fallback,
             trim,
             discard_attempts,
+            stop_before_end,
+            offline_tail,
             maybeFillerKind,
             custom_title,
             disable_watermarks);

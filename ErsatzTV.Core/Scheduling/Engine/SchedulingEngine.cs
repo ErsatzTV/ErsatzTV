@@ -465,6 +465,8 @@ public class SchedulingEngine(
         string fallback,
         bool trim,
         int discardAttempts,
+        bool stopBeforeEnd,
+        bool offlineTail,
         Option<FillerKind> maybeFillerKind,
         string customTitle,
         bool disableWatermarks)
@@ -505,10 +507,10 @@ public class SchedulingEngine(
 
         _state.CurrentTime = AddDurationInternal(
             targetTime,
-            stopBeforeEnd: true,
+            stopBeforeEnd,
             discardAttempts,
             trim,
-            offlineTail: true,
+            offlineTail,
             GetFillerKind(maybeFillerKind),
             customTitle,
             disableWatermarks,

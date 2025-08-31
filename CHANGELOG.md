@@ -64,6 +64,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Add *experimental* `Scripted Schedule` playout system
   - This system uses python scripts to support the highest degree of customization
   - The goal is to expose methods equivalent to all sequential schedule (YAML) instructions
+- YAML and Scripted schedules: add `offline_tail` and `stop_before_end` to `pad_to_next` instruction
+  - Both parameters default to `true`
 
 ### Fix
 - Fix database operations that were slowing down playout builds
