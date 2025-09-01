@@ -222,9 +222,11 @@
         "properties": {
           "pad_to_next": { "type": "integer" },
           "content": { "type": "string" },
+          "offline_tail": { "type": "boolean" },
           "trim": { "type": "boolean" },
           "fallback": { "type": "string" },
           "discard_attempts": { "type": "integer" },
+          "stop_before_end": { "type": "boolean" },
           "filler_kind": { "$ref": "#/$defs/enums/filler_kind" },
           "custom_title": { "type": "string" },
           "disable_watermarks": { "type": "boolean" }
