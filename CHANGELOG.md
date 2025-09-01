@@ -90,6 +90,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Classic schedules: always start new alternate schedules with the first schedule item
 - Classic Schedules: log offline gaps longer than 1 hour due to strict fixed start times
 - Fix `HLS Segmenter V2` streaming mode with AMF acceleration
+- Fix `HLS Segmenter V2` streaming mode with VideoToolbox acceleration
 - Fix startup process for database and search index initialization
   - Redirect all pages to home page when initializing to prevent errors
   - Clear stale sqlite migration lock on startup to prevent getting stuck on database initialization
