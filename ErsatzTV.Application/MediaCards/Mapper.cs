@@ -34,7 +34,7 @@ internal static class Mapper
             GetSeasonName(season.SeasonNumber),
             season.SeasonMetadata.HeadOrNone().Map(sm => GetPoster(sm, maybeJellyfin, maybeEmby))
                 .IfNone(string.Empty),
-            season.SeasonNumber == 0 ? "S" : season.SeasonNumber.ToString(CultureInfo.InvariantCulture),
+            season.SeasonNumber == 0 ? "S" : new string(season.SeasonNumber.ToString(CultureInfo.InvariantCulture).Take(20).ToArray()),
             season.State);
 
     internal static TelevisionSeasonCardViewModel ProjectToViewModel(

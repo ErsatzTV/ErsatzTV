@@ -94,6 +94,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix startup process for database and search index initialization
   - Redirect all pages to home page when initializing to prevent errors
   - Clear stale sqlite migration lock on startup to prevent getting stuck on database initialization
+- Fix display of long season placeholder text (when season posters are unavailable)
 
 ### Changed
 - Rename some schedule and playout terms for clarity
