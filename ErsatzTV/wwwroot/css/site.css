@@ -43,7 +43,10 @@ div.ersatztv-light {
     width: 100%;
 }
 
-.media-card-poster-placeholder { font-weight: bold; }
+.media-card-poster-placeholder {
+    font-weight: bold;
+    word-wrap: break-word;
+}
 
 .media-card-overlay {
     background: rgba(0, 0, 0, 0.4);
