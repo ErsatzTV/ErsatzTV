@@ -6,7 +6,7 @@ public class DecoderH264V4l2m2m : DecoderBase
 {
     public override string Name => "h264_v4l2m2m";
 
-    protected override FrameDataLocation OutputFrameDataLocation => FrameDataLocation.Hardware;
+    protected override FrameDataLocation OutputFrameDataLocation => FrameDataLocation.Software;
 
     public override FrameState NextState(FrameState currentState)
     {
