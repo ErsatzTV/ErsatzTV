@@ -66,6 +66,11 @@ public class
             result.Add(HardwareAccelerationKind.Amf);
         }
 
+        if (ffmpegCapabilities.HasHardwareAcceleration(HardwareAccelerationMode.V4l2m2m))
+        {
+            result.Add(HardwareAccelerationKind.V4l2m2m);
+        }
+
         return result;
     }
 

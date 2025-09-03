@@ -35,6 +35,14 @@ public class FFmpegCapabilities : IFFmpegCapabilities
                 StringComparison.OrdinalIgnoreCase));
         }
 
+        // V4l2m2m isn't a "hwaccel" in ffmpeg, so check for presence of encoders
+        if (hardwareAccelerationMode is HardwareAccelerationMode.V4l2m2m)
+        {
+            return _ffmpegEncoders.Any(e => e.EndsWith(
+                $"_{FFmpegKnownHardwareAcceleration.V4l2m2m.Name}",
+                StringComparison.OrdinalIgnoreCase));
+        }
+
         Option<FFmpegKnownHardwareAcceleration> maybeAccelToCheck = hardwareAccelerationMode switch
         {
             HardwareAccelerationMode.Nvenc => FFmpegKnownHardwareAcceleration.Cuda,

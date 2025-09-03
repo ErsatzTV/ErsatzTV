@@ -132,18 +132,20 @@ public class HardwareAccelerationHealthCheck : BaseHealthCheck, IHardwareAcceler
             }
         }
 
-        if (_runtimeInfo.IsOSPlatform(OSPlatform.Windows))
+        // not real ffmpeg hwaccels, but have hw encoders that we can use
+        string output2 = await GetProcessOutput(
+            ffmpegPath,
+            FFmpegEncodersArguments,
+            cancellationToken);
+        foreach (string encoder in output2.Split("\n").Map(s => s.Trim()))
         {
-            string output2 = await GetProcessOutput(
-                ffmpegPath,
-                FFmpegEncodersArguments,
-                cancellationToken);
-            foreach (string method in output2.Split("\n").Map(s => s.Trim()))
+            if (_runtimeInfo.IsOSPlatform(OSPlatform.Windows) && encoder.Contains("_amf "))
             {
-                if (method.Contains("_amf "))
-                {
-                    result.Add(HardwareAccelerationKind.Amf);
-                }
+                result.Add(HardwareAccelerationKind.Amf);
+            }
+            else if (_runtimeInfo.IsOSPlatform(OSPlatform.Linux) && encoder.Contains("_v4l2m2m "))
+            {
+                result.Add(HardwareAccelerationKind.V4l2m2m);
             }
         }
 

@@ -40,6 +40,11 @@ public class FFmpegProfileEditViewModelValidator : AbstractValidator<FFmpegProfi
         FFmpegProfileVideoFormat.Hevc
     ];
 
+    private static readonly List<FFmpegProfileVideoFormat> V4l2m2mFormats =
+    [
+        FFmpegProfileVideoFormat.H264,
+        FFmpegProfileVideoFormat.Hevc
+    ];
     public FFmpegProfileEditViewModelValidator()
     {
         RuleFor(x => x.Name).NotEmpty();
@@ -91,6 +96,14 @@ public class FFmpegProfileEditViewModelValidator : AbstractValidator<FFmpegProfi
             {
                 RuleFor(x => x.VideoFormat).Must(c => AmfFormats.Contains(c))
                     .WithMessage("Amf supports formats (h264, hevc)");
+            });
+
+        When(
+            x => x.HardwareAcceleration == HardwareAccelerationKind.V4l2m2m,
+            () =>
+            {
+                RuleFor(x => x.VideoFormat).Must(c => V4l2m2mFormats.Contains(c))
+                    .WithMessage("V4L2 M2M supports formats (h264, hevc)");
             });
 
         When(

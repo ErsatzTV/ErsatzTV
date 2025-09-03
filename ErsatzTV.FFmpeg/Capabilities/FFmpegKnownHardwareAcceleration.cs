@@ -9,6 +9,7 @@ public record FFmpegKnownHardwareAcceleration
     public static readonly FFmpegKnownHardwareAcceleration VideoToolbox = new("videotoolbox");
     public static readonly FFmpegKnownHardwareAcceleration OpenCL = new("opencl");
     public static readonly FFmpegKnownHardwareAcceleration Vulkan = new("vulkan");
+    public static readonly FFmpegKnownHardwareAcceleration V4l2m2m = new("v4l2m2m");
 
     private FFmpegKnownHardwareAcceleration(string Name) => this.Name = Name;
 
@@ -22,6 +23,7 @@ public record FFmpegKnownHardwareAcceleration
         Vaapi.Name,
         VideoToolbox.Name,
         OpenCL.Name,
-        Vulkan.Name
+        Vulkan.Name,
+        V4l2m2m.Name
     ];
 }
