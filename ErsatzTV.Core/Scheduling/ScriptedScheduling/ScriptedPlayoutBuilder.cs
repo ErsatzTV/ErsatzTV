@@ -1,3 +1,4 @@
+using System.CommandLine.Parsing;
 using CliWrap;
 using CliWrap.Buffered;
 using ErsatzTV.Core.Domain;
@@ -30,15 +31,35 @@ public class ScriptedPlayoutBuilder(
 
         try
         {
-            if (!localFileSystem.FileExists(playout.ScheduleFile))
+            var args = CommandLineParser.SplitCommandLine(playout.ScheduleFile).ToList();
+
+            string scriptFile = args[0];
+            string[] scriptArgs = args.Skip(1).ToArray();
+
+            if (!localFileSystem.FileExists(scriptFile))
             {
                 logger.LogError(
                     "Cannot build scripted playout; schedule file {File} does not exist",
-                    playout.ScheduleFile);
+                    scriptFile);
                 return result;
             }
 
-            logger.LogInformation("Building scripted playout with id {BuildId} ...", buildId);
+            var arguments = new List<string>
+            {
+                $"http://localhost:{Settings.UiPort}",
+                buildId.ToString(),
+                mode.ToString().ToLowerInvariant()
+            };
+
+            if (scriptArgs.Length > 0)
+            {
+                arguments.AddRange(scriptArgs);
+            }
+
+            logger.LogInformation(
+                "Building scripted playout {Script} with arguments {Arguments}",
+                scriptFile,
+                arguments);
 
             int daysToBuild = await GetDaysToBuild(cancellationToken);
             DateTimeOffset finish = start.AddDays(daysToBuild);
@@ -54,13 +75,8 @@ public class ScriptedPlayoutBuilder(
             using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
             using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cts.Token);
 
-            Command command = Cli.Wrap(playout.ScheduleFile)
-                .WithArguments(
-                [
-                    $"http://localhost:{Settings.UiPort}",
-                    buildId.ToString(),
-                    mode.ToString().ToLowerInvariant()
-                ])
+            Command command = Cli.Wrap(scriptFile)
+                .WithArguments(arguments)
                 .WithValidation(CommandResultValidation.None);
 
             var commandResult = await command.ExecuteBufferedAsync(linkedCts.Token);
