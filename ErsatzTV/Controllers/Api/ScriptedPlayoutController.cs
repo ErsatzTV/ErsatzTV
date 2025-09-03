@@ -356,4 +356,136 @@ public class ScriptedPlayoutController(IScriptedPlayoutBuilderService scriptedPl
             disableWatermarks);
         return Ok();
     }
+
+    [HttpGet("start_epg_group", Name="StartEpgGroup")]
+    public IActionResult StartEpgGroup([FromRoute]Guid buildId, bool advance = true)
+    {
+        ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
+        if (engine == null)
+        {
+            return NotFound($"Active build engine not found for build {buildId}.");
+        }
+
+        engine.LockGuideGroup(advance);
+        return Ok();
+    }
+
+    [HttpGet("stop_epg_group", Name="StopEpgGroup")]
+    public IActionResult StopEpgGroup([FromRoute]Guid buildId)
+    {
+        ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
+        if (engine == null)
+        {
+            return NotFound($"Active build engine not found for build {buildId}.");
+        }
+
+        engine.UnlockGuideGroup();
+        return Ok();
+    }
+
+    [HttpGet("graphics_on", Name = "GraphicsOn")]
+    public async Task<IActionResult> GraphicsOn(
+        [FromRoute] Guid buildId,
+        List<string> graphics,
+        Dictionary<string, string> variables = null,
+        CancellationToken cancellationToken = default)
+    {
+        ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
+        if (engine == null)
+        {
+            return NotFound($"Active build engine not found for build {buildId}.");
+        }
+
+        await engine.GraphicsOn(graphics, variables ?? [], cancellationToken);
+        return Ok();
+    }
+
+    [HttpGet("graphics_off", Name = "GraphicsOff")]
+    public async Task<IActionResult> GraphicsOff(
+        [FromRoute] Guid buildId,
+        List<string> graphics = null,
+        CancellationToken cancellationToken = default)
+    {
+        ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
+        if (engine == null)
+        {
+            return NotFound($"Active build engine not found for build {buildId}.");
+        }
+
+        await engine.GraphicsOff(graphics ?? [], cancellationToken);
+        return Ok();
+    }
+
+    [HttpGet("watermark_on", Name = "WatermarkOn")]
+    public async Task<IActionResult> WatermarkOn([FromRoute] Guid buildId, List<string> watermark)
+    {
+        ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
+        if (engine == null)
+        {
+            return NotFound($"Active build engine not found for build {buildId}.");
+        }
+
+        await engine.WatermarkOn(watermark);
+        return Ok();
+    }
+
+    [HttpGet("watermark_off", Name = "WatermarkOff")]
+    public async Task<IActionResult> WatermarkOff([FromRoute] Guid buildId, List<string> watermark = null)
+    {
+        ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
+        if (engine == null)
+        {
+            return NotFound($"Active build engine not found for build {buildId}.");
+        }
+
+        await engine.WatermarkOff(watermark ?? []);
+        return Ok();
+    }
+
+    [HttpGet("skip_items", Name = "SkipItems")]
+    public IActionResult SkipItems([FromRoute] Guid buildId, string content, int count)
+    {
+        ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
+        if (engine == null)
+        {
+            return NotFound($"Active build engine not found for build {buildId}.");
+        }
+
+        engine.SkipItems(content, count);
+        return Ok();
+    }
+
+    [HttpGet("skip_to_item", Name = "SkipToItem")]
+    public IActionResult SkipToItem([FromRoute] Guid buildId, string content, int season, int episode)
+    {
+        ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
+        if (engine == null)
+        {
+            return NotFound($"Active build engine not found for build {buildId}.");
+        }
+
+        engine.SkipToItem(content, season, episode);
+        return Ok();
+    }
+
+    [HttpGet("wait_until", Name = "WaitUntil")]
+    public IActionResult WaitUntil(
+        [FromRoute] Guid buildId,
+        string when,
+        bool tomorrow = false,
+        bool rewindOnReset = false)
+    {
+        ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
+        if (engine == null)
+        {
+            return NotFound($"Active build engine not found for build {buildId}.");
+        }
+
+        if (TimeOnly.TryParse(when, out TimeOnly waitUntil))
+        {
+            engine.WaitUntil(waitUntil, tomorrow, rewindOnReset);
+        }
+
+        return Ok();
+    }
 }
