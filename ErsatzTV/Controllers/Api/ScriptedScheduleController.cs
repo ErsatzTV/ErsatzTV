@@ -8,9 +8,9 @@ using Microsoft.AspNetCore.Mvc;
 namespace ErsatzTV.Controllers.Api;
 
 [ApiController]
-[EndpointGroupName("scripted-playout")]
+[EndpointGroupName("scripted-schedule")]
 [Route("api/scripted/playout/build/{buildId:guid}")]
-public class ScriptedPlayoutController(IScriptedPlayoutBuilderService scriptedPlayoutBuilderService) : ControllerBase
+public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedPlayoutBuilderService) : ControllerBase
 {
     [HttpGet("context", Name = "GetContext")]
     public ActionResult<ContextResponseModel> GetContext([FromRoute] Guid buildId)

@@ -144,9 +144,9 @@ public class Startup
 
         services.AddDataProtection().PersistKeysToFileSystem(new DirectoryInfo(FileSystemLayout.DataProtectionFolder));
 
-        services.AddOpenApi("scripted-playout", options =>
+        services.AddOpenApi("scripted-schedule", options =>
         {
-            options.ShouldInclude += a => a.GroupName == "scripted-playout";
+            options.ShouldInclude += a => a.GroupName == "scripted-schedule";
         });
 
         OidcHelper.Init(Configuration);
