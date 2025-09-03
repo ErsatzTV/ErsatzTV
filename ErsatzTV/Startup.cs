@@ -144,6 +144,11 @@ public class Startup
 
         services.AddDataProtection().PersistKeysToFileSystem(new DirectoryInfo(FileSystemLayout.DataProtectionFolder));
 
+        services.AddOpenApi("scripted-playout", options =>
+        {
+            options.ShouldInclude += a => a.GroupName == "scripted-playout";
+        });
+
         OidcHelper.Init(Configuration);
         JwtHelper.Init(Configuration);
         SearchHelper.Init(Configuration);
@@ -592,6 +597,7 @@ public class Startup
                     endpoints.MapControllers();
                     endpoints.MapBlazorHub();
                     endpoints.MapFallbackToPage("/_Host");
+                    endpoints.MapOpenApi().CacheOutput();
                 });
             });
 

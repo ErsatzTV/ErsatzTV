@@ -1,4 +1,6 @@
 using ErsatzTV.Core.Api.ScriptedPlayout;
+using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using ErsatzTV.Core.Scheduling.Engine;
 using Microsoft.AspNetCore.Mvc;
@@ -6,30 +8,12 @@ using Microsoft.AspNetCore.Mvc;
 namespace ErsatzTV.Controllers.Api;
 
 [ApiController]
+[EndpointGroupName("scripted-playout")]
 [Route("api/scripted/playout/build/{buildId:guid}")]
-public class ScriptedPlayoutController(IScriptedPlayoutBuilderService scriptedPlayoutBuilderService, IServiceProvider serviceProvider) : ControllerBase
+public class ScriptedPlayoutController(IScriptedPlayoutBuilderService scriptedPlayoutBuilderService) : ControllerBase
 {
-    [HttpPost]
-    [Route("mock")]
-    public IActionResult Start(Guid buildId)
-    {
-        ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
-        if (engine is not null)
-        {
-            return BadRequest("Build id is already in use");
-        }
-
-        engine = serviceProvider.GetService<ISchedulingEngine>();
-        if (!scriptedPlayoutBuilderService.MockSession(engine, buildId))
-        {
-            return BadRequest("Build id is already in use");
-        }
-
-        return Ok();
-    }
-
-    [HttpGet("context")]
-    public IActionResult GetContext([FromRoute]Guid buildId)
+    [HttpGet("context", Name="GetContext")]
+    public ActionResult<ContextResponseModel> GetContext([FromRoute]Guid buildId)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
         if (engine == null)
@@ -39,7 +23,7 @@ public class ScriptedPlayoutController(IScriptedPlayoutBuilderService scriptedPl
 
         var state = engine.GetState();
 
-        // TODO: better IsDone
+        // TODO: better IsDone logic
         return Ok(
             new ContextResponseModel(
                 state.CurrentTime,
@@ -48,17 +32,53 @@ public class ScriptedPlayoutController(IScriptedPlayoutBuilderService scriptedPl
                 state.CurrentTime >= state.Finish));
     }
 
-    [HttpPost("ping")]
-    public IActionResult Ping([FromRoute]Guid buildId)
+    [HttpPost("add_collection", Name = "AddCollection")]
+    public async Task<IActionResult> AddCollection(
+        [FromRoute]
+        Guid buildId,
+        string key,
+        string collection,
+        string order,
+        CancellationToken cancellationToken)
     {
-        var engine = scriptedPlayoutBuilderService.GetEngine(buildId);
+        ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
         if (engine == null)
         {
-            Console.WriteLine($"No active engine for {buildId}");
-            return NotFound();
+            return NotFound($"Active build engine not found for build {buildId}.");
         }
 
-        Console.WriteLine($"Ping playout build {buildId}");
+        if (!Enum.TryParse(order, ignoreCase: true, out PlaybackOrder playbackOrder))
+        {
+            return BadRequest("Invalid playback order.");
+        }
+
+        await engine.AddCollection(key, collection, playbackOrder, cancellationToken);
+        return Ok();
+    }
+
+    [HttpPost("add_count", Name = "AddCount")]
+    public IActionResult AddCount(
+        [FromRoute]
+        Guid buildId,
+        string content,
+        int count,
+        string fillerKind = null,
+        string customTitle = null,
+        bool disableWatermarks = false)
+    {
+        ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
+        if (engine == null)
+        {
+            return NotFound($"Active build engine not found for build {buildId}.");
+        }
+
+        Option<FillerKind> maybeFillerKind = Option<FillerKind>.None;
+        if (Enum.TryParse(fillerKind, ignoreCase: true, out FillerKind fk))
+        {
+            maybeFillerKind = fk;
+        }
+
+        engine.AddCount(content, count, maybeFillerKind, customTitle, disableWatermarks);
         return Ok();
     }
 }

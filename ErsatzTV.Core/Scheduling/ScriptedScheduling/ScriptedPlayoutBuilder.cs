@@ -1,4 +1,5 @@
 using CliWrap;
+using CliWrap.Buffered;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
@@ -51,11 +52,18 @@ public class ScriptedPlayoutBuilder(
             using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cts.Token);
 
             Command command = Cli.Wrap(playout.ScheduleFile)
-                .WithArguments([$"http://localhost:{Settings.UiPort}", buildId.ToString()])
-                .WithStandardOutputPipe(PipeTarget.ToDelegate(_ => { }))
-                .WithStandardErrorPipe(PipeTarget.ToDelegate(_ => { }));
+                .WithArguments(
+                    [
+                        $"http://localhost:{Settings.UiPort}",
+                        buildId.ToString(),
+                        mode.ToString().ToLowerInvariant()
+                    ]);
 
-            await command.ExecuteAsync(linkedCts.Token);
+            var commandResult = await command.ExecuteBufferedAsync(linkedCts.Token);
+            if (!string.IsNullOrWhiteSpace(commandResult.StandardOutput))
+            {
+                Console.WriteLine(commandResult.StandardOutput);
+            }
 
             playout.Anchor = schedulingEngine.GetAnchor();
 
