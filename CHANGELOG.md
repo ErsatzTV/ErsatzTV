@@ -16,7 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - The scripted schedule file will be passed the following arguments (in order):
     - The API host (e.g. `http://localhost:8409`)
     - The build id (a UUID string that is required on all API calls)
-    - The playout build mode (e.g. `reset`, normally only used for specific logic when resetting a playout)
+    - The playout build mode (e.g. `reset` or `continue`, normally only used for specific logic when resetting a playout)
 
 ## [25.5.0] - 2025-09-01
 ### Added
