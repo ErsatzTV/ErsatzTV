@@ -17,6 +17,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - The API host (e.g. `http://localhost:8409`)
     - The build id (a UUID string that is required on all API calls)
     - The playout build mode (e.g. `reset` or `continue`, normally only used for specific logic when resetting a playout)
+  - Custom arguments can be included in the `Scripted Schedule` field in the playout editor
+    - Custom arguments will be passed *after* required arguments
+    - For example, a `Scripted Schedule` of `/home/jason/schedule.sh "party central" 23` will be executed like
+      - `/home/jason/schedule.sh http://localhost:8409 00000000-0000...0000 reset "party central" 23`
+    - This enables wrapper script re-use across multiple scripted schedules
 
 ## [25.5.0] - 2025-09-01
 ### Added
