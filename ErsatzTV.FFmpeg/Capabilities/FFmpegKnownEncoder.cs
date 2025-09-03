@@ -13,6 +13,8 @@ public record FFmpegKnownEncoder
     [
         "h264_amf",
         "hevc_amf",
+        "h264_v4l2m2m",
+        "hevc_v4l2m2m",
         "h264_videotoolbox",
         "hevc_videotoolbox"
     ];
