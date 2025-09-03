@@ -19,4 +19,6 @@ public interface ISchedulingEngineState
     List<PlayoutItem> AddedItems { get; }
     System.Collections.Generic.HashSet<int> HistoryToRemove { get; }
     List<PlayoutHistory> AddedHistory { get; }
+
+    bool IsDone { get; }
 }

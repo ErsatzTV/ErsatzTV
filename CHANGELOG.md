@@ -7,6 +7,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - Fix transcoding content with bt709/pc color metadata
 
+### Changed
+- **BREAKING CHANGE**: change how `Scripted Schedule` system works
+  - No longer uses embedded python (IronPython); instead uses HTTP API
+  - OpenAPI Description has been added at `/openapi/scripted-schedule.json`
+    - This allows scripted scheduling from *many* languages
+  - The scripted schedule file must now be directly executable (though a wrapper can be used to load a venv)
+  - The scripted schedule file will be passed the following arguments (in order):
+    - The API host (e.g. `http://localhost:8409`)
+    - The build id (a UUID string that is required on all API calls)
+    - The playout build mode (e.g. `reset` or `continue`, normally only used for specific logic when resetting a playout)
+
 ## [25.5.0] - 2025-09-01
 ### Added
 - Add *experimental* graphics engine

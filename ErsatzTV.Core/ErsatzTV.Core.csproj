@@ -13,8 +13,6 @@
         <PackageReference Include="Destructurama.Attributed" Version="5.1.0" />
         <PackageReference Include="Flurl" Version="4.0.0" />
         <PackageReference Include="Humanizer.Core" Version="2.14.1" />
-        <PackageReference Include="IronPython" Version="3.4.2" />
-        <PackageReference Include="IronPython.StdLib" Version="3.4.2" />
         <PackageReference Include="LanguageExt.Core" Version="4.4.9" />
         <PackageReference Include="LanguageExt.Transformers" Version="4.4.8" />
         <PackageReference Include="MediatR" Version="[12.5.0]" />

@@ -144,6 +144,11 @@ public class Startup
 
         services.AddDataProtection().PersistKeysToFileSystem(new DirectoryInfo(FileSystemLayout.DataProtectionFolder));
 
+        services.AddOpenApi("scripted-schedule", options =>
+        {
+            options.ShouldInclude += a => a.GroupName == "scripted-schedule";
+        });
+
         OidcHelper.Init(Configuration);
         JwtHelper.Init(Configuration);
         SearchHelper.Init(Configuration);
@@ -592,6 +597,7 @@ public class Startup
                     endpoints.MapControllers();
                     endpoints.MapBlazorHub();
                     endpoints.MapFallbackToPage("/_Host");
+                    endpoints.MapOpenApi().CacheOutput();
                 });
             });
 
@@ -641,7 +647,7 @@ public class Startup
 
             services.AddSingleton<ISearchIndex, LuceneSearchIndex>();
         }
-
+        services.AddSingleton<IScriptedPlayoutBuilderService, ScriptedPlayoutBuilderService>();
         services.AddSingleton<IFFmpegSegmenterService, FFmpegSegmenterService>();
         services.AddSingleton<ITempFilePool, TempFilePool>();
         services.AddSingleton<IHlsPlaylistFilter, HlsPlaylistFilter>();
