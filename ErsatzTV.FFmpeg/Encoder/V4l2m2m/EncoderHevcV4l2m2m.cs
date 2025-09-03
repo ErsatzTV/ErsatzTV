@@ -4,7 +4,7 @@ namespace ErsatzTV.FFmpeg.Encoder.V4l2m2m;
 
 public class EncoderHevcV4l2m2m : EncoderBase
 {
-    public override string Name => "hevc_V4l2m2m";
+    public override string Name => "hevc_v4l2m2m";
     public override StreamKind Kind => StreamKind.Video;
 
     public override FrameState NextState(FrameState currentState) => currentState with

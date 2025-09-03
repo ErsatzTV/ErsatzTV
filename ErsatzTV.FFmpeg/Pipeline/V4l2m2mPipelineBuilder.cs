@@ -1,5 +1,6 @@
 using ErsatzTV.FFmpeg.Capabilities;
 using ErsatzTV.FFmpeg.Decoder;
+using ErsatzTV.FFmpeg.Decoder.V4l2m2m;
 using ErsatzTV.FFmpeg.Encoder;
 using ErsatzTV.FFmpeg.Encoder.V4l2m2m;
 using ErsatzTV.FFmpeg.Filter;
@@ -87,7 +88,13 @@ public class V4l2m2mPipelineBuilder : SoftwarePipelineBuilder
     {
         Option<IDecoder> maybeDecoder = (ffmpegState.DecoderHardwareAccelerationMode, videoStream.Codec) switch
         {
-            (HardwareAccelerationMode.V4l2m2m, _) => new DecoderV4l2m2m(),
+            (HardwareAccelerationMode.V4l2m2m, VideoFormat.Hevc) => new DecoderHevcV4l2m2m(),
+            (HardwareAccelerationMode.V4l2m2m, VideoFormat.H264) => new DecoderH264V4l2m2m(),
+            (HardwareAccelerationMode.V4l2m2m, VideoFormat.Mpeg2Video) => new DecoderMpeg2V4l2m2m(),
+            (HardwareAccelerationMode.V4l2m2m, VideoFormat.Mpeg4) => new DecoderMpeg4V4l2m2m(),
+            (HardwareAccelerationMode.V4l2m2m, VideoFormat.Vc1) => new DecoderVc1V4l2m2m(),
+            (HardwareAccelerationMode.V4l2m2m, VideoFormat.Vp8) => new DecoderVp8V4l2m2m(),
+            (HardwareAccelerationMode.V4l2m2m, VideoFormat.Vp9) => new DecoderVp9V4l2m2m(),
 
             _ => GetSoftwareDecoder(videoStream)
         };
