@@ -26,15 +26,18 @@ public class ScriptedPlayoutBuilder(
     {
         var result = PlayoutBuildResult.Empty;
 
+        Guid buildId = scriptedPlayoutBuilderService.StartSession(schedulingEngine);
+
         try
         {
             if (!localFileSystem.FileExists(playout.ScheduleFile))
             {
-                logger.LogError("Cannot build scripted playout; schedule file {File} does not exist", playout.ScheduleFile);
+                logger.LogError(
+                    "Cannot build scripted playout; schedule file {File} does not exist",
+                    playout.ScheduleFile);
                 return result;
             }
 
-            Guid buildId = scriptedPlayoutBuilderService.StartSession(schedulingEngine);
             logger.LogInformation("Building scripted playout with id {BuildId} ...", buildId);
 
             int daysToBuild = await GetDaysToBuild(cancellationToken);
@@ -53,11 +56,11 @@ public class ScriptedPlayoutBuilder(
 
             Command command = Cli.Wrap(playout.ScheduleFile)
                 .WithArguments(
-                    [
-                        $"http://localhost:{Settings.UiPort}",
-                        buildId.ToString(),
-                        mode.ToString().ToLowerInvariant()
-                    ]);
+                [
+                    $"http://localhost:{Settings.UiPort}",
+                    buildId.ToString(),
+                    mode.ToString().ToLowerInvariant()
+                ]);
 
             var commandResult = await command.ExecuteBufferedAsync(linkedCts.Token);
             if (!string.IsNullOrWhiteSpace(commandResult.StandardOutput))
@@ -78,6 +81,10 @@ public class ScriptedPlayoutBuilder(
         {
             logger.LogWarning(ex, "Unexpected exception building scripted playout");
             throw;
+        }
+        finally
+        {
+            scriptedPlayoutBuilderService.EndSession(buildId);
         }
 
         return result;
