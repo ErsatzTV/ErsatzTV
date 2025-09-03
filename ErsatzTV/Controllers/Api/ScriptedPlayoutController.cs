@@ -12,8 +12,8 @@ namespace ErsatzTV.Controllers.Api;
 [Route("api/scripted/playout/build/{buildId:guid}")]
 public class ScriptedPlayoutController(IScriptedPlayoutBuilderService scriptedPlayoutBuilderService) : ControllerBase
 {
-    [HttpGet("context", Name="GetContext")]
-    public ActionResult<ContextResponseModel> GetContext([FromRoute]Guid buildId)
+    [HttpGet("context", Name = "GetContext")]
+    public ActionResult<ContextResponseModel> GetContext([FromRoute] Guid buildId)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
         if (engine == null)
@@ -36,9 +36,8 @@ public class ScriptedPlayoutController(IScriptedPlayoutBuilderService scriptedPl
     public async Task<IActionResult> AddCollection(
         [FromRoute]
         Guid buildId,
-        string key,
-        string collection,
-        string order,
+        [FromBody]
+        AddCollectionRequestModel request,
         CancellationToken cancellationToken)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
@@ -47,26 +46,17 @@ public class ScriptedPlayoutController(IScriptedPlayoutBuilderService scriptedPl
             return NotFound($"Active build engine not found for build {buildId}.");
         }
 
-        if (!Enum.TryParse(order, ignoreCase: true, out PlaybackOrder playbackOrder))
+        if (!Enum.TryParse(request.Order, ignoreCase: true, out PlaybackOrder playbackOrder))
         {
             return BadRequest("Invalid playback order.");
         }
 
-        await engine.AddCollection(key, collection, playbackOrder, cancellationToken);
+        await engine.AddCollection(request.Key, request.Collection, playbackOrder, cancellationToken);
         return Ok();
     }
 
     [HttpPost("add_marathon", Name = "AddMarathon")]
-    public async Task<IActionResult> AddMarathon(
-        [FromRoute]
-        Guid buildId,
-        string key,
-        string groupBy,
-        string itemOrder = "shuffle",
-        Dictionary<string, List<string>> guids = null,
-        List<string> searches = null,
-        bool playAllItems = false,
-        bool shuffleGroups = false)
+    public async Task<IActionResult> AddMarathon([FromRoute] Guid buildId, [FromBody] AddMarathonRequestModel request)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
         if (engine == null)
@@ -74,19 +64,19 @@ public class ScriptedPlayoutController(IScriptedPlayoutBuilderService scriptedPl
             return NotFound($"Active build engine not found for build {buildId}.");
         }
 
-        if (!Enum.TryParse(itemOrder, ignoreCase: true, out PlaybackOrder itemPlaybackOrder))
+        if (!Enum.TryParse(request.ItemOrder, ignoreCase: true, out PlaybackOrder itemPlaybackOrder))
         {
             return BadRequest("Invalid item playback order.");
         }
 
         await engine.AddMarathon(
-            key,
-            guids ?? [],
-            searches ?? [],
-            groupBy,
-            shuffleGroups,
+            request.Key,
+            request.Guids ?? [],
+            request.Searches ?? [],
+            request.GroupBy,
+            request.ShuffleGroups,
             itemPlaybackOrder,
-            playAllItems);
+            request.PlayAllItems);
         return Ok();
     }
 
@@ -94,9 +84,8 @@ public class ScriptedPlayoutController(IScriptedPlayoutBuilderService scriptedPl
     public async Task<IActionResult> AddMultiCollection(
         [FromRoute]
         Guid buildId,
-        string key,
-        string multiCollection,
-        string order,
+        [FromBody]
+        AddMultiCollectionRequestModel request,
         CancellationToken cancellationToken)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
@@ -105,12 +94,12 @@ public class ScriptedPlayoutController(IScriptedPlayoutBuilderService scriptedPl
             return NotFound($"Active build engine not found for build {buildId}.");
         }
 
-        if (!Enum.TryParse(order, ignoreCase: true, out PlaybackOrder playbackOrder))
+        if (!Enum.TryParse(request.Order, ignoreCase: true, out PlaybackOrder playbackOrder))
         {
             return BadRequest("Invalid playback order.");
         }
 
-        await engine.AddMultiCollection(key, multiCollection, playbackOrder, cancellationToken);
+        await engine.AddMultiCollection(request.Key, request.MultiCollection, playbackOrder, cancellationToken);
         return Ok();
     }
 
@@ -118,9 +107,8 @@ public class ScriptedPlayoutController(IScriptedPlayoutBuilderService scriptedPl
     public async Task<IActionResult> AddPlaylist(
         [FromRoute]
         Guid buildId,
-        string key,
-        string playlist,
-        string playlistGroup,
+        [FromBody]
+        AddPlaylistRequestModel request,
         CancellationToken cancellationToken)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
@@ -129,7 +117,7 @@ public class ScriptedPlayoutController(IScriptedPlayoutBuilderService scriptedPl
             return NotFound($"Active build engine not found for build {buildId}.");
         }
 
-        await engine.AddPlaylist(key, playlist, playlistGroup, cancellationToken);
+        await engine.AddPlaylist(request.Key, request.Playlist, request.PlaylistGroup, cancellationToken);
         return Ok();
     }
 
@@ -137,9 +125,8 @@ public class ScriptedPlayoutController(IScriptedPlayoutBuilderService scriptedPl
     public async Task<IActionResult> AddSmartCollection(
         [FromRoute]
         Guid buildId,
-        string key,
-        string smartCollection,
-        string order,
+        [FromBody]
+        AddSmartCollectionRequestModel request,
         CancellationToken cancellationToken)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
@@ -148,12 +135,12 @@ public class ScriptedPlayoutController(IScriptedPlayoutBuilderService scriptedPl
             return NotFound($"Active build engine not found for build {buildId}.");
         }
 
-        if (!Enum.TryParse(order, ignoreCase: true, out PlaybackOrder playbackOrder))
+        if (!Enum.TryParse(request.Order, ignoreCase: true, out PlaybackOrder playbackOrder))
         {
             return BadRequest("Invalid playback order.");
         }
 
-        await engine.AddSmartCollection(key, smartCollection, playbackOrder, cancellationToken);
+        await engine.AddSmartCollection(request.Key, request.SmartCollection, playbackOrder, cancellationToken);
         return Ok();
     }
 
@@ -161,9 +148,8 @@ public class ScriptedPlayoutController(IScriptedPlayoutBuilderService scriptedPl
     public async Task<IActionResult> AddShow(
         [FromRoute]
         Guid buildId,
-        string key,
-        Dictionary<string, string> guids,
-        string order,
+        [FromBody]
+        AddShowRequestModel request,
         CancellationToken cancellationToken)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
@@ -172,23 +158,17 @@ public class ScriptedPlayoutController(IScriptedPlayoutBuilderService scriptedPl
             return NotFound($"Active build engine not found for build {buildId}.");
         }
 
-        if (!Enum.TryParse(order, ignoreCase: true, out PlaybackOrder playbackOrder))
+        if (!Enum.TryParse(request.Order, ignoreCase: true, out PlaybackOrder playbackOrder))
         {
             return BadRequest("Invalid playback order.");
         }
 
-        await engine.AddShow(key, guids, playbackOrder);
+        await engine.AddShow(request.Key, request.Guids, playbackOrder);
         return Ok();
     }
 
     [HttpPost("add_all", Name = "AddAll")]
-    public IActionResult AddAll(
-        [FromRoute]
-        Guid buildId,
-        string content,
-        string fillerKind = null,
-        string customTitle = null,
-        bool disableWatermarks = false)
+    public IActionResult AddAll([FromRoute] Guid buildId, [FromBody] AddAllRequestModel request)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
         if (engine == null)
@@ -197,12 +177,12 @@ public class ScriptedPlayoutController(IScriptedPlayoutBuilderService scriptedPl
         }
 
         Option<FillerKind> maybeFillerKind = Option<FillerKind>.None;
-        if (Enum.TryParse(fillerKind, ignoreCase: true, out FillerKind fk))
+        if (Enum.TryParse(request.FillerKind, ignoreCase: true, out FillerKind fk))
         {
             maybeFillerKind = fk;
         }
 
-        engine.AddAll(content, maybeFillerKind, customTitle, disableWatermarks);
+        engine.AddAll(request.Content, maybeFillerKind, request.CustomTitle, request.DisableWatermarks);
         return Ok();
     }
 
@@ -210,11 +190,8 @@ public class ScriptedPlayoutController(IScriptedPlayoutBuilderService scriptedPl
     public IActionResult AddCount(
         [FromRoute]
         Guid buildId,
-        string content,
-        int count,
-        string fillerKind = null,
-        string customTitle = null,
-        bool disableWatermarks = false)
+        [FromBody]
+        AddCountRequestModel request)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
         if (engine == null)
@@ -223,29 +200,22 @@ public class ScriptedPlayoutController(IScriptedPlayoutBuilderService scriptedPl
         }
 
         Option<FillerKind> maybeFillerKind = Option<FillerKind>.None;
-        if (Enum.TryParse(fillerKind, ignoreCase: true, out FillerKind fk))
+        if (Enum.TryParse(request.FillerKind, ignoreCase: true, out FillerKind fk))
         {
             maybeFillerKind = fk;
         }
 
-        engine.AddCount(content, count, maybeFillerKind, customTitle, disableWatermarks);
+        engine.AddCount(
+            request.Content,
+            request.Count,
+            maybeFillerKind,
+            request.CustomTitle,
+            request.DisableWatermarks);
         return Ok();
     }
 
     [HttpPost("add_duration", Name = "AddDuration")]
-    public IActionResult AddDuration(
-        [FromRoute]
-        Guid buildId,
-        string content,
-        string duration,
-        string fallback = null,
-        bool trim = false,
-        int discardAttempts = 0,
-        bool stopBeforeEnd = true,
-        bool offlineTail = false,
-        string fillerKind = null,
-        string customTitle = null,
-        bool disableWatermarks = false)
+    public IActionResult AddDuration([FromRoute] Guid buildId, [FromBody] AddDurationRequestModel request)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
         if (engine == null)
@@ -254,39 +224,27 @@ public class ScriptedPlayoutController(IScriptedPlayoutBuilderService scriptedPl
         }
 
         Option<FillerKind> maybeFillerKind = Option<FillerKind>.None;
-        if (Enum.TryParse(fillerKind, ignoreCase: true, out FillerKind fk))
+        if (Enum.TryParse(request.FillerKind, ignoreCase: true, out FillerKind fk))
         {
             maybeFillerKind = fk;
         }
 
         engine.AddDuration(
-            content,
-            duration,
-            fallback,
-            trim,
-            discardAttempts,
-            stopBeforeEnd,
-            offlineTail,
+            request.Content,
+            request.Duration,
+            request.Fallback,
+            request.Trim,
+            request.DiscardAttempts,
+            request.StopBeforeEnd,
+            request.OfflineTail,
             maybeFillerKind,
-            customTitle,
-            disableWatermarks);
+            request.CustomTitle,
+            request.DisableWatermarks);
         return Ok();
     }
 
     [HttpPost("pad_to_next", Name = "PadToNext")]
-    public IActionResult PadToNext(
-        [FromRoute]
-        Guid buildId,
-        string content,
-        int minutes,
-        string fallback = null,
-        bool trim = false,
-        int discardAttempts = 0,
-        bool stopBeforeEnd = true,
-        bool offlineTail = true,
-        string fillerKind = null,
-        string customTitle = null,
-        bool disableWatermarks = false)
+    public IActionResult PadToNext([FromRoute] Guid buildId, [FromBody] PadToNextRequestModel request)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
         if (engine == null)
@@ -295,40 +253,27 @@ public class ScriptedPlayoutController(IScriptedPlayoutBuilderService scriptedPl
         }
 
         Option<FillerKind> maybeFillerKind = Option<FillerKind>.None;
-        if (Enum.TryParse(fillerKind, ignoreCase: true, out FillerKind fk))
+        if (Enum.TryParse(request.FillerKind, ignoreCase: true, out FillerKind fk))
         {
             maybeFillerKind = fk;
         }
 
         engine.PadToNext(
-            content,
-            minutes,
-            fallback,
-            trim,
-            discardAttempts,
-            stopBeforeEnd,
-            offlineTail,
+            request.Content,
+            request.Minutes,
+            request.Fallback,
+            request.Trim,
+            request.DiscardAttempts,
+            request.StopBeforeEnd,
+            request.OfflineTail,
             maybeFillerKind,
-            customTitle,
-            disableWatermarks);
+            request.CustomTitle,
+            request.DisableWatermarks);
         return Ok();
     }
 
     [HttpPost("pad_until", Name = "PadUntil")]
-    public IActionResult PadUntil(
-        [FromRoute]
-        Guid buildId,
-        string content,
-        string when,
-        bool tomorrow = false,
-        string fallback = null,
-        bool trim = false,
-        int discardAttempts = 0,
-        bool stopBeforeEnd = true,
-        bool offlineTail = false,
-        string fillerKind = null,
-        string customTitle = null,
-        bool disableWatermarks = false)
+    public IActionResult PadUntil([FromRoute] Guid buildId, [FromBody] PadUntilRequestModel request)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
         if (engine == null)
@@ -337,28 +282,28 @@ public class ScriptedPlayoutController(IScriptedPlayoutBuilderService scriptedPl
         }
 
         Option<FillerKind> maybeFillerKind = Option<FillerKind>.None;
-        if (Enum.TryParse(fillerKind, ignoreCase: true, out FillerKind fk))
+        if (Enum.TryParse(request.FillerKind, ignoreCase: true, out FillerKind fk))
         {
             maybeFillerKind = fk;
         }
 
         engine.PadUntil(
-            content,
-            when,
-            tomorrow,
-            fallback,
-            trim,
-            discardAttempts,
-            stopBeforeEnd,
-            offlineTail,
+            request.Content,
+            request.When,
+            request.Tomorrow,
+            request.Fallback,
+            request.Trim,
+            request.DiscardAttempts,
+            request.StopBeforeEnd,
+            request.OfflineTail,
             maybeFillerKind,
-            customTitle,
-            disableWatermarks);
+            request.CustomTitle,
+            request.DisableWatermarks);
         return Ok();
     }
 
-    [HttpGet("start_epg_group", Name="StartEpgGroup")]
-    public IActionResult StartEpgGroup([FromRoute]Guid buildId, bool advance = true)
+    [HttpGet("start_epg_group", Name = "StartEpgGroup")]
+    public IActionResult StartEpgGroup([FromRoute] Guid buildId, [FromBody] StartEpgGroupRequestModel request)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
         if (engine == null)
@@ -366,12 +311,12 @@ public class ScriptedPlayoutController(IScriptedPlayoutBuilderService scriptedPl
             return NotFound($"Active build engine not found for build {buildId}.");
         }
 
-        engine.LockGuideGroup(advance);
+        engine.LockGuideGroup(request.Advance);
         return Ok();
     }
 
-    [HttpGet("stop_epg_group", Name="StopEpgGroup")]
-    public IActionResult StopEpgGroup([FromRoute]Guid buildId)
+    [HttpGet("stop_epg_group", Name = "StopEpgGroup")]
+    public IActionResult StopEpgGroup([FromRoute] Guid buildId)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
         if (engine == null)
@@ -385,9 +330,10 @@ public class ScriptedPlayoutController(IScriptedPlayoutBuilderService scriptedPl
 
     [HttpGet("graphics_on", Name = "GraphicsOn")]
     public async Task<IActionResult> GraphicsOn(
-        [FromRoute] Guid buildId,
-        List<string> graphics,
-        Dictionary<string, string> variables = null,
+        [FromRoute]
+        Guid buildId,
+        [FromBody]
+        GraphicsOnRequestModel request,
         CancellationToken cancellationToken = default)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
@@ -396,14 +342,16 @@ public class ScriptedPlayoutController(IScriptedPlayoutBuilderService scriptedPl
             return NotFound($"Active build engine not found for build {buildId}.");
         }
 
-        await engine.GraphicsOn(graphics, variables ?? [], cancellationToken);
+        await engine.GraphicsOn(request.Graphics, request.Variables, cancellationToken);
         return Ok();
     }
 
     [HttpGet("graphics_off", Name = "GraphicsOff")]
     public async Task<IActionResult> GraphicsOff(
-        [FromRoute] Guid buildId,
-        List<string> graphics = null,
+        [FromRoute]
+        Guid buildId,
+        [FromBody]
+        GraphicsOffRequestModel request,
         CancellationToken cancellationToken = default)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
@@ -412,12 +360,12 @@ public class ScriptedPlayoutController(IScriptedPlayoutBuilderService scriptedPl
             return NotFound($"Active build engine not found for build {buildId}.");
         }
 
-        await engine.GraphicsOff(graphics ?? [], cancellationToken);
+        await engine.GraphicsOff(request.Graphics, cancellationToken);
         return Ok();
     }
 
     [HttpGet("watermark_on", Name = "WatermarkOn")]
-    public async Task<IActionResult> WatermarkOn([FromRoute] Guid buildId, List<string> watermark)
+    public async Task<IActionResult> WatermarkOn([FromRoute] Guid buildId, [FromBody] WatermarkOnRequestModel request)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
         if (engine == null)
@@ -425,12 +373,12 @@ public class ScriptedPlayoutController(IScriptedPlayoutBuilderService scriptedPl
             return NotFound($"Active build engine not found for build {buildId}.");
         }
 
-        await engine.WatermarkOn(watermark);
+        await engine.WatermarkOn(request.Watermark);
         return Ok();
     }
 
     [HttpGet("watermark_off", Name = "WatermarkOff")]
-    public async Task<IActionResult> WatermarkOff([FromRoute] Guid buildId, List<string> watermark = null)
+    public async Task<IActionResult> WatermarkOff([FromRoute] Guid buildId, [FromBody] WatermarkOffRequestModel request)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
         if (engine == null)
@@ -438,12 +386,12 @@ public class ScriptedPlayoutController(IScriptedPlayoutBuilderService scriptedPl
             return NotFound($"Active build engine not found for build {buildId}.");
         }
 
-        await engine.WatermarkOff(watermark ?? []);
+        await engine.WatermarkOff(request.Watermark);
         return Ok();
     }
 
     [HttpGet("skip_items", Name = "SkipItems")]
-    public IActionResult SkipItems([FromRoute] Guid buildId, string content, int count)
+    public IActionResult SkipItems([FromRoute] Guid buildId, [FromBody] SkipItemsRequestModel request)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
         if (engine == null)
@@ -451,12 +399,12 @@ public class ScriptedPlayoutController(IScriptedPlayoutBuilderService scriptedPl
             return NotFound($"Active build engine not found for build {buildId}.");
         }
 
-        engine.SkipItems(content, count);
+        engine.SkipItems(request.Content, request.Count);
         return Ok();
     }
 
     [HttpGet("skip_to_item", Name = "SkipToItem")]
-    public IActionResult SkipToItem([FromRoute] Guid buildId, string content, int season, int episode)
+    public IActionResult SkipToItem([FromRoute] Guid buildId, [FromBody] SkipToItemRequestModel request)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
         if (engine == null)
@@ -464,16 +412,16 @@ public class ScriptedPlayoutController(IScriptedPlayoutBuilderService scriptedPl
             return NotFound($"Active build engine not found for build {buildId}.");
         }
 
-        engine.SkipToItem(content, season, episode);
+        engine.SkipToItem(request.Content, request.Season, request.Episode);
         return Ok();
     }
 
     [HttpGet("wait_until", Name = "WaitUntil")]
     public IActionResult WaitUntil(
-        [FromRoute] Guid buildId,
-        string when,
-        bool tomorrow = false,
-        bool rewindOnReset = false)
+        [FromRoute]
+        Guid buildId,
+        [FromBody]
+        WaitUntilRequestModel request)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
         if (engine == null)
@@ -481,9 +429,9 @@ public class ScriptedPlayoutController(IScriptedPlayoutBuilderService scriptedPl
             return NotFound($"Active build engine not found for build {buildId}.");
         }
 
-        if (TimeOnly.TryParse(when, out TimeOnly waitUntil))
+        if (TimeOnly.TryParse(request.When, out TimeOnly waitUntil))
         {
-            engine.WaitUntil(waitUntil, tomorrow, rewindOnReset);
+            engine.WaitUntil(waitUntil, request.Tomorrow, request.RewindOnReset);
         }
 
         return Ok();

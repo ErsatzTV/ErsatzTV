@@ -60,12 +60,21 @@ public class ScriptedPlayoutBuilder(
                     $"http://localhost:{Settings.UiPort}",
                     buildId.ToString(),
                     mode.ToString().ToLowerInvariant()
-                ]);
+                ])
+                .WithValidation(CommandResultValidation.None);
 
             var commandResult = await command.ExecuteBufferedAsync(linkedCts.Token);
             if (!string.IsNullOrWhiteSpace(commandResult.StandardOutput))
             {
                 Console.WriteLine(commandResult.StandardOutput);
+            }
+
+            if (commandResult.ExitCode != 0)
+            {
+                logger.LogWarning(
+                    "Scripted playout process exited with code {Code}: {Error}",
+                    commandResult.ExitCode,
+                    commandResult.StandardError);
             }
 
             playout.Anchor = schedulingEngine.GetAnchor();
