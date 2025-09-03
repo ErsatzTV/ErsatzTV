@@ -1,20 +1,16 @@
-using System.Diagnostics.CodeAnalysis;
+using CliWrap;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using ErsatzTV.Core.Scheduling.Engine;
-using ErsatzTV.Core.Scheduling.ScriptedScheduling.Modules;
-using IronPython.Hosting;
-using IronPython.Runtime;
-using IronPython.Runtime.Exceptions;
 using Microsoft.Extensions.Logging;
-using Microsoft.Scripting.Hosting;
 
 namespace ErsatzTV.Core.Scheduling.ScriptedScheduling;
 
 public class ScriptedPlayoutBuilder(
     IConfigElementRepository configElementRepository,
+    IScriptedPlayoutBuilderService scriptedPlayoutBuilderService,
     ISchedulingEngine schedulingEngine,
     ILocalFileSystem localFileSystem,
     ILogger<ScriptedPlayoutBuilder> logger)
@@ -37,7 +33,8 @@ public class ScriptedPlayoutBuilder(
                 return result;
             }
 
-            logger.LogInformation("Building scripted playout...");
+            Guid buildId = scriptedPlayoutBuilderService.StartSession(schedulingEngine);
+            logger.LogInformation("Building scripted playout with id {BuildId} ...", buildId);
 
             int daysToBuild = await GetDaysToBuild(cancellationToken);
             DateTimeOffset finish = start.AddDays(daysToBuild);
@@ -48,84 +45,17 @@ public class ScriptedPlayoutBuilder(
             schedulingEngine.BuildBetween(start, finish);
             schedulingEngine.WithReferenceData(referenceData);
 
-            var engine = Python.CreateEngine();
-            var scope = engine.CreateScope();
-
-            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
-            var token = cts.Token;
-            TracebackDelegate traceDelegate = null;
-            traceDelegate = (_, why, _) =>
-            {
-                if (why == "line")
-                {
-                    token.ThrowIfCancellationRequested();
-                }
-                return traceDelegate;
-            };
-            engine.SetTrace(traceDelegate);
-
-            string scriptPath = Path.GetDirectoryName(playout.ScheduleFile);
-            if (!string.IsNullOrWhiteSpace(scriptPath) && localFileSystem.FolderExists(scriptPath))
-            {
-                ICollection<string> paths = engine.GetSearchPaths();
-                paths.Add(scriptPath);
-                engine.SetSearchPaths(paths);
-            }
-
-            var contentModule = new ContentModule(schedulingEngine, token);
-            var playoutModule = new PlayoutModule(schedulingEngine, token);
-
-            engine.ExecuteFile(playout.ScheduleFile, scope);
-
-            // define_content is required
-            if (!scope.TryGetVariable("define_content", out PythonFunction defineContentFunc))
-            {
-                logger.LogError("Script must contain a 'define_content' function");
-                return result;
-            }
-
-            if (defineContentFunc.__code__.co_argcount != 2)
-            {
-                logger.LogError("Script function 'define_content' must accept 2 parameters: (content, context)");
-                return result;
-            }
-
-            // reset_playout is NOT required
-            scope.TryGetVariable("reset_playout", out PythonFunction resetPlayoutFunc);
-            if (resetPlayoutFunc != null && resetPlayoutFunc.__code__.co_argcount != 2)
-            {
-                logger.LogError("Script function 'reset_playout' must accept 2 parameters: (playout, context)");
-                return result;
-            }
-
-            // build_playout is required
-            if (!scope.TryGetVariable("build_playout", out PythonFunction buildPlayoutFunc))
-            {
-                logger.LogError("Script must contain a 'build_playout' function");
-                return result;
-            }
-
-            if (buildPlayoutFunc.__code__.co_argcount != 2)
-            {
-                logger.LogError("Script function 'build_playout' must accept 2 parameters: (playout, context)");
-                return result;
-            }
-
             schedulingEngine.RestoreOrReset(Optional(playout.Anchor));
 
-            var context = new PythonPlayoutContext(schedulingEngine.GetState(), playoutModule, engine);
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cts.Token);
 
-            // define content first
-            engine.Operations.Invoke(defineContentFunc, contentModule, context);
+            Command command = Cli.Wrap(playout.ScheduleFile)
+                .WithArguments([$"http://localhost:{Settings.UiPort}", buildId.ToString()])
+                .WithStandardOutputPipe(PipeTarget.ToDelegate(_ => { }))
+                .WithStandardErrorPipe(PipeTarget.ToDelegate(_ => { }));
 
-            // reset if applicable
-            if (mode is PlayoutBuildMode.Reset && resetPlayoutFunc != null)
-            {
-                engine.Operations.Invoke(resetPlayoutFunc, playoutModule, context);
-            }
-
-            // build playout
-            engine.Operations.Invoke(buildPlayoutFunc, playoutModule, context);
+            await command.ExecuteAsync(linkedCts.Token);
 
             playout.Anchor = schedulingEngine.GetAnchor();
 
@@ -160,96 +90,4 @@ public class ScriptedPlayoutBuilder(
             AddedHistory = state.AddedHistory,
             HistoryToRemove = state.HistoryToRemove
         };
-
-    [SuppressMessage("ReSharper", "InconsistentNaming")]
-    [SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores")]
-    public class PythonPlayoutContext
-    {
-        private readonly ISchedulingEngineState _state;
-        private readonly PlayoutModule _playoutModule;
-        private readonly ScriptEngine _scriptEngine;
-        private readonly dynamic _datetimeModule;
-
-        // track playout build failures
-        private const int MaxFailures = 10;
-
-        // track is_done calls when current_time has not advanced
-        private DateTimeOffset _lastCheckedTime;
-        private int _noProgressCounter;
-        private const int MaxCallsNoProgress = 20;
-
-        public PythonPlayoutContext(
-            ISchedulingEngineState state,
-            PlayoutModule playoutModule,
-            ScriptEngine scriptEngine)
-        {
-            _state = state;
-            _playoutModule = playoutModule;
-            _scriptEngine = scriptEngine;
-            _datetimeModule = _scriptEngine.ImportModule("datetime");
-            _lastCheckedTime = _state.CurrentTime;
-        }
-
-        public object current_time => ToPythonDateTime(_state.CurrentTime);
-        public object start_time => ToPythonDateTime(_state.Start);
-        public object finish_time => ToPythonDateTime(_state.Finish);
-
-        public bool is_done()
-        {
-            if (_playoutModule.FailureCount >= MaxFailures)
-            {
-                throw new InvalidOperationException(
-                    $"Script execution halted after {MaxFailures} consecutive failures to add content."
-                );
-            }
-
-            if (_state.CurrentTime == _lastCheckedTime)
-            {
-                _noProgressCounter++;
-                if (_noProgressCounter >= MaxCallsNoProgress)
-                {
-                    throw new InvalidOperationException(
-                        $"Script execution halted after {MaxCallsNoProgress} consecutive calls to is_done() without time advancing.");
-                }
-            }
-            else
-            {
-                _lastCheckedTime = _state.CurrentTime;
-                _noProgressCounter = 0;
-            }
-
-            return _state.CurrentTime >= _state.Finish;
-        }
-
-        private object ToPythonDateTime(DateTimeOffset dto)
-        {
-            dynamic dt_constructor = _datetimeModule.datetime;
-            dynamic timedelta_constructor = _datetimeModule.timedelta;
-            dynamic timezone_constructor = _datetimeModule.timezone;
-
-            var offset = dto.Offset;
-            dynamic py_offset = _scriptEngine.Operations.Invoke(
-                timedelta_constructor,
-                0,
-                (int)offset.TotalSeconds
-            );
-
-            dynamic py_tzinfo = _scriptEngine.Operations.Invoke(
-                timezone_constructor,
-                py_offset
-            );
-
-            return _scriptEngine.Operations.Invoke(
-                dt_constructor,
-                dto.Year,
-                dto.Month,
-                dto.Day,
-                dto.Hour,
-                dto.Minute,
-                dto.Second,
-                dto.Millisecond * 1000,
-                py_tzinfo
-            );
-        }
-    }
 }
