@@ -21,15 +21,15 @@ public class ScriptedPlayoutController(IScriptedPlayoutBuilderService scriptedPl
             return NotFound($"Active build engine not found for build {buildId}.");
         }
 
-        var state = engine.GetState();
-
-        // TODO: better IsDone logic
-        return Ok(
-            new ContextResponseModel(
-                state.CurrentTime,
-                state.Start,
-                state.Finish,
-                state.CurrentTime >= state.Finish));
+        try
+        {
+            var state = engine.GetState();
+            return Ok(new ContextResponseModel(state.CurrentTime, state.Start, state.Finish, state.IsDone));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     [HttpPost("add_collection", Name = "AddCollection")]

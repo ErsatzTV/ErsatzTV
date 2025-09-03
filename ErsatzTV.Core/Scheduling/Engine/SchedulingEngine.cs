@@ -1351,6 +1351,11 @@ public class SchedulingEngine(
         private readonly Dictionary<int, string> _graphicsElements = [];
         private readonly System.Collections.Generic.HashSet<int> _channelWatermarkIds = [];
 
+        // track is_done calls when current_time has not advanced
+        private DateTimeOffset _lastCheckedTime;
+        private int _noProgressCounter;
+        private const int MaxCallsNoProgress = 20;
+
         // state
         public int PlayoutId { get; set; }
         public PlayoutBuildMode Mode { get; set; }
@@ -1418,6 +1423,29 @@ public class SchedulingEngine(
         public List<PlayoutItem> AddedItems { get; } = [];
         public System.Collections.Generic.HashSet<int> HistoryToRemove { get; } = [];
         public List<PlayoutHistory> AddedHistory { get; } = [];
+
+        public bool IsDone
+        {
+            get
+            {
+                if (CurrentTime == _lastCheckedTime)
+                {
+                    _noProgressCounter++;
+                    if (_noProgressCounter >= MaxCallsNoProgress)
+                    {
+                        throw new InvalidOperationException(
+                            $"Script execution halted after {MaxCallsNoProgress} consecutive calls to is_done() without time advancing.");
+                    }
+                }
+                else
+                {
+                    _lastCheckedTime = CurrentTime;
+                    _noProgressCounter = 0;
+                }
+
+                return CurrentTime >= Finish;
+            }
+        }
 
         public string SerializeContext()
         {
