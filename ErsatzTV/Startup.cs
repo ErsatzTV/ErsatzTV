@@ -93,6 +93,7 @@ using MudBlazor.Services;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Refit;
+using Scalar.AspNetCore;
 using Serilog;
 using Serilog.Events;
 
@@ -598,6 +599,7 @@ public class Startup
                     endpoints.MapBlazorHub();
                     endpoints.MapFallbackToPage("/_Host");
                     endpoints.MapOpenApi().CacheOutput();
+                    endpoints.MapScalarApiReference();
                 });
             });
 
