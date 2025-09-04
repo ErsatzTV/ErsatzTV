@@ -123,6 +123,31 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
         return Ok();
     }
 
+    [HttpPost("add_search", Name = "AddSearchQuery")]
+    [Tags("Scripted Content")]
+    [EndpointSummary("Add a search query")]
+    public async Task<IActionResult> AddSearchQuery(
+        [FromRoute]
+        Guid buildId,
+        [FromBody]
+        AddSearchQueryRequestModel request,
+        CancellationToken cancellationToken)
+    {
+        ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
+        if (engine == null)
+        {
+            return NotFound($"Active build engine not found for build {buildId}.");
+        }
+
+        if (!Enum.TryParse(request.Order, ignoreCase: true, out PlaybackOrder playbackOrder))
+        {
+            return BadRequest("Invalid playback order.");
+        }
+
+        await engine.AddSearch(request.Key, request.Query, playbackOrder, cancellationToken);
+        return Ok();
+    }
+
     [HttpPost("add_smart_collection", Name = "AddSmartCollection")]
     [Tags("Scripted Content")]
     [EndpointSummary("Add a smart collection")]
@@ -328,7 +353,7 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
 
     [HttpPost("start_epg_group", Name = "StartEpgGroup")]
     [Tags("Scripted Control")]
-    [EndpointSummary("Start a new EPG group")]
+    [EndpointSummary("Start an EPG group")]
     public IActionResult StartEpgGroup([FromRoute] Guid buildId, [FromBody] StartEpgGroupRequestModel request)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
@@ -343,7 +368,7 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
 
     [HttpPost("stop_epg_group", Name = "StopEpgGroup")]
     [Tags("Scripted Control")]
-    [EndpointSummary("Finish the current EPG group")]
+    [EndpointSummary("Finish an EPG group")]
     public IActionResult StopEpgGroup([FromRoute] Guid buildId)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
