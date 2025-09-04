@@ -13,6 +13,8 @@ namespace ErsatzTV.Controllers.Api;
 public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedPlayoutBuilderService) : ControllerBase
 {
     [HttpGet("context", Name = "GetContext")]
+    [Tags("Metadata")]
+    [EndpointSummary("Get the current context")]
     public ActionResult<ContextResponseModel> GetContext([FromRoute] Guid buildId)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
@@ -25,6 +27,8 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
     }
 
     [HttpPost("add_collection", Name = "AddCollection")]
+    [Tags("Content")]
+    [EndpointSummary("Add a collection")]
     public async Task<IActionResult> AddCollection(
         [FromRoute]
         Guid buildId,
@@ -48,6 +52,8 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
     }
 
     [HttpPost("add_marathon", Name = "AddMarathon")]
+    [Tags("Content")]
+    [EndpointSummary("Add a marathon")]
     public async Task<IActionResult> AddMarathon([FromRoute] Guid buildId, [FromBody] AddMarathonRequestModel request)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
@@ -73,6 +79,8 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
     }
 
     [HttpPost("add_multi_collection", Name = "AddMultiCollection")]
+    [Tags("Content")]
+    [EndpointSummary("Add a multi-collection")]
     public async Task<IActionResult> AddMultiCollection(
         [FromRoute]
         Guid buildId,
@@ -96,6 +104,8 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
     }
 
     [HttpPost("add_playlist", Name = "AddPlaylist")]
+    [Tags("Content")]
+    [EndpointSummary("Add a playlist")]
     public async Task<IActionResult> AddPlaylist(
         [FromRoute]
         Guid buildId,
@@ -114,6 +124,8 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
     }
 
     [HttpPost("add_smart_collection", Name = "AddSmartCollection")]
+    [Tags("Content")]
+    [EndpointSummary("Add a smart collection")]
     public async Task<IActionResult> AddSmartCollection(
         [FromRoute]
         Guid buildId,
@@ -137,6 +149,8 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
     }
 
     [HttpPost("add_show", Name = "AddShow")]
+    [Tags("Content")]
+    [EndpointSummary("Add a show")]
     public async Task<IActionResult> AddShow(
         [FromRoute]
         Guid buildId,
@@ -160,6 +174,8 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
     }
 
     [HttpPost("add_all", Name = "AddAll")]
+    [Tags("Scheduling")]
+    [EndpointSummary("Add all content")]
     public ActionResult<ContextResponseModel> AddAll([FromRoute] Guid buildId, [FromBody] AddAllRequestModel request)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
@@ -179,6 +195,8 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
     }
 
     [HttpPost("add_count", Name = "AddCount")]
+    [Tags("Scheduling")]
+    [EndpointSummary("Add a specific number of content items")]
     public ActionResult<ContextResponseModel> AddCount(
         [FromRoute]
         Guid buildId,
@@ -207,6 +225,8 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
     }
 
     [HttpPost("add_duration", Name = "AddDuration")]
+    [Tags("Scheduling")]
+    [EndpointSummary("Add content for a specific duration")]
     public ActionResult<ContextResponseModel> AddDuration(
         [FromRoute]
         Guid buildId,
@@ -240,6 +260,8 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
     }
 
     [HttpPost("pad_to_next", Name = "PadToNext")]
+    [Tags("Scheduling")]
+    [EndpointSummary("Add content until a specific minutes interval")]
     public ActionResult<ContextResponseModel> PadToNext(
         [FromRoute] Guid buildId,
         [FromBody] PadToNextRequestModel request)
@@ -271,6 +293,8 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
     }
 
     [HttpPost("pad_until", Name = "PadUntil")]
+    [Tags("Scheduling")]
+    [EndpointSummary("Add content until a specified time")]
     public ActionResult<ContextResponseModel> PadUntil(
         [FromRoute] Guid buildId,
         [FromBody] PadUntilRequestModel request)
@@ -303,6 +327,8 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
     }
 
     [HttpPost("start_epg_group", Name = "StartEpgGroup")]
+    [Tags("Control")]
+    [EndpointSummary("Start a new EPG group")]
     public IActionResult StartEpgGroup([FromRoute] Guid buildId, [FromBody] StartEpgGroupRequestModel request)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
@@ -316,6 +342,8 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
     }
 
     [HttpPost("stop_epg_group", Name = "StopEpgGroup")]
+    [Tags("Control")]
+    [EndpointSummary("Finish the current EPG group")]
     public IActionResult StopEpgGroup([FromRoute] Guid buildId)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
@@ -329,6 +357,8 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
     }
 
     [HttpPost("graphics_on", Name = "GraphicsOn")]
+    [Tags("Control")]
+    [EndpointSummary("Turn on graphics elements")]
     public async Task<IActionResult> GraphicsOn(
         [FromRoute]
         Guid buildId,
@@ -347,6 +377,8 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
     }
 
     [HttpPost("graphics_off", Name = "GraphicsOff")]
+    [Tags("Control")]
+    [EndpointSummary("Turn off graphics elements")]
     public async Task<IActionResult> GraphicsOff(
         [FromRoute]
         Guid buildId,
@@ -365,6 +397,8 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
     }
 
     [HttpPost("watermark_on", Name = "WatermarkOn")]
+    [Tags("Control")]
+    [EndpointSummary("Turn on watermarks")]
     public async Task<IActionResult> WatermarkOn([FromRoute] Guid buildId, [FromBody] WatermarkOnRequestModel request)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
@@ -378,6 +412,8 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
     }
 
     [HttpPost("watermark_off", Name = "WatermarkOff")]
+    [Tags("Control")]
+    [EndpointSummary("Turn off watermarks")]
     public async Task<IActionResult> WatermarkOff([FromRoute] Guid buildId, [FromBody] WatermarkOffRequestModel request)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
@@ -391,6 +427,8 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
     }
 
     [HttpPost("skip_items", Name = "SkipItems")]
+    [Tags("Control")]
+    [EndpointSummary("Skip a specific number of items")]
     public IActionResult SkipItems([FromRoute] Guid buildId, [FromBody] SkipItemsRequestModel request)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
@@ -404,6 +442,8 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
     }
 
     [HttpPost("skip_to_item", Name = "SkipToItem")]
+    [Tags("Control")]
+    [EndpointSummary("Skip to a specific episode")]
     public IActionResult SkipToItem([FromRoute] Guid buildId, [FromBody] SkipToItemRequestModel request)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
@@ -417,6 +457,8 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
     }
 
     [HttpPost("wait_until", Name = "WaitUntil")]
+    [Tags("Control")]
+    [EndpointSummary("Wait until the specified time")]
     public ActionResult<ContextResponseModel> WaitUntil(
         [FromRoute]
         Guid buildId,

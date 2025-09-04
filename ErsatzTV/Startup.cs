@@ -599,7 +599,11 @@ public class Startup
                     endpoints.MapBlazorHub();
                     endpoints.MapFallbackToPage("/_Host");
                     endpoints.MapOpenApi().CacheOutput();
-                    endpoints.MapScalarApiReference();
+                    endpoints.MapScalarApiReference(options =>
+                    {
+                        options.AddDocument("scripted-schedule", "Scripted Schedule", "openapi/scripted-schedule.json");
+                        options.HideClientButton = true;
+                    });
                 });
             });
 
