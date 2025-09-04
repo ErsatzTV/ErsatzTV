@@ -13,7 +13,7 @@ namespace ErsatzTV.Controllers.Api;
 public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedPlayoutBuilderService) : ControllerBase
 {
     [HttpGet("context", Name = "GetContext")]
-    [Tags("Metadata")]
+    [Tags("Scripted Metadata")]
     [EndpointSummary("Get the current context")]
     public ActionResult<ContextResponseModel> GetContext([FromRoute] Guid buildId)
     {
@@ -27,7 +27,7 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
     }
 
     [HttpPost("add_collection", Name = "AddCollection")]
-    [Tags("Content")]
+    [Tags("Scripted Content")]
     [EndpointSummary("Add a collection")]
     public async Task<IActionResult> AddCollection(
         [FromRoute]
@@ -52,7 +52,7 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
     }
 
     [HttpPost("add_marathon", Name = "AddMarathon")]
-    [Tags("Content")]
+    [Tags("Scripted Content")]
     [EndpointSummary("Add a marathon")]
     public async Task<IActionResult> AddMarathon([FromRoute] Guid buildId, [FromBody] AddMarathonRequestModel request)
     {
@@ -79,7 +79,7 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
     }
 
     [HttpPost("add_multi_collection", Name = "AddMultiCollection")]
-    [Tags("Content")]
+    [Tags("Scripted Content")]
     [EndpointSummary("Add a multi-collection")]
     public async Task<IActionResult> AddMultiCollection(
         [FromRoute]
@@ -104,7 +104,7 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
     }
 
     [HttpPost("add_playlist", Name = "AddPlaylist")]
-    [Tags("Content")]
+    [Tags("Scripted Content")]
     [EndpointSummary("Add a playlist")]
     public async Task<IActionResult> AddPlaylist(
         [FromRoute]
@@ -124,7 +124,7 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
     }
 
     [HttpPost("add_smart_collection", Name = "AddSmartCollection")]
-    [Tags("Content")]
+    [Tags("Scripted Content")]
     [EndpointSummary("Add a smart collection")]
     public async Task<IActionResult> AddSmartCollection(
         [FromRoute]
@@ -149,7 +149,7 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
     }
 
     [HttpPost("add_show", Name = "AddShow")]
-    [Tags("Content")]
+    [Tags("Scripted Content")]
     [EndpointSummary("Add a show")]
     public async Task<IActionResult> AddShow(
         [FromRoute]
@@ -174,7 +174,7 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
     }
 
     [HttpPost("add_all", Name = "AddAll")]
-    [Tags("Scheduling")]
+    [Tags("Scripted Scheduling")]
     [EndpointSummary("Add all content")]
     public ActionResult<ContextResponseModel> AddAll([FromRoute] Guid buildId, [FromBody] AddAllRequestModel request)
     {
@@ -195,7 +195,7 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
     }
 
     [HttpPost("add_count", Name = "AddCount")]
-    [Tags("Scheduling")]
+    [Tags("Scripted Scheduling")]
     [EndpointSummary("Add a specific number of content items")]
     public ActionResult<ContextResponseModel> AddCount(
         [FromRoute]
@@ -225,7 +225,7 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
     }
 
     [HttpPost("add_duration", Name = "AddDuration")]
-    [Tags("Scheduling")]
+    [Tags("Scripted Scheduling")]
     [EndpointSummary("Add content for a specific duration")]
     public ActionResult<ContextResponseModel> AddDuration(
         [FromRoute]
@@ -260,7 +260,7 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
     }
 
     [HttpPost("pad_to_next", Name = "PadToNext")]
-    [Tags("Scheduling")]
+    [Tags("Scripted Scheduling")]
     [EndpointSummary("Add content until a specific minutes interval")]
     public ActionResult<ContextResponseModel> PadToNext(
         [FromRoute] Guid buildId,
@@ -293,7 +293,7 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
     }
 
     [HttpPost("pad_until", Name = "PadUntil")]
-    [Tags("Scheduling")]
+    [Tags("Scripted Scheduling")]
     [EndpointSummary("Add content until a specified time")]
     public ActionResult<ContextResponseModel> PadUntil(
         [FromRoute] Guid buildId,
@@ -327,7 +327,7 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
     }
 
     [HttpPost("start_epg_group", Name = "StartEpgGroup")]
-    [Tags("Control")]
+    [Tags("Scripted Control")]
     [EndpointSummary("Start a new EPG group")]
     public IActionResult StartEpgGroup([FromRoute] Guid buildId, [FromBody] StartEpgGroupRequestModel request)
     {
@@ -342,7 +342,7 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
     }
 
     [HttpPost("stop_epg_group", Name = "StopEpgGroup")]
-    [Tags("Control")]
+    [Tags("Scripted Control")]
     [EndpointSummary("Finish the current EPG group")]
     public IActionResult StopEpgGroup([FromRoute] Guid buildId)
     {
@@ -357,7 +357,7 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
     }
 
     [HttpPost("graphics_on", Name = "GraphicsOn")]
-    [Tags("Control")]
+    [Tags("Scripted Control")]
     [EndpointSummary("Turn on graphics elements")]
     public async Task<IActionResult> GraphicsOn(
         [FromRoute]
@@ -377,7 +377,7 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
     }
 
     [HttpPost("graphics_off", Name = "GraphicsOff")]
-    [Tags("Control")]
+    [Tags("Scripted Control")]
     [EndpointSummary("Turn off graphics elements")]
     public async Task<IActionResult> GraphicsOff(
         [FromRoute]
@@ -397,7 +397,7 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
     }
 
     [HttpPost("watermark_on", Name = "WatermarkOn")]
-    [Tags("Control")]
+    [Tags("Scripted Control")]
     [EndpointSummary("Turn on watermarks")]
     public async Task<IActionResult> WatermarkOn([FromRoute] Guid buildId, [FromBody] WatermarkOnRequestModel request)
     {
@@ -412,7 +412,7 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
     }
 
     [HttpPost("watermark_off", Name = "WatermarkOff")]
-    [Tags("Control")]
+    [Tags("Scripted Control")]
     [EndpointSummary("Turn off watermarks")]
     public async Task<IActionResult> WatermarkOff([FromRoute] Guid buildId, [FromBody] WatermarkOffRequestModel request)
     {
@@ -427,7 +427,7 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
     }
 
     [HttpPost("skip_items", Name = "SkipItems")]
-    [Tags("Control")]
+    [Tags("Scripted Control")]
     [EndpointSummary("Skip a specific number of items")]
     public IActionResult SkipItems([FromRoute] Guid buildId, [FromBody] SkipItemsRequestModel request)
     {
@@ -442,7 +442,7 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
     }
 
     [HttpPost("skip_to_item", Name = "SkipToItem")]
-    [Tags("Control")]
+    [Tags("Scripted Control")]
     [EndpointSummary("Skip to a specific episode")]
     public IActionResult SkipToItem([FromRoute] Guid buildId, [FromBody] SkipToItemRequestModel request)
     {
@@ -457,7 +457,7 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
     }
 
     [HttpPost("wait_until", Name = "WaitUntil")]
-    [Tags("Control")]
+    [Tags("Scripted Control")]
     [EndpointSummary("Wait until the specified time")]
     public ActionResult<ContextResponseModel> WaitUntil(
         [FromRoute]
@@ -484,7 +484,14 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
         try
         {
             var state = engine.GetState();
-            return Ok(new ContextResponseModel(state.CurrentTime, state.Start, state.Finish, state.IsDone));
+            var responseModel = new ContextResponseModel
+            {
+                CurrentTime = state.CurrentTime,
+                StartTime = state.Start,
+                FinishTime = state.Finish,
+                IsDone = state.IsDone
+            };
+            return Ok(responseModel);
         }
         catch (InvalidOperationException ex)
         {
