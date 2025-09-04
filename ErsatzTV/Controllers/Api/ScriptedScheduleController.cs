@@ -302,7 +302,7 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
         return GetContextInternal(engine);
     }
 
-    [HttpGet("start_epg_group", Name = "StartEpgGroup")]
+    [HttpPost("start_epg_group", Name = "StartEpgGroup")]
     public IActionResult StartEpgGroup([FromRoute] Guid buildId, [FromBody] StartEpgGroupRequestModel request)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
@@ -315,7 +315,7 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
         return Ok();
     }
 
-    [HttpGet("stop_epg_group", Name = "StopEpgGroup")]
+    [HttpPost("stop_epg_group", Name = "StopEpgGroup")]
     public IActionResult StopEpgGroup([FromRoute] Guid buildId)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
@@ -328,7 +328,7 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
         return Ok();
     }
 
-    [HttpGet("graphics_on", Name = "GraphicsOn")]
+    [HttpPost("graphics_on", Name = "GraphicsOn")]
     public async Task<IActionResult> GraphicsOn(
         [FromRoute]
         Guid buildId,
@@ -346,7 +346,7 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
         return Ok();
     }
 
-    [HttpGet("graphics_off", Name = "GraphicsOff")]
+    [HttpPost("graphics_off", Name = "GraphicsOff")]
     public async Task<IActionResult> GraphicsOff(
         [FromRoute]
         Guid buildId,
@@ -364,7 +364,7 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
         return Ok();
     }
 
-    [HttpGet("watermark_on", Name = "WatermarkOn")]
+    [HttpPost("watermark_on", Name = "WatermarkOn")]
     public async Task<IActionResult> WatermarkOn([FromRoute] Guid buildId, [FromBody] WatermarkOnRequestModel request)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
@@ -377,7 +377,7 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
         return Ok();
     }
 
-    [HttpGet("watermark_off", Name = "WatermarkOff")]
+    [HttpPost("watermark_off", Name = "WatermarkOff")]
     public async Task<IActionResult> WatermarkOff([FromRoute] Guid buildId, [FromBody] WatermarkOffRequestModel request)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
@@ -390,7 +390,7 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
         return Ok();
     }
 
-    [HttpGet("skip_items", Name = "SkipItems")]
+    [HttpPost("skip_items", Name = "SkipItems")]
     public IActionResult SkipItems([FromRoute] Guid buildId, [FromBody] SkipItemsRequestModel request)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
@@ -403,7 +403,7 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
         return Ok();
     }
 
-    [HttpGet("skip_to_item", Name = "SkipToItem")]
+    [HttpPost("skip_to_item", Name = "SkipToItem")]
     public IActionResult SkipToItem([FromRoute] Guid buildId, [FromBody] SkipToItemRequestModel request)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
@@ -416,7 +416,7 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
         return Ok();
     }
 
-    [HttpGet("wait_until", Name = "WaitUntil")]
+    [HttpPost("wait_until", Name = "WaitUntil")]
     public ActionResult<ContextResponseModel> WaitUntil(
         [FromRoute]
         Guid buildId,
