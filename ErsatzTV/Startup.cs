@@ -145,10 +145,11 @@ public class Startup
 
         services.AddDataProtection().PersistKeysToFileSystem(new DirectoryInfo(FileSystemLayout.DataProtectionFolder));
 
-        services.AddOpenApi("scripted-schedule", options =>
-        {
-            options.ShouldInclude += a => a.GroupName == "scripted-schedule";
-        });
+        services.AddOpenApi("v1", options => { options.ShouldInclude += a => a.GroupName == "general"; });
+
+        services.AddOpenApi(
+            "scripted-schedule",
+            options => { options.ShouldInclude += a => a.GroupName == "scripted-schedule"; });
 
         OidcHelper.Init(Configuration);
         JwtHelper.Init(Configuration);
@@ -602,6 +603,7 @@ public class Startup
                     endpoints.MapScalarApiReference("/docs", options =>
                     {
                         options.AddDocument("scripted-schedule", "Scripted Schedule", "openapi/scripted-schedule.json");
+                        options.AddDocument("v1", "General", "openapi/v1.json");
                         options.HideClientButton = true;
                         options.Title = "ErsatzTV API Reference";
                     });
