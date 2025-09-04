@@ -1,7 +1,18 @@
+using System.ComponentModel;
+
 namespace ErsatzTV.Core.Api.ScriptedPlayout;
 
-public record ContextResponseModel(
-    DateTimeOffset CurrentTime,
-    DateTimeOffset StartTime,
-    DateTimeOffset FinishTime,
-    bool IsDone);
+public record ContextResponseModel
+{
+    [Description("The current time of the playout build")]
+    public DateTimeOffset CurrentTime { get; set; }
+
+    [Description("The start time of the playout build")]
+    public DateTimeOffset StartTime { get; set; }
+
+    [Description("The finish time of the playout build")]
+    public DateTimeOffset FinishTime { get; set; }
+
+    [Description("Indicates whether the current playout build is complete")]
+    public bool IsDone { get; set; }
+}

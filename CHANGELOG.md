@@ -22,7 +22,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - For example, a `Scripted Schedule` of `/home/jason/schedule.sh "party central" 23` will be executed like
       - `/home/jason/schedule.sh http://localhost:8409 00000000-0000...0000 reset "party central" 23`
     - This enables wrapper script re-use across multiple scripted schedules
-  - API reference is available at `/scalar/scripted-schedule`
+  - API reference is available at `/docs`
 
 ## [25.5.0] - 2025-09-01
 ### Added
