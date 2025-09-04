@@ -21,15 +21,7 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
             return NotFound($"Active build engine not found for build {buildId}.");
         }
 
-        try
-        {
-            var state = engine.GetState();
-            return Ok(new ContextResponseModel(state.CurrentTime, state.Start, state.Finish, state.IsDone));
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(ex.Message);
-        }
+        return GetContextInternal(engine);
     }
 
     [HttpPost("add_collection", Name = "AddCollection")]
@@ -168,7 +160,7 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
     }
 
     [HttpPost("add_all", Name = "AddAll")]
-    public IActionResult AddAll([FromRoute] Guid buildId, [FromBody] AddAllRequestModel request)
+    public ActionResult<ContextResponseModel> AddAll([FromRoute] Guid buildId, [FromBody] AddAllRequestModel request)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
         if (engine == null)
@@ -183,11 +175,11 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
         }
 
         engine.AddAll(request.Content, maybeFillerKind, request.CustomTitle, request.DisableWatermarks);
-        return Ok();
+        return GetContextInternal(engine);
     }
 
     [HttpPost("add_count", Name = "AddCount")]
-    public IActionResult AddCount(
+    public ActionResult<ContextResponseModel> AddCount(
         [FromRoute]
         Guid buildId,
         [FromBody]
@@ -211,11 +203,15 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
             maybeFillerKind,
             request.CustomTitle,
             request.DisableWatermarks);
-        return Ok();
+        return GetContextInternal(engine);
     }
 
     [HttpPost("add_duration", Name = "AddDuration")]
-    public IActionResult AddDuration([FromRoute] Guid buildId, [FromBody] AddDurationRequestModel request)
+    public ActionResult<ContextResponseModel> AddDuration(
+        [FromRoute]
+        Guid buildId,
+        [FromBody]
+        AddDurationRequestModel request)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
         if (engine == null)
@@ -240,11 +236,13 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
             maybeFillerKind,
             request.CustomTitle,
             request.DisableWatermarks);
-        return Ok();
+        return GetContextInternal(engine);
     }
 
     [HttpPost("pad_to_next", Name = "PadToNext")]
-    public IActionResult PadToNext([FromRoute] Guid buildId, [FromBody] PadToNextRequestModel request)
+    public ActionResult<ContextResponseModel> PadToNext(
+        [FromRoute] Guid buildId,
+        [FromBody] PadToNextRequestModel request)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
         if (engine == null)
@@ -269,11 +267,13 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
             maybeFillerKind,
             request.CustomTitle,
             request.DisableWatermarks);
-        return Ok();
+        return GetContextInternal(engine);
     }
 
     [HttpPost("pad_until", Name = "PadUntil")]
-    public IActionResult PadUntil([FromRoute] Guid buildId, [FromBody] PadUntilRequestModel request)
+    public ActionResult<ContextResponseModel> PadUntil(
+        [FromRoute] Guid buildId,
+        [FromBody] PadUntilRequestModel request)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
         if (engine == null)
@@ -299,7 +299,7 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
             maybeFillerKind,
             request.CustomTitle,
             request.DisableWatermarks);
-        return Ok();
+        return GetContextInternal(engine);
     }
 
     [HttpGet("start_epg_group", Name = "StartEpgGroup")]
@@ -417,7 +417,7 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
     }
 
     [HttpGet("wait_until", Name = "WaitUntil")]
-    public IActionResult WaitUntil(
+    public ActionResult<ContextResponseModel> WaitUntil(
         [FromRoute]
         Guid buildId,
         [FromBody]
@@ -434,6 +434,19 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
             engine.WaitUntil(waitUntil, request.Tomorrow, request.RewindOnReset);
         }
 
-        return Ok();
+        return GetContextInternal(engine);
+    }
+
+    private ActionResult<ContextResponseModel> GetContextInternal(ISchedulingEngine engine)
+    {
+        try
+        {
+            var state = engine.GetState();
+            return Ok(new ContextResponseModel(state.CurrentTime, state.Start, state.Finish, state.IsDone));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 }
