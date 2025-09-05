@@ -620,7 +620,12 @@ public class Startup
                     endpoints.MapControllers();
                     endpoints.MapBlazorHub();
                     endpoints.MapFallbackToPage("/_Host");
-                    endpoints.MapOpenApi().CacheOutput();
+
+                    if (CurrentEnvironment.IsDevelopment())
+                    {
+                        endpoints.MapOpenApi();
+                    }
+
                     endpoints.MapScalarApiReference("/docs", options =>
                     {
                         options.AddDocument(
