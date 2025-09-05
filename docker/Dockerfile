@@ -5,8 +5,15 @@ COPY --from=dotnet-runtime /usr/share/dotnet /usr/share/dotnet
 
 # https://hub.docker.com/_/microsoft-dotnet
 FROM mcr.microsoft.com/dotnet/sdk:9.0-noble-amd64 AS build
-RUN apt-get update && apt-get install -y ca-certificates gnupg
+RUN apt-get update && apt-get install -y ca-certificates gnupg default-jre-headless python3-pip
 WORKDIR /source
+
+# generate openapi client
+COPY ErsatzTV/wwwroot/openapi/. /app/ErsatzTV/wwwroot/openapi/
+RUN wget https://repo1.maven.org/maven2/org/openapitools/openapi-generator-cli/7.15.0/openapi-generator-cli-7.15.0.jar
+RUN java -jar openapi-generator-cli-7.15.0.jar generate -i /app/ErsatzTV/wwwroot/openapi/scripted-schedule.json -g python -o /app/etv-client --package-name etv_client
+RUN rm -rf openapi-generator-cli-7.15.0.jar /app/ErsatzTV
+RUN python3 -m pip install --target=/app/pythonlibs /app/etv-client
 
 # copy csproj and restore as distinct layers
 COPY *.sln .
@@ -43,6 +50,7 @@ ENV FONTCONFIG_PATH=/etc/fonts
 RUN fc-cache update
 WORKDIR /app
 COPY --from=build /app ./
+ENV PYTHONPATH=/app/pythonlibs
 ENV ETV_CONFIG_FOLDER=/config
 ENV ETV_TRANSCODE_FOLDER=/transcode
 ENV ETV_DISABLE_VULKAN=1
