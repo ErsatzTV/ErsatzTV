@@ -15,6 +15,20 @@
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     </PropertyGroup>
 
+    <PropertyGroup>
+        <OpenApiDocumentsDirectory>$(MSBuildProjectDirectory)\wwwroot\openapi</OpenApiDocumentsDirectory>
+        <OpenApiGenerateDocumentsOnBuild>false</OpenApiGenerateDocumentsOnBuild>
+    </PropertyGroup>
+
+    <Target Name="RenameOpenApiFiles" AfterTargets="GenerateOpenApiDocuments">
+        <Move SourceFiles="$(OpenApiDocumentsDirectory)\ErsatzTV.json"
+              DestinationFiles="$(OpenApiDocumentsDirectory)\v1.json" />
+        <Move SourceFiles="$(OpenApiDocumentsDirectory)\ErsatzTV_scripted-schedule.json"
+              DestinationFiles="$(OpenApiDocumentsDirectory)\scripted-schedule.json" />
+        <Move SourceFiles="$(OpenApiDocumentsDirectory)\ErsatzTV_scripted-schedule-tagged.json"
+              DestinationFiles="$(OpenApiDocumentsDirectory)\scripted-schedule-tagged.json" />
+    </Target>
+
     <ItemGroup>
         <PackageReference Include="Blazored.FluentValidation" Version="2.2.0" />
         <PackageReference Include="Bugsnag.AspNet.Core" Version="4.1.0" />
@@ -33,6 +47,10 @@
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.8">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Microsoft.Extensions.ApiDescription.Server" Version="9.0.8">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
         <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.14.15">
             <PrivateAssets>all</PrivateAssets>
