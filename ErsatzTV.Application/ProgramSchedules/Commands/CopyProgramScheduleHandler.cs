@@ -56,6 +56,13 @@ public class
                 watermark.ProgramScheduleItemId = 0;
                 watermark.ProgramScheduleItem = item;
             }
+
+            foreach (ProgramScheduleItemGraphicsElement graphicsElement in item.ProgramScheduleItemGraphicsElements)
+            {
+                DetachEntity(dbContext, graphicsElement);
+                graphicsElement.ProgramScheduleItemId = 0;
+                graphicsElement.ProgramScheduleItem = item;
+            }
         }
 
         await dbContext.ProgramSchedules.AddAsync(schedule, cancellationToken);
@@ -81,6 +88,8 @@ public class
             .AsNoTracking()
             .Include(ps => ps.Items)
             .ThenInclude(ps => ps.ProgramScheduleItemWatermarks)
+            .Include(ps => ps.Items)
+            .ThenInclude(ps => ps.ProgramScheduleItemGraphicsElements)
             .SelectOneAsync(p => p.Id, p => p.Id == request.ProgramScheduleId, cancellationToken)
             .Map(o => o.ToValidation<BaseError>("Schedule does not exist."));
 

@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Added
+- Classic schedules: allow selecting multiple graphics elements on schedule items
+
 ### Fixed
 - Fix transcoding content with bt709/pc color metadata
 - Fix scripted schedule validation (file exists) when creating or editing playout

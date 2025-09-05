@@ -2,6 +2,7 @@
 using System.Runtime.CompilerServices;
 using ErsatzTV.Annotations;
 using ErsatzTV.Application.Filler;
+using ErsatzTV.Application.Graphics;
 using ErsatzTV.Application.MediaCollections;
 using ErsatzTV.Application.MediaItems;
 using ErsatzTV.Application.Watermarks;
@@ -93,6 +94,7 @@ public class ProgramScheduleItemEditViewModel : INotifyPropertyChanged
     public FillerPresetViewModel TailFiller { get; set; }
     public FillerPresetViewModel FallbackFiller { get; set; }
     public IEnumerable<WatermarkViewModel> Watermarks { get; set; }
+    public IEnumerable<GraphicsElementViewModel> GraphicsElements { get; set; }
     public string PreferredAudioLanguageCode { get; set; }
     public string PreferredAudioTitle { get; set; }
     public string PreferredSubtitleLanguageCode { get; set; }
