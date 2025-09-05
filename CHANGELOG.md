@@ -27,6 +27,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
       - `/home/jason/schedule.sh http://localhost:8409 00000000-0000...0000 reset "party central" 23`
     - This enables wrapper script re-use across multiple scripted schedules
   - API reference is available at `/docs`
+  - Docker images contain pre-generated python api client and entrypoint script
+    - Entrypoint is at `/app/scripted-schedules/entrypoint.py`
+    - Scripts folder should be mounted to `/app/scripted-schedules/scripts`
+    - Playouts should be created with scripted schedule `/app/scripted-schedules/entrypoint.py script-name` (no trailing `.py`)
 
 ## [25.5.0] - 2025-09-01
 ### Added
