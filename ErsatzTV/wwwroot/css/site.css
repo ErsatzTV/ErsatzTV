@@ -197,3 +197,19 @@ div.ersatztv-light {
     word-wrap: break-word;
     overflow-wrap: break-word;
 }
+
+.playout-filler-guidemode {
+    background-color: var(--mud-palette-primary-darken);
+}
+
+.playout-filler-preroll, .playout-filler-midroll, .playout-filler-postroll {
+    background-color: var(--mud-palette-dark);
+}
+
+.playout-filler-tail {
+    background-color: var(--mud-palette-dark-lighten);
+}
+
+.playout-filler-fallback {
+    background-color: var(--mud-palette-warning-darken);
+}

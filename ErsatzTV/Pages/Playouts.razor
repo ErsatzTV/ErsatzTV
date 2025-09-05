@@ -222,7 +222,8 @@
                           Dense="true"
                           @bind-RowsPerPage="@_detailRowsPerPage"
                           ServerData="@(new Func<TableState, CancellationToken, Task<TableData<PlayoutItemViewModel>>>(DetailServerReload))"
-                          @ref="_detailTable">
+                          @ref="_detailTable"
+                          RowClassFunc="PlayoutItemViewRowClassFunc">
                     <ToolBarContent>
                         <MudSwitch T="bool" Class="ml-6" @bind-Value="@ShowFiller" Color="Color.Secondary" Label="Show Filler"/>
                     </ToolBarContent>
@@ -437,4 +438,8 @@
         return new TableData<PlayoutItemViewModel> { TotalItems = 0 };
     }
 
+    private string PlayoutItemViewRowClassFunc(PlayoutItemViewModel item, int index)
+    {
+        return "playout-filler-" + item.FillerKind.ToString().ToLower();
+    }
 }
