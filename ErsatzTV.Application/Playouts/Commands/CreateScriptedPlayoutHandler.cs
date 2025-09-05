@@ -1,3 +1,4 @@
+using System.CommandLine.Parsing;
 using System.Threading.Channels;
 using ErsatzTV.Application.Channels;
 using ErsatzTV.Core;
@@ -88,7 +89,9 @@ public class CreateScriptedPlayoutHandler
 
     private Validation<BaseError, string> ValidateScheduleFile(CreateScriptedPlayout request)
     {
-        if (!_localFileSystem.FileExists(request.ScheduleFile))
+        var args = CommandLineParser.SplitCommandLine(request.ScheduleFile).ToList();
+        string scriptFile = args[0];
+        if (!_localFileSystem.FileExists(scriptFile))
         {
             return BaseError.New("Scripted schedule does not exist!");
         }
