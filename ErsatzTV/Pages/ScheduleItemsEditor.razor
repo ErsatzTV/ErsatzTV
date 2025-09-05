@@ -1,5 +1,6 @@
 ﻿@page "/schedules/{Id:int}/items"
 @using ErsatzTV.Application.Filler
+@using ErsatzTV.Application.Graphics
 @using ErsatzTV.Application.MediaCollections
 @using ErsatzTV.Application.MediaItems
 @using ErsatzTV.Application.ProgramSchedules
@@ -576,6 +577,21 @@
     </MudStack>
     <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
         <div class="d-flex">
+            <MudText>Graphics Elements</MudText>
+        </div>
+        <MudSelect T="GraphicsElementViewModel"
+                   @bind-SelectedValues="_selectedItem.GraphicsElements"
+                   ToStringFunc="@(ge => ge?.Name)"
+                   Clearable="true"
+                   MultiSelection="true">
+            @foreach (GraphicsElementViewModel graphicsElement in _graphicsElements)
+            {
+                <MudSelectItem Value="@graphicsElement">@graphicsElement.Name</MudSelectItem>
+            }
+        </MudSelect>
+    </MudStack>
+    <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+        <div class="d-flex">
             <MudText>Preferred Audio Language</MudText>
         </div>
         <MudSelect @bind-Value="_selectedItem.PreferredAudioLanguageCode"
@@ -633,6 +649,7 @@
     private ProgramScheduleItemsEditViewModel _schedule = new();
     private List<FillerPresetViewModel> _fillerPresets = [];
     private List<WatermarkViewModel> _watermarks = [];
+    private List<GraphicsElementViewModel> _graphicsElements = [];
     private List<LanguageCodeViewModel> _availableCultures = [];
     private readonly List<PlaylistGroupViewModel> _playlistGroups = [];
     private readonly List<PlaylistViewModel> _playlists = [];
@@ -662,6 +679,8 @@
             _fillerPresets = await Mediator.Send(new GetAllFillerPresets(), token)
                 .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
             _watermarks = await Mediator.Send(new GetAllWatermarks(), token)
+                .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
+            _graphicsElements = await Mediator.Send(new GetAllGraphicsElements(), token)
                 .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
             _availableCultures = await Mediator.Send(new GetAllLanguageCodes(), token);
             _playlistGroups.AddRange(await Mediator.Send(new GetAllPlaylistGroups(), token));
@@ -795,7 +814,8 @@
             PreferredAudioTitle = item.PreferredAudioTitle,
             PreferredSubtitleLanguageCode = item.PreferredSubtitleLanguageCode,
             SubtitleMode = item.SubtitleMode,
-            Watermarks = item.Watermarks
+            Watermarks = item.Watermarks,
+            GraphicsElements = item.GraphicsElements
         };
 
         switch (item)
@@ -861,6 +881,7 @@
             TailFiller = item.TailFiller,
             FallbackFiller = item.FallbackFiller,
             Watermarks = item.Watermarks.ToList(),
+            GraphicsElements = item.GraphicsElements.ToList(),
             PreferredAudioLanguageCode = item.PreferredAudioLanguageCode,
             PreferredAudioTitle = item.PreferredAudioTitle,
             PreferredSubtitleLanguageCode = item.PreferredSubtitleLanguageCode,
@@ -935,6 +956,7 @@
             item.TailFiller?.Id,
             item.FallbackFiller?.Id,
             item.Watermarks.Map(wm => wm.Id).ToList(),
+            item.GraphicsElements.Map(wm => wm.Id).ToList(),
             item.PreferredAudioLanguageCode,
             item.PreferredAudioTitle,
             item.PreferredSubtitleLanguageCode,

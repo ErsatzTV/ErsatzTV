@@ -31,6 +31,7 @@ public record ReplaceProgramScheduleItem(
     int? TailFillerId,
     int? FallbackFillerId,
     List<int> WatermarkIds,
+    List<int> GraphicsElementIds,
     string PreferredAudioLanguageCode,
     string PreferredAudioTitle,
     string PreferredSubtitleLanguageCode,

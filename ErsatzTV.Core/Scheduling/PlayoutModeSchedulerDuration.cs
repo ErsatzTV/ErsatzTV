@@ -162,7 +162,8 @@ public class PlayoutModeSchedulerDuration : PlayoutModeSchedulerBase<ProgramSche
                     PreferredAudioTitle = scheduleItem.PreferredAudioTitle,
                     PreferredSubtitleLanguageCode = scheduleItem.PreferredSubtitleLanguageCode,
                     SubtitleMode = scheduleItem.SubtitleMode,
-                    PlayoutItemWatermarks = []
+                    PlayoutItemWatermarks = [],
+                    PlayoutItemGraphicsElements = []
                 };
 
                 foreach (ProgramScheduleItemWatermark programScheduleItemWatermark in scheduleItem
@@ -173,6 +174,17 @@ public class PlayoutModeSchedulerDuration : PlayoutModeSchedulerBase<ProgramSche
                         {
                             PlayoutItem = playoutItem,
                             WatermarkId = programScheduleItemWatermark.WatermarkId
+                        });
+                }
+
+                foreach (ProgramScheduleItemGraphicsElement programScheduleItemGraphicsElement in scheduleItem
+                             .ProgramScheduleItemGraphicsElements ?? [])
+                {
+                    playoutItem.PlayoutItemGraphicsElements.Add(
+                        new PlayoutItemGraphicsElement
+                        {
+                            PlayoutItem = playoutItem,
+                            GraphicsElementId = programScheduleItemGraphicsElement.GraphicsElementId
                         });
                 }
 

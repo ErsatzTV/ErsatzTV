@@ -314,6 +314,17 @@ public abstract class ProgramScheduleItemCommandBase
                 });
         }
 
+        foreach (int graphicsElementId in item.GraphicsElementIds)
+        {
+            result.ProgramScheduleItemGraphicsElements ??= [];
+            result.ProgramScheduleItemGraphicsElements.Add(
+                new ProgramScheduleItemGraphicsElement
+                {
+                    ProgramScheduleItem = result,
+                    GraphicsElementId = graphicsElementId
+                });
+        }
+
         return result;
     }
 
