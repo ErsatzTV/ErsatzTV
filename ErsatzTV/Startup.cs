@@ -148,8 +148,21 @@ public class Startup
         services.AddOpenApi("v1", options => { options.ShouldInclude += a => a.GroupName == "general"; });
 
         services.AddOpenApi(
-            "scripted-schedule",
+            "scripted-schedule-tagged",
             options => { options.ShouldInclude += a => a.GroupName == "scripted-schedule"; });
+
+        services.AddOpenApi(
+            "scripted-schedule",
+            options =>
+            {
+                options.ShouldInclude += a => a.GroupName == "scripted-schedule";
+                options.AddOperationTransformer((operation, _, _) =>
+                {
+                    // remove tags so openapi generator only generates a single api
+                    operation.Tags.Clear();
+                    return Task.CompletedTask;
+                });
+            });
 
         OidcHelper.Init(Configuration);
         JwtHelper.Init(Configuration);
@@ -602,9 +615,13 @@ public class Startup
                     endpoints.MapOpenApi().CacheOutput();
                     endpoints.MapScalarApiReference("/docs", options =>
                     {
-                        options.AddDocument("scripted-schedule", "Scripted Schedule", "openapi/scripted-schedule.json");
+                        options.AddDocument(
+                            "scripted-schedule",
+                            "Scripted Schedule",
+                            "openapi/scripted-schedule-tagged.json");
                         options.AddDocument("v1", "General", "openapi/v1.json");
                         options.HideClientButton = true;
+                        options.DocumentDownloadType = DocumentDownloadType.None;
                         options.Title = "ErsatzTV API Reference";
                     });
                 });
