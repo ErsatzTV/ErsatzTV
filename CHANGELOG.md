@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - Fix transcoding content with bt709/pc color metadata
 - Fix scripted schedule validation (file exists) when creating or editing playout
+- Fix adding single episode, movie, season, show to empty playlists
 
 ### Changed
 - **BREAKING CHANGE**: change how `Scripted Schedule` system works
