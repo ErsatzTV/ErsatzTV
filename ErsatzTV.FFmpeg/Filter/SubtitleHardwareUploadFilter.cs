@@ -31,6 +31,9 @@ public class SubtitleHardwareUploadFilter : BaseFilter
             // leave v4l2m2m in software since we use a software overlay filter
             HardwareAccelerationMode.V4l2m2m => string.Empty,
 
+            // leave rkmpp in software since we use a software overlay filter
+            HardwareAccelerationMode.Rkmpp => string.Empty,
+
             _ => "hwupload"
         };
 

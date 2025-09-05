@@ -16,6 +16,8 @@ public record FFmpegKnownEncoder
         "h264_v4l2m2m",
         "hevc_v4l2m2m",
         "h264_videotoolbox",
-        "hevc_videotoolbox"
+        "hevc_videotoolbox",
+        "h264_rkmpp",
+        "hevc_rkmpp"
     ];
 }

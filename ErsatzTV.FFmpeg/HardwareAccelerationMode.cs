@@ -10,5 +10,6 @@ public enum HardwareAccelerationMode
     Amf = 5,
     OpenCL = 6,
     Vulkan = 7,
-    V4l2m2m = 8
+    V4l2m2m = 8,
+    Rkmpp = 9
 }

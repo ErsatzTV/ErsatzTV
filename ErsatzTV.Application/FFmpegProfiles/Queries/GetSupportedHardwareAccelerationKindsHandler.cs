@@ -72,6 +72,11 @@ public class
         //     result.Add(HardwareAccelerationKind.V4l2m2m);
         // }
 
+        if (ffmpegCapabilities.HasHardwareAcceleration(HardwareAccelerationMode.Rkmpp))
+        {
+            result.Add(HardwareAccelerationKind.Rkmpp);
+        }
+
         return result;
     }
 

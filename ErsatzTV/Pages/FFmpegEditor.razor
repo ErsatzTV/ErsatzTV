@@ -77,7 +77,7 @@
             </div>
             <MudSelect @bind-Value="_model.VideoProfile"
                        For="@(() => _model.VideoProfile)"
-                       Disabled="@(_model.VideoFormat != FFmpegProfileVideoFormat.H264 || _model.HardwareAcceleration != HardwareAccelerationKind.Nvenc && _model.HardwareAcceleration != HardwareAccelerationKind.Qsv && _model.HardwareAcceleration != HardwareAccelerationKind.VideoToolbox && _model.HardwareAcceleration != HardwareAccelerationKind.None)"
+                       Disabled="@(_model.VideoFormat != FFmpegProfileVideoFormat.H264 || _model.HardwareAcceleration != HardwareAccelerationKind.Nvenc && _model.HardwareAcceleration != HardwareAccelerationKind.Qsv && _model.HardwareAcceleration != HardwareAccelerationKind.VideoToolbox && _model.HardwareAcceleration != HardwareAccelerationKind.Rkmpp && _model.HardwareAcceleration != HardwareAccelerationKind.None)"
                        Clearable="true">
                 <MudSelectItem Value="@VideoProfile.Main">main</MudSelectItem>
                 <MudSelectItem Value="@VideoProfile.High">high</MudSelectItem>
@@ -431,6 +431,7 @@
             HardwareAccelerationKind.Vaapi => HardwareAccelerationMode.Vaapi,
             HardwareAccelerationKind.VideoToolbox => HardwareAccelerationMode.VideoToolbox,
             HardwareAccelerationKind.V4l2m2m => HardwareAccelerationMode.V4l2m2m,
+            HardwareAccelerationKind.Rkmpp => HardwareAccelerationMode.Rkmpp,
             _ => HardwareAccelerationMode.None
         };
 

@@ -8,5 +8,6 @@ public enum HardwareAccelerationKind
     Vaapi = 3,
     VideoToolbox = 4,
     Amf = 5,
-    V4l2m2m = 6
+    V4l2m2m = 6,
+    Rkmpp = 7
 }

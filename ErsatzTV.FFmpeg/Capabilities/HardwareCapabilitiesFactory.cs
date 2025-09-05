@@ -110,6 +110,7 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
             HardwareAccelerationMode.VideoToolbox => new VideoToolboxHardwareCapabilities(ffmpegCapabilities, _logger),
             HardwareAccelerationMode.Amf => new AmfHardwareCapabilities(),
             HardwareAccelerationMode.V4l2m2m => new V4l2m2mHardwareCapabilities(ffmpegCapabilities),
+            HardwareAccelerationMode.Rkmpp => new RkmppHardwareCapabilities(),
             _ => new DefaultHardwareCapabilities()
         };
     }

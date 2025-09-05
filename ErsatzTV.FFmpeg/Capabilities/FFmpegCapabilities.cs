@@ -51,6 +51,7 @@ public class FFmpegCapabilities : IFFmpegCapabilities
             HardwareAccelerationMode.VideoToolbox => FFmpegKnownHardwareAcceleration.VideoToolbox,
             HardwareAccelerationMode.OpenCL => FFmpegKnownHardwareAcceleration.OpenCL,
             HardwareAccelerationMode.Vulkan => FFmpegKnownHardwareAcceleration.Vulkan,
+            HardwareAccelerationMode.Rkmpp => FFmpegKnownHardwareAcceleration.Rkmpp,
             _ => Option<FFmpegKnownHardwareAcceleration>.None
         };
 
