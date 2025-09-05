@@ -14,6 +14,8 @@ RUN wget https://repo1.maven.org/maven2/org/openapitools/openapi-generator-cli/7
 RUN java -jar openapi-generator-cli-7.15.0.jar generate -i /app/ErsatzTV/wwwroot/openapi/scripted-schedule.json -g python -o /app/etv-client --package-name etv_client
 RUN rm -rf openapi-generator-cli-7.15.0.jar /app/ErsatzTV
 RUN python3 -m pip install --target=/app/pythonlibs /app/etv-client
+RUN rm -rf /app/etv-client
+COPY scripts/scripted-schedules/. /app/scripted-schedules/
 
 # copy csproj and restore as distinct layers
 COPY *.sln .
