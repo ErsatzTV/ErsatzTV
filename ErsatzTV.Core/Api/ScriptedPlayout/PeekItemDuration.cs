@@ -2,7 +2,7 @@ using System.ComponentModel;
 
 namespace ErsatzTV.Core.Api.ScriptedPlayout;
 
-public class PeekItemResponseModel
+public class PeekItemDuration
 {
     public string Content { get; set; }
 

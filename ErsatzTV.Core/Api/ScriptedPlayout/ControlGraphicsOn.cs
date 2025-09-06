@@ -2,7 +2,7 @@ using System.ComponentModel;
 
 namespace ErsatzTV.Core.Api.ScriptedPlayout;
 
-public record GraphicsOnRequestModel
+public record ControlGraphicsOn
 {
     [Description("A list of graphics elements to turn on.")]
     public List<string> Graphics { get; set; }

@@ -7,7 +7,7 @@ import sys
 from uuid import UUID
 
 import etv_client
-from etv_client.api import scripted_schedule_api
+from etv_client.api import ScriptedScheduleApi
 
 def main():
     parser = argparse.ArgumentParser(description="Run an ETV scripted schedule")
@@ -32,7 +32,7 @@ def main():
             reset_playout = getattr(script_module, 'reset_playout')
             build_playout = getattr(script_module, 'build_playout')
 
-            api_instance = scripted_schedule_api.ScriptedScheduleApi(api_client)
+            api_instance = ScriptedScheduleApi(api_client)
 
             context = api_instance.get_context(known_args.build_id)
 

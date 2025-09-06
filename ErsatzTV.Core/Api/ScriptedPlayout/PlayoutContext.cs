@@ -2,7 +2,7 @@ using System.ComponentModel;
 
 namespace ErsatzTV.Core.Api.ScriptedPlayout;
 
-public record ContextResponseModel
+public record PlayoutContext
 {
     [Description("The current time of the playout build")]
     public DateTimeOffset CurrentTime { get; set; }

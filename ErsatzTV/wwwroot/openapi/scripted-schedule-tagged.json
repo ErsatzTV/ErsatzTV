@@ -29,17 +29,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/ContextResponseModel"
+                  "$ref": "#/components/schemas/PlayoutContext"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ContextResponseModel"
+                  "$ref": "#/components/schemas/PlayoutContext"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ContextResponseModel"
+                  "$ref": "#/components/schemas/PlayoutContext"
                 }
               }
             }
@@ -69,22 +69,22 @@
           "content": {
             "application/json-patch+json": {
               "schema": {
-                "$ref": "#/components/schemas/AddCollectionRequestModel"
+                "$ref": "#/components/schemas/ContentCollection"
               }
             },
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/AddCollectionRequestModel"
+                "$ref": "#/components/schemas/ContentCollection"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/AddCollectionRequestModel"
+                "$ref": "#/components/schemas/ContentCollection"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/AddCollectionRequestModel"
+                "$ref": "#/components/schemas/ContentCollection"
               }
             }
           },
@@ -119,22 +119,22 @@
           "content": {
             "application/json-patch+json": {
               "schema": {
-                "$ref": "#/components/schemas/AddMarathonRequestModel"
+                "$ref": "#/components/schemas/ContentMarathon"
               }
             },
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/AddMarathonRequestModel"
+                "$ref": "#/components/schemas/ContentMarathon"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/AddMarathonRequestModel"
+                "$ref": "#/components/schemas/ContentMarathon"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/AddMarathonRequestModel"
+                "$ref": "#/components/schemas/ContentMarathon"
               }
             }
           },
@@ -169,22 +169,22 @@
           "content": {
             "application/json-patch+json": {
               "schema": {
-                "$ref": "#/components/schemas/AddMultiCollectionRequestModel"
+                "$ref": "#/components/schemas/ContentMultiCollection"
               }
             },
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/AddMultiCollectionRequestModel"
+                "$ref": "#/components/schemas/ContentMultiCollection"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/AddMultiCollectionRequestModel"
+                "$ref": "#/components/schemas/ContentMultiCollection"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/AddMultiCollectionRequestModel"
+                "$ref": "#/components/schemas/ContentMultiCollection"
               }
             }
           },
@@ -219,22 +219,22 @@
           "content": {
             "application/json-patch+json": {
               "schema": {
-                "$ref": "#/components/schemas/AddPlaylistRequestModel"
+                "$ref": "#/components/schemas/ContentPlaylist"
               }
             },
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/AddPlaylistRequestModel"
+                "$ref": "#/components/schemas/ContentPlaylist"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/AddPlaylistRequestModel"
+                "$ref": "#/components/schemas/ContentPlaylist"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/AddPlaylistRequestModel"
+                "$ref": "#/components/schemas/ContentPlaylist"
               }
             }
           },
@@ -269,22 +269,22 @@
           "content": {
             "application/json-patch+json": {
               "schema": {
-                "$ref": "#/components/schemas/AddSearchQueryRequestModel"
+                "$ref": "#/components/schemas/ContentSearch"
               }
             },
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/AddSearchQueryRequestModel"
+                "$ref": "#/components/schemas/ContentSearch"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/AddSearchQueryRequestModel"
+                "$ref": "#/components/schemas/ContentSearch"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/AddSearchQueryRequestModel"
+                "$ref": "#/components/schemas/ContentSearch"
               }
             }
           },
@@ -319,22 +319,22 @@
           "content": {
             "application/json-patch+json": {
               "schema": {
-                "$ref": "#/components/schemas/AddSmartCollectionRequestModel"
+                "$ref": "#/components/schemas/ContentSmartCollection"
               }
             },
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/AddSmartCollectionRequestModel"
+                "$ref": "#/components/schemas/ContentSmartCollection"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/AddSmartCollectionRequestModel"
+                "$ref": "#/components/schemas/ContentSmartCollection"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/AddSmartCollectionRequestModel"
+                "$ref": "#/components/schemas/ContentSmartCollection"
               }
             }
           },
@@ -369,22 +369,22 @@
           "content": {
             "application/json-patch+json": {
               "schema": {
-                "$ref": "#/components/schemas/AddShowRequestModel"
+                "$ref": "#/components/schemas/ContentShow"
               }
             },
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/AddShowRequestModel"
+                "$ref": "#/components/schemas/ContentShow"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/AddShowRequestModel"
+                "$ref": "#/components/schemas/ContentShow"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/AddShowRequestModel"
+                "$ref": "#/components/schemas/ContentShow"
               }
             }
           },
@@ -419,22 +419,22 @@
           "content": {
             "application/json-patch+json": {
               "schema": {
-                "$ref": "#/components/schemas/AddAllRequestModel"
+                "$ref": "#/components/schemas/ContentAll"
               }
             },
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/AddAllRequestModel"
+                "$ref": "#/components/schemas/ContentAll"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/AddAllRequestModel"
+                "$ref": "#/components/schemas/ContentAll"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/AddAllRequestModel"
+                "$ref": "#/components/schemas/ContentAll"
               }
             }
           },
@@ -446,17 +446,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/ContextResponseModel"
+                  "$ref": "#/components/schemas/PlayoutContext"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ContextResponseModel"
+                  "$ref": "#/components/schemas/PlayoutContext"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ContextResponseModel"
+                  "$ref": "#/components/schemas/PlayoutContext"
                 }
               }
             }
@@ -486,22 +486,22 @@
           "content": {
             "application/json-patch+json": {
               "schema": {
-                "$ref": "#/components/schemas/AddCountRequestModel"
+                "$ref": "#/components/schemas/PlayoutCount"
               }
             },
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/AddCountRequestModel"
+                "$ref": "#/components/schemas/PlayoutCount"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/AddCountRequestModel"
+                "$ref": "#/components/schemas/PlayoutCount"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/AddCountRequestModel"
+                "$ref": "#/components/schemas/PlayoutCount"
               }
             }
           },
@@ -513,17 +513,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/ContextResponseModel"
+                  "$ref": "#/components/schemas/PlayoutContext"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ContextResponseModel"
+                  "$ref": "#/components/schemas/PlayoutContext"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ContextResponseModel"
+                  "$ref": "#/components/schemas/PlayoutContext"
                 }
               }
             }
@@ -553,22 +553,22 @@
           "content": {
             "application/json-patch+json": {
               "schema": {
-                "$ref": "#/components/schemas/AddDurationRequestModel"
+                "$ref": "#/components/schemas/PlayoutDuration"
               }
             },
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/AddDurationRequestModel"
+                "$ref": "#/components/schemas/PlayoutDuration"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/AddDurationRequestModel"
+                "$ref": "#/components/schemas/PlayoutDuration"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/AddDurationRequestModel"
+                "$ref": "#/components/schemas/PlayoutDuration"
               }
             }
           },
@@ -580,17 +580,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/ContextResponseModel"
+                  "$ref": "#/components/schemas/PlayoutContext"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ContextResponseModel"
+                  "$ref": "#/components/schemas/PlayoutContext"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ContextResponseModel"
+                  "$ref": "#/components/schemas/PlayoutContext"
                 }
               }
             }
@@ -620,22 +620,22 @@
           "content": {
             "application/json-patch+json": {
               "schema": {
-                "$ref": "#/components/schemas/PadToNextRequestModel"
+                "$ref": "#/components/schemas/PlayoutPadToNext"
               }
             },
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/PadToNextRequestModel"
+                "$ref": "#/components/schemas/PlayoutPadToNext"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/PadToNextRequestModel"
+                "$ref": "#/components/schemas/PlayoutPadToNext"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/PadToNextRequestModel"
+                "$ref": "#/components/schemas/PlayoutPadToNext"
               }
             }
           },
@@ -647,17 +647,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/ContextResponseModel"
+                  "$ref": "#/components/schemas/PlayoutContext"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ContextResponseModel"
+                  "$ref": "#/components/schemas/PlayoutContext"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ContextResponseModel"
+                  "$ref": "#/components/schemas/PlayoutContext"
                 }
               }
             }
@@ -687,22 +687,22 @@
           "content": {
             "application/json-patch+json": {
               "schema": {
-                "$ref": "#/components/schemas/PadUntilRequestModel"
+                "$ref": "#/components/schemas/PlayoutPadUntil"
               }
             },
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/PadUntilRequestModel"
+                "$ref": "#/components/schemas/PlayoutPadUntil"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/PadUntilRequestModel"
+                "$ref": "#/components/schemas/PlayoutPadUntil"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/PadUntilRequestModel"
+                "$ref": "#/components/schemas/PlayoutPadUntil"
               }
             }
           },
@@ -714,17 +714,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/ContextResponseModel"
+                  "$ref": "#/components/schemas/PlayoutContext"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ContextResponseModel"
+                  "$ref": "#/components/schemas/PlayoutContext"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ContextResponseModel"
+                  "$ref": "#/components/schemas/PlayoutContext"
                 }
               }
             }
@@ -754,22 +754,22 @@
           "content": {
             "application/json-patch+json": {
               "schema": {
-                "$ref": "#/components/schemas/PadUntilExactRequestModel"
+                "$ref": "#/components/schemas/PlayoutPadUntilExact"
               }
             },
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/PadUntilExactRequestModel"
+                "$ref": "#/components/schemas/PlayoutPadUntilExact"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/PadUntilExactRequestModel"
+                "$ref": "#/components/schemas/PlayoutPadUntilExact"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/PadUntilExactRequestModel"
+                "$ref": "#/components/schemas/PlayoutPadUntilExact"
               }
             }
           },
@@ -781,17 +781,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/ContextResponseModel"
+                  "$ref": "#/components/schemas/PlayoutContext"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ContextResponseModel"
+                  "$ref": "#/components/schemas/PlayoutContext"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ContextResponseModel"
+                  "$ref": "#/components/schemas/PlayoutContext"
                 }
               }
             }
@@ -831,17 +831,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/PeekItemResponseModel"
+                  "$ref": "#/components/schemas/PeekItemDuration"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PeekItemResponseModel"
+                  "$ref": "#/components/schemas/PeekItemDuration"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PeekItemResponseModel"
+                  "$ref": "#/components/schemas/PeekItemDuration"
                 }
               }
             }
@@ -871,22 +871,22 @@
           "content": {
             "application/json-patch+json": {
               "schema": {
-                "$ref": "#/components/schemas/StartEpgGroupRequestModel"
+                "$ref": "#/components/schemas/ControlStartEpgGroup"
               }
             },
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/StartEpgGroupRequestModel"
+                "$ref": "#/components/schemas/ControlStartEpgGroup"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/StartEpgGroupRequestModel"
+                "$ref": "#/components/schemas/ControlStartEpgGroup"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/StartEpgGroupRequestModel"
+                "$ref": "#/components/schemas/ControlStartEpgGroup"
               }
             }
           },
@@ -946,22 +946,22 @@
           "content": {
             "application/json-patch+json": {
               "schema": {
-                "$ref": "#/components/schemas/GraphicsOnRequestModel"
+                "$ref": "#/components/schemas/ControlGraphicsOn"
               }
             },
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/GraphicsOnRequestModel"
+                "$ref": "#/components/schemas/ControlGraphicsOn"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/GraphicsOnRequestModel"
+                "$ref": "#/components/schemas/ControlGraphicsOn"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/GraphicsOnRequestModel"
+                "$ref": "#/components/schemas/ControlGraphicsOn"
               }
             }
           },
@@ -996,22 +996,22 @@
           "content": {
             "application/json-patch+json": {
               "schema": {
-                "$ref": "#/components/schemas/GraphicsOffRequestModel"
+                "$ref": "#/components/schemas/ControlGraphicsOff"
               }
             },
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/GraphicsOffRequestModel"
+                "$ref": "#/components/schemas/ControlGraphicsOff"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/GraphicsOffRequestModel"
+                "$ref": "#/components/schemas/ControlGraphicsOff"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/GraphicsOffRequestModel"
+                "$ref": "#/components/schemas/ControlGraphicsOff"
               }
             }
           },
@@ -1046,22 +1046,22 @@
           "content": {
             "application/json-patch+json": {
               "schema": {
-                "$ref": "#/components/schemas/WatermarkOnRequestModel"
+                "$ref": "#/components/schemas/ControlWatermarkOn"
               }
             },
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/WatermarkOnRequestModel"
+                "$ref": "#/components/schemas/ControlWatermarkOn"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/WatermarkOnRequestModel"
+                "$ref": "#/components/schemas/ControlWatermarkOn"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/WatermarkOnRequestModel"
+                "$ref": "#/components/schemas/ControlWatermarkOn"
               }
             }
           },
@@ -1096,22 +1096,22 @@
           "content": {
             "application/json-patch+json": {
               "schema": {
-                "$ref": "#/components/schemas/WatermarkOffRequestModel"
+                "$ref": "#/components/schemas/ControlWatermarkOff"
               }
             },
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/WatermarkOffRequestModel"
+                "$ref": "#/components/schemas/ControlWatermarkOff"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/WatermarkOffRequestModel"
+                "$ref": "#/components/schemas/ControlWatermarkOff"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/WatermarkOffRequestModel"
+                "$ref": "#/components/schemas/ControlWatermarkOff"
               }
             }
           },
@@ -1146,22 +1146,22 @@
           "content": {
             "application/json-patch+json": {
               "schema": {
-                "$ref": "#/components/schemas/SkipItemsRequestModel"
+                "$ref": "#/components/schemas/ControlSkipItems"
               }
             },
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/SkipItemsRequestModel"
+                "$ref": "#/components/schemas/ControlSkipItems"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/SkipItemsRequestModel"
+                "$ref": "#/components/schemas/ControlSkipItems"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/SkipItemsRequestModel"
+                "$ref": "#/components/schemas/ControlSkipItems"
               }
             }
           },
@@ -1196,22 +1196,22 @@
           "content": {
             "application/json-patch+json": {
               "schema": {
-                "$ref": "#/components/schemas/SkipToItemRequestModel"
+                "$ref": "#/components/schemas/ControlSkipToItem"
               }
             },
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/SkipToItemRequestModel"
+                "$ref": "#/components/schemas/ControlSkipToItem"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/SkipToItemRequestModel"
+                "$ref": "#/components/schemas/ControlSkipToItem"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/SkipToItemRequestModel"
+                "$ref": "#/components/schemas/ControlSkipToItem"
               }
             }
           },
@@ -1246,22 +1246,22 @@
           "content": {
             "application/json-patch+json": {
               "schema": {
-                "$ref": "#/components/schemas/WaitUntilExactRequestModel"
+                "$ref": "#/components/schemas/ControlWaitUntilExact"
               }
             },
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/WaitUntilExactRequestModel"
+                "$ref": "#/components/schemas/ControlWaitUntilExact"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/WaitUntilExactRequestModel"
+                "$ref": "#/components/schemas/ControlWaitUntilExact"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/WaitUntilExactRequestModel"
+                "$ref": "#/components/schemas/ControlWaitUntilExact"
               }
             }
           },
@@ -1273,17 +1273,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/ContextResponseModel"
+                  "$ref": "#/components/schemas/PlayoutContext"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ContextResponseModel"
+                  "$ref": "#/components/schemas/PlayoutContext"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ContextResponseModel"
+                  "$ref": "#/components/schemas/PlayoutContext"
                 }
               }
             }
@@ -1313,22 +1313,22 @@
           "content": {
             "application/json-patch+json": {
               "schema": {
-                "$ref": "#/components/schemas/WaitUntilRequestModel"
+                "$ref": "#/components/schemas/ControlWaitUntil"
               }
             },
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/WaitUntilRequestModel"
+                "$ref": "#/components/schemas/ControlWaitUntil"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/WaitUntilRequestModel"
+                "$ref": "#/components/schemas/ControlWaitUntil"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/WaitUntilRequestModel"
+                "$ref": "#/components/schemas/ControlWaitUntil"
               }
             }
           },
@@ -1340,17 +1340,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/ContextResponseModel"
+                  "$ref": "#/components/schemas/PlayoutContext"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ContextResponseModel"
+                  "$ref": "#/components/schemas/PlayoutContext"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ContextResponseModel"
+                  "$ref": "#/components/schemas/PlayoutContext"
                 }
               }
             }
@@ -1361,7 +1361,7 @@
   },
   "components": {
     "schemas": {
-      "AddAllRequestModel": {
+      "ContentAll": {
         "type": "object",
         "properties": {
           "content": {
@@ -1384,7 +1384,7 @@
           }
         }
       },
-      "AddCollectionRequestModel": {
+      "ContentCollection": {
         "type": "object",
         "properties": {
           "key": {
@@ -1404,7 +1404,327 @@
           }
         }
       },
-      "AddCountRequestModel": {
+      "ContentMarathon": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Unique name used to reference this content throughout the scripted schedule",
+            "nullable": true
+          },
+          "groupBy": {
+            "type": "string",
+            "description": "Tells the scheduler how to group the combined content (returned from all guids and searches). Valid values are show, season, artist and album.",
+            "nullable": true
+          },
+          "itemOrder": {
+            "type": "string",
+            "description": "Playback order within each group; only chronological and shuffle are currently supported",
+            "nullable": true
+          },
+          "guids": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "description": "List of external content identifiers",
+            "nullable": true
+          },
+          "searches": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of search queries",
+            "nullable": true
+          },
+          "playAllItems": {
+            "type": "boolean",
+            "description": "When true, will add every item from a group before moving to the next group. When false, will play one item from a group before moving to the next group."
+          },
+          "shuffleGroups": {
+            "type": "boolean",
+            "description": "When true, will randomize the order of groups. When false, will cycle through groups in a fixed order."
+          }
+        }
+      },
+      "ContentMultiCollection": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Unique name used to reference this content throughout the scripted schedule",
+            "nullable": true
+          },
+          "multiCollection": {
+            "type": "string",
+            "description": "The name of the existing multi-collection",
+            "nullable": true
+          },
+          "order": {
+            "type": "string",
+            "description": "The playback order; only chronological and shuffle are currently supported",
+            "nullable": true
+          }
+        }
+      },
+      "ContentPlaylist": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Unique name used to reference this content throughout the scripted schedule",
+            "nullable": true
+          },
+          "playlist": {
+            "type": "string",
+            "description": "The name of the existing playlist",
+            "nullable": true
+          },
+          "playlistGroup": {
+            "type": "string",
+            "description": "The name of the existing playlist group that contains the named playlist",
+            "nullable": true
+          }
+        }
+      },
+      "ContentSearch": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "nullable": true
+          },
+          "query": {
+            "type": "string",
+            "nullable": true
+          },
+          "order": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "ContentShow": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Unique name used to reference this content throughout the scripted schedule",
+            "nullable": true
+          },
+          "guids": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "List of show identifiers",
+            "nullable": true
+          },
+          "order": {
+            "type": "string",
+            "description": "The playback order; only chronological and shuffle are currently supported",
+            "nullable": true
+          }
+        }
+      },
+      "ContentSmartCollection": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Unique name used to reference this content throughout the scripted schedule",
+            "nullable": true
+          },
+          "smartCollection": {
+            "type": "string",
+            "description": "The name of the existing smart collection",
+            "nullable": true
+          },
+          "order": {
+            "type": "string",
+            "description": "The playback order; only chronological and shuffle are currently supported",
+            "nullable": true
+          }
+        }
+      },
+      "ControlGraphicsOff": {
+        "type": "object",
+        "properties": {
+          "graphics": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "A list of graphics elements to turn off. All graphics elements will be turned off if this list is null or empty",
+            "nullable": true
+          }
+        }
+      },
+      "ControlGraphicsOn": {
+        "type": "object",
+        "properties": {
+          "graphics": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "A list of graphics elements to turn on.",
+            "nullable": true
+          },
+          "variables": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "nullable": true
+          }
+        }
+      },
+      "ControlSkipItems": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "description": "The 'key' for the content",
+            "nullable": true
+          },
+          "count": {
+            "type": "integer",
+            "description": "The number of items to skip",
+            "format": "int32"
+          }
+        }
+      },
+      "ControlSkipToItem": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "description": "The 'key' for the content",
+            "nullable": true
+          },
+          "season": {
+            "type": "integer",
+            "description": "The season number",
+            "format": "int32"
+          },
+          "episode": {
+            "type": "integer",
+            "description": "The episode number",
+            "format": "int32"
+          }
+        }
+      },
+      "ControlStartEpgGroup": {
+        "type": "object",
+        "properties": {
+          "advance": {
+            "type": "boolean",
+            "description": "When true, will make a new EPG group. When false, will continue the existing EPG group."
+          }
+        }
+      },
+      "ControlWaitUntil": {
+        "type": "object",
+        "properties": {
+          "when": {
+            "type": "string",
+            "description": "The time of day to wait (insert unscheduled time) until",
+            "nullable": true
+          },
+          "tomorrow": {
+            "type": "boolean",
+            "description": "When true, will wait until the specified time tomorrow if it has already passed today."
+          },
+          "rewindOnReset": {
+            "type": "boolean",
+            "description": "When true, the current time of the playout build is allowed to move backward when the playout is reset."
+          }
+        }
+      },
+      "ControlWaitUntilExact": {
+        "type": "object",
+        "properties": {
+          "when": {
+            "type": "string",
+            "description": "The time to wait (insert unscheduled time) until",
+            "format": "date-time"
+          },
+          "rewindOnReset": {
+            "type": "boolean",
+            "description": "When true, the current time of the playout build is allowed to move backward when the playout is reset."
+          }
+        }
+      },
+      "ControlWatermarkOff": {
+        "type": "object",
+        "properties": {
+          "watermark": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "A list of existing watermark names to turn off. All (scripted) watermarks will be turned off if this list is null or empty.",
+            "nullable": true
+          }
+        }
+      },
+      "ControlWatermarkOn": {
+        "type": "object",
+        "properties": {
+          "watermark": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "A list of existing watermark names to turn on",
+            "nullable": true
+          }
+        }
+      },
+      "PeekItemDuration": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "nullable": true
+          },
+          "milliseconds": {
+            "type": "integer",
+            "description": "Duration in milliseconds",
+            "format": "int64"
+          }
+        }
+      },
+      "PlayoutContext": {
+        "type": "object",
+        "properties": {
+          "currentTime": {
+            "type": "string",
+            "description": "The current time of the playout build",
+            "format": "date-time"
+          },
+          "startTime": {
+            "type": "string",
+            "description": "The start time of the playout build",
+            "format": "date-time"
+          },
+          "finishTime": {
+            "type": "string",
+            "description": "The finish time of the playout build",
+            "format": "date-time"
+          },
+          "isDone": {
+            "type": "boolean",
+            "description": "Indicates whether the current playout build is complete"
+          }
+        }
+      },
+      "PlayoutCount": {
         "type": "object",
         "properties": {
           "content": {
@@ -1431,7 +1751,7 @@
           }
         }
       },
-      "AddDurationRequestModel": {
+      "PlayoutDuration": {
         "type": "object",
         "properties": {
           "content": {
@@ -1481,211 +1801,7 @@
           }
         }
       },
-      "AddMarathonRequestModel": {
-        "type": "object",
-        "properties": {
-          "key": {
-            "type": "string",
-            "description": "Unique name used to reference this content throughout the scripted schedule",
-            "nullable": true
-          },
-          "groupBy": {
-            "type": "string",
-            "description": "Tells the scheduler how to group the combined content (returned from all guids and searches). Valid values are show, season, artist and album.",
-            "nullable": true
-          },
-          "itemOrder": {
-            "type": "string",
-            "description": "Playback order within each group; only chronological and shuffle are currently supported",
-            "nullable": true
-          },
-          "guids": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            "description": "List of external content identifiers",
-            "nullable": true
-          },
-          "searches": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "description": "List of search queries",
-            "nullable": true
-          },
-          "playAllItems": {
-            "type": "boolean",
-            "description": "When true, will add every item from a group before moving to the next group. When false, will play one item from a group before moving to the next group."
-          },
-          "shuffleGroups": {
-            "type": "boolean",
-            "description": "When true, will randomize the order of groups. When false, will cycle through groups in a fixed order."
-          }
-        }
-      },
-      "AddMultiCollectionRequestModel": {
-        "type": "object",
-        "properties": {
-          "key": {
-            "type": "string",
-            "description": "Unique name used to reference this content throughout the scripted schedule",
-            "nullable": true
-          },
-          "multiCollection": {
-            "type": "string",
-            "description": "The name of the existing multi-collection",
-            "nullable": true
-          },
-          "order": {
-            "type": "string",
-            "description": "The playback order; only chronological and shuffle are currently supported",
-            "nullable": true
-          }
-        }
-      },
-      "AddPlaylistRequestModel": {
-        "type": "object",
-        "properties": {
-          "key": {
-            "type": "string",
-            "description": "Unique name used to reference this content throughout the scripted schedule",
-            "nullable": true
-          },
-          "playlist": {
-            "type": "string",
-            "description": "The name of the existing playlist",
-            "nullable": true
-          },
-          "playlistGroup": {
-            "type": "string",
-            "description": "The name of the existing playlist group that contains the named playlist",
-            "nullable": true
-          }
-        }
-      },
-      "AddSearchQueryRequestModel": {
-        "type": "object",
-        "properties": {
-          "key": {
-            "type": "string",
-            "nullable": true
-          },
-          "query": {
-            "type": "string",
-            "nullable": true
-          },
-          "order": {
-            "type": "string",
-            "nullable": true
-          }
-        }
-      },
-      "AddShowRequestModel": {
-        "type": "object",
-        "properties": {
-          "key": {
-            "type": "string",
-            "description": "Unique name used to reference this content throughout the scripted schedule",
-            "nullable": true
-          },
-          "guids": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "string"
-            },
-            "description": "List of show identifiers",
-            "nullable": true
-          },
-          "order": {
-            "type": "string",
-            "description": "The playback order; only chronological and shuffle are currently supported",
-            "nullable": true
-          }
-        }
-      },
-      "AddSmartCollectionRequestModel": {
-        "type": "object",
-        "properties": {
-          "key": {
-            "type": "string",
-            "description": "Unique name used to reference this content throughout the scripted schedule",
-            "nullable": true
-          },
-          "smartCollection": {
-            "type": "string",
-            "description": "The name of the existing smart collection",
-            "nullable": true
-          },
-          "order": {
-            "type": "string",
-            "description": "The playback order; only chronological and shuffle are currently supported",
-            "nullable": true
-          }
-        }
-      },
-      "ContextResponseModel": {
-        "type": "object",
-        "properties": {
-          "currentTime": {
-            "type": "string",
-            "description": "The current time of the playout build",
-            "format": "date-time"
-          },
-          "startTime": {
-            "type": "string",
-            "description": "The start time of the playout build",
-            "format": "date-time"
-          },
-          "finishTime": {
-            "type": "string",
-            "description": "The finish time of the playout build",
-            "format": "date-time"
-          },
-          "isDone": {
-            "type": "boolean",
-            "description": "Indicates whether the current playout build is complete"
-          }
-        }
-      },
-      "GraphicsOffRequestModel": {
-        "type": "object",
-        "properties": {
-          "graphics": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "description": "A list of graphics elements to turn off. All graphics elements will be turned off if this list is null or empty",
-            "nullable": true
-          }
-        }
-      },
-      "GraphicsOnRequestModel": {
-        "type": "object",
-        "properties": {
-          "graphics": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "description": "A list of graphics elements to turn on.",
-            "nullable": true
-          },
-          "variables": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "string"
-            },
-            "nullable": true
-          }
-        }
-      },
-      "PadToNextRequestModel": {
+      "PlayoutPadToNext": {
         "type": "object",
         "properties": {
           "content": {
@@ -1735,57 +1851,7 @@
           }
         }
       },
-      "PadUntilExactRequestModel": {
-        "type": "object",
-        "properties": {
-          "content": {
-            "type": "string",
-            "description": "The 'key' for the content that should be added",
-            "nullable": true
-          },
-          "when": {
-            "type": "string",
-            "description": "The time content should be added until",
-            "format": "date-time"
-          },
-          "fallback": {
-            "type": "string",
-            "description": "The 'key' for the content that should be used to fill any remaining unscheduled time. One item will be selected to be looped and trimmed to exactly fit.",
-            "nullable": true
-          },
-          "trim": {
-            "type": "boolean",
-            "description": "Controls whether content will be trimmed to exactly fit until the specified time"
-          },
-          "discardAttempts": {
-            "type": "integer",
-            "description": "When trim is false, this is the number of times to discard items from the collection to find something that fits until the specified time",
-            "format": "int32"
-          },
-          "stopBeforeEnd": {
-            "type": "boolean",
-            "description": "When false, allows content to run over the specified the specified time before completing this request"
-          },
-          "offlineTail": {
-            "type": "boolean",
-            "description": "When true, afer scheduling everything that will fit, any remaining time from the specified interval will be unscheduled (offline)"
-          },
-          "fillerKind": {
-            "type": "string",
-            "description": "Flags this content as filler, which influences EPG grouping",
-            "nullable": true
-          },
-          "customTitle": {
-            "type": "string",
-            "description": "Overrides the title used in the EPG",
-            "nullable": true
-          },
-          "disableWatermarks": {
-            "type": "boolean"
-          }
-        }
-      },
-      "PadUntilRequestModel": {
+      "PlayoutPadUntil": {
         "type": "object",
         "properties": {
           "content": {
@@ -1839,119 +1905,53 @@
           }
         }
       },
-      "PeekItemResponseModel": {
+      "PlayoutPadUntilExact": {
         "type": "object",
         "properties": {
           "content": {
             "type": "string",
+            "description": "The 'key' for the content that should be added",
             "nullable": true
           },
-          "milliseconds": {
-            "type": "integer",
-            "description": "Duration in milliseconds",
-            "format": "int64"
-          }
-        }
-      },
-      "SkipItemsRequestModel": {
-        "type": "object",
-        "properties": {
-          "content": {
-            "type": "string",
-            "description": "The 'key' for the content",
-            "nullable": true
-          },
-          "count": {
-            "type": "integer",
-            "description": "The number of items to skip",
-            "format": "int32"
-          }
-        }
-      },
-      "SkipToItemRequestModel": {
-        "type": "object",
-        "properties": {
-          "content": {
-            "type": "string",
-            "description": "The 'key' for the content",
-            "nullable": true
-          },
-          "season": {
-            "type": "integer",
-            "description": "The season number",
-            "format": "int32"
-          },
-          "episode": {
-            "type": "integer",
-            "description": "The episode number",
-            "format": "int32"
-          }
-        }
-      },
-      "StartEpgGroupRequestModel": {
-        "type": "object",
-        "properties": {
-          "advance": {
-            "type": "boolean",
-            "description": "When true, will make a new EPG group. When false, will continue the existing EPG group."
-          }
-        }
-      },
-      "WaitUntilExactRequestModel": {
-        "type": "object",
-        "properties": {
           "when": {
             "type": "string",
-            "description": "The time to wait (insert unscheduled time) until",
+            "description": "The time content should be added until",
             "format": "date-time"
           },
-          "rewindOnReset": {
-            "type": "boolean",
-            "description": "When true, the current time of the playout build is allowed to move backward when the playout is reset."
-          }
-        }
-      },
-      "WaitUntilRequestModel": {
-        "type": "object",
-        "properties": {
-          "when": {
+          "fallback": {
             "type": "string",
-            "description": "The time of day to wait (insert unscheduled time) until",
+            "description": "The 'key' for the content that should be used to fill any remaining unscheduled time. One item will be selected to be looped and trimmed to exactly fit.",
             "nullable": true
           },
-          "tomorrow": {
+          "trim": {
             "type": "boolean",
-            "description": "When true, will wait until the specified time tomorrow if it has already passed today."
+            "description": "Controls whether content will be trimmed to exactly fit until the specified time"
           },
-          "rewindOnReset": {
+          "discardAttempts": {
+            "type": "integer",
+            "description": "When trim is false, this is the number of times to discard items from the collection to find something that fits until the specified time",
+            "format": "int32"
+          },
+          "stopBeforeEnd": {
             "type": "boolean",
-            "description": "When true, the current time of the playout build is allowed to move backward when the playout is reset."
-          }
-        }
-      },
-      "WatermarkOffRequestModel": {
-        "type": "object",
-        "properties": {
-          "watermark": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "description": "A list of existing watermark names to turn off. All (scripted) watermarks will be turned off if this list is null or empty.",
+            "description": "When false, allows content to run over the specified the specified time before completing this request"
+          },
+          "offlineTail": {
+            "type": "boolean",
+            "description": "When true, afer scheduling everything that will fit, any remaining time from the specified interval will be unscheduled (offline)"
+          },
+          "fillerKind": {
+            "type": "string",
+            "description": "Flags this content as filler, which influences EPG grouping",
             "nullable": true
-          }
-        }
-      },
-      "WatermarkOnRequestModel": {
-        "type": "object",
-        "properties": {
-          "watermark": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "description": "A list of existing watermark names to turn on",
+          },
+          "customTitle": {
+            "type": "string",
+            "description": "Overrides the title used in the EPG",
             "nullable": true
+          },
+          "disableWatermarks": {
+            "type": "boolean"
           }
         }
       }
