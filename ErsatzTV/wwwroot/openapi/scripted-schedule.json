@@ -253,7 +253,7 @@
           "ScriptedSchedule"
         ],
         "summary": "Add a search query",
-        "operationId": "AddSearchQuery",
+        "operationId": "AddSearch",
         "parameters": [
           {
             "name": "buildId",
@@ -670,7 +670,7 @@
         "tags": [
           "ScriptedSchedule"
         ],
-        "summary": "Add content until a specified time",
+        "summary": "Add content until a specified time of day",
         "operationId": "PadUntil",
         "parameters": [
           {
@@ -725,6 +725,123 @@
               "text/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ContextResponseModel"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/scripted/playout/build/{buildId}/pad_until_exact": {
+      "post": {
+        "tags": [
+          "ScriptedSchedule"
+        ],
+        "summary": "Add content until an exact time",
+        "operationId": "PadUntilExact",
+        "parameters": [
+          {
+            "name": "buildId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/PadUntilExactRequestModel"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PadUntilExactRequestModel"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PadUntilExactRequestModel"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/PadUntilExactRequestModel"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContextResponseModel"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContextResponseModel"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContextResponseModel"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/scripted/playout/build/{buildId}/peek_next/{content}": {
+      "get": {
+        "tags": [
+          "ScriptedSchedule"
+        ],
+        "summary": "Peek the next content item",
+        "operationId": "PeekNext",
+        "parameters": [
+          {
+            "name": "buildId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "content",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PeekItemResponseModel"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PeekItemResponseModel"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PeekItemResponseModel"
                 }
               }
             }
@@ -1107,12 +1224,79 @@
         }
       }
     },
+    "/api/scripted/playout/build/{buildId}/wait_until_exact": {
+      "post": {
+        "tags": [
+          "ScriptedSchedule"
+        ],
+        "summary": "Wait until an exact time",
+        "operationId": "WaitUntilExact",
+        "parameters": [
+          {
+            "name": "buildId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/WaitUntilExactRequestModel"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WaitUntilExactRequestModel"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WaitUntilExactRequestModel"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/WaitUntilExactRequestModel"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContextResponseModel"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContextResponseModel"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContextResponseModel"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/scripted/playout/build/{buildId}/wait_until": {
       "post": {
         "tags": [
           "ScriptedSchedule"
         ],
-        "summary": "Wait until the specified time",
+        "summary": "Wait until the specified time of day",
         "operationId": "WaitUntil",
         "parameters": [
           {
@@ -1551,6 +1735,56 @@
           }
         }
       },
+      "PadUntilExactRequestModel": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "description": "The 'key' for the content that should be added",
+            "nullable": true
+          },
+          "when": {
+            "type": "string",
+            "description": "The time content should be added until",
+            "format": "date-time"
+          },
+          "fallback": {
+            "type": "string",
+            "description": "The 'key' for the content that should be used to fill any remaining unscheduled time. One item will be selected to be looped and trimmed to exactly fit.",
+            "nullable": true
+          },
+          "trim": {
+            "type": "boolean",
+            "description": "Controls whether content will be trimmed to exactly fit until the specified time"
+          },
+          "discardAttempts": {
+            "type": "integer",
+            "description": "When trim is false, this is the number of times to discard items from the collection to find something that fits until the specified time",
+            "format": "int32"
+          },
+          "stopBeforeEnd": {
+            "type": "boolean",
+            "description": "When false, allows content to run over the specified the specified time before completing this request"
+          },
+          "offlineTail": {
+            "type": "boolean",
+            "description": "When true, afer scheduling everything that will fit, any remaining time from the specified interval will be unscheduled (offline)"
+          },
+          "fillerKind": {
+            "type": "string",
+            "description": "Flags this content as filler, which influences EPG grouping",
+            "nullable": true
+          },
+          "customTitle": {
+            "type": "string",
+            "description": "Overrides the title used in the EPG",
+            "nullable": true
+          },
+          "disableWatermarks": {
+            "type": "boolean"
+          }
+        }
+      },
       "PadUntilRequestModel": {
         "type": "object",
         "properties": {
@@ -1605,6 +1839,20 @@
           }
         }
       },
+      "PeekItemResponseModel": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "nullable": true
+          },
+          "milliseconds": {
+            "type": "integer",
+            "description": "Duration in milliseconds",
+            "format": "int64"
+          }
+        }
+      },
       "SkipItemsRequestModel": {
         "type": "object",
         "properties": {
@@ -1646,6 +1894,20 @@
           "advance": {
             "type": "boolean",
             "description": "When true, will make a new EPG group. When false, will continue the existing EPG group."
+          }
+        }
+      },
+      "WaitUntilExactRequestModel": {
+        "type": "object",
+        "properties": {
+          "when": {
+            "type": "string",
+            "description": "The time to wait (insert unscheduled time) until",
+            "format": "date-time"
+          },
+          "rewindOnReset": {
+            "type": "boolean",
+            "description": "When true, the current time of the playout build is allowed to move backward when the playout is reset."
           }
         }
       },

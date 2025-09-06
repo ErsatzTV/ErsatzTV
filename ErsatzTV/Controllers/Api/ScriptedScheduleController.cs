@@ -123,10 +123,10 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
         return Ok();
     }
 
-    [HttpPost("add_search", Name = "AddSearchQuery")]
+    [HttpPost("add_search", Name = "AddSearch")]
     [Tags("Scripted Content")]
     [EndpointSummary("Add a search query")]
-    public async Task<IActionResult> AddSearchQuery(
+    public async Task<IActionResult> AddSearch(
         [FromRoute]
         Guid buildId,
         [FromBody]
@@ -319,7 +319,7 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
 
     [HttpPost("pad_until", Name = "PadUntil")]
     [Tags("Scripted Scheduling")]
-    [EndpointSummary("Add content until a specified time")]
+    [EndpointSummary("Add content until a specified time of day")]
     public ActionResult<ContextResponseModel> PadUntil(
         [FromRoute] Guid buildId,
         [FromBody] PadUntilRequestModel request)
@@ -349,6 +349,65 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
             request.CustomTitle,
             request.DisableWatermarks);
         return GetContextInternal(engine);
+    }
+
+    [HttpPost("pad_until_exact", Name = "PadUntilExact")]
+    [Tags("Scripted Scheduling")]
+    [EndpointSummary("Add content until an exact time")]
+    public ActionResult<ContextResponseModel> PadUntilExact(
+        [FromRoute]
+        Guid buildId,
+        [FromBody]
+        PadUntilExactRequestModel request)
+    {
+        ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
+        if (engine == null)
+        {
+            return NotFound($"Active build engine not found for build {buildId}.");
+        }
+
+        Option<FillerKind> maybeFillerKind = Option<FillerKind>.None;
+        if (Enum.TryParse(request.FillerKind, ignoreCase: true, out FillerKind fk))
+        {
+            maybeFillerKind = fk;
+        }
+
+        engine.PadUntilExact(
+            request.Content,
+            request.When,
+            request.Fallback,
+            request.Trim,
+            request.DiscardAttempts,
+            request.StopBeforeEnd,
+            request.OfflineTail,
+            maybeFillerKind,
+            request.CustomTitle,
+            request.DisableWatermarks);
+        return GetContextInternal(engine);
+    }
+
+    [HttpGet("peek_next/{content}", Name="PeekNext")]
+    [Tags("Scripted Scheduling")]
+    [EndpointSummary("Peek the next content item")]
+    public ActionResult<PeekItemResponseModel> PeekNext(Guid buildId, string content)
+    {
+        ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
+        if (engine == null)
+        {
+            return NotFound($"Active build engine not found for build {buildId}.");
+        }
+
+        Option<MediaItem> maybeMediaItem = engine.PeekNext(content);
+        foreach (var mediaItem in maybeMediaItem)
+        {
+            return new PeekItemResponseModel
+            {
+                Content = content,
+                Milliseconds = (long)engine.DurationForMediaItem(mediaItem).TotalMilliseconds
+            };
+        }
+
+        return NotFound("Content key does not exist, or collection is empty");
     }
 
     [HttpPost("start_epg_group", Name = "StartEpgGroup")]
@@ -481,10 +540,30 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
         return Ok();
     }
 
+    [HttpPost("wait_until_exact", Name = "WaitUntilExact")]
+    [Tags("Scripted Control")]
+    [EndpointSummary("Wait until an exact time")]
+    public ActionResult<ContextResponseModel> WaitUntilExact(
+        [FromRoute]
+        Guid buildId,
+        [FromBody]
+        WaitUntilExactRequestModel request)
+    {
+        ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
+        if (engine == null)
+        {
+            return NotFound($"Active build engine not found for build {buildId}.");
+        }
+
+        engine.WaitUntilExact(request.When, request.RewindOnReset);
+
+        return GetContextInternal(engine);
+    }
+
     [HttpPost("wait_until", Name = "WaitUntil")]
     [Tags("Scripted Control")]
-    [EndpointSummary("Wait until the specified time")]
-    public ActionResult<ContextResponseModel> WaitUntil(
+    [EndpointSummary("Wait until the specified time of day")]
+    public ActionResult<ContextResponseModel> WaitUntilTime(
         [FromRoute]
         Guid buildId,
         [FromBody]

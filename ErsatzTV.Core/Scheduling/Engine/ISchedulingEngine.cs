@@ -103,6 +103,20 @@ public interface ISchedulingEngine
         string customTitle,
         bool disableWatermarks);
 
+    bool PadUntilExact(
+        string content,
+        DateTimeOffset padUntil,
+        string fallback,
+        bool trim,
+        int discardAttempts,
+        bool stopBeforeEnd,
+        bool offlineTail,
+        Option<FillerKind> maybeFillerKind,
+        string customTitle,
+        bool disableWatermarks);
+
+    Option<MediaItem> PeekNext(string content);
+
     // control instructions
     void LockGuideGroup(bool advance);
     void UnlockGuideGroup();
@@ -118,10 +132,13 @@ public interface ISchedulingEngine
     void SkipItems(string content, int count);
     void SkipToItem(string content, int season, int episode);
     ISchedulingEngine WaitUntil(TimeOnly waitUntil, bool tomorrow, bool rewindOnReset);
+    ISchedulingEngine WaitUntilExact(DateTimeOffset waitUntil, bool rewindOnReset);
 
 
 
     PlayoutAnchor GetAnchor();
 
     ISchedulingEngineState GetState();
+
+    TimeSpan DurationForMediaItem(MediaItem mediaItem);
 }

@@ -586,6 +586,52 @@ public class SchedulingEngine(
         return true;
     }
 
+    public bool PadUntilExact(
+        string content,
+        DateTimeOffset padUntil,
+        string fallback,
+        bool trim,
+        int discardAttempts,
+        bool stopBeforeEnd,
+        bool offlineTail,
+        Option<FillerKind> maybeFillerKind,
+        string customTitle,
+        bool disableWatermarks)
+    {
+        if (!_enumerators.TryGetValue(content, out EnumeratorDetails enumeratorDetails))
+        {
+            logger.LogWarning("Skipping invalid content {Key}", content);
+            return false;
+        }
+
+        EnumeratorDetails fallbackEnumeratorDetails = null;
+        if (!string.IsNullOrEmpty(fallback))
+        {
+            _enumerators.TryGetValue(fallback, out fallbackEnumeratorDetails);
+        }
+
+        DateTimeOffset targetTime = _state.CurrentTime;
+        if (targetTime < padUntil)
+        {
+            // this is wrong when offset changes?
+            targetTime = padUntil.ToLocalTime();
+        }
+
+        _state.CurrentTime = AddDurationInternal(
+            targetTime,
+            stopBeforeEnd,
+            discardAttempts,
+            trim,
+            offlineTail,
+            GetFillerKind(maybeFillerKind),
+            customTitle,
+            disableWatermarks,
+            enumeratorDetails,
+            Optional(fallbackEnumeratorDetails));
+
+        return true;
+    }
+
     private DateTimeOffset AddDurationInternal(
         DateTimeOffset targetTime,
         bool stopBeforeEnd,
@@ -844,6 +890,17 @@ public class SchedulingEngine(
         return result;
     }
 
+    public Option<MediaItem> PeekNext(string content)
+    {
+        if (!_enumerators.TryGetValue(content, out EnumeratorDetails enumeratorDetails))
+        {
+            logger.LogWarning("Unable to peek next item for invalid content {Key}", content);
+            return Option<MediaItem>.None;
+        }
+
+        return enumeratorDetails.Enumerator.Current;
+    }
+
     public void LockGuideGroup(bool advance)
     {
         _state.LockGuideGroup(advance);
@@ -999,6 +1056,29 @@ public class SchedulingEngine(
         {
             // this is wrong when offset changes
             currentTime = new DateTimeOffset(dayOnly, waitUntil, currentTime.Offset);
+        }
+
+        _state.CurrentTime = currentTime;
+
+        return this;
+    }
+
+    public ISchedulingEngine WaitUntilExact(DateTimeOffset waitUntil, bool rewindOnReset)
+    {
+        var currentTime = _state.CurrentTime;
+
+        if (currentTime > waitUntil)
+        {
+            if (rewindOnReset && _state.Mode == PlayoutBuildMode.Reset)
+            {
+                // maybe wrong when offset changes?
+                currentTime = waitUntil.ToLocalTime();
+            }
+        }
+        else
+        {
+            // this is wrong when offset changes?
+            currentTime = waitUntil.ToLocalTime();
         }
 
         _state.CurrentTime = currentTime;
@@ -1199,7 +1279,7 @@ public class SchedulingEngine(
         }
     }
 
-    private static TimeSpan DurationForMediaItem(MediaItem mediaItem)
+    public TimeSpan DurationForMediaItem(MediaItem mediaItem)
     {
         if (mediaItem is Image image)
         {
