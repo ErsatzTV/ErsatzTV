@@ -7,7 +7,7 @@ namespace ErsatzTV.Core.Scheduling.Engine;
 
 public class MarathonHelper(IMediaCollectionRepository mediaCollectionRepository)
 {
-    public async Task<Option<MarathonContentResult>> GetEnumerator(
+    public async Task<Option<PlaylistContentResult>> GetEnumerator(
         Dictionary<string, List<string>> guids,
         List<string> searches,
         string groupBy,
@@ -70,7 +70,7 @@ public class MarathonHelper(IMediaCollectionRepository mediaCollectionRepository
             shuffleGroups,
             cancellationToken);
 
-        return new MarathonContentResult(
+        return new PlaylistContentResult(
             enumerator,
             itemMap.ToImmutableDictionary(x => CollectionKey.ForPlaylistItem(x.Key), x => x.Value));
     }

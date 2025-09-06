@@ -247,6 +247,56 @@
         }
       }
     },
+    "/api/scripted/playout/build/{buildId}/create_playlist": {
+      "post": {
+        "tags": [
+          "ScriptedSchedule"
+        ],
+        "summary": "Create a playlist",
+        "operationId": "CreatePlaylist",
+        "parameters": [
+          {
+            "name": "buildId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentCreatePlaylist"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentCreatePlaylist"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentCreatePlaylist"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentCreatePlaylist"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/scripted/playout/build/{buildId}/add_search": {
       "post": {
         "tags": [
@@ -1124,6 +1174,81 @@
         }
       }
     },
+    "/api/scripted/playout/build/{buildId}/pre_roll_on": {
+      "post": {
+        "tags": [
+          "ScriptedSchedule"
+        ],
+        "summary": "Turn on pre-roll playlist",
+        "operationId": "PreRollOn",
+        "parameters": [
+          {
+            "name": "buildId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ControlPreRollOn"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ControlPreRollOn"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ControlPreRollOn"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ControlPreRollOn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/scripted/playout/build/{buildId}/pre_roll_off": {
+      "post": {
+        "tags": [
+          "ScriptedSchedule"
+        ],
+        "summary": "Turn off pre-roll playlist",
+        "operationId": "PreRollOff",
+        "parameters": [
+          {
+            "name": "buildId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/scripted/playout/build/{buildId}/skip_items": {
       "post": {
         "tags": [
@@ -1404,6 +1529,24 @@
           }
         }
       },
+      "ContentCreatePlaylist": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Unique name used to reference this content throughout the scripted schedule",
+            "nullable": true
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PlaylistItem"
+            },
+            "description": "List of playlist items",
+            "nullable": true
+          }
+        }
+      },
       "ContentMarathon": {
         "type": "object",
         "properties": {
@@ -1584,6 +1727,16 @@
           }
         }
       },
+      "ControlPreRollOn": {
+        "type": "object",
+        "properties": {
+          "playlist": {
+            "type": "string",
+            "description": "The 'key' for the scripted playlist",
+            "nullable": true
+          }
+        }
+      },
       "ControlSkipItems": {
         "type": "object",
         "properties": {
@@ -1697,6 +1850,20 @@
             "type": "integer",
             "description": "Duration in milliseconds",
             "format": "int64"
+          }
+        }
+      },
+      "PlaylistItem": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "description": "The 'key' for the content",
+            "nullable": true
+          },
+          "count": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },

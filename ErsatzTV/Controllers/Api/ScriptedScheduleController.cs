@@ -123,6 +123,29 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
         return Ok();
     }
 
+    [HttpPost("create_playlist", Name="CreatePlaylist")]
+    [Tags("Scripted Content")]
+    [EndpointSummary("Create a playlist")]
+    public async Task<IActionResult> CreatePlaylist(
+        [FromRoute]
+        Guid buildId,
+        [FromBody]
+        ContentCreatePlaylist request,
+        CancellationToken cancellationToken)
+    {
+        ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
+        if (engine == null)
+        {
+            return NotFound($"Active build engine not found for build {buildId}.");
+        }
+
+        await engine.CreatePlaylist(
+            request.Key,
+            request.Items.ToDictionary(i => i.Content, i => i.Count),
+            cancellationToken);
+        return Ok();
+    }
+
     [HttpPost("add_search", Name = "AddSearch")]
     [Tags("Scripted Content")]
     [EndpointSummary("Add a search query")]
@@ -507,6 +530,36 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
         }
 
         await engine.WatermarkOff(request.Watermark);
+        return Ok();
+    }
+
+    [HttpPost("pre_roll_on", Name = "PreRollOn")]
+    [Tags("Scripted Control")]
+    [EndpointSummary("Turn on pre-roll playlist")]
+    public IActionResult PreRollOn([FromRoute] Guid buildId, [FromBody] ControlPreRollOn request)
+    {
+        ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
+        if (engine == null)
+        {
+            return NotFound($"Active build engine not found for build {buildId}.");
+        }
+
+        engine.PreRollOn(request.Playlist);
+        return Ok();
+    }
+
+    [HttpPost("pre_roll_off", Name = "PreRollOff")]
+    [Tags("Scripted Control")]
+    [EndpointSummary("Turn off pre-roll playlist")]
+    public IActionResult PreRollOff([FromRoute] Guid buildId)
+    {
+        ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
+        if (engine == null)
+        {
+            return NotFound($"Active build engine not found for build {buildId}.");
+        }
+
+        engine.PreRollOff();
         return Ok();
     }
 
