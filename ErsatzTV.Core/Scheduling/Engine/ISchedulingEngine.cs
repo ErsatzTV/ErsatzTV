@@ -42,6 +42,7 @@ public interface ISchedulingEngine
         CancellationToken cancellationToken);
 
     Task AddPlaylist(string key, string playlist, string playlistGroup, CancellationToken cancellationToken);
+    Task CreatePlaylist(string key, Dictionary<string, int> playlistItems, CancellationToken cancellationToken);
 
     Task AddSmartCollection(
         string key,
@@ -129,6 +130,9 @@ public interface ISchedulingEngine
     Task GraphicsOff(List<string> graphicsElements, CancellationToken cancellationToken);
     Task WatermarkOn(List<string> watermarks);
     Task WatermarkOff(List<string> watermarks);
+    void PreRollOn(string content);
+    void PreRollOff();
+
     void SkipItems(string content, int count);
     void SkipToItem(string content, int season, int episode);
     ISchedulingEngine WaitUntil(TimeOnly waitUntil, bool tomorrow, bool rewindOnReset);
