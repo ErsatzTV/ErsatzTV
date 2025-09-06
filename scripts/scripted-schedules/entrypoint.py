@@ -39,7 +39,8 @@ def main():
             define_content(api_instance, context, known_args.build_id)
 
             if known_args.mode == "reset":
-                context = reset_playout(api_instance, context, known_args.build_id)
+                new_context = reset_playout(api_instance, context, known_args.build_id)
+                context = new_context or api_instance.get_context(known_args.build_id)
 
             build_playout(api_instance, context, known_args.build_id)
         except etv_client.ApiException as e:
