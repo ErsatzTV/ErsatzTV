@@ -1,8 +1,10 @@
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 
 namespace ErsatzTV.Core.Api.ScriptedPlayout;
 
-public record AddCollectionRequestModel
+[SuppressMessage("Naming", "CA1711:Identifiers should not have incorrect suffix")]
+public record ContentCollection
 {
     [Description("Unique name used to reference this content throughout the scripted schedule")]
     public string Key { get; init; }

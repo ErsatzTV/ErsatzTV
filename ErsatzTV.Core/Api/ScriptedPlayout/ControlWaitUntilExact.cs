@@ -2,7 +2,7 @@ using System.ComponentModel;
 
 namespace ErsatzTV.Core.Api.ScriptedPlayout;
 
-public record WaitUntilExactRequestModel
+public record ControlWaitUntilExact
 {
     [Description("The time to wait (insert unscheduled time) until")]
     public DateTimeOffset When { get; set; }

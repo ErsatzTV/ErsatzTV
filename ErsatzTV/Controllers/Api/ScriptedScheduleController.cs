@@ -15,7 +15,7 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
     [HttpGet("context", Name = "GetContext")]
     [Tags("Scripted Metadata")]
     [EndpointSummary("Get the current context")]
-    public ActionResult<ContextResponseModel> GetContext([FromRoute] Guid buildId)
+    public ActionResult<PlayoutContext> GetContext([FromRoute] Guid buildId)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
         if (engine == null)
@@ -33,7 +33,7 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
         [FromRoute]
         Guid buildId,
         [FromBody]
-        AddCollectionRequestModel request,
+        ContentCollection request,
         CancellationToken cancellationToken)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
@@ -54,7 +54,7 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
     [HttpPost("add_marathon", Name = "AddMarathon")]
     [Tags("Scripted Content")]
     [EndpointSummary("Add a marathon")]
-    public async Task<IActionResult> AddMarathon([FromRoute] Guid buildId, [FromBody] AddMarathonRequestModel request)
+    public async Task<IActionResult> AddMarathon([FromRoute] Guid buildId, [FromBody] ContentMarathon request)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
         if (engine == null)
@@ -85,7 +85,7 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
         [FromRoute]
         Guid buildId,
         [FromBody]
-        AddMultiCollectionRequestModel request,
+        ContentMultiCollection request,
         CancellationToken cancellationToken)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
@@ -110,7 +110,7 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
         [FromRoute]
         Guid buildId,
         [FromBody]
-        AddPlaylistRequestModel request,
+        ContentPlaylist request,
         CancellationToken cancellationToken)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
@@ -130,7 +130,7 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
         [FromRoute]
         Guid buildId,
         [FromBody]
-        AddSearchQueryRequestModel request,
+        ContentSearch request,
         CancellationToken cancellationToken)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
@@ -155,7 +155,7 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
         [FromRoute]
         Guid buildId,
         [FromBody]
-        AddSmartCollectionRequestModel request,
+        ContentSmartCollection request,
         CancellationToken cancellationToken)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
@@ -180,7 +180,7 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
         [FromRoute]
         Guid buildId,
         [FromBody]
-        AddShowRequestModel request,
+        ContentShow request,
         CancellationToken cancellationToken)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
@@ -201,7 +201,7 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
     [HttpPost("add_all", Name = "AddAll")]
     [Tags("Scripted Scheduling")]
     [EndpointSummary("Add all content")]
-    public ActionResult<ContextResponseModel> AddAll([FromRoute] Guid buildId, [FromBody] AddAllRequestModel request)
+    public ActionResult<PlayoutContext> AddAll([FromRoute] Guid buildId, [FromBody] ContentAll request)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
         if (engine == null)
@@ -222,11 +222,11 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
     [HttpPost("add_count", Name = "AddCount")]
     [Tags("Scripted Scheduling")]
     [EndpointSummary("Add a specific number of content items")]
-    public ActionResult<ContextResponseModel> AddCount(
+    public ActionResult<PlayoutContext> AddCount(
         [FromRoute]
         Guid buildId,
         [FromBody]
-        AddCountRequestModel request)
+        PlayoutCount request)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
         if (engine == null)
@@ -252,11 +252,11 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
     [HttpPost("add_duration", Name = "AddDuration")]
     [Tags("Scripted Scheduling")]
     [EndpointSummary("Add content for a specific duration")]
-    public ActionResult<ContextResponseModel> AddDuration(
+    public ActionResult<PlayoutContext> AddDuration(
         [FromRoute]
         Guid buildId,
         [FromBody]
-        AddDurationRequestModel request)
+        PlayoutDuration request)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
         if (engine == null)
@@ -287,9 +287,9 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
     [HttpPost("pad_to_next", Name = "PadToNext")]
     [Tags("Scripted Scheduling")]
     [EndpointSummary("Add content until a specific minutes interval")]
-    public ActionResult<ContextResponseModel> PadToNext(
+    public ActionResult<PlayoutContext> PadToNext(
         [FromRoute] Guid buildId,
-        [FromBody] PadToNextRequestModel request)
+        [FromBody] PlayoutPadToNext request)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
         if (engine == null)
@@ -320,9 +320,9 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
     [HttpPost("pad_until", Name = "PadUntil")]
     [Tags("Scripted Scheduling")]
     [EndpointSummary("Add content until a specified time of day")]
-    public ActionResult<ContextResponseModel> PadUntil(
+    public ActionResult<PlayoutContext> PadUntil(
         [FromRoute] Guid buildId,
-        [FromBody] PadUntilRequestModel request)
+        [FromBody] PlayoutPadUntil request)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
         if (engine == null)
@@ -354,11 +354,11 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
     [HttpPost("pad_until_exact", Name = "PadUntilExact")]
     [Tags("Scripted Scheduling")]
     [EndpointSummary("Add content until an exact time")]
-    public ActionResult<ContextResponseModel> PadUntilExact(
+    public ActionResult<PlayoutContext> PadUntilExact(
         [FromRoute]
         Guid buildId,
         [FromBody]
-        PadUntilExactRequestModel request)
+        PlayoutPadUntilExact request)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
         if (engine == null)
@@ -389,7 +389,7 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
     [HttpGet("peek_next/{content}", Name="PeekNext")]
     [Tags("Scripted Scheduling")]
     [EndpointSummary("Peek the next content item")]
-    public ActionResult<PeekItemResponseModel> PeekNext(Guid buildId, string content)
+    public ActionResult<PeekItemDuration> PeekNext(Guid buildId, string content)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
         if (engine == null)
@@ -400,7 +400,7 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
         Option<MediaItem> maybeMediaItem = engine.PeekNext(content);
         foreach (var mediaItem in maybeMediaItem)
         {
-            return new PeekItemResponseModel
+            return new PeekItemDuration
             {
                 Content = content,
                 Milliseconds = (long)engine.DurationForMediaItem(mediaItem).TotalMilliseconds
@@ -413,7 +413,7 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
     [HttpPost("start_epg_group", Name = "StartEpgGroup")]
     [Tags("Scripted Control")]
     [EndpointSummary("Start an EPG group")]
-    public IActionResult StartEpgGroup([FromRoute] Guid buildId, [FromBody] StartEpgGroupRequestModel request)
+    public IActionResult StartEpgGroup([FromRoute] Guid buildId, [FromBody] ControlStartEpgGroup request)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
         if (engine == null)
@@ -447,7 +447,7 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
         [FromRoute]
         Guid buildId,
         [FromBody]
-        GraphicsOnRequestModel request,
+        ControlGraphicsOn request,
         CancellationToken cancellationToken = default)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
@@ -467,7 +467,7 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
         [FromRoute]
         Guid buildId,
         [FromBody]
-        GraphicsOffRequestModel request,
+        ControlGraphicsOff request,
         CancellationToken cancellationToken = default)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
@@ -483,7 +483,7 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
     [HttpPost("watermark_on", Name = "WatermarkOn")]
     [Tags("Scripted Control")]
     [EndpointSummary("Turn on watermarks")]
-    public async Task<IActionResult> WatermarkOn([FromRoute] Guid buildId, [FromBody] WatermarkOnRequestModel request)
+    public async Task<IActionResult> WatermarkOn([FromRoute] Guid buildId, [FromBody] ControlWatermarkOn request)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
         if (engine == null)
@@ -498,7 +498,7 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
     [HttpPost("watermark_off", Name = "WatermarkOff")]
     [Tags("Scripted Control")]
     [EndpointSummary("Turn off watermarks")]
-    public async Task<IActionResult> WatermarkOff([FromRoute] Guid buildId, [FromBody] WatermarkOffRequestModel request)
+    public async Task<IActionResult> WatermarkOff([FromRoute] Guid buildId, [FromBody] ControlWatermarkOff request)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
         if (engine == null)
@@ -513,7 +513,7 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
     [HttpPost("skip_items", Name = "SkipItems")]
     [Tags("Scripted Control")]
     [EndpointSummary("Skip a specific number of items")]
-    public IActionResult SkipItems([FromRoute] Guid buildId, [FromBody] SkipItemsRequestModel request)
+    public IActionResult SkipItems([FromRoute] Guid buildId, [FromBody] ControlSkipItems request)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
         if (engine == null)
@@ -528,7 +528,7 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
     [HttpPost("skip_to_item", Name = "SkipToItem")]
     [Tags("Scripted Control")]
     [EndpointSummary("Skip to a specific episode")]
-    public IActionResult SkipToItem([FromRoute] Guid buildId, [FromBody] SkipToItemRequestModel request)
+    public IActionResult SkipToItem([FromRoute] Guid buildId, [FromBody] ControlSkipToItem request)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
         if (engine == null)
@@ -543,11 +543,11 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
     [HttpPost("wait_until_exact", Name = "WaitUntilExact")]
     [Tags("Scripted Control")]
     [EndpointSummary("Wait until an exact time")]
-    public ActionResult<ContextResponseModel> WaitUntilExact(
+    public ActionResult<PlayoutContext> WaitUntilExact(
         [FromRoute]
         Guid buildId,
         [FromBody]
-        WaitUntilExactRequestModel request)
+        ControlWaitUntilExact request)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
         if (engine == null)
@@ -563,11 +563,11 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
     [HttpPost("wait_until", Name = "WaitUntil")]
     [Tags("Scripted Control")]
     [EndpointSummary("Wait until the specified time of day")]
-    public ActionResult<ContextResponseModel> WaitUntilTime(
+    public ActionResult<PlayoutContext> WaitUntilTime(
         [FromRoute]
         Guid buildId,
         [FromBody]
-        WaitUntilRequestModel request)
+        ControlWaitUntil request)
     {
         ISchedulingEngine engine = scriptedPlayoutBuilderService.GetEngine(buildId);
         if (engine == null)
@@ -583,12 +583,12 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
         return GetContextInternal(engine);
     }
 
-    private ActionResult<ContextResponseModel> GetContextInternal(ISchedulingEngine engine)
+    private ActionResult<PlayoutContext> GetContextInternal(ISchedulingEngine engine)
     {
         try
         {
             var state = engine.GetState();
-            var responseModel = new ContextResponseModel
+            var responseModel = new PlayoutContext
             {
                 CurrentTime = state.CurrentTime,
                 StartTime = state.Start,

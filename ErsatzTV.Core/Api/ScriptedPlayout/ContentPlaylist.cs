@@ -2,7 +2,7 @@ using System.ComponentModel;
 
 namespace ErsatzTV.Core.Api.ScriptedPlayout;
 
-public record AddPlaylistRequestModel
+public record ContentPlaylist
 {
     [Description("Unique name used to reference this content throughout the scripted schedule")]
     public string Key { get; set; }

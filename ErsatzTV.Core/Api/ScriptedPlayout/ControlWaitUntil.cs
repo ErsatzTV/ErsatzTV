@@ -2,7 +2,7 @@ using System.ComponentModel;
 
 namespace ErsatzTV.Core.Api.ScriptedPlayout;
 
-public record WaitUntilRequestModel
+public record ControlWaitUntil
 {
     [Description("The time of day to wait (insert unscheduled time) until")]
     public string When { get; set; }

@@ -2,7 +2,7 @@ using System.ComponentModel;
 
 namespace ErsatzTV.Core.Api.ScriptedPlayout;
 
-public record SkipItemsRequestModel
+public record ControlSkipItems
 {
     [Description("The 'key' for the content")]
     public string Content { get; set; }

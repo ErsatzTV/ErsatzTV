@@ -1,6 +1,6 @@
 namespace ErsatzTV.Core.Api.ScriptedPlayout;
 
-public record AddSearchQueryRequestModel
+public record ContentSearch
 {
     public string Key { get; set; }
     public string Query { get; set; }
