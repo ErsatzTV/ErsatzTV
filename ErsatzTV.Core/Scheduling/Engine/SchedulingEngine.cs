@@ -1159,7 +1159,6 @@ public class SchedulingEngine(
         {
             if (rewindOnReset && _state.Mode == PlayoutBuildMode.Reset)
             {
-                Console.WriteLine("rewinding???");
                 // maybe wrong when offset changes?
                 currentTime = waitUntil.ToLocalTime();
             }
