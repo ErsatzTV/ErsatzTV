@@ -101,9 +101,20 @@ public class UpdateChannelHandler(
 
         c.PlayoutSource = update.PlayoutSource;
         c.PlayoutMode = update.PlayoutMode;
+        c.MirrorSourceChannelId = update.MirrorSourceChannelId;
         c.StreamingMode = update.StreamingMode;
         c.WatermarkId = update.WatermarkId;
         c.FallbackFillerId = update.FallbackFillerId;
+
+        if (c.PlayoutSource is ChannelPlayoutSource.Mirror)
+        {
+            c.PlayoutMode = ChannelPlayoutMode.Continuous;
+        }
+        else
+        {
+            c.MirrorSourceChannelId = null;
+        }
+
         await dbContext.SaveChangesAsync(cancellationToken);
 
         searchTargets.SearchTargetsChanged();
@@ -121,7 +132,7 @@ public class UpdateChannelHandler(
 
         await workerChannel.WriteAsync(new RefreshChannelList(), cancellationToken);
 
-        return ProjectToViewModel(c);
+        return ProjectToViewModel(c, c.Playouts?.Count ?? 0);
     }
 
     private static async Task<Validation<BaseError, Channel>> Validate(

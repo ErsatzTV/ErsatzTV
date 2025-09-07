@@ -18,6 +18,7 @@ public record ChannelViewModel(
     string PreferredAudioTitle,
     ChannelPlayoutSource PlayoutSource,
     ChannelPlayoutMode PlayoutMode,
+    int? MirrorSourceChannelId,
     StreamingMode StreamingMode,
     int? WatermarkId,
     int? FallbackFillerId,

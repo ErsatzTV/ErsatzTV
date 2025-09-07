@@ -6,7 +6,7 @@ namespace ErsatzTV.Application.Channels;
 
 internal static class Mapper
 {
-    internal static ChannelViewModel ProjectToViewModel(Channel channel) =>
+    internal static ChannelViewModel ProjectToViewModel(Channel channel, int playoutCount) =>
         new(
             channel.Id,
             channel.Number,
@@ -21,10 +21,11 @@ internal static class Mapper
             channel.PreferredAudioTitle,
             channel.PlayoutSource,
             channel.PlayoutMode,
+            channel.MirrorSourceChannelId,
             channel.StreamingMode,
             channel.WatermarkId,
             channel.FallbackFillerId,
-            channel.Playouts?.Count ?? 0,
+            playoutCount,
             channel.PreferredSubtitleLanguageCode,
             channel.SubtitleMode,
             channel.MusicVideoCreditsMode,

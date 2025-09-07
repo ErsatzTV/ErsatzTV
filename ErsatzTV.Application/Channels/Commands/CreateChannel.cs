@@ -17,6 +17,7 @@ public record CreateChannel(
     string PreferredAudioTitle,
     ChannelPlayoutSource PlayoutSource,
     ChannelPlayoutMode PlayoutMode,
+    int? MirrorSourceChannelId,
     StreamingMode StreamingMode,
     int? WatermarkId,
     int? FallbackFillerId,
