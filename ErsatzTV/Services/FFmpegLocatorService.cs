@@ -35,13 +35,16 @@ public class FFmpegLocatorService : BackgroundService
 
         // check for ffmpeg and ffprobe in the last known/configured location
         // otherwise search using which/where and save any located executables
-        Option<string> maybeFFmpegPath = await ffmpegLocator.ValidatePath("ffmpeg", ConfigElementKey.FFmpegPath);
+        Option<string> maybeFFmpegPath = await ffmpegLocator.ValidatePath(
+            "ffmpeg",
+            ConfigElementKey.FFmpegPath,
+            stoppingToken);
         maybeFFmpegPath.Match(
             path => _logger.LogInformation("Located ffmpeg at {Path}", path),
             () => _logger.LogWarning("Failed to locate ffmpeg executable"));
 
         Option<string> maybeFFprobePath =
-            await ffmpegLocator.ValidatePath("ffprobe", ConfigElementKey.FFprobePath);
+            await ffmpegLocator.ValidatePath("ffprobe", ConfigElementKey.FFprobePath, stoppingToken);
         maybeFFprobePath.Match(
             path => _logger.LogInformation("Located ffprobe at {Path}", path),
             () => _logger.LogWarning("Failed to locate ffprobe executable"));

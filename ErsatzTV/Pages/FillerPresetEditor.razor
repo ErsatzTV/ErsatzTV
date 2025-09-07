@@ -254,7 +254,7 @@
 </MudForm>
 
 @code {
-    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource _cts;
 
     [Parameter]
     public int Id { get; set; }
@@ -276,78 +276,90 @@
 
     public void Dispose()
     {
-        _cts.Cancel();
-        _cts.Dispose();
+        _cts?.Cancel();
+        _cts?.Dispose();
     }
 
     protected override async Task OnParametersSetAsync()
     {
-        _mediaCollections.AddRange(
-            await Mediator.Send(new GetAllCollections(), _cts.Token)
-                .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList()));
-        _multiCollections.AddRange(
-            await Mediator.Send(new GetAllMultiCollections(), _cts.Token)
-                .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList()));
-        _smartCollections.AddRange(
-            await Mediator.Send(new GetAllSmartCollections(), _cts.Token)
-                .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList()));
-        _televisionShows.AddRange(
-            await Mediator.Send(new GetAllTelevisionShows(), _cts.Token)
-                .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList()));
-        _televisionSeasons.AddRange(
-            await Mediator.Send(new GetAllTelevisionSeasons(), _cts.Token)
-                .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList()));
-        _artists.AddRange(
-            await Mediator.Send(new GetAllArtists(), _cts.Token)
-                .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList()));
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
 
-        _playlistGroups.AddRange(await Mediator.Send(new GetAllPlaylistGroups(), _cts.Token));
-
-        if (IsEdit)
+        try
         {
-            Option<FillerPresetViewModel> maybeFillerPreset = await Mediator.Send(new GetFillerPresetById(Id), _cts.Token);
-            maybeFillerPreset.IfSome(fillerPreset =>
+            _mediaCollections.AddRange(
+                await Mediator.Send(new GetAllCollections(), token)
+                    .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList()));
+            _multiCollections.AddRange(
+                await Mediator.Send(new GetAllMultiCollections(), token)
+                    .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList()));
+            _smartCollections.AddRange(
+                await Mediator.Send(new GetAllSmartCollections(), token)
+                    .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList()));
+            _televisionShows.AddRange(
+                await Mediator.Send(new GetAllTelevisionShows(), token)
+                    .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList()));
+            _televisionSeasons.AddRange(
+                await Mediator.Send(new GetAllTelevisionSeasons(), token)
+                    .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList()));
+            _artists.AddRange(
+                await Mediator.Send(new GetAllArtists(), token)
+                    .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList()));
+
+            _playlistGroups.AddRange(await Mediator.Send(new GetAllPlaylistGroups(), token));
+
+            if (IsEdit)
             {
-                _model.Id = fillerPreset.Id;
-                _model.Name = fillerPreset.Name;
-                _model.FillerKind = fillerPreset.FillerKind;
-                _model.FillerMode = fillerPreset.FillerMode;
-                _model.Duration = fillerPreset.Duration;
-                _model.Count = fillerPreset.Count;
-                _model.PadToNearestMinute = fillerPreset.PadToNearestMinute;
-                _model.AllowWatermarks = fillerPreset.AllowWatermarks;
-                _model.CollectionType = fillerPreset.CollectionType;
-                _model.Collection = fillerPreset.CollectionId.HasValue
-                    ? _mediaCollections.Find(c => c.Id == fillerPreset.CollectionId.Value)
-                    : null;
-                _model.MultiCollection = fillerPreset.MultiCollectionId.HasValue
-                    ? _multiCollections.Find(c => c.Id == fillerPreset.MultiCollectionId.Value)
-                    : null;
-                _model.SmartCollection = fillerPreset.SmartCollectionId.HasValue
-                    ? _smartCollections.Find(c => c.Id == fillerPreset.SmartCollectionId.Value)
-                    : null;
-                _model.MediaItem = fillerPreset.MediaItemId.HasValue
-                    ? _televisionShows.Append(_televisionSeasons).Append(_artists).ToList().Find(vm => vm.MediaItemId == fillerPreset.MediaItemId.Value)
-                    : null;
-                _model.Expression = fillerPreset.Expression;
-                _model.UseChaptersAsMediaItems = fillerPreset.UseChaptersAsMediaItems;
-                _model.Playlist = fillerPreset.Playlist;
-            });
-        }
-        else
-        {
-            _model.Name = "New Filler Preset";
-            _model.FillerKind = FillerKind.PreRoll;
-            _model.FillerMode = FillerMode.Duration;
-        }
-
-        foreach (int playlistGroupId in Optional(_model.Playlist?.PlaylistGroupId))
-        {
-            foreach (PlaylistGroupViewModel group in Optional(_playlistGroups.Find(g => g.Id == playlistGroupId)))
-            {
-                _selectedPlaylistGroup = group;
-                await UpdatePlaylistGroupItems(group);
+                Option<FillerPresetViewModel> maybeFillerPreset = await Mediator.Send(new GetFillerPresetById(Id), token);
+                maybeFillerPreset.IfSome(fillerPreset =>
+                {
+                    _model.Id = fillerPreset.Id;
+                    _model.Name = fillerPreset.Name;
+                    _model.FillerKind = fillerPreset.FillerKind;
+                    _model.FillerMode = fillerPreset.FillerMode;
+                    _model.Duration = fillerPreset.Duration;
+                    _model.Count = fillerPreset.Count;
+                    _model.PadToNearestMinute = fillerPreset.PadToNearestMinute;
+                    _model.AllowWatermarks = fillerPreset.AllowWatermarks;
+                    _model.CollectionType = fillerPreset.CollectionType;
+                    _model.Collection = fillerPreset.CollectionId.HasValue
+                        ? _mediaCollections.Find(c => c.Id == fillerPreset.CollectionId.Value)
+                        : null;
+                    _model.MultiCollection = fillerPreset.MultiCollectionId.HasValue
+                        ? _multiCollections.Find(c => c.Id == fillerPreset.MultiCollectionId.Value)
+                        : null;
+                    _model.SmartCollection = fillerPreset.SmartCollectionId.HasValue
+                        ? _smartCollections.Find(c => c.Id == fillerPreset.SmartCollectionId.Value)
+                        : null;
+                    _model.MediaItem = fillerPreset.MediaItemId.HasValue
+                        ? _televisionShows.Append(_televisionSeasons).Append(_artists).ToList().Find(vm => vm.MediaItemId == fillerPreset.MediaItemId.Value)
+                        : null;
+                    _model.Expression = fillerPreset.Expression;
+                    _model.UseChaptersAsMediaItems = fillerPreset.UseChaptersAsMediaItems;
+                    _model.Playlist = fillerPreset.Playlist;
+                });
             }
+            else
+            {
+                _model.Name = "New Filler Preset";
+                _model.FillerKind = FillerKind.PreRoll;
+                _model.FillerMode = FillerMode.Duration;
+            }
+
+            foreach (int playlistGroupId in Optional(_model.Playlist?.PlaylistGroupId))
+            {
+                foreach (PlaylistGroupViewModel group in Optional(_playlistGroups.Find(g => g.Id == playlistGroupId)))
+                {
+                    _selectedPlaylistGroup = group;
+                    await UpdatePlaylistGroupItems(group);
+                }
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
         }
     }
 

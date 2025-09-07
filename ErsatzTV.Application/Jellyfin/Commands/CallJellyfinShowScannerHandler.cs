@@ -31,7 +31,7 @@ public class CallJellyfinShowScannerHandler : CallLibraryScannerHandler<Synchron
         SynchronizeJellyfinShowById request,
         CancellationToken cancellationToken)
     {
-        Validation<BaseError, string> validation = await Validate(request);
+        Validation<BaseError, string> validation = await Validate(request, cancellationToken);
         return await validation.Match(
             scanner => PerformScan(scanner, request, cancellationToken),
             error =>
@@ -67,7 +67,8 @@ public class CallJellyfinShowScannerHandler : CallLibraryScannerHandler<Synchron
 
     protected override Task<DateTimeOffset> GetLastScan(
         TvContext dbContext,
-        SynchronizeJellyfinShowById request) =>
+        SynchronizeJellyfinShowById request,
+        CancellationToken cancellationToken) =>
         Task.FromResult(DateTimeOffset.MinValue);
 
     protected override bool ScanIsRequired(

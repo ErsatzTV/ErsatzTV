@@ -12,11 +12,11 @@ public class GetHDHRUUIDHandler : IRequestHandler<GetHDHRUUID, Guid>
 
     public async Task<Guid> Handle(GetHDHRUUID request, CancellationToken cancellationToken)
     {
-        Option<Guid> maybeGuid = await _configElementRepository.GetValue<Guid>(ConfigElementKey.HDHRUUID);
+        Option<Guid> maybeGuid = await _configElementRepository.GetValue<Guid>(ConfigElementKey.HDHRUUID, cancellationToken);
         return await maybeGuid.IfNoneAsync(async () =>
         {
             var guid = Guid.NewGuid();
-            await _configElementRepository.Upsert(ConfigElementKey.HDHRUUID, guid);
+            await _configElementRepository.Upsert(ConfigElementKey.HDHRUUID, guid, cancellationToken);
             return guid;
         });
     }

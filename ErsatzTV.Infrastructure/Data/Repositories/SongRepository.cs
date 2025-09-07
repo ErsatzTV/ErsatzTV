@@ -104,21 +104,6 @@ public class SongRepository : ISongRepository
             new { tag.Name, MetadataId = metadata.Id, tag.ExternalCollectionId }).Map(result => result > 0);
     }
 
-    public async Task<List<SongMetadata>> GetSongsForCards(List<int> ids)
-    {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
-        return await dbContext.SongMetadata
-            .AsNoTracking()
-            .Filter(ovm => ids.Contains(ovm.SongId))
-            .Include(ovm => ovm.Song)
-            .Include(ovm => ovm.Artwork)
-            .Include(sm => sm.Song)
-            .ThenInclude(s => s.MediaVersions)
-            .ThenInclude(mv => mv.MediaFiles)
-            .OrderBy(ovm => ovm.SortTitle)
-            .ToListAsync();
-    }
-
     private static async Task<Either<BaseError, MediaItemScanResult<Song>>> AddSong(
         TvContext dbContext,
         int libraryPathId,

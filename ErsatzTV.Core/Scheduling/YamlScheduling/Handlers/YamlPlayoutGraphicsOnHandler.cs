@@ -22,7 +22,7 @@ public class YamlPlayoutGraphicsOnHandler(IGraphicsElementRepository graphicsEle
         YamlPlayoutInstruction instruction,
         PlayoutBuildMode mode,
         Func<string, Task> executeSequence,
-        ILogger<YamlPlayoutBuilder> logger,
+        ILogger<SequentialPlayoutBuilder> logger,
         CancellationToken cancellationToken)
     {
         if (instruction is not YamlPlayoutGraphicsOnInstruction graphicsOn)
@@ -35,7 +35,7 @@ public class YamlPlayoutGraphicsOnHandler(IGraphicsElementRepository graphicsEle
             return false;
         }
 
-        foreach (GraphicsElement ge in await GetGraphicsElementByPath(graphicsOn.GraphicsOn))
+        foreach (GraphicsElement ge in await GetGraphicsElementByPath(graphicsOn.GraphicsOn, cancellationToken))
         {
             string variables = null;
             if (graphicsOn.Variables.Count > 0)
@@ -49,7 +49,9 @@ public class YamlPlayoutGraphicsOnHandler(IGraphicsElementRepository graphicsEle
         return true;
     }
 
-    private async Task<Option<GraphicsElement>> GetGraphicsElementByPath(string path)
+    private async Task<Option<GraphicsElement>> GetGraphicsElementByPath(
+        string path,
+        CancellationToken cancellationToken)
     {
         if (_graphicsElementCache.TryGetValue(path, out Option<GraphicsElement> cachedGraphicsElement))
         {
@@ -61,7 +63,7 @@ public class YamlPlayoutGraphicsOnHandler(IGraphicsElementRepository graphicsEle
         else
         {
             Option<GraphicsElement> maybeGraphicsElement =
-                await graphicsElementRepository.GetGraphicsElementByPath(path);
+                await graphicsElementRepository.GetGraphicsElementByPath(path, cancellationToken);
             _graphicsElementCache.Add(path, maybeGraphicsElement);
             foreach (GraphicsElement graphicsElement in maybeGraphicsElement)
             {

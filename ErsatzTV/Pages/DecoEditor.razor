@@ -43,16 +43,17 @@
     <MudSelect @bind-Value="_deco.WatermarkMode" For="@(() => _deco.WatermarkMode)">
         <MudSelectItem Value="DecoMode.Inherit">Inherit</MudSelectItem>
         <MudSelectItem Value="DecoMode.Disable">Disable</MudSelectItem>
-        <MudSelectItem Value="DecoMode.Override">Override</MudSelectItem>
+        <MudSelectItem Value="DecoMode.Override">Replace</MudSelectItem>
+        <MudSelectItem Value="DecoMode.Merge">Merge</MudSelectItem>
     </MudSelect>
 </MudStack>
 <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
     <div class="d-flex">
-        <MudText>Watermark Override</MudText>
+        <MudText>Watermark</MudText>
     </div>
     <MudSelect T="WatermarkViewModel"
                @bind-SelectedValues="_deco.Watermarks"
-               Disabled="@(_deco.WatermarkMode != DecoMode.Override)"
+               Disabled="@(_deco.WatermarkMode is not (DecoMode.Override or DecoMode.Merge))"
                ToStringFunc="@(wm => wm?.Name)"
                Clearable="true"
                MultiSelection="true">
@@ -335,7 +336,7 @@
 </MudForm>
 
 @code {
-    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource _cts;
 
     [Parameter]
     public int Id { get; set; }
@@ -354,86 +355,90 @@
 
     public void Dispose()
     {
-        _cts.Cancel();
-        _cts.Dispose();
+        _cts?.Cancel();
+        _cts?.Dispose();
     }
 
     protected override async Task OnParametersSetAsync()
     {
-        await LoadWatermarks();
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
 
-        _mediaCollections = await Mediator.Send(new GetAllCollections(), _cts.Token)
-            .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
-        _multiCollections = await Mediator.Send(new GetAllMultiCollections(), _cts.Token)
-            .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
-        _smartCollections = await Mediator.Send(new GetAllSmartCollections(), _cts.Token)
-            .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
-        _televisionShows = await Mediator.Send(new GetAllTelevisionShows(), _cts.Token)
-            .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
-        _televisionSeasons = await Mediator.Send(new GetAllTelevisionSeasons(), _cts.Token)
-            .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
-        _artists = await Mediator.Send(new GetAllArtists(), _cts.Token)
-            .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
-
-        await LoadDeco();
-    }
-
-    private async Task LoadWatermarks() =>
-        _watermarks = await Mediator.Send(new GetAllWatermarks(), _cts.Token);
-
-    private async Task LoadDeco()
-    {
-        Option<DecoViewModel> maybeDeco = await Mediator.Send(new GetDecoById(Id), _cts.Token);
-        if (maybeDeco.IsNone)
+        try
         {
-            NavigationManager.NavigateTo("decos");
-            return;
-        }
+            _watermarks = await Mediator.Send(new GetAllWatermarks(), token);
 
-        foreach (DecoViewModel deco in maybeDeco)
-        {
-            _deco = new DecoEditViewModel
+            _mediaCollections = await Mediator.Send(new GetAllCollections(), token)
+                .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
+            _multiCollections = await Mediator.Send(new GetAllMultiCollections(), token)
+                .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
+            _smartCollections = await Mediator.Send(new GetAllSmartCollections(), token)
+                .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
+            _televisionShows = await Mediator.Send(new GetAllTelevisionShows(), token)
+                .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
+            _televisionSeasons = await Mediator.Send(new GetAllTelevisionSeasons(), token)
+                .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
+            _artists = await Mediator.Send(new GetAllArtists(), token)
+                .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
+
+            Option<DecoViewModel> maybeDeco = await Mediator.Send(new GetDecoById(Id), token);
+            if (maybeDeco.IsNone)
             {
-                Name = deco.Name,
-                DecoGroupId = deco.DecoGroupId,
-                GroupName = deco.DecoGroupName,
-                WatermarkMode = deco.WatermarkMode,
-                Watermarks = deco.Watermarks,
-                UseWatermarkDuringFiller = deco.UseWatermarkDuringFiller,
+                NavigationManager.NavigateTo("decos");
+                return;
+            }
 
-                DefaultFillerMode = deco.DefaultFillerMode,
-                DefaultFillerCollectionType = deco.DefaultFillerCollectionType,
-                DefaultFillerCollection = deco.DefaultFillerCollectionId.HasValue
-                    ? _mediaCollections.Find(c => c.Id == deco.DefaultFillerCollectionId!.Value)
-                    : null,
-                DefaultFillerMediaItem = deco.DefaultFillerMediaItemId.HasValue
-                    ? _televisionShows.Append(_televisionSeasons).Append(_artists).ToList()
-                        .Find(vm => vm.MediaItemId == deco.DefaultFillerMediaItemId!.Value)
-                    : null,
-                DefaultFillerMultiCollection = deco.DefaultFillerMultiCollectionId.HasValue
-                    ? _multiCollections.Find(c => c.Id == deco.DefaultFillerMultiCollectionId!.Value)
-                    : null,
-                DefaultFillerSmartCollection = deco.DefaultFillerSmartCollectionId.HasValue
-                    ? _smartCollections.Find(c => c.Id == deco.DefaultFillerSmartCollectionId!.Value)
-                    : null,
-                DefaultFillerTrimToFit = deco.DefaultFillerTrimToFit,
+            foreach (DecoViewModel deco in maybeDeco)
+            {
+                _deco = new DecoEditViewModel
+                {
+                    Name = deco.Name,
+                    DecoGroupId = deco.DecoGroupId,
+                    GroupName = deco.DecoGroupName,
+                    WatermarkMode = deco.WatermarkMode,
+                    Watermarks = deco.Watermarks,
+                    UseWatermarkDuringFiller = deco.UseWatermarkDuringFiller,
 
-                DeadAirFallbackMode = deco.DeadAirFallbackMode,
-                DeadAirFallbackCollectionType = deco.DeadAirFallbackCollectionType,
-                DeadAirFallbackCollection = deco.DeadAirFallbackCollectionId.HasValue
-                    ? _mediaCollections.Find(c => c.Id == deco.DeadAirFallbackCollectionId!.Value)
-                    : null,
-                DeadAirFallbackMediaItem = deco.DeadAirFallbackMediaItemId.HasValue
-                    ? _televisionShows.Append(_televisionSeasons).Append(_artists).ToList()
-                        .Find(vm => vm.MediaItemId == deco.DeadAirFallbackMediaItemId!.Value)
-                    : null,
-                DeadAirFallbackMultiCollection = deco.DeadAirFallbackMultiCollectionId.HasValue
-                    ? _multiCollections.Find(c => c.Id == deco.DeadAirFallbackMultiCollectionId!.Value)
-                    : null,
-                DeadAirFallbackSmartCollection = deco.DeadAirFallbackSmartCollectionId.HasValue
-                    ? _smartCollections.Find(c => c.Id == deco.DeadAirFallbackSmartCollectionId!.Value)
-                    : null
-            };
+                    DefaultFillerMode = deco.DefaultFillerMode,
+                    DefaultFillerCollectionType = deco.DefaultFillerCollectionType,
+                    DefaultFillerCollection = deco.DefaultFillerCollectionId.HasValue
+                        ? _mediaCollections.Find(c => c.Id == deco.DefaultFillerCollectionId!.Value)
+                        : null,
+                    DefaultFillerMediaItem = deco.DefaultFillerMediaItemId.HasValue
+                        ? _televisionShows.Append(_televisionSeasons).Append(_artists).ToList()
+                            .Find(vm => vm.MediaItemId == deco.DefaultFillerMediaItemId!.Value)
+                        : null,
+                    DefaultFillerMultiCollection = deco.DefaultFillerMultiCollectionId.HasValue
+                        ? _multiCollections.Find(c => c.Id == deco.DefaultFillerMultiCollectionId!.Value)
+                        : null,
+                    DefaultFillerSmartCollection = deco.DefaultFillerSmartCollectionId.HasValue
+                        ? _smartCollections.Find(c => c.Id == deco.DefaultFillerSmartCollectionId!.Value)
+                        : null,
+                    DefaultFillerTrimToFit = deco.DefaultFillerTrimToFit,
+
+                    DeadAirFallbackMode = deco.DeadAirFallbackMode,
+                    DeadAirFallbackCollectionType = deco.DeadAirFallbackCollectionType,
+                    DeadAirFallbackCollection = deco.DeadAirFallbackCollectionId.HasValue
+                        ? _mediaCollections.Find(c => c.Id == deco.DeadAirFallbackCollectionId!.Value)
+                        : null,
+                    DeadAirFallbackMediaItem = deco.DeadAirFallbackMediaItemId.HasValue
+                        ? _televisionShows.Append(_televisionSeasons).Append(_artists).ToList()
+                            .Find(vm => vm.MediaItemId == deco.DeadAirFallbackMediaItemId!.Value)
+                        : null,
+                    DeadAirFallbackMultiCollection = deco.DeadAirFallbackMultiCollectionId.HasValue
+                        ? _multiCollections.Find(c => c.Id == deco.DeadAirFallbackMultiCollectionId!.Value)
+                        : null,
+                    DeadAirFallbackSmartCollection = deco.DeadAirFallbackSmartCollectionId.HasValue
+                        ? _smartCollections.Find(c => c.Id == deco.DeadAirFallbackSmartCollectionId!.Value)
+                        : null
+                };
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
         }
     }
 

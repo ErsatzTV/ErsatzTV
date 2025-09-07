@@ -9,10 +9,10 @@ namespace ErsatzTV.Core.Scheduling.YamlScheduling.Handlers;
 public class YamlPlayoutApplyHistoryHandler(EnumeratorCache enumeratorCache)
 {
     public async Task<bool> Handle(
-        PlayoutReferenceData referenceData,
+        IReadOnlyCollection<PlayoutHistory> filteredHistory,
         YamlPlayoutContext context,
         YamlPlayoutContentItem contentItem,
-        ILogger<YamlPlayoutBuilder> logger,
+        ILogger<SequentialPlayoutBuilder> logger,
         CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(contentItem.Key))
@@ -39,7 +39,7 @@ public class YamlPlayoutApplyHistoryHandler(EnumeratorCache enumeratorCache)
         string historyKey = HistoryDetails.KeyForYamlContent(contentItem);
 
         DateTime historyTime = context.CurrentTime.UtcDateTime;
-        Option<DateTime> maxWhen = await referenceData.PlayoutHistory
+        Option<DateTime> maxWhen = await filteredHistory
             .Filter(h => h.Key == historyKey)
             .Filter(h => h.When < historyTime)
             .Map(h => h.When)
@@ -47,7 +47,7 @@ public class YamlPlayoutApplyHistoryHandler(EnumeratorCache enumeratorCache)
             .HeadOrNone()
             .IfNoneAsync(DateTime.MinValue);
 
-        var maybeHistory = referenceData.PlayoutHistory
+        var maybeHistory = filteredHistory
             .Filter(h => h.Key == historyKey)
             .Filter(h => h.When == maxWhen)
             .ToList();

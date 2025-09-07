@@ -29,19 +29,21 @@ public class SynchronizePlexCollectionsHandler : IRequestHandler<SynchronizePlex
         SynchronizePlexCollections request,
         CancellationToken cancellationToken)
     {
-        Validation<BaseError, RequestParameters> validation = await Validate(request);
+        Validation<BaseError, RequestParameters> validation = await Validate(request, cancellationToken);
         return await validation.Match(
             p => SynchronizeCollections(p, cancellationToken),
             error => Task.FromResult<Either<BaseError, Unit>>(error.Join()));
     }
 
-    private async Task<Validation<BaseError, RequestParameters>> Validate(SynchronizePlexCollections request)
+    private async Task<Validation<BaseError, RequestParameters>> Validate(
+        SynchronizePlexCollections request,
+        CancellationToken cancellationToken)
     {
-        Task<Validation<BaseError, ConnectionParameters>> mediaSource = MediaSourceMustExist(request)
+        Task<Validation<BaseError, ConnectionParameters>> mediaSource = MediaSourceMustExist(request, cancellationToken)
             .BindT(MediaSourceMustHaveActiveConnection)
             .BindT(MediaSourceMustHaveToken);
 
-        return (await mediaSource, await ValidateLibraryRefreshInterval())
+        return (await mediaSource, await ValidateLibraryRefreshInterval(cancellationToken))
             .Apply((connectionParameters, libraryRefreshInterval) => new RequestParameters(
                 connectionParameters,
                 connectionParameters.PlexMediaSource,
@@ -49,14 +51,15 @@ public class SynchronizePlexCollectionsHandler : IRequestHandler<SynchronizePlex
                 libraryRefreshInterval));
     }
 
-    private Task<Validation<BaseError, int>> ValidateLibraryRefreshInterval() =>
-        _configElementRepository.GetValue<int>(ConfigElementKey.LibraryRefreshInterval)
+    private Task<Validation<BaseError, int>> ValidateLibraryRefreshInterval(CancellationToken cancellationToken) =>
+        _configElementRepository.GetValue<int>(ConfigElementKey.LibraryRefreshInterval, cancellationToken)
             .FilterT(lri => lri is >= 0 and < 1_000_000)
             .Map(lri => lri.ToValidation<BaseError>("Library refresh interval is invalid"));
 
     private Task<Validation<BaseError, PlexMediaSource>> MediaSourceMustExist(
-        SynchronizePlexCollections request) =>
-        _mediaSourceRepository.GetPlex(request.PlexMediaSourceId)
+        SynchronizePlexCollections request,
+        CancellationToken cancellationToken) =>
+        _mediaSourceRepository.GetPlex(request.PlexMediaSourceId, cancellationToken)
             .Map(o => o.ToValidation<BaseError>("Plex media source does not exist."));
 
     private static Validation<BaseError, ConnectionParameters> MediaSourceMustHaveActiveConnection(

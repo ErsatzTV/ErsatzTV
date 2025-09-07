@@ -24,7 +24,7 @@ public class PlayoutModeSchedulerMultiple : PlayoutModeSchedulerBase<ProgramSche
     {
         var playoutItems = new List<PlayoutItem>();
 
-        DateTimeOffset firstStart = GetStartTimeAfter(playoutBuilderState, scheduleItem);
+        DateTimeOffset firstStart = GetStartTimeAfter(playoutBuilderState, scheduleItem, Option<ILogger>.Some(Logger));
         if (firstStart >= hardStop)
         {
             playoutBuilderState = playoutBuilderState with { CurrentTime = hardStop };
@@ -84,7 +84,7 @@ public class PlayoutModeSchedulerMultiple : PlayoutModeSchedulerBase<ProgramSche
             MediaItem mediaItem = contentEnumerator.Current.ValueUnsafe();
 
             // find when we should start this item, based on the current time
-            DateTimeOffset itemStartTime = GetStartTimeAfter(nextState, scheduleItem);
+            DateTimeOffset itemStartTime = GetStartTimeAfter(nextState, scheduleItem, Option<ILogger>.Some(Logger));
 
             TimeSpan itemDuration = DurationForMediaItem(mediaItem);
             List<MediaChapter> itemChapters = ChaptersForMediaItem(mediaItem);
@@ -107,7 +107,8 @@ public class PlayoutModeSchedulerMultiple : PlayoutModeSchedulerBase<ProgramSche
                 PreferredAudioTitle = scheduleItem.PreferredAudioTitle,
                 PreferredSubtitleLanguageCode = scheduleItem.PreferredSubtitleLanguageCode,
                 SubtitleMode = scheduleItem.SubtitleMode,
-                PlayoutItemWatermarks = []
+                PlayoutItemWatermarks = [],
+                PlayoutItemGraphicsElements = []
             };
 
             foreach (ProgramScheduleItemWatermark programScheduleItemWatermark in scheduleItem
@@ -118,6 +119,17 @@ public class PlayoutModeSchedulerMultiple : PlayoutModeSchedulerBase<ProgramSche
                     {
                         PlayoutItem = playoutItem,
                         WatermarkId = programScheduleItemWatermark.WatermarkId
+                    });
+            }
+
+            foreach (ProgramScheduleItemGraphicsElement programScheduleItemGraphicsElement in scheduleItem
+                         .ProgramScheduleItemGraphicsElements ?? [])
+            {
+                playoutItem.PlayoutItemGraphicsElements.Add(
+                    new PlayoutItemGraphicsElement
+                    {
+                        PlayoutItem = playoutItem,
+                        GraphicsElementId = programScheduleItemGraphicsElement.GraphicsElementId
                     });
             }
 

@@ -161,7 +161,8 @@ public class PlexOtherVideoLibraryScanner :
 
     protected override async Task<Either<BaseError, MediaItemScanResult<PlexOtherVideo>>> UpdateMetadata(
         MediaItemScanResult<PlexOtherVideo> result,
-        OtherVideoMetadata fullMetadata)
+        OtherVideoMetadata fullMetadata,
+        CancellationToken cancellationToken)
     {
         PlexOtherVideo existing = result.Item;
         OtherVideoMetadata existingMetadata = existing.OtherVideoMetadata.Head();
@@ -342,7 +343,7 @@ public class PlexOtherVideoLibraryScanner :
             }
         }
 
-        if (await _metadataRepository.UpdateSubtitles(existingMetadata, fullMetadata.Subtitles))
+        if (await _metadataRepository.UpdateSubtitles(existingMetadata, fullMetadata.Subtitles, cancellationToken))
         {
             result.IsUpdated = true;
         }

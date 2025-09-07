@@ -21,7 +21,10 @@
 
 <MudLayout @onclick="@(() => _isOpen = false)" Class="@(_isDarkMode ? "d-flex d-flex-column ersatztv-dark" : "d-flex d-flex-column ersatztv-light")" Style="height: 100vh">
     <MudAppBar Elevation="1" Class="app-bar">
-        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@ToggleDrawer"/>
+        @if (SystemStartup.IsDatabaseReady && SystemStartup.IsSearchIndexReady)
+        {
+            <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@ToggleDrawer"/>
+        }
         <div style="min-width: 240px" class="ml-3 d-none d-md-flex">
             <a href="">
                 <img src="images/ersatztv.png" alt="ErsatzTV"/>
@@ -39,7 +42,7 @@
                                   Immediate="true"
                                   Class="search-bar"
                                   @onclick="@(() => _isOpen = true)"
-                                  OnKeyUp="OnKeyUp">
+                                  OnKeyUp="@OnKeyUp">
                     </MudTextField>
                     <MudPopover Open="@_isOpen" MaxHeight="300" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter" RelativeWidth="DropdownWidth.Relative">
                         @if (!string.IsNullOrWhiteSpace(_query) && _query.Length >= 3)
@@ -82,13 +85,14 @@
             {
                 <MudLink Color="Color.Info" Href="iptv/channels.m3u" Target="_blank" Underline="Underline.None">M3U</MudLink>
                 <MudLink Color="Color.Info" Href="iptv/xmltv.xml" Target="_blank" Class="mx-4" Underline="Underline.None">XMLTV</MudLink>
+                <MudLink Color="Color.Primary" Href="docs" Target="_blank" Underline="Underline.None" Style="font-weight: bold">API</MudLink>
             }
             @* <MudLink Color="Color.Info" Href="/swagger" Target="_blank" Class="mr-4" Underline="Underline.None">API</MudLink> *@
             <MudTooltip Text="Documentation">
                 <MudIconButton Icon="@Icons.Material.Filled.Help" Color="Color.Primary" Href="https://ersatztv.org" Target="_blank"/>
             </MudTooltip>
             <MudTooltip Text="Discord">
-                <MudIconButton Icon="fab fa-discord" Color="Color.Primary" Href="https://discord.gg/hHaJm3yGy6" Target="_blank"/>
+                <MudIconButton Icon="fab fa-discord" Color="Color.Primary" Href="https://discord.ersatztv.org" Target="_blank"/>
             </MudTooltip>
             <MudTooltip Text="GitHub">
                 <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Primary" Href="https://github.com/ErsatzTV/ErsatzTV" Target="_blank"/>
@@ -215,7 +219,7 @@
 @code {
     private static readonly string InfoVersion = Assembly.GetEntryAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? "unknown";
 
-    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource _cts;
 
     private string _query;
 
@@ -266,8 +270,8 @@
 
         Courier.UnSubscribe<HealthCheckSummary>(HandleHealthCheckSummary);
 
-        _cts.Cancel();
-        _cts.Dispose();
+        _cts?.Cancel();
+        _cts?.Dispose();
     }
 
     private static MudTheme ErsatzTvTheme => new()
@@ -349,20 +353,52 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        await base.OnParametersSetAsync();
-        _query = NavigationManager.Uri.GetSearchQuery();
+        if (!SystemStartup.IsDatabaseReady || !SystemStartup.IsSearchIndexReady)
+        {
+            string currentUri = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+            if (!string.IsNullOrEmpty(currentUri))
+            {
+                NavigationManager.NavigateTo(string.Empty);
+                return;
+            }
+        }
 
-        if (SystemStartup.IsDatabaseReady && _searchTargets is null)
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
+
+        try
+        {
+            await base.OnParametersSetAsync();
+            _query = NavigationManager.Uri.GetSearchQuery();
+
+            if (SystemStartup.IsDatabaseReady && _searchTargets is null)
+            {
+                _searchTargets = await Mediator.Send(new QuerySearchTargets(), token);
+            }
+
+            _isDarkMode = await Mediator.Send(new GetConfigElementByKey(ConfigElementKey.PagesIsDarkMode), token)
+                .MapT(result => !bool.TryParse(result.Value, out bool value) || value)
+                .IfNoneAsync(true);
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
+        }
+    }
+
+    protected async void OnSearchTargetsChanged(object sender, EventArgs e)
+    {
+        try
         {
             _searchTargets = await Mediator.Send(new QuerySearchTargets(), _cts.Token);
         }
-
-        _isDarkMode = await Mediator.Send(new GetConfigElementByKey(ConfigElementKey.PagesIsDarkMode), _cts.Token)
-            .MapT(result => !bool.TryParse(result.Value, out bool value) || value)
-            .IfNoneAsync(true);
+        catch (Exception)
+        {
+            // do nothing
+        }
     }
-
-    protected async void OnSearchTargetsChanged(object sender, EventArgs e) => _searchTargets = await Mediator.Send(new QuerySearchTargets(), _cts.Token);
 
     private void PerformSearch()
     {

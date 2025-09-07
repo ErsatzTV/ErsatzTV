@@ -216,7 +216,7 @@
 }
 
 @code {
-    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource _cts;
     private PersistingComponentStateSubscription _persistingSubscription;
 
     [Parameter]
@@ -235,8 +235,8 @@
     {
         _persistingSubscription.Dispose();
 
-        _cts.Cancel();
-        _cts.Dispose();
+        _cts?.Cancel();
+        _cts?.Dispose();
     }
 
     protected override Task OnInitializedAsync()
@@ -248,22 +248,43 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        if (!ApplicationState.TryTakeFromJson("_movie", out MovieViewModel restored))
-        {
-            _movie = await RefreshData();
-        }
-        else
-        {
-            _movie = restored;
-        }
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
 
-        _sortedContentRatings = _movie?.ContentRatings.OrderBy(cr => cr).ToList();
-        _sortedLanguages = _movie?.Languages.OrderBy(l => l).ToList();
-        _sortedStudios = _movie?.Studios.OrderBy(s => s).ToList();
-        _sortedGenres = _movie?.Genres.OrderBy(g => g).ToList();
-        _sortedTags = _movie?.Tags.OrderBy(t => t).ToList();
-        _sortedDirectors = _movie?.Directors.OrderBy(d => d).ToList();
-        _sortedWriters = _movie?.Writers.OrderBy(w => w).ToList();
+        try
+        {
+            if (!ApplicationState.TryTakeFromJson("_movie", out MovieViewModel restored))
+            {
+                Option<MovieViewModel> maybeMovie = await Mediator.Send(new GetMovieById(MovieId), token);
+                foreach (var movie in maybeMovie)
+                {
+                    _movie = movie;
+                }
+
+                if (maybeMovie.IsNone)
+                {
+                    NavigationManager.NavigateTo("404");
+                }
+            }
+            else
+            {
+                _movie = restored;
+            }
+
+            _sortedContentRatings = _movie?.ContentRatings.OrderBy(cr => cr).ToList();
+            _sortedLanguages = _movie?.Languages.OrderBy(l => l).ToList();
+            _sortedStudios = _movie?.Studios.OrderBy(s => s).ToList();
+            _sortedGenres = _movie?.Genres.OrderBy(g => g).ToList();
+            _sortedTags = _movie?.Tags.OrderBy(t => t).ToList();
+            _sortedDirectors = _movie?.Directors.OrderBy(d => d).ToList();
+            _sortedWriters = _movie?.Writers.OrderBy(w => w).ToList();
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
+        }
     }
 
     private Task PersistData()
@@ -271,12 +292,6 @@
         ApplicationState.PersistAsJson("_movie", _movie);
 
         return Task.CompletedTask;
-    }
-
-    private async Task<MovieViewModel> RefreshData()
-    {
-        Option<MovieViewModel> vm = await Mediator.Send(new GetMovieById(MovieId), _cts.Token);
-        return vm.IsSome ? vm.ValueUnsafe() : null;
     }
 
     private async Task AddToCollection()

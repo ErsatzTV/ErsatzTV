@@ -1,4 +1,4 @@
-﻿@inject IMediator Mediator
+﻿@implements IDisposable
 @inject NavigationManager NavigationManager
 @inject ISnackbar Snackbar
 @inject ILogger<RemoteMediaSourceEditor> Logger
@@ -24,21 +24,43 @@
 </MudContainer>
 
 @code {
+    private CancellationTokenSource _cts;
 
     [Parameter]
     public string Name { get; set; }
 
     [Parameter]
-    public Func<RemoteMediaSourceEditViewModel, Task<Unit>> LoadSecrets { get; set; }
+    public Func<RemoteMediaSourceEditViewModel, CancellationToken, Task<Unit>> LoadSecrets { get; set; }
 
     [Parameter]
-    public Func<RemoteMediaSourceEditViewModel, Task<Either<BaseError, Unit>>> SaveSecrets { get; set; }
+    public Func<RemoteMediaSourceEditViewModel, CancellationToken, Task<Either<BaseError, Unit>>> SaveSecrets { get; set; }
 
     private readonly RemoteMediaSourceEditViewModel _model = new();
     private EditContext _editContext;
     private ValidationMessageStore _messageStore;
 
-    protected override async Task OnParametersSetAsync() => await LoadSecrets(_model);
+    public void Dispose()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
+
+        try
+        {
+            await LoadSecrets(_model, token);
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
+        }
+    }
 
     protected override void OnInitialized()
     {
@@ -51,7 +73,7 @@
         _messageStore.Clear();
         if (_editContext.Validate())
         {
-            Either<BaseError, Unit> result = await SaveSecrets(_model);
+            Either<BaseError, Unit> result = await SaveSecrets(_model, _cts.Token);
             result.Match(
                 _ => NavigationManager.NavigateTo($"media/sources/{Name.ToLowerInvariant()}"),
                 error =>

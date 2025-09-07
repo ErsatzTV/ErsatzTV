@@ -27,6 +27,7 @@ public class BlockPlayoutPreviewBuilder(
     protected override ILogger Logger => NullLogger.Instance;
 
     public override async Task<PlayoutBuildResult> Build(
+        DateTimeOffset start,
         Playout playout,
         PlayoutReferenceData referenceData,
         PlayoutBuildMode mode,
@@ -34,14 +35,14 @@ public class BlockPlayoutPreviewBuilder(
     {
         _randomizedCollections.Add(playout.Channel.UniqueId, []);
 
-        PlayoutBuildResult result = await base.Build(playout, referenceData, mode, cancellationToken);
+        PlayoutBuildResult result = await base.Build(start, playout, referenceData, mode, cancellationToken);
 
         _randomizedCollections.Remove(playout.Channel.UniqueId);
 
         return result;
     }
 
-    protected override Task<int> GetDaysToBuild() => Task.FromResult(1);
+    protected override Task<int> GetDaysToBuild(CancellationToken cancellationToken) => Task.FromResult(1);
 
     protected override IMediaCollectionEnumerator GetEnumerator(
         Playout playout,

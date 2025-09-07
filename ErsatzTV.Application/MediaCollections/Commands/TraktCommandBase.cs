@@ -40,23 +40,26 @@ public abstract class TraktCommandBase
     protected ILogger Logger { get; }
 
     protected static Task<Validation<BaseError, TraktList>>
-        TraktListMustExist(TvContext dbContext, int traktListId) =>
+        TraktListMustExist(TvContext dbContext, int traktListId, CancellationToken cancellationToken) =>
         dbContext.TraktLists
             .Include(l => l.Items)
             .ThenInclude(i => i.Guids)
             .Include(tl => tl.Playlist)
             .ThenInclude(tl => tl.Items)
-            .SelectOneAsync(c => c.Id, c => c.Id == traktListId)
+            .SelectOneAsync(c => c.Id, c => c.Id == traktListId, cancellationToken)
             .Map(o => o.ToValidation<BaseError>($"TraktList {traktListId} does not exist."));
 
-    protected async Task<Either<BaseError, TraktList>> SaveList(TvContext dbContext, TraktList list)
+    protected async Task<Either<BaseError, TraktList>> SaveList(
+        TvContext dbContext,
+        TraktList list,
+        CancellationToken cancellationToken)
     {
         _logger.LogDebug("Saving trakt list to database: {User}/{List}", list.User, list.List);
 
         Option<TraktList> maybeExisting = await dbContext.TraktLists
             .Include(l => l.Items)
             .ThenInclude(i => i.Guids)
-            .SelectOneAsync(tl => tl.Id, tl => tl.User == list.User && tl.List == list.List);
+            .SelectOneAsync(tl => tl.Id, tl => tl.User == list.User && tl.List == list.List, cancellationToken);
 
         return await maybeExisting.Match(
             async existing =>
@@ -65,14 +68,14 @@ public abstract class TraktCommandBase
                 existing.Description = list.Description;
                 existing.ItemCount = list.ItemCount;
 
-                await dbContext.SaveChangesAsync();
+                await dbContext.SaveChangesAsync(cancellationToken);
 
                 return existing;
             },
             async () =>
             {
-                await dbContext.TraktLists.AddAsync(list);
-                await dbContext.SaveChangesAsync();
+                await dbContext.TraktLists.AddAsync(list, cancellationToken);
+                await dbContext.SaveChangesAsync(cancellationToken);
 
                 return list;
             });
@@ -125,7 +128,10 @@ public abstract class TraktCommandBase
             error => Task.FromResult(Left<BaseError, TraktList>(error)));
     }
 
-    protected async Task<Either<BaseError, TraktList>> MatchListItems(TvContext dbContext, TraktList list)
+    protected async Task<Either<BaseError, TraktList>> MatchListItems(
+        TvContext dbContext,
+        TraktList list,
+        CancellationToken cancellationToken)
     {
         try
         {
@@ -192,7 +198,7 @@ public abstract class TraktCommandBase
                                 IncludeInProgramGuide = true
                             };
 
-                            await dbContext.PlaylistItems.AddAsync(playlistItem);
+                            await dbContext.PlaylistItems.AddAsync(playlistItem, cancellationToken);
                         }
 
                         playlistItem.CollectionType = item.Kind switch
@@ -216,15 +222,19 @@ public abstract class TraktCommandBase
                 }
             }
 
-            if (await dbContext.SaveChangesAsync() > 0)
+            if (await dbContext.SaveChangesAsync(cancellationToken) > 0)
             {
-                await _searchIndex.RebuildItems(_searchRepository, _fallbackMetadataProvider, ids.ToList());
+                await _searchIndex.RebuildItems(
+                    _searchRepository,
+                    _fallbackMetadataProvider,
+                    ids.ToList(),
+                    cancellationToken);
             }
 
             _searchIndex.Commit();
 
             list.LastMatch = DateTime.UtcNow;
-            await dbContext.SaveChangesAsync();
+            await dbContext.SaveChangesAsync(cancellationToken);
 
             return list;
         }

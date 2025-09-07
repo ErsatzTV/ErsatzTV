@@ -79,7 +79,7 @@
 </MudForm>
 
 @code {
-    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource _cts;
 
     [Parameter]
     public int Id { get; set; }
@@ -88,10 +88,10 @@
     public string Name { get; set; }
 
     [Parameter]
-    public Func<int, Task<Option<RemoteMediaSourceViewModel>>> GetMediaSourceById { get; set; }
+    public Func<int, CancellationToken, Task<Option<RemoteMediaSourceViewModel>>> GetMediaSourceById { get; set; }
 
     [Parameter]
-    public Func<int, Task<List<RemoteMediaSourcePathReplacementEditViewModel>>> GetPathReplacementsBySourceId { get; set; }
+    public Func<int, CancellationToken, Task<List<RemoteMediaSourcePathReplacementEditViewModel>>> GetPathReplacementsBySourceId { get; set; }
 
     [Parameter]
     public Func<List<RemoteMediaSourcePathReplacementEditViewModel>, IRequest<Either<BaseError, Unit>>> GetUpdatePathReplacementsRequest { get; set; }
@@ -103,26 +103,36 @@
 
     public void Dispose()
     {
-        _cts.Cancel();
-        _cts.Dispose();
+        _cts?.Cancel();
+        _cts?.Dispose();
     }
 
-    protected override Task OnParametersSetAsync() => LoadData();
-
-    private async Task LoadData()
+    protected override async Task OnParametersSetAsync()
     {
-        Option<RemoteMediaSourceViewModel> maybeSource = await GetMediaSourceById(Id);
-        await maybeSource.Match(
-            async source =>
-            {
-                _source = source;
-                _pathReplacements = await GetPathReplacementsBySourceId(Id);
-            },
-            () =>
-            {
-                NavigationManager.NavigateTo("404");
-                return Task.CompletedTask;
-            });
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
+
+        try
+        {
+            Option<RemoteMediaSourceViewModel> maybeSource = await GetMediaSourceById(Id, token);
+            await maybeSource.Match(
+                async source =>
+                {
+                    _source = source;
+                    _pathReplacements = await GetPathReplacementsBySourceId(Id, token);
+                },
+                () =>
+                {
+                    NavigationManager.NavigateTo("404");
+                    return Task.CompletedTask;
+                });
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
+        }
     }
 
     private void AddPathReplacement()

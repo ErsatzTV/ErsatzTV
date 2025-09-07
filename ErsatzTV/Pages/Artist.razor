@@ -4,6 +4,7 @@
 @using ErsatzTV.Application.MediaCards
 @using ErsatzTV.Application.MediaCollections
 @using ErsatzTV.Application.ProgramSchedules
+@using ErsatzTV.Core.Search
 @using ErsatzTV.Extensions
 @implements IDisposable
 @inject IMediator Mediator
@@ -14,7 +15,7 @@
 
 <MudContainer MaxWidth="MaxWidth.False" Style="padding: 0" Class="fanart-container">
     <div class="fanart-tint"></div>
-    @if (!string.IsNullOrWhiteSpace(_artist.FanArt))
+    @if (!string.IsNullOrWhiteSpace(_artist?.FanArt))
     {
         <img src="@($"artwork/fanart/{_artist.FanArt}")" alt="fan art"/>
     }
@@ -25,7 +26,7 @@
 </MudContainer>
 <MudContainer MaxWidth="MaxWidth.Large" Style="margin-top: 100px" Class="z-10">
     <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Spacing="6">
-        @if (!string.IsNullOrWhiteSpace(_artist.Thumbnail))
+        @if (!string.IsNullOrWhiteSpace(_artist?.Thumbnail))
         {
             <MudImage Elevation="2" Src="@($"artwork/thumbnails/{_artist.Thumbnail}")" Class="rounded-lg z-10" Style="height: 220px; width: 220px; margin-left: auto; margin-right: auto;"/>
         }
@@ -41,11 +42,11 @@
                 <MudHidden Invert="true" Breakpoint="Breakpoint.MdAndUp">
                     <MudText Typo="Typo.h2" Class="media-item-title">@_artist?.Name</MudText>
                 </MudHidden>
-                <MudText Typo="Typo.subtitle1" Class="media-item-subtitle mb-6 mud-text-secondary">@_artist.Disambiguation</MudText>
+                <MudText Typo="Typo.subtitle1" Class="media-item-subtitle mb-6 mud-text-secondary">@_artist?.Disambiguation</MudText>
             </MudStack>
             <MudCard Elevation="2" Class="mb-6">
                 <MudCardContent Class="mx-3 my-3" Style="height: 100%">
-                    @if (!string.IsNullOrWhiteSpace(_artist.Biography))
+                    @if (!string.IsNullOrWhiteSpace(_artist?.Biography))
                     {
                         <MudText Style="flex-grow: 1">
                             @if (_artist.Biography.Length > 400)
@@ -242,38 +243,48 @@
 </MudContainer>
 
 @code {
-    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource _cts;
 
     [Parameter]
     public int ArtistId { get; set; }
 
     private ArtistViewModel _artist;
-    private List<CultureInfo> _sortedLanguages = new();
-    private List<string> _sortedGenres = new();
-    private List<string> _sortedStyles = new();
-    private List<string> _sortedMoods = new();
-    private MusicVideoCardResultsViewModel _musicVideos;
+    private List<CultureInfo> _sortedLanguages = [];
+    private List<string> _sortedGenres = [];
+    private List<string> _sortedStyles = [];
+    private List<string> _sortedMoods = [];
+    private MusicVideoCardResultsViewModel _musicVideos = new(0, [], new SearchPageMap([]));
 
     public void Dispose()
     {
-        _cts.Cancel();
-        _cts.Dispose();
+        _cts?.Cancel();
+        _cts?.Dispose();
     }
 
-    protected override Task OnParametersSetAsync() => RefreshData();
-
-    private async Task RefreshData()
+    protected override async Task OnParametersSetAsync()
     {
-        await Mediator.Send(new GetArtistById(ArtistId), _cts.Token).IfSomeAsync(vm =>
-        {
-            _artist = vm;
-            _sortedLanguages = _artist.Languages.OrderBy(ci => ci.EnglishName).ToList();
-            _sortedGenres = _artist.Genres.OrderBy(g => g).ToList();
-            _sortedStyles = _artist.Styles.OrderBy(s => s).ToList();
-            _sortedMoods = _artist.Moods.OrderBy(m => m).ToList();
-        });
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
 
-        _musicVideos = await Mediator.Send(new GetMusicVideoCards(ArtistId, 1, 100), _cts.Token);
+        try
+        {
+            await Mediator.Send(new GetArtistById(ArtistId), token).IfSomeAsync(vm =>
+            {
+                _artist = vm;
+                _sortedLanguages = _artist.Languages.OrderBy(ci => ci.EnglishName).ToList();
+                _sortedGenres = _artist.Genres.OrderBy(g => g).ToList();
+                _sortedStyles = _artist.Styles.OrderBy(s => s).ToList();
+                _sortedMoods = _artist.Moods.OrderBy(m => m).ToList();
+            });
+
+            _musicVideos = await Mediator.Send(new GetMusicVideoCards(ArtistId, 1, 100), token);
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
+        }
     }
 
     private async Task AddToCollection()

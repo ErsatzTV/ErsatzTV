@@ -18,7 +18,7 @@ public class DeleteFillerPresetHandler : IRequestHandler<DeleteFillerPreset, Eit
         CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        Validation<BaseError, FillerPreset> validation = await FillerPresetMustExist(dbContext, request);
+        Validation<BaseError, FillerPreset> validation = await FillerPresetMustExist(dbContext, request, cancellationToken);
         return await validation.Apply(ps => DoDeletion(dbContext, ps));
     }
 
@@ -30,8 +30,9 @@ public class DeleteFillerPresetHandler : IRequestHandler<DeleteFillerPreset, Eit
 
     private static Task<Validation<BaseError, FillerPreset>> FillerPresetMustExist(
         TvContext dbContext,
-        DeleteFillerPreset request) =>
+        DeleteFillerPreset request,
+        CancellationToken cancellationToken) =>
         dbContext.FillerPresets
-            .SelectOneAsync(fp => fp.Id, ps => ps.Id == request.FillerPresetId)
+            .SelectOneAsync(fp => fp.Id, ps => ps.Id == request.FillerPresetId, cancellationToken)
             .Map(o => o.ToValidation<BaseError>($"FillerPreset {request.FillerPresetId} does not exist."));
 }

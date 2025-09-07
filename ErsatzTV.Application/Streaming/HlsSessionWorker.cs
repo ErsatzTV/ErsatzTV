@@ -198,7 +198,7 @@ public class HlsSessionWorker : IHlsSessionWorker
                     cancellationToken);
             }
 
-            bool initialWorkAhead = Volatile.Read(ref _workAheadCount) < await GetWorkAheadLimit();
+            bool initialWorkAhead = Volatile.Read(ref _workAheadCount) < await GetWorkAheadLimit(cancellationToken);
             _state = initialWorkAhead ? HlsSessionState.SeekAndWorkAhead : HlsSessionState.SeekAndRealtime;
 
             if (!await Transcode(!initialWorkAhead, cancellationToken))
@@ -224,7 +224,7 @@ public class HlsSessionWorker : IHlsSessionWorker
                     // only use realtime encoding when we're at least 30 seconds ahead
                     bool realtime = transcodedBuffer >= TimeSpan.FromSeconds(30);
                     bool subsequentWorkAhead =
-                        !realtime && Volatile.Read(ref _workAheadCount) < await GetWorkAheadLimit();
+                        !realtime && Volatile.Read(ref _workAheadCount) < await GetWorkAheadLimit(cancellationToken);
                     if (!await Transcode(!subsequentWorkAhead, cancellationToken))
                     {
                         return;
@@ -715,8 +715,8 @@ public class HlsSessionWorker : IHlsSessionWorker
         }
     }
 
-    private async Task<int> GetWorkAheadLimit() =>
-        await _configElementRepository.GetValue<int>(ConfigElementKey.FFmpegWorkAheadSegmenters)
+    private async Task<int> GetWorkAheadLimit(CancellationToken cancellationToken) =>
+        await _configElementRepository.GetValue<int>(ConfigElementKey.FFmpegWorkAheadSegmenters, cancellationToken)
             .Map(maybeCount => maybeCount.Match(identity, () => 1));
 
     private async Task<Option<string[]>> ReadPlaylistLines(CancellationToken cancellationToken)

@@ -13,5 +13,5 @@ public class GetConfigElementByKeyHandler : IRequestHandler<GetConfigElementByKe
     public Task<Option<ConfigElementViewModel>> Handle(
         GetConfigElementByKey request,
         CancellationToken cancellationToken) =>
-        _configElementRepository.GetConfigElement(request.Key).MapT(ProjectToViewModel);
+        _configElementRepository.GetConfigElement(request.Key, cancellationToken).MapT(ProjectToViewModel);
 }

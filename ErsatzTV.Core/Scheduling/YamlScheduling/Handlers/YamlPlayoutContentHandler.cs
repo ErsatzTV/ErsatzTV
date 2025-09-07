@@ -17,13 +17,13 @@ public abstract class YamlPlayoutContentHandler(EnumeratorCache enumeratorCache)
         YamlPlayoutInstruction instruction,
         PlayoutBuildMode mode,
         Func<string, Task> executeSequence,
-        ILogger<YamlPlayoutBuilder> logger,
+        ILogger<SequentialPlayoutBuilder> logger,
         CancellationToken cancellationToken);
 
     protected async Task<Option<IMediaCollectionEnumerator>> GetContentEnumerator(
         YamlPlayoutContext context,
         string contentKey,
-        ILogger<YamlPlayoutBuilder> logger,
+        ILogger<SequentialPlayoutBuilder> logger,
         CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(contentKey))
@@ -54,7 +54,7 @@ public abstract class YamlPlayoutContentHandler(EnumeratorCache enumeratorCache)
         IMediaCollectionEnumerator enumerator,
         PlayoutItem playoutItem,
         MediaItem mediaItem,
-        ILogger<YamlPlayoutBuilder> logger)
+        ILogger<SequentialPlayoutBuilder> logger)
     {
         int index = context.Definition.Content.FindIndex(c => c.Key == contentKey);
         if (index < 0)

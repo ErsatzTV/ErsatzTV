@@ -33,18 +33,21 @@ public class SynchronizeEmbyLibrariesHandler : IRequestHandler<SynchronizeEmbyLi
     public Task<Either<BaseError, Unit>> Handle(
         SynchronizeEmbyLibraries request,
         CancellationToken cancellationToken) =>
-        Validate(request)
-            .MapT(SynchronizeLibraries)
+        Validate(request, cancellationToken)
+            .MapT(p => SynchronizeLibraries(p, cancellationToken))
             .Bind(v => v.ToEitherAsync());
 
-    private Task<Validation<BaseError, ConnectionParameters>> Validate(SynchronizeEmbyLibraries request) =>
-        MediaSourceMustExist(request)
+    private Task<Validation<BaseError, ConnectionParameters>> Validate(
+        SynchronizeEmbyLibraries request,
+        CancellationToken cancellationToken) =>
+        MediaSourceMustExist(request, cancellationToken)
             .BindT(MediaSourceMustHaveActiveConnection)
             .BindT(MediaSourceMustHaveApiKey);
 
     private Task<Validation<BaseError, EmbyMediaSource>> MediaSourceMustExist(
-        SynchronizeEmbyLibraries request) =>
-        _mediaSourceRepository.GetEmby(request.EmbyMediaSourceId)
+        SynchronizeEmbyLibraries request,
+        CancellationToken cancellationToken) =>
+        _mediaSourceRepository.GetEmby(request.EmbyMediaSourceId, cancellationToken)
             .Map(o => o.ToValidation<BaseError>("Emby media source does not exist."));
 
     private Validation<BaseError, ConnectionParameters> MediaSourceMustHaveActiveConnection(
@@ -65,7 +68,9 @@ public class SynchronizeEmbyLibrariesHandler : IRequestHandler<SynchronizeEmbyLi
             .ToValidation<BaseError>("Emby media source requires an api key");
     }
 
-    private async Task<Unit> SynchronizeLibraries(ConnectionParameters connectionParameters)
+    private async Task<Unit> SynchronizeLibraries(
+        ConnectionParameters connectionParameters,
+        CancellationToken cancellationToken)
     {
         Either<BaseError, List<EmbyLibrary>> maybeLibraries = await _embyApiClient.GetLibraries(
             connectionParameters.ActiveConnection.Address,
@@ -91,7 +96,8 @@ public class SynchronizeEmbyLibrariesHandler : IRequestHandler<SynchronizeEmbyLi
                 connectionParameters.EmbyMediaSource.Id,
                 toAdd,
                 toRemove,
-                toUpdate);
+                toUpdate,
+                cancellationToken);
             if (ids.Count != 0)
             {
                 await _searchIndex.RemoveItems(ids);

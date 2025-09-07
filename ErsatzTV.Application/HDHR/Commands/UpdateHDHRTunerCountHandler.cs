@@ -18,7 +18,7 @@ public class UpdateHDHRTunerCountHandler : IRequestHandler<UpdateHDHRTunerCount,
         Validate(request)
             .MapT(_ => _configElementRepository.Upsert(
                 ConfigElementKey.HDHRTunerCount,
-                request.TunerCount.ToString(CultureInfo.InvariantCulture)))
+                request.TunerCount.ToString(CultureInfo.InvariantCulture), cancellationToken))
             .Bind(v => v.ToEitherAsync());
 
     private static Task<Validation<BaseError, Unit>> Validate(UpdateHDHRTunerCount request) =>

@@ -14,7 +14,7 @@ public class YamlPlayoutSkipToItemHandler(EnumeratorCache enumeratorCache) : IYa
         YamlPlayoutInstruction instruction,
         PlayoutBuildMode mode,
         Func<string, Task> executeSequence,
-        ILogger<YamlPlayoutBuilder> logger,
+        ILogger<SequentialPlayoutBuilder> logger,
         CancellationToken cancellationToken)
     {
         if (instruction is not YamlPlayoutSkipToItemInstruction skipToItem)

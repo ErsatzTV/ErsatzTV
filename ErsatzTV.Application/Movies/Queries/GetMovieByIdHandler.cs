@@ -42,10 +42,10 @@ public class GetMovieByIdHandler : IRequestHandler<GetMovieById, Option<MovieVie
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
-        Option<JellyfinMediaSource> maybeJellyfin = await _mediaSourceRepository.GetAllJellyfin()
+        Option<JellyfinMediaSource> maybeJellyfin = await _mediaSourceRepository.GetAllJellyfin(cancellationToken)
             .Map(list => list.HeadOrNone());
 
-        Option<EmbyMediaSource> maybeEmby = await _mediaSourceRepository.GetAllEmby()
+        Option<EmbyMediaSource> maybeEmby = await _mediaSourceRepository.GetAllEmby(cancellationToken)
             .Map(list => list.HeadOrNone());
 
         Option<Movie> maybeMovie = await _movieRepository.GetMovie(request.Id);
@@ -68,6 +68,7 @@ public class GetMovieByIdHandler : IRequestHandler<GetMovieById, Option<MovieVie
                 _plexPathReplacementService,
                 _jellyfinPathReplacementService,
                 _embyPathReplacementService,
+                cancellationToken,
                 false);
             return ProjectToViewModel(movie, localPath, languageCodes, maybeJellyfin, maybeEmby);
         }

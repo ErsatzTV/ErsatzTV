@@ -26,7 +26,7 @@
 </MudForm>
 
 @code {
-    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource _cts;
 
     [Parameter]
     public int Id { get; set; }
@@ -37,24 +37,36 @@
 
     public void Dispose()
     {
-        _cts.Cancel();
-        _cts.Dispose();
+        _cts?.Cancel();
+        _cts?.Dispose();
     }
 
     protected override async Task OnParametersSetAsync()
     {
-        if (IsEdit)
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
+
+        try
         {
-            Option<MediaCollectionViewModel> maybeCollection = await Mediator.Send(new GetCollectionById(Id), _cts.Token);
-            maybeCollection.IfSome(collection =>
+            if (IsEdit)
             {
-                _model.Id = collection.Id;
-                _model.Name = collection.Name;
-            });
+                Option<MediaCollectionViewModel> maybeCollection = await Mediator.Send(new GetCollectionById(Id), token);
+                maybeCollection.IfSome(collection =>
+                {
+                    _model.Id = collection.Id;
+                    _model.Name = collection.Name;
+                });
+            }
+            else
+            {
+                _model.Name = "New Collection";
+            }
         }
-        else
+        catch (OperationCanceledException)
         {
-            _model.Name = "New Collection";
+            // do nothing
         }
     }
 

@@ -29,7 +29,7 @@
 </div>
 
 @code {
-    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource _cts;
 
     [CascadingParameter]
     IMudDialogInstance MudDialog { get; set; }
@@ -52,13 +52,27 @@
 
     public void Dispose()
     {
-        _cts.Cancel();
-        _cts.Dispose();
+        _cts?.Cancel();
+        _cts?.Dispose();
     }
 
-    protected override async Task OnParametersSetAsync() =>
-        _schedules = await Mediator.Send(new GetAllProgramSchedules(), _cts.Token)
-            .Map(list => list.OrderBy(vm => vm.Name, new NaturalSortComparer(StringComparison.CurrentCultureIgnoreCase)).ToList());
+    protected override async Task OnParametersSetAsync()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
+
+        try
+        {
+            _schedules = await Mediator.Send(new GetAllProgramSchedules(), token)
+                .Map(list => list.OrderBy(vm => vm.Name, new NaturalSortComparer(StringComparison.CurrentCultureIgnoreCase)).ToList());
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
+        }
+    }
 
     private string FormatText() => $"Select the schedule to add the {EntityType} {EntityName}";
 

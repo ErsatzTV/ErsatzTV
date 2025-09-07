@@ -11,7 +11,8 @@ public static class MediaItemsForCollection
         IMediaCollectionRepository mediaCollectionRepository,
         ITelevisionRepository televisionRepository,
         IArtistRepository artistRepository,
-        CollectionKey collectionKey)
+        CollectionKey collectionKey,
+        CancellationToken cancellationToken)
     {
         var result = new List<MediaItem>();
 
@@ -31,15 +32,19 @@ public static class MediaItemsForCollection
                 break;
             case ProgramScheduleItemCollectionType.MultiCollection:
                 result.AddRange(
-                    await mediaCollectionRepository.GetMultiCollectionItems(collectionKey.MultiCollectionId ?? 0));
+                    await mediaCollectionRepository.GetMultiCollectionItems(
+                        collectionKey.MultiCollectionId ?? 0,
+                        cancellationToken));
                 break;
             case ProgramScheduleItemCollectionType.SmartCollection:
                 result.AddRange(
-                    await mediaCollectionRepository.GetSmartCollectionItems(collectionKey.SmartCollectionId ?? 0));
+                    await mediaCollectionRepository.GetSmartCollectionItems(
+                        collectionKey.SmartCollectionId ?? 0,
+                        cancellationToken));
                 break;
             case ProgramScheduleItemCollectionType.Playlist:
                 result.AddRange(
-                    await mediaCollectionRepository.GetPlaylistItems(collectionKey.PlaylistId ?? 0));
+                    await mediaCollectionRepository.GetPlaylistItems(collectionKey.PlaylistId ?? 0, cancellationToken));
                 break;
             case ProgramScheduleItemCollectionType.Movie:
                 foreach (int mediaItemId in Optional(collectionKey.MediaItemId))

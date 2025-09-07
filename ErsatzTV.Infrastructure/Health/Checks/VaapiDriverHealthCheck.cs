@@ -45,7 +45,8 @@ public class VaapiDriverHealthCheck(
             return NotApplicableResult();
         }
 
-        Option<string> maybeFFmpegPath = await dbContext.ConfigElements.GetValue<string>(ConfigElementKey.FFmpegPath);
+        Option<string> maybeFFmpegPath =
+            await dbContext.ConfigElements.GetValue<string>(ConfigElementKey.FFmpegPath, cancellationToken);
         if (maybeFFmpegPath.IsNone)
         {
             return NotApplicableResult();

@@ -14,7 +14,7 @@ public class YamlPlayoutRepeatHandler : IYamlPlayoutHandler
         YamlPlayoutInstruction instruction,
         PlayoutBuildMode mode,
         Func<string, Task> executeSequence,
-        ILogger<YamlPlayoutBuilder> logger,
+        ILogger<SequentialPlayoutBuilder> logger,
         CancellationToken cancellationToken)
     {
         if (instruction is not YamlPlayoutRepeatInstruction)
@@ -25,7 +25,7 @@ public class YamlPlayoutRepeatHandler : IYamlPlayoutHandler
         if (context.VisitedAll && _itemsSinceLastRepeat == context.AddedItems.Count)
         {
             logger.LogWarning("Repeat encountered without adding any playout items; aborting");
-            throw new InvalidOperationException("YAML playout loop detected");
+            throw new InvalidOperationException("Sequential playout loop detected");
         }
 
         _itemsSinceLastRepeat = context.AddedItems.Count;

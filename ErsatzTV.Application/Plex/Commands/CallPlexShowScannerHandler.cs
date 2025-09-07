@@ -31,7 +31,7 @@ public class CallPlexShowScannerHandler : CallLibraryScannerHandler<SynchronizeP
         SynchronizePlexShowById request,
         CancellationToken cancellationToken)
     {
-        Validation<BaseError, string> validation = await Validate(request);
+        Validation<BaseError, string> validation = await Validate(request, cancellationToken);
         return await validation.Match(
             scanner => PerformScan(scanner, request, cancellationToken),
             error =>
@@ -67,7 +67,8 @@ public class CallPlexShowScannerHandler : CallLibraryScannerHandler<SynchronizeP
 
     protected override Task<DateTimeOffset> GetLastScan(
         TvContext dbContext,
-        SynchronizePlexShowById request) =>
+        SynchronizePlexShowById request,
+        CancellationToken cancellationToken) =>
         Task.FromResult(DateTimeOffset.MinValue);
 
     protected override bool ScanIsRequired(

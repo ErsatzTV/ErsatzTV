@@ -26,14 +26,15 @@ public class AddItemsToPlaylistHandler : IRequestHandler<AddItemsToPlaylist, Eit
     public async Task<Either<BaseError, Unit>> Handle(AddItemsToPlaylist request, CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        Validation<BaseError, Playlist> validation = await Validate(dbContext, request);
-        return await validation.Apply(c => ApplyAddItemsRequest(dbContext, c, request));
+        Validation<BaseError, Playlist> validation = await Validate(dbContext, request, cancellationToken);
+        return await validation.Apply(c => ApplyAddItemsRequest(dbContext, c, request, cancellationToken));
     }
 
     private static async Task<Unit> ApplyAddItemsRequest(
         TvContext dbContext,
         Playlist playlist,
-        AddItemsToPlaylist request)
+        AddItemsToPlaylist request,
+        CancellationToken cancellationToken)
     {
         var allItems = new Dictionary<ProgramScheduleItemCollectionType, List<int>>
         {
@@ -67,15 +68,16 @@ public class AddItemsToPlaylistHandler : IRequestHandler<AddItemsToPlaylist, Eit
             }
         }
 
-        await dbContext.SaveChangesAsync();
+        await dbContext.SaveChangesAsync(cancellationToken);
 
         return Unit.Default;
     }
 
     private async Task<Validation<BaseError, Playlist>> Validate(
         TvContext dbContext,
-        AddItemsToPlaylist request) =>
-        (await PlaylistMustExist(dbContext, request),
+        AddItemsToPlaylist request,
+        CancellationToken cancellationToken) =>
+        (await PlaylistMustExist(dbContext, request, cancellationToken),
             await ValidateMovies(request),
             await ValidateShows(request),
             await ValidateSeasons(request),
@@ -84,10 +86,11 @@ public class AddItemsToPlaylistHandler : IRequestHandler<AddItemsToPlaylist, Eit
 
     private static Task<Validation<BaseError, Playlist>> PlaylistMustExist(
         TvContext dbContext,
-        AddItemsToPlaylist request) =>
+        AddItemsToPlaylist request,
+        CancellationToken cancellationToken) =>
         dbContext.Playlists
             .Include(c => c.Items)
-            .SelectOneAsync(c => c.Id, c => c.Id == request.PlaylistId)
+            .SelectOneAsync(c => c.Id, c => c.Id == request.PlaylistId, cancellationToken)
             .Map(o => o.ToValidation<BaseError>("Playlist does not exist."));
 
     private Task<Validation<BaseError, Unit>> ValidateMovies(AddItemsToPlaylist request) =>

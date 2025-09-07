@@ -24,6 +24,7 @@ internal static class BlockPlayoutChangeDetection
     }
 
     public static Tuple<List<EffectiveBlock>, List<PlayoutItem>> FindUpdatedItems(
+        DateTimeOffset buildStart,
         List<PlayoutItem> playoutItems,
         Dictionary<PlayoutItem, BlockKey> itemBlockKeys,
         List<EffectiveBlock> blocksToSchedule,
@@ -124,8 +125,8 @@ internal static class BlockPlayoutChangeDetection
             Log.Logger.Debug("Earliest block id: {Id} => {Value}", blockId, value);
         }
 
-        // find affected playout items
-        foreach (PlayoutItem item in playoutItems)
+        // find affected playout items (importantly, from within the effective window)
+        foreach (PlayoutItem item in playoutItems.Where(pi => pi.StartOffset >= buildStart))
         {
             if (!itemBlockKeys.TryGetValue(item, out BlockKey blockKey))
             {
@@ -144,7 +145,8 @@ internal static class BlockPlayoutChangeDetection
             }
         }
 
-        return Tuple(updatedBlocks.ToList(), playoutItems.Filter(i => updatedItemIds.Contains(i.Id)).ToList());
+        var itemsToRemove = playoutItems.Filter(i => updatedItemIds.Contains(i.Id)).ToList();
+        return Tuple(updatedBlocks.ToList(), itemsToRemove);
     }
 
     public static void RemoveItemAndHistory(

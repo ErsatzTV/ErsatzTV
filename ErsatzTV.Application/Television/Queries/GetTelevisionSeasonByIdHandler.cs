@@ -22,10 +22,10 @@ public class
         GetTelevisionSeasonById request,
         CancellationToken cancellationToken)
     {
-        Option<JellyfinMediaSource> maybeJellyfin = await _mediaSourceRepository.GetAllJellyfin()
+        Option<JellyfinMediaSource> maybeJellyfin = await _mediaSourceRepository.GetAllJellyfin(cancellationToken)
             .Map(list => list.HeadOrNone());
 
-        Option<EmbyMediaSource> maybeEmby = await _mediaSourceRepository.GetAllEmby()
+        Option<EmbyMediaSource> maybeEmby = await _mediaSourceRepository.GetAllEmby(cancellationToken)
             .Map(list => list.HeadOrNone());
 
         return await _televisionRepository.GetSeason(request.SeasonId)

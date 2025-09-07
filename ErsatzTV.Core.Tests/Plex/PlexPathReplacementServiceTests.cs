@@ -28,7 +28,8 @@ public class PlexPathReplacementServiceTests
         };
 
         IMediaSourceRepository repo = Substitute.For<IMediaSourceRepository>();
-        repo.GetPlexPathReplacementsByLibraryId(Arg.Any<int>()).Returns(replacements.AsTask());
+        repo.GetPlexPathReplacementsByLibraryId(Arg.Any<int>(), Arg.Any<CancellationToken>())
+            .Returns(replacements.AsTask());
 
         IRuntimeInfo runtime = Substitute.For<IRuntimeInfo>();
         runtime.IsOSPlatform(OSPlatform.Windows).Returns(true);
@@ -40,7 +41,8 @@ public class PlexPathReplacementServiceTests
 
         string result = await service.GetReplacementPlexPath(
             0,
-            @"C:\Something\Some Shared Folder\Some Movie\Some Movie.mkv");
+            @"C:\Something\Some Shared Folder\Some Movie\Some Movie.mkv",
+            CancellationToken.None);
 
         result.ShouldBe(@"C:\Something Else\Some Shared Folder\Some Movie\Some Movie.mkv");
     }
@@ -60,7 +62,8 @@ public class PlexPathReplacementServiceTests
         };
 
         IMediaSourceRepository repo = Substitute.For<IMediaSourceRepository>();
-        repo.GetPlexPathReplacementsByLibraryId(Arg.Any<int>()).Returns(replacements.AsTask());
+        repo.GetPlexPathReplacementsByLibraryId(Arg.Any<int>(), Arg.Any<CancellationToken>())
+            .Returns(replacements.AsTask());
 
         IRuntimeInfo runtime = Substitute.For<IRuntimeInfo>();
         runtime.IsOSPlatform(OSPlatform.Windows).Returns(false);
@@ -72,7 +75,8 @@ public class PlexPathReplacementServiceTests
 
         string result = await service.GetReplacementPlexPath(
             0,
-            @"C:\Something\Some Shared Folder\Some Movie\Some Movie.mkv");
+            @"C:\Something\Some Shared Folder\Some Movie\Some Movie.mkv",
+            CancellationToken.None);
 
         result.ShouldBe(@"/mnt/something else/Some Shared Folder/Some Movie/Some Movie.mkv");
     }
@@ -92,7 +96,8 @@ public class PlexPathReplacementServiceTests
         };
 
         IMediaSourceRepository repo = Substitute.For<IMediaSourceRepository>();
-        repo.GetPlexPathReplacementsByLibraryId(Arg.Any<int>()).Returns(replacements.AsTask());
+        repo.GetPlexPathReplacementsByLibraryId(Arg.Any<int>(), Arg.Any<CancellationToken>())
+            .Returns(replacements.AsTask());
 
         IRuntimeInfo runtime = Substitute.For<IRuntimeInfo>();
         runtime.IsOSPlatform(OSPlatform.Windows).Returns(false);
@@ -104,7 +109,8 @@ public class PlexPathReplacementServiceTests
 
         string result = await service.GetReplacementPlexPath(
             0,
-            @"\\192.168.1.100\Something\Some Shared Folder\Some Movie\Some Movie.mkv");
+            @"\\192.168.1.100\Something\Some Shared Folder\Some Movie\Some Movie.mkv",
+            CancellationToken.None);
 
         result.ShouldBe(@"/mnt/something else/Some Shared Folder/Some Movie/Some Movie.mkv");
     }
@@ -124,7 +130,8 @@ public class PlexPathReplacementServiceTests
         };
 
         IMediaSourceRepository repo = Substitute.For<IMediaSourceRepository>();
-        repo.GetPlexPathReplacementsByLibraryId(Arg.Any<int>()).Returns(replacements.AsTask());
+        repo.GetPlexPathReplacementsByLibraryId(Arg.Any<int>(), Arg.Any<CancellationToken>())
+            .Returns(replacements.AsTask());
 
         IRuntimeInfo runtime = Substitute.For<IRuntimeInfo>();
         runtime.IsOSPlatform(OSPlatform.Windows).Returns(false);
@@ -136,7 +143,8 @@ public class PlexPathReplacementServiceTests
 
         string result = await service.GetReplacementPlexPath(
             0,
-            @"\\192.168.1.100\Something\Some Shared Folder\Some Movie\Some Movie.mkv");
+            @"\\192.168.1.100\Something\Some Shared Folder\Some Movie\Some Movie.mkv",
+            CancellationToken.None);
 
         result.ShouldBe(@"/mnt/something else/Some Shared Folder/Some Movie/Some Movie.mkv");
     }
@@ -156,7 +164,8 @@ public class PlexPathReplacementServiceTests
         };
 
         IMediaSourceRepository repo = Substitute.For<IMediaSourceRepository>();
-        repo.GetPlexPathReplacementsByLibraryId(Arg.Any<int>()).Returns(replacements.AsTask());
+        repo.GetPlexPathReplacementsByLibraryId(Arg.Any<int>(), Arg.Any<CancellationToken>())
+            .Returns(replacements.AsTask());
 
         IRuntimeInfo runtime = Substitute.For<IRuntimeInfo>();
         runtime.IsOSPlatform(OSPlatform.Windows).Returns(false);
@@ -168,7 +177,8 @@ public class PlexPathReplacementServiceTests
 
         string result = await service.GetReplacementPlexPath(
             0,
-            @"\\SERVERNAME\Something\Some Shared Folder\Some Movie\Some Movie.mkv");
+            @"\\SERVERNAME\Something\Some Shared Folder\Some Movie\Some Movie.mkv",
+            CancellationToken.None);
 
         result.ShouldBe(@"/mnt/something else/Some Shared Folder/Some Movie/Some Movie.mkv");
     }
@@ -188,7 +198,8 @@ public class PlexPathReplacementServiceTests
         };
 
         IMediaSourceRepository repo = Substitute.For<IMediaSourceRepository>();
-        repo.GetPlexPathReplacementsByLibraryId(Arg.Any<int>()).Returns(replacements.AsTask());
+        repo.GetPlexPathReplacementsByLibraryId(Arg.Any<int>(), Arg.Any<CancellationToken>())
+            .Returns(replacements.AsTask());
 
         IRuntimeInfo runtime = Substitute.For<IRuntimeInfo>();
         runtime.IsOSPlatform(OSPlatform.Windows).Returns(true);
@@ -200,7 +211,8 @@ public class PlexPathReplacementServiceTests
 
         string result = await service.GetReplacementPlexPath(
             0,
-            @"/mnt/something/Some Shared Folder/Some Movie/Some Movie.mkv");
+            @"/mnt/something/Some Shared Folder/Some Movie/Some Movie.mkv",
+            CancellationToken.None);
 
         result.ShouldBe(@"C:\Something Else\Some Shared Folder\Some Movie\Some Movie.mkv");
     }
@@ -220,7 +232,8 @@ public class PlexPathReplacementServiceTests
         };
 
         IMediaSourceRepository repo = Substitute.For<IMediaSourceRepository>();
-        repo.GetPlexPathReplacementsByLibraryId(Arg.Any<int>()).Returns(replacements.AsTask());
+        repo.GetPlexPathReplacementsByLibraryId(Arg.Any<int>(), Arg.Any<CancellationToken>())
+            .Returns(replacements.AsTask());
 
         IRuntimeInfo runtime = Substitute.For<IRuntimeInfo>();
         runtime.IsOSPlatform(OSPlatform.Windows).Returns(false);
@@ -232,7 +245,8 @@ public class PlexPathReplacementServiceTests
 
         string result = await service.GetReplacementPlexPath(
             0,
-            @"/mnt/something/Some Shared Folder/Some Movie/Some Movie.mkv");
+            @"/mnt/something/Some Shared Folder/Some Movie/Some Movie.mkv",
+            CancellationToken.None);
 
         result.ShouldBe(@"/mnt/something else/Some Shared Folder/Some Movie/Some Movie.mkv");
     }
@@ -252,7 +266,8 @@ public class PlexPathReplacementServiceTests
         };
 
         IMediaSourceRepository repo = Substitute.For<IMediaSourceRepository>();
-        repo.GetPlexPathReplacementsByLibraryId(Arg.Any<int>()).Returns(replacements.AsTask());
+        repo.GetPlexPathReplacementsByLibraryId(Arg.Any<int>(), Arg.Any<CancellationToken>())
+            .Returns(replacements.AsTask());
 
         IRuntimeInfo runtime = Substitute.For<IRuntimeInfo>();
         runtime.IsOSPlatform(OSPlatform.Windows).Returns(false);
@@ -264,7 +279,8 @@ public class PlexPathReplacementServiceTests
 
         string result = await service.GetReplacementPlexPath(
             0,
-            @"/mnt/something/Some Shared Folder/Some Movie/Some Movie.mkv");
+            @"/mnt/something/Some Shared Folder/Some Movie/Some Movie.mkv",
+            CancellationToken.None);
 
         result.ShouldBe(@"/mnt/something/Some Shared Folder/Some Movie/Some Movie.mkv");
     }
@@ -284,7 +300,8 @@ public class PlexPathReplacementServiceTests
         };
 
         IMediaSourceRepository repo = Substitute.For<IMediaSourceRepository>();
-        repo.GetPlexPathReplacementsByLibraryId(Arg.Any<int>()).Returns(replacements.AsTask());
+        repo.GetPlexPathReplacementsByLibraryId(Arg.Any<int>(), Arg.Any<CancellationToken>())
+            .Returns(replacements.AsTask());
 
         IRuntimeInfo runtime = Substitute.For<IRuntimeInfo>();
         runtime.IsOSPlatform(OSPlatform.Windows).Returns(false);
@@ -296,7 +313,8 @@ public class PlexPathReplacementServiceTests
 
         string result = await service.GetReplacementPlexPath(
             0,
-            @"/mnt/something/Some Shared Folder/Some Movie/Some Movie.mkv");
+            @"/mnt/something/Some Shared Folder/Some Movie/Some Movie.mkv",
+            CancellationToken.None);
 
         result.ShouldBe(@"/Some Movie/Some Movie.mkv");
     }

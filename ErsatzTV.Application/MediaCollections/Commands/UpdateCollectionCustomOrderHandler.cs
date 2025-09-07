@@ -31,7 +31,7 @@ public class UpdateCollectionCustomOrderHandler : IRequestHandler<UpdateCollecti
         CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        Validation<BaseError, Collection> validation = await Validate(dbContext, request);
+        Validation<BaseError, Collection> validation = await Validate(dbContext, request, cancellationToken);
         return await validation.Apply(c => ApplyUpdateRequest(dbContext, c, request));
     }
 
@@ -66,14 +66,16 @@ public class UpdateCollectionCustomOrderHandler : IRequestHandler<UpdateCollecti
 
     private static Task<Validation<BaseError, Collection>> Validate(
         TvContext dbContext,
-        UpdateCollectionCustomOrder request) =>
-        CollectionMustExist(dbContext, request);
+        UpdateCollectionCustomOrder request,
+        CancellationToken cancellationToken) =>
+        CollectionMustExist(dbContext, request, cancellationToken);
 
     private static Task<Validation<BaseError, Collection>> CollectionMustExist(
         TvContext dbContext,
-        UpdateCollectionCustomOrder request) =>
+        UpdateCollectionCustomOrder request,
+        CancellationToken cancellationToken) =>
         dbContext.Collections
             .Include(c => c.CollectionItems)
-            .SelectOneAsync(c => c.Id, c => c.Id == request.CollectionId)
+            .SelectOneAsync(c => c.Id, c => c.Id == request.CollectionId, cancellationToken)
             .Map(o => o.ToValidation<BaseError>("Collection does not exist."));
 }

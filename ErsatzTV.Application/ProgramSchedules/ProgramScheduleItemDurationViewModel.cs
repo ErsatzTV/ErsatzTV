@@ -1,4 +1,5 @@
 ﻿using ErsatzTV.Application.Filler;
+using ErsatzTV.Application.Graphics;
 using ErsatzTV.Application.MediaCollections;
 using ErsatzTV.Application.MediaItems;
 using ErsatzTV.Application.Watermarks;
@@ -34,6 +35,7 @@ public record ProgramScheduleItemDurationViewModel : ProgramScheduleItemViewMode
         FillerPresetViewModel tailFiller,
         FillerPresetViewModel fallbackFiller,
         List<WatermarkViewModel> watermarks,
+        List<GraphicsElementViewModel> graphicsElements,
         string preferredAudioLanguageCode,
         string preferredAudioTitle,
         string preferredSubtitleLanguageCode,
@@ -60,6 +62,7 @@ public record ProgramScheduleItemDurationViewModel : ProgramScheduleItemViewMode
         tailFiller,
         fallbackFiller,
         watermarks,
+        graphicsElements,
         preferredAudioLanguageCode,
         preferredAudioTitle,
         preferredSubtitleLanguageCode,

@@ -328,7 +328,7 @@ else if (_previewItems is not null)
 </MudForm>
 
 @code {
-    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource _cts;
 
     [Parameter]
     public int Id { get; set; }
@@ -339,39 +339,49 @@ else if (_previewItems is not null)
 
     public void Dispose()
     {
-        _cts.Cancel();
-        _cts.Dispose();
+        _cts?.Cancel();
+        _cts?.Dispose();
     }
 
-    protected override async Task OnParametersSetAsync() => await LoadPlaylistItems();
-
-    private async Task LoadPlaylistItems()
+    protected override async Task OnParametersSetAsync()
     {
-        Option<PlaylistViewModel> maybePlaylist = await Mediator.Send(new GetPlaylistById(Id), _cts.Token);
-        if (maybePlaylist.IsNone)
-        {
-            NavigationManager.NavigateTo("media/playlists");
-            return;
-        }
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
 
-        foreach (PlaylistViewModel playlist in maybePlaylist)
+        try
         {
-            _playlist = new PlaylistItemsEditViewModel
+            Option<PlaylistViewModel> maybePlaylist = await Mediator.Send(new GetPlaylistById(Id), token);
+            if (maybePlaylist.IsNone)
             {
-                Name = playlist.Name,
-                IsSystem = playlist.IsSystem,
-                Items = []
-            };
-        }
-
-        Option<IEnumerable<PlaylistItemViewModel>> maybeResults = await Mediator.Send(new GetPlaylistItems(Id), _cts.Token);
-        foreach (IEnumerable<PlaylistItemViewModel> items in maybeResults)
-        {
-            _playlist.Items.AddRange(items.Map(ProjectToEditViewModel));
-            if (_playlist.Items.Count == 1)
-            {
-                _selectedItem = _playlist.Items.Head();
+                NavigationManager.NavigateTo("media/playlists");
+                return;
             }
+
+            foreach (PlaylistViewModel playlist in maybePlaylist)
+            {
+                _playlist = new PlaylistItemsEditViewModel
+                {
+                    Name = playlist.Name,
+                    IsSystem = playlist.IsSystem,
+                    Items = []
+                };
+            }
+
+            Option<IEnumerable<PlaylistItemViewModel>> maybeResults = await Mediator.Send(new GetPlaylistItems(Id), token);
+            foreach (IEnumerable<PlaylistItemViewModel> items in maybeResults)
+            {
+                _playlist.Items.AddRange(items.Map(ProjectToEditViewModel));
+                if (_playlist.Items.Count == 1)
+                {
+                    _selectedItem = _playlist.Items.Head();
+                }
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
         }
     }
 

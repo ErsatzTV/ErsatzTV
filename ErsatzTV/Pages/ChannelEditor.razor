@@ -1,5 +1,6 @@
 ﻿@page "/channels/{Id:int?}"
 @page "/channels/add"
+@using System.Globalization
 @using ErsatzTV.Application.Artworks
 @using ErsatzTV.Application.Channels
 @using ErsatzTV.Application.FFmpegProfiles
@@ -20,7 +21,7 @@
 
 <MudForm Model="@_model" @ref="@_form" Validation="@(_validator.ValidateValue)" ValidationDelay="0" Style="max-height: 100%">
 <MudPaper Square="true" Style="display: flex; height: 64px; min-height: 64px; width: 100%; z-index: 100; align-items: center">
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-6" OnClick="HandleSubmitAsync" StartIcon="@(IsEdit ? Icons.Material.Filled.Save : Icons.Material.Filled.Add)">@(IsEdit ? "Save Channel" : "Add Channel")</MudButton>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-6" OnClick="@HandleSubmitAsync" StartIcon="@(IsEdit ? Icons.Material.Filled.Save : Icons.Material.Filled.Add)">@(IsEdit ? "Save Channel" : "Add Channel")</MudButton>
 </MudPaper>
 <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
@@ -69,13 +70,50 @@
 </MudStack>
 <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
     <div class="d-flex">
-        <MudText>Playout Mode</MudText>
+        <MudText>Playout Source</MudText>
     </div>
-    <MudSelect @bind-Value="_model.PlayoutMode" For="@(() => _model.PlayoutMode)" HelperText="Controls the progression of the channel's playout">
-        <MudSelectItem Value="@(ChannelPlayoutMode.Continuous)">Continuous</MudSelectItem>
-        <MudSelectItem Value="@(ChannelPlayoutMode.OnDemand)">On Demand</MudSelectItem>
+    <MudSelect @bind-Value="_model.PlayoutSource" For="@(() => _model.PlayoutSource)" HelperText="Controls the source of the channel's content">
+        <MudSelectItem Value="@(ChannelPlayoutSource.Generated)">Generated</MudSelectItem>
+        <MudSelectItem Value="@(ChannelPlayoutSource.Mirror)">Mirror</MudSelectItem>
     </MudSelect>
 </MudStack>
+@if (_model.PlayoutSource is ChannelPlayoutSource.Mirror)
+{
+    <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+        <div class="d-flex">
+            <MudText>Mirror Source Channel</MudText>
+        </div>
+        <MudSelect @bind-Value="_model.MirrorSourceChannelId" For="@(() => _model.MirrorSourceChannelId)"
+                   Clearable="true">
+            <MudSelectItem T="int?" Value="@((int?)null)">(none)</MudSelectItem>
+            @foreach (ChannelViewModel channel in _channels.OrderBy(c => decimal.Parse(c.Number, CultureInfo.InvariantCulture)))
+            {
+                <MudSelectItem T="int?" Value="@channel.Id">(@channel.Number) - @channel.Name</MudSelectItem>
+            }
+        </MudSelect>
+    </MudStack>
+    <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+        <div class="d-flex">
+            <MudText>Playout Offset</MudText>
+        </div>
+        <MudTextField T="int"
+                      @bind-Value="_model.PlayoutOffsetHours"
+                      Adornment="Adornment.End"
+                      AdornmentText="hours"/>
+    </MudStack>
+}
+else
+{
+    <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+        <div class="d-flex">
+            <MudText>Playout Mode</MudText>
+        </div>
+        <MudSelect @bind-Value="_model.PlayoutMode" For="@(() => _model.PlayoutMode)" HelperText="Controls the progression of the channel's playout">
+            <MudSelectItem Value="@(ChannelPlayoutMode.Continuous)">Continuous</MudSelectItem>
+            <MudSelectItem Value="@(ChannelPlayoutMode.OnDemand)">On Demand</MudSelectItem>
+        </MudSelect>
+    </MudStack>
+}
 <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
     <div class="d-flex">
         <MudText>Is Enabled</MudText>
@@ -221,7 +259,7 @@ else
     <div class="d-flex">
         <MudText>Logo</MudText>
     </div>
-    <InputFile id="fileInput" OnChange="UploadLogo" style="display: none;"/>
+    <InputFile id="fileInput" OnChange="@UploadLogo" style="display: none;"/>
     <MudButton HtmlTag="label"
                Variant="Variant.Filled"
                Color="Color.Primary"
@@ -276,7 +314,7 @@ else
 </MudForm>
 
 @code {
-    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource _cts;
 
     [Parameter]
     public int? Id { get; set; }
@@ -285,6 +323,7 @@ else
     private readonly ChannelEditViewModelValidator _validator = new();
     private MudForm _form;
 
+    private List<ChannelViewModel> _channels = [];
     private List<FFmpegProfileViewModel> _ffmpegProfiles = [];
     private List<LanguageCodeViewModel> _availableCultures = [];
     private List<WatermarkViewModel> _watermarks = [];
@@ -294,112 +333,139 @@ else
 
     public void Dispose()
     {
-        _cts.Cancel();
-        _cts.Dispose();
+        _cts?.Cancel();
+        _cts?.Dispose();
     }
 
     protected override async Task OnParametersSetAsync()
     {
-        await LoadFFmpegProfiles(_cts.Token);
-        _availableCultures = await Mediator.Send(new GetAllLanguageCodes(), _cts.Token);
-        await LoadWatermarks(_cts.Token);
-        await LoadFillerPresets(_cts.Token);
-        await LoadMusicVideoCreditsTemplates(_cts.Token);
-        await LoadChannelStreamSelectors(_cts.Token);
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
 
-        if (Id.HasValue)
+        try
         {
-            Option<ChannelViewModel> maybeChannel = await Mediator.Send(new GetChannelById(Id.Value), _cts.Token);
-            maybeChannel.Match(
-                channelViewModel =>
-                {
-                    _model.Id = channelViewModel.Id;
-                    _model.Name = channelViewModel.Name;
-                    _model.Group = channelViewModel.Group;
-                    _model.Categories = channelViewModel.Categories;
-                    _model.Number = channelViewModel.Number;
-                    _model.FFmpegProfileId = channelViewModel.FFmpegProfileId;
+            var loadingTasks = new List<Task>
+            {
+                LoadDataAsync(() => Mediator.Send(new GetAllChannels(), token), r => _channels = r),
+                LoadDataAsync(() => Mediator.Send(new GetAllFFmpegProfiles(), token), r => _ffmpegProfiles = r),
+                LoadDataAsync(() => Mediator.Send(new GetAllLanguageCodes(), token), r => _availableCultures = r),
+                LoadDataAsync(() => Mediator.Send(new GetAllWatermarks(), token), r => _watermarks = r),
+                LoadDataAsync(() => Mediator.Send(new GetAllFillerPresets(), token)
+                    .Map(list => list.Filter(vm => vm.FillerKind == FillerKind.Fallback).ToList()), r => _fillerPresets = r),
+                LoadDataAsync(() => Mediator.Send(new GetMusicVideoCreditTemplates(), token), r => _musicVideoCreditsTemplates = r),
+                LoadDataAsync(() => Mediator.Send(new GetChannelStreamSelectors(), token), r => _streamSelectors = r),
+            };
 
-                    if (channelViewModel.Logo.IsExternalUrl)
-                    {
-                        _model.ExternalLogoUrl = channelViewModel.Logo.Path;
-                    }
-                    else
-                    {
-                        _model.Logo = channelViewModel.Logo;
-                    }
+            await Task.WhenAll(loadingTasks);
 
-                    _model.PlayoutMode = channelViewModel.PlayoutMode;
-                    _model.StreamingMode = channelViewModel.StreamingMode;
-                    _model.StreamSelectorMode = channelViewModel.StreamSelectorMode;
-                    _model.StreamSelector = channelViewModel.StreamSelector;
-                    _model.PreferredAudioLanguageCode = channelViewModel.PreferredAudioLanguageCode;
-                    _model.PreferredAudioTitle = channelViewModel.PreferredAudioTitle;
-                    _model.WatermarkId = channelViewModel.WatermarkId;
-                    _model.FallbackFillerId = channelViewModel.FallbackFillerId;
-                    _model.PreferredSubtitleLanguageCode = channelViewModel.PreferredSubtitleLanguageCode;
-                    _model.SubtitleMode = channelViewModel.SubtitleMode;
-                    _model.MusicVideoCreditsMode = channelViewModel.MusicVideoCreditsMode;
-                    _model.MusicVideoCreditsTemplate = channelViewModel.MusicVideoCreditsTemplate;
-                    _model.SongVideoMode = channelViewModel.SongVideoMode;
-                    _model.TranscodeMode = channelViewModel.TranscodeMode;
-                    _model.IdleBehavior = channelViewModel.IdleBehavior;
-                    _model.IsEnabled = channelViewModel.IsEnabled;
-                    _model.ShowInEpg = channelViewModel.ShowInEpg;
-                },
-                () => NavigationManager.NavigateTo("404"));
+            if (Id.HasValue)
+            {
+                Option<ChannelViewModel> maybeChannel = await Mediator.Send(new GetChannelById(Id.Value), token);
+                maybeChannel.Match(
+                    channelViewModel =>
+                    {
+                        _model.Id = channelViewModel.Id;
+                        _model.Name = channelViewModel.Name;
+                        _model.Group = channelViewModel.Group;
+                        _model.Categories = channelViewModel.Categories;
+                        _model.Number = channelViewModel.Number;
+                        _model.FFmpegProfileId = channelViewModel.FFmpegProfileId;
+
+                        if (channelViewModel.Logo.IsExternalUrl)
+                        {
+                            _model.ExternalLogoUrl = channelViewModel.Logo.Path;
+                        }
+                        else
+                        {
+                            _model.Logo = channelViewModel.Logo;
+                        }
+
+                        _model.PlayoutSource = channelViewModel.PlayoutSource;
+                        _model.PlayoutMode = channelViewModel.PlayoutMode;
+                        _model.MirrorSourceChannelId = channelViewModel.MirrorSourceChannelId;
+                        _model.PlayoutOffset = channelViewModel.PlayoutOffset;
+                        _model.StreamingMode = channelViewModel.StreamingMode;
+                        _model.StreamSelectorMode = channelViewModel.StreamSelectorMode;
+                        _model.StreamSelector = channelViewModel.StreamSelector;
+                        _model.PreferredAudioLanguageCode = channelViewModel.PreferredAudioLanguageCode;
+                        _model.PreferredAudioTitle = channelViewModel.PreferredAudioTitle;
+                        _model.WatermarkId = channelViewModel.WatermarkId;
+                        _model.FallbackFillerId = channelViewModel.FallbackFillerId;
+                        _model.PreferredSubtitleLanguageCode = channelViewModel.PreferredSubtitleLanguageCode;
+                        _model.SubtitleMode = channelViewModel.SubtitleMode;
+                        _model.MusicVideoCreditsMode = channelViewModel.MusicVideoCreditsMode;
+                        _model.MusicVideoCreditsTemplate = channelViewModel.MusicVideoCreditsTemplate;
+                        _model.SongVideoMode = channelViewModel.SongVideoMode;
+                        _model.TranscodeMode = channelViewModel.TranscodeMode;
+                        _model.IdleBehavior = channelViewModel.IdleBehavior;
+                        _model.IsEnabled = channelViewModel.IsEnabled;
+                        _model.ShowInEpg = channelViewModel.ShowInEpg;
+                    },
+                    () => NavigationManager.NavigateTo("404"));
+            }
+            else
+            {
+                FFmpegSettingsViewModel ffmpegSettings = await Mediator.Send(new GetFFmpegSettings(), token);
+
+                // TODO: command for new channel
+                IEnumerable<int> channelNumbers = await Mediator.Send(new GetAllChannels(), token)
+                    .Map(list => list.Map(c => int.TryParse(c.Number.Split(".").Head(), out int result) ? result : 0));
+                int maxNumber = Optional(channelNumbers).Flatten().DefaultIfEmpty(0).Max();
+                _model.Number = (maxNumber + 1).ToString();
+                _model.Name = "New Channel";
+                _model.Group = "ErsatzTV";
+                _model.FFmpegProfileId = ffmpegSettings.DefaultFFmpegProfileId;
+                _model.StreamingMode = StreamingMode.TransportStreamHybrid;
+                _model.IsEnabled = true;
+                _model.ShowInEpg = true;
+            }
         }
-        else
+        catch (OperationCanceledException)
         {
-            FFmpegSettingsViewModel ffmpegSettings = await Mediator.Send(new GetFFmpegSettings(), _cts.Token);
-
-            // TODO: command for new channel
-            IEnumerable<int> channelNumbers = await Mediator.Send(new GetAllChannels(), _cts.Token)
-                .Map(list => list.Map(c => int.TryParse(c.Number.Split(".").Head(), out int result) ? result : 0));
-            int maxNumber = Optional(channelNumbers).Flatten().DefaultIfEmpty(0).Max();
-            _model.Number = (maxNumber + 1).ToString();
-            _model.Name = "New Channel";
-            _model.Group = "ErsatzTV";
-            _model.FFmpegProfileId = ffmpegSettings.DefaultFFmpegProfileId;
-            _model.StreamingMode = StreamingMode.TransportStreamHybrid;
-            _model.IsEnabled = true;
-            _model.ShowInEpg = true;
+            // do nothing
         }
+    }
+
+    private async Task LoadDataAsync<T>(Func<Task<T>> fetch, Action<T> assign)
+    {
+        assign(await fetch());
     }
 
     private bool IsEdit => Id.HasValue;
 
-    private async Task LoadFFmpegProfiles(CancellationToken cancellationToken) =>
-        _ffmpegProfiles = await Mediator.Send(new GetAllFFmpegProfiles(), cancellationToken);
-
-    private async Task LoadWatermarks(CancellationToken cancellationToken) =>
-        _watermarks = await Mediator.Send(new GetAllWatermarks(), cancellationToken);
-
-    private async Task LoadFillerPresets(CancellationToken cancellationToken) =>
-        _fillerPresets = await Mediator.Send(new GetAllFillerPresets(), cancellationToken)
-            .Map(list => list.Filter(vm => vm.FillerKind == FillerKind.Fallback).ToList());
-
-    private async Task LoadMusicVideoCreditsTemplates(CancellationToken cancellationToken) =>
-        _musicVideoCreditsTemplates = await Mediator.Send(new GetMusicVideoCreditTemplates(), cancellationToken);
-
-    private async Task LoadChannelStreamSelectors(CancellationToken cancellationToken) =>
-        _streamSelectors = await Mediator.Send(new GetChannelStreamSelectors(), cancellationToken);
-
     private async Task HandleSubmitAsync()
     {
         await _form.Validate();
-        ValidationResult result = await _validator.ValidateAsync(_model, _cts.Token);
-        if (result.IsValid)
+        if (!_form.IsValid)
         {
-            Seq<BaseError> errorMessage = IsEdit ? (await Mediator.Send(_model.ToUpdate(), _cts.Token)).LeftToSeq() : (await Mediator.Send(_model.ToCreate(), _cts.Token)).LeftToSeq();
+            return;
+        }
 
-            errorMessage.HeadOrNone().Match(
-                error =>
-                {
-                    Snackbar.Add(error.Value, Severity.Error);
-                    Logger.LogError("Unexpected error saving channel: {Error}", error.Value);
-                },
-                () => NavigationManager.NavigateTo("channels"));
+        try
+        {
+            var token = _cts?.Token ?? CancellationToken.None;
+
+            ValidationResult result = await _validator.ValidateAsync(_model, token);
+            if (result.IsValid)
+            {
+                Seq<BaseError> errorMessage = IsEdit
+                    ? (await Mediator.Send(_model.ToUpdate(), token)).LeftToSeq()
+                    : (await Mediator.Send(_model.ToCreate(), token)).LeftToSeq();
+
+                errorMessage.HeadOrNone().Match(
+                    error =>
+                    {
+                        Snackbar.Add(error.Value, Severity.Error);
+                        Logger.LogError("Unexpected error saving channel: {Error}", error.Value);
+                    },
+                    () => NavigationManager.NavigateTo("channels"));
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
         }
     }
 
@@ -407,8 +473,10 @@ else
     {
         try
         {
+            var token = _cts?.Token ?? CancellationToken.None;
+
             Either<BaseError, string> maybeCacheFileName =
-                await Mediator.Send(new SaveArtworkToDisk(e.File.OpenReadStream(10 * 1024 * 1024), ArtworkKind.Logo, e.File.ContentType), _cts.Token);
+                await Mediator.Send(new SaveArtworkToDisk(e.File.OpenReadStream(10 * 1024 * 1024), ArtworkKind.Logo, e.File.ContentType), token);
             maybeCacheFileName.Match(
                 relativeFileName =>
                 {
@@ -421,6 +489,10 @@ else
                     Snackbar.Add($"Unexpected error saving channel logo: {error.Value}", Severity.Error);
                     Logger.LogError("Unexpected error saving channel logo: {Error}", error.Value);
                 });
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
         }
         catch (IOException)
         {

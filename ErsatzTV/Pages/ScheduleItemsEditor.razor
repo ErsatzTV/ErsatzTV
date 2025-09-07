@@ -1,5 +1,6 @@
 ﻿@page "/schedules/{Id:int}/items"
 @using ErsatzTV.Application.Filler
+@using ErsatzTV.Application.Graphics
 @using ErsatzTV.Application.MediaCollections
 @using ErsatzTV.Application.MediaItems
 @using ErsatzTV.Application.ProgramSchedules
@@ -50,10 +51,10 @@
             }
         </div>
         <div style="margin-left: auto" class="d-none d-md-flex">
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@SaveChanges" StartIcon="@Icons.Material.Filled.Save">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@SaveChanges" StartIcon="@Icons.Material.Filled.Save" Disabled="@(_schedule?.Items is null)">
                 Save Schedule Items
             </MudButton>
-            <MudButton Class="ml-3" Variant="Variant.Filled" Color="Color.Default" OnClick="@AddScheduleItem" StartIcon="@Icons.Material.Filled.PlaylistAdd">
+            <MudButton Class="ml-3" Variant="Variant.Filled" Color="Color.Default" OnClick="@AddScheduleItem" StartIcon="@Icons.Material.Filled.PlaylistAdd" Disabled="@(_schedule?.Items is null)">
                 Add Schedule Item
             </MudButton>
         </div>
@@ -576,6 +577,21 @@
     </MudStack>
     <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
         <div class="d-flex">
+            <MudText>Graphics Elements</MudText>
+        </div>
+        <MudSelect T="GraphicsElementViewModel"
+                   @bind-SelectedValues="_selectedItem.GraphicsElements"
+                   ToStringFunc="@(ge => ge?.Name)"
+                   Clearable="true"
+                   MultiSelection="true">
+            @foreach (GraphicsElementViewModel graphicsElement in _graphicsElements)
+            {
+                <MudSelectItem Value="@graphicsElement">@graphicsElement.Name</MudSelectItem>
+            }
+        </MudSelect>
+    </MudStack>
+    <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+        <div class="d-flex">
             <MudText>Preferred Audio Language</MudText>
         </div>
         <MudSelect @bind-Value="_selectedItem.PreferredAudioLanguageCode"
@@ -625,15 +641,16 @@
 </MudForm>
 
 @code {
-    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource _cts;
 
     [Parameter]
     public int Id { get; set; }
 
     private ProgramScheduleItemsEditViewModel _schedule = new();
-    private List<FillerPresetViewModel> _fillerPresets = new();
-    private List<WatermarkViewModel> _watermarks = new();
-    private List<LanguageCodeViewModel> _availableCultures = new();
+    private List<FillerPresetViewModel> _fillerPresets = [];
+    private List<WatermarkViewModel> _watermarks = [];
+    private List<GraphicsElementViewModel> _graphicsElements = [];
+    private List<LanguageCodeViewModel> _availableCultures = [];
     private readonly List<PlaylistGroupViewModel> _playlistGroups = [];
     private readonly List<PlaylistViewModel> _playlists = [];
 
@@ -645,46 +662,58 @@
 
     public void Dispose()
     {
-        _cts.Cancel();
-        _cts.Dispose();
+        _cts?.Cancel();
+        _cts?.Dispose();
     }
 
-    protected override async Task OnParametersSetAsync() => await LoadScheduleItems();
-
-    private async Task LoadScheduleItems()
+    protected override async Task OnParametersSetAsync()
     {
-        // TODO: fix performance
-        _fillerPresets = await Mediator.Send(new GetAllFillerPresets(), _cts.Token)
-            .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
-        _watermarks = await Mediator.Send(new GetAllWatermarks(), _cts.Token)
-            .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
-        _availableCultures = await Mediator.Send(new GetAllLanguageCodes(), _cts.Token);
-        _playlistGroups.AddRange(await Mediator.Send(new GetAllPlaylistGroups(), _cts.Token));
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
 
-        string name = string.Empty;
-        var shuffleScheduleItems = false;
-        Option<ProgramScheduleViewModel> maybeSchedule = await Mediator.Send(new GetProgramScheduleById(Id), _cts.Token);
-        foreach (ProgramScheduleViewModel schedule in maybeSchedule)
+        try
         {
-            name = schedule.Name;
-            shuffleScheduleItems = schedule.ShuffleScheduleItems;
-        }
+            // TODO: fix performance
+            _fillerPresets = await Mediator.Send(new GetAllFillerPresets(), token)
+                .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
+            _watermarks = await Mediator.Send(new GetAllWatermarks(), token)
+                .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
+            _graphicsElements = await Mediator.Send(new GetAllGraphicsElements(), token)
+                .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
+            _availableCultures = await Mediator.Send(new GetAllLanguageCodes(), token);
+            _playlistGroups.AddRange(await Mediator.Send(new GetAllPlaylistGroups(), token));
 
-        Option<IEnumerable<ProgramScheduleItemViewModel>> maybeResults =
-            await Mediator.Send(new GetProgramScheduleItems(Id), _cts.Token);
-        foreach (IEnumerable<ProgramScheduleItemViewModel> items in maybeResults)
-        {
-            _schedule = new ProgramScheduleItemsEditViewModel
+            string name = string.Empty;
+            var shuffleScheduleItems = false;
+            Option<ProgramScheduleViewModel> maybeSchedule = await Mediator.Send(new GetProgramScheduleById(Id), token);
+            foreach (ProgramScheduleViewModel schedule in maybeSchedule)
             {
-                Name = name,
-                ShuffleScheduleItems = shuffleScheduleItems,
-                Items = items.Map(ProjectToEditViewModel).ToList()
-            };
-
-            if (_schedule.Items.Count == 1)
-            {
-                await SelectedItemChanged(_schedule.Items.Head());
+                name = schedule.Name;
+                shuffleScheduleItems = schedule.ShuffleScheduleItems;
             }
+
+            Option<IEnumerable<ProgramScheduleItemViewModel>> maybeResults =
+                await Mediator.Send(new GetProgramScheduleItems(Id), token);
+            foreach (IEnumerable<ProgramScheduleItemViewModel> items in maybeResults)
+            {
+                _schedule = new ProgramScheduleItemsEditViewModel
+                {
+                    Name = name,
+                    ShuffleScheduleItems = shuffleScheduleItems,
+                    Items = items.Map(ProjectToEditViewModel).ToList()
+                };
+
+                if (_schedule.Items.Count == 1)
+                {
+                    await SelectedItemChanged(_schedule.Items.Head());
+                }
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
         }
     }
 
@@ -785,7 +814,8 @@
             PreferredAudioTitle = item.PreferredAudioTitle,
             PreferredSubtitleLanguageCode = item.PreferredSubtitleLanguageCode,
             SubtitleMode = item.SubtitleMode,
-            Watermarks = item.Watermarks
+            Watermarks = item.Watermarks,
+            GraphicsElements = item.GraphicsElements
         };
 
         switch (item)
@@ -813,7 +843,8 @@
             PlayoutMode = PlayoutMode.One,
             PlaybackOrder = PlaybackOrder.Shuffle,
             CollectionType = ProgramScheduleItemCollectionType.Collection,
-            Watermarks = []
+            Watermarks = [],
+            GraphicsElements = []
         };
 
         _schedule.Items.Add(item);
@@ -851,6 +882,7 @@
             TailFiller = item.TailFiller,
             FallbackFiller = item.FallbackFiller,
             Watermarks = item.Watermarks.ToList(),
+            GraphicsElements = item.GraphicsElements.ToList(),
             PreferredAudioLanguageCode = item.PreferredAudioLanguageCode,
             PreferredAudioTitle = item.PreferredAudioTitle,
             PreferredSubtitleLanguageCode = item.PreferredSubtitleLanguageCode,
@@ -925,6 +957,7 @@
             item.TailFiller?.Id,
             item.FallbackFiller?.Id,
             item.Watermarks.Map(wm => wm.Id).ToList(),
+            item.GraphicsElements.Map(wm => wm.Id).ToList(),
             item.PreferredAudioLanguageCode,
             item.PreferredAudioTitle,
             item.PreferredSubtitleLanguageCode,

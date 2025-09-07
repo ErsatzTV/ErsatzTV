@@ -47,4 +47,5 @@ public class ConfigElementKey
     public static ConfigElementKey PlayoutSkipMissingItems => new("playout.skip_missing_items");
     public static ConfigElementKey XmltvTimeZone => new("xmltv.time_zone");
     public static ConfigElementKey XmltvDaysToBuild => new("xmltv.days_to_build");
+    public static ConfigElementKey XmltvBlockBehavior => new("xmltv.block_behavior");
 }

@@ -22,7 +22,7 @@ public class SearchQueryParserTests
             ISmartCollectionCache smartCollectionCache = Substitute.For<ISmartCollectionCache>();
             var parser = new SearchQueryParser(smartCollectionCache, Substitute.For<ILogger<SearchQueryParser>>());
 
-            Query result = await parser.ParseQuery(input, null);
+            Query result = await parser.ParseQuery(input, null, CancellationToken.None);
             result.ToString().ShouldBe(expected);
         }
     }

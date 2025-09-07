@@ -2,6 +2,7 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using ErsatzTV.Core.Scheduling.BlockScheduling;
+using ErsatzTV.Core.Scheduling.Engine;
 using ErsatzTV.Core.Scheduling.YamlScheduling.Models;
 using Microsoft.Extensions.Logging;
 
@@ -70,20 +71,26 @@ public class EnumeratorCache(IMediaCollectionRepository mediaCollectionRepositor
         switch (content)
         {
             case YamlPlayoutContentSearchItem search:
-                items = await mediaCollectionRepository.GetSmartCollectionItems(search.Query, string.Empty);
+                items = await mediaCollectionRepository.GetSmartCollectionItems(search.Query, string.Empty, cancellationToken);
                 break;
             case YamlPlayoutContentShowItem show:
                 items = await mediaCollectionRepository.GetShowItemsByShowGuids(
                     show.Guids.Map(g => $"{g.Source}://{g.Value}").ToList());
                 break;
             case YamlPlayoutContentCollectionItem collection:
-                items = await mediaCollectionRepository.GetCollectionItemsByName(collection.Collection);
+                items = await mediaCollectionRepository.GetCollectionItemsByName(
+                    collection.Collection,
+                    cancellationToken);
                 break;
             case YamlPlayoutContentSmartCollectionItem smartCollection:
-                items = await mediaCollectionRepository.GetSmartCollectionItemsByName(smartCollection.SmartCollection);
+                items = await mediaCollectionRepository.GetSmartCollectionItemsByName(
+                    smartCollection.SmartCollection,
+                    cancellationToken);
                 break;
             case YamlPlayoutContentMultiCollectionItem multiCollection:
-                items = await mediaCollectionRepository.GetMultiCollectionItemsByName(multiCollection.MultiCollection);
+                items = await mediaCollectionRepository.GetMultiCollectionItemsByName(
+                    multiCollection.MultiCollection,
+                    cancellationToken);
                 break;
 
             // playlist is handled later
@@ -96,19 +103,42 @@ public class EnumeratorCache(IMediaCollectionRepository mediaCollectionRepositor
         // marathon is a special case that needs to be handled on its own
         if (content is YamlPlayoutContentMarathonItem marathon)
         {
-            var helper = new YamlPlayoutMarathonHelper(mediaCollectionRepository);
-            Option<YamlMarathonContentResult> maybeResult = await helper.GetEnumerator(
-                marathon,
+            var helper = new MarathonHelper(mediaCollectionRepository);
+            var guids = new Dictionary<string, List<string>>();
+            foreach (var guid in marathon.Guids)
+            {
+                if (!guids.TryGetValue(guid.Source, out List<string> value))
+                {
+                    value = [];
+                    guids.Add(guid.Source, value);
+                }
+
+                value.Add(guid.Value);
+            }
+
+            if (!Enum.TryParse(marathon.ItemOrder, true, out PlaybackOrder itemPlaybackOrder))
+            {
+                itemPlaybackOrder = PlaybackOrder.Shuffle;
+            }
+
+            Option<PlaylistContentResult> maybeResult = await helper.GetEnumerator(
+                guids,
+                marathon.Searches,
+                marathon.GroupBy,
+                marathon.ShuffleGroups,
+                itemPlaybackOrder,
+                marathon.PlayAllItems,
                 state,
                 cancellationToken);
-            foreach (YamlMarathonContentResult result in maybeResult)
+
+            foreach (PlaylistContentResult result in maybeResult)
             {
                 foreach ((CollectionKey collectionKey, List<MediaItem> mediaItems) in result.Content)
                 {
                     _playlistMediaItems.Add(new PlaylistKey(contentKey, collectionKey), mediaItems);
                 }
 
-                return Some(result.PlaylistEnumerator);
+                return result.PlaylistEnumerator;
             }
         }
 
@@ -127,7 +157,10 @@ public class EnumeratorCache(IMediaCollectionRepository mediaCollectionRepositor
             }
 
             Dictionary<PlaylistItem, List<MediaItem>> itemMap =
-                await mediaCollectionRepository.GetPlaylistItemMap(playlist.PlaylistGroup, playlist.Playlist);
+                await mediaCollectionRepository.GetPlaylistItemMap(
+                    playlist.PlaylistGroup,
+                    playlist.Playlist,
+                    cancellationToken);
 
             foreach ((PlaylistItem playlistItem, List<MediaItem> mediaItems) in itemMap)
             {

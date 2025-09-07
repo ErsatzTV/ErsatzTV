@@ -22,7 +22,7 @@ public class UpdateTraktListHandler(
 
             Option<TraktList> maybeTraktList = await dbContext.TraktLists
                 .Include(tl => tl.Playlist)
-                .SelectOneAsync(t => t.Id, t => t.Id == request.Id);
+                .SelectOneAsync(t => t.Id, t => t.Id == request.Id, cancellationToken);
 
             foreach (TraktList traktList in maybeTraktList)
             {

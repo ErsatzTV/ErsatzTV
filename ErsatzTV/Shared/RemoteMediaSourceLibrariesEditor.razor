@@ -14,7 +14,7 @@
     </MudPaper>
     <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
         <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-            <MudText Typo="Typo.h5" Class="mb-2"><b>@_source.Name</b> Libraries</MudText>
+            <MudText Typo="Typo.h5" Class="mb-2"><b>@_source?.Name</b> Libraries</MudText>
             <MudDivider Class="mb-6"/>
             <MudTable Hover="true" Items="_libraries" Dense="true">
                 <ColGroup>
@@ -50,7 +50,7 @@
 </MudForm>
 
 @code {
-    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource _cts;
 
     [Parameter]
     public int Id { get; set; }
@@ -59,16 +59,16 @@
     public string Name { get; set; }
 
     [Parameter]
-    public Func<int, Task<Option<RemoteMediaSourceViewModel>>> GetMediaSourceById { get; set; }
+    public Func<int, CancellationToken, Task<Option<RemoteMediaSourceViewModel>>> GetMediaSourceById { get; set; }
 
     [Parameter]
-    public Func<int, Task<List<RemoteMediaSourceLibraryEditViewModel>>> GetLibrariesBySourceId { get; set; }
+    public Func<int, CancellationToken, Task<List<RemoteMediaSourceLibraryEditViewModel>>> GetLibrariesBySourceId { get; set; }
 
     [Parameter]
     public Func<List<RemoteMediaSourceLibraryEditViewModel>, IRequest<Either<BaseError, Unit>>> GetUpdateLibraryRequest { get; set; }
 
     [Parameter]
-    public Func<SynchronizeParameters, Task<Unit>> SynchronizeLibraryByIdIfNeeded { get; set; }
+    public Func<SynchronizeParameters, CancellationToken, Task<Unit>> SynchronizeLibraryByIdIfNeeded { get; set; }
 
     private RemoteMediaSourceViewModel _source;
     private List<RemoteMediaSourceLibraryEditViewModel> _libraries;
@@ -77,52 +77,63 @@
 
     public void Dispose()
     {
-        _cts.Cancel();
-        _cts.Dispose();
+        _cts?.Cancel();
+        _cts?.Dispose();
     }
 
     protected override Task OnParametersSetAsync() => LoadData();
 
     private async Task LoadData()
     {
-        Option<RemoteMediaSourceViewModel> maybeSource = await GetMediaSourceById(Id);
-        await maybeSource.Match(
-            async source =>
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
+
+        try
+        {
+            Option<RemoteMediaSourceViewModel> maybeSource = await GetMediaSourceById(Id, token);
+            foreach (var source in maybeSource)
             {
                 _source = source;
-                _libraries = await GetLibrariesBySourceId(Id);
-            },
-            () =>
+                _libraries = await GetLibrariesBySourceId(Id, token);
+            }
+
+            if (maybeSource.IsNone)
             {
                 NavigationManager.NavigateTo("404");
-                return Task.CompletedTask;
-            });
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
+        }
     }
 
     private async Task SaveChanges()
     {
+        using var cts = new CancellationTokenSource();
+
         IRequest<Either<BaseError, Unit>> request = GetUpdateLibraryRequest(_libraries);
-        Seq<BaseError> errorMessages = await Mediator.Send(request, _cts.Token).Map(e => e.LeftToSeq());
+        Either<BaseError, Unit> result = await Mediator.Send(request, cts.Token);
+        foreach (var error in result.LeftToSeq())
+        {
+            Snackbar.Add($"Unexpected error saving {Name.ToLowerInvariant()} libraries: {error.Value}", Severity.Error);
+            Logger.LogError("Unexpected error saving {MediaSource} libraries: {Error}", Name, error.Value);
+        }
 
-        await errorMessages.HeadOrNone().Match(
-            error =>
+        if (result.IsRight)
+        {
+            foreach (int libraryId in _libraries.Filter(l => l.ShouldSyncItems).Map(l => l.Id))
             {
-                Snackbar.Add($"Unexpected error saving {Name.ToLowerInvariant()} libraries: {error.Value}", Severity.Error);
-                Logger.LogError("Unexpected error saving {MediaSource} libraries: {Error}", Name, error.Value);
-                return Task.CompletedTask;
-            },
-            async () =>
-            {
-                foreach (int libraryId in _libraries.Filter(l => l.ShouldSyncItems).Map(l => l.Id))
+                if (Locker.LockLibrary(libraryId))
                 {
-                    if (Locker.LockLibrary(libraryId))
-                    {
-                        await SynchronizeLibraryByIdIfNeeded(new SynchronizeParameters(libraryId, Id));
-                    }
+                    await SynchronizeLibraryByIdIfNeeded(new SynchronizeParameters(libraryId, Id), cts.Token);
                 }
+            }
 
-                NavigationManager.NavigateTo($"media/sources/{Name.ToLowerInvariant()}");
-            });
+            NavigationManager.NavigateTo($"media/sources/{Name.ToLowerInvariant()}");
+        }
     }
 
 }

@@ -12,10 +12,12 @@ public class GetPlayoutSettingsHandler : IRequestHandler<GetPlayoutSettings, Pla
 
     public async Task<PlayoutSettingsViewModel> Handle(GetPlayoutSettings request, CancellationToken cancellationToken)
     {
-        Option<int> daysToBuild = await _configElementRepository.GetValue<int>(ConfigElementKey.PlayoutDaysToBuild);
+        Option<int> daysToBuild = await _configElementRepository.GetValue<int>(
+            ConfigElementKey.PlayoutDaysToBuild,
+            cancellationToken);
 
         Option<bool> skipMissingItems =
-            await _configElementRepository.GetValue<bool>(ConfigElementKey.PlayoutSkipMissingItems);
+            await _configElementRepository.GetValue<bool>(ConfigElementKey.PlayoutSkipMissingItems, cancellationToken);
 
         return new PlayoutSettingsViewModel
         {

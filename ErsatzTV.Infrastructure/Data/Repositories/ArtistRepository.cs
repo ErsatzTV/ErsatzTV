@@ -108,18 +108,6 @@ public class ArtistRepository : IArtistRepository
             .Map(Optional);
     }
 
-    public async Task<List<ArtistMetadata>> GetArtistsForCards(List<int> ids)
-    {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
-        return await dbContext.ArtistMetadata
-            .AsNoTracking()
-            .Filter(am => ids.Contains(am.ArtistId))
-            .Include(am => am.Artist)
-            .Include(am => am.Artwork)
-            .OrderBy(am => am.SortTitle)
-            .ToListAsync();
-    }
-
     public async Task<bool> AddGenre(ArtistMetadata metadata, Genre genre)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();

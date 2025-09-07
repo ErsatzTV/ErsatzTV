@@ -36,7 +36,7 @@ public class AddSongToCollectionHandler :
         CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        Validation<BaseError, Parameters> validation = await Validate(dbContext, request);
+        Validation<BaseError, Parameters> validation = await Validate(dbContext, request, cancellationToken);
         return await validation.Apply(parameters => ApplyAddSongRequest(dbContext, parameters));
     }
 
@@ -60,23 +60,27 @@ public class AddSongToCollectionHandler :
 
     private static async Task<Validation<BaseError, Parameters>> Validate(
         TvContext dbContext,
-        AddSongToCollection request) =>
-        (await CollectionMustExist(dbContext, request), await ValidateSong(dbContext, request))
+        AddSongToCollection request,
+        CancellationToken cancellationToken) =>
+        (await CollectionMustExist(dbContext, request, cancellationToken),
+            await ValidateSong(dbContext, request, cancellationToken))
         .Apply((collection, episode) => new Parameters(collection, episode));
 
     private static Task<Validation<BaseError, Collection>> CollectionMustExist(
         TvContext dbContext,
-        AddSongToCollection request) =>
+        AddSongToCollection request,
+        CancellationToken cancellationToken) =>
         dbContext.Collections
             .Include(c => c.MediaItems)
-            .SelectOneAsync(c => c.Id, c => c.Id == request.CollectionId)
+            .SelectOneAsync(c => c.Id, c => c.Id == request.CollectionId, cancellationToken)
             .Map(o => o.ToValidation<BaseError>("Collection does not exist."));
 
     private static Task<Validation<BaseError, Song>> ValidateSong(
         TvContext dbContext,
-        AddSongToCollection request) =>
+        AddSongToCollection request,
+        CancellationToken cancellationToken) =>
         dbContext.Songs
-            .SelectOneAsync(m => m.Id, e => e.Id == request.SongId)
+            .SelectOneAsync(m => m.Id, e => e.Id == request.SongId, cancellationToken)
             .Map(o => o.ToValidation<BaseError>("Song does not exist"));
 
     private sealed record Parameters(Collection Collection, Song Song);

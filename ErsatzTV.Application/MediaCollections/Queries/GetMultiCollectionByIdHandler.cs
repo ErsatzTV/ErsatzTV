@@ -16,13 +16,14 @@ public class GetMultiCollectionByIdHandler : IRequestHandler<GetMultiCollectionB
         GetMultiCollectionById request,
         CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await dbContext.MultiCollections
+            .AsNoTracking()
             .Include(mc => mc.MultiCollectionItems)
             .ThenInclude(mc => mc.Collection)
             .Include(mc => mc.MultiCollectionSmartItems)
             .ThenInclude(mc => mc.SmartCollection)
-            .SelectOneAsync(c => c.Id, c => c.Id == request.Id)
+            .SelectOneAsync(c => c.Id, c => c.Id == request.Id, cancellationToken)
             .MapT(ProjectToViewModel);
     }
 }

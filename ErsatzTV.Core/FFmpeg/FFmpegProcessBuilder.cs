@@ -48,8 +48,7 @@ internal class FFmpegProcessBuilder
         Option<List<FadePoint>> maybeFadePoints,
         IDisplaySize resolution)
     {
-        ChannelWatermarkMode maybeWatermarkMode = watermarkOptions.Map(wmo => wmo.Watermark.Map(wm => wm.Mode))
-            .Flatten()
+        ChannelWatermarkMode maybeWatermarkMode = watermarkOptions.Map(wmo => wmo.Watermark.Mode)
             .IfNone(ChannelWatermarkMode.None);
 
         // skip watermark if intermittent and no fade points
@@ -59,30 +58,14 @@ internal class FFmpegProcessBuilder
         {
             foreach (WatermarkOptions options in watermarkOptions)
             {
-                foreach (string path in options.ImagePath)
-                {
-                    if (options.IsAnimated)
-                    {
-                        _arguments.Add("-ignore_loop");
-                        _arguments.Add("0");
-                    }
+                _arguments.Add("-i");
+                _arguments.Add(options.ImagePath);
 
-                    // when we have fade points, we need to loop the static watermark image
-                    else if (maybeFadePoints.Map(fp => fp.Count).IfNone(0) > 0)
-                    {
-                        _arguments.Add("-stream_loop");
-                        _arguments.Add("-1");
-                    }
-
-                    _arguments.Add("-i");
-                    _arguments.Add(path);
-
-                    _complexFilterBuilder = _complexFilterBuilder.WithWatermark(
-                        options.Watermark,
-                        maybeFadePoints,
-                        resolution,
-                        options.ImageStreamIndex);
-                }
+                _complexFilterBuilder = _complexFilterBuilder.WithWatermark(
+                    options.Watermark,
+                    maybeFadePoints,
+                    resolution,
+                    options.ImageStreamIndex);
             }
         }
 

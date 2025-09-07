@@ -76,20 +76,32 @@
 </MudForm>
 
 @code {
-    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource _cts;
 
     private List<WatermarkViewModel> _watermarks = [];
 
     public void Dispose()
     {
-        _cts.Cancel();
-        _cts.Dispose();
+        _cts?.Cancel();
+        _cts?.Dispose();
     }
 
-    protected override async Task OnParametersSetAsync() => await LoadWatermarksAsync();
+    protected override async Task OnParametersSetAsync()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
 
-    private async Task LoadWatermarksAsync() =>
-        _watermarks = await Mediator.Send(new GetAllWatermarks(), _cts.Token);
+        try
+        {
+            _watermarks = await Mediator.Send(new GetAllWatermarks(), token);
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
+        }
+    }
 
     private async Task DeleteWatermarkAsync(WatermarkViewModel watermark)
     {
@@ -101,7 +113,7 @@
         if (result is { Canceled: false })
         {
             await Mediator.Send(new DeleteWatermark(watermark.Id), _cts.Token);
-            await LoadWatermarksAsync();
+            _watermarks = await Mediator.Send(new GetAllWatermarks(), _cts.Token);
         }
     }
 

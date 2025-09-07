@@ -82,5 +82,18 @@ public class ProgramScheduleItemConfiguration : IEntityTypeConfiguration<Program
                     .HasForeignKey(ci => ci.ProgramScheduleItemId)
                     .OnDelete(DeleteBehavior.Cascade),
                 j => j.HasKey(ci => new { ci.ProgramScheduleItemId, ci.WatermarkId }));
+
+        builder.HasMany(c => c.GraphicsElements)
+            .WithMany(m => m.ProgramScheduleItems)
+            .UsingEntity<ProgramScheduleItemGraphicsElement>(
+                j => j.HasOne(ci => ci.GraphicsElement)
+                    .WithMany(mi => mi.ProgramScheduleItemGraphicsElements)
+                    .HasForeignKey(ci => ci.GraphicsElementId)
+                    .OnDelete(DeleteBehavior.Cascade),
+                j => j.HasOne(ci => ci.ProgramScheduleItem)
+                    .WithMany(c => c.ProgramScheduleItemGraphicsElements)
+                    .HasForeignKey(ci => ci.ProgramScheduleItemId)
+                    .OnDelete(DeleteBehavior.Cascade),
+                j => j.HasKey(ci => new { ci.ProgramScheduleItemId, ci.GraphicsElementId }));
     }
 }

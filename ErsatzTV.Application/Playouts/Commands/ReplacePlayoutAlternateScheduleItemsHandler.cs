@@ -40,7 +40,7 @@ public class ReplacePlayoutAlternateScheduleItemsHandler :
                 .Include(p => p.ProgramSchedule)
                 .Include(p => p.ProgramScheduleAlternates)
                 .ThenInclude(p => p.ProgramSchedule)
-                .SelectOneAsync(p => p.Id, p => p.Id == request.PlayoutId);
+                .SelectOneAsync(p => p.Id, p => p.Id == request.PlayoutId, cancellationToken);
 
             foreach (Playout playout in maybePlayout)
             {
@@ -112,12 +112,18 @@ public class ReplacePlayoutAlternateScheduleItemsHandler :
                 }
 
                 // save highest index directly to playout
-                if (playout.ProgramScheduleId != highest.ProgramScheduleId)
+                bool hasDefaultScheduleChange = playout.ProgramScheduleId != highest.ProgramScheduleId;
+                if (hasDefaultScheduleChange)
                 {
                     playout.ProgramScheduleId = highest.ProgramScheduleId;
                 }
 
                 await dbContext.SaveChangesAsync(cancellationToken);
+
+                if (hasDefaultScheduleChange)
+                {
+                    await dbContext.Entry(playout).Reference(p => p.ProgramSchedule).LoadAsync(cancellationToken);
+                }
 
                 // load newly-added schedules
                 foreach (ProgramScheduleAlternate alternate in playout.ProgramScheduleAlternates

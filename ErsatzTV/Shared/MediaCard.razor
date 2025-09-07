@@ -13,8 +13,15 @@
             <MudPaper Class="@($"media-card {CardClass}")" Style="@ArtworkForItem()">
                 @if (string.IsNullOrWhiteSpace(Data.Poster))
                 {
-                    <MudText Align="Align.Center" Typo="Typo.h1" Class="media-card-poster-placeholder mud-text-primary">
-                        @GetPlaceholder(Data.SortTitle)
+                    string placeholder = GetPlaceholder(Data.SortTitle);
+                    Typo typo = placeholder.Length switch
+                    {
+                        > 12 => Typo.h3,
+                        > 2 => Typo.h2,
+                        _ => Typo.h1
+                    };
+                    <MudText Align="Align.Center" Typo="@typo" Class="media-card-poster-placeholder mud-text-primary">
+                        @placeholder
                     </MudText>
                 }
             </MudPaper>
@@ -96,8 +103,15 @@
         <MudPaper Class="@($"media-card {CardClass}")" Style="@ArtworkForItem()">
             @if (string.IsNullOrWhiteSpace(Data.Poster))
             {
-                <MudText Align="Align.Center" Typo="Typo.h1" Class="media-card-poster-placeholder mud-text-primary">
-                    @GetPlaceholder(Data.SortTitle)
+                string placeholder = GetPlaceholder(Data.SortTitle);
+                Typo typo = placeholder.Length switch
+                {
+                    > 12 => Typo.h3,
+                    > 2 => Typo.h2,
+                    _ => Typo.h1
+                };
+                <MudText Align="Align.Center" Typo="@typo" Class="media-card-poster-placeholder mud-text-primary">
+                    @placeholder
                 </MudText>
             }
         </MudPaper>

@@ -13,7 +13,8 @@ public class GetRemoteStreamByIdHandler(IDbContextFactory<TvContext> dbContextFa
     {
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await dbContext.RemoteStreams
-            .SelectOneAsync(rs => rs.Id, rs => rs.Id == request.RemoteStreamId)
+            .AsNoTracking()
+            .SelectOneAsync(rs => rs.Id, rs => rs.Id == request.RemoteStreamId, cancellationToken)
             .MapT(Mapper.ProjectToViewModel);
     }
 }

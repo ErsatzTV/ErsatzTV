@@ -51,7 +51,7 @@ public class PlayoutModeSchedulerDuration : PlayoutModeSchedulerBase<ProgramSche
             MediaItem mediaItem = contentEnumerator.Current.ValueUnsafe();
 
             // find when we should start this item, based on the current time
-            DateTimeOffset itemStartTime = GetStartTimeAfter(nextState, scheduleItem);
+            DateTimeOffset itemStartTime = GetStartTimeAfter(nextState, scheduleItem, Option<ILogger>.Some(Logger));
 
             if (itemStartTime >= nextState.DurationFinish.IfNone(SystemTime.MaxValueUtc) ||
                 // don't start if the first item will already be after the hard stop
@@ -162,7 +162,8 @@ public class PlayoutModeSchedulerDuration : PlayoutModeSchedulerBase<ProgramSche
                     PreferredAudioTitle = scheduleItem.PreferredAudioTitle,
                     PreferredSubtitleLanguageCode = scheduleItem.PreferredSubtitleLanguageCode,
                     SubtitleMode = scheduleItem.SubtitleMode,
-                    PlayoutItemWatermarks = []
+                    PlayoutItemWatermarks = [],
+                    PlayoutItemGraphicsElements = []
                 };
 
                 foreach (ProgramScheduleItemWatermark programScheduleItemWatermark in scheduleItem
@@ -173,6 +174,17 @@ public class PlayoutModeSchedulerDuration : PlayoutModeSchedulerBase<ProgramSche
                         {
                             PlayoutItem = playoutItem,
                             WatermarkId = programScheduleItemWatermark.WatermarkId
+                        });
+                }
+
+                foreach (ProgramScheduleItemGraphicsElement programScheduleItemGraphicsElement in scheduleItem
+                             .ProgramScheduleItemGraphicsElements ?? [])
+                {
+                    playoutItem.PlayoutItemGraphicsElements.Add(
+                        new PlayoutItemGraphicsElement
+                        {
+                            PlayoutItem = playoutItem,
+                            GraphicsElementId = programScheduleItemGraphicsElement.GraphicsElementId
                         });
                 }
 

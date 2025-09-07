@@ -1,6 +1,4 @@
-﻿@implements IDisposable
-
-<MudDialog>
+﻿<MudDialog>
     <DialogContent>
         <MudContainer Class="mb-6">
             <MudText>
@@ -10,16 +8,14 @@
         <MudTextField Label="External Json File" @bind-Value="_externalJsonFile"/>
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="Cancel" ButtonType="ButtonType.Reset">Cancel</MudButton>
-        <MudButton Color="Color.Primary" Variant="Variant.Filled" Disabled="@(string.IsNullOrWhiteSpace(_externalJsonFile))" OnClick="Submit">
+        <MudButton OnClick="@Cancel" ButtonType="ButtonType.Reset">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" Disabled="@(string.IsNullOrWhiteSpace(_externalJsonFile))" OnClick="@Submit">
             Save Changes
         </MudButton>
     </DialogActions>
 </MudDialog>
 
 @code {
-    private readonly CancellationTokenSource _cts = new();
-
     [Parameter]
     public string ExternalJsonFile { get; set; }
 
@@ -27,12 +23,6 @@
     IMudDialogInstance MudDialog { get; set; }
 
     private string _externalJsonFile;
-
-    public void Dispose()
-    {
-        _cts.Cancel();
-        _cts.Dispose();
-    }
 
     protected override void OnParametersSet() => _externalJsonFile = ExternalJsonFile;
 

@@ -149,9 +149,10 @@ public class JellyfinMovieRepository : IJellyfinMovieRepository
     public async Task<Either<BaseError, MediaItemScanResult<JellyfinMovie>>> GetOrAdd(
         JellyfinLibrary library,
         JellyfinMovie item,
-        bool deepScan)
+        bool deepScan,
+        CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Option<JellyfinMovie> maybeExisting = await dbContext.JellyfinMovies
             .Include(m => m.LibraryPath)
             .ThenInclude(lp => lp.Library)
@@ -179,7 +180,7 @@ public class JellyfinMovieRepository : IJellyfinMovieRepository
             .ThenInclude(mm => mm.Guids)
             .Include(m => m.TraktListItems)
             .ThenInclude(tli => tli.TraktList)
-            .SelectOneAsync(m => m.ItemId, m => m.ItemId == item.ItemId);
+            .SelectOneAsync(m => m.ItemId, m => m.ItemId == item.ItemId, cancellationToken);
 
         foreach (JellyfinMovie jellyfinMovie in maybeExisting)
         {
@@ -193,7 +194,7 @@ public class JellyfinMovieRepository : IJellyfinMovieRepository
             return result;
         }
 
-        return await AddMovie(dbContext, library, item);
+        return await AddMovie(dbContext, library, item, cancellationToken);
     }
 
     public async Task<Unit> SetEtag(JellyfinMovie movie, string etag)
@@ -385,11 +386,17 @@ public class JellyfinMovieRepository : IJellyfinMovieRepository
     private async Task<Either<BaseError, MediaItemScanResult<JellyfinMovie>>> AddMovie(
         TvContext dbContext,
         JellyfinLibrary library,
-        JellyfinMovie movie)
+        JellyfinMovie movie,
+        CancellationToken cancellationToken)
     {
         try
         {
-            if (await MediaItemRepository.MediaFileAlreadyExists(movie, library.Paths.Head().Id, dbContext, _logger))
+            if (await MediaItemRepository.MediaFileAlreadyExists(
+                    movie,
+                    library.Paths.Head().Id,
+                    dbContext,
+                    _logger,
+                    cancellationToken))
             {
                 return new MediaFileAlreadyExists();
             }
@@ -400,14 +407,14 @@ public class JellyfinMovieRepository : IJellyfinMovieRepository
 
             movie.LibraryPathId = library.Paths.Head().Id;
 
-            await dbContext.AddAsync(movie);
-            await dbContext.SaveChangesAsync();
+            await dbContext.AddAsync(movie, cancellationToken);
+            await dbContext.SaveChangesAsync(cancellationToken);
 
             // restore etag
             movie.Etag = etag;
 
-            await dbContext.Entry(movie).Reference(m => m.LibraryPath).LoadAsync();
-            await dbContext.Entry(movie.LibraryPath).Reference(lp => lp.Library).LoadAsync();
+            await dbContext.Entry(movie).Reference(m => m.LibraryPath).LoadAsync(cancellationToken);
+            await dbContext.Entry(movie.LibraryPath).Reference(lp => lp.Library).LoadAsync(cancellationToken);
             return new MediaItemScanResult<JellyfinMovie>(movie) { IsAdded = true };
         }
         catch (Exception ex)

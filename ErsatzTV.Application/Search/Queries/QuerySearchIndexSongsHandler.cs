@@ -1,38 +1,41 @@
 ﻿using Bugsnag;
 using ErsatzTV.Application.MediaCards;
-using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Search;
+using ErsatzTV.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 using static ErsatzTV.Application.MediaCards.Mapper;
 
 namespace ErsatzTV.Application.Search;
 
-public class QuerySearchIndexSongsHandler : IRequestHandler<QuerySearchIndexSongs, SongCardResultsViewModel>
+public class QuerySearchIndexSongsHandler(IClient client, ISearchIndex searchIndex, IDbContextFactory<TvContext> dbContextFactory)
+    : IRequestHandler<QuerySearchIndexSongs, SongCardResultsViewModel>
 {
-    private readonly IClient _client;
-    private readonly ISearchIndex _searchIndex;
-    private readonly ISongRepository _songRepository;
-
-    public QuerySearchIndexSongsHandler(IClient client, ISearchIndex searchIndex, ISongRepository songRepository)
-    {
-        _client = client;
-        _searchIndex = searchIndex;
-        _songRepository = songRepository;
-    }
-
     public async Task<SongCardResultsViewModel> Handle(
         QuerySearchIndexSongs request,
         CancellationToken cancellationToken)
     {
-        SearchResult searchResult = await _searchIndex.Search(
-            _client,
+        SearchResult searchResult = await searchIndex.Search(
+            client,
             request.Query,
             string.Empty,
             (request.PageNumber - 1) * request.PageSize,
-            request.PageSize);
+            request.PageSize,
+            cancellationToken);
 
-        List<SongCardViewModel> items = await _songRepository
-            .GetSongsForCards(searchResult.Items.Map(i => i.Id).ToList())
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+
+        var ids = searchResult.Items.Map(i => i.Id).ToHashSet();
+        List<SongCardViewModel> items = await dbContext.SongMetadata
+            .AsNoTracking()
+            .Filter(ovm => ids.Contains(ovm.SongId))
+            .Include(ovm => ovm.Song)
+            .Include(ovm => ovm.Artwork)
+            .Include(sm => sm.Song)
+            .ThenInclude(s => s.MediaVersions)
+            .ThenInclude(mv => mv.MediaFiles)
+            .OrderBy(ovm => ovm.SortTitle)
+            .ToListAsync(cancellationToken)
             .Map(list => list.Map(ProjectToViewModel).ToList());
 
         return new SongCardResultsViewModel(searchResult.TotalCount, items, searchResult.PageMap);

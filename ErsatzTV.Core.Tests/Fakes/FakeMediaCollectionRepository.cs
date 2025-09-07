@@ -10,30 +10,40 @@ public class FakeMediaCollectionRepository : IMediaCollectionRepository
 
     public FakeMediaCollectionRepository(Map<int, List<MediaItem>> data) => _data = data;
 
-    public Task<Dictionary<PlaylistItem, List<MediaItem>>> GetPlaylistItemMap(int playlistId) =>
+    public Task<Dictionary<PlaylistItem, List<MediaItem>>> GetPlaylistItemMap(
+        int playlistId,
+        CancellationToken cancellationToken) =>
         throw new NotSupportedException();
 
-    public Task<Dictionary<PlaylistItem, List<MediaItem>>> GetPlaylistItemMap(string groupName, string name) =>
+    public Task<Dictionary<PlaylistItem, List<MediaItem>>> GetPlaylistItemMap(
+        string groupName,
+        string name,
+        CancellationToken cancellationToken) =>
         throw new NotSupportedException();
 
-    public Task<Dictionary<PlaylistItem, List<MediaItem>>> GetPlaylistItemMap(Playlist playlist) =>
+    public Task<Dictionary<PlaylistItem, List<MediaItem>>> GetPlaylistItemMap(
+        Playlist playlist,
+        CancellationToken cancellationToken) =>
         throw new NotSupportedException();
 
     public Task<Option<Collection>> GetCollectionWithCollectionItemsUntracked(int id) =>
         throw new NotSupportedException();
 
     public Task<List<MediaItem>> GetItems(int id) => _data[id].ToList().AsTask();
-    public Task<List<MediaItem>> GetCollectionItemsByName(string name) => throw new NotSupportedException();
-    public Task<List<MediaItem>> GetMultiCollectionItems(int id) => throw new NotSupportedException();
-    public Task<List<MediaItem>> GetMultiCollectionItemsByName(string name) => throw new NotSupportedException();
-    public Task<List<MediaItem>> GetSmartCollectionItems(int id) => _data[id].ToList().AsTask();
-    public Task<List<MediaItem>> GetSmartCollectionItemsByName(string name) => throw new NotSupportedException();
+    public Task<List<MediaItem>> GetCollectionItemsByName(string name, CancellationToken cancellationToken) => throw new NotSupportedException();
+    public Task<List<MediaItem>> GetMultiCollectionItems(int id, CancellationToken cancellationToken) => throw new NotSupportedException();
+    public Task<List<MediaItem>> GetMultiCollectionItemsByName(string name, CancellationToken cancellationToken) => throw new NotSupportedException();
+    public Task<List<MediaItem>> GetSmartCollectionItems(int id, CancellationToken cancellationToken) => _data[id].ToList().AsTask();
+    public Task<List<MediaItem>> GetSmartCollectionItemsByName(string name, CancellationToken cancellationToken) => throw new NotSupportedException();
 
-    public Task<List<MediaItem>> GetSmartCollectionItems(string query, string smartCollectionName) =>
+    public Task<List<MediaItem>> GetSmartCollectionItems(
+        string query,
+        string smartCollectionName,
+        CancellationToken cancellationToken) =>
         throw new NotSupportedException();
 
     public Task<List<MediaItem>> GetShowItemsByShowGuids(List<string> guids) => throw new NotSupportedException();
-    public Task<List<MediaItem>> GetPlaylistItems(int id) => throw new NotSupportedException();
+    public Task<List<MediaItem>> GetPlaylistItems(int id, CancellationToken cancellationToken) => throw new NotSupportedException();
     public Task<List<Movie>> GetMovie(int id) => throw new NotSupportedException();
     public Task<List<Episode>> GetEpisode(int id) => throw new NotSupportedException();
     public Task<List<MusicVideo>> GetMusicVideo(int id) => throw new NotSupportedException();
@@ -42,11 +52,13 @@ public class FakeMediaCollectionRepository : IMediaCollectionRepository
     public Task<List<Image>> GetImage(int id) => throw new NotSupportedException();
     public Task<List<RemoteStream>> GetRemoteStream(int id) => throw new NotSupportedException();
 
-    public Task<List<CollectionWithItems>> GetMultiCollectionCollections(int id) =>
+    public Task<List<CollectionWithItems>> GetMultiCollectionCollections(int id, CancellationToken cancellationToken) =>
         throw new NotSupportedException();
 
-    public Task<List<CollectionWithItems>>
-        GetFakeMultiCollectionCollections(int? collectionId, int? smartCollectionId) =>
+    public Task<List<CollectionWithItems>> GetFakeMultiCollectionCollections(
+        int? collectionId,
+        int? smartCollectionId,
+        CancellationToken cancellationToken) =>
         throw new NotSupportedException();
 
     public Task<List<int>> PlayoutIdsUsingCollection(int collectionId) => throw new NotSupportedException();
@@ -58,7 +70,7 @@ public class FakeMediaCollectionRepository : IMediaCollectionRepository
         throw new NotSupportedException();
 
     public Task<bool> IsCustomPlaybackOrder(int collectionId) => false.AsTask();
-    public Task<Option<string>> GetNameFromKey(CollectionKey emptyCollection) => Option<string>.None.AsTask();
+    public Task<Option<string>> GetNameFromKey(CollectionKey emptyCollection, CancellationToken cancellationToken) => Option<string>.None.AsTask();
 
     public List<CollectionWithItems> GroupIntoFakeCollections(List<MediaItem> items, string fakeKey = null) =>
         throw new NotSupportedException();

@@ -28,6 +28,11 @@ public class VideoToolboxHardwareCapabilities : IHardwareCapabilities
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX) && Decoders.IsEmpty)
         {
+            if (VideoToolboxUtil.IsHardwareDecoderSupported(FourCC.Av1, _logger))
+            {
+                Decoders.AddOrUpdate(VideoFormat.Av1, true, (_, _) => true);
+            }
+
             if (VideoToolboxUtil.IsHardwareDecoderSupported(FourCC.H264, _logger))
             {
                 Decoders.AddOrUpdate(VideoFormat.H264, true, (_, _) => true);
@@ -36,6 +41,16 @@ public class VideoToolboxHardwareCapabilities : IHardwareCapabilities
             if (VideoToolboxUtil.IsHardwareDecoderSupported(FourCC.Hevc, _logger))
             {
                 Decoders.AddOrUpdate(VideoFormat.Hevc, true, (_, _) => true);
+            }
+
+            if (VideoToolboxUtil.IsHardwareDecoderSupported(FourCC.Mpeg2Video, _logger))
+            {
+                Decoders.AddOrUpdate(VideoFormat.Mpeg2Video, true, (_, _) => true);
+            }
+
+            if (VideoToolboxUtil.IsHardwareDecoderSupported(FourCC.Mpeg4, _logger))
+            {
+                Decoders.AddOrUpdate(VideoFormat.Mpeg4, true, (_, _) => true);
             }
 
             if (VideoToolboxUtil.IsHardwareDecoderSupported(FourCC.Vp9, _logger))

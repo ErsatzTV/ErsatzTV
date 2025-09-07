@@ -153,7 +153,7 @@
 </MudForm>
 
 @code {
-    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource _cts;
 
     private MudTable<MediaCollectionViewModel> _collectionsTable;
     private MudTable<MultiCollectionViewModel> _multiCollectionsTable;
@@ -165,20 +165,32 @@
 
     public void Dispose()
     {
-        _cts.Cancel();
-        _cts.Dispose();
+        _cts?.Cancel();
+        _cts?.Dispose();
     }
 
     protected override async Task OnParametersSetAsync()
     {
-        _collectionsRowsPerPage = await Mediator.Send(new GetConfigElementByKey(ConfigElementKey.CollectionsPageSize), _cts.Token)
-            .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
 
-        _multiCollectionsRowsPerPage = await Mediator.Send(new GetConfigElementByKey(ConfigElementKey.MultiCollectionsPageSize), _cts.Token)
-            .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
+        try
+        {
+            _collectionsRowsPerPage = await Mediator.Send(new GetConfigElementByKey(ConfigElementKey.CollectionsPageSize), token)
+                .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
 
-        _smartCollectionsRowsPerPage = await Mediator.Send(new GetConfigElementByKey(ConfigElementKey.SmartCollectionsPageSize), _cts.Token)
-            .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
+            _multiCollectionsRowsPerPage = await Mediator.Send(new GetConfigElementByKey(ConfigElementKey.MultiCollectionsPageSize), token)
+                .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
+
+            _smartCollectionsRowsPerPage = await Mediator.Send(new GetConfigElementByKey(ConfigElementKey.SmartCollectionsPageSize), token)
+                .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
+        }
     }
 
     private async Task DeleteMediaCollection(MediaCollectionViewModel collection)
@@ -234,25 +246,25 @@
 
     private async Task<TableData<MediaCollectionViewModel>> ServerReloadCollections(TableState state, CancellationToken cancellationToken)
     {
-        await Mediator.Send(new SaveConfigElementByKey(ConfigElementKey.CollectionsPageSize, state.PageSize.ToString()), _cts.Token);
+        await Mediator.Send(new SaveConfigElementByKey(ConfigElementKey.CollectionsPageSize, state.PageSize.ToString()), cancellationToken);
 
-        PagedMediaCollectionsViewModel data = await Mediator.Send(new GetPagedCollections(state.Page, state.PageSize), _cts.Token);
+        PagedMediaCollectionsViewModel data = await Mediator.Send(new GetPagedCollections(state.Page, state.PageSize), cancellationToken);
         return new TableData<MediaCollectionViewModel> { TotalItems = data.TotalCount, Items = data.Page };
     }
 
     private async Task<TableData<MultiCollectionViewModel>> ServerReloadMultiCollections(TableState state, CancellationToken cancellationToken)
     {
-        await Mediator.Send(new SaveConfigElementByKey(ConfigElementKey.MultiCollectionsPageSize, state.PageSize.ToString()), _cts.Token);
+        await Mediator.Send(new SaveConfigElementByKey(ConfigElementKey.MultiCollectionsPageSize, state.PageSize.ToString()), cancellationToken);
 
-        PagedMultiCollectionsViewModel data = await Mediator.Send(new GetPagedMultiCollections(state.Page, state.PageSize), _cts.Token);
+        PagedMultiCollectionsViewModel data = await Mediator.Send(new GetPagedMultiCollections(state.Page, state.PageSize), cancellationToken);
         return new TableData<MultiCollectionViewModel> { TotalItems = data.TotalCount, Items = data.Page };
     }
 
     private async Task<TableData<SmartCollectionViewModel>> ServerReloadSmartCollections(TableState state, CancellationToken cancellationToken)
     {
-        await Mediator.Send(new SaveConfigElementByKey(ConfigElementKey.SmartCollectionsPageSize, state.PageSize.ToString()), _cts.Token);
+        await Mediator.Send(new SaveConfigElementByKey(ConfigElementKey.SmartCollectionsPageSize, state.PageSize.ToString()), cancellationToken);
 
-        PagedSmartCollectionsViewModel data = await Mediator.Send(new GetPagedSmartCollections(state.Page, state.PageSize), _cts.Token);
+        PagedSmartCollectionsViewModel data = await Mediator.Send(new GetPagedSmartCollections(state.Page, state.PageSize), cancellationToken);
         return new TableData<SmartCollectionViewModel> { TotalItems = data.TotalCount, Items = data.Page };
     }
 

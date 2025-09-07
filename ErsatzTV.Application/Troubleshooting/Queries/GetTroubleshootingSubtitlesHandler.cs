@@ -21,7 +21,7 @@ public class GetTroubleshootingSubtitlesHandler(IDbContextFactory<TvContext> dbC
             .ThenInclude(mm => mm.Subtitles)
             .Include(mi => (mi as OtherVideo).OtherVideoMetadata)
             .ThenInclude(mm => mm.Subtitles)
-            .SelectOneAsync(mi => mi.Id, mi => mi.Id == request.MediaItemId);
+            .SelectOneAsync(mi => mi.Id, mi => mi.Id == request.MediaItemId, cancellationToken);
 
         foreach (MediaItem mediaItem in maybeMediaItem)
         {

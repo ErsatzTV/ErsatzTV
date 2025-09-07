@@ -11,6 +11,6 @@ public class GetHDHRTunerCountHandler : IRequestHandler<GetHDHRTunerCount, int>
         _configElementRepository = configElementRepository;
 
     public Task<int> Handle(GetHDHRTunerCount request, CancellationToken cancellationToken) =>
-        _configElementRepository.GetValue<int>(ConfigElementKey.HDHRTunerCount)
+        _configElementRepository.GetValue<int>(ConfigElementKey.HDHRTunerCount, cancellationToken)
             .Map(result => result.IfNone(2));
 }

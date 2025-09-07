@@ -1,7 +1,7 @@
 @page "/system/troubleshooting/yaml"
 @using ErsatzTV.Core.Interfaces.Scheduling
 @implements IDisposable
-@inject IYamlScheduleValidator YamlScheduleValidator
+@inject ISequentialScheduleValidator SequentialScheduleValidator
 
 <MudForm Style="max-height: 100%">
     <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
@@ -88,19 +88,19 @@
 
     public void Dispose()
     {
-        _cts.Cancel();
-        _cts.Dispose();
+        _cts?.Cancel();
+        _cts?.Dispose();
     }
 
     private async Task ValidateYaml()
     {
         if (_exists)
         {
-            _yamlText = await File.ReadAllTextAsync(_yamlFile);
+            _yamlText = await File.ReadAllTextAsync(_yamlFile, _cts.Token);
             try
             {
-                _jsonText = YamlScheduleValidator.ToJson(_yamlText);
-                IList<string> messages = await YamlScheduleValidator.GetValidationMessages(_yamlText, _isImport);
+                _jsonText = SequentialScheduleValidator.ToJson(_yamlText);
+                IList<string> messages = await SequentialScheduleValidator.GetValidationMessages(_yamlText, _isImport);
                 _messagesCount = messages.Count;
                 _messages = string.Join("\n", messages);
 

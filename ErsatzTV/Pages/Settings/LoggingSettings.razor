@@ -85,17 +85,32 @@
 </MudForm>
 
 @code {
-    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource _cts;
 
     private LoggingSettingsViewModel _loggingSettings = new();
 
     public void Dispose()
     {
-        _cts.Cancel();
-        _cts.Dispose();
+        _cts?.Cancel();
+        _cts?.Dispose();
     }
 
-    protected override async Task OnParametersSetAsync() => _loggingSettings = await Mediator.Send(new GetLoggingSettings(), _cts.Token);
+    protected override async Task OnParametersSetAsync()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
+
+        try
+        {
+            _loggingSettings = await Mediator.Send(new GetLoggingSettings(), token);
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
+        }
+    }
 
     private async Task SaveLoggingSettings()
     {

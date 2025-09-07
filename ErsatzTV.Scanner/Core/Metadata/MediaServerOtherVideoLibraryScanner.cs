@@ -96,8 +96,8 @@ public abstract class MediaServerOtherVideoLibraryScanner<TConnectionParameters,
                     library.Id,
                     library.Name,
                     percentCompletion,
-                    Array.Empty<int>(),
-                    Array.Empty<int>()),
+                    [],
+                    []),
                 cancellationToken);
 
             string localPath = getLocalPath(incoming);
@@ -118,7 +118,7 @@ public abstract class MediaServerOtherVideoLibraryScanner<TConnectionParameters,
             if (ServerReturnsStatisticsWithMetadata)
             {
                 maybeOtherVideo = await otherVideoRepository
-                    .GetOrAdd(library, incoming, deepScan)
+                    .GetOrAdd(library, incoming, deepScan, cancellationToken)
                     .MapT(result =>
                     {
                         result.LocalPath = localPath;
@@ -129,13 +129,14 @@ public abstract class MediaServerOtherVideoLibraryScanner<TConnectionParameters,
                         library,
                         existing,
                         incoming,
-                        deepScan))
-                    .BindT(UpdateChapters);
+                        deepScan,
+                        cancellationToken))
+                    .BindT(existing => UpdateChapters(existing, cancellationToken));
             }
             else
             {
                 maybeOtherVideo = await otherVideoRepository
-                    .GetOrAdd(library, incoming, deepScan)
+                    .GetOrAdd(library, incoming, deepScan, cancellationToken)
                     .MapT(result =>
                     {
                         result.LocalPath = localPath;
@@ -147,7 +148,8 @@ public abstract class MediaServerOtherVideoLibraryScanner<TConnectionParameters,
                         existing,
                         incoming,
                         deepScan,
-                        None))
+                        None,
+                        cancellationToken))
                     .BindT(existing => UpdateStatistics(
                         connectionParameters,
                         library,
@@ -155,8 +157,8 @@ public abstract class MediaServerOtherVideoLibraryScanner<TConnectionParameters,
                         incoming,
                         deepScan,
                         None))
-                    .BindT(UpdateSubtitles)
-                    .BindT(UpdateChapters);
+                    .BindT(existing => UpdateSubtitles(existing, cancellationToken))
+                    .BindT(existing => UpdateChapters(existing, cancellationToken));
             }
 
             if (maybeOtherVideo.IsLeft)
@@ -262,7 +264,8 @@ public abstract class MediaServerOtherVideoLibraryScanner<TConnectionParameters,
 
     protected abstract Task<Either<BaseError, MediaItemScanResult<TOtherVideo>>> UpdateMetadata(
         MediaItemScanResult<TOtherVideo> result,
-        OtherVideoMetadata fullMetadata);
+        OtherVideoMetadata fullMetadata,
+        CancellationToken cancellationToken);
 
     private async Task<bool> ShouldScanItem(
         IMediaServerOtherVideoRepository<TLibrary, TOtherVideo, TEtag> otherVideoRepository,
@@ -349,7 +352,8 @@ public abstract class MediaServerOtherVideoLibraryScanner<TConnectionParameters,
         TLibrary library,
         MediaItemScanResult<TOtherVideo> result,
         TOtherVideo incoming,
-        bool deepScan)
+        bool deepScan,
+        CancellationToken cancellationToken)
     {
         Option<Tuple<OtherVideoMetadata, MediaVersion>> maybeMetadataAndStatistics = await GetFullMetadataAndStatistics(
             connectionParameters,
@@ -365,7 +369,8 @@ public abstract class MediaServerOtherVideoLibraryScanner<TConnectionParameters,
                 result,
                 incoming,
                 deepScan,
-                fullMetadata);
+                fullMetadata,
+                cancellationToken);
 
             foreach (BaseError error in metadataResult.LeftToSeq())
             {
@@ -405,7 +410,8 @@ public abstract class MediaServerOtherVideoLibraryScanner<TConnectionParameters,
         MediaItemScanResult<TOtherVideo> result,
         TOtherVideo incoming,
         bool deepScan,
-        Option<OtherVideoMetadata> maybeFullMetadata)
+        Option<OtherVideoMetadata> maybeFullMetadata,
+        CancellationToken cancellationToken)
     {
         if (maybeFullMetadata.IsNone)
         {
@@ -416,7 +422,7 @@ public abstract class MediaServerOtherVideoLibraryScanner<TConnectionParameters,
         {
             // TODO: move some of this code into this scanner
             // will have to merge JF, Emby, Plex logic
-            return await UpdateMetadata(result, fullMetadata);
+            return await UpdateMetadata(result, fullMetadata, cancellationToken);
         }
 
         return result;
@@ -458,7 +464,8 @@ public abstract class MediaServerOtherVideoLibraryScanner<TConnectionParameters,
 
 
     private async Task<Either<BaseError, MediaItemScanResult<TOtherVideo>>> UpdateSubtitles(
-        MediaItemScanResult<TOtherVideo> existing)
+        MediaItemScanResult<TOtherVideo> existing,
+        CancellationToken cancellationToken)
     {
         try
         {
@@ -471,7 +478,7 @@ public abstract class MediaServerOtherVideoLibraryScanner<TConnectionParameters,
                     .Map(Subtitle.FromMediaStream)
                     .ToList();
 
-                if (await _metadataRepository.UpdateSubtitles(metadata, subtitles))
+                if (await _metadataRepository.UpdateSubtitles(metadata, subtitles, cancellationToken))
                 {
                     return existing;
                 }
@@ -486,7 +493,8 @@ public abstract class MediaServerOtherVideoLibraryScanner<TConnectionParameters,
     }
 
     private async Task<Either<BaseError, MediaItemScanResult<TOtherVideo>>> UpdateChapters(
-        MediaItemScanResult<TOtherVideo> existing)
+        MediaItemScanResult<TOtherVideo> existing,
+        CancellationToken cancellationToken)
     {
         try
         {
@@ -496,7 +504,7 @@ public abstract class MediaServerOtherVideoLibraryScanner<TConnectionParameters,
                 return existing;
             }
 
-            if (await _localChaptersProvider.UpdateChapters(existing.Item, Some(existing.LocalPath)))
+            if (await _localChaptersProvider.UpdateChapters(existing.Item, Some(existing.LocalPath), cancellationToken))
             {
                 existing.IsUpdated = true;
             }

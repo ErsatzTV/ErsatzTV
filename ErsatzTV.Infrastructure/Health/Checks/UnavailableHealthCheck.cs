@@ -73,6 +73,7 @@ public class UnavailableHealthCheck : BaseHealthCheck, IUnavailableHealthCheck
                         _plexPathReplacementService,
                         _jellyfinPathReplacementService,
                         _embyPathReplacementService,
+                        cancellationToken,
                         false)
                 };
 

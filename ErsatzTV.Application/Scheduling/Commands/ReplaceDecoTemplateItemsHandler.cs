@@ -14,14 +14,15 @@ public class ReplaceDecoTemplateItemsHandler(IDbContextFactory<TvContext> dbCont
         CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
-        Validation<BaseError, DecoTemplate> validation = await Validate(dbContext, request);
-        return await validation.Apply(ps => Persist(dbContext, request, ps));
+        Validation<BaseError, DecoTemplate> validation = await Validate(dbContext, request, cancellationToken);
+        return await validation.Apply(ps => Persist(dbContext, request, ps, cancellationToken));
     }
 
     private static async Task<List<DecoTemplateItemViewModel>> Persist(
         TvContext dbContext,
         ReplaceDecoTemplateItems request,
-        DecoTemplate decoTemplate)
+        DecoTemplate decoTemplate,
+        CancellationToken cancellationToken)
     {
         decoTemplate.Name = request.Name;
         decoTemplate.DateUpdated = DateTime.UtcNow;
@@ -34,7 +35,7 @@ public class ReplaceDecoTemplateItemsHandler(IDbContextFactory<TvContext> dbCont
             .Filter(i => i.StartTime < i.EndTime || i.EndTime == TimeSpan.Zero)
             .ToList();
 
-        await dbContext.SaveChangesAsync();
+        await dbContext.SaveChangesAsync(cancellationToken);
 
         // TODO: refresh any playouts that use this schedule
         // foreach (Playout playout in programSchedule.Playouts)
@@ -46,7 +47,7 @@ public class ReplaceDecoTemplateItemsHandler(IDbContextFactory<TvContext> dbCont
             .Collection(t => t.Items)
             .Query()
             .Include(i => i.Deco)
-            .LoadAsync();
+            .LoadAsync(cancellationToken);
 
         return decoTemplate.Items.Map(Mapper.ProjectToViewModel).ToList();
     }
@@ -62,16 +63,18 @@ public class ReplaceDecoTemplateItemsHandler(IDbContextFactory<TvContext> dbCont
 
     private static Task<Validation<BaseError, DecoTemplate>> Validate(
         TvContext dbContext,
-        ReplaceDecoTemplateItems request) =>
-        DecoTemplateMustExist(dbContext, request.DecoTemplateId)
+        ReplaceDecoTemplateItems request,
+        CancellationToken cancellationToken) =>
+        DecoTemplateMustExist(dbContext, request.DecoTemplateId, cancellationToken)
             .BindT(decoTemplate => DecoTemplateNameMustBeValid(dbContext, decoTemplate, request));
 
     private static Task<Validation<BaseError, DecoTemplate>> DecoTemplateMustExist(
         TvContext dbContext,
-        int decoTemplateId) =>
+        int decoTemplateId,
+        CancellationToken cancellationToken) =>
         dbContext.DecoTemplates
             .Include(b => b.Items)
-            .SelectOneAsync(b => b.Id, b => b.Id == decoTemplateId)
+            .SelectOneAsync(b => b.Id, b => b.Id == decoTemplateId, cancellationToken)
             .Map(o => o.ToValidation<BaseError>("[DecoTemplateId] does not exist."));
 
     private static async Task<Validation<BaseError, DecoTemplate>> DecoTemplateNameMustBeValid(

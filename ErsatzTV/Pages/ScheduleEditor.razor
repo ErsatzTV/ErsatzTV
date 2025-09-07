@@ -68,7 +68,7 @@
 </MudForm>
 
 @code {
-    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource _cts;
 
     [Parameter]
     public int Id { get; set; }
@@ -79,31 +79,43 @@
 
     public void Dispose()
     {
-        _cts.Cancel();
-        _cts.Dispose();
+        _cts?.Cancel();
+        _cts?.Dispose();
     }
 
     protected override async Task OnParametersSetAsync()
     {
-        if (IsEdit)
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
+
+        try
         {
-            Option<ProgramScheduleViewModel> maybeProgramSchedule = await Mediator.Send(new GetProgramScheduleById(Id), _cts.Token);
-            maybeProgramSchedule.Match(
-                viewModel =>
-                {
-                    _model.Id = viewModel.Id;
-                    _model.Name = viewModel.Name;
-                    _model.ShuffleScheduleItems = viewModel.ShuffleScheduleItems;
-                    _model.KeepMultiPartEpisodesTogether = viewModel.KeepMultiPartEpisodesTogether;
-                    _model.TreatCollectionsAsShows = viewModel.TreatCollectionsAsShows;
-                    _model.RandomStartPoint = viewModel.RandomStartPoint;
-                    _model.FixedStartTimeBehavior = viewModel.FixedStartTimeBehavior;
-                },
-                () => NavigationManager.NavigateTo("404"));
+            if (IsEdit)
+            {
+                Option<ProgramScheduleViewModel> maybeProgramSchedule = await Mediator.Send(new GetProgramScheduleById(Id), token);
+                maybeProgramSchedule.Match(
+                    viewModel =>
+                    {
+                        _model.Id = viewModel.Id;
+                        _model.Name = viewModel.Name;
+                        _model.ShuffleScheduleItems = viewModel.ShuffleScheduleItems;
+                        _model.KeepMultiPartEpisodesTogether = viewModel.KeepMultiPartEpisodesTogether;
+                        _model.TreatCollectionsAsShows = viewModel.TreatCollectionsAsShows;
+                        _model.RandomStartPoint = viewModel.RandomStartPoint;
+                        _model.FixedStartTimeBehavior = viewModel.FixedStartTimeBehavior;
+                    },
+                    () => NavigationManager.NavigateTo("404"));
+            }
+            else
+            {
+                _model.Name = "New Schedule";
+            }
         }
-        else
+        catch (OperationCanceledException)
         {
-            _model.Name = "New Schedule";
+            // do nothing
         }
     }
 

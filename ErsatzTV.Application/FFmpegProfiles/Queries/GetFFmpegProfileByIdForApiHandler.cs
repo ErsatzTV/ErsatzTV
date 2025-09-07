@@ -22,7 +22,7 @@ public class
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await dbContext.FFmpegProfiles
             .Include(p => p.Resolution)
-            .SelectOneAsync(p => p.Id, p => p.Id == request.Id)
+            .SelectOneAsync(p => p.Id, p => p.Id == request.Id, cancellationToken)
             .MapT(ProjectToFullResponseModel);
     }
 }

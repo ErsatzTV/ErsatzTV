@@ -7,6 +7,7 @@ using NSubstitute;
 using NUnit.Framework;
 using Serilog;
 using Shouldly;
+using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace ErsatzTV.Core.Tests.Scheduling;
 
@@ -756,7 +757,10 @@ public class PlayoutModeSchedulerBaseTests : SchedulerTestBase
             };
 
             DateTimeOffset result =
-                PlayoutModeSchedulerBase<ProgramScheduleItem>.GetStartTimeAfter(state, scheduleItem);
+                PlayoutModeSchedulerBase<ProgramScheduleItem>.GetStartTimeAfter(
+                    state,
+                    scheduleItem,
+                    Option<ILogger>.None);
 
             result.ShouldBe(DateTime.Today.AddHours(6));
         }

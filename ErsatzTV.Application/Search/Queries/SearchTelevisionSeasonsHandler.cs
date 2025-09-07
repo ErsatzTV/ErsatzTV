@@ -6,18 +6,14 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Application.Search;
 
-public class SearchTelevisionSeasonsHandler : IRequestHandler<SearchTelevisionSeasons, List<NamedMediaItemViewModel>>
+public class SearchTelevisionSeasonsHandler(IDbContextFactory<TvContext> dbContextFactory)
+    : IRequestHandler<SearchTelevisionSeasons, List<NamedMediaItemViewModel>>
 {
-    private readonly IDbContextFactory<TvContext> _dbContextFactory;
-
-    public SearchTelevisionSeasonsHandler(IDbContextFactory<TvContext> dbContextFactory) =>
-        _dbContextFactory = dbContextFactory;
-
     public async Task<List<NamedMediaItemViewModel>> Handle(
         SearchTelevisionSeasons request,
         CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await (from season in dbContext.Set<Season>()
                 join seasonMetadata in dbContext.Set<SeasonMetadata>()
                     on season.Id equals seasonMetadata.SeasonId

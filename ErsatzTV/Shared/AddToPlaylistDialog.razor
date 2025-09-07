@@ -44,7 +44,7 @@
 
 
 @code {
-    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource _cts;
 
     [CascadingParameter]
     IMudDialogInstance MudDialog { get; set; }
@@ -73,27 +73,39 @@
 
     public void Dispose()
     {
-        _cts.Cancel();
-        _cts.Dispose();
+        _cts?.Cancel();
+        _cts?.Dispose();
     }
 
     private bool CanSubmit() => _selectedPlaylist != null;
 
     protected override async Task OnParametersSetAsync()
     {
-        _playlistGroups.AddRange(await Mediator.Send(new GetAllPlaylistGroups(), _cts.Token));
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
 
-        if (MemoryCache.TryGetValue("AddToPlaylistDialog.SelectedPlaylistGroupId", out int groupId))
+        try
         {
-            _selectedPlaylistGroup = _playlistGroups.SingleOrDefault(pg => pg.Id == groupId);
-            if (_selectedPlaylistGroup is not null)
+            _playlistGroups.AddRange(await Mediator.Send(new GetAllPlaylistGroups(), token));
+
+            if (MemoryCache.TryGetValue("AddToPlaylistDialog.SelectedPlaylistGroupId", out int groupId))
             {
-                await UpdatePlaylistGroupItems(_selectedPlaylistGroup);
-                if (MemoryCache.TryGetValue("AddToPlaylistDialog.SelectedPlaylistId", out int id))
+                _selectedPlaylistGroup = _playlistGroups.SingleOrDefault(pg => pg.Id == groupId);
+                if (_selectedPlaylistGroup is not null)
                 {
-                    _selectedPlaylist = _playlists.SingleOrDefault(c => c.Id == id);
+                    await UpdatePlaylistGroupItems(_selectedPlaylistGroup);
+                    if (MemoryCache.TryGetValue("AddToPlaylistDialog.SelectedPlaylistId", out int id))
+                    {
+                        _selectedPlaylist = _playlists.SingleOrDefault(c => c.Id == id);
+                    }
                 }
             }
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
         }
     }
 

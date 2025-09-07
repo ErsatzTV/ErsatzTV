@@ -159,7 +159,8 @@ public class PlexMovieLibraryScanner :
 
     protected override async Task<Either<BaseError, MediaItemScanResult<PlexMovie>>> UpdateMetadata(
         MediaItemScanResult<PlexMovie> result,
-        MovieMetadata fullMetadata)
+        MovieMetadata fullMetadata,
+        CancellationToken cancellationToken)
     {
         PlexMovie existing = result.Item;
         MovieMetadata existingMetadata = existing.MovieMetadata.Head();
@@ -340,7 +341,7 @@ public class PlexMovieLibraryScanner :
             }
         }
 
-        if (await _metadataRepository.UpdateSubtitles(existingMetadata, fullMetadata.Subtitles))
+        if (await _metadataRepository.UpdateSubtitles(existingMetadata, fullMetadata.Subtitles, cancellationToken))
         {
             result.IsUpdated = true;
         }

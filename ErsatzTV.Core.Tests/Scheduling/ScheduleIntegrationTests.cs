@@ -110,11 +110,13 @@ public class ScheduleIntegrationTests
             new LocalFileSystem(
                 provider.GetRequiredService<IClient>(),
                 provider.GetRequiredService<ILogger<LocalFileSystem>>()),
-            provider.GetRequiredService<IConfigElementRepository>());
+            provider.GetRequiredService<IConfigElementRepository>(),
+            _cancellationToken);
 
         await searchIndex.Rebuild(
             provider.GetRequiredService<ICachingSearchRepository>(),
-            provider.GetRequiredService<IFallbackMetadataProvider>());
+            provider.GetRequiredService<IFallbackMetadataProvider>(),
+            _cancellationToken);
 
         var builder = new PlayoutBuilder(
             new ConfigElementRepository(factory),
@@ -128,12 +130,12 @@ public class ScheduleIntegrationTests
         {
             await using TvContext context = await factory.CreateDbContextAsync(_cancellationToken);
 
-            Option<Playout> maybePlayout = await GetPlayout(context, PLAYOUT_ID);
+            Option<Playout> maybePlayout = await GetPlayout(context, PLAYOUT_ID, _cancellationToken);
             Playout playout = maybePlayout.ValueUnsafe();
             PlayoutReferenceData referenceData = await GetReferenceData(
                 context,
                 PLAYOUT_ID,
-                ProgramSchedulePlayoutType.Classic);
+                PlayoutScheduleKind.Classic);
 
             await builder.Build(
                 playout,
@@ -152,12 +154,12 @@ public class ScheduleIntegrationTests
         {
             await using TvContext context = await factory.CreateDbContextAsync(_cancellationToken);
 
-            Option<Playout> maybePlayout = await GetPlayout(context, PLAYOUT_ID);
+            Option<Playout> maybePlayout = await GetPlayout(context, PLAYOUT_ID, _cancellationToken);
             Playout playout = maybePlayout.ValueUnsafe();
             PlayoutReferenceData referenceData = await GetReferenceData(
                 context,
                 PLAYOUT_ID,
-                ProgramSchedulePlayoutType.Classic);
+                PlayoutScheduleKind.Classic);
 
             await builder.Build(
                 playout,
@@ -176,12 +178,12 @@ public class ScheduleIntegrationTests
         {
             await using TvContext context = await factory.CreateDbContextAsync(_cancellationToken);
 
-            Option<Playout> maybePlayout = await GetPlayout(context, PLAYOUT_ID);
+            Option<Playout> maybePlayout = await GetPlayout(context, PLAYOUT_ID, _cancellationToken);
             Playout playout = maybePlayout.ValueUnsafe();
             PlayoutReferenceData referenceData = await GetReferenceData(
                 context,
                 PLAYOUT_ID,
-                ProgramSchedulePlayoutType.Classic);
+                PlayoutScheduleKind.Classic);
 
             await builder.Build(
                 playout,
@@ -324,12 +326,12 @@ public class ScheduleIntegrationTests
         {
             await using TvContext context = await factory.CreateDbContextAsync(_cancellationToken);
 
-            Option<Playout> maybePlayout = await GetPlayout(context, playoutId);
+            Option<Playout> maybePlayout = await GetPlayout(context, playoutId, _cancellationToken);
             Playout playout = maybePlayout.ValueUnsafe();
             PlayoutReferenceData referenceData = await GetReferenceData(
                 context,
                 playoutId,
-                ProgramSchedulePlayoutType.Classic);
+                PlayoutScheduleKind.Classic);
 
             await builder.Build(
                 playout,
@@ -388,16 +390,19 @@ public class ScheduleIntegrationTests
         return playout.Id;
     }
 
-    private static async Task<Option<Playout>> GetPlayout(TvContext dbContext, int playoutId) =>
+    private static async Task<Option<Playout>> GetPlayout(
+        TvContext dbContext,
+        int playoutId,
+        CancellationToken cancellationToken) =>
         await dbContext.Playouts
             .Include(p => p.ProgramScheduleAnchors)
             .ThenInclude(a => a.EnumeratorState)
-            .SelectOneAsync(p => p.Id, p => p.Id == playoutId);
+            .SelectOneAsync(p => p.Id, p => p.Id == playoutId, cancellationToken);
 
     private static async Task<PlayoutReferenceData> GetReferenceData(
         TvContext dbContext,
         int playoutId,
-        ProgramSchedulePlayoutType playoutType)
+        PlayoutScheduleKind scheduleKind)
     {
         Channel channel = await dbContext.Channels
             .AsNoTracking()
@@ -407,7 +412,7 @@ public class ScheduleIntegrationTests
         List<PlayoutItem> existingItems = [];
         List<PlayoutTemplate> playoutTemplates = [];
 
-        if (playoutType is ProgramSchedulePlayoutType.Block)
+        if (scheduleKind is PlayoutScheduleKind.Block)
         {
             existingItems = await dbContext.PlayoutItems
                 .AsNoTracking()
@@ -434,6 +439,9 @@ public class ScheduleIntegrationTests
             .ThenInclude(psi => psi.ProgramScheduleItemWatermarks)
             .ThenInclude(psi => psi.Watermark)
             .Include(ps => ps.Items)
+            .ThenInclude(psi => psi.ProgramScheduleItemGraphicsElements)
+            .ThenInclude(psi => psi.GraphicsElement)
+            .Include(ps => ps.Items)
             .ThenInclude(psi => psi.Collection)
             .Include(ps => ps.Items)
             .ThenInclude(psi => psi.MediaItem)
@@ -456,6 +464,10 @@ public class ScheduleIntegrationTests
             .ThenInclude(ps => ps.Items)
             .ThenInclude(psi => psi.ProgramScheduleItemWatermarks)
             .ThenInclude(psi => psi.Watermark)
+            .Include(a => a.ProgramSchedule)
+            .ThenInclude(ps => ps.Items)
+            .ThenInclude(psi => psi.ProgramScheduleItemGraphicsElements)
+            .ThenInclude(psi => psi.GraphicsElement)
             .Include(a => a.ProgramSchedule)
             .ThenInclude(ps => ps.Items)
             .ThenInclude(psi => psi.Collection)
@@ -491,6 +503,7 @@ public class ScheduleIntegrationTests
             playoutTemplates,
             programSchedule,
             programScheduleAlternates,
-            playoutHistory);
+            playoutHistory,
+            TimeSpan.Zero);
     }
 }

@@ -29,7 +29,7 @@
 </MudContainer>
 <MudContainer MaxWidth="MaxWidth.Large" Style="margin-top: 100px" Class="z-10">
     <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Spacing="6">
-        <MudImage Src="@GetPosterUrl(_show.Poster)" Elevation="2" Class="rounded-lg z-10" Style="max-height: 325px; margin-left: auto; margin-right: auto"/>
+        <MudImage Src="@GetPosterUrl(_show?.Poster)" Elevation="2" Class="rounded-lg z-10" Style="max-height: 325px; margin-left: auto; margin-right: auto"/>
         <MudStack Row="false" Style="flex: 1" Class="z-10">
             <MudStack Row="false">
                 <MudHidden Invert="true" Breakpoint="Breakpoint.SmAndDown">
@@ -176,7 +176,7 @@
 </MudContainer>
 
 @code {
-    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource _cts;
 
     [Parameter]
     public int ShowId { get; set; }
@@ -192,31 +192,41 @@
     private static int PageSize => 100;
     private const int PageNumber = 1;
 
-    private TelevisionSeasonCardResultsViewModel _data = new(0, new List<TelevisionSeasonCardViewModel>(), null);
+    private TelevisionSeasonCardResultsViewModel _data = new(0, [], null);
 
     public void Dispose()
     {
-        _cts.Cancel();
-        _cts.Dispose();
+        _cts?.Cancel();
+        _cts?.Dispose();
     }
 
-    protected override Task OnParametersSetAsync() => RefreshData();
-
-    private async Task RefreshData()
+    protected override async Task OnParametersSetAsync()
     {
-        Option<TelevisionShowViewModel> maybeShow = await Mediator.Send(new GetTelevisionShowById(ShowId), _cts.Token);
-        foreach (TelevisionShowViewModel show in maybeShow)
-        {
-            _show = show;
-            _sortedContentRatings = _show.ContentRatings.OrderBy(cr => cr).ToList();
-            _sortedLanguages = _show.Languages.OrderBy(ci => ci.EnglishName).ToList();
-            _sortedStudios = _show.Studios.OrderBy(s => s).ToList();
-            _sortedGenres = _show.Genres.OrderBy(g => g).ToList();
-            _sortedTags = _show.Tags.OrderBy(t => t).ToList();
-            _sortedNetworks = _show.Networks.OrderBy(n => n).ToList();
-        }
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
 
-        _data = await Mediator.Send(new GetTelevisionSeasonCards(ShowId, PageNumber, PageSize), _cts.Token);
+        try
+        {
+            Option<TelevisionShowViewModel> maybeShow = await Mediator.Send(new GetTelevisionShowById(ShowId), token);
+            foreach (TelevisionShowViewModel show in maybeShow)
+            {
+                _show = show;
+                _sortedContentRatings = _show.ContentRatings.OrderBy(cr => cr).ToList();
+                _sortedLanguages = _show.Languages.OrderBy(ci => ci.EnglishName).ToList();
+                _sortedStudios = _show.Studios.OrderBy(s => s).ToList();
+                _sortedGenres = _show.Genres.OrderBy(g => g).ToList();
+                _sortedTags = _show.Tags.OrderBy(t => t).ToList();
+                _sortedNetworks = _show.Networks.OrderBy(n => n).ToList();
+            }
+
+            _data = await Mediator.Send(new GetTelevisionSeasonCards(ShowId, PageNumber, PageSize), token);
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
+        }
     }
 
     private async Task AddToCollection()
@@ -285,7 +295,15 @@
         }
     }
 
-    private static string GetPosterUrl(string poster) => poster.StartsWith("http://") || poster.StartsWith("https://") ? poster : $"artwork/posters/{poster}";
+    private static string GetPosterUrl(string poster)
+    {
+        if (string.IsNullOrWhiteSpace(poster))
+        {
+            return poster;
+        }
+
+        return poster.StartsWith("http://") || poster.StartsWith("https://") ? poster : $"artwork/posters/{poster}";
+    }
 
     private async Task ScanShow(bool deepScan)
     {

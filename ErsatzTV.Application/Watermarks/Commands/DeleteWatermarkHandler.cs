@@ -23,7 +23,10 @@ public class DeleteWatermarkHandler : IRequestHandler<DeleteWatermark, Either<Ba
         CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        Validation<BaseError, ChannelWatermark> validation = await WatermarkMustExist(dbContext, request);
+        Validation<BaseError, ChannelWatermark> validation = await WatermarkMustExist(
+            dbContext,
+            request,
+            cancellationToken);
         return await validation.Apply(p => DoDeletion(dbContext, p));
     }
 
@@ -39,8 +42,9 @@ public class DeleteWatermarkHandler : IRequestHandler<DeleteWatermark, Either<Ba
 
     private static Task<Validation<BaseError, ChannelWatermark>> WatermarkMustExist(
         TvContext dbContext,
-        DeleteWatermark request) =>
+        DeleteWatermark request,
+        CancellationToken cancellationToken) =>
         dbContext.ChannelWatermarks
-            .SelectOneAsync(p => p.Id, p => p.Id == request.WatermarkId)
+            .SelectOneAsync(p => p.Id, p => p.Id == request.WatermarkId, cancellationToken)
             .Map(o => o.ToValidation<BaseError>($"Watermark {request.WatermarkId} does not exist"));
 }

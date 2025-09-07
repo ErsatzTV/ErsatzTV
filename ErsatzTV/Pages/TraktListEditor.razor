@@ -43,7 +43,7 @@
 </MudForm>
 
 @code {
-    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource _cts;
 
     [Parameter]
     public int Id { get; set; }
@@ -54,22 +54,34 @@
 
     public void Dispose()
     {
-        _cts.Cancel();
-        _cts.Dispose();
+        _cts?.Cancel();
+        _cts?.Dispose();
     }
 
     protected override async Task OnParametersSetAsync()
     {
-        Option<TraktListViewModel> maybeTraktList = await Mediator.Send(new GetTraktListById(Id), _cts.Token);
-        maybeTraktList.Match(
-            viewModel =>
-            {
-                _model.Id = viewModel.Id;
-                _model.Slug = viewModel.Slug;
-                _model.AutoRefresh = viewModel.AutoRefresh;
-                _model.GeneratePlaylist = viewModel.GeneratePlaylist;
-            },
-            () => NavigationManager.NavigateTo("404"));
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
+
+        try
+        {
+            Option<TraktListViewModel> maybeTraktList = await Mediator.Send(new GetTraktListById(Id), token);
+            maybeTraktList.Match(
+                viewModel =>
+                {
+                    _model.Id = viewModel.Id;
+                    _model.Slug = viewModel.Slug;
+                    _model.AutoRefresh = viewModel.AutoRefresh;
+                    _model.GeneratePlaylist = viewModel.GeneratePlaylist;
+                },
+                () => NavigationManager.NavigateTo("404"));
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
+        }
     }
 
     private async Task HandleSubmitAsync()

@@ -6,15 +6,20 @@ using Microsoft.AspNetCore.Mvc;
 namespace ErsatzTV.Controllers.Api;
 
 [ApiController]
+[EndpointGroupName("general")]
 public class LibrariesController(ITelevisionRepository televisionRepository, IMediator mediator)
 {
     [HttpPost("/api/libraries/{id:int}/scan")]
-    public async Task<IActionResult> ResetPlayout(int id) =>
+    [Tags("Libraries")]
+    [EndpointSummary("Scan library")]
+    public async Task<IActionResult> ScanLibrary(int id) =>
         await mediator.Send(new QueueLibraryScanByLibraryId(id))
             ? new OkResult()
             : new NotFoundResult();
 
     [HttpPost("/api/libraries/{id:int}/scan-show")]
+    [Tags("Libraries")]
+    [EndpointSummary("Scan show")]
     public async Task<IActionResult> ScanShow(int id, [FromBody] ScanShowRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.ShowTitle))

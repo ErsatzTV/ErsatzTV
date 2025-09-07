@@ -20,7 +20,7 @@ public class DeleteCustomResolutionHandler : IRequestHandler<DeleteCustomResolut
 
         Option<Resolution> maybeResolution = await dbContext.Resolutions
             .AsNoTracking()
-            .SelectOneAsync(p => p.Id, p => p.Id == request.ResolutionId && p.IsCustom == true);
+            .SelectOneAsync(p => p.Id, p => p.Id == request.ResolutionId && p.IsCustom == true, cancellationToken);
 
         foreach (Resolution resolution in maybeResolution)
         {

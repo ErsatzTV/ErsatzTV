@@ -92,7 +92,8 @@ public class BlockPlayoutFillerBuilder(
                         mediaCollectionRepository,
                         televisionRepository,
                         artistRepository,
-                        collectionKey);
+                        collectionKey,
+                        cancellationToken);
 
                     enumerator = BlockPlayoutEnumerator.Shuffle(
                         collectionItems,
@@ -168,6 +169,7 @@ public class BlockPlayoutFillerBuilder(
                             PlaybackOrder = PlaybackOrder.Shuffle,
                             Index = enumerator.State.Index,
                             When = current.UtcDateTime,
+                            Finish = filler.FinishOffset.UtcDateTime,
                             Key = historyKey,
                             Details = HistoryDetails.ForMediaItem(mediaItem)
                         };

@@ -14,7 +14,7 @@ public class DeleteDecoTemplateGroupHandler(IDbContextFactory<TvContext> dbConte
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         Option<DecoTemplateGroup> maybeDecoTemplateGroup = await dbContext.DecoTemplateGroups
-            .SelectOneAsync(p => p.Id, p => p.Id == request.DecoTemplateGroupId);
+            .SelectOneAsync(p => p.Id, p => p.Id == request.DecoTemplateGroupId, cancellationToken);
 
         foreach (DecoTemplateGroup decoTemplateGroup in maybeDecoTemplateGroup)
         {

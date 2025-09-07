@@ -15,7 +15,7 @@ public class GetAllChannelsForApiHandler : IRequestHandler<GetAllChannelsForApi,
         GetAllChannelsForApi request,
         CancellationToken cancellationToken)
     {
-        IEnumerable<Channel> channels = Optional(await _channelRepository.GetAll()).Flatten();
+        IEnumerable<Channel> channels = Optional(await _channelRepository.GetAll(cancellationToken)).Flatten();
         return channels.Map(ProjectToResponseModel).ToList();
     }
 }

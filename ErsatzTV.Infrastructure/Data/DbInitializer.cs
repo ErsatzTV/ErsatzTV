@@ -13,6 +13,30 @@ public static class DbInitializer
         {
             await context.Connection.ExecuteAsync("PRAGMA journal_mode=WAL", cancellationToken);
         }
+        else
+        {
+            int localInfile = await context.Connection.ExecuteScalarAsync<int>(
+                "SELECT @@GLOBAL.local_infile");
+
+            if (localInfile == 0)
+            {
+                try
+                {
+                    await context.Connection.ExecuteAsync("SET GLOBAL local_infile = 'ON'", cancellationToken);
+                }
+                catch
+                {
+                    Serilog.Log.Fatal(
+                        """
+                        ErsatzTV requires local_infile=ON when using MySQL.
+                        Please run the following as a MySQL administrator:
+                          SET GLOBAL local_infile = 'ON';
+                        Or configure it in my.cnf under [mysqld].
+                        """);
+                    throw;
+                }
+            }
+        }
 
         if (!context.LanguageCodes.Any())
         {

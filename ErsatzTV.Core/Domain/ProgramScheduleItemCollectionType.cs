@@ -18,5 +18,6 @@ public enum ProgramScheduleItemCollectionType
     Image = 60,
     RemoteStream = 70,
 
-    FakeCollection = 100
+    FakeCollection = 100,
+    FakePlaylistItem = 101
 }

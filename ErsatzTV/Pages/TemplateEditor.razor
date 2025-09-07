@@ -112,7 +112,7 @@
 </MudForm>
 
 @code {
-    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource _cts;
     private readonly List<BlockGroupViewModel> _blockGroups = [];
     private readonly List<BlockViewModel> _blocks = [];
     private readonly List<DateTime> _startTimes = [];
@@ -128,26 +128,38 @@
 
     public void Dispose()
     {
-        _cts.Cancel();
-        _cts.Dispose();
+        _cts?.Cancel();
+        _cts?.Dispose();
     }
 
     protected override async Task OnParametersSetAsync()
     {
-        await LoadTemplateItems();
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
 
-        DateTime start = DateTime.Today;
-        _selectedBlockStart = start;
-        while (start.Date == DateTime.Today.Date)
+        try
         {
-            _startTimes.Add(start);
-            start = start.AddMinutes(5);
+            await LoadTemplateItems(token);
+
+            DateTime start = DateTime.Today;
+            _selectedBlockStart = start;
+            while (start.Date == DateTime.Today.Date)
+            {
+                _startTimes.Add(start);
+                start = start.AddMinutes(5);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
         }
     }
 
-    private async Task LoadTemplateItems()
+    private async Task LoadTemplateItems(CancellationToken cancellationToken)
     {
-        Option<TemplateViewModel> maybeTemplate = await Mediator.Send(new GetTemplateById(Id), _cts.Token);
+        Option<TemplateViewModel> maybeTemplate = await Mediator.Send(new GetTemplateById(Id), cancellationToken);
         if (maybeTemplate.IsNone)
         {
             NavigationManager.NavigateTo("templates");
@@ -164,13 +176,13 @@
             };
         }
 
-        Option<IEnumerable<TemplateItemViewModel>> maybeResults = await Mediator.Send(new GetTemplateItems(Id), _cts.Token);
+        Option<IEnumerable<TemplateItemViewModel>> maybeResults = await Mediator.Send(new GetTemplateItems(Id), cancellationToken);
         foreach (IEnumerable<TemplateItemViewModel> items in maybeResults)
         {
             _template.Items.AddRange(items.Map(ProjectToEditViewModel));
         }
 
-        _blockGroups.AddRange(await Mediator.Send(new GetAllBlockGroups(), _cts.Token));
+        _blockGroups.AddRange(await Mediator.Send(new GetAllBlockGroups(), cancellationToken));
     }
 
     private static TemplateItemEditViewModel ProjectToEditViewModel(TemplateItemViewModel item) =>

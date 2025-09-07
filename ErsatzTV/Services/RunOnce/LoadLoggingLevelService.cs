@@ -31,7 +31,7 @@ public class LoadLoggingLevelService : BackgroundService
             scope.ServiceProvider.GetRequiredService<IConfigElementRepository>();
 
         foreach (LogEventLevel logLevel in await configElementRepository.GetValue<LogEventLevel>(
-                     ConfigElementKey.MinimumLogLevel))
+                     ConfigElementKey.MinimumLogLevel, stoppingToken))
         {
             LoggingLevelSwitches loggingLevelSwitches =
                 scope.ServiceProvider.GetRequiredService<LoggingLevelSwitches>();
@@ -39,7 +39,7 @@ public class LoadLoggingLevelService : BackgroundService
         }
 
         foreach (LogEventLevel logLevel in await configElementRepository.GetValue<LogEventLevel>(
-                     ConfigElementKey.MinimumLogLevelScanning))
+                     ConfigElementKey.MinimumLogLevelScanning, stoppingToken))
         {
             LoggingLevelSwitches loggingLevelSwitches =
                 scope.ServiceProvider.GetRequiredService<LoggingLevelSwitches>();
@@ -47,7 +47,7 @@ public class LoadLoggingLevelService : BackgroundService
         }
 
         foreach (LogEventLevel logLevel in await configElementRepository.GetValue<LogEventLevel>(
-                     ConfigElementKey.MinimumLogLevelScheduling))
+                     ConfigElementKey.MinimumLogLevelScheduling, stoppingToken))
         {
             LoggingLevelSwitches loggingLevelSwitches =
                 scope.ServiceProvider.GetRequiredService<LoggingLevelSwitches>();
@@ -55,7 +55,7 @@ public class LoadLoggingLevelService : BackgroundService
         }
 
         foreach (LogEventLevel logLevel in await configElementRepository.GetValue<LogEventLevel>(
-                     ConfigElementKey.MinimumLogLevelStreaming))
+                     ConfigElementKey.MinimumLogLevelStreaming, stoppingToken))
         {
             LoggingLevelSwitches loggingLevelSwitches =
                 scope.ServiceProvider.GetRequiredService<LoggingLevelSwitches>();
@@ -63,7 +63,7 @@ public class LoadLoggingLevelService : BackgroundService
         }
 
         foreach (LogEventLevel logLevel in await configElementRepository.GetValue<LogEventLevel>(
-                     ConfigElementKey.MinimumLogLevelHttp))
+                     ConfigElementKey.MinimumLogLevelHttp, stoppingToken))
         {
             LoggingLevelSwitches loggingLevelSwitches =
                 scope.ServiceProvider.GetRequiredService<LoggingLevelSwitches>();

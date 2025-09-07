@@ -20,7 +20,7 @@
 
 <MudForm Model="@_model" @ref="@_form" Validation="@(_validator.ValidateValue)" ValidationDelay="0" Style="max-height: 100%">
 <MudPaper Square="true" Style="display: flex; height: 64px; min-height: 64px; width: 100%; z-index: 100; align-items: center">
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-6" OnClick="HandleSubmitAsync" StartIcon="@(IsEdit ? Icons.Material.Filled.Save : Icons.Material.Filled.Add)">@(IsEdit ? "Save Profile" : "Add Profile")</MudButton>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-6" OnClick="@HandleSubmitAsync" StartIcon="@(IsEdit ? Icons.Material.Filled.Save : Icons.Material.Filled.Add)">@(IsEdit ? "Save Profile" : "Add Profile")</MudButton>
 </MudPaper>
 <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
     <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
@@ -270,7 +270,7 @@
 </MudForm>
 
 @code {
-    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource _cts;
 
     [Parameter]
     public int Id { get; set; }
@@ -279,8 +279,8 @@
     private readonly FFmpegProfileEditViewModelValidator _validator = new();
     private MudForm _form;
 
-    private List<ResolutionViewModel> _resolutions = new();
-    private List<HardwareAccelerationKind> _hardwareAccelerationKinds = new();
+    private List<ResolutionViewModel> _resolutions = [];
+    private List<HardwareAccelerationKind> _hardwareAccelerationKinds = [];
     private List<string> _vaapiDisplays = [];
     private List<string> _vaapiDevices = [];
     private PersistingComponentStateSubscription _persistingSubscription;
@@ -289,8 +289,8 @@
     {
         _persistingSubscription.Dispose();
 
-        _cts.Cancel();
-        _cts.Dispose();
+        _cts?.Cancel();
+        _cts?.Dispose();
     }
 
     protected override Task OnInitializedAsync()
@@ -302,67 +302,79 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        if (!ApplicationState.TryTakeFromJson("_resolutions", out List<ResolutionViewModel> restoredResolutions))
-        {
-            _resolutions = await Mediator.Send(new GetAllResolutions(), _cts.Token);
-        }
-        else
-        {
-            _resolutions = restoredResolutions;
-        }
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
 
-        if (!ApplicationState.TryTakeFromJson("_hardwareAccelerationKinds", out List<HardwareAccelerationKind> restoredHardwareAccelerationKinds))
+        try
         {
-            _hardwareAccelerationKinds = await Mediator.Send(new GetSupportedHardwareAccelerationKinds(), _cts.Token);
-        }
-        else
-        {
-            _hardwareAccelerationKinds = restoredHardwareAccelerationKinds;
-        }
-
-        if (IsEdit)
-        {
-            if (!ApplicationState.TryTakeFromJson("_model", out FFmpegProfileEditViewModel restoredProfile))
+            if (!ApplicationState.TryTakeFromJson("_resolutions", out List<ResolutionViewModel> restoredResolutions))
             {
-                Option<FFmpegProfileViewModel> maybeProfile = await Mediator.Send(new GetFFmpegProfileById(Id), _cts.Token);
-                foreach (FFmpegProfileViewModel profile in maybeProfile)
-                {
-                    _model = new FFmpegProfileEditViewModel(profile);
-                }
+                _resolutions = await Mediator.Send(new GetAllResolutions(), token);
+            }
+            else
+            {
+                _resolutions = restoredResolutions;
+            }
 
-                if (maybeProfile.IsNone)
+            if (!ApplicationState.TryTakeFromJson("_hardwareAccelerationKinds", out List<HardwareAccelerationKind> restoredHardwareAccelerationKinds))
+            {
+                _hardwareAccelerationKinds = await Mediator.Send(new GetSupportedHardwareAccelerationKinds(), token);
+            }
+            else
+            {
+                _hardwareAccelerationKinds = restoredHardwareAccelerationKinds;
+            }
+
+            if (IsEdit)
+            {
+                if (!ApplicationState.TryTakeFromJson("_model", out FFmpegProfileEditViewModel restoredProfile))
                 {
-                    NavigationManager.NavigateTo("404");
+                    Option<FFmpegProfileViewModel> maybeProfile = await Mediator.Send(new GetFFmpegProfileById(Id), token);
+                    foreach (FFmpegProfileViewModel profile in maybeProfile)
+                    {
+                        _model = new FFmpegProfileEditViewModel(profile);
+                    }
+
+                    if (maybeProfile.IsNone)
+                    {
+                        NavigationManager.NavigateTo("404");
+                    }
+                }
+                else
+                {
+                    _model = restoredProfile;
                 }
             }
             else
             {
-                _model = restoredProfile;
+                _model = new FFmpegProfileEditViewModel(await Mediator.Send(new NewFFmpegProfile(), token));
             }
+
+            if (!_hardwareAccelerationKinds.Contains(_model.HardwareAcceleration))
+            {
+                _model.HardwareAcceleration = HardwareAccelerationKind.None;
+            }
+
+            if (!MemoryCache.TryGetValue("ffmpeg.render_devices", out List<string> vaapiDevices))
+            {
+                vaapiDevices = ["/dev/dri/renderD128"];
+            }
+
+            _vaapiDevices = vaapiDevices.OrderBy(s => s).ToList();
+
+            if (!MemoryCache.TryGetValue("ffmpeg.vaapi_displays", out List<string> vaapiDisplays))
+            {
+                vaapiDisplays = ["drm"];
+            }
+
+            _vaapiDisplays = vaapiDisplays.OrderBy(s => s).ToList();
         }
-        else
+        catch (OperationCanceledException)
         {
-            _model = new FFmpegProfileEditViewModel(await Mediator.Send(new NewFFmpegProfile(), _cts.Token));
+            // do nothing
         }
-
-        if (!_hardwareAccelerationKinds.Contains(_model.HardwareAcceleration))
-        {
-            _model.HardwareAcceleration = HardwareAccelerationKind.None;
-        }
-
-        if (!MemoryCache.TryGetValue("ffmpeg.render_devices", out List<string> vaapiDevices))
-        {
-            vaapiDevices = ["/dev/dri/renderD128"];
-        }
-
-        _vaapiDevices = vaapiDevices.OrderBy(s => s).ToList();
-
-        if (!MemoryCache.TryGetValue("ffmpeg.vaapi_displays", out List<string> vaapiDisplays))
-        {
-            vaapiDisplays = ["drm"];
-        }
-
-        _vaapiDisplays = vaapiDisplays.OrderBy(s => s).ToList();
     }
 
     private Task PersistData()
@@ -379,18 +391,34 @@
     private async Task HandleSubmitAsync()
     {
         await _form.Validate();
-        ValidationResult result = await _validator.ValidateAsync(_model, _cts.Token);
-        if (result.IsValid)
+        if (!_form.IsValid)
         {
-            Seq<BaseError> errorMessage = IsEdit ? (await Mediator.Send(_model.ToUpdate(), _cts.Token)).LeftToSeq() : (await Mediator.Send(_model.ToCreate(), _cts.Token)).LeftToSeq();
+            return;
+        }
 
-            errorMessage.HeadOrNone().Match(
-                error =>
-                {
-                    Snackbar.Add("Unexpected error saving ffmpeg profile");
-                    Logger.LogError("Unexpected error saving ffmpeg profile: {Error}", error.Value);
-                },
-                () => NavigationManager.NavigateTo("ffmpeg"));
+        using var cts = new CancellationTokenSource();
+
+        try
+        {
+            ValidationResult result = await _validator.ValidateAsync(_model, cts.Token);
+            if (result.IsValid)
+            {
+                Seq<BaseError> errorMessage = IsEdit
+                    ? (await Mediator.Send(_model.ToUpdate(), cts.Token)).LeftToSeq()
+                    : (await Mediator.Send(_model.ToCreate(), cts.Token)).LeftToSeq();
+
+                errorMessage.HeadOrNone().Match(
+                    error =>
+                    {
+                        Snackbar.Add("Unexpected error saving ffmpeg profile");
+                        Logger.LogError("Unexpected error saving ffmpeg profile: {Error}", error.Value);
+                    },
+                    () => NavigationManager.NavigateTo("ffmpeg"));
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
         }
     }
 

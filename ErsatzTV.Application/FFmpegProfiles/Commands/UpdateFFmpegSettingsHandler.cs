@@ -29,7 +29,7 @@ public class UpdateFFmpegSettingsHandler : IRequestHandler<UpdateFFmpegSettings,
         UpdateFFmpegSettings request,
         CancellationToken cancellationToken) =>
         Validate(request)
-            .MapT(_ => ApplyUpdate(request))
+            .MapT(_ => ApplyUpdate(request, cancellationToken))
             .Bind(v => v.ToEitherAsync());
 
     private async Task<Validation<BaseError, Unit>> Validate(UpdateFFmpegSettings request) =>
@@ -69,19 +69,22 @@ public class UpdateFFmpegSettingsHandler : IRequestHandler<UpdateFFmpegSettings,
             : BaseError.New($"Unable to verify {name} version");
     }
 
-    private async Task<Unit> ApplyUpdate(UpdateFFmpegSettings request)
+    private async Task<Unit> ApplyUpdate(UpdateFFmpegSettings request, CancellationToken cancellationToken)
     {
-        await _configElementRepository.Upsert(ConfigElementKey.FFmpegPath, request.Settings.FFmpegPath);
-        await _configElementRepository.Upsert(ConfigElementKey.FFprobePath, request.Settings.FFprobePath);
+        await _configElementRepository.Upsert(ConfigElementKey.FFmpegPath, request.Settings.FFmpegPath, cancellationToken);
+        await _configElementRepository.Upsert(ConfigElementKey.FFprobePath, request.Settings.FFprobePath, cancellationToken);
         await _configElementRepository.Upsert(
             ConfigElementKey.FFmpegDefaultProfileId,
-            request.Settings.DefaultFFmpegProfileId.ToString(CultureInfo.InvariantCulture));
+            request.Settings.DefaultFFmpegProfileId.ToString(CultureInfo.InvariantCulture),
+            cancellationToken);
         await _configElementRepository.Upsert(
             ConfigElementKey.FFmpegSaveReports,
-            request.Settings.SaveReports.ToString());
+            request.Settings.SaveReports.ToString(),
+            cancellationToken);
         await _configElementRepository.Upsert(
             ConfigElementKey.FFmpegHlsDirectOutputFormat,
-            request.Settings.HlsDirectOutputFormat);
+            request.Settings.HlsDirectOutputFormat,
+            cancellationToken);
 
         if (request.Settings.SaveReports && !Directory.Exists(FileSystemLayout.FFmpegReportsFolder))
         {
@@ -90,11 +93,13 @@ public class UpdateFFmpegSettingsHandler : IRequestHandler<UpdateFFmpegSettings,
 
         await _configElementRepository.Upsert(
             ConfigElementKey.FFmpegPreferredLanguageCode,
-            request.Settings.PreferredAudioLanguageCode);
+            request.Settings.PreferredAudioLanguageCode,
+            cancellationToken);
 
         await _configElementRepository.Upsert(
             ConfigElementKey.FFmpegUseEmbeddedSubtitles,
-            request.Settings.UseEmbeddedSubtitles);
+            request.Settings.UseEmbeddedSubtitles,
+            cancellationToken);
 
         // do not extract when subtitles are not used
         if (!request.Settings.UseEmbeddedSubtitles)
@@ -104,47 +109,53 @@ public class UpdateFFmpegSettingsHandler : IRequestHandler<UpdateFFmpegSettings,
 
         await _configElementRepository.Upsert(
             ConfigElementKey.FFmpegExtractEmbeddedSubtitles,
-            request.Settings.ExtractEmbeddedSubtitles);
+            request.Settings.ExtractEmbeddedSubtitles,
+            cancellationToken);
 
         // queue extracting all embedded subtitles
         if (request.Settings.ExtractEmbeddedSubtitles)
         {
-            await _workerChannel.WriteAsync(new ExtractEmbeddedSubtitles(Option<int>.None));
+            await _workerChannel.WriteAsync(new ExtractEmbeddedSubtitles(Option<int>.None), cancellationToken);
         }
 
         if (request.Settings.GlobalWatermarkId is not null)
         {
             await _configElementRepository.Upsert(
                 ConfigElementKey.FFmpegGlobalWatermarkId,
-                request.Settings.GlobalWatermarkId.Value);
+                request.Settings.GlobalWatermarkId.Value,
+                cancellationToken);
         }
         else
         {
-            await _configElementRepository.Delete(ConfigElementKey.FFmpegGlobalWatermarkId);
+            await _configElementRepository.Delete(ConfigElementKey.FFmpegGlobalWatermarkId, cancellationToken);
         }
 
         if (request.Settings.GlobalFallbackFillerId is not null)
         {
             await _configElementRepository.Upsert(
                 ConfigElementKey.FFmpegGlobalFallbackFillerId,
-                request.Settings.GlobalFallbackFillerId.Value);
+                request.Settings.GlobalFallbackFillerId.Value,
+                cancellationToken);
         }
         else
         {
-            await _configElementRepository.Delete(ConfigElementKey.FFmpegGlobalFallbackFillerId);
+            await _configElementRepository.Delete(ConfigElementKey.FFmpegGlobalFallbackFillerId, cancellationToken);
         }
 
         await _configElementRepository.Upsert(
             ConfigElementKey.FFmpegSegmenterTimeout,
-            request.Settings.HlsSegmenterIdleTimeout);
+            request.Settings.HlsSegmenterIdleTimeout,
+            cancellationToken);
 
         await _configElementRepository.Upsert(
             ConfigElementKey.FFmpegWorkAheadSegmenters,
-            request.Settings.WorkAheadSegmenterLimit);
+            request.Settings.WorkAheadSegmenterLimit,
+            cancellationToken);
 
         await _configElementRepository.Upsert(
             ConfigElementKey.FFmpegInitialSegmentCount,
-            request.Settings.InitialSegmentCount);
+            request.Settings.InitialSegmentCount,
+            cancellationToken);
 
         return Unit.Default;
     }

@@ -1,7 +1,6 @@
 ﻿@page "/media/sources/emby/edit"
 @using ErsatzTV.Application.Emby
 @using ErsatzTV.Core.Emby
-@implements IDisposable
 @inject IMediator Mediator
 
 <RemoteMediaSourceEditor
@@ -10,26 +9,18 @@
     SaveSecrets="SaveSecrets"/>
 
 @code {
-    private readonly CancellationTokenSource _cts = new();
-
-    public void Dispose()
+    private async Task<Unit> LoadSecrets(RemoteMediaSourceEditViewModel viewModel, CancellationToken cancellationToken)
     {
-        _cts.Cancel();
-        _cts.Dispose();
-    }
-
-    private async Task<Unit> LoadSecrets(RemoteMediaSourceEditViewModel viewModel)
-    {
-        EmbySecrets secrets = await Mediator.Send(new GetEmbySecrets(), _cts.Token);
+        EmbySecrets secrets = await Mediator.Send(new GetEmbySecrets(), cancellationToken);
         viewModel.Address = secrets.Address;
         viewModel.ApiKey = secrets.ApiKey;
         return Unit.Default;
     }
 
-    private async Task<Either<BaseError, Unit>> SaveSecrets(RemoteMediaSourceEditViewModel viewModel)
+    private async Task<Either<BaseError, Unit>> SaveSecrets(RemoteMediaSourceEditViewModel viewModel, CancellationToken cancellationToken)
     {
         var secrets = new EmbySecrets { Address = viewModel.Address, ApiKey = viewModel.ApiKey };
-        return await Mediator.Send(new SaveEmbySecrets(secrets), _cts.Token);
+        return await Mediator.Send(new SaveEmbySecrets(secrets), cancellationToken);
     }
 
 }

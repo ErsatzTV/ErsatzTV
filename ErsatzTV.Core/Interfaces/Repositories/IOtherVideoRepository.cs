@@ -8,7 +8,8 @@ public interface IOtherVideoRepository
     Task<Either<BaseError, MediaItemScanResult<OtherVideo>>> GetOrAdd(
         LibraryPath libraryPath,
         LibraryFolder libraryFolder,
-        string path);
+        string path,
+        CancellationToken cancellationToken = default);
 
     Task<IEnumerable<string>> FindOtherVideoPaths(LibraryPath libraryPath);
     Task<List<int>> DeleteByPath(LibraryPath libraryPath, string path);
@@ -18,6 +19,4 @@ public interface IOtherVideoRepository
     Task<bool> AddActor(OtherVideoMetadata metadata, Actor actor);
     Task<bool> AddDirector(OtherVideoMetadata metadata, Director director);
     Task<bool> AddWriter(OtherVideoMetadata metadata, Writer writer);
-
-    Task<List<OtherVideoMetadata>> GetOtherVideosForCards(List<int> ids);
 }

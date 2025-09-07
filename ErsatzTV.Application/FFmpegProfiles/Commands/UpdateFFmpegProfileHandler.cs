@@ -24,14 +24,15 @@ public class
         CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        Validation<BaseError, FFmpegProfile> validation = await Validate(dbContext, request);
-        return await validation.Apply(p => ApplyUpdateRequest(dbContext, p, request));
+        Validation<BaseError, FFmpegProfile> validation = await Validate(dbContext, request, cancellationToken);
+        return await validation.Apply(p => ApplyUpdateRequest(dbContext, p, request, cancellationToken));
     }
 
     private async Task<UpdateFFmpegProfileResult> ApplyUpdateRequest(
         TvContext dbContext,
         FFmpegProfile p,
-        UpdateFFmpegProfile update)
+        UpdateFFmpegProfile update,
+        CancellationToken cancellationToken)
     {
         p.Name = update.Name;
         p.ThreadCount = update.ThreadCount;
@@ -63,7 +64,7 @@ public class
         p.AudioSampleRate = update.AudioSampleRate;
         p.NormalizeFramerate = update.NormalizeFramerate;
         p.DeinterlaceVideo = update.DeinterlaceVideo;
-        await dbContext.SaveChangesAsync();
+        await dbContext.SaveChangesAsync(cancellationToken);
 
         _searchTargets.SearchTargetsChanged();
 
@@ -72,16 +73,19 @@ public class
 
     private static async Task<Validation<BaseError, FFmpegProfile>> Validate(
         TvContext dbContext,
-        UpdateFFmpegProfile request) =>
-        (await FFmpegProfileMustExist(dbContext, request), ValidateName(request), ValidateThreadCount(request),
-            await ResolutionMustExist(dbContext, request))
+        UpdateFFmpegProfile request,
+        CancellationToken cancellationToken) =>
+        (await FFmpegProfileMustExist(dbContext, request, cancellationToken), ValidateName(request),
+            ValidateThreadCount(request),
+            await ResolutionMustExist(dbContext, request, cancellationToken))
         .Apply((ffmpegProfileToUpdate, _, _, _) => ffmpegProfileToUpdate);
 
     private static Task<Validation<BaseError, FFmpegProfile>> FFmpegProfileMustExist(
         TvContext dbContext,
-        UpdateFFmpegProfile updateFFmpegProfile) =>
+        UpdateFFmpegProfile updateFFmpegProfile,
+        CancellationToken cancellationToken) =>
         dbContext.FFmpegProfiles
-            .SelectOneAsync(p => p.Id, p => p.Id == updateFFmpegProfile.FFmpegProfileId)
+            .SelectOneAsync(p => p.Id, p => p.Id == updateFFmpegProfile.FFmpegProfileId, cancellationToken)
             .Map(o => o.ToValidation<BaseError>("FFmpegProfile does not exist."));
 
     private static Validation<BaseError, string> ValidateName(UpdateFFmpegProfile updateFFmpegProfile) =>
@@ -93,9 +97,10 @@ public class
 
     private static Task<Validation<BaseError, int>> ResolutionMustExist(
         TvContext dbContext,
-        UpdateFFmpegProfile updateFFmpegProfile) =>
+        UpdateFFmpegProfile updateFFmpegProfile,
+        CancellationToken cancellationToken) =>
         dbContext.Resolutions
-            .SelectOneAsync(r => r.Id, r => r.Id == updateFFmpegProfile.ResolutionId)
+            .SelectOneAsync(r => r.Id, r => r.Id == updateFFmpegProfile.ResolutionId, cancellationToken)
             .MapT(r => r.Id)
             .Map(o => o.ToValidation<BaseError>($"[Resolution] {updateFFmpegProfile.ResolutionId} does not exist"));
 }

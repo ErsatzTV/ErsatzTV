@@ -31,11 +31,15 @@ public class LocalSubtitlesProvider : ILocalSubtitlesProvider
         _logger = logger;
     }
 
-    public async Task<bool> UpdateSubtitles(MediaItem mediaItem, Option<string> localPath, bool saveFullPath)
+    public async Task<bool> UpdateSubtitles(
+        MediaItem mediaItem,
+        Option<string> localPath,
+        bool saveFullPath,
+        CancellationToken cancellationToken)
     {
         if (_languageCodes.Count == 0)
         {
-            await _slim.WaitAsync();
+            await _slim.WaitAsync(cancellationToken);
             try
             {
                 _languageCodes.AddRange(await _mediaItemRepository.GetAllKnownCultures());
@@ -79,7 +83,7 @@ public class LocalSubtitlesProvider : ILocalSubtitlesProvider
             var subtitles = subtitleStreams.Map(Subtitle.FromMediaStream).ToList();
             string mediaItemPath = await localPath.IfNoneAsync(() => mediaItem.GetHeadVersion().MediaFiles.Head().Path);
             subtitles.AddRange(LocateExternalSubtitles(_languageCodes, mediaItemPath, saveFullPath));
-            bool updateResult = await _metadataRepository.UpdateSubtitles(metadata, subtitles);
+            bool updateResult = await _metadataRepository.UpdateSubtitles(metadata, subtitles, cancellationToken);
             if (!updateResult)
             {
                 _logger.LogError("Failed to save {Count} subtitles to database", subtitles.Count);

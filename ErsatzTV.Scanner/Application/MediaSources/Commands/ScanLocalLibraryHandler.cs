@@ -50,7 +50,7 @@ public class ScanLocalLibraryHandler : IRequestHandler<ScanLocalLibrary, Either<
     }
 
     public Task<Either<BaseError, string>> Handle(ScanLocalLibrary request, CancellationToken cancellationToken) =>
-        Validate(request)
+        Validate(request, cancellationToken)
             .MapT(parameters => PerformScan(parameters, cancellationToken).Map(_ => parameters.LocalLibrary.Name))
             .Bind(v => v.ToEitherAsync());
 
@@ -172,18 +172,20 @@ public class ScanLocalLibraryHandler : IRequestHandler<ScanLocalLibrary, Either<
         }
 
         await _mediator.Publish(
-            new ScannerProgressUpdate(localLibrary.Id, localLibrary.Name, 0, Array.Empty<int>(), Array.Empty<int>()),
+            new ScannerProgressUpdate(localLibrary.Id, localLibrary.Name, 0, [], []),
             cancellationToken);
 
         return Unit.Default;
     }
 
-    private async Task<Validation<BaseError, RequestParameters>> Validate(ScanLocalLibrary request)
+    private async Task<Validation<BaseError, RequestParameters>> Validate(
+        ScanLocalLibrary request,
+        CancellationToken cancellationToken)
     {
         Validation<BaseError, LocalLibrary> libraryResult = await LocalLibraryMustExist(request);
-        Validation<BaseError, string> ffprobePathResult = await ValidateFFprobePath();
-        Validation<BaseError, string> ffmpegPathResult = await ValidateFFmpegPath();
-        Validation<BaseError, int> refreshIntervalResult = await ValidateLibraryRefreshInterval();
+        Validation<BaseError, string> ffprobePathResult = await ValidateFFprobePath(cancellationToken);
+        Validation<BaseError, string> ffmpegPathResult = await ValidateFFmpegPath(cancellationToken);
+        Validation<BaseError, int> refreshIntervalResult = await ValidateLibraryRefreshInterval(cancellationToken);
 
         return (libraryResult, ffprobePathResult, ffmpegPathResult, refreshIntervalResult)
             .Apply((library, ffprobePath, ffmpegPath, libraryRefreshInterval) => new RequestParameters(
@@ -199,20 +201,20 @@ public class ScanLocalLibraryHandler : IRequestHandler<ScanLocalLibrary, Either<
             .Map(maybeLibrary => maybeLibrary.OfType<LocalLibrary>().HeadOrNone())
             .Map(v => v.ToValidation<BaseError>($"Local library {request.LibraryId} does not exist."));
 
-    private Task<Validation<BaseError, string>> ValidateFFprobePath() =>
-        _configElementRepository.GetValue<string>(ConfigElementKey.FFprobePath)
+    private Task<Validation<BaseError, string>> ValidateFFprobePath(CancellationToken cancellationToken) =>
+        _configElementRepository.GetValue<string>(ConfigElementKey.FFprobePath, cancellationToken)
             .FilterT(File.Exists)
             .Map(ffprobePath =>
                 ffprobePath.ToValidation<BaseError>("FFprobe path does not exist on the file system"));
 
-    private Task<Validation<BaseError, string>> ValidateFFmpegPath() =>
-        _configElementRepository.GetValue<string>(ConfigElementKey.FFmpegPath)
+    private Task<Validation<BaseError, string>> ValidateFFmpegPath(CancellationToken cancellationToken) =>
+        _configElementRepository.GetValue<string>(ConfigElementKey.FFmpegPath, cancellationToken)
             .FilterT(File.Exists)
             .Map(ffmpegPath =>
                 ffmpegPath.ToValidation<BaseError>("FFmpeg path does not exist on the file system"));
 
-    private Task<Validation<BaseError, int>> ValidateLibraryRefreshInterval() =>
-        _configElementRepository.GetValue<int>(ConfigElementKey.LibraryRefreshInterval)
+    private Task<Validation<BaseError, int>> ValidateLibraryRefreshInterval(CancellationToken cancellationToken) =>
+        _configElementRepository.GetValue<int>(ConfigElementKey.LibraryRefreshInterval, cancellationToken)
             .FilterT(lri => lri is >= 0 and < 1_000_000)
             .Map(lri => lri.ToValidation<BaseError>("Library refresh interval is invalid"));
 

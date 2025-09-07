@@ -11,7 +11,7 @@ public class YamlPlayoutPadToNextHandler(EnumeratorCache enumeratorCache) : Yaml
         YamlPlayoutInstruction instruction,
         PlayoutBuildMode mode,
         Func<string, Task> executeSequence,
-        ILogger<YamlPlayoutBuilder> logger,
+        ILogger<SequentialPlayoutBuilder> logger,
         CancellationToken cancellationToken)
     {
         if (instruction is not YamlPlayoutPadToNextInstruction padToNext)
@@ -60,10 +60,10 @@ public class YamlPlayoutPadToNextHandler(EnumeratorCache enumeratorCache) : Yaml
                 padToNext.Content,
                 padToNext.Fallback,
                 targetTime,
-                stopBeforeEnd: true,
+                padToNext.StopBeforeEnd,
                 padToNext.DiscardAttempts,
                 padToNext.Trim,
-                true,
+                padToNext.OfflineTail,
                 GetFillerKind(padToNext, context),
                 padToNext.CustomTitle,
                 padToNext.DisableWatermarks,

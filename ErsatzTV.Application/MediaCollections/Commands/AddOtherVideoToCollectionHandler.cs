@@ -36,7 +36,7 @@ public class AddOtherVideoToCollectionHandler :
         CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        Validation<BaseError, Parameters> validation = await Validate(dbContext, request);
+        Validation<BaseError, Parameters> validation = await Validate(dbContext, request, cancellationToken);
         return await LanguageExtensions.Apply(
             validation,
             parameters => ApplyAddOtherVideoRequest(dbContext, parameters));
@@ -62,23 +62,27 @@ public class AddOtherVideoToCollectionHandler :
 
     private static async Task<Validation<BaseError, Parameters>> Validate(
         TvContext dbContext,
-        AddOtherVideoToCollection request) =>
-        (await CollectionMustExist(dbContext, request), await ValidateOtherVideo(dbContext, request))
+        AddOtherVideoToCollection request,
+        CancellationToken cancellationToken) =>
+        (await CollectionMustExist(dbContext, request, cancellationToken),
+            await ValidateOtherVideo(dbContext, request, cancellationToken))
         .Apply((collection, episode) => new Parameters(collection, episode));
 
     private static Task<Validation<BaseError, Collection>> CollectionMustExist(
         TvContext dbContext,
-        AddOtherVideoToCollection request) =>
+        AddOtherVideoToCollection request,
+        CancellationToken cancellationToken) =>
         dbContext.Collections
             .Include(c => c.MediaItems)
-            .SelectOneAsync(c => c.Id, c => c.Id == request.CollectionId)
+            .SelectOneAsync(c => c.Id, c => c.Id == request.CollectionId, cancellationToken)
             .Map(o => o.ToValidation<BaseError>("Collection does not exist."));
 
     private static Task<Validation<BaseError, OtherVideo>> ValidateOtherVideo(
         TvContext dbContext,
-        AddOtherVideoToCollection request) =>
+        AddOtherVideoToCollection request,
+        CancellationToken cancellationToken) =>
         dbContext.OtherVideos
-            .SelectOneAsync(m => m.Id, e => e.Id == request.OtherVideoId)
+            .SelectOneAsync(m => m.Id, e => e.Id == request.OtherVideoId, cancellationToken)
             .Map(o => o.ToValidation<BaseError>("OtherVideo does not exist"));
 
     private sealed record Parameters(Collection Collection, OtherVideo OtherVideo);

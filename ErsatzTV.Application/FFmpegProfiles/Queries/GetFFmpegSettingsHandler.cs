@@ -15,30 +15,30 @@ public class GetFFmpegSettingsHandler : IRequestHandler<GetFFmpegSettings, FFmpe
         GetFFmpegSettings request,
         CancellationToken cancellationToken)
     {
-        Option<string> ffmpegPath = await _configElementRepository.GetValue<string>(ConfigElementKey.FFmpegPath);
-        Option<string> ffprobePath = await _configElementRepository.GetValue<string>(ConfigElementKey.FFprobePath);
+        Option<string> ffmpegPath = await _configElementRepository.GetValue<string>(ConfigElementKey.FFmpegPath, cancellationToken);
+        Option<string> ffprobePath = await _configElementRepository.GetValue<string>(ConfigElementKey.FFprobePath, cancellationToken);
         Option<int> defaultFFmpegProfileId =
-            await _configElementRepository.GetValue<int>(ConfigElementKey.FFmpegDefaultProfileId);
+            await _configElementRepository.GetValue<int>(ConfigElementKey.FFmpegDefaultProfileId, cancellationToken);
         Option<bool> saveReports =
-            await _configElementRepository.GetValue<bool>(ConfigElementKey.FFmpegSaveReports);
+            await _configElementRepository.GetValue<bool>(ConfigElementKey.FFmpegSaveReports, cancellationToken);
         Option<string> preferredAudioLanguageCode =
-            await _configElementRepository.GetValue<string>(ConfigElementKey.FFmpegPreferredLanguageCode);
+            await _configElementRepository.GetValue<string>(ConfigElementKey.FFmpegPreferredLanguageCode, cancellationToken);
         Option<bool> useEmbeddedSubtitles =
-            await _configElementRepository.GetValue<bool>(ConfigElementKey.FFmpegUseEmbeddedSubtitles);
+            await _configElementRepository.GetValue<bool>(ConfigElementKey.FFmpegUseEmbeddedSubtitles, cancellationToken);
         Option<bool> extractEmbeddedSubtitles =
-            await _configElementRepository.GetValue<bool>(ConfigElementKey.FFmpegExtractEmbeddedSubtitles);
+            await _configElementRepository.GetValue<bool>(ConfigElementKey.FFmpegExtractEmbeddedSubtitles, cancellationToken);
         Option<int> watermark =
-            await _configElementRepository.GetValue<int>(ConfigElementKey.FFmpegGlobalWatermarkId);
+            await _configElementRepository.GetValue<int>(ConfigElementKey.FFmpegGlobalWatermarkId, cancellationToken);
         Option<int> fallbackFiller =
-            await _configElementRepository.GetValue<int>(ConfigElementKey.FFmpegGlobalFallbackFillerId);
+            await _configElementRepository.GetValue<int>(ConfigElementKey.FFmpegGlobalFallbackFillerId, cancellationToken);
         Option<int> hlsSegmenterIdleTimeout =
-            await _configElementRepository.GetValue<int>(ConfigElementKey.FFmpegSegmenterTimeout);
+            await _configElementRepository.GetValue<int>(ConfigElementKey.FFmpegSegmenterTimeout, cancellationToken);
         Option<int> workAheadSegmenterLimit =
-            await _configElementRepository.GetValue<int>(ConfigElementKey.FFmpegWorkAheadSegmenters);
+            await _configElementRepository.GetValue<int>(ConfigElementKey.FFmpegWorkAheadSegmenters, cancellationToken);
         Option<int> initialSegmentCount =
-            await _configElementRepository.GetValue<int>(ConfigElementKey.FFmpegInitialSegmentCount);
+            await _configElementRepository.GetValue<int>(ConfigElementKey.FFmpegInitialSegmentCount, cancellationToken);
         Option<OutputFormatKind> outputFormatKind =
-            await _configElementRepository.GetValue<OutputFormatKind>(ConfigElementKey.FFmpegHlsDirectOutputFormat);
+            await _configElementRepository.GetValue<OutputFormatKind>(ConfigElementKey.FFmpegHlsDirectOutputFormat, cancellationToken);
 
         var result = new FFmpegSettingsViewModel
         {

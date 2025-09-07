@@ -32,19 +32,22 @@ public class SynchronizePlexNetworksHandler : IRequestHandler<SynchronizePlexNet
         SynchronizePlexNetworks request,
         CancellationToken cancellationToken)
     {
-        Validation<BaseError, RequestParameters> validation = await Validate(request);
+        Validation<BaseError, RequestParameters> validation = await Validate(request, cancellationToken);
         return await validation.Match(
             p => SynchronizeNetworks(p, cancellationToken),
             error => Task.FromResult<Either<BaseError, Unit>>(error.Join()));
     }
 
-    private async Task<Validation<BaseError, RequestParameters>> Validate(SynchronizePlexNetworks request)
+    private async Task<Validation<BaseError, RequestParameters>> Validate(
+        SynchronizePlexNetworks request,
+        CancellationToken cancellationToken)
     {
         Task<Validation<BaseError, ConnectionParameters>> mediaSource = MediaSourceMustExist(request)
             .BindT(MediaSourceMustHaveActiveConnection)
             .BindT(MediaSourceMustHaveToken);
 
-        return (await mediaSource, await PlexLibraryMustExist(request), await ValidateLibraryRefreshInterval())
+        return (await mediaSource, await PlexLibraryMustExist(request),
+                await ValidateLibraryRefreshInterval(cancellationToken))
             .Apply((connectionParameters, plexLibrary, libraryRefreshInterval) => new RequestParameters(
                 connectionParameters,
                 plexLibrary,
@@ -57,8 +60,8 @@ public class SynchronizePlexNetworksHandler : IRequestHandler<SynchronizePlexNet
         _mediaSourceRepository.GetPlexLibrary(request.PlexLibraryId)
             .Map(v => v.ToValidation<BaseError>($"Plex library {request.PlexLibraryId} does not exist."));
 
-    private Task<Validation<BaseError, int>> ValidateLibraryRefreshInterval() =>
-        _configElementRepository.GetValue<int>(ConfigElementKey.LibraryRefreshInterval)
+    private Task<Validation<BaseError, int>> ValidateLibraryRefreshInterval(CancellationToken cancellationToken) =>
+        _configElementRepository.GetValue<int>(ConfigElementKey.LibraryRefreshInterval, cancellationToken)
             .FilterT(lri => lri is >= 0 and < 1_000_000)
             .Map(lri => lri.ToValidation<BaseError>("Library refresh interval is invalid"));
 
@@ -104,7 +107,7 @@ public class SynchronizePlexNetworksHandler : IRequestHandler<SynchronizePlexNet
             if (result.IsRight)
             {
                 parameters.Library.LastNetworksScan = DateTime.UtcNow;
-                await _plexTelevisionRepository.UpdateLastNetworksScan(parameters.Library);
+                await _plexTelevisionRepository.UpdateLastNetworksScan(parameters.Library, cancellationToken);
             }
 
             return result;

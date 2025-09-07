@@ -24,7 +24,10 @@ public class PlayoutModeSchedulerOne : PlayoutModeSchedulerBase<ProgramScheduleI
         foreach (MediaItem mediaItem in contentEnumerator.Current)
         {
             // find when we should start this item, based on the current time
-            DateTimeOffset itemStartTime = GetStartTimeAfter(playoutBuilderState, scheduleItem);
+            DateTimeOffset itemStartTime = GetStartTimeAfter(
+                playoutBuilderState,
+                scheduleItem,
+                Option<ILogger>.Some(Logger));
             if (itemStartTime >= hardStop)
             {
                 playoutBuilderState = playoutBuilderState with { CurrentTime = hardStop };
@@ -52,7 +55,8 @@ public class PlayoutModeSchedulerOne : PlayoutModeSchedulerBase<ProgramScheduleI
                 PreferredAudioTitle = scheduleItem.PreferredAudioTitle,
                 PreferredSubtitleLanguageCode = scheduleItem.PreferredSubtitleLanguageCode,
                 SubtitleMode = scheduleItem.SubtitleMode,
-                PlayoutItemWatermarks = []
+                PlayoutItemWatermarks = [],
+                PlayoutItemGraphicsElements = []
             };
 
             foreach (ProgramScheduleItemWatermark programScheduleItemWatermark in scheduleItem
@@ -63,6 +67,17 @@ public class PlayoutModeSchedulerOne : PlayoutModeSchedulerBase<ProgramScheduleI
                     {
                         PlayoutItem = playoutItem,
                         WatermarkId = programScheduleItemWatermark.WatermarkId
+                    });
+            }
+
+            foreach (ProgramScheduleItemGraphicsElement programScheduleItemGraphicsElement in scheduleItem
+                         .ProgramScheduleItemGraphicsElements ?? [])
+            {
+                playoutItem.PlayoutItemGraphicsElements.Add(
+                    new PlayoutItemGraphicsElement
+                    {
+                        PlayoutItem = playoutItem,
+                        GraphicsElementId = programScheduleItemGraphicsElement.GraphicsElementId
                     });
             }
 
@@ -86,7 +101,7 @@ public class PlayoutModeSchedulerOne : PlayoutModeSchedulerBase<ProgramScheduleI
             // LogScheduledItem(scheduleItem, mediaItem, itemStartTime);
 
             // only play one item from collection, so always advance to the next item
-            // _logger.LogDebug(
+            // Logger.LogDebug(
             //     "Advancing to next schedule item after playout mode {PlayoutMode}",
             //     "One");
 

@@ -23,9 +23,10 @@ public class ImageRepository : IImageRepository
     public async Task<Either<BaseError, MediaItemScanResult<Image>>> GetOrAdd(
         LibraryPath libraryPath,
         LibraryFolder libraryFolder,
-        string path)
+        string path,
+        CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Option<Image> maybeExisting = await dbContext.Images
             .AsNoTracking()
             .Include(i => i.ImageMetadata)
@@ -50,13 +51,13 @@ public class ImageRepository : IImageRepository
             .Include(ov => ov.TraktListItems)
             .ThenInclude(tli => tli.TraktList)
             .OrderBy(i => i.MediaVersions.First().MediaFiles.First().Path)
-            .SingleOrDefaultAsync(i => i.MediaVersions.First().MediaFiles.First().Path == path);
+            .SingleOrDefaultAsync(i => i.MediaVersions.First().MediaFiles.First().Path == path, cancellationToken);
 
         return await maybeExisting.Match(
             mediaItem =>
                 Right<BaseError, MediaItemScanResult<Image>>(
                     new MediaItemScanResult<Image>(mediaItem) { IsAdded = false }).AsTask(),
-            async () => await AddImage(dbContext, libraryPath.Id, libraryFolder.Id, path));
+            async () => await AddImage(dbContext, libraryPath.Id, libraryFolder.Id, path, cancellationToken));
     }
 
     public async Task<IEnumerable<string>> FindImagePaths(LibraryPath libraryPath)
@@ -107,30 +108,21 @@ public class ImageRepository : IImageRepository
             new { tag.Name, MetadataId = metadata.Id, tag.ExternalCollectionId }).Map(result => result > 0);
     }
 
-    public async Task<List<ImageMetadata>> GetImagesForCards(List<int> ids)
-    {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
-        return await dbContext.ImageMetadata
-            .AsNoTracking()
-            .Filter(im => ids.Contains(im.ImageId))
-            .Include(im => im.Image)
-            .Include(im => im.Artwork)
-            .Include(im => im.Image)
-            .ThenInclude(s => s.MediaVersions)
-            .ThenInclude(mv => mv.MediaFiles)
-            .OrderBy(im => im.SortTitle)
-            .ToListAsync();
-    }
-
     private async Task<Either<BaseError, MediaItemScanResult<Image>>> AddImage(
         TvContext dbContext,
         int libraryPathId,
         int libraryFolderId,
-        string path)
+        string path,
+        CancellationToken cancellationToken)
     {
         try
         {
-            if (await MediaItemRepository.MediaFileAlreadyExists(path, libraryPathId, dbContext, _logger))
+            if (await MediaItemRepository.MediaFileAlreadyExists(
+                    path,
+                    libraryPathId,
+                    dbContext,
+                    _logger,
+                    cancellationToken))
             {
                 return new MediaFileAlreadyExists();
             }
@@ -158,10 +150,10 @@ public class ImageRepository : IImageRepository
                 }
             };
 
-            await dbContext.Images.AddAsync(image);
-            await dbContext.SaveChangesAsync();
-            await dbContext.Entry(image).Reference(m => m.LibraryPath).LoadAsync();
-            await dbContext.Entry(image.LibraryPath).Reference(lp => lp.Library).LoadAsync();
+            await dbContext.Images.AddAsync(image, cancellationToken);
+            await dbContext.SaveChangesAsync(cancellationToken);
+            await dbContext.Entry(image).Reference(m => m.LibraryPath).LoadAsync(cancellationToken);
+            await dbContext.Entry(image.LibraryPath).Reference(lp => lp.Library).LoadAsync(cancellationToken);
             return new MediaItemScanResult<Image>(image) { IsAdded = true };
         }
         catch (Exception ex)

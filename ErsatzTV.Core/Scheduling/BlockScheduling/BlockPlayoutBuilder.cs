@@ -28,6 +28,7 @@ public class BlockPlayoutBuilder(
     protected virtual ILogger Logger => logger;
 
     public virtual async Task<PlayoutBuildResult> Build(
+        DateTimeOffset start,
         Playout playout,
         PlayoutReferenceData referenceData,
         PlayoutBuildMode mode,
@@ -50,16 +51,15 @@ public class BlockPlayoutBuilder(
             PlaybackOrder.RandomRotation
         ];
 
-        DateTimeOffset start = DateTimeOffset.Now;
-
-        int daysToBuild = await GetDaysToBuild();
+        int daysToBuild = await GetDaysToBuild(cancellationToken);
 
         // get blocks to schedule
         List<EffectiveBlock> blocksToSchedule =
             EffectiveBlock.GetEffectiveBlocks(referenceData.PlayoutTemplates, start, daysToBuild);
 
         // get all collection items for the playout
-        Map<CollectionKey, List<MediaItem>> collectionMediaItems = await GetCollectionMediaItems(blocksToSchedule);
+        Map<CollectionKey, List<MediaItem>> collectionMediaItems =
+            await GetCollectionMediaItems(blocksToSchedule, cancellationToken);
         if (collectionMediaItems.Values.All(v => v.Count == 0))
         {
             logger.LogWarning("There are no media items to schedule");
@@ -84,6 +84,7 @@ public class BlockPlayoutBuilder(
 
         (List<EffectiveBlock> updatedEffectiveBlocks, List<PlayoutItem> playoutItemsToRemove) =
             BlockPlayoutChangeDetection.FindUpdatedItems(
+                start,
                 referenceData.ExistingItems,
                 itemBlockKeys,
                 blocksToSchedule,
@@ -232,6 +233,7 @@ public class BlockPlayoutBuilder(
                         PlaybackOrder = blockItem.PlaybackOrder,
                         Index = enumerator.State.Index,
                         When = currentTime.UtcDateTime,
+                        Finish = playoutItem.FinishOffset.UtcDateTime,
                         Key = historyKey,
                         Details = HistoryDetails.ForMediaItem(mediaItem)
                     };
@@ -255,9 +257,9 @@ public class BlockPlayoutBuilder(
         return result;
     }
 
-    protected virtual async Task<int> GetDaysToBuild() =>
+    protected virtual async Task<int> GetDaysToBuild(CancellationToken cancellationToken) =>
         await configElementRepository
-            .GetValue<int>(ConfigElementKey.PlayoutDaysToBuild)
+            .GetValue<int>(ConfigElementKey.PlayoutDaysToBuild, cancellationToken)
             .IfNoneAsync(2);
 
     protected virtual IMediaCollectionEnumerator GetEnumerator(
@@ -334,37 +336,23 @@ public class BlockPlayoutBuilder(
         PlayoutBuildResult result)
     {
         IEnumerable<PlayoutHistory> allItemsToDelete = referenceData.PlayoutHistory
-            .Append(result.AddedHistory)
-            .GroupBy(h => (h.BlockId, h.Key))
+            .GroupBy(h => h.Key)
             .SelectMany(group => group
-                .Filter(h => h.When < start.UtcDateTime)
-                .OrderByDescending(h => h.When)
+                .Filter(h => h.Finish < start.UtcDateTime)
+                .OrderByDescending(h => h.Finish)
                 .Tail());
-
-        var addedToRemove = new System.Collections.Generic.HashSet<PlayoutHistory>();
 
         foreach (PlayoutHistory delete in allItemsToDelete)
         {
-            if (delete.Id > 0)
-            {
-                result.HistoryToRemove.Add(delete.Id);
-            }
-            else
-            {
-                addedToRemove.Add(delete);
-            }
-        }
-
-        if (addedToRemove.Count > 0)
-        {
-            result.AddedHistory.RemoveAll(addedToRemove.Contains);
+            result.HistoryToRemove.Add(delete.Id);
         }
 
         return result;
     }
 
     private async Task<Map<CollectionKey, List<MediaItem>>> GetCollectionMediaItems(
-        List<EffectiveBlock> effectiveBlocks)
+        List<EffectiveBlock> effectiveBlocks,
+        CancellationToken cancellationToken)
     {
         var collectionKeys = effectiveBlocks.Map(b => b.Block.Items)
             .Flatten()
@@ -380,7 +368,8 @@ public class BlockPlayoutBuilder(
                     mediaCollectionRepository,
                     televisionRepository,
                     artistRepository,
-                    collectionKey))).SequenceParallel();
+                    collectionKey,
+                    cancellationToken))).SequenceParallel();
 
         return Map.createRange(tuples);
     }

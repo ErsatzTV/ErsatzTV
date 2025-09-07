@@ -28,16 +28,18 @@ public class MediaCollectionRepository : IMediaCollectionRepository
         _dbContextFactory = dbContextFactory;
     }
 
-    public async Task<Dictionary<PlaylistItem, List<MediaItem>>> GetPlaylistItemMap(int playlistId)
+    public async Task<Dictionary<PlaylistItem, List<MediaItem>>> GetPlaylistItemMap(
+        int playlistId,
+        CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         var result = new Dictionary<PlaylistItem, List<MediaItem>>();
 
         Option<Playlist> maybePlaylist = await dbContext.Playlists
             .AsNoTracking()
             .Include(p => p.Items)
-            .SelectOneAsync(p => p.Id, p => p.Id == playlistId);
+            .SelectOneAsync(p => p.Id, p => p.Id == playlistId, cancellationToken);
 
         foreach (PlaylistItem playlistItem in maybePlaylist.SelectMany(p => p.Items))
         {
@@ -89,7 +91,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
                 case ProgramScheduleItemCollectionType.MultiCollection:
                     foreach (int multiCollectionId in Optional(playlistItem.MultiCollectionId))
                     {
-                        mediaItems.AddRange(await GetMultiCollectionItems(multiCollectionId));
+                        mediaItems.AddRange(await GetMultiCollectionItems(multiCollectionId, cancellationToken));
                     }
 
                     break;
@@ -97,7 +99,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
                 case ProgramScheduleItemCollectionType.SmartCollection:
                     foreach (int smartCollectionId in Optional(playlistItem.SmartCollectionId))
                     {
-                        mediaItems.AddRange(await GetSmartCollectionItems(smartCollectionId));
+                        mediaItems.AddRange(await GetSmartCollectionItems(smartCollectionId, cancellationToken));
                     }
 
                     break;
@@ -165,25 +167,33 @@ public class MediaCollectionRepository : IMediaCollectionRepository
         return result;
     }
 
-    public async Task<Dictionary<PlaylistItem, List<MediaItem>>> GetPlaylistItemMap(string groupName, string name)
+    public async Task<Dictionary<PlaylistItem, List<MediaItem>>> GetPlaylistItemMap(
+        string groupName,
+        string name,
+        CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         Option<Playlist> maybePlaylist = await dbContext.Playlists
             .AsNoTracking()
-            .SelectOneAsync(p => p.Name, p => EF.Functions.Collate(p.Name, TvContext.CaseInsensitiveCollation) == name);
+            .SelectOneAsync(
+                p => p.Name,
+                p => EF.Functions.Collate(p.Name, TvContext.CaseInsensitiveCollation) == name,
+                cancellationToken);
 
         foreach (Playlist playlist in maybePlaylist)
         {
-            return await GetPlaylistItemMap(playlist.Id);
+            return await GetPlaylistItemMap(playlist.Id, cancellationToken);
         }
 
         return [];
     }
 
-    public async Task<Dictionary<PlaylistItem, List<MediaItem>>> GetPlaylistItemMap(Playlist playlist)
+    public async Task<Dictionary<PlaylistItem, List<MediaItem>>> GetPlaylistItemMap(
+        Playlist playlist,
+        CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         var result = new Dictionary<PlaylistItem, List<MediaItem>>();
 
@@ -237,7 +247,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
                 case ProgramScheduleItemCollectionType.MultiCollection:
                     foreach (int multiCollectionId in Optional(playlistItem.MultiCollectionId))
                     {
-                        mediaItems.AddRange(await GetMultiCollectionItems(multiCollectionId));
+                        mediaItems.AddRange(await GetMultiCollectionItems(multiCollectionId, cancellationToken));
                     }
 
                     break;
@@ -245,7 +255,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
                 case ProgramScheduleItemCollectionType.SmartCollection:
                     foreach (int smartCollectionId in Optional(playlistItem.SmartCollectionId))
                     {
-                        mediaItems.AddRange(await GetSmartCollectionItems(smartCollectionId));
+                        mediaItems.AddRange(await GetSmartCollectionItems(smartCollectionId, cancellationToken));
                     }
 
                     break;
@@ -344,13 +354,16 @@ public class MediaCollectionRepository : IMediaCollectionRepository
         return result.Distinct().ToList();
     }
 
-    public async Task<List<MediaItem>> GetCollectionItemsByName(string name)
+    public async Task<List<MediaItem>> GetCollectionItemsByName(string name, CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         Option<Collection> maybeCollection = await dbContext.Collections
             .AsNoTracking()
-            .SelectOneAsync(c => c.Name, c => EF.Functions.Collate(c.Name, TvContext.CaseInsensitiveCollation) == name);
+            .SelectOneAsync(
+                c => c.Name,
+                c => EF.Functions.Collate(c.Name, TvContext.CaseInsensitiveCollation) == name,
+                cancellationToken);
 
         foreach (Collection collection in maybeCollection)
         {
@@ -360,9 +373,9 @@ public class MediaCollectionRepository : IMediaCollectionRepository
         return [];
     }
 
-    public async Task<List<MediaItem>> GetMultiCollectionItems(int id)
+    public async Task<List<MediaItem>> GetMultiCollectionItems(int id, CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         var result = new List<MediaItem>();
 
@@ -370,7 +383,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
             .AsNoTracking()
             .Include(mc => mc.Collections)
             .Include(mc => mc.SmartCollections)
-            .SelectOneAsync(mc => mc.Id, mc => mc.Id == id);
+            .SelectOneAsync(mc => mc.Id, mc => mc.Id == id, cancellationToken);
 
         foreach (MultiCollection multiCollection in maybeMultiCollection)
         {
@@ -390,73 +403,84 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
             foreach (int smartCollectionId in multiCollection.SmartCollections.Map(c => c.Id))
             {
-                result.AddRange(await GetSmartCollectionItems(smartCollectionId));
+                result.AddRange(await GetSmartCollectionItems(smartCollectionId, cancellationToken));
             }
         }
 
         return result.DistinctBy(x => x.Id).ToList();
     }
 
-    public async Task<List<MediaItem>> GetMultiCollectionItemsByName(string name)
+    public async Task<List<MediaItem>> GetMultiCollectionItemsByName(string name, CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         Option<MultiCollection> maybeCollection = await dbContext.MultiCollections
             .AsNoTracking()
             .SelectOneAsync(
                 mc => mc.Name,
-                mc => EF.Functions.Collate(mc.Name, TvContext.CaseInsensitiveCollation) == name);
+                mc => EF.Functions.Collate(mc.Name, TvContext.CaseInsensitiveCollation) == name,
+                cancellationToken);
 
         foreach (MultiCollection collection in maybeCollection)
         {
-            return await GetMultiCollectionItems(collection.Id);
+            return await GetMultiCollectionItems(collection.Id, cancellationToken);
         }
 
         return [];
     }
 
-    public async Task<List<MediaItem>> GetSmartCollectionItems(int id)
+    public async Task<List<MediaItem>> GetSmartCollectionItems(int id, CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         Option<SmartCollection> maybeCollection = await dbContext.SmartCollections
             .AsNoTracking()
-            .SelectOneAsync(sc => sc.Id, sc => sc.Id == id);
+            .SelectOneAsync(sc => sc.Id, sc => sc.Id == id, cancellationToken);
 
         foreach (SmartCollection collection in maybeCollection)
         {
-            return await GetSmartCollectionItems(collection.Query, collection.Name);
+            return await GetSmartCollectionItems(collection.Query, collection.Name, cancellationToken);
         }
 
         return [];
     }
 
-    public async Task<List<MediaItem>> GetSmartCollectionItemsByName(string name)
+    public async Task<List<MediaItem>> GetSmartCollectionItemsByName(string name, CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         Option<SmartCollection> maybeCollection = await dbContext.SmartCollections
             .AsNoTracking()
             .SelectOneAsync(
                 sc => sc.Name,
-                sc => EF.Functions.Collate(sc.Name, TvContext.CaseInsensitiveCollation) == name);
+                sc => EF.Functions.Collate(sc.Name, TvContext.CaseInsensitiveCollation) == name,
+                cancellationToken);
 
         foreach (SmartCollection collection in maybeCollection)
         {
-            return await GetSmartCollectionItems(collection.Query, collection.Name);
+            return await GetSmartCollectionItems(collection.Query, collection.Name, cancellationToken);
         }
 
         return [];
     }
 
-    public async Task<List<MediaItem>> GetSmartCollectionItems(string query, string smartCollectionName)
+    public async Task<List<MediaItem>> GetSmartCollectionItems(
+        string query,
+        string smartCollectionName,
+        CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         var result = new List<MediaItem>();
 
         // elasticsearch doesn't like when we ask for a limit of zero, so use 10,000
-        SearchResult searchResults = await _searchIndex.Search(_client, query, smartCollectionName, 0, 10_000);
+        SearchResult searchResults = await _searchIndex.Search(
+            _client,
+            query,
+            smartCollectionName,
+            0,
+            10_000,
+            cancellationToken);
 
         var movieIds = searchResults.Items
             .Filter(i => i.Type == LuceneSearchIndex.MovieType)
@@ -558,9 +582,11 @@ public class MediaCollectionRepository : IMediaCollectionRepository
         return result;
     }
 
-    public async Task<List<CollectionWithItems>> GetMultiCollectionCollections(int id)
+    public async Task<List<CollectionWithItems>> GetMultiCollectionCollections(
+        int id,
+        CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         var result = new List<CollectionWithItems>();
 
@@ -572,7 +598,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
             .ThenInclude(mci => mci.Collection)
             .Include(mc => mc.MultiCollectionSmartItems)
             .ThenInclude(mci => mci.SmartCollection)
-            .SelectOneAsync(mc => mc.Id, mc => mc.Id == id);
+            .SelectOneAsync(mc => mc.Id, mc => mc.Id == id, cancellationToken);
 
         foreach (MultiCollection multiCollection in maybeMultiCollection)
         {
@@ -617,7 +643,9 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
             foreach (MultiCollectionSmartItem multiCollectionSmartItem in multiCollection.MultiCollectionSmartItems)
             {
-                List<MediaItem> items = await GetSmartCollectionItems(multiCollectionSmartItem.SmartCollectionId);
+                List<MediaItem> items = await GetSmartCollectionItems(
+                    multiCollectionSmartItem.SmartCollectionId,
+                    cancellationToken);
 
                 result.Add(
                     new CollectionWithItems(
@@ -646,16 +674,16 @@ public class MediaCollectionRepository : IMediaCollectionRepository
         return result;
     }
 
-    public async Task<List<MediaItem>> GetPlaylistItems(int id)
+    public async Task<List<MediaItem>> GetPlaylistItems(int id, CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         var result = new List<MediaItem>();
 
         Option<Playlist> maybePlaylist = await dbContext.Playlists
             .AsNoTracking()
             .Include(p => p.Items)
-            .SelectOneAsync(p => p.Id, p => p.Id == id);
+            .SelectOneAsync(p => p.Id, p => p.Id == id, cancellationToken);
 
         foreach (PlaylistItem playlistItem in maybePlaylist.SelectMany(p => p.Items))
         {
@@ -705,7 +733,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
                 case ProgramScheduleItemCollectionType.MultiCollection:
                     foreach (int multiCollectionId in Optional(playlistItem.MultiCollectionId))
                     {
-                        result.AddRange(await GetMultiCollectionItems(multiCollectionId));
+                        result.AddRange(await GetMultiCollectionItems(multiCollectionId, cancellationToken));
                     }
 
                     break;
@@ -713,7 +741,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
                 case ProgramScheduleItemCollectionType.SmartCollection:
                     foreach (int smartCollectionId in Optional(playlistItem.SmartCollectionId))
                     {
-                        result.AddRange(await GetSmartCollectionItems(smartCollectionId));
+                        result.AddRange(await GetSmartCollectionItems(smartCollectionId, cancellationToken));
                     }
 
                     break;
@@ -823,7 +851,8 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
     public async Task<List<CollectionWithItems>> GetFakeMultiCollectionCollections(
         int? collectionId,
-        int? smartCollectionId)
+        int? smartCollectionId,
+        CancellationToken cancellationToken)
     {
         var items = new List<MediaItem>();
 
@@ -834,7 +863,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
         if (smartCollectionId.HasValue)
         {
-            items = await GetSmartCollectionItems(smartCollectionId.Value);
+            items = await GetSmartCollectionItems(smartCollectionId.Value, cancellationToken);
         }
 
         return GroupIntoFakeCollections(items);
@@ -881,39 +910,39 @@ public class MediaCollectionRepository : IMediaCollectionRepository
             new { CollectionId = collectionId });
     }
 
-    public async Task<Option<string>> GetNameFromKey(CollectionKey emptyCollection)
+    public async Task<Option<string>> GetNameFromKey(CollectionKey emptyCollection, CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         return emptyCollection.CollectionType switch
         {
             ProgramScheduleItemCollectionType.Artist => await dbContext.Artists
                 .AsNoTracking()
                 .Include(a => a.ArtistMetadata)
-                .SelectOneAsync(a => a.Id, a => a.Id == emptyCollection.MediaItemId.Value)
+                .SelectOneAsync(a => a.Id, a => a.Id == emptyCollection.MediaItemId.Value, cancellationToken)
                 .MapT(a => a.ArtistMetadata.Head().Title),
             ProgramScheduleItemCollectionType.Collection => await dbContext.Collections
                 .AsNoTracking()
-                .SelectOneAsync(c => c.Id, c => c.Id == emptyCollection.CollectionId.Value)
+                .SelectOneAsync(c => c.Id, c => c.Id == emptyCollection.CollectionId.Value, cancellationToken)
                 .MapT(c => c.Name),
             ProgramScheduleItemCollectionType.MultiCollection => await dbContext.MultiCollections
                 .AsNoTracking()
-                .SelectOneAsync(c => c.Id, c => c.Id == emptyCollection.MultiCollectionId.Value)
+                .SelectOneAsync(c => c.Id, c => c.Id == emptyCollection.MultiCollectionId.Value, cancellationToken)
                 .MapT(c => c.Name),
             ProgramScheduleItemCollectionType.SmartCollection => await dbContext.SmartCollections
                 .AsNoTracking()
-                .SelectOneAsync(c => c.Id, c => c.Id == emptyCollection.SmartCollectionId.Value)
+                .SelectOneAsync(c => c.Id, c => c.Id == emptyCollection.SmartCollectionId.Value, cancellationToken)
                 .MapT(c => c.Name),
             ProgramScheduleItemCollectionType.TelevisionSeason => await dbContext.Seasons
                 .AsNoTracking()
                 .Include(s => s.SeasonMetadata)
                 .Include(s => s.Show)
                 .ThenInclude(s => s.ShowMetadata)
-                .SelectOneAsync(a => a.Id, a => a.Id == emptyCollection.MediaItemId.Value)
+                .SelectOneAsync(a => a.Id, a => a.Id == emptyCollection.MediaItemId.Value, cancellationToken)
                 .MapT(s => $"{s.Show.ShowMetadata.Head().Title} Season {s.SeasonNumber}"),
             ProgramScheduleItemCollectionType.TelevisionShow => await dbContext.Shows.Include(s => s.ShowMetadata)
                 .AsNoTracking()
-                .SelectOneAsync(a => a.Id, a => a.Id == emptyCollection.MediaItemId.Value)
+                .SelectOneAsync(a => a.Id, a => a.Id == emptyCollection.MediaItemId.Value, cancellationToken)
                 .MapT(s => s.ShowMetadata.Head().Title),
             // TODO: get playlist name
             _ => None

@@ -33,7 +33,7 @@ public class CreateExternalJsonPlayoutHandler
         CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        Validation<BaseError, Playout> validation = await Validate(dbContext, request);
+        Validation<BaseError, Playout> validation = await Validate(dbContext, request, cancellationToken);
         return await validation.Apply(playout => PersistPlayout(dbContext, playout));
     }
 
@@ -48,21 +48,23 @@ public class CreateExternalJsonPlayoutHandler
 
     private async Task<Validation<BaseError, Playout>> Validate(
         TvContext dbContext,
-        CreateExternalJsonPlayout request) =>
-        (await ValidateChannel(dbContext, request), ValidateExternalJsonFile(request), ValidatePlayoutType(request))
-        .Apply((channel, externalJsonFile, playoutType) => new Playout
+        CreateExternalJsonPlayout request,
+        CancellationToken cancellationToken) =>
+        (await ValidateChannel(dbContext, request, cancellationToken), ValidateExternalJsonFile(request), ValidateScheduleKind(request))
+        .Apply((channel, externalJsonFile, scheduleKind) => new Playout
         {
             ChannelId = channel.Id,
-            ExternalJsonFile = externalJsonFile,
-            ProgramSchedulePlayoutType = playoutType
+            ScheduleFile = externalJsonFile,
+            ScheduleKind = scheduleKind
         });
 
     private static Task<Validation<BaseError, Channel>> ValidateChannel(
         TvContext dbContext,
-        CreateExternalJsonPlayout createExternalJsonPlayout) =>
+        CreateExternalJsonPlayout createExternalJsonPlayout,
+        CancellationToken cancellationToken) =>
         dbContext.Channels
             .Include(c => c.Playouts)
-            .SelectOneAsync(c => c.Id, c => c.Id == createExternalJsonPlayout.ChannelId)
+            .SelectOneAsync(c => c.Id, c => c.Id == createExternalJsonPlayout.ChannelId, cancellationToken)
             .Map(o => o.ToValidation<BaseError>("Channel does not exist"))
             .BindT(ChannelMustNotHavePlayouts);
 
@@ -74,17 +76,17 @@ public class CreateExternalJsonPlayoutHandler
 
     private Validation<BaseError, string> ValidateExternalJsonFile(CreateExternalJsonPlayout request)
     {
-        if (!_localFileSystem.FileExists(request.ExternalJsonFile))
+        if (!_localFileSystem.FileExists(request.ScheduleFile))
         {
             return BaseError.New("External Json File does not exist!");
         }
 
-        return request.ExternalJsonFile;
+        return request.ScheduleFile;
     }
 
-    private static Validation<BaseError, ProgramSchedulePlayoutType> ValidatePlayoutType(
+    private static Validation<BaseError, PlayoutScheduleKind> ValidateScheduleKind(
         CreateExternalJsonPlayout createExternalJsonPlayout) =>
-        Optional(createExternalJsonPlayout.ProgramSchedulePlayoutType)
-            .Filter(playoutType => playoutType == ProgramSchedulePlayoutType.ExternalJson)
-            .ToValidation<BaseError>("[ProgramSchedulePlayoutType] must be ExternalJson");
+        Optional(createExternalJsonPlayout.ScheduleKind)
+            .Filter(scheduleKind => scheduleKind == PlayoutScheduleKind.ExternalJson)
+            .ToValidation<BaseError>("[ScheduleKind] must be ExternalJson");
 }

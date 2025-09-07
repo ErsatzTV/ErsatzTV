@@ -29,6 +29,7 @@ public interface IProgramScheduleItemRequest
     int? TailFillerId { get; }
     int? FallbackFillerId { get; }
     List<int> WatermarkIds { get; }
+    List<int> GraphicsElementIds { get; }
     string PreferredAudioLanguageCode { get; }
     string PreferredAudioTitle { get; }
     string PreferredSubtitleLanguageCode { get; }

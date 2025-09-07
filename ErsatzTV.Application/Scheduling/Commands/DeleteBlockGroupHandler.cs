@@ -14,7 +14,7 @@ public class DeleteBlockGroupHandler(IDbContextFactory<TvContext> dbContextFacto
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         Option<BlockGroup> maybeBlockGroup = await dbContext.BlockGroups
-            .SelectOneAsync(p => p.Id, p => p.Id == request.BlockGroupId);
+            .SelectOneAsync(p => p.Id, p => p.Id == request.BlockGroupId, cancellationToken);
 
         foreach (BlockGroup blockGroup in maybeBlockGroup)
         {

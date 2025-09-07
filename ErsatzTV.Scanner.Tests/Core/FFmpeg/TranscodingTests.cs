@@ -254,10 +254,8 @@ public class TranscodingTests
 
         var oldService = new FFmpegProcessService(
             new FakeStreamSelector(),
-            mockImageCache,
             tempFilePool,
             Substitute.For<IClient>(),
-            MemoryCache,
             LoggerFactory.CreateLogger<FFmpegProcessService>());
 
         var service = new FFmpegLibraryProcessService(
@@ -317,8 +315,6 @@ public class TranscodingTests
         (string videoPath, MediaVersion videoVersion) = await songVideoGenerator.GenerateSongVideo(
             song,
             channel,
-            None, // playout item watermark
-            None, // global watermark
             ExecutableName("ffmpeg"),
             ExecutableName("ffprobe"),
             CancellationToken.None);
@@ -350,6 +346,16 @@ public class TranscodingTests
 
         DateTimeOffset now = DateTimeOffset.Now;
 
+        WatermarkSelector watermarkSelector = new WatermarkSelector(
+            mockImageCache,
+            LoggerFactory.CreateLogger<WatermarkSelector>());
+
+        List<WatermarkOptions> watermarks = [];
+        foreach (var wm in GetWatermark(watermark))
+        {
+            watermarks.AddRange(watermarkSelector.GetWatermarkOptions(channel, wm, Option<ChannelWatermark>.None));
+        }
+
         PlayoutItemResult playoutItemResult = await service.ForPlayoutItem(
             ExecutableName("ffmpeg"),
             ExecutableName("ffprobe"),
@@ -367,8 +373,7 @@ public class TranscodingTests
             now,
             now + TimeSpan.FromSeconds(3),
             now,
-            [],
-            GetWatermark(watermark),
+            watermarks,
             [],
             "drm",
             VaapiDriver.RadeonSI,
@@ -382,9 +387,9 @@ public class TranscodingTests
             DateTimeOffset.Now,
             0,
             None,
-            false,
             Option<string>.None,
-            _ => { });
+            _ => { },
+            CancellationToken.None);
 
         // Console.WriteLine($"ffmpeg arguments {process.Arguments}");
 
@@ -616,25 +621,51 @@ public class TranscodingTests
 
         FFmpegLibraryProcessService service = GetService();
 
+        var channel = new Channel(Guid.NewGuid())
+        {
+            Number = "1",
+            FFmpegProfile = FFmpegProfile.New("test", profileResolution) with
+            {
+                HardwareAcceleration = profileAcceleration,
+                VideoFormat = profileVideoFormat,
+                AudioFormat = FFmpegProfileAudioFormat.Aac,
+                DeinterlaceVideo = true,
+                BitDepth = profileBitDepth,
+                ScalingBehavior = scalingBehavior
+            },
+            StreamingMode = streamingMode,
+            SubtitleMode = subtitleMode
+        };
+
+        var localFileSystem = new LocalFileSystem(
+            Substitute.For<IClient>(),
+            LoggerFactory.CreateLogger<LocalFileSystem>());
+        var tempFilePool = new TempFilePool();
+
+        ImageCache mockImageCache = Substitute.For<ImageCache>(localFileSystem, tempFilePool);
+
+        // always return the static watermark resource
+        mockImageCache.GetPathForImage(
+                Arg.Any<string>(),
+                Arg.Is<ArtworkKind>(x => x == ArtworkKind.Watermark),
+                Arg.Any<Option<int>>())
+            .Returns(Path.Combine(TestContext.CurrentContext.TestDirectory, "Resources", "ErsatzTV.png"));
+
+        WatermarkSelector watermarkSelector = new WatermarkSelector(
+            mockImageCache,
+            LoggerFactory.CreateLogger<WatermarkSelector>());
+
+        List<WatermarkOptions> watermarks = [];
+        foreach (var wm in channelWatermark)
+        {
+            watermarks.AddRange(watermarkSelector.GetWatermarkOptions(channel, wm, Option<ChannelWatermark>.None));
+        }
+
         PlayoutItemResult playoutItemResult = await service.ForPlayoutItem(
             ExecutableName("ffmpeg"),
             ExecutableName("ffprobe"),
             false,
-            new Channel(Guid.NewGuid())
-            {
-                Number = "1",
-                FFmpegProfile = FFmpegProfile.New("test", profileResolution) with
-                {
-                    HardwareAcceleration = profileAcceleration,
-                    VideoFormat = profileVideoFormat,
-                    AudioFormat = FFmpegProfileAudioFormat.Aac,
-                    DeinterlaceVideo = true,
-                    BitDepth = profileBitDepth,
-                    ScalingBehavior = scalingBehavior
-                },
-                StreamingMode = streamingMode,
-                SubtitleMode = subtitleMode
-            },
+            channel,
             v,
             new MediaItemAudioVersion(null, v),
             file,
@@ -647,8 +678,7 @@ public class TranscodingTests
             now,
             now + TimeSpan.FromSeconds(3),
             now,
-            [],
-            channelWatermark,
+            watermarks,
             [],
             "drm",
             VaapiDriver.RadeonSI,
@@ -662,9 +692,9 @@ public class TranscodingTests
             DateTimeOffset.Now,
             0,
             None,
-            false,
             Option<string>.None,
-            PipelineAction);
+            PipelineAction,
+            CancellationToken.None);
 
         // Console.WriteLine($"ffmpeg arguments {string.Join(" ", process.StartInfo.ArgumentList)}");
 
@@ -898,10 +928,8 @@ public class TranscodingTests
 
         var oldService = new FFmpegProcessService(
             new FakeStreamSelector(),
-            imageCache,
             Substitute.For<ITempFilePool>(),
             Substitute.For<IClient>(),
-            MemoryCache,
             LoggerFactory.CreateLogger<FFmpegProcessService>());
 
         var service = new FFmpegLibraryProcessService(
@@ -1075,7 +1103,8 @@ public class TranscodingTests
             StreamingMode streamingMode,
             Channel channel,
             string preferredAudioLanguage,
-            string preferredAudioTitle) =>
+            string preferredAudioTitle,
+            CancellationToken cancellationToken) =>
             Optional(version.MediaVersion.Streams.FirstOrDefault(s => s.MediaStreamKind == MediaStreamKind.Audio))
                 .AsTask();
 
@@ -1083,7 +1112,8 @@ public class TranscodingTests
             ImmutableList<ErsatzTV.Core.Domain.Subtitle> subtitles,
             Channel channel,
             string preferredSubtitleLanguage,
-            ChannelSubtitleMode subtitleMode) =>
+            ChannelSubtitleMode subtitleMode,
+            CancellationToken cancellationToken) =>
             subtitles.HeadOrNone().AsTask();
     }
 

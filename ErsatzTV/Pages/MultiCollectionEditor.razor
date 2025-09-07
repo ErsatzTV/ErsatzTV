@@ -111,7 +111,7 @@
 </MudForm>
 
 @code {
-    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource _cts;
 
     [Parameter]
     public int Id { get; set; }
@@ -130,47 +130,59 @@
 
     public void Dispose()
     {
-        _cts.Cancel();
-        _cts.Dispose();
+        _cts?.Cancel();
+        _cts?.Dispose();
     }
 
     protected override async Task OnParametersSetAsync()
     {
-        _collections = await Mediator.Send(new GetAllCollections(), _cts.Token)
-            .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
 
-        _smartCollections = await Mediator.Send(new GetAllSmartCollections(), _cts.Token)
-            .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
-
-        if (IsEdit)
+        try
         {
-            Option<MultiCollectionViewModel> maybeCollection = await Mediator.Send(new GetMultiCollectionById(Id), _cts.Token);
-            maybeCollection.IfSome(collection =>
+            _collections = await Mediator.Send(new GetAllCollections(), token)
+                .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
+
+            _smartCollections = await Mediator.Send(new GetAllSmartCollections(), token)
+                .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
+
+            if (IsEdit)
             {
-                _model.Id = collection.Id;
-                _model.Name = collection.Name;
-                _model.Items = collection.Items
-                    .Map(item =>
-                        new MultiCollectionItemEditViewModel
-                        {
-                            Collection = item.Collection,
-                            ScheduleAsGroup = item.ScheduleAsGroup,
-                            PlaybackOrder = item.PlaybackOrder
-                        })
-                    .Append(
-                        collection.SmartItems.Map(item =>
-                            new MultiCollectionSmartItemEditViewModel
+                Option<MultiCollectionViewModel> maybeCollection = await Mediator.Send(new GetMultiCollectionById(Id), token);
+                maybeCollection.IfSome(collection =>
+                {
+                    _model.Id = collection.Id;
+                    _model.Name = collection.Name;
+                    _model.Items = collection.Items
+                        .Map(item =>
+                            new MultiCollectionItemEditViewModel
                             {
-                                SmartCollection = item.SmartCollection,
+                                Collection = item.Collection,
                                 ScheduleAsGroup = item.ScheduleAsGroup,
                                 PlaybackOrder = item.PlaybackOrder
-                            })).ToList();
-            });
+                            })
+                        .Append(
+                            collection.SmartItems.Map(item =>
+                                new MultiCollectionSmartItemEditViewModel
+                                {
+                                    SmartCollection = item.SmartCollection,
+                                    ScheduleAsGroup = item.ScheduleAsGroup,
+                                    PlaybackOrder = item.PlaybackOrder
+                                })).ToList();
+                });
+            }
+            else
+            {
+                _model.Name = "New Multi Collection";
+                _model.Items = new List<MultiCollectionItemEditViewModel>();
+            }
         }
-        else
+        catch (OperationCanceledException)
         {
-            _model.Name = "New Multi Collection";
-            _model.Items = new List<MultiCollectionItemEditViewModel>();
+            // do nothing
         }
     }
 

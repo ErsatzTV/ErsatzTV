@@ -29,6 +29,7 @@ public class PrepareTroubleshootingPlaybackHandler(
     IFFmpegProcessService ffmpegProcessService,
     ILocalFileSystem localFileSystem,
     ISongVideoGenerator songVideoGenerator,
+    IWatermarkSelector watermarkSelector,
     IEntityLocker entityLocker,
     IMediator mediator,
     ILogger<PrepareTroubleshootingPlaybackHandler> logger)
@@ -43,9 +44,17 @@ public class PrepareTroubleshootingPlaybackHandler(
             await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
             Validation<BaseError, Tuple<MediaItem, string, string, FFmpegProfile>> validation = await Validate(
                 dbContext,
-                request);
+                request,
+                cancellationToken);
             return await validation.Match(
-                tuple => GetProcess(dbContext, request, tuple.Item1, tuple.Item2, tuple.Item3, tuple.Item4),
+                tuple => GetProcess(
+                    dbContext,
+                    request,
+                    tuple.Item1,
+                    tuple.Item2,
+                    tuple.Item3,
+                    tuple.Item4,
+                    cancellationToken),
                 error => Task.FromResult<Either<BaseError, PlayoutItemResult>>(error.Join()));
         }
         catch (Exception ex)
@@ -63,7 +72,8 @@ public class PrepareTroubleshootingPlaybackHandler(
         MediaItem mediaItem,
         string ffmpegPath,
         string ffprobePath,
-        FFmpegProfile ffmpegProfile)
+        FFmpegProfile ffmpegProfile,
+        CancellationToken cancellationToken)
     {
         if (entityLocker.IsTroubleshootingPlaybackLocked())
         {
@@ -79,7 +89,7 @@ public class PrepareTroubleshootingPlaybackHandler(
 
         MediaVersion version = mediaItem.GetHeadVersion();
 
-        string mediaPath = await GetMediaItemPath(dbContext, mediaItem);
+        string mediaPath = await GetMediaItemPath(dbContext, mediaItem, cancellationToken);
         if (string.IsNullOrEmpty(mediaPath))
         {
             logger.LogWarning("Media item {MediaItemId} does not exist on disk; cannot troubleshoot.", mediaItem.Id);
@@ -95,16 +105,22 @@ public class PrepareTroubleshootingPlaybackHandler(
             StreamingMode = StreamingMode.HttpLiveStreamingSegmenter,
             StreamSelectorMode = ChannelStreamSelectorMode.Troubleshooting,
             SubtitleMode = SUBTITLE_MODE
+            //SongVideoMode = ChannelSongVideoMode.WithProgress
         };
 
-        List<ChannelWatermark> watermarks = [];
+        List<WatermarkOptions> watermarks = [];
         if (request.WatermarkIds.Count > 0)
         {
             List<ChannelWatermark> channelWatermarks = await dbContext.ChannelWatermarks
+                .AsNoTracking()
                 .Where(w => request.WatermarkIds.Contains(w.Id))
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
 
-            watermarks.AddRange(channelWatermarks);
+            foreach (var watermark in channelWatermarks)
+            {
+                watermarks.AddRange(
+                    watermarkSelector.GetWatermarkOptions(channel, watermark, Option<ChannelWatermark>.None));
+            }
         }
 
         string videoPath = mediaPath;
@@ -115,8 +131,6 @@ public class PrepareTroubleshootingPlaybackHandler(
             (videoPath, videoVersion) = await songVideoGenerator.GenerateSongVideo(
                 song,
                 channel,
-                Option<ChannelWatermark>.None,
-                Option<ChannelWatermark>.None,
                 ffmpegPath,
                 ffprobePath,
                 CancellationToken.None);
@@ -129,20 +143,26 @@ public class PrepareTroubleshootingPlaybackHandler(
                 bool is43 = Math.Abs(ratio - 4.0 / 3.0) < 0.01;
                 string image = is43 ? "song_progress_overlay_43.png" : "song_progress_overlay.png";
 
+                var progressWatermark = new ChannelWatermark
+                {
+                    Mode = ChannelWatermarkMode.Permanent,
+                    Size = WatermarkSize.Scaled,
+                    WidthPercent = 100,
+                    HorizontalMarginPercent = 0,
+                    VerticalMarginPercent = 0,
+                    Opacity = 100,
+                    Location = WatermarkLocation.TopLeft,
+                    ImageSource = ChannelWatermarkImageSource.Resource,
+                    Image = image
+                };
+
+                var progressWatermarkOption = new WatermarkOptions(
+                    progressWatermark,
+                    Path.Combine(FileSystemLayout.ResourcesCacheFolder, progressWatermark.Image),
+                    Option<int>.None);
+
                 watermarks.Clear();
-                watermarks.Add(
-                    new ChannelWatermark
-                    {
-                        Mode = ChannelWatermarkMode.Permanent,
-                        Size = WatermarkSize.Scaled,
-                        WidthPercent = 100,
-                        HorizontalMarginPercent = 0,
-                        VerticalMarginPercent = 0,
-                        Opacity = 100,
-                        Location = WatermarkLocation.TopLeft,
-                        ImageSource = ChannelWatermarkImageSource.Resource,
-                        Image = image
-                    });
+                watermarks.Add(progressWatermarkOption);
             }
         }
 
@@ -180,7 +200,7 @@ public class PrepareTroubleshootingPlaybackHandler(
 
         List<GraphicsElement> graphicsElements = await dbContext.GraphicsElements
             .Where(ge => request.GraphicsElementIds.Contains(ge.Id))
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         PlayoutItemResult playoutItemResult = await ffmpegProcessService.ForPlayoutItem(
             ffmpegPath,
@@ -200,7 +220,6 @@ public class PrepareTroubleshootingPlaybackHandler(
             now + duration,
             now,
             watermarks,
-            Option<ChannelWatermark>.None,
             graphicsElements.Map(ge => new PlayoutItemGraphicsElement { GraphicsElement = ge }).ToList(),
             ffmpegProfile.VaapiDisplay,
             ffmpegProfile.VaapiDriver,
@@ -214,9 +233,9 @@ public class PrepareTroubleshootingPlaybackHandler(
             channelStartTime: DateTimeOffset.Now,
             0,
             None,
-            false,
             FileSystemLayout.TranscodeTroubleshootingFolder,
-            _ => { });
+            _ => { },
+            cancellationToken);
 
         return playoutItemResult;
     }
@@ -265,17 +284,19 @@ public class PrepareTroubleshootingPlaybackHandler(
 
     private static async Task<Validation<BaseError, Tuple<MediaItem, string, string, FFmpegProfile>>> Validate(
         TvContext dbContext,
-        PrepareTroubleshootingPlayback request) =>
-        (await MediaItemMustExist(dbContext, request),
-            await FFmpegPathMustExist(dbContext),
-            await FFprobePathMustExist(dbContext),
-            await FFmpegProfileMustExist(dbContext, request))
+        PrepareTroubleshootingPlayback request,
+        CancellationToken cancellationToken) =>
+        (await MediaItemMustExist(dbContext, request, cancellationToken),
+            await FFmpegPathMustExist(dbContext, cancellationToken),
+            await FFprobePathMustExist(dbContext, cancellationToken),
+            await FFmpegProfileMustExist(dbContext, request, cancellationToken))
         .Apply((mediaItem, ffmpegPath, ffprobePath, ffmpegProfile) =>
             Tuple(mediaItem, ffmpegPath, ffprobePath, ffmpegProfile));
 
     private static async Task<Validation<BaseError, MediaItem>> MediaItemMustExist(
         TvContext dbContext,
-        PrepareTroubleshootingPlayback request) =>
+        PrepareTroubleshootingPlayback request,
+        CancellationToken cancellationToken) =>
         await dbContext.MediaItems
             .AsNoTracking()
             .Include(mi => (mi as Episode).EpisodeMetadata)
@@ -329,32 +350,38 @@ public class PrepareTroubleshootingPlaybackHandler(
             .Include(mi => (mi as RemoteStream).MediaVersions)
             .ThenInclude(mv => mv.Streams)
             .Include(mi => (mi as RemoteStream).RemoteStreamMetadata)
-            .SelectOneAsync(mi => mi.Id, mi => mi.Id == request.MediaItemId)
+            .SelectOneAsync(mi => mi.Id, mi => mi.Id == request.MediaItemId, cancellationToken)
             .Map(o => o.ToValidation<BaseError>(new UnableToLocatePlayoutItem()));
 
-    private static Task<Validation<BaseError, string>> FFmpegPathMustExist(TvContext dbContext) =>
-        dbContext.ConfigElements.GetValue<string>(ConfigElementKey.FFmpegPath)
+    private static Task<Validation<BaseError, string>> FFmpegPathMustExist(
+        TvContext dbContext,
+        CancellationToken cancellationToken) =>
+        dbContext.ConfigElements.GetValue<string>(ConfigElementKey.FFmpegPath, cancellationToken)
             .FilterT(File.Exists)
             .Map(maybePath => maybePath.ToValidation<BaseError>("FFmpeg path does not exist on filesystem"));
 
-    private static Task<Validation<BaseError, string>> FFprobePathMustExist(TvContext dbContext) =>
-        dbContext.ConfigElements.GetValue<string>(ConfigElementKey.FFprobePath)
+    private static Task<Validation<BaseError, string>> FFprobePathMustExist(
+        TvContext dbContext,
+        CancellationToken cancellationToken) =>
+        dbContext.ConfigElements.GetValue<string>(ConfigElementKey.FFprobePath, cancellationToken)
             .FilterT(File.Exists)
             .Map(maybePath => maybePath.ToValidation<BaseError>("FFprobe path does not exist on filesystem"));
 
     private static Task<Validation<BaseError, FFmpegProfile>> FFmpegProfileMustExist(
         TvContext dbContext,
-        PrepareTroubleshootingPlayback request) =>
+        PrepareTroubleshootingPlayback request,
+        CancellationToken cancellationToken) =>
         dbContext.FFmpegProfiles
             .Include(p => p.Resolution)
-            .SelectOneAsync(p => p.Id, p => p.Id == request.FFmpegProfileId)
+            .SelectOneAsync(p => p.Id, p => p.Id == request.FFmpegProfileId, cancellationToken)
             .Map(o => o.ToValidation<BaseError>($"FFmpegProfile {request.FFmpegProfileId} does not exist"));
 
     private async Task<string> GetMediaItemPath(
         TvContext dbContext,
-        MediaItem mediaItem)
+        MediaItem mediaItem,
+        CancellationToken cancellationToken)
     {
-        string path = await GetLocalPath(mediaItem);
+        string path = await GetLocalPath(mediaItem, cancellationToken);
 
         // check filesystem first
         if (localFileSystem.FileExists(path))
@@ -424,7 +451,7 @@ public class PrepareTroubleshootingPlaybackHandler(
         return null;
     }
 
-    private async Task<string> GetLocalPath(MediaItem mediaItem)
+    private async Task<string> GetLocalPath(MediaItem mediaItem, CancellationToken cancellationToken)
     {
         MediaVersion version = mediaItem.GetHeadVersion();
         MediaFile file = version.MediaFiles.Head();
@@ -434,22 +461,28 @@ public class PrepareTroubleshootingPlaybackHandler(
         {
             PlexMovie plexMovie => await plexPathReplacementService.GetReplacementPlexPath(
                 plexMovie.LibraryPathId,
-                path),
+                path,
+                cancellationToken),
             PlexEpisode plexEpisode => await plexPathReplacementService.GetReplacementPlexPath(
                 plexEpisode.LibraryPathId,
-                path),
+                path,
+                cancellationToken),
             JellyfinMovie jellyfinMovie => await jellyfinPathReplacementService.GetReplacementJellyfinPath(
                 jellyfinMovie.LibraryPathId,
-                path),
+                path,
+                cancellationToken),
             JellyfinEpisode jellyfinEpisode => await jellyfinPathReplacementService.GetReplacementJellyfinPath(
                 jellyfinEpisode.LibraryPathId,
-                path),
+                path,
+                cancellationToken),
             EmbyMovie embyMovie => await embyPathReplacementService.GetReplacementEmbyPath(
                 embyMovie.LibraryPathId,
-                path),
+                path,
+                cancellationToken),
             EmbyEpisode embyEpisode => await embyPathReplacementService.GetReplacementEmbyPath(
                 embyEpisode.LibraryPathId,
-                path),
+                path,
+                cancellationToken),
             _ => path
         };
     }

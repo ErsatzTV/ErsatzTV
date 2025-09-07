@@ -5,6 +5,47 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 ### Added
+- Classic schedules: allow selecting multiple graphics elements on schedule items
+- Add channel `Playout Source` setting
+  - `Generated`: default/existing behavior where channel must have its own playout
+  - `Mirror`: channel will play content from the specified `Mirror Source Channel`'s playout
+    - This allows the exact same content on different channels with different channel settings
+    - `Playout Offset` can be used to offset the times of scheduled playout items from the mirror source channel
+      - e.g. -2 hours will cause the mirror channel to play content 2 hours before the mirror source channel
+
+### Fixed
+- Fix transcoding content with bt709/pc color metadata
+- Fix scripted schedule validation (file exists) when creating or editing playout
+- Fix adding single episode, movie, season, show to empty playlists
+- Fix startup with MySql as non-superuser
+  - `local_infile=ON` is required when using MySQL (for bulk inserts when building playouts)
+  - ETV will set this automatically when it has permission
+  - When ETV does not have permission, startup will fail with logged instructions on how to configure MySql
+- Fix scaling anamorphic content in locales that don't use period as a decimal separator (e.g. `,`)
+
+### Changed
+- **BREAKING CHANGE**: change how `Scripted Schedule` system works
+  - No longer uses embedded python (IronPython); instead uses HTTP API
+  - OpenAPI Description has been added at `/openapi/scripted-schedule.json`
+    - This allows scripted scheduling from *many* languages
+  - The scripted schedule file must now be directly executable (though a wrapper can be used to load a venv)
+  - The scripted schedule file will be passed the following arguments (in order):
+    - The API host (e.g. `http://localhost:8409`)
+    - The build id (a UUID string that is required on all API calls)
+    - The playout build mode (e.g. `reset` or `continue`, normally only used for specific logic when resetting a playout)
+  - Custom arguments can be included in the `Scripted Schedule` field in the playout editor
+    - Custom arguments will be passed *after* required arguments
+    - For example, a `Scripted Schedule` of `/home/jason/schedule.sh "party central" 23` will be executed like
+      - `/home/jason/schedule.sh http://localhost:8409 00000000-0000...0000 reset "party central" 23`
+    - This enables wrapper script re-use across multiple scripted schedules
+  - API reference is available at `/docs`
+  - Docker images contain pre-generated python api client and entrypoint script
+    - Entrypoint is at `/app/scripted-schedules/entrypoint.py`
+    - Scripts folder should be mounted to `/app/scripted-schedules/scripts`
+    - Playouts should be created with scripted schedule `/app/scripted-schedules/entrypoint.py script-name` (no trailing `.py`)
+
+## [25.5.0] - 2025-09-01
+### Added
 - Add *experimental* graphics engine
   - All watermarks will use new graphics engine
 - Add `Opacity Expression` watermark mode
@@ -57,6 +98,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Supports quick and deep scans
   - Can be triggered from the `Scan` button on show pages
   - Can be triggered by API call to `/api/libraries/{library-id}/scan-show`
+- Add XMLTV setting `XMLTV Block Behavior` to control how block schedules appear in the EPG
+  - `Split Time Evenly` - default (existing) behavior; block time is split among all items that are visible in the EPG
+  - `Use Actual Times` - actual times are used for all items that are visible in the EPG
+    - This will introduce EPG gaps when filler is used, or when items are hidden from the EPG
+- Add *experimental* `Scripted Schedule` playout system
+  - This system uses python scripts to support the highest degree of customization
+  - The goal is to expose methods equivalent to all sequential schedule (YAML) instructions
+- YAML and Scripted schedules: add `offline_tail` and `stop_before_end` to `pad_to_next` instruction
+  - Both parameters default to `true`
 
 ### Fix
 - Fix database operations that were slowing down playout builds
@@ -74,11 +124,38 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix bug where multiple Plex servers would mix their episodes
 - Fix incorrect media item counts after removing paths from local libraries
 - Fix song playback in playback troubleshooting
+- Fix seeking into extracted text subtitles
+- Fix error when changing default (lowest priority) alternate schedule
+- Fix remote library editing, tv shows, artists with MySql/MariaDB
+- Classic schedules: fix alternate schedule transitions (some edge cases would cause days to be skipped completely)
+- Classic schedules: always start new alternate schedules with the first schedule item
+- Classic Schedules: log offline gaps longer than 1 hour due to strict fixed start times
+- Fix `HLS Segmenter V2` streaming mode with AMF acceleration
+- Fix `HLS Segmenter V2` streaming mode with VideoToolbox acceleration
+- Fix startup process for database and search index initialization
+  - Redirect all pages to home page when initializing to prevent errors
+  - Clear stale sqlite migration lock on startup to prevent getting stuck on database initialization
+- Fix display of long season placeholder text (when season posters are unavailable)
 
 ### Changed
+- Rename some schedule and playout terms for clarity
+  - Schedules are used to build playouts and are what actually differs
+  - The playout is the end result, and is the same no matter what schedule kind is used
+  - Supported schedule kinds:
+    - `Classic Schedules`
+    - `Block Schedules`
+    - `Sequential Schedules` (formerly `YAML Schedules` or `YAML Playouts`)
+    - `Scripted Schedules`
+    - `JSON (dizqueTV) Schedules` (formerly `External JSON Playouts`)
 - Allow multiple watermarks in playback troubleshooting
 - Classic schedules: allow selecting multiple watermarks on schedule items
 - Block schedules: allow selecting multiple watermarks on decos
+- Block schedules: change available watermark modes on decos. For reference, the levels from highest to lowest with block schedules are `Global` > `Channel` > `Playout Default Deco` > `Template Deco`.
+  - `Inherit` - Use watermarks configured at a higher level
+  - `Disable` - Disable watermarks at this level and above
+  - `Replace` - Replace all watermarks configured at a higher level with those on this deco
+    - This was renamed from `Override`
+  - `Merge` - Merge all watermarks configured at a higher level with those on this deco
 - YAML playout: `watermark` instruction changes:
   - When value is `true`, will add named watermark to list of active watermarks
   - When value is `false` and `name` is specified, will remove named watermark from list of active watermarks
@@ -2589,7 +2666,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/ErsatzTV/ErsatzTV/compare/v25.4.0...HEAD
+[Unreleased]: https://github.com/ErsatzTV/ErsatzTV/compare/v25.5.0...HEAD
+[25.5.0]: https://github.com/ErsatzTV/ErsatzTV/compare/v25.4.0...v25.5.0
 [25.4.0]: https://github.com/ErsatzTV/ErsatzTV/compare/v25.3.1...v25.4.0
 [25.3.1]: https://github.com/ErsatzTV/ErsatzTV/compare/v25.3.0...v25.3.1
 [25.3.0]: https://github.com/ErsatzTV/ErsatzTV/compare/v25.2.0...v25.3.0

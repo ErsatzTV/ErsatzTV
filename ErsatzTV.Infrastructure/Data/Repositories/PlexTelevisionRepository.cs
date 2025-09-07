@@ -25,189 +25,236 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
         _logger = logger;
     }
 
-    public async Task<Option<int>> FlagNormal(PlexLibrary library, PlexEpisode episode)
+    public async Task<Option<int>> FlagNormal(
+        PlexLibrary library,
+        PlexEpisode episode,
+        CancellationToken cancellationToken)
     {
         if (episode.State is MediaItemState.Normal)
         {
             return Option<int>.None;
         }
 
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         episode.State = MediaItemState.Normal;
 
         Option<int> maybeId = await dbContext.Connection.ExecuteScalarAsync<int>(
-            @"SELECT PlexEpisode.Id FROM PlexEpisode
-            INNER JOIN MediaItem MI ON MI.Id = PlexEpisode.Id
-            INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id AND LibraryId = @LibraryId
-            WHERE PlexEpisode.Key = @Key",
-            new { LibraryId = library.Id, episode.Key });
+            new CommandDefinition(
+                @"SELECT PlexEpisode.Id FROM PlexEpisode
+                    INNER JOIN MediaItem MI ON MI.Id = PlexEpisode.Id
+                    INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id AND LibraryId = @LibraryId
+                    WHERE PlexEpisode.Key = @Key",
+                parameters: new { LibraryId = library.Id, episode.Key },
+                cancellationToken: cancellationToken));
 
         foreach (int id in maybeId)
         {
             return await dbContext.Connection.ExecuteAsync(
-                "UPDATE MediaItem SET State = 0 WHERE Id = @Id AND State != 0",
-                new { Id = id }).Map(count => count > 0 ? Some(id) : None);
+                new CommandDefinition(
+                    "UPDATE MediaItem SET State = 0 WHERE Id = @Id AND State != 0",
+                    parameters: new { Id = id },
+                    cancellationToken: cancellationToken)).Map(count => count > 0 ? Some(id) : None);
         }
 
         return None;
     }
 
-    public async Task<Option<int>> FlagNormal(PlexLibrary library, PlexSeason season)
+    public async Task<Option<int>> FlagNormal(
+        PlexLibrary library,
+        PlexSeason season,
+        CancellationToken cancellationToken)
     {
         if (season.State is MediaItemState.Normal)
         {
             return Option<int>.None;
         }
 
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         season.State = MediaItemState.Normal;
 
         Option<int> maybeId = await dbContext.Connection.ExecuteScalarAsync<int>(
-            @"SELECT PlexSeason.Id FROM PlexSeason
-            INNER JOIN MediaItem MI ON MI.Id = PlexSeason.Id
-            INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id AND LibraryId = @LibraryId
-            WHERE PlexSeason.Key = @Key",
-            new { LibraryId = library.Id, season.Key });
+            new CommandDefinition(
+                @"SELECT PlexSeason.Id FROM PlexSeason
+                    INNER JOIN MediaItem MI ON MI.Id = PlexSeason.Id
+                    INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id AND LibraryId = @LibraryId
+                    WHERE PlexSeason.Key = @Key",
+                parameters: new { LibraryId = library.Id, season.Key },
+                cancellationToken: cancellationToken));
 
         foreach (int id in maybeId)
         {
             return await dbContext.Connection.ExecuteAsync(
-                "UPDATE MediaItem SET State = 0 WHERE Id = @Id AND State != 0",
-                new { Id = id }).Map(count => count > 0 ? Some(id) : None);
+                new CommandDefinition(
+                    "UPDATE MediaItem SET State = 0 WHERE Id = @Id AND State != 0",
+                    parameters: new { Id = id },
+                    cancellationToken: cancellationToken)).Map(count => count > 0 ? Some(id) : None);
         }
 
         return None;
     }
 
-    public async Task<Option<int>> FlagNormal(PlexLibrary library, PlexShow show)
+    public async Task<Option<int>> FlagNormal(PlexLibrary library, PlexShow show, CancellationToken cancellationToken)
     {
         if (show.State is MediaItemState.Normal)
         {
             return Option<int>.None;
         }
 
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         show.State = MediaItemState.Normal;
 
         Option<int> maybeId = await dbContext.Connection.ExecuteScalarAsync<int>(
-            @"SELECT PlexShow.Id FROM PlexShow
-            INNER JOIN MediaItem MI ON MI.Id = PlexShow.Id
-            INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id AND LibraryId = @LibraryId
-            WHERE PlexShow.Key = @Key",
-            new { LibraryId = library.Id, show.Key });
+            new CommandDefinition(
+                @"SELECT PlexShow.Id FROM PlexShow
+                    INNER JOIN MediaItem MI ON MI.Id = PlexShow.Id
+                    INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id AND LibraryId = @LibraryId
+                    WHERE PlexShow.Key = @Key",
+                parameters: new { LibraryId = library.Id, show.Key },
+                cancellationToken: cancellationToken));
 
         foreach (int id in maybeId)
         {
             return await dbContext.Connection.ExecuteAsync(
-                "UPDATE MediaItem SET State = 0 WHERE Id = @Id AND State != 0",
-                new { Id = id }).Map(count => count > 0 ? Some(id) : None);
+                new CommandDefinition(
+                    "UPDATE MediaItem SET State = 0 WHERE Id = @Id AND State != 0",
+                    parameters: new { Id = id },
+                    cancellationToken: cancellationToken)).Map(count => count > 0 ? Some(id) : None);
         }
 
         return None;
     }
 
-    public async Task<Option<int>> FlagUnavailable(PlexLibrary library, PlexEpisode episode)
+    public async Task<Option<int>> FlagUnavailable(
+        PlexLibrary library,
+        PlexEpisode episode,
+        CancellationToken cancellationToken)
     {
         if (episode.State is MediaItemState.Unavailable)
         {
             return Option<int>.None;
         }
 
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         episode.State = MediaItemState.Unavailable;
 
         Option<int> maybeId = await dbContext.Connection.ExecuteScalarAsync<int>(
-            @"SELECT PlexEpisode.Id FROM PlexEpisode
-            INNER JOIN MediaItem MI ON MI.Id = PlexEpisode.Id
-            INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id AND LibraryId = @LibraryId
-            WHERE PlexEpisode.Key = @Key",
-            new { LibraryId = library.Id, episode.Key });
+            new CommandDefinition(
+                @"SELECT PlexEpisode.Id FROM PlexEpisode
+                    INNER JOIN MediaItem MI ON MI.Id = PlexEpisode.Id
+                    INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id AND LibraryId = @LibraryId
+                    WHERE PlexEpisode.Key = @Key",
+                parameters: new { LibraryId = library.Id, episode.Key },
+                cancellationToken: cancellationToken));
 
         foreach (int id in maybeId)
         {
             return await dbContext.Connection.ExecuteAsync(
-                "UPDATE MediaItem SET State = 2 WHERE Id = @Id AND State != 2",
-                new { Id = id }).Map(count => count > 0 ? Some(id) : None);
+                new CommandDefinition(
+                    "UPDATE MediaItem SET State = 2 WHERE Id = @Id AND State != 2",
+                    parameters: new { Id = id },
+                    cancellationToken: cancellationToken)).Map(count => count > 0 ? Some(id) : None);
         }
 
         return None;
     }
 
-    public async Task<Option<int>> FlagRemoteOnly(PlexLibrary library, PlexEpisode episode)
+    public async Task<Option<int>> FlagRemoteOnly(
+        PlexLibrary library,
+        PlexEpisode episode,
+        CancellationToken cancellationToken)
     {
         if (episode.State is MediaItemState.RemoteOnly)
         {
             return Option<int>.None;
         }
 
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         episode.State = MediaItemState.RemoteOnly;
 
         Option<int> maybeId = await dbContext.Connection.ExecuteScalarAsync<int>(
-            @"SELECT PlexEpisode.Id FROM PlexEpisode
-            INNER JOIN MediaItem MI ON MI.Id = PlexEpisode.Id
-            INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id AND LibraryId = @LibraryId
-            WHERE PlexEpisode.Key = @Key",
-            new { LibraryId = library.Id, episode.Key });
+            new CommandDefinition(
+                @"SELECT PlexEpisode.Id FROM PlexEpisode
+                    INNER JOIN MediaItem MI ON MI.Id = PlexEpisode.Id
+                    INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id AND LibraryId = @LibraryId
+                    WHERE PlexEpisode.Key = @Key",
+                parameters: new { LibraryId = library.Id, episode.Key },
+                cancellationToken: cancellationToken));
 
         foreach (int id in maybeId)
         {
             return await dbContext.Connection.ExecuteAsync(
-                "UPDATE MediaItem SET State = 3 WHERE Id = @Id AND State != 3",
-                new { Id = id }).Map(count => count > 0 ? Some(id) : None);
+                new CommandDefinition(
+                    "UPDATE MediaItem SET State = 3 WHERE Id = @Id AND State != 3",
+                    parameters: new { Id = id },
+                    cancellationToken: cancellationToken)).Map(count => count > 0 ? Some(id) : None);
         }
 
         return None;
     }
 
-    public async Task<List<PlexItemEtag>> GetExistingShows(PlexLibrary library)
+    public async Task<List<PlexItemEtag>> GetExistingShows(PlexLibrary library, CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await dbContext.Connection.QueryAsync<PlexItemEtag>(
-                @"SELECT PS.Key, PS.Etag, MI.State FROM PlexShow PS
+                new CommandDefinition(
+                    @"SELECT PS.Key, PS.Etag, MI.State FROM PlexShow PS
                       INNER JOIN MediaItem MI on PS.Id = MI.Id
                       INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id AND LP.LibraryId = @LibraryId",
-                new { LibraryId = library.Id })
+                    parameters: new { LibraryId = library.Id },
+                    cancellationToken: cancellationToken))
             .Map(result => result.ToList());
     }
 
-    public async Task<List<PlexItemEtag>> GetExistingSeasons(PlexLibrary library, PlexShow show)
+    public async Task<List<PlexItemEtag>> GetExistingSeasons(
+        PlexLibrary library,
+        PlexShow show,
+        CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await dbContext.Connection.QueryAsync<PlexItemEtag>(
-                @"SELECT PlexSeason.Key, PlexSeason.Etag, MI.State FROM PlexSeason
+                new CommandDefinition(
+                    @"SELECT PlexSeason.Key, PlexSeason.Etag, MI.State FROM PlexSeason
                       INNER JOIN Season S on PlexSeason.Id = S.Id
                       INNER JOIN MediaItem MI on S.Id = MI.Id
                       INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id AND LP.LibraryId = @LibraryId
                       INNER JOIN PlexShow PS ON S.ShowId = PS.Id
                       WHERE LP.LibraryId = @LibraryId AND PS.Key = @Key",
-                new { LibraryId = library.Id, show.Key })
+                    parameters: new { LibraryId = library.Id, show.Key },
+                    cancellationToken: cancellationToken))
             .Map(result => result.ToList());
     }
 
-    public async Task<List<PlexItemEtag>> GetExistingEpisodes(PlexLibrary library, PlexSeason season)
+    public async Task<List<PlexItemEtag>> GetExistingEpisodes(
+        PlexLibrary library,
+        PlexSeason season,
+        CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await dbContext.Connection.QueryAsync<PlexItemEtag>(
-                @"SELECT PlexEpisode.Key, PlexEpisode.Etag, MI.State FROM PlexEpisode
+                new CommandDefinition(
+                    @"SELECT PlexEpisode.Key, PlexEpisode.Etag, MI.State FROM PlexEpisode
                       INNER JOIN Episode E on PlexEpisode.Id = E.Id
                       INNER JOIN MediaItem MI on E.Id = MI.Id
                       INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id
                       INNER JOIN Season S2 on E.SeasonId = S2.Id
                       INNER JOIN PlexSeason PS on S2.Id = PS.Id
                       WHERE LP.LibraryId = @LibraryId AND PS.Key = @Key",
-                new { LibraryId = library.Id, season.Key })
+                    parameters: new { LibraryId = library.Id, season.Key },
+                    cancellationToken: cancellationToken))
             .Map(result => result.ToList());
     }
 
-    public async Task<Either<BaseError, MediaItemScanResult<PlexShow>>> GetOrAdd(PlexLibrary library, PlexShow item)
+    public async Task<Either<BaseError, MediaItemScanResult<PlexShow>>> GetOrAdd(
+        PlexLibrary library,
+        PlexShow item,
+        CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Option<PlexShow> maybeExisting = await dbContext.PlexShows
             .AsNoTracking()
             .Where(ps => ps.LibraryPath.LibraryId == library.Id)
@@ -228,19 +275,22 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
             .ThenInclude(lp => lp.Library)
             .Include(i => i.TraktListItems)
             .ThenInclude(tli => tli.TraktList)
-            .SelectOneAsync(i => i.Key, i => i.Key == item.Key);
+            .SelectOneAsync(i => i.Key, i => i.Key == item.Key, cancellationToken);
 
         foreach (PlexShow plexShow in maybeExisting)
         {
             return new MediaItemScanResult<PlexShow>(plexShow) { IsAdded = false };
         }
 
-        return await AddShow(dbContext, library, item);
+        return await AddShow(dbContext, library, item, cancellationToken);
     }
 
-    public async Task<Either<BaseError, MediaItemScanResult<PlexSeason>>> GetOrAdd(PlexLibrary library, PlexSeason item)
+    public async Task<Either<BaseError, MediaItemScanResult<PlexSeason>>> GetOrAdd(
+        PlexLibrary library,
+        PlexSeason item,
+        CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Option<PlexSeason> maybeExisting = await dbContext.PlexSeasons
             .AsNoTracking()
             .Where(ps => ps.LibraryPath.LibraryId == library.Id)
@@ -254,22 +304,23 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
             .ThenInclude(l => l.Library)
             .Include(s => s.TraktListItems)
             .ThenInclude(tli => tli.TraktList)
-            .SelectOneAsync(i => i.Key, i => i.Key == item.Key);
+            .SelectOneAsync(i => i.Key, i => i.Key == item.Key, cancellationToken);
 
         foreach (PlexSeason plexSeason in maybeExisting)
         {
             return new MediaItemScanResult<PlexSeason>(plexSeason) { IsAdded = false };
         }
 
-        return await AddSeason(dbContext, library, item);
+        return await AddSeason(dbContext, library, item, cancellationToken);
     }
 
     public async Task<Either<BaseError, MediaItemScanResult<PlexEpisode>>> GetOrAdd(
         PlexLibrary library,
         PlexEpisode item,
-        bool deepScan)
+        bool deepScan,
+        CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Option<PlexEpisode> maybeExisting = await dbContext.PlexEpisodes
             .AsNoTracking()
             .Where(pe => pe.LibraryPath.LibraryId == library.Id)
@@ -299,14 +350,14 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
             .Include(e => e.Season)
             .Include(e => e.TraktListItems)
             .ThenInclude(tli => tli.TraktList)
-            .SelectOneAsync(i => i.Key, i => i.Key == item.Key);
+            .SelectOneAsync(i => i.Key, i => i.Key == item.Key, cancellationToken);
 
         foreach (PlexEpisode plexEpisode in maybeExisting)
         {
             var result = new MediaItemScanResult<PlexEpisode>(plexEpisode) { IsAdded = false };
             if (plexEpisode.Etag != item.Etag || deepScan)
             {
-                foreach (BaseError error in await UpdateEpisodePath(dbContext, plexEpisode, item))
+                foreach (BaseError error in await UpdateEpisodePath(dbContext, plexEpisode, item, cancellationToken))
                 {
                     return error;
                 }
@@ -317,104 +368,131 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
             return result;
         }
 
-        return await AddEpisode(dbContext, library, item);
+        return await AddEpisode(dbContext, library, item, cancellationToken);
     }
 
-    public async Task<Unit> SetEtag(PlexShow show, string etag)
+    public async Task<Unit> SetEtag(PlexShow show, string etag, CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await dbContext.Connection.ExecuteAsync(
-            "UPDATE PlexShow SET Etag = @Etag WHERE Id = @Id",
-            new { Etag = etag, show.Id }).Map(_ => Unit.Default);
+            new CommandDefinition(
+                "UPDATE PlexShow SET Etag = @Etag WHERE Id = @Id",
+                parameters: new { Etag = etag, show.Id },
+                cancellationToken: cancellationToken)).Map(_ => Unit.Default);
     }
 
-    public async Task<Unit> SetEtag(PlexSeason season, string etag)
+    public async Task<Unit> SetEtag(PlexSeason season, string etag, CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await dbContext.Connection.ExecuteAsync(
-            "UPDATE PlexSeason SET Etag = @Etag WHERE Id = @Id",
-            new { Etag = etag, season.Id }).Map(_ => Unit.Default);
+            new CommandDefinition(
+                "UPDATE PlexSeason SET Etag = @Etag WHERE Id = @Id",
+                parameters: new { Etag = etag, season.Id },
+                cancellationToken: cancellationToken)).Map(_ => Unit.Default);
     }
 
-    public async Task<Unit> SetEtag(PlexEpisode episode, string etag)
+    public async Task<Unit> SetEtag(PlexEpisode episode, string etag, CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await dbContext.Connection.ExecuteAsync(
-            "UPDATE PlexEpisode SET Etag = @Etag WHERE Id = @Id",
-            new { Etag = etag, episode.Id }).Map(_ => Unit.Default);
+            new CommandDefinition(
+                "UPDATE PlexEpisode SET Etag = @Etag WHERE Id = @Id",
+                parameters: new { Etag = etag, episode.Id },
+                cancellationToken: cancellationToken)).Map(_ => Unit.Default);
     }
 
-    public async Task<List<int>> FlagFileNotFoundShows(PlexLibrary library, List<string> showItemIds)
+    public async Task<List<int>> FlagFileNotFoundShows(
+        PlexLibrary library,
+        List<string> showItemIds,
+        CancellationToken cancellationToken)
     {
         if (showItemIds.Count == 0)
         {
             return [];
         }
 
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         List<int> ids = await dbContext.Connection.QueryAsync<int>(
-                @"SELECT M.Id
+                new CommandDefinition(
+                    @"SELECT M.Id
                 FROM MediaItem M
                 INNER JOIN PlexShow ON PlexShow.Id = M.Id
                 INNER JOIN LibraryPath LP on M.LibraryPathId = LP.Id AND LP.LibraryId = @LibraryId
                 WHERE PlexShow.Key IN @ShowKeys",
-                new { LibraryId = library.Id, ShowKeys = showItemIds })
+                    parameters: new { LibraryId = library.Id, ShowKeys = showItemIds },
+                    cancellationToken: cancellationToken))
             .Map(result => result.ToList());
 
         await dbContext.Connection.ExecuteAsync(
-            @"UPDATE MediaItem SET State = 1 WHERE Id IN @Ids",
-            new { Ids = ids });
+            new CommandDefinition(
+                @"UPDATE MediaItem SET State = 1 WHERE Id IN @Ids",
+                parameters: new { Ids = ids },
+                cancellationToken: cancellationToken));
 
         return ids;
     }
 
-    public async Task<List<int>> FlagFileNotFoundSeasons(PlexLibrary library, List<string> seasonItemIds)
+    public async Task<List<int>> FlagFileNotFoundSeasons(
+        PlexLibrary library,
+        List<string> seasonItemIds,
+        CancellationToken cancellationToken)
     {
         if (seasonItemIds.Count == 0)
         {
             return [];
         }
 
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         List<int> ids = await dbContext.Connection.QueryAsync<int>(
-                @"SELECT M.Id
+                new CommandDefinition(
+                    @"SELECT M.Id
                 FROM MediaItem M
                 INNER JOIN PlexSeason ON PlexSeason.Id = M.Id
                 INNER JOIN LibraryPath LP on M.LibraryPathId = LP.Id AND LP.LibraryId = @LibraryId
                 WHERE PlexSeason.Key IN @SeasonKeys",
-                new { LibraryId = library.Id, SeasonKeys = seasonItemIds })
+                    parameters: new { LibraryId = library.Id, SeasonKeys = seasonItemIds },
+                    cancellationToken: cancellationToken))
             .Map(result => result.ToList());
 
         await dbContext.Connection.ExecuteAsync(
-            @"UPDATE MediaItem SET State = 1 WHERE Id IN @Ids",
-            new { Ids = ids });
+            new CommandDefinition(
+                @"UPDATE MediaItem SET State = 1 WHERE Id IN @Ids",
+                parameters: new { Ids = ids },
+                cancellationToken: cancellationToken));
 
         return ids;
     }
 
-    public async Task<List<int>> FlagFileNotFoundEpisodes(PlexLibrary library, List<string> episodeItemIds)
+    public async Task<List<int>> FlagFileNotFoundEpisodes(
+        PlexLibrary library,
+        List<string> episodeItemIds,
+        CancellationToken cancellationToken)
     {
         if (episodeItemIds.Count == 0)
         {
             return [];
         }
 
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         List<int> ids = await dbContext.Connection.QueryAsync<int>(
-                @"SELECT M.Id
-                FROM MediaItem M
-                INNER JOIN PlexEpisode ON PlexEpisode.Id = M.Id
-                INNER JOIN LibraryPath LP on M.LibraryPathId = LP.Id AND LP.LibraryId = @LibraryId
-                WHERE PlexEpisode.Key IN @EpisodeKeys",
-                new { LibraryId = library.Id, EpisodeKeys = episodeItemIds })
+                new CommandDefinition(
+                    @"SELECT M.Id
+                    FROM MediaItem M
+                    INNER JOIN PlexEpisode ON PlexEpisode.Id = M.Id
+                    INNER JOIN LibraryPath LP on M.LibraryPathId = LP.Id AND LP.LibraryId = @LibraryId
+                    WHERE PlexEpisode.Key IN @EpisodeKeys",
+                    parameters: new { LibraryId = library.Id, EpisodeKeys = episodeItemIds },
+                    cancellationToken: cancellationToken))
             .Map(result => result.ToList());
 
         await dbContext.Connection.ExecuteAsync(
-            @"UPDATE MediaItem SET State = 1 WHERE Id IN @Ids",
-            new { Ids = ids });
+            new CommandDefinition(
+                @"UPDATE MediaItem SET State = 1 WHERE Id IN @Ids",
+                parameters: new { Ids = ids },
+                cancellationToken: cancellationToken));
 
         return ids;
     }
@@ -422,9 +500,10 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
     public async Task<List<int>> RemoveAllTags(
         PlexLibrary library,
         PlexTag tag,
-        System.Collections.Generic.HashSet<int> keep)
+        System.Collections.Generic.HashSet<int> keep,
+        CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         var tagType = tag.TagType.ToString(CultureInfo.InvariantCulture);
 
@@ -433,7 +512,7 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
             .Where(sm => sm.Show.LibraryPath.LibraryId == library.Id)
             .Where(sm => sm.Tags.Any(t => t.Name == tag.Tag && t.ExternalTypeId == tagType))
             .Select(sm => sm.ShowId)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         if (result.Count > 0)
         {
@@ -441,28 +520,38 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
                 .Where(sm => result.Contains(sm.ShowId))
                 .Where(sm => sm.Tags.Any(t => t.Name == tag.Tag && t.ExternalTypeId == tagType))
                 .SelectMany(sm => sm.Tags.Select(t => t.Id))
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
 
             // delete all tags
-            await dbContext.Connection.ExecuteAsync("DELETE FROM Tag WHERE Id IN @TagIds", new { TagIds = tagIds });
+            await dbContext.Connection.ExecuteAsync(
+                new CommandDefinition(
+                    "DELETE FROM Tag WHERE Id IN @TagIds",
+                    parameters: new { TagIds = tagIds },
+                    cancellationToken: cancellationToken));
         }
 
         // show ids to refresh
         return result;
     }
 
-    public async Task<PlexShowAddTagResult> AddTag(PlexLibrary library, PlexShow show, PlexTag tag)
+    public async Task<PlexShowAddTagResult> AddTag(
+        PlexLibrary library,
+        PlexShow show,
+        PlexTag tag,
+        CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         int existingShowId = await dbContext.Connection.ExecuteScalarAsync<int>(
-            @"SELECT PS.Id FROM Tag
-            INNER JOIN ShowMetadata SM on SM.Id = Tag.ShowMetadataId
-            INNER JOIN PlexShow PS on PS.Id = SM.ShowId
-            INNER JOIN MediaItem MI on PS.Id = MI.Id
-            INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id AND LP.LibraryId = @LibraryId
-            WHERE PS.Key = @Key AND Tag.Name = @Tag AND Tag.ExternalTypeId = @TagType",
-            new { show.Key, tag.Tag, tag.TagType, LibraryId = library.Id });
+            new CommandDefinition(
+                @"SELECT PS.Id FROM Tag
+                INNER JOIN ShowMetadata SM on SM.Id = Tag.ShowMetadataId
+                INNER JOIN PlexShow PS on PS.Id = SM.ShowId
+                INNER JOIN MediaItem MI on PS.Id = MI.Id
+                INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id AND LP.LibraryId = @LibraryId
+                WHERE PS.Key = @Key AND Tag.Name = @Tag AND Tag.ExternalTypeId = @TagType",
+                parameters: new { show.Key, tag.Tag, tag.TagType, LibraryId = library.Id },
+                cancellationToken: cancellationToken));
 
         // already exists
         if (existingShowId > 0)
@@ -473,35 +562,42 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
         int showId = await dbContext.PlexShows
             .Where(s => s.Key == show.Key)
             .Select(s => s.Id)
-            .FirstOrDefaultAsync();
+            .FirstOrDefaultAsync(cancellationToken);
 
         await dbContext.Connection.ExecuteAsync(
-            @"INSERT INTO Tag (Name, ExternalTypeId, ShowMetadataId)
-              SELECT @Tag, @TagType, Id FROM
-              (SELECT Id FROM ShowMetadata WHERE ShowId = @ShowId) AS A",
-            new { tag.Tag, tag.TagType, ShowId = showId });
+            new CommandDefinition(
+                @"INSERT INTO Tag (Name, ExternalTypeId, ShowMetadataId)
+                  SELECT @Tag, @TagType, Id FROM
+                  (SELECT Id FROM ShowMetadata WHERE ShowId = @ShowId) AS A",
+                parameters: new { tag.Tag, tag.TagType, ShowId = showId },
+                cancellationToken: cancellationToken));
 
         // show id to refresh
         return new PlexShowAddTagResult(Option<int>.None, showId);
     }
 
-    public async Task UpdateLastNetworksScan(PlexLibrary library)
+    public async Task UpdateLastNetworksScan(PlexLibrary library, CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         await dbContext.Connection.ExecuteAsync(
-            "UPDATE PlexLibrary SET LastNetworksScan = @LastNetworksScan WHERE Id = @Id",
-            new { library.LastNetworksScan, library.Id });
+            new CommandDefinition(
+                "UPDATE PlexLibrary SET LastNetworksScan = @LastNetworksScan WHERE Id = @Id",
+                parameters: new { library.LastNetworksScan, library.Id },
+                cancellationToken: cancellationToken));
     }
 
-    public async Task<Option<PlexShowTitleKeyResult>> GetShowTitleKey(int libraryId, int showId)
+    public async Task<Option<PlexShowTitleKeyResult>> GetShowTitleKey(
+        int libraryId,
+        int showId,
+        CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         Option<PlexShow> maybeShow = await dbContext.PlexShows
             .Where(s => s.Id == showId)
             .Where(s => s.LibraryPath.LibraryId == libraryId)
             .Include(s => s.ShowMetadata)
-            .FirstOrDefaultAsync()
+            .FirstOrDefaultAsync(cancellationToken)
             .Map(Optional);
 
         foreach (PlexShow show in maybeShow)
@@ -517,7 +613,8 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
     private static async Task<Either<BaseError, MediaItemScanResult<PlexShow>>> AddShow(
         TvContext dbContext,
         PlexLibrary library,
-        PlexShow item)
+        PlexShow item,
+        CancellationToken cancellationToken)
     {
         try
         {
@@ -527,14 +624,14 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
 
             item.LibraryPathId = library.Paths.Head().Id;
 
-            await dbContext.PlexShows.AddAsync(item);
-            await dbContext.SaveChangesAsync();
+            await dbContext.PlexShows.AddAsync(item, cancellationToken);
+            await dbContext.SaveChangesAsync(cancellationToken);
 
             // restore etag
             item.Etag = etag;
 
-            await dbContext.Entry(item).Reference(i => i.LibraryPath).LoadAsync();
-            await dbContext.Entry(item.LibraryPath).Reference(lp => lp.Library).LoadAsync();
+            await dbContext.Entry(item).Reference(i => i.LibraryPath).LoadAsync(cancellationToken);
+            await dbContext.Entry(item.LibraryPath).Reference(lp => lp.Library).LoadAsync(cancellationToken);
             return new MediaItemScanResult<PlexShow>(item) { IsAdded = true };
         }
         catch (Exception ex)
@@ -546,7 +643,8 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
     private static async Task<Either<BaseError, MediaItemScanResult<PlexSeason>>> AddSeason(
         TvContext dbContext,
         PlexLibrary library,
-        PlexSeason item)
+        PlexSeason item,
+        CancellationToken cancellationToken)
     {
         try
         {
@@ -556,14 +654,14 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
 
             item.LibraryPathId = library.Paths.Head().Id;
 
-            await dbContext.PlexSeasons.AddAsync(item);
-            await dbContext.SaveChangesAsync();
+            await dbContext.PlexSeasons.AddAsync(item, cancellationToken);
+            await dbContext.SaveChangesAsync(cancellationToken);
 
             // restore etag
             item.Etag = etag;
 
-            await dbContext.Entry(item).Reference(i => i.LibraryPath).LoadAsync();
-            await dbContext.Entry(item.LibraryPath).Reference(lp => lp.Library).LoadAsync();
+            await dbContext.Entry(item).Reference(i => i.LibraryPath).LoadAsync(cancellationToken);
+            await dbContext.Entry(item.LibraryPath).Reference(lp => lp.Library).LoadAsync(cancellationToken);
             return new MediaItemScanResult<PlexSeason>(item) { IsAdded = true };
         }
         catch (Exception ex)
@@ -575,11 +673,17 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
     private async Task<Either<BaseError, MediaItemScanResult<PlexEpisode>>> AddEpisode(
         TvContext dbContext,
         PlexLibrary library,
-        PlexEpisode item)
+        PlexEpisode item,
+        CancellationToken cancellationToken)
     {
         try
         {
-            if (await MediaItemRepository.MediaFileAlreadyExists(item, library.Paths.Head().Id, dbContext, _logger))
+            if (await MediaItemRepository.MediaFileAlreadyExists(
+                    item,
+                    library.Paths.Head().Id,
+                    dbContext,
+                    _logger,
+                    cancellationToken))
             {
                 return new MediaFileAlreadyExists();
             }
@@ -599,15 +703,15 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
                 metadata.Writers ??= [];
             }
 
-            await dbContext.PlexEpisodes.AddAsync(item);
-            await dbContext.SaveChangesAsync();
+            await dbContext.PlexEpisodes.AddAsync(item, cancellationToken);
+            await dbContext.SaveChangesAsync(cancellationToken);
 
             // restore etag
             item.Etag = etag;
 
-            await dbContext.Entry(item).Reference(i => i.LibraryPath).LoadAsync();
-            await dbContext.Entry(item.LibraryPath).Reference(lp => lp.Library).LoadAsync();
-            await dbContext.Entry(item).Reference(e => e.Season).LoadAsync();
+            await dbContext.Entry(item).Reference(i => i.LibraryPath).LoadAsync(cancellationToken);
+            await dbContext.Entry(item.LibraryPath).Reference(lp => lp.Library).LoadAsync(cancellationToken);
+            await dbContext.Entry(item).Reference(e => e.Season).LoadAsync(cancellationToken);
             return new MediaItemScanResult<PlexEpisode>(item) { IsAdded = true };
         }
         catch (Exception ex)
@@ -619,7 +723,8 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
     private async Task<Option<BaseError>> UpdateEpisodePath(
         TvContext dbContext,
         PlexEpisode existing,
-        PlexEpisode incoming)
+        PlexEpisode incoming,
+        CancellationToken cancellationToken)
     {
         try
         {
@@ -650,16 +755,22 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
                 file.Key = incomingFile.Key;
 
                 await dbContext.Connection.ExecuteAsync(
-                    @"UPDATE MediaVersion SET Name = @Name, DateAdded = @DateAdded WHERE Id = @Id",
-                    new { version.Name, version.DateAdded, version.Id });
+                    new CommandDefinition(
+                        @"UPDATE MediaVersion SET Name = @Name, DateAdded = @DateAdded WHERE Id = @Id",
+                        parameters: new { version.Name, version.DateAdded, version.Id },
+                        cancellationToken: cancellationToken));
 
                 await dbContext.Connection.ExecuteAsync(
-                    @"UPDATE MediaFile SET Path = @Path WHERE Id = @Id",
-                    new { file.Path, file.Id });
+                    new CommandDefinition(
+                        @"UPDATE MediaFile SET Path = @Path WHERE Id = @Id",
+                        parameters: new { file.Path, file.Id },
+                        cancellationToken: cancellationToken));
 
                 await dbContext.Connection.ExecuteAsync(
-                    @"UPDATE PlexMediaFile SET `Key` = @Key WHERE Id = @Id",
-                    new { file.Key, file.Id });
+                    new CommandDefinition(
+                        @"UPDATE PlexMediaFile SET `Key` = @Key WHERE Id = @Id",
+                        parameters: new { file.Key, file.Id },
+                        cancellationToken: cancellationToken));
             }
 
             return Option<BaseError>.None;

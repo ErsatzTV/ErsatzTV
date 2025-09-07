@@ -68,6 +68,8 @@ internal static class Mapper
                         : null,
                     duration.ProgramScheduleItemWatermarks.Map(wm => Watermarks.Mapper.ProjectToViewModel(wm.Watermark))
                         .ToList(),
+                    duration.ProgramScheduleItemGraphicsElements.Map(ge => Graphics.Mapper.ProjectToViewModel(ge.GraphicsElement))
+                        .ToList(),
                     duration.PreferredAudioLanguageCode,
                     duration.PreferredAudioTitle,
                     duration.PreferredSubtitleLanguageCode,
@@ -119,6 +121,8 @@ internal static class Mapper
                         ? Filler.Mapper.ProjectToViewModel(flood.FallbackFiller)
                         : null,
                     flood.ProgramScheduleItemWatermarks.Map(wm => Watermarks.Mapper.ProjectToViewModel(wm.Watermark))
+                        .ToList(),
+                    flood.ProgramScheduleItemGraphicsElements.Map(ge => Graphics.Mapper.ProjectToViewModel(ge.GraphicsElement))
                         .ToList(),
                     flood.PreferredAudioLanguageCode,
                     flood.PreferredAudioTitle,
@@ -174,6 +178,8 @@ internal static class Mapper
                         : null,
                     multiple.ProgramScheduleItemWatermarks.Map(wm => Watermarks.Mapper.ProjectToViewModel(wm.Watermark))
                         .ToList(),
+                    multiple.ProgramScheduleItemGraphicsElements.Map(ge => Graphics.Mapper.ProjectToViewModel(ge.GraphicsElement))
+                        .ToList(),
                     multiple.PreferredAudioLanguageCode,
                     multiple.PreferredAudioTitle,
                     multiple.PreferredSubtitleLanguageCode,
@@ -225,6 +231,8 @@ internal static class Mapper
                         ? Filler.Mapper.ProjectToViewModel(one.FallbackFiller)
                         : null,
                     one.ProgramScheduleItemWatermarks.Map(wm => Watermarks.Mapper.ProjectToViewModel(wm.Watermark))
+                        .ToList(),
+                    one.ProgramScheduleItemGraphicsElements.Map(ge => Graphics.Mapper.ProjectToViewModel(ge.GraphicsElement))
                         .ToList(),
                     one.PreferredAudioLanguageCode,
                     one.PreferredAudioTitle,

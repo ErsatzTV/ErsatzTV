@@ -1,6 +1,4 @@
-﻿@implements IDisposable
-
-<MudDialog>
+﻿<MudDialog>
     <DialogContent>
         <MudContainer Class="mb-6">
             <MudText>
@@ -15,16 +13,14 @@
                          Immediate="true"/>
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="Cancel" ButtonType="ButtonType.Reset">Cancel</MudButton>
-        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">
+        <MudButton OnClick="@Cancel" ButtonType="ButtonType.Reset">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="@Submit">
             Save Changes
         </MudButton>
     </DialogActions>
 </MudDialog>
 
 @code {
-    private readonly CancellationTokenSource _cts = new();
-
     [Parameter]
     public double? ImageFolderDuration { get; set; }
 
@@ -32,12 +28,6 @@
     IMudDialogInstance MudDialog { get; set; }
 
     private double? _imageDurationSeconds;
-
-    public void Dispose()
-    {
-        _cts.Cancel();
-        _cts.Dispose();
-    }
 
     protected override void OnParametersSet() => _imageDurationSeconds = ImageFolderDuration;
 

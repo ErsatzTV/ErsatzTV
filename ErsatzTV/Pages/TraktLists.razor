@@ -83,7 +83,7 @@
 </MudForm>
 
 @code {
-    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource _cts;
 
     private MudTable<TraktListViewModel> _traktListsTable;
 
@@ -91,14 +91,29 @@
 
     public void Dispose()
     {
-        _cts.Cancel();
-        _cts.Dispose();
+        _cts?.Cancel();
+        _cts?.Dispose();
     }
 
     protected override void OnInitialized() => Locker.OnTraktChanged += LockChanged;
 
-    protected override async Task OnParametersSetAsync() => _traktListsRowsPerPage = await Mediator.Send(new GetConfigElementByKey(ConfigElementKey.TraktListsPageSize), _cts.Token)
-        .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
+    protected override async Task OnParametersSetAsync()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
+
+        try
+        {
+            _traktListsRowsPerPage = await Mediator.Send(new GetConfigElementByKey(ConfigElementKey.TraktListsPageSize), token)
+                .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
+        }
+    }
 
     private void LockChanged(object sender, EventArgs e) =>
         InvokeAsync(async () =>
@@ -142,9 +157,9 @@
     {
         try
         {
-            await Mediator.Send(new SaveConfigElementByKey(ConfigElementKey.TraktListsPageSize, state.PageSize.ToString()), _cts.Token);
+            await Mediator.Send(new SaveConfigElementByKey(ConfigElementKey.TraktListsPageSize, state.PageSize.ToString()), cancellationToken);
 
-            PagedTraktListsViewModel data = await Mediator.Send(new GetPagedTraktLists(state.Page, state.PageSize), _cts.Token);
+            PagedTraktListsViewModel data = await Mediator.Send(new GetPagedTraktLists(state.Page, state.PageSize), cancellationToken);
             return new TableData<TraktListViewModel> { TotalItems = data.TotalCount, Items = data.Page };
         }
         catch (Exception)
@@ -152,7 +167,7 @@
             return new TableData<TraktListViewModel>
             {
                 TotalItems = 0,
-                Items = Array.Empty<TraktListViewModel>()
+                Items = []
             };
         }
     }

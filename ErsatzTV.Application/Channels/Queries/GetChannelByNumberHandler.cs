@@ -3,12 +3,9 @@ using static ErsatzTV.Application.Channels.Mapper;
 
 namespace ErsatzTV.Application.Channels;
 
-public class GetChannelByNumberHandler : IRequestHandler<GetChannelByNumber, Option<ChannelViewModel>>
+public class GetChannelByNumberHandler(IChannelRepository channelRepository)
+    : IRequestHandler<GetChannelByNumber, Option<ChannelViewModel>>
 {
-    private readonly IChannelRepository _channelRepository;
-
-    public GetChannelByNumberHandler(IChannelRepository channelRepository) => _channelRepository = channelRepository;
-
     public Task<Option<ChannelViewModel>> Handle(GetChannelByNumber request, CancellationToken cancellationToken) =>
-        _channelRepository.GetByNumber(request.ChannelNumber).MapT(ProjectToViewModel);
+        channelRepository.GetByNumber(request.ChannelNumber).MapT(c => ProjectToViewModel(c, 0));
 }

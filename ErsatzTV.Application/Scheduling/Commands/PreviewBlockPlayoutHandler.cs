@@ -42,7 +42,7 @@ public class PreviewBlockPlayoutHandler(
                 Name = "Block Preview"
             },
             Items = [],
-            ProgramSchedulePlayoutType = ProgramSchedulePlayoutType.Block,
+            ScheduleKind = PlayoutScheduleKind.Block,
             PlayoutHistory = [],
             Templates =
             [
@@ -65,10 +65,16 @@ public class PreviewBlockPlayoutHandler(
             playout.Templates.ToList(),
             playout.ProgramSchedule,
             playout.ProgramScheduleAlternates,
-            playout.PlayoutHistory.ToList());
+            playout.PlayoutHistory.ToList(),
+            TimeSpan.Zero);
 
         PlayoutBuildResult result =
-            await blockPlayoutBuilder.Build(playout, referenceData, PlayoutBuildMode.Reset, cancellationToken);
+            await blockPlayoutBuilder.Build(
+                DateTimeOffset.Now,
+                playout,
+                referenceData,
+                PlayoutBuildMode.Reset,
+                cancellationToken);
 
         // load playout item details for title
         foreach (PlayoutItem playoutItem in result.AddedItems)
@@ -95,7 +101,7 @@ public class PreviewBlockPlayoutHandler(
                 .Include(mi => (mi as Image).MediaVersions)
                 .Include(mi => (mi as RemoteStream).RemoteStreamMetadata)
                 .Include(mi => (mi as RemoteStream).MediaVersions)
-                .SelectOneAsync(mi => mi.Id, mi => mi.Id == playoutItem.MediaItemId);
+                .SelectOneAsync(mi => mi.Id, mi => mi.Id == playoutItem.MediaItemId, cancellationToken);
 
             foreach (MediaItem mediaItem in maybeMediaItem)
             {

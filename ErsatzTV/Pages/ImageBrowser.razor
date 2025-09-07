@@ -48,25 +48,31 @@
 </MudForm>
 
 @code {
-    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource _cts;
     private List<TreeItemData<ImageTreeItemViewModel>> TreeItems { get; set; } = [];
 
     public void Dispose()
     {
-        _cts.Cancel();
-        _cts.Dispose();
+        _cts?.Cancel();
+        _cts?.Dispose();
     }
 
     protected override async Task OnParametersSetAsync()
     {
-        await ReloadImageFolders();
-        await InvokeAsync(StateHasChanged);
-    }
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
 
-    private async Task ReloadImageFolders()
-    {
-        List<ImageFolderViewModel> imageFolders = await Mediator.Send(new GetImageFolders(Option<int>.None), _cts.Token);
-        TreeItems = imageFolders.Map(g => new TreeItemData<ImageTreeItemViewModel> { Value = new ImageTreeItemViewModel(g) }).ToList();
+        try
+        {
+            List<ImageFolderViewModel> imageFolders = await Mediator.Send(new GetImageFolders(Option<int>.None), token);
+            TreeItems = imageFolders.Map(g => new TreeItemData<ImageTreeItemViewModel> { Value = new ImageTreeItemViewModel(g) }).ToList();
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
+        }
     }
 
     private async Task<IReadOnlyCollection<TreeItemData<ImageTreeItemViewModel>>> LoadServerData(ImageTreeItemViewModel parentNode)

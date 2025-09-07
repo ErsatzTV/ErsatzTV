@@ -32,7 +32,7 @@ public class PreviewPlaylistPlayoutHandler(
                 Name = "Playlist Preview"
             },
             Items = [],
-            ProgramSchedulePlayoutType = ProgramSchedulePlayoutType.Classic,
+            ScheduleKind = PlayoutScheduleKind.Classic,
             PlayoutHistory = [],
             ProgramSchedule = new ProgramSchedule
             {
@@ -50,7 +50,8 @@ public class PreviewPlaylistPlayoutHandler(
             playout.Templates.ToList(),
             new ProgramSchedule(),
             playout.ProgramScheduleAlternates.ToList(),
-            playout.PlayoutHistory.ToList());
+            playout.PlayoutHistory.ToList(),
+            TimeSpan.Zero);
 
         // TODO: make an explicit method to preview, this is ugly
         playoutBuilder.TrimStart = false;
@@ -63,7 +64,9 @@ public class PreviewPlaylistPlayoutHandler(
 
         var maxItems = 0;
         Dictionary<PlaylistItem, List<MediaItem>> map =
-            await mediaCollectionRepository.GetPlaylistItemMap(playout.ProgramSchedule.Items[0].Playlist);
+            await mediaCollectionRepository.GetPlaylistItemMap(
+                playout.ProgramSchedule.Items[0].Playlist,
+                cancellationToken);
         foreach (PlaylistItem item in playout.ProgramSchedule.Items[0].Playlist.Items)
         {
             if (item.PlayAll)
@@ -102,7 +105,7 @@ public class PreviewPlaylistPlayoutHandler(
                 .Include(mi => (mi as Song).MediaVersions)
                 .Include(mi => (mi as Image).ImageMetadata)
                 .Include(mi => (mi as Image).MediaVersions)
-                .SelectOneAsync(mi => mi.Id, mi => mi.Id == playoutItem.MediaItemId);
+                .SelectOneAsync(mi => mi.Id, mi => mi.Id == playoutItem.MediaItemId, cancellationToken);
 
             foreach (MediaItem mediaItem in maybeMediaItem)
             {

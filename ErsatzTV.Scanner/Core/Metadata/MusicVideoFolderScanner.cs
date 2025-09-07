@@ -332,7 +332,10 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
             }
 
             string musicVideoFolder = folderQueue.Dequeue();
-            Option<int> maybeParentFolder = await _libraryRepository.GetParentFolderId(libraryPath, musicVideoFolder);
+            Option<int> maybeParentFolder = await _libraryRepository.GetParentFolderId(
+                libraryPath,
+                musicVideoFolder,
+                cancellationToken);
 
             // _logger.LogDebug("Scanning music video folder {Folder}", musicVideoFolder);
 
@@ -382,8 +385,8 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
                     .BindT(video => UpdateLibraryFolderId(video, knownFolder))
                     .BindT(UpdateMetadata)
                     .BindT(result => UpdateThumbnail(result, cancellationToken))
-                    .BindT(UpdateSubtitles)
-                    .BindT(UpdateChapters)
+                    .BindT(result => UpdateSubtitles(result, cancellationToken))
+                    .BindT(result => UpdateChapters(result, cancellationToken))
                     .BindT(FlagNormal);
 
                 foreach (BaseError error in maybeMusicVideo.LeftToSeq())
@@ -533,11 +536,12 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
     }
 
     private async Task<Either<BaseError, MediaItemScanResult<MusicVideo>>> UpdateSubtitles(
-        MediaItemScanResult<MusicVideo> result)
+        MediaItemScanResult<MusicVideo> result,
+        CancellationToken cancellationToken)
     {
         try
         {
-            await _localSubtitlesProvider.UpdateSubtitles(result.Item, None, true);
+            await _localSubtitlesProvider.UpdateSubtitles(result.Item, None, true, cancellationToken);
             return result;
         }
         catch (Exception ex)
@@ -548,11 +552,12 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
     }
 
     private async Task<Either<BaseError, MediaItemScanResult<MusicVideo>>> UpdateChapters(
-        MediaItemScanResult<MusicVideo> result)
+        MediaItemScanResult<MusicVideo> result,
+        CancellationToken cancellationToken)
     {
         try
         {
-            await _localChaptersProvider.UpdateChapters(result.Item, None);
+            await _localChaptersProvider.UpdateChapters(result.Item, None, cancellationToken);
             return result;
         }
         catch (Exception ex)

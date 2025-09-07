@@ -132,6 +132,7 @@ public class JellyfinMovieLibraryScanner :
 
     protected override Task<Either<BaseError, MediaItemScanResult<JellyfinMovie>>> UpdateMetadata(
         MediaItemScanResult<JellyfinMovie> result,
-        MovieMetadata fullMetadata) =>
+        MovieMetadata fullMetadata,
+        CancellationToken cancellationToken) =>
         Task.FromResult<Either<BaseError, MediaItemScanResult<JellyfinMovie>>>(result);
 }

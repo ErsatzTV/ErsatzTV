@@ -37,7 +37,7 @@ public class UpdateLocalLibraryHandler : LocalLibraryHandlerBase,
         CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        Validation<BaseError, Parameters> validation = await Validate(dbContext, request);
+        Validation<BaseError, Parameters> validation = await Validate(dbContext, request, cancellationToken);
         return await validation.Apply(parameters => UpdateLocalLibrary(dbContext, parameters));
     }
 
@@ -105,18 +105,20 @@ public class UpdateLocalLibraryHandler : LocalLibraryHandlerBase,
 
     private static Task<Validation<BaseError, Parameters>> Validate(
         TvContext dbContext,
-        UpdateLocalLibrary request) =>
-        LocalLibraryMustExist(dbContext, request)
+        UpdateLocalLibrary request,
+        CancellationToken cancellationToken) =>
+        LocalLibraryMustExist(dbContext, request, cancellationToken)
             .BindT(parameters => NameMustBeValid(request, parameters.Incoming).MapT(_ => parameters))
             .BindT(parameters => PathsMustBeValid(dbContext, parameters.Incoming, parameters.Existing.Id)
                 .MapT(_ => parameters));
 
     private static Task<Validation<BaseError, Parameters>> LocalLibraryMustExist(
         TvContext dbContext,
-        UpdateLocalLibrary request) =>
+        UpdateLocalLibrary request,
+        CancellationToken cancellationToken) =>
         dbContext.LocalLibraries
             .Include(ll => ll.Paths)
-            .SelectOneAsync(ll => ll.Id, ll => ll.Id == request.Id)
+            .SelectOneAsync(ll => ll.Id, ll => ll.Id == request.Id, cancellationToken)
             .MapT(existing =>
             {
                 var incoming = new LocalLibrary

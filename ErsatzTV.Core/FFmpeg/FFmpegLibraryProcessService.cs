@@ -64,8 +64,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         DateTimeOffset start,
         DateTimeOffset finish,
         DateTimeOffset now,
-        List<ChannelWatermark> playoutItemWatermarks,
-        Option<ChannelWatermark> globalWatermark,
+        List<WatermarkOptions> watermarks,
         List<PlayoutItemGraphicsElement> graphicsElements,
         string vaapiDisplay,
         VaapiDriver vaapiDriver,
@@ -79,9 +78,9 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         DateTimeOffset channelStartTime,
         long ptsOffset,
         Option<int> targetFramerate,
-        bool disableWatermarks,
         Option<string> customReportsFolder,
-        Action<FFmpegPipeline> pipelineAction)
+        Action<FFmpegPipeline> pipelineAction,
+        CancellationToken cancellationToken)
     {
         MediaStream videoStream = await _ffmpegStreamSelector.SelectVideoStream(videoVersion);
 
@@ -132,14 +131,16 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                     channel.StreamingMode,
                     channel,
                     preferredAudioLanguage,
-                    preferredAudioTitle);
+                    preferredAudioTitle,
+                    cancellationToken);
 
             maybeSubtitle =
                 await _ffmpegStreamSelector.SelectSubtitleStream(
                     allSubtitles.ToImmutableList(),
                     channel,
                     preferredSubtitleLanguage,
-                    subtitleMode);
+                    subtitleMode,
+                    cancellationToken);
         }
 
         if (channel.StreamSelectorMode is ChannelStreamSelectorMode.Troubleshooting && maybeSubtitle.IsNone)
@@ -149,7 +150,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
 
         foreach (Subtitle subtitle in maybeSubtitle)
         {
-            if (subtitle.SubtitleKind == SubtitleKind.Sidecar)
+            if (subtitle.SubtitleKind == SubtitleKind.Sidecar || subtitle is
+                    { SubtitleKind: SubtitleKind.Embedded, IsImage: false, IsExtracted: true })
             {
                 // proxy to avoid dealing with escaping
                 subtitle.Path = $"http://localhost:{Settings.StreamingPort}/media/subtitle/{subtitle.Id}";
@@ -249,7 +251,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
 
                 // override with setting if applicable
                 Option<OutputFormatKind> maybeOutputFormat = await _configElementRepository
-                    .GetValue<OutputFormatKind>(ConfigElementKey.FFmpegHlsDirectOutputFormat);
+                    .GetValue<OutputFormatKind>(ConfigElementKey.FFmpegHlsDirectOutputFormat, cancellationToken);
                 foreach (OutputFormatKind of in maybeOutputFormat)
                 {
                     outputFormat = of;
@@ -276,12 +278,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                 subtitle.Codec,
                 StreamKind.Video);
 
-            string path = subtitle.IsImage switch
-            {
-                true => videoPath,
-                false when subtitle.SubtitleKind == SubtitleKind.Sidecar => subtitle.Path,
-                _ => Path.Combine(FileSystemLayout.SubtitleCacheFolder, subtitle.Path)
-            };
+            string path = subtitle.IsImage ? videoPath : subtitle.Path;
 
             SubtitleMethod method = SubtitleMethod.Burn;
             if (channel.StreamingMode == StreamingMode.HttpLiveStreamingDirect)
@@ -334,50 +331,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         List<GraphicsElementContext> graphicsElementContexts = [];
 
         // use graphics engine for all watermarks
-        if (!disableWatermarks)
-        {
-            var watermarks = new Dictionary<int, WatermarkElementContext>();
-
-            // still need channel and global watermarks
-            if (playoutItemWatermarks.Count == 0)
-            {
-                WatermarkOptions options = await _ffmpegProcessService.GetWatermarkOptions(
-                    ffprobePath,
-                    channel,
-                    Option<ChannelWatermark>.None,
-                    globalWatermark,
-                    videoVersion,
-                    None,
-                    None);
-
-                foreach (ChannelWatermark watermark in options.Watermark)
-                {
-                    // don't allow duplicates
-                    watermarks.TryAdd(watermark.Id, new WatermarkElementContext(options));
-                }
-            }
-
-            // load all playout item watermarks
-            foreach (ChannelWatermark playoutItemWatermark in playoutItemWatermarks)
-            {
-                WatermarkOptions options = await _ffmpegProcessService.GetWatermarkOptions(
-                    ffprobePath,
-                    channel,
-                    playoutItemWatermark,
-                    globalWatermark,
-                    videoVersion,
-                    None,
-                    None);
-
-                foreach (ChannelWatermark watermark in options.Watermark)
-                {
-                    // don't allow duplicates
-                    watermarks.TryAdd(watermark.Id, new WatermarkElementContext(options));
-                }
-            }
-
-            graphicsElementContexts.AddRange(watermarks.Values);
-        }
+        graphicsElementContexts.AddRange(watermarks.Map(wm => new WatermarkElementContext(wm)));
 
         HardwareAccelerationMode hwAccel = GetHardwareAccelerationMode(playbackSettings, fillerKind);
 
@@ -1051,8 +1005,6 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         string ffprobePath,
         Option<string> subtitleFile,
         Channel channel,
-        Option<ChannelWatermark> playoutItemWatermark,
-        Option<ChannelWatermark> globalWatermark,
         MediaVersion videoVersion,
         string videoPath,
         bool boxBlur,
@@ -1067,8 +1019,6 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             ffprobePath,
             subtitleFile,
             channel,
-            playoutItemWatermark,
-            globalWatermark,
             videoVersion,
             videoPath,
             boxBlur,

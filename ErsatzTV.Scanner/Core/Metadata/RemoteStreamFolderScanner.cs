@@ -127,7 +127,7 @@ public class RemoteStreamFolderScanner : LocalFolderScanner, IRemoteStreamFolder
 
                 string remoteStreamFolder = folderQueue.Dequeue();
                 Option<int> maybeParentFolder =
-                    await _libraryRepository.GetParentFolderId(libraryPath, remoteStreamFolder);
+                    await _libraryRepository.GetParentFolderId(libraryPath, remoteStreamFolder, cancellationToken);
 
                 foldersCompleted++;
 
@@ -178,11 +178,11 @@ public class RemoteStreamFolderScanner : LocalFolderScanner, IRemoteStreamFolder
                 foreach (string file in allFiles.OrderBy(identity))
                 {
                     Either<BaseError, MediaItemScanResult<RemoteStream>> maybeVideo = await _remoteStreamRepository
-                        .GetOrAdd(libraryPath, knownFolder, file)
+                        .GetOrAdd(libraryPath, knownFolder, file, cancellationToken)
                         .BindT(video => ParseRemoteStreamDefinition(video, deserializer, cancellationToken))
                         .BindT(video => UpdateStatistics(video, ffmpegPath, ffprobePath))
                         .BindT(video => UpdateLibraryFolderId(video, knownFolder))
-                        .BindT(UpdateMetadata)
+                        .BindT(video => UpdateMetadata(video, cancellationToken))
                         //.BindT(video => UpdateThumbnail(video, cancellationToken))
                         //.BindT(UpdateSubtitles)
                         .BindT(FlagNormal);
@@ -216,7 +216,7 @@ public class RemoteStreamFolderScanner : LocalFolderScanner, IRemoteStreamFolder
                 }
             }
 
-            foreach (string path in await _remoteStreamRepository.FindRemoteStreamPaths(libraryPath))
+            foreach (string path in await _remoteStreamRepository.FindRemoteStreamPaths(libraryPath, cancellationToken))
             {
                 if (!_localFileSystem.FileExists(path))
                 {
@@ -234,7 +234,7 @@ public class RemoteStreamFolderScanner : LocalFolderScanner, IRemoteStreamFolder
                 else if (Path.GetFileName(path).StartsWith("._", StringComparison.OrdinalIgnoreCase))
                 {
                     _logger.LogInformation("Removing dot underscore file at {Path}", path);
-                    List<int> remoteStreamIds = await _remoteStreamRepository.DeleteByPath(libraryPath, path);
+                    List<int> remoteStreamIds = await _remoteStreamRepository.DeleteByPath(libraryPath, path, cancellationToken);
                     await _mediator.Publish(
                         new ScannerProgressUpdate(
                             libraryPath.LibraryId,
@@ -336,7 +336,7 @@ public class RemoteStreamFolderScanner : LocalFolderScanner, IRemoteStreamFolder
 
             if (updated)
             {
-                await _remoteStreamRepository.UpdateDefinition(remoteStream);
+                await _remoteStreamRepository.UpdateDefinition(remoteStream, cancellationToken);
                 result.IsUpdated = true;
             }
 
@@ -350,7 +350,8 @@ public class RemoteStreamFolderScanner : LocalFolderScanner, IRemoteStreamFolder
     }
 
     private async Task<Either<BaseError, MediaItemScanResult<RemoteStream>>> UpdateMetadata(
-        MediaItemScanResult<RemoteStream> result)
+        MediaItemScanResult<RemoteStream> result,
+        CancellationToken cancellationToken)
     {
         try
         {
@@ -371,7 +372,7 @@ public class RemoteStreamFolderScanner : LocalFolderScanner, IRemoteStreamFolder
                 remoteStream.RemoteStreamMetadata ??= [];
 
                 _logger.LogDebug("Refreshing {Attribute} for {Path}", "Metadata", path);
-                if (await _localMetadataProvider.RefreshTagMetadata(remoteStream))
+                if (await _localMetadataProvider.RefreshTagMetadata(remoteStream, cancellationToken))
                 {
                     result.IsUpdated = true;
                 }

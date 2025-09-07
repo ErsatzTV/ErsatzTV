@@ -603,7 +603,8 @@ public partial class PlexTelevisionLibraryScanner :
 
     protected override async Task<Either<BaseError, MediaItemScanResult<PlexEpisode>>> UpdateMetadata(
         MediaItemScanResult<PlexEpisode> result,
-        EpisodeMetadata fullMetadata)
+        EpisodeMetadata fullMetadata,
+        CancellationToken cancellationToken)
     {
         PlexEpisode existing = result.Item;
         EpisodeMetadata existingMetadata = existing.EpisodeMetadata.Head();
@@ -686,7 +687,7 @@ public partial class PlexTelevisionLibraryScanner :
             result.IsUpdated = true;
         }
 
-        if (await _metadataRepository.UpdateSubtitles(existingMetadata, fullMetadata.Subtitles))
+        if (await _metadataRepository.UpdateSubtitles(existingMetadata, fullMetadata.Subtitles, cancellationToken))
         {
             result.IsUpdated = true;
         }

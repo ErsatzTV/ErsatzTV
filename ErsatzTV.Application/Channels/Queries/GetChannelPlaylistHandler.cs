@@ -12,7 +12,7 @@ public class GetChannelPlaylistHandler : IRequestHandler<GetChannelPlaylist, Cha
         _channelRepository = channelRepository;
 
     public Task<ChannelPlaylist> Handle(GetChannelPlaylist request, CancellationToken cancellationToken) =>
-        _channelRepository.GetAll()
+        _channelRepository.GetAll(cancellationToken)
             .Map(channels => EnsureMode(channels, request.Mode))
             .Map(channels => new ChannelPlaylist(
                 request.Scheme,

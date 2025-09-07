@@ -18,7 +18,8 @@ public class UpdateLibraryRefreshIntervalHandler :
         Validate(request)
             .MapT(_ => _configElementRepository.Upsert(
                 ConfigElementKey.LibraryRefreshInterval,
-                request.LibraryRefreshInterval))
+                request.LibraryRefreshInterval,
+                cancellationToken))
             .Bind(v => v.ToEitherAsync());
 
     private static Task<Validation<BaseError, Unit>> Validate(UpdateLibraryRefreshInterval request) =>

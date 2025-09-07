@@ -20,7 +20,7 @@ public class CreateBlockPlayoutHandler(
         CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
-        Validation<BaseError, Playout> validation = await Validate(dbContext, request);
+        Validation<BaseError, Playout> validation = await Validate(dbContext, request, cancellationToken);
         return await validation.Apply(playout => PersistPlayout(dbContext, playout));
     }
 
@@ -40,21 +40,23 @@ public class CreateBlockPlayoutHandler(
 
     private static async Task<Validation<BaseError, Playout>> Validate(
         TvContext dbContext,
-        CreateBlockPlayout request) =>
-        (await ValidateChannel(dbContext, request), ValidatePlayoutType(request))
-        .Apply((channel, playoutType) => new Playout
+        CreateBlockPlayout request,
+        CancellationToken cancellationToken) =>
+        (await ValidateChannel(dbContext, request, cancellationToken), ValidateScheduleKind(request))
+        .Apply((channel, scheduleKind) => new Playout
         {
             ChannelId = channel.Id,
-            ProgramSchedulePlayoutType = playoutType,
+            ScheduleKind = scheduleKind,
             Seed = new Random().Next()
         });
 
     private static Task<Validation<BaseError, Channel>> ValidateChannel(
         TvContext dbContext,
-        CreateBlockPlayout createBlockPlayout) =>
+        CreateBlockPlayout createBlockPlayout,
+        CancellationToken cancellationToken) =>
         dbContext.Channels
             .Include(c => c.Playouts)
-            .SelectOneAsync(c => c.Id, c => c.Id == createBlockPlayout.ChannelId)
+            .SelectOneAsync(c => c.Id, c => c.Id == createBlockPlayout.ChannelId, cancellationToken)
             .Map(o => o.ToValidation<BaseError>("Channel does not exist"))
             .BindT(ChannelMustNotHavePlayouts);
 
@@ -64,9 +66,9 @@ public class CreateBlockPlayoutHandler(
             .Map(_ => channel)
             .ToValidation<BaseError>("Channel already has one playout");
 
-    private static Validation<BaseError, ProgramSchedulePlayoutType> ValidatePlayoutType(
+    private static Validation<BaseError, PlayoutScheduleKind> ValidateScheduleKind(
         CreateBlockPlayout createBlockPlayout) =>
-        Optional(createBlockPlayout.ProgramSchedulePlayoutType)
-            .Filter(playoutType => playoutType == ProgramSchedulePlayoutType.Block)
-            .ToValidation<BaseError>("[ProgramSchedulePlayoutType] must be Block");
+        Optional(createBlockPlayout.ScheduleKind)
+            .Filter(scheduleKind => scheduleKind == PlayoutScheduleKind.Block)
+            .ToValidation<BaseError>("[ScheduleKind] must be Block");
 }

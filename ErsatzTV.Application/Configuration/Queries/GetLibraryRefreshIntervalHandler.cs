@@ -11,6 +11,6 @@ public class GetLibraryRefreshIntervalHandler : IRequestHandler<GetLibraryRefres
         _configElementRepository = configElementRepository;
 
     public Task<int> Handle(GetLibraryRefreshInterval request, CancellationToken cancellationToken) =>
-        _configElementRepository.GetValue<int>(ConfigElementKey.LibraryRefreshInterval)
+        _configElementRepository.GetValue<int>(ConfigElementKey.LibraryRefreshInterval, cancellationToken)
             .Map(result => result.IfNone(6));
 }

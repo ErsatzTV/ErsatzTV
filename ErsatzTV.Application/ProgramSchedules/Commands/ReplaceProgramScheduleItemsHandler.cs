@@ -28,24 +28,32 @@ public class ReplaceProgramScheduleItemsHandler : ProgramScheduleItemCommandBase
         CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        Validation<BaseError, ProgramSchedule> validation = await Validate(dbContext, request);
-        return await validation.Apply(ps => PersistItems(dbContext, request, ps));
+        Validation<BaseError, ProgramSchedule> validation = await Validate(dbContext, request, cancellationToken);
+        return await validation.Apply(ps => PersistItems(dbContext, request, ps, cancellationToken));
     }
 
     private async Task<IEnumerable<ProgramScheduleItemViewModel>> PersistItems(
         TvContext dbContext,
         ReplaceProgramScheduleItems request,
-        ProgramSchedule programSchedule)
+        ProgramSchedule programSchedule,
+        CancellationToken cancellationToken)
     {
         dbContext.RemoveRange(programSchedule.Items);
-        programSchedule.Items = request.Items.Map(i => BuildItem(programSchedule, i.Index, i)).ToList();
 
-        await dbContext.SaveChangesAsync();
+        // reset index starting with zero
+        programSchedule.Items = [];
+        var orderedItems = request.Items.OrderBy(i => i.Index).ToList();
+        for (var i = 0; i < orderedItems.Count; i++)
+        {
+            programSchedule.Items.Add(BuildItem(programSchedule, i, orderedItems[i]));
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
 
         // refresh any playouts that use this schedule
         foreach (Playout playout in programSchedule.Playouts)
         {
-            await _channel.WriteAsync(new BuildPlayout(playout.Id, PlayoutBuildMode.Refresh));
+            await _channel.WriteAsync(new BuildPlayout(playout.Id, PlayoutBuildMode.Refresh), cancellationToken);
         }
 
         return programSchedule.Items.Map(ProjectToViewModel);
@@ -53,8 +61,9 @@ public class ReplaceProgramScheduleItemsHandler : ProgramScheduleItemCommandBase
 
     private static Task<Validation<BaseError, ProgramSchedule>> Validate(
         TvContext dbContext,
-        ReplaceProgramScheduleItems request) =>
-        ProgramScheduleMustExist(dbContext, request.ProgramScheduleId)
+        ReplaceProgramScheduleItems request,
+        CancellationToken cancellationToken) =>
+        ProgramScheduleMustExist(dbContext, request.ProgramScheduleId, cancellationToken)
             .BindT(programSchedule => PlayoutModesMustBeValid(request, programSchedule))
             .BindT(programSchedule => CollectionTypesMustBeValid(request, programSchedule))
             .BindT(programSchedule => PlaybackOrdersMustBeValid(request, programSchedule))

@@ -6,6 +6,6 @@ public interface IChannelRepository
 {
     Task<Option<Channel>> GetChannel(int id);
     Task<Option<Channel>> GetByNumber(string number);
-    Task<List<Channel>> GetAll();
+    Task<List<Channel>> GetAll(CancellationToken cancellationToken);
     Task<Option<ChannelWatermark>> GetWatermarkByName(string name);
 }

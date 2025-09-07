@@ -37,6 +37,8 @@ using ErsatzTV.Core.Metadata;
 using ErsatzTV.Core.Plex;
 using ErsatzTV.Core.Scheduling;
 using ErsatzTV.Core.Scheduling.BlockScheduling;
+using ErsatzTV.Core.Scheduling.Engine;
+using ErsatzTV.Core.Scheduling.ScriptedScheduling;
 using ErsatzTV.Core.Scheduling.YamlScheduling;
 using ErsatzTV.Core.Search;
 using ErsatzTV.Core.Trakt;
@@ -87,10 +89,12 @@ using Microsoft.Extensions.Primitives;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.IO;
+using Microsoft.OpenApi.Models;
 using MudBlazor.Services;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Refit;
+using Scalar.AspNetCore;
 using Serilog;
 using Serilog.Events;
 
@@ -141,6 +145,32 @@ public class Startup
         });
 
         services.AddDataProtection().PersistKeysToFileSystem(new DirectoryInfo(FileSystemLayout.DataProtectionFolder));
+
+        services.AddOpenApi("v1", options => { options.ShouldInclude += a => a.GroupName == "general"; });
+
+        services.AddOpenApi(
+            "scripted-schedule-tagged",
+            options => { options.ShouldInclude += a => a.GroupName == "scripted-schedule"; });
+
+        services.AddOpenApi(
+            "scripted-schedule",
+            options =>
+            {
+                options.ShouldInclude += a => a.GroupName == "scripted-schedule";
+                var tag = new OpenApiTag { Name = "ScriptedSchedule" };
+                options.AddOperationTransformer((operation, _, _) =>
+                {
+                    operation.Tags.Clear();
+                    operation.Tags.Add(tag);
+                    return Task.CompletedTask;
+                });
+                options.AddDocumentTransformer((document, _, _) =>
+                {
+                    document.Tags.Clear();
+                    document.Tags.Add(tag);
+                    return Task.CompletedTask;
+                });
+            });
 
         OidcHelper.Init(Configuration);
         JwtHelper.Init(Configuration);
@@ -323,7 +353,7 @@ public class Startup
         Log.Logger.Warning(
             "Give feedback at {GitHub} or {Discord}",
             "https://github.com/ErsatzTV/ErsatzTV",
-            "https://discord.gg/hHaJm3yGy6");
+            "https://discord.ersatztv.org");
 
         CopyMacOsConfigFolderIfNeeded();
 
@@ -590,6 +620,23 @@ public class Startup
                     endpoints.MapControllers();
                     endpoints.MapBlazorHub();
                     endpoints.MapFallbackToPage("/_Host");
+
+                    if (CurrentEnvironment.IsDevelopment())
+                    {
+                        endpoints.MapOpenApi();
+                    }
+
+                    endpoints.MapScalarApiReference("/docs", options =>
+                    {
+                        options.AddDocument(
+                            "scripted-schedule",
+                            "Scripted Schedule",
+                            "openapi/scripted-schedule-tagged.json");
+                        options.AddDocument("v1", "General", "openapi/v1.json");
+                        options.HideClientButton = true;
+                        options.DocumentDownloadType = DocumentDownloadType.None;
+                        options.Title = "ErsatzTV API Reference";
+                    });
                 });
             });
 
@@ -639,7 +686,7 @@ public class Startup
 
             services.AddSingleton<ISearchIndex, LuceneSearchIndex>();
         }
-
+        services.AddSingleton<IScriptedPlayoutBuilderService, ScriptedPlayoutBuilderService>();
         services.AddSingleton<IFFmpegSegmenterService, FFmpegSegmenterService>();
         services.AddSingleton<ITempFilePool, TempFilePool>();
         services.AddSingleton<IHlsPlaylistFilter, HlsPlaylistFilter>();
@@ -695,7 +742,9 @@ public class Startup
         services.AddScoped<IBlockPlayoutBuilder, BlockPlayoutBuilder>();
         services.AddScoped<IBlockPlayoutPreviewBuilder, BlockPlayoutPreviewBuilder>();
         services.AddScoped<IBlockPlayoutFillerBuilder, BlockPlayoutFillerBuilder>();
-        services.AddScoped<IYamlPlayoutBuilder, YamlPlayoutBuilder>();
+        services.AddScoped<ISequentialPlayoutBuilder, SequentialPlayoutBuilder>();
+        services.AddScoped<IScriptedPlayoutBuilder, ScriptedPlayoutBuilder>();
+        services.AddScoped<ISchedulingEngine, SchedulingEngine>();
         services.AddScoped<IExternalJsonPlayoutBuilder, ExternalJsonPlayoutBuilder>();
         services.AddScoped<IPlayoutTimeShifter, PlayoutTimeShifter>();
         services.AddScoped<IImageCache, ImageCache>();
@@ -727,6 +776,7 @@ public class Startup
         services.AddScoped<IGraphicsElementRepository, GraphicsElementRepository>();
         services.AddScoped<ITemplateDataRepository, TemplateDataRepository>();
         services.AddScoped<TemplateFunctions>();
+        services.AddScoped<IWatermarkSelector, WatermarkSelector>();
 
         services.AddScoped<IFFmpegProcessService, FFmpegLibraryProcessService>();
         services.AddScoped<IPipelineBuilderFactory, PipelineBuilderFactory>();
@@ -744,7 +794,7 @@ public class Startup
         services.AddScoped<IJellyfinSecretStore, JellyfinSecretStore>();
         services.AddScoped<IEmbySecretStore, EmbySecretStore>();
         services.AddScoped<IScriptEngine, ScriptEngine>();
-        services.AddScoped<IYamlScheduleValidator, YamlScheduleValidator>();
+        services.AddScoped<ISequentialScheduleValidator, SequentialScheduleValidator>();
 
         services.AddScoped<PlexEtag>();
 

@@ -138,7 +138,7 @@
 </MudForm>
 
 @code {
-    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource _cts;
     private readonly List<DecoGroupViewModel> _decoGroups = [];
     private readonly List<DecoViewModel> _decos = [];
     private readonly List<DateTime> _startTimes = [];
@@ -156,26 +156,38 @@
 
     public void Dispose()
     {
-        _cts.Cancel();
-        _cts.Dispose();
+        _cts?.Cancel();
+        _cts?.Dispose();
     }
 
     protected override async Task OnParametersSetAsync()
     {
-        await LoadDecoTemplateItems();
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
 
-        DateTime start = DateTime.Today;
-        _selectedDecoStart = start;
-        while (start.Date == DateTime.Today.Date)
+        try
         {
-            _startTimes.Add(start);
-            start = start.AddMinutes(5);
+            await LoadDecoTemplateItems(token);
+
+            DateTime start = DateTime.Today;
+            _selectedDecoStart = start;
+            while (start.Date == DateTime.Today.Date)
+            {
+                _startTimes.Add(start);
+                start = start.AddMinutes(5);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
         }
     }
 
-    private async Task LoadDecoTemplateItems()
+    private async Task LoadDecoTemplateItems(CancellationToken cancellationToken)
     {
-        Option<DecoTemplateViewModel> maybeDecoTemplate = await Mediator.Send(new GetDecoTemplateById(Id), _cts.Token);
+        Option<DecoTemplateViewModel> maybeDecoTemplate = await Mediator.Send(new GetDecoTemplateById(Id), cancellationToken);
         if (maybeDecoTemplate.IsNone)
         {
             NavigationManager.NavigateTo("deco-templates");
@@ -192,13 +204,13 @@
             };
         }
 
-        Option<IEnumerable<DecoTemplateItemViewModel>> maybeResults = await Mediator.Send(new GetDecoTemplateItems(Id), _cts.Token);
+        Option<IEnumerable<DecoTemplateItemViewModel>> maybeResults = await Mediator.Send(new GetDecoTemplateItems(Id), cancellationToken);
         foreach (IEnumerable<DecoTemplateItemViewModel> items in maybeResults)
         {
             _decoTemplate.Items.AddRange(items.Map(ProjectToEditViewModel));
         }
 
-        _decoGroups.AddRange(await Mediator.Send(new GetAllDecoGroups(), _cts.Token));
+        _decoGroups.AddRange(await Mediator.Send(new GetAllDecoGroups(), cancellationToken));
     }
 
     private static DecoTemplateItemEditViewModel ProjectToEditViewModel(DecoTemplateItemViewModel item) =>

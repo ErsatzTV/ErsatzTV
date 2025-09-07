@@ -16,7 +16,10 @@ public class UpdateFillerPresetHandler : IRequestHandler<UpdateFillerPreset, Eit
     public async Task<Either<BaseError, Unit>> Handle(UpdateFillerPreset request, CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        Validation<BaseError, FillerPreset> validation = await FillerPresetMustExist(dbContext, request);
+        Validation<BaseError, FillerPreset> validation = await FillerPresetMustExist(
+            dbContext,
+            request,
+            cancellationToken);
         return await validation.Apply(ps => ApplyUpdateRequest(dbContext, ps, request));
     }
 
@@ -49,8 +52,9 @@ public class UpdateFillerPresetHandler : IRequestHandler<UpdateFillerPreset, Eit
 
     private static Task<Validation<BaseError, FillerPreset>> FillerPresetMustExist(
         TvContext dbContext,
-        UpdateFillerPreset request) =>
+        UpdateFillerPreset request,
+        CancellationToken cancellationToken) =>
         dbContext.FillerPresets
-            .SelectOneAsync(ps => ps.Id, ps => ps.Id == request.Id)
+            .SelectOneAsync(ps => ps.Id, ps => ps.Id == request.Id, cancellationToken)
             .Map(o => o.ToValidation<BaseError>("FillerPreset does not exist"));
 }

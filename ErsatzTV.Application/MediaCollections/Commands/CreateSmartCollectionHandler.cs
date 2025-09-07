@@ -31,17 +31,18 @@ public class CreateSmartCollectionHandler :
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, SmartCollection> validation = await Validate(dbContext, request);
-        return await validation.Apply(c => PersistCollection(dbContext, c));
+        return await validation.Apply(c => PersistCollection(dbContext, c, cancellationToken));
     }
 
     private async Task<SmartCollectionViewModel> PersistCollection(
         TvContext dbContext,
-        SmartCollection smartCollection)
+        SmartCollection smartCollection,
+        CancellationToken cancellationToken)
     {
-        await dbContext.SmartCollections.AddAsync(smartCollection);
-        await dbContext.SaveChangesAsync();
+        await dbContext.SmartCollections.AddAsync(smartCollection, cancellationToken);
+        await dbContext.SaveChangesAsync(cancellationToken);
         _searchTargets.SearchTargetsChanged();
-        await _smartCollectionCache.Refresh();
+        await _smartCollectionCache.Refresh(cancellationToken);
         return ProjectToViewModel(smartCollection);
     }
 

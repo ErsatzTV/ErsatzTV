@@ -18,7 +18,7 @@ public class GetChannelResolutionAndBitrateHandler(IDbContextFactory<TvContext> 
             .AsNoTracking()
             .Include(c => c.FFmpegProfile)
             .ThenInclude(ff => ff.Resolution)
-            .SelectOneAsync(c => c.Number, c => c.Number == request.ChannelNumber);
+            .SelectOneAsync(c => c.Number, c => c.Number == request.ChannelNumber, cancellationToken);
 
         return maybeChannel.Map(c => Mapper.ProjectToViewModel(
             c.FFmpegProfile.Resolution,

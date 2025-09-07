@@ -19,11 +19,12 @@ public class ResetAllPlayoutsHandler(
 
         foreach (Playout playout in await dbContext.Playouts.ToListAsync(cancellationToken))
         {
-            switch (playout.ProgramSchedulePlayoutType)
+            switch (playout.ScheduleKind)
             {
-                case ProgramSchedulePlayoutType.Classic:
-                case ProgramSchedulePlayoutType.Block:
-                case ProgramSchedulePlayoutType.Yaml:
+                case PlayoutScheduleKind.Classic:
+                case PlayoutScheduleKind.Block:
+                case PlayoutScheduleKind.Sequential:
+                case PlayoutScheduleKind.Scripted:
                     if (!locker.IsPlayoutLocked(playout.Id))
                     {
                         await channel.WriteAsync(
@@ -32,8 +33,8 @@ public class ResetAllPlayoutsHandler(
                     }
 
                     break;
-                case ProgramSchedulePlayoutType.ExternalJson:
-                case ProgramSchedulePlayoutType.None:
+                case PlayoutScheduleKind.ExternalJson:
+                case PlayoutScheduleKind.None:
                 default:
                     // external json cannot be reset
                     continue;

@@ -11,11 +11,12 @@ public abstract class ProgramScheduleItemCommandBase
 {
     protected static Task<Validation<BaseError, ProgramSchedule>> ProgramScheduleMustExist(
         TvContext dbContext,
-        int programScheduleId) =>
+        int programScheduleId,
+        CancellationToken cancellationToken) =>
         dbContext.ProgramSchedules
             .Include(ps => ps.Items)
             .Include(ps => ps.Playouts)
-            .SelectOneAsync(ps => ps.Id, ps => ps.Id == programScheduleId)
+            .SelectOneAsync(ps => ps.Id, ps => ps.Id == programScheduleId, cancellationToken)
             .Map(o => o.ToValidation<BaseError>("[ProgramScheduleId] does not exist."));
 
     protected static async Task<Either<BaseError, ProgramSchedule>> FillerConfigurationMustBeValid(
@@ -310,6 +311,17 @@ public abstract class ProgramScheduleItemCommandBase
                 {
                     ProgramScheduleItem = result,
                     WatermarkId = watermarkId
+                });
+        }
+
+        foreach (int graphicsElementId in item.GraphicsElementIds)
+        {
+            result.ProgramScheduleItemGraphicsElements ??= [];
+            result.ProgramScheduleItemGraphicsElements.Add(
+                new ProgramScheduleItemGraphicsElement
+                {
+                    ProgramScheduleItem = result,
+                    GraphicsElementId = graphicsElementId
                 });
         }
 

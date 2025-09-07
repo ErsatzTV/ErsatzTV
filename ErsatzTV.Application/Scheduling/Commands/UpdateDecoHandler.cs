@@ -13,23 +13,25 @@ public class UpdateDecoHandler(IDbContextFactory<TvContext> dbContextFactory)
     public async Task<Either<BaseError, Unit>> Handle(UpdateDeco request, CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
-        Validation<BaseError, Deco> validation = await Validate(dbContext, request);
-        return await validation.Apply(ps => ApplyUpdateRequest(dbContext, ps, request));
+        Validation<BaseError, Deco> validation = await Validate(dbContext, request, cancellationToken);
+        return await validation.Apply(ps => ApplyUpdateRequest(dbContext, ps, request, cancellationToken));
     }
 
     private static async Task<Unit> ApplyUpdateRequest(
         TvContext dbContext,
         Deco existing,
-        UpdateDeco request)
+        UpdateDeco request,
+        CancellationToken cancellationToken)
     {
         existing.Name = request.Name;
 
+        bool hasWatermark = request.WatermarkMode is (DecoMode.Override or DecoMode.Merge);
+
         // watermark
         existing.WatermarkMode = request.WatermarkMode;
-        existing.UseWatermarkDuringFiller =
-            request.WatermarkMode is DecoMode.Override && request.UseWatermarkDuringFiller;
+        existing.UseWatermarkDuringFiller = hasWatermark && request.UseWatermarkDuringFiller;
 
-        if (request.WatermarkMode is DecoMode.Override)
+        if (hasWatermark)
         {
             // this is different than schedule item/playout item because we have to merge watermark ids
             IEnumerable<int> toAdd =
@@ -106,21 +108,25 @@ public class UpdateDecoHandler(IDbContextFactory<TvContext> dbContextFactory)
             }
         }
 
-        await dbContext.SaveChangesAsync();
+        await dbContext.SaveChangesAsync(cancellationToken);
 
         return Unit.Default;
     }
 
-    private static async Task<Validation<BaseError, Deco>> Validate(TvContext dbContext, UpdateDeco request) =>
-        (await DecoMustExist(dbContext, request), await ValidateDecoName(dbContext, request))
+    private static async Task<Validation<BaseError, Deco>> Validate(
+        TvContext dbContext,
+        UpdateDeco request,
+        CancellationToken cancellationToken) =>
+        (await DecoMustExist(dbContext, request, cancellationToken), await ValidateDecoName(dbContext, request))
         .Apply((deco, _) => deco);
 
     private static Task<Validation<BaseError, Deco>> DecoMustExist(
         TvContext dbContext,
-        UpdateDeco request) =>
+        UpdateDeco request,
+        CancellationToken cancellationToken) =>
         dbContext.Decos
             .Include(d => d.DecoWatermarks)
-            .SelectOneAsync(d => d.Id, d => d.Id == request.DecoId)
+            .SelectOneAsync(d => d.Id, d => d.Id == request.DecoId, cancellationToken)
             .Map(o => o.ToValidation<BaseError>("Deco does not exist"));
 
     private static async Task<Validation<BaseError, string>> ValidateDecoName(

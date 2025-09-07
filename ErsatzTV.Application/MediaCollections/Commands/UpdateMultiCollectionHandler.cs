@@ -35,16 +35,20 @@ public class UpdateMultiCollectionHandler : IRequestHandler<UpdateMultiCollectio
         CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        Validation<BaseError, MultiCollection> validation = await Validate(dbContext, request);
-        return await validation.Apply(c => ApplyUpdateRequest(dbContext, c, request));
+        Validation<BaseError, MultiCollection> validation = await Validate(dbContext, request, cancellationToken);
+        return await validation.Apply(c => ApplyUpdateRequest(dbContext, c, request, cancellationToken));
     }
 
-    private async Task<Unit> ApplyUpdateRequest(TvContext dbContext, MultiCollection c, UpdateMultiCollection request)
+    private async Task<Unit> ApplyUpdateRequest(
+        TvContext dbContext,
+        MultiCollection c,
+        UpdateMultiCollection request,
+        CancellationToken cancellationToken)
     {
         c.Name = request.Name;
 
         // save name first so playouts don't get rebuilt for a name change
-        await dbContext.SaveChangesAsync();
+        await dbContext.SaveChangesAsync(cancellationToken);
 
         var toAdd = request.Items
             .Filter(i => i.CollectionId.HasValue)
@@ -115,7 +119,7 @@ public class UpdateMultiCollectionHandler : IRequestHandler<UpdateMultiCollectio
         c.MultiCollectionSmartItems.AddRange(toAddSmart);
 
         // rebuild playouts
-        if (await dbContext.SaveChangesAsync() > 0)
+        if (await dbContext.SaveChangesAsync(cancellationToken) > 0)
         {
             _searchTargets.SearchTargetsChanged();
 
@@ -123,7 +127,7 @@ public class UpdateMultiCollectionHandler : IRequestHandler<UpdateMultiCollectio
             foreach (int playoutId in await _mediaCollectionRepository.PlayoutIdsUsingMultiCollection(
                          request.MultiCollectionId))
             {
-                await _channel.WriteAsync(new BuildPlayout(playoutId, PlayoutBuildMode.Refresh));
+                await _channel.WriteAsync(new BuildPlayout(playoutId, PlayoutBuildMode.Refresh), cancellationToken);
             }
         }
 
@@ -132,17 +136,19 @@ public class UpdateMultiCollectionHandler : IRequestHandler<UpdateMultiCollectio
 
     private static async Task<Validation<BaseError, MultiCollection>> Validate(
         TvContext dbContext,
-        UpdateMultiCollection request) =>
-        (await MultiCollectionMustExist(dbContext, request), await ValidateName(dbContext, request))
+        UpdateMultiCollection request,
+        CancellationToken cancellationToken) =>
+        (await MultiCollectionMustExist(dbContext, request, cancellationToken), await ValidateName(dbContext, request))
         .Apply((collectionToUpdate, _) => collectionToUpdate);
 
     private static Task<Validation<BaseError, MultiCollection>> MultiCollectionMustExist(
         TvContext dbContext,
-        UpdateMultiCollection updateCollection) =>
+        UpdateMultiCollection updateCollection,
+        CancellationToken cancellationToken) =>
         dbContext.MultiCollections
             .Include(mc => mc.MultiCollectionItems)
             .Include(mc => mc.MultiCollectionSmartItems)
-            .SelectOneAsync(c => c.Id, c => c.Id == updateCollection.MultiCollectionId)
+            .SelectOneAsync(c => c.Id, c => c.Id == updateCollection.MultiCollectionId, cancellationToken)
             .Map(o => o.ToValidation<BaseError>("MultiCollection does not exist."));
 
     private static async Task<Validation<BaseError, string>> ValidateName(

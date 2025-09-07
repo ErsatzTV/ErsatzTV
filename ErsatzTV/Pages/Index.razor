@@ -134,7 +134,7 @@
 </MudForm>
 
 @code {
-    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource _cts;
 
     private string _releaseNotes;
 
@@ -149,8 +149,8 @@
         SystemStartup.OnDatabaseReady -= OnStartupProgress;
         SystemStartup.OnSearchIndexReady -= OnStartupProgress;
 
-        _cts.Cancel();
-        _cts.Dispose();
+        _cts?.Cancel();
+        _cts?.Dispose();
     }
 
     private async void OnStartupProgress(object sender, EventArgs e)
@@ -167,6 +167,11 @@
 
     protected override async Task OnParametersSetAsync()
     {
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
+
         try
         {
             if (MemoryCache.TryGetValue("Index.ReleaseNotesHtml", out string releaseNotesHtml))
@@ -191,7 +196,7 @@
                                 gitHubVersion = $"v{gitHubVersion}";
                             }
 
-                            maybeNotes = await GitHubApiClient.GetReleaseNotes(gitHubVersion, _cts.Token);
+                            maybeNotes = await GitHubApiClient.GetReleaseNotes(gitHubVersion, token);
                             foreach (string notes in maybeNotes.RightToSeq())
                             {
                                 _releaseNotes = notes;
@@ -199,7 +204,7 @@
                         }
                         else
                         {
-                            maybeNotes = await GitHubApiClient.GetLatestReleaseNotes(_cts.Token);
+                            maybeNotes = await GitHubApiClient.GetLatestReleaseNotes(token);
                             foreach (string notes in maybeNotes.RightToSeq())
                             {
                                 _releaseNotes = notes;
@@ -222,7 +227,7 @@
 
     private async Task<TableData<HealthCheckResult>> ServerReload(TableState state, CancellationToken cancellationToken)
     {
-        List<HealthCheckResult> healthCheckResults = await Mediator.Send(new GetAllHealthCheckResults(), _cts.Token);
+        List<HealthCheckResult> healthCheckResults = await Mediator.Send(new GetAllHealthCheckResults(), cancellationToken);
 
         return new TableData<HealthCheckResult>
         {

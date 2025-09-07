@@ -8,11 +8,11 @@ public interface IRemoteStreamRepository
     Task<Either<BaseError, MediaItemScanResult<RemoteStream>>> GetOrAdd(
         LibraryPath libraryPath,
         LibraryFolder libraryFolder,
-        string path);
+        string path,
+        CancellationToken cancellationToken);
 
-    Task<IEnumerable<string>> FindRemoteStreamPaths(LibraryPath libraryPath);
-    Task<List<int>> DeleteByPath(LibraryPath libraryPath, string path);
-    Task<bool> AddTag(RemoteStreamMetadata metadata, Tag tag);
-    Task<List<RemoteStreamMetadata>> GetRemoteStreamsForCards(List<int> ids);
-    Task UpdateDefinition(RemoteStream remoteStream);
+    Task<IEnumerable<string>> FindRemoteStreamPaths(LibraryPath libraryPath, CancellationToken cancellationToken);
+    Task<List<int>> DeleteByPath(LibraryPath libraryPath, string path, CancellationToken cancellationToken);
+    Task<bool> AddTag(RemoteStreamMetadata metadata, Tag tag, CancellationToken cancellationToken);
+    Task UpdateDefinition(RemoteStream remoteStream, CancellationToken cancellationToken);
 }

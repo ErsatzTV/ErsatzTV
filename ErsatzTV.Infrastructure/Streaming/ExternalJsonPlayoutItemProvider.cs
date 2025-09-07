@@ -47,28 +47,29 @@ public class ExternalJsonPlayoutItemProvider : IExternalJsonPlayoutItemProvider
     public async Task<Either<BaseError, PlayoutItemWithPath>> CheckForExternalJson(
         Channel channel,
         DateTimeOffset now,
-        string ffprobePath)
+        string ffprobePath,
+        CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         Option<Playout> maybePlayout = await dbContext.Playouts
             .AsNoTracking()
-            .SelectOneAsync(p => p.ChannelId, p => p.ChannelId == channel.Id);
+            .SelectOneAsync(p => p.ChannelId, p => p.ChannelId == channel.Id, cancellationToken);
 
         foreach (Playout playout in maybePlayout)
         {
             // playout must be external json
-            if (playout.ProgramSchedulePlayoutType == ProgramSchedulePlayoutType.ExternalJson)
+            if (playout.ScheduleKind == PlayoutScheduleKind.ExternalJson)
             {
                 // json file must exist
-                if (_localFileSystem.FileExists(playout.ExternalJsonFile))
+                if (_localFileSystem.FileExists(playout.ScheduleFile))
                 {
-                    return await GetExternalJsonPlayoutItem(dbContext, playout, now, ffprobePath);
+                    return await GetExternalJsonPlayoutItem(dbContext, playout, now, ffprobePath, cancellationToken);
                 }
 
                 _logger.LogWarning(
-                    "Unable to locate external json file {File} for channel {Number} - {Name}",
-                    playout.ExternalJsonFile,
+                    "Unable to locate json schedule file {File} for channel {Number} - {Name}",
+                    playout.ScheduleFile,
                     channel.Number,
                     channel.Name);
             }
@@ -81,10 +82,11 @@ public class ExternalJsonPlayoutItemProvider : IExternalJsonPlayoutItemProvider
         TvContext dbContext,
         Playout playout,
         DateTimeOffset now,
-        string ffprobePath)
+        string ffprobePath,
+        CancellationToken cancellationToken)
     {
         Option<ExternalJsonChannel> maybeChannel = JsonConvert.DeserializeObject<ExternalJsonChannel>(
-            await File.ReadAllTextAsync(playout.ExternalJsonFile));
+            await File.ReadAllTextAsync(playout.ScheduleFile, cancellationToken));
 
         // must deserialize channel from json
         foreach (ExternalJsonChannel channel in maybeChannel)
@@ -105,7 +107,7 @@ public class ExternalJsonPlayoutItemProvider : IExternalJsonPlayoutItemProvider
                 if (nextStart > now)
                 {
                     //_logger.LogDebug("should play program {@Program}", program);
-                    return await BuildPlayoutItem(dbContext, startTime, program, ffprobePath);
+                    return await BuildPlayoutItem(dbContext, startTime, program, ffprobePath, cancellationToken);
                 }
 
                 startTime = nextStart;
@@ -119,27 +121,30 @@ public class ExternalJsonPlayoutItemProvider : IExternalJsonPlayoutItemProvider
         TvContext dbContext,
         DateTimeOffset startTime,
         ExternalJsonProgram program,
-        string ffprobePath)
+        string ffprobePath,
+        CancellationToken cancellationToken)
     {
         // find any library path from the appropriate plex server
         List<LibraryPath> maybeLibraryPath = await dbContext.LibraryPaths
+            .AsNoTracking()
             .Filter(lp => ((PlexMediaSource)((PlexLibrary)lp.Library).MediaSource).ServerName == program.ServerKey)
             .OrderBy(lp => lp.Id)
             .Take(1)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         foreach (LibraryPath libraryPath in maybeLibraryPath.HeadOrNone())
         {
             string localPath = await _plexPathReplacementService.GetReplacementPlexPath(
                 libraryPath.Id,
-                program.File);
+                program.File,
+                cancellationToken);
 
             if (_localFileSystem.FileExists(localPath))
             {
                 return await StreamLocally(startTime, program, ffprobePath, localPath);
             }
 
-            return await StreamRemotely(dbContext, startTime, program);
+            return await StreamRemotely(dbContext, startTime, program, cancellationToken);
         }
 
         return new UnableToLocatePlayoutItem();
@@ -194,11 +199,12 @@ public class ExternalJsonPlayoutItemProvider : IExternalJsonPlayoutItemProvider
     private async Task<Either<BaseError, PlayoutItemWithPath>> StreamRemotely(
         TvContext dbContext,
         DateTimeOffset startTime,
-        ExternalJsonProgram program)
+        ExternalJsonProgram program,
+        CancellationToken cancellationToken)
     {
         Option<PlexMediaSource> maybeServer = await dbContext.PlexMediaSources
             .Include(pms => pms.Connections)
-            .SelectOneAsync(pms => pms.ServerName, pms => pms.ServerName == program.ServerKey);
+            .SelectOneAsync(pms => pms.ServerName, pms => pms.ServerName == program.ServerKey, cancellationToken);
 
         foreach (PlexMediaSource server in maybeServer)
         {
