@@ -8,5 +8,5 @@ public class GetChannelByIdHandler(IChannelRepository channelRepository)
 {
     public Task<Option<ChannelViewModel>> Handle(GetChannelById request, CancellationToken cancellationToken) =>
         channelRepository.GetChannel(request.Id)
-            .MapT(ProjectToViewModel);
+            .MapT(c => ProjectToViewModel(c, 0));
 }

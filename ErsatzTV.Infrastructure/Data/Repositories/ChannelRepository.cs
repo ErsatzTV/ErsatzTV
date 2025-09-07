@@ -45,6 +45,8 @@ public class ChannelRepository : IChannelRepository
             .Include(c => c.FFmpegProfile)
             .Include(c => c.Artwork)
             .Include(c => c.Playouts)
+            .Include(c => c.MirrorSourceChannel)
+            .ThenInclude(mc => mc.Playouts)
             .ToListAsync(cancellationToken);
     }
 

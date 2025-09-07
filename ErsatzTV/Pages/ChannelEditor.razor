@@ -1,5 +1,6 @@
 ﻿@page "/channels/{Id:int?}"
 @page "/channels/add"
+@using System.Globalization
 @using ErsatzTV.Application.Artworks
 @using ErsatzTV.Application.Channels
 @using ErsatzTV.Application.FFmpegProfiles
@@ -69,13 +70,41 @@
 </MudStack>
 <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
     <div class="d-flex">
-        <MudText>Playout Mode</MudText>
+        <MudText>Playout Source</MudText>
     </div>
-    <MudSelect @bind-Value="_model.PlayoutMode" For="@(() => _model.PlayoutMode)" HelperText="Controls the progression of the channel's playout">
-        <MudSelectItem Value="@(ChannelPlayoutMode.Continuous)">Continuous</MudSelectItem>
-        <MudSelectItem Value="@(ChannelPlayoutMode.OnDemand)">On Demand</MudSelectItem>
+    <MudSelect @bind-Value="_model.PlayoutSource" For="@(() => _model.PlayoutSource)" HelperText="Controls the source of the channel's content">
+        <MudSelectItem Value="@(ChannelPlayoutSource.Generated)">Generated</MudSelectItem>
+        <MudSelectItem Value="@(ChannelPlayoutSource.Mirror)">Mirror</MudSelectItem>
     </MudSelect>
 </MudStack>
+@if (_model.PlayoutSource is ChannelPlayoutSource.Mirror)
+{
+    <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+        <div class="d-flex">
+            <MudText>Mirror Source Channel</MudText>
+        </div>
+        <MudSelect @bind-Value="_model.MirrorSourceChannelId" For="@(() => _model.MirrorSourceChannelId)"
+                   Clearable="true">
+            <MudSelectItem T="int?" Value="@((int?)null)">(none)</MudSelectItem>
+            @foreach (ChannelViewModel channel in _channels.OrderBy(c => decimal.Parse(c.Number, CultureInfo.InvariantCulture)))
+            {
+                <MudSelectItem T="int?" Value="@channel.Id">(@channel.Number) - @channel.Name</MudSelectItem>
+            }
+        </MudSelect>
+    </MudStack>
+}
+else
+{
+    <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+        <div class="d-flex">
+            <MudText>Playout Mode</MudText>
+        </div>
+        <MudSelect @bind-Value="_model.PlayoutMode" For="@(() => _model.PlayoutMode)" HelperText="Controls the progression of the channel's playout">
+            <MudSelectItem Value="@(ChannelPlayoutMode.Continuous)">Continuous</MudSelectItem>
+            <MudSelectItem Value="@(ChannelPlayoutMode.OnDemand)">On Demand</MudSelectItem>
+        </MudSelect>
+    </MudStack>
+}
 <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
     <div class="d-flex">
         <MudText>Is Enabled</MudText>
@@ -285,6 +314,7 @@ else
     private readonly ChannelEditViewModelValidator _validator = new();
     private MudForm _form;
 
+    private List<ChannelViewModel> _channels = [];
     private List<FFmpegProfileViewModel> _ffmpegProfiles = [];
     private List<LanguageCodeViewModel> _availableCultures = [];
     private List<WatermarkViewModel> _watermarks = [];
@@ -309,6 +339,7 @@ else
         {
             var loadingTasks = new List<Task>
             {
+                LoadDataAsync(() => Mediator.Send(new GetAllChannels(), token), r => _channels = r),
                 LoadDataAsync(() => Mediator.Send(new GetAllFFmpegProfiles(), token), r => _ffmpegProfiles = r),
                 LoadDataAsync(() => Mediator.Send(new GetAllLanguageCodes(), token), r => _availableCultures = r),
                 LoadDataAsync(() => Mediator.Send(new GetAllWatermarks(), token), r => _watermarks = r),
@@ -342,7 +373,9 @@ else
                             _model.Logo = channelViewModel.Logo;
                         }
 
+                        _model.PlayoutSource = channelViewModel.PlayoutSource;
                         _model.PlayoutMode = channelViewModel.PlayoutMode;
+                        _model.MirrorSourceChannelId = channelViewModel.MirrorSourceChannelId;
                         _model.StreamingMode = channelViewModel.StreamingMode;
                         _model.StreamSelectorMode = channelViewModel.StreamSelectorMode;
                         _model.StreamSelector = channelViewModel.StreamSelector;

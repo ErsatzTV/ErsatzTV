@@ -76,7 +76,9 @@ public class CreateChannelHandler(
                 Group = request.Group,
                 Categories = request.Categories,
                 FFmpegProfileId = ffmpegProfileId,
+                PlayoutSource = request.PlayoutSource,
                 PlayoutMode = request.PlayoutMode,
+                MirrorSourceChannelId = request.MirrorSourceChannelId,
                 StreamingMode = request.StreamingMode,
                 Artwork = artwork,
                 StreamSelectorMode = request.StreamSelectorMode,
@@ -93,6 +95,15 @@ public class CreateChannelHandler(
                 IsEnabled = request.IsEnabled,
                 ShowInEpg = request.IsEnabled && request.ShowInEpg
             };
+
+            if (channel.PlayoutSource is ChannelPlayoutSource.Mirror)
+            {
+                channel.PlayoutMode = ChannelPlayoutMode.Continuous;
+            }
+            else
+            {
+                channel.MirrorSourceChannelId = null;
+            }
 
             foreach (int id in watermarkId)
             {

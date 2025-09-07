@@ -277,6 +277,9 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .HasColumnType("tinyint(1)")
                         .HasDefaultValue(true);
 
+                    b.Property<int?>("MirrorSourceChannelId")
+                        .HasColumnType("int");
+
                     b.Property<int>("MusicVideoCreditsMode")
                         .HasColumnType("int");
 
@@ -290,6 +293,12 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .HasColumnType("varchar(255)");
 
                     b.Property<int>("PlayoutMode")
+                        .HasColumnType("int");
+
+                    b.Property<TimeSpan?>("PlayoutOffset")
+                        .HasColumnType("time(6)");
+
+                    b.Property<int>("PlayoutSource")
                         .HasColumnType("int");
 
                     b.Property<string>("PreferredAudioLanguageCode")
@@ -335,6 +344,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.HasIndex("FFmpegProfileId");
 
                     b.HasIndex("FallbackFillerId");
+
+                    b.HasIndex("MirrorSourceChannelId");
 
                     b.HasIndex("Number")
                         .IsUnique();
@@ -4048,6 +4059,11 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .HasForeignKey("FallbackFillerId")
                         .OnDelete(DeleteBehavior.SetNull);
 
+                    b.HasOne("ErsatzTV.Core.Domain.Channel", "MirrorSourceChannel")
+                        .WithMany()
+                        .HasForeignKey("MirrorSourceChannelId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("ErsatzTV.Core.Domain.ChannelWatermark", "Watermark")
                         .WithMany()
                         .HasForeignKey("WatermarkId")
@@ -4056,6 +4072,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Navigation("FFmpegProfile");
 
                     b.Navigation("FallbackFiller");
+
+                    b.Navigation("MirrorSourceChannel");
 
                     b.Navigation("Watermark");
                 });

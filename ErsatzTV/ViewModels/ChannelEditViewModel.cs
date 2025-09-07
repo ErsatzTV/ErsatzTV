@@ -19,7 +19,9 @@ public class ChannelEditViewModel
     public string PreferredAudioTitle { get; set; }
     public ArtworkContentTypeModel Logo { get; set; }
     public string ExternalLogoUrl { get; set; }
+    public ChannelPlayoutSource PlayoutSource { get; set; }
     public ChannelPlayoutMode PlayoutMode { get; set; }
+    public int? MirrorSourceChannelId { get; set; }
     public StreamingMode StreamingMode { get; set; }
     public int? WatermarkId { get; set; }
     public int? FallbackFillerId { get; set; }
@@ -56,7 +58,9 @@ public class ChannelEditViewModel
             StreamSelector,
             PreferredAudioLanguageCode,
             PreferredAudioTitle,
+            PlayoutSource,
             PlayoutMode,
+            MirrorSourceChannelId,
             StreamingMode,
             WatermarkId,
             FallbackFillerId,
@@ -84,7 +88,9 @@ public class ChannelEditViewModel
             StreamSelector,
             PreferredAudioLanguageCode,
             PreferredAudioTitle,
+            PlayoutSource,
             PlayoutMode,
+            MirrorSourceChannelId,
             StreamingMode,
             WatermarkId,
             FallbackFillerId,

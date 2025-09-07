@@ -183,7 +183,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
             .Include(i => i.MediaItem)
             .ThenInclude(mi => (mi as RemoteStream).RemoteStreamMetadata)
             .Include(i => i.Watermarks)
-            .ForChannelAndTime(channel.Id, now)
+            .ForChannelAndTime(channel.MirrorSourceChannelId ?? channel.Id, now)
             .Map(o => o.ToEither<BaseError>(new UnableToLocatePlayoutItem()))
             .BindT(item => ValidatePlayoutItemPath(dbContext, item, cancellationToken));
 

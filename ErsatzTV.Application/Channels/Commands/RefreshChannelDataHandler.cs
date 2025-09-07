@@ -52,8 +52,10 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
         string targetFile = Path.Combine(FileSystemLayout.ChannelGuideCacheFolder, $"{request.ChannelNumber}.xml");
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
+        string channelNumber = request.ChannelNumber;
+
         int hiddenCount = await dbContext.Channels
-            .Where(c => c.Number == request.ChannelNumber && c.ShowInEpg == false)
+            .Where(c => c.Number == channelNumber && c.ShowInEpg == false)
             .CountAsync(cancellationToken);
         if (hiddenCount > 0)
         {
@@ -96,6 +98,17 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
 
         string otherVideoText = await File.ReadAllTextAsync(otherVideoTemplateFileName, cancellationToken);
         var otherVideoTemplate = Template.Parse(otherVideoText, otherVideoTemplateFileName);
+
+        Option<string> maybeMirrorNumber = await dbContext.Channels
+            .Filter(c => c.Number == channelNumber)
+            .Filter(c => c.PlayoutSource == ChannelPlayoutSource.Mirror && c.MirrorSourceChannelId != null)
+            .Map(c => c.MirrorSourceChannel.Number)
+            .ToListAsync(cancellationToken)
+            .Map(list => list.HeadOrNone());
+        foreach (string mirrorNumber in maybeMirrorNumber)
+        {
+            request = new RefreshChannelData(ChannelNumber: mirrorNumber);
+        }
 
         List<Playout> playouts = await dbContext.Playouts
             .AsNoTracking()

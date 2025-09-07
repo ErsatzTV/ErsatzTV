@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 ### Added
 - Classic schedules: allow selecting multiple graphics elements on schedule items
+- Add channel `Playout Source` setting
+  - `Generated`: default/existing behavior where channel must have its own playout
+  - `Mirror`: channel will play content from the specified `Mirror Source Channel`'s playout
+    - This allows the exact same content on different channels with different channel settings
 
 ### Fixed
 - Fix transcoding content with bt709/pc color metadata
@@ -15,7 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - `local_infile=ON` is required when using MySQL (for bulk inserts when building playouts)
   - ETV will set this automatically when it has permission
   - When ETV does not have permission, startup will fail with logged instructions on how to configure MySql
-- Fix scaling content in locales that don't use period as a decimal separator (e.g. `,`)
+- Fix scaling anamorphic content in locales that don't use period as a decimal separator (e.g. `,`)
 
 ### Changed
 - **BREAKING CHANGE**: change how `Scripted Schedule` system works
