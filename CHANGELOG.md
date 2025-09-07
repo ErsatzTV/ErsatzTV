@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 ### Added
 - Classic schedules: allow selecting multiple graphics elements on schedule items
+- Add channel `Playout Source` setting
+  - `Generated`: default/existing behavior where channel must have its own playout
+  - `Mirror`: channel will play content from the specified `Mirror Source Channel`'s playout
+    - This allows the exact same content on different channels with different channel settings
 
 ### Fixed
 - Fix transcoding content with bt709/pc color metadata
