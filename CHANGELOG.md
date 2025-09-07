@@ -11,6 +11,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix transcoding content with bt709/pc color metadata
 - Fix scripted schedule validation (file exists) when creating or editing playout
 - Fix adding single episode, movie, season, show to empty playlists
+- Fix startup with MySql as non-superuser
+  - `local_infile=ON` is required when using MySQL (for bulk inserts when building playouts)
+  - ETV will set this automatically when it has permission
+  - When ETV does not have permission, startup will fail with logged instructions on how to configure MySql
 
 ### Changed
 - **BREAKING CHANGE**: change how `Scripted Schedule` system works
