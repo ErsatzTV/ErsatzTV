@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - This allows the exact same content on different channels with different channel settings
     - `Playout Offset` can be used to offset the times of scheduled playout items from the mirror source channel
       - e.g. -2 hours will cause the mirror channel to play content 2 hours before the mirror source channel
+- Add support for `.aif`, `.aifc`, `.aiff` song files
 
 ### Fixed
 - Fix transcoding content with bt709/pc color metadata

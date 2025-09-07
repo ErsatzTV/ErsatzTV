@@ -67,6 +67,14 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
         try
         {
             string mediaItemPath = mediaItem.GetHeadVersion().MediaFiles.Head().Path;
+
+            // aifc is unsupported here
+            string extension = Path.GetExtension(mediaItemPath);
+            if (extension.Contains("aifc", StringComparison.OrdinalIgnoreCase))
+            {
+                return new List<SongTag>();
+            }
+
             var song = File.Create(mediaItemPath);
 
             var result = new List<SongTag>();
