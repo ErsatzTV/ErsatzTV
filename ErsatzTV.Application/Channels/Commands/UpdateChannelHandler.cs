@@ -33,6 +33,8 @@ public class UpdateChannelHandler(
         UpdateChannel update,
         CancellationToken cancellationToken)
     {
+        bool hasEpgChange = c.PlayoutSource != update.PlayoutSource || c.ShowInEpg != update.ShowInEpg;
+
         c.Name = update.Name;
         c.Number = update.Number;
         c.Group = update.Group;
@@ -101,19 +103,21 @@ public class UpdateChannelHandler(
 
         c.PlayoutSource = update.PlayoutSource;
         c.PlayoutMode = update.PlayoutMode;
-        c.MirrorSourceChannelId = update.MirrorSourceChannelId;
-        c.StreamingMode = update.StreamingMode;
-        c.WatermarkId = update.WatermarkId;
-        c.FallbackFillerId = update.FallbackFillerId;
 
         if (c.PlayoutSource is ChannelPlayoutSource.Mirror)
         {
             c.PlayoutMode = ChannelPlayoutMode.Continuous;
+            hasEpgChange |= c.MirrorSourceChannelId != update.MirrorSourceChannelId;
         }
         else
         {
             c.MirrorSourceChannelId = null;
         }
+
+        c.MirrorSourceChannelId = update.MirrorSourceChannelId;
+        c.StreamingMode = update.StreamingMode;
+        c.WatermarkId = update.WatermarkId;
+        c.FallbackFillerId = update.FallbackFillerId;
 
         await dbContext.SaveChangesAsync(cancellationToken);
 
@@ -131,6 +135,10 @@ public class UpdateChannelHandler(
         }
 
         await workerChannel.WriteAsync(new RefreshChannelList(), cancellationToken);
+        if (hasEpgChange)
+        {
+            await workerChannel.WriteAsync(new RefreshChannelData(c.Number), cancellationToken);
+        }
 
         return ProjectToViewModel(c, c.Playouts?.Count ?? 0);
     }
