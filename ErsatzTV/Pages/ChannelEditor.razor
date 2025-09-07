@@ -69,6 +69,15 @@
 </MudStack>
 <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
     <div class="d-flex">
+        <MudText>Playout Source</MudText>
+    </div>
+    <MudSelect @bind-Value="_model.PlayoutSource" For="@(() => _model.PlayoutSource)" HelperText="Controls the source of the channel's content">
+        <MudSelectItem Value="@(ChannelPlayoutSource.Generated)">Generated</MudSelectItem>
+        <MudSelectItem Value="@(ChannelPlayoutSource.Mirror)">Mirror</MudSelectItem>
+    </MudSelect>
+</MudStack>
+<MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+    <div class="d-flex">
         <MudText>Playout Mode</MudText>
     </div>
     <MudSelect @bind-Value="_model.PlayoutMode" For="@(() => _model.PlayoutMode)" HelperText="Controls the progression of the channel's playout">
@@ -342,6 +351,7 @@ else
                             _model.Logo = channelViewModel.Logo;
                         }
 
+                        _model.PlayoutSource = channelViewModel.PlayoutSource;
                         _model.PlayoutMode = channelViewModel.PlayoutMode;
                         _model.StreamingMode = channelViewModel.StreamingMode;
                         _model.StreamSelectorMode = channelViewModel.StreamSelectorMode;

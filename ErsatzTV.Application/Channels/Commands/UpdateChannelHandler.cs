@@ -99,6 +99,7 @@ public class UpdateChannelHandler(
             }
         }
 
+        c.PlayoutSource = update.PlayoutSource;
         c.PlayoutMode = update.PlayoutMode;
         c.StreamingMode = update.StreamingMode;
         c.WatermarkId = update.WatermarkId;

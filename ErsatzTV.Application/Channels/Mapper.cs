@@ -19,6 +19,7 @@ internal static class Mapper
             channel.StreamSelector,
             channel.PreferredAudioLanguageCode,
             channel.PreferredAudioTitle,
+            channel.PlayoutSource,
             channel.PlayoutMode,
             channel.StreamingMode,
             channel.WatermarkId,

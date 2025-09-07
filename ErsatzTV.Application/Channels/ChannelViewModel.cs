@@ -16,6 +16,7 @@ public record ChannelViewModel(
     string StreamSelector,
     string PreferredAudioLanguageCode,
     string PreferredAudioTitle,
+    ChannelPlayoutSource PlayoutSource,
     ChannelPlayoutMode PlayoutMode,
     StreamingMode StreamingMode,
     int? WatermarkId,
