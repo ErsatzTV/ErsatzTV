@@ -108,13 +108,16 @@ public class UpdateChannelHandler(
         {
             c.PlayoutMode = ChannelPlayoutMode.Continuous;
             hasEpgChange |= c.MirrorSourceChannelId != update.MirrorSourceChannelId;
+            hasEpgChange |= c.PlayoutOffset != update.PlayoutOffset;
         }
         else
         {
             c.MirrorSourceChannelId = null;
+            c.PlayoutOffset = null;
         }
 
         c.MirrorSourceChannelId = update.MirrorSourceChannelId;
+        c.PlayoutOffset = update.PlayoutOffset;
         c.StreamingMode = update.StreamingMode;
         c.WatermarkId = update.WatermarkId;
         c.FallbackFillerId = update.FallbackFillerId;

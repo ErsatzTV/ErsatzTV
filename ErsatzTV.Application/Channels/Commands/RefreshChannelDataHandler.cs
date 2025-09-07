@@ -11,6 +11,7 @@ using ErsatzTV.Core.Iptv;
 using ErsatzTV.Core.Jellyfin;
 using ErsatzTV.Core.Streaming;
 using ErsatzTV.Infrastructure.Data;
+using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.IO;
@@ -52,10 +53,8 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
         string targetFile = Path.Combine(FileSystemLayout.ChannelGuideCacheFolder, $"{request.ChannelNumber}.xml");
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
-        string channelNumber = request.ChannelNumber;
-
         int hiddenCount = await dbContext.Channels
-            .Where(c => c.Number == channelNumber && c.ShowInEpg == false)
+            .Where(c => c.Number == request.ChannelNumber && c.ShowInEpg == false)
             .CountAsync(cancellationToken);
         if (hiddenCount > 0)
         {
@@ -99,20 +98,22 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
         string otherVideoText = await File.ReadAllTextAsync(otherVideoTemplateFileName, cancellationToken);
         var otherVideoTemplate = Template.Parse(otherVideoText, otherVideoTemplateFileName);
 
-        Option<string> maybeMirrorNumber = await dbContext.Channels
-            .Filter(c => c.Number == channelNumber)
+        TimeSpan playoutOffset = TimeSpan.Zero;
+        string mirrorChannelNumber = null;
+        Option<Channel> maybeChannel = await dbContext.Channels
+            .AsNoTracking()
+            .Include(c => c.MirrorSourceChannel)
             .Filter(c => c.PlayoutSource == ChannelPlayoutSource.Mirror && c.MirrorSourceChannelId != null)
-            .Map(c => c.MirrorSourceChannel.Number)
-            .ToListAsync(cancellationToken)
-            .Map(list => list.HeadOrNone());
-        foreach (string mirrorNumber in maybeMirrorNumber)
+            .SelectOneAsync(c => c.Number == request.ChannelNumber, c => c.Number == request.ChannelNumber, cancellationToken);
+        foreach (Channel channel in maybeChannel)
         {
-            request = new RefreshChannelData(ChannelNumber: mirrorNumber);
+            mirrorChannelNumber = channel.MirrorSourceChannel.Number;
+            playoutOffset = channel.PlayoutOffset ?? TimeSpan.Zero;
         }
 
         List<Playout> playouts = await dbContext.Playouts
             .AsNoTracking()
-            .Filter(pi => pi.Channel.Number == request.ChannelNumber)
+            .Filter(pi => pi.Channel.Number == (mirrorChannelNumber ?? request.ChannelNumber))
             .Include(p => p.Items)
             .ThenInclude(i => i.MediaItem)
             .ThenInclude(i => (i as Episode).EpisodeMetadata)
@@ -213,6 +214,11 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
                         .OrderBy(pi => pi.Start)
                         .Filter(pi => pi.StartOffset <= finish)
                         .ToList();
+                    foreach (var item in floodSorted)
+                    {
+                        item.Start += playoutOffset;
+                        item.Finish += playoutOffset;
+                    }
                     await WritePlayoutXml(
                         request,
                         floodSorted,
@@ -232,6 +238,11 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
                         .OrderBy(pi => pi.Start)
                         .Filter(pi => pi.StartOffset <= finish)
                         .ToList();
+                    foreach (var item in blockSorted)
+                    {
+                        item.Start += playoutOffset;
+                        item.Finish += playoutOffset;
+                    }
                     await WriteBlockPlayoutXml(
                         request,
                         blockSorted,
@@ -249,7 +260,11 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
                     var externalJsonSorted = (await CollectExternalJsonItems(playout.ScheduleFile))
                         .Filter(pi => pi.StartOffset <= finish)
                         .ToList();
-
+                    foreach (var item in externalJsonSorted)
+                    {
+                        item.Start += playoutOffset;
+                        item.Finish += playoutOffset;
+                    }
                     await WritePlayoutXml(
                         request,
                         externalJsonSorted,

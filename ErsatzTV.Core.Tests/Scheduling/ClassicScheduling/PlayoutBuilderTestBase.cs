@@ -95,7 +95,8 @@ public abstract class PlayoutBuilderTestBase
             [],
             playout.ProgramSchedule,
             [],
-            []);
+            [],
+            TimeSpan.Zero);
 
         return new TestData(builder, playout, referenceData);
     }
@@ -208,7 +209,8 @@ public abstract class PlayoutBuilderTestBase
             [],
             playout.ProgramSchedule,
             [],
-            []);
+            [],
+            TimeSpan.Zero);
 
         return new TestData(builder, playout, referenceData);
     }

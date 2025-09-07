@@ -171,7 +171,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
             {
                 changeCount += await dbContext.PlayoutItems
                     .Where(pi => pi.PlayoutId == playout.Id)
-                    .Where(pi => pi.Finish < removeBefore.UtcDateTime)
+                    .Where(pi => pi.Finish < removeBefore.UtcDateTime + referenceData.MinPlayoutOffset)
                     .ExecuteDeleteAsync(cancellationToken);
             }
 
@@ -242,6 +242,17 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
                 playout.ScheduleKind is PlayoutScheduleKind.ExternalJson)
             {
                 await _workerChannel.WriteAsync(new RefreshChannelData(channelNumber), cancellationToken);
+
+                // refresh guide data for all mirror channels, too
+                List<string> maybeMirrors = await dbContext.Channels
+                    .AsNoTracking()
+                    .Filter(c => c.MirrorSourceChannelId == referenceData.Channel.Id)
+                    .Map(c => c.Number)
+                    .ToListAsync(cancellationToken);
+                foreach (string mirror in maybeMirrors)
+                {
+                    await _workerChannel.WriteAsync(new RefreshChannelData(mirror), cancellationToken);
+                }
             }
 
             await _workerChannel.WriteAsync(new ExtractEmbeddedSubtitles(playout.Id), cancellationToken);
@@ -337,6 +348,20 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
             .AsNoTracking()
             .Where(c => c.Playouts.Any(p => p.Id == playoutId))
             .FirstOrDefaultAsync();
+
+        TimeSpan minPlayoutOffset = TimeSpan.Zero;
+        List<Channel> mirrorChannels = await dbContext.Channels
+            .AsNoTracking()
+            .Where(c => c.MirrorSourceChannelId == channel.Id)
+            .ToListAsync();
+        foreach (var mirrorChannel in mirrorChannels)
+        {
+            var offset = mirrorChannel.PlayoutOffset ?? TimeSpan.Zero;
+            if (offset < minPlayoutOffset)
+            {
+                minPlayoutOffset = offset;
+            }
+        }
 
         Option<Deco> deco = Option<Deco>.None;
         List<PlayoutItem> existingItems = [];
@@ -439,6 +464,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
             playoutTemplates,
             programSchedule,
             programScheduleAlternates,
-            playoutHistory);
+            playoutHistory,
+            minPlayoutOffset);
     }
 }
