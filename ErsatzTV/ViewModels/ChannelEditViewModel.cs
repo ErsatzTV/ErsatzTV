@@ -22,6 +22,14 @@ public class ChannelEditViewModel
     public ChannelPlayoutSource PlayoutSource { get; set; }
     public ChannelPlayoutMode PlayoutMode { get; set; }
     public int? MirrorSourceChannelId { get; set; }
+    public TimeSpan? PlayoutOffset { get; set; }
+
+    public int PlayoutOffsetHours
+    {
+        get => PlayoutOffset?.Hours ?? 0;
+        set => PlayoutOffset = new TimeSpan(hours: value, minutes: 0, seconds: 0);
+    }
+
     public StreamingMode StreamingMode { get; set; }
     public int? WatermarkId { get; set; }
     public int? FallbackFillerId { get; set; }
@@ -61,6 +69,7 @@ public class ChannelEditViewModel
             PlayoutSource,
             PlayoutMode,
             MirrorSourceChannelId,
+            PlayoutOffset,
             StreamingMode,
             WatermarkId,
             FallbackFillerId,
@@ -91,6 +100,7 @@ public class ChannelEditViewModel
             PlayoutSource,
             PlayoutMode,
             MirrorSourceChannelId,
+            PlayoutOffset,
             StreamingMode,
             WatermarkId,
             FallbackFillerId,

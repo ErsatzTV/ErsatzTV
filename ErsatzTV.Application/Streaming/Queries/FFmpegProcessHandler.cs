@@ -22,7 +22,13 @@ public abstract class FFmpegProcessHandler<T> : IRequestHandler<T, Either<BaseEr
             request,
             cancellationToken);
         return await validation.Match(
-            tuple => GetProcess(dbContext, request, tuple.Item1, tuple.Item2, tuple.Item3, cancellationToken),
+            tuple => GetProcess(
+                dbContext,
+                request with { Now = request.Now - (tuple.Item1.PlayoutOffset ?? TimeSpan.Zero) },
+                tuple.Item1,
+                tuple.Item2,
+                tuple.Item3,
+                cancellationToken),
             error => Task.FromResult<Either<BaseError, PlayoutItemProcessModel>>(error.Join()));
     }
 

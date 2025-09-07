@@ -79,6 +79,7 @@ public class CreateChannelHandler(
                 PlayoutSource = request.PlayoutSource,
                 PlayoutMode = request.PlayoutMode,
                 MirrorSourceChannelId = request.MirrorSourceChannelId,
+                PlayoutOffset = request.PlayoutOffset,
                 StreamingMode = request.StreamingMode,
                 Artwork = artwork,
                 StreamSelectorMode = request.StreamSelectorMode,
@@ -103,6 +104,7 @@ public class CreateChannelHandler(
             else
             {
                 channel.MirrorSourceChannelId = null;
+                channel.PlayoutOffset = null;
             }
 
             foreach (int id in watermarkId)

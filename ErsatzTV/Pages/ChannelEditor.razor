@@ -92,6 +92,15 @@
             }
         </MudSelect>
     </MudStack>
+    <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+        <div class="d-flex">
+            <MudText>Playout Offset</MudText>
+        </div>
+        <MudTextField T="int"
+                      @bind-Value="_model.PlayoutOffsetHours"
+                      Adornment="Adornment.End"
+                      AdornmentText="hours"/>
+    </MudStack>
 }
 else
 {
@@ -376,6 +385,7 @@ else
                         _model.PlayoutSource = channelViewModel.PlayoutSource;
                         _model.PlayoutMode = channelViewModel.PlayoutMode;
                         _model.MirrorSourceChannelId = channelViewModel.MirrorSourceChannelId;
+                        _model.PlayoutOffset = channelViewModel.PlayoutOffset;
                         _model.StreamingMode = channelViewModel.StreamingMode;
                         _model.StreamSelectorMode = channelViewModel.StreamSelectorMode;
                         _model.StreamSelector = channelViewModel.StreamSelector;

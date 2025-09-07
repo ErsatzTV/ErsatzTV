@@ -503,6 +503,7 @@ public class ScheduleIntegrationTests
             playoutTemplates,
             programSchedule,
             programScheduleAlternates,
-            playoutHistory);
+            playoutHistory,
+            TimeSpan.Zero);
     }
 }
