@@ -715,6 +715,9 @@ public class SchedulingEngine(
                 remainingToFill = targetTime - _state.CurrentTime;
                 if (remainingToFill <= TimeSpan.Zero)
                 {
+                    // TODO: this shouldn't be needed, but prevents overlap
+                    _state.AddedItems.RemoveAll(pi => pi.FinishOffset >= targetTime);
+                    _state.CurrentTime = _state.AddedItems.Max(pi => pi.FinishOffset);
                     break;
                 }
             }
@@ -1156,6 +1159,7 @@ public class SchedulingEngine(
         {
             if (rewindOnReset && _state.Mode == PlayoutBuildMode.Reset)
             {
+                Console.WriteLine("rewinding???");
                 // maybe wrong when offset changes?
                 currentTime = waitUntil.ToLocalTime();
             }
