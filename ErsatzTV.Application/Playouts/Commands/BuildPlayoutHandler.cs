@@ -171,7 +171,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
             {
                 changeCount += await dbContext.PlayoutItems
                     .Where(pi => pi.PlayoutId == playout.Id)
-                    .Where(pi => pi.Finish < removeBefore.UtcDateTime + referenceData.MinPlayoutOffset)
+                    .Where(pi => pi.Finish < removeBefore.UtcDateTime - referenceData.MaxPlayoutOffset)
                     .ExecuteDeleteAsync(cancellationToken);
             }
 
@@ -349,7 +349,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
             .Where(c => c.Playouts.Any(p => p.Id == playoutId))
             .FirstOrDefaultAsync();
 
-        TimeSpan minPlayoutOffset = TimeSpan.Zero;
+        TimeSpan maxPlayoutOffset = TimeSpan.Zero;
         List<Channel> mirrorChannels = await dbContext.Channels
             .AsNoTracking()
             .Where(c => c.MirrorSourceChannelId == channel.Id)
@@ -357,9 +357,9 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
         foreach (var mirrorChannel in mirrorChannels)
         {
             var offset = mirrorChannel.PlayoutOffset ?? TimeSpan.Zero;
-            if (offset < minPlayoutOffset)
+            if (offset > maxPlayoutOffset)
             {
-                minPlayoutOffset = offset;
+                maxPlayoutOffset = offset;
             }
         }
 
@@ -465,6 +465,6 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
             programSchedule,
             programScheduleAlternates,
             playoutHistory,
-            minPlayoutOffset);
+            maxPlayoutOffset);
     }
 }

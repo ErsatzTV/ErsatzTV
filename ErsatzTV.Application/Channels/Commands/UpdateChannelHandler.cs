@@ -208,6 +208,14 @@ public class UpdateChannelHandler(
             }
         }
 
+        foreach (TimeSpan playoutOffset in Optional(request.PlayoutOffset))
+        {
+            if (playoutOffset < TimeSpan.FromHours(-12) || playoutOffset > TimeSpan.FromHours(12))
+            {
+                return BaseError.New("Playout offset must not be greater than 12 hours");
+            }
+        }
+
         return Unit.Default;
     }
 
