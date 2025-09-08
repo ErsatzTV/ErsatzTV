@@ -47,6 +47,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - Entrypoint is at `/app/scripted-schedules/entrypoint.py`
     - Scripts folder should be mounted to `/app/scripted-schedules/scripts`
     - Playouts should be created with scripted schedule `/app/scripted-schedules/entrypoint.py script-name` (no trailing `.py`)
+- Automatically ignore Specials/Season 0 when using `Season, Episode` playback order
 
 ## [25.5.0] - 2025-09-01
 ### Added

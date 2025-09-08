@@ -73,17 +73,41 @@ public class SeasonEpisodeContentTests
         chronologicalContent.State.Seed.ShouldBe(0);
     }
 
+    [Test]
+    public void Episodes_Should_Ignore_Specials()
+    {
+        List<MediaItem> contents = Episodes(10);
+        for (int i = 0; i < 2; i++)
+        {
+            ((Episode)contents[i]).Season = new Season { SeasonNumber = 0 };
+        }
+
+        var state = new CollectionEnumeratorState();
+
+        var chronologicalContent = new SeasonEpisodeMediaCollectionEnumerator(contents, state);
+
+        for (var i = 0; i < 16; i++)
+        {
+            chronologicalContent.State.Index.ShouldBe(i % 8);
+            chronologicalContent.MoveNext();
+        }
+    }
+
     private static List<MediaItem> Episodes(int count) =>
         Range(1, count).Map(i => (MediaItem)new Episode
             {
                 Id = i,
-                EpisodeMetadata = new List<EpisodeMetadata>
-                {
-                    new()
+                EpisodeMetadata =
+                [
+                    new EpisodeMetadata
                     {
                         ReleaseDate = new DateTime(2020, 1, 20 - i),
                         EpisodeNumber = i
                     }
+                ],
+                Season = new Season
+                {
+                    SeasonNumber = 1
                 }
             })
             .Reverse()
