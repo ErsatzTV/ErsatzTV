@@ -490,11 +490,13 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         {
             graphicsEngineInput = new GraphicsEngineInput();
 
+            FrameSize targetSize = await desiredState.CroppedSize.IfNoneAsync(desiredState.ScaledSize);
+
             graphicsEngineContext = new GraphicsEngineContext(
                 channel.Number,
                 audioVersion.MediaItem,
                 graphicsElementContexts,
-                new Resolution { Width = desiredState.ScaledSize.Width, Height = desiredState.ScaledSize.Height },
+                new Resolution { Width = targetSize.Width, Height = targetSize.Height },
                 channel.FFmpegProfile.Resolution,
                 await playbackSettings.FrameRate.IfNoneAsync(24),
                 channelStartTime,

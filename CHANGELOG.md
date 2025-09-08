@@ -25,6 +25,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix scaling anamorphic content in locales that don't use period as a decimal separator (e.g. `,`)
 - Block schedules: fix playout build crash when empty collection uses random playback order
 - Fix watermarks and graphics elements on primary content split by mid-roll filler
+- Fix watermarks and graphics elements when `Scaling Behavior` is `Crop`
 
 ### Changed
 - **BREAKING CHANGE**: change how `Scripted Schedule` system works
