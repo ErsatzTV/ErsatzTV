@@ -23,6 +23,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - ETV will set this automatically when it has permission
   - When ETV does not have permission, startup will fail with logged instructions on how to configure MySql
 - Fix scaling anamorphic content in locales that don't use period as a decimal separator (e.g. `,`)
+- Block schedules: fix playout build crash when empty collection uses random playback order
 
 ### Changed
 - **BREAKING CHANGE**: change how `Scripted Schedule` system works
