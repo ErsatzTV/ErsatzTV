@@ -11,4 +11,4 @@ public record PlayoutReferenceData(
     ProgramSchedule ProgramSchedule,
     List<ProgramScheduleAlternate> ProgramScheduleAlternates,
     List<PlayoutHistory> PlayoutHistory,
-    TimeSpan MinPlayoutOffset);
+    TimeSpan MaxPlayoutOffset);

@@ -72,7 +72,10 @@
     <div class="d-flex">
         <MudText>Playout Source</MudText>
     </div>
-    <MudSelect @bind-Value="_model.PlayoutSource" For="@(() => _model.PlayoutSource)" HelperText="Controls the source of the channel's content">
+    <MudSelect @bind-Value="_model.PlayoutSource"
+               For="@(() => _model.PlayoutSource)"
+               HelperText="Controls the source of the channel's content. This cannot be changed when the channel already has a playout."
+               Disabled="@(_channels.Any(c => c.Id == Id && c.PlayoutCount > 0))">
         <MudSelectItem Value="@(ChannelPlayoutSource.Generated)">Generated</MudSelectItem>
         <MudSelectItem Value="@(ChannelPlayoutSource.Mirror)">Mirror</MudSelectItem>
     </MudSelect>
@@ -86,7 +89,9 @@
         <MudSelect @bind-Value="_model.MirrorSourceChannelId" For="@(() => _model.MirrorSourceChannelId)"
                    Clearable="true">
             <MudSelectItem T="int?" Value="@((int?)null)">(none)</MudSelectItem>
-            @foreach (ChannelViewModel channel in _channels.OrderBy(c => decimal.Parse(c.Number, CultureInfo.InvariantCulture)))
+            @foreach (ChannelViewModel channel in _channels
+                .Where(c => c.Id != Id && c.PlayoutSource is ChannelPlayoutSource.Generated)
+                .OrderBy(c => decimal.Parse(c.Number, CultureInfo.InvariantCulture)))
             {
                 <MudSelectItem T="int?" Value="@channel.Id">(@channel.Number) - @channel.Name</MudSelectItem>
             }
