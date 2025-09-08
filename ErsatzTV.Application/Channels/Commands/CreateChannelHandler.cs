@@ -39,13 +39,15 @@ public class CreateChannelHandler(
         (ValidateName(request), await ValidateNumber(dbContext, request, cancellationToken),
             await FFmpegProfileMustExist(dbContext, request, cancellationToken),
             await WatermarkMustExist(dbContext, request, cancellationToken),
-            await FillerPresetMustExist(dbContext, request, cancellationToken))
+            await FillerPresetMustExist(dbContext, request, cancellationToken),
+            await MirrorSourceMustBeValid(dbContext, request, cancellationToken))
         .Apply((
             name,
             number,
             ffmpegProfileId,
             watermarkId,
-            fillerPresetId) =>
+            fillerPresetId,
+            _) =>
         {
             var artwork = new List<Artwork>();
             if (!string.IsNullOrWhiteSpace(request.Logo?.Path))
@@ -191,5 +193,39 @@ public class CreateChannelHandler(
             .MapT(_ => Optional(createChannel.FallbackFillerId))
             .Map(o => o.ToValidation<BaseError>(
                 $"Fallback filler {createChannel.FallbackFillerId} does not exist."));
+    }
+
+    private static async Task<Validation<BaseError, Unit>> MirrorSourceMustBeValid(
+        TvContext dbContext,
+        CreateChannel createChannel,
+        CancellationToken cancellationToken)
+    {
+        if (createChannel.PlayoutSource is not ChannelPlayoutSource.Mirror)
+        {
+            return Unit.Default;
+        }
+
+        Option<Channel> maybeMirrorSource = await dbContext.Channels
+            .AsNoTracking()
+            .SelectOneAsync(
+                c => c.Id == createChannel.MirrorSourceChannelId,
+                c => c.Id == createChannel.MirrorSourceChannelId,
+                cancellationToken);
+
+        if (maybeMirrorSource.IsNone)
+        {
+            return BaseError.New("Mirror source channel does not exist.");
+        }
+
+        foreach (var mirrorSource in maybeMirrorSource)
+        {
+            if (mirrorSource.PlayoutSource is not ChannelPlayoutSource.Generated)
+            {
+                return BaseError.New(
+                    $"Mirror source channel {mirrorSource.Name} must use generated playout source");
+            }
+        }
+
+        return Unit.Default;
     }
 }
