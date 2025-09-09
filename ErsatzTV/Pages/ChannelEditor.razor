@@ -75,7 +75,7 @@
     <MudSelect @bind-Value="_model.PlayoutSource"
                For="@(() => _model.PlayoutSource)"
                HelperText="Controls the source of the channel's content. This cannot be changed when the channel already has a playout."
-               Disabled="@(_channels.Any(c => c.Id == Id && c.PlayoutCount > 0))">
+               Disabled="@(_channels.Any(c => c.PlayoutSource is ChannelPlayoutSource.Generated && c.Id == Id && c.PlayoutCount > 0))">
         <MudSelectItem Value="@(ChannelPlayoutSource.Generated)">Generated</MudSelectItem>
         <MudSelectItem Value="@(ChannelPlayoutSource.Mirror)">Mirror</MudSelectItem>
     </MudSelect>
