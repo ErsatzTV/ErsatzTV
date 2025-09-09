@@ -61,6 +61,7 @@ public class PlayoutBuilder : IPlayoutBuilder
     }
 
     public async Task<PlayoutBuildResult> Build(
+        DateTimeOffset start,
         Playout playout,
         PlayoutReferenceData referenceData,
         PlayoutBuildMode mode,
@@ -79,7 +80,7 @@ public class PlayoutBuilder : IPlayoutBuilder
             return result;
         }
 
-        foreach (PlayoutParameters parameters in await Validate(playout, referenceData, cancellationToken))
+        foreach (PlayoutParameters parameters in await Validate(start, playout, referenceData, cancellationToken))
         {
             // for testing purposes
             // if (mode == PlayoutBuildMode.Reset)
@@ -116,7 +117,7 @@ public class PlayoutBuilder : IPlayoutBuilder
         DateTimeOffset finish,
         CancellationToken cancellationToken)
     {
-        foreach (PlayoutParameters parameters in await Validate(playout, referenceData, cancellationToken))
+        foreach (PlayoutParameters parameters in await Validate(start, playout, referenceData, cancellationToken))
         {
             result = await Build(
                 playout,
@@ -320,6 +321,7 @@ public class PlayoutBuilder : IPlayoutBuilder
     }
 
     private async Task<Option<PlayoutParameters>> Validate(
+        DateTimeOffset start,
         Playout playout,
         PlayoutReferenceData referenceData,
         CancellationToken cancellationToken)
@@ -367,7 +369,7 @@ public class PlayoutBuilder : IPlayoutBuilder
             ConfigElementKey.PlayoutDaysToBuild,
             cancellationToken);
 
-        DateTimeOffset now = DateTimeOffset.Now;
+        DateTimeOffset now = start;
 
         return new PlayoutParameters(
             now,

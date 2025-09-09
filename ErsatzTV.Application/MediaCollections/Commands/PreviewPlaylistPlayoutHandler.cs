@@ -57,6 +57,7 @@ public class PreviewPlaylistPlayoutHandler(
         playoutBuilder.TrimStart = false;
         playoutBuilder.DebugPlaylist = playout.ProgramSchedule.Items[0].Playlist;
         PlayoutBuildResult result = await playoutBuilder.Build(
+            DateTimeOffset.Now,
             playout,
             referenceData,
             PlayoutBuildMode.Reset,

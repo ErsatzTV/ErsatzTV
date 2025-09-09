@@ -34,6 +34,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Block schedules: fix playout build crash when empty collection uses random playback order
 - Fix watermarks and graphics elements on primary content split by mid-roll filler
 - Fix watermarks and graphics elements when `Scaling Behavior` is `Crop`
+- Fix hardware acceleration health check message on mobile
 
 ### Changed
 - **BREAKING CHANGE**: change how `Scripted Schedule` system works

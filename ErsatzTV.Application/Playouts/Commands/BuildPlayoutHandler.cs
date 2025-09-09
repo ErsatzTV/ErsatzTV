@@ -154,7 +154,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
                 case PlayoutScheduleKind.None:
                 case PlayoutScheduleKind.Classic:
                 default:
-                    result = await _playoutBuilder.Build(playout, referenceData, request.Mode, cancellationToken);
+                    result = await _playoutBuilder.Build(request.Start, playout, referenceData, request.Mode, cancellationToken);
                     break;
             }
 
