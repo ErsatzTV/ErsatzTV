@@ -60,7 +60,8 @@ public class PlaylistEnumeratorTests
             repo,
             playlistItemMap,
             new CollectionEnumeratorState(),
-            false,
+            shufflePlaylistItems: false,
+            batchSize: Option<int>.None,
             CancellationToken.None);
 
         var items = new List<int>();
@@ -127,7 +128,8 @@ public class PlaylistEnumeratorTests
             repo,
             playlistItemMap,
             new CollectionEnumeratorState(),
-            false,
+            shufflePlaylistItems: false,
+            batchSize: Option<int>.None,
             CancellationToken.None);
 
         var items = new List<int>();

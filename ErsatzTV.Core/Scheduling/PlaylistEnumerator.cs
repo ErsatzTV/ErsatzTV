@@ -15,6 +15,8 @@ public class PlaylistEnumerator : IMediaCollectionEnumerator
     private CloneableRandom _random;
     private bool _shufflePlaylistItems;
     private List<IMediaCollectionEnumerator> _sortedEnumerators;
+    private int _itemsTakenFromCurrent;
+    private Option<int> _batchSize = Option<int>.None;
 
     private PlaylistEnumerator()
     {
@@ -65,11 +67,18 @@ public class PlaylistEnumerator : IMediaCollectionEnumerator
         }
 
         _sortedEnumerators[EnumeratorIndex].MoveNext();
+        _itemsTakenFromCurrent++;
 
-        // if we aren't playing all, or if we just finished playing all, move to the next enumerator
-        if (!_playAll[EnumeratorIndex] || _sortedEnumerators[EnumeratorIndex].State.Index == 0)
+        bool shouldSwitchEnumerator = _batchSize.Match(
+            // move to the next enumerator if we've hit the batch size
+            batchSize => _itemsTakenFromCurrent >= batchSize,
+            // if we aren't playing all, or if we just finished playing all, move to the next enumerator
+            () => !_playAll[EnumeratorIndex] || _sortedEnumerators[EnumeratorIndex].State.Index == 0);
+
+        if (shouldSwitchEnumerator)
         {
             EnumeratorIndex = (EnumeratorIndex + 1) % _sortedEnumerators.Count;
+            _itemsTakenFromCurrent = 0;
         }
 
         State.Index += 1;
@@ -94,6 +103,7 @@ public class PlaylistEnumerator : IMediaCollectionEnumerator
         Dictionary<PlaylistItem, List<MediaItem>> playlistItemMap,
         CollectionEnumeratorState state,
         bool shufflePlaylistItems,
+        Option<int> batchSize,
         CancellationToken cancellationToken)
     {
         var result = new PlaylistEnumerator
@@ -101,7 +111,8 @@ public class PlaylistEnumerator : IMediaCollectionEnumerator
             _sortedEnumerators = [],
             _playAll = [],
             _idsToIncludeInEPG = [],
-            _shufflePlaylistItems = shufflePlaylistItems
+            _shufflePlaylistItems = shufflePlaylistItems,
+            _batchSize = batchSize
         };
 
         // collections should share enumerators
@@ -167,6 +178,11 @@ public class PlaylistEnumerator : IMediaCollectionEnumerator
                     case PlaybackOrder.SeasonEpisode:
                         // TODO: check random start point?
                         enumerator = new SeasonEpisodeMediaCollectionEnumerator(items, initState);
+                        // season, episode will filter out season 0, so we may get an empty enumerator back
+                        if (enumerator.Count == 0)
+                        {
+                            enumerator = null;
+                        }
                         break;
                     case PlaybackOrder.Random:
                         enumerator = new RandomizedMediaCollectionEnumerator(items, initState);

@@ -255,7 +255,8 @@ public class SchedulingEngine(
             mediaCollectionRepository,
             itemMap,
             state,
-            false,
+            shufflePlaylistItems: false,
+            batchSize: Option<int>.None,
             CancellationToken.None);
 
         string historyKey = HistoryDetails.KeyForSchedulingContent(key, PlaybackOrder.None);

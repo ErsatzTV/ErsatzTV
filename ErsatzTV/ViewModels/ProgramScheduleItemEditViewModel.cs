@@ -135,6 +135,14 @@ public class ProgramScheduleItemEditViewModel : INotifyPropertyChanged
         }
     }
 
+    public MarathonGroupBy MarathonGroupBy { get; set; }
+
+    public bool MarathonShuffleGroups { get; set; }
+
+    public bool MarathonShuffleItems { get; set; }
+
+    public int? MarathonBatchSize { get; set; }
+
     public MultipleMode MultipleMode { get; set; }
 
     public int? MultipleCount
