@@ -45,6 +45,10 @@ internal static class Mapper
                         _ => null
                     },
                     duration.PlaybackOrder,
+                    duration.MarathonGroupBy,
+                    duration.MarathonShuffleGroups,
+                    duration.MarathonShuffleItems,
+                    duration.MarathonBatchSize,
                     duration.FillWithGroupMode,
                     duration.PlayoutDuration,
                     duration.TailMode,
@@ -102,6 +106,10 @@ internal static class Mapper
                         _ => null
                     },
                     flood.PlaybackOrder,
+                    flood.MarathonGroupBy,
+                    flood.MarathonShuffleGroups,
+                    flood.MarathonShuffleItems,
+                    flood.MarathonBatchSize,
                     flood.FillWithGroupMode,
                     flood.CustomTitle,
                     flood.GuideMode,
@@ -156,6 +164,10 @@ internal static class Mapper
                         _ => null
                     },
                     multiple.PlaybackOrder,
+                    multiple.MarathonGroupBy,
+                    multiple.MarathonShuffleGroups,
+                    multiple.MarathonShuffleItems,
+                    multiple.MarathonBatchSize,
                     multiple.FillWithGroupMode,
                     multiple.MultipleMode,
                     multiple.Count,
@@ -212,6 +224,10 @@ internal static class Mapper
                         _ => null
                     },
                     one.PlaybackOrder,
+                    one.MarathonGroupBy,
+                    one.MarathonShuffleGroups,
+                    one.MarathonShuffleItems,
+                    one.MarathonBatchSize,
                     one.FillWithGroupMode,
                     one.CustomTitle,
                     one.GuideMode,

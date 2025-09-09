@@ -266,7 +266,7 @@
         DialogResult result = await dialog.Result;
         if (result is { Canceled: false, Data: ProgramScheduleViewModel schedule })
         {
-            await Mediator.Send(new AddProgramScheduleItem(schedule.Id, StartType.Dynamic, null, null, PlayoutMode.One, ProgramScheduleItemCollectionType.TelevisionShow, null, null, null, ShowId, null, PlaybackOrder.Shuffle, FillWithGroupMode.None, MultipleMode.Count, null, null, TailMode.None, null, null, GuideMode.Normal, null, null, null, null, null, null, [], null, null, null, null), _cts.Token);
+            await Mediator.Send(AddProgramScheduleItem.ForMediaItem(schedule.Id, ProgramScheduleItemCollectionType.TelevisionShow, ShowId), _cts.Token);
             NavigationManager.NavigateTo($"schedules/{schedule.Id}/items");
         }
     }

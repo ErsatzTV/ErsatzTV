@@ -2221,6 +2221,18 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<int>("Index")
                         .HasColumnType("int");
 
+                    b.Property<int?>("MarathonBatchSize")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MarathonGroupBy")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("MarathonShuffleGroups")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("MarathonShuffleItems")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<int?>("MediaItemId")
                         .HasColumnType("int");
 

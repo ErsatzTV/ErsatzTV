@@ -13,6 +13,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - `Playout Offset` can be used to offset the times of scheduled playout items from the mirror source channel
       - e.g. -2 hours will cause the mirror channel to play content 2 hours before the mirror source channel
 - Add support for `.aif`, `.aifc`, `.aiff` song files
+- Classic schedules: add playback order `Marathon`
+  - This can be used with collections and smart collections
+  - Items from the collection will be grouped by the `Marathon Group By` setting: `Artist`, `Album`, `Season` or `Show`
+  - The order of groups can optionally be shuffled
+  - The order of items in each group can optionally be shuffled (otherwise `Season, Episode` or `Chronological` as appropriate)
+  - A batch size can be set to limit the number of items to schedule from each group at a time
+    - Empty or zero batch size means play all items from each group before advancing
+    - Any other value means play the specified number of items before advancing to the next group
 
 ### Fixed
 - Fix transcoding content with bt709/pc color metadata
@@ -2116,7 +2124,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Allow `Shuffle In Order` with Collections and Smart Collections
   - Episodes will be grouped by show, and music videos will be grouped by artist
   - All movies will be a single group (multi-collections are probably better if `Shuffle In Order` is desired for movies)
-  - All groups will be be ordered chronologically (custom ordering is only supported in multi-collections)
+  - All groups will be ordered chronologically (custom ordering is only supported in multi-collections)
 
 ### Fixed
 - Generate XMLTV that validates successfully

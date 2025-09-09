@@ -355,6 +355,7 @@
                     <MudSelectItem Value="PlaybackOrder.Random">Random</MudSelectItem>
                     <MudSelectItem Value="PlaybackOrder.Shuffle">Shuffle</MudSelectItem>
                     <MudSelectItem Value="PlaybackOrder.ShuffleInOrder">Shuffle In Order</MudSelectItem>
+                    <MudSelectItem Value="PlaybackOrder.Marathon">Marathon</MudSelectItem>
                     break;
                 case ProgramScheduleItemCollectionType.TelevisionShow:
                     <MudSelectItem Value="PlaybackOrder.Chronological">Chronological</MudSelectItem>
@@ -373,6 +374,44 @@
             }
         </MudSelect>
     </MudStack>
+    @if (_selectedItem.PlaybackOrder is PlaybackOrder.Marathon)
+    {
+        <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+            <div class="d-flex">
+                <MudText>Marathon Group By</MudText>
+            </div>
+            <MudSelect @bind-Value="@_selectedItem.MarathonGroupBy" For="@(() => _selectedItem.MarathonGroupBy)">
+                <MudSelectItem Value="MarathonGroupBy.Album">Album</MudSelectItem>
+                <MudSelectItem Value="MarathonGroupBy.Artist">Artist</MudSelectItem>
+                <MudSelectItem Value="MarathonGroupBy.Season">Season</MudSelectItem>
+                <MudSelectItem Value="MarathonGroupBy.Show">Show</MudSelectItem>
+            </MudSelect>
+        </MudStack>
+        <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+            <div class="d-flex">
+                <MudText>Marathon Shuffle Groups</MudText>
+            </div>
+            <MudCheckBox @bind-Value="_selectedItem.MarathonShuffleGroups"
+                         For="@(() => _selectedItem.MarathonShuffleGroups)"
+                         Dense="true"/>
+        </MudStack>
+        <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+            <div class="d-flex">
+                <MudText>Marathon Shuffle Items</MudText>
+            </div>
+            <MudCheckBox @bind-Value="_selectedItem.MarathonShuffleItems"
+                         For="@(() => _selectedItem.MarathonShuffleItems)"
+                         Dense="true"/>
+        </MudStack>
+        <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+            <div class="d-flex">
+                <MudText>Marathon Batch Size</MudText>
+            </div>
+            <MudTextField @bind-Value="@_selectedItem.MarathonBatchSize"
+                          For="@(() => _selectedItem.MarathonBatchSize)"
+                          HelperText="How many items to play from each group before advancing; empty or zero will play all items"/>
+        </MudStack>
+    }
     <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
         <div class="d-flex">
             <MudText>Playout Mode</MudText>
@@ -802,6 +841,10 @@
             Playlist = item.Playlist,
             MediaItem = item.MediaItem,
             PlaybackOrder = item.PlaybackOrder,
+            MarathonGroupBy = item.MarathonGroupBy,
+            MarathonShuffleGroups = item.MarathonShuffleGroups,
+            MarathonShuffleItems = item.MarathonShuffleItems,
+            MarathonBatchSize = item.MarathonBatchSize,
             FillWithGroupMode = item.FillWithGroupMode,
             CustomTitle = item.CustomTitle,
             GuideMode = item.GuideMode,
@@ -873,6 +916,10 @@
             Playlist = item.Playlist,
             MediaItem = item.MediaItem,
             PlaybackOrder = item.PlaybackOrder,
+            MarathonGroupBy = item.MarathonGroupBy,
+            MarathonShuffleGroups = item.MarathonShuffleGroups,
+            MarathonShuffleItems = item.MarathonShuffleItems,
+            MarathonBatchSize = item.MarathonBatchSize,
             FillWithGroupMode = item.FillWithGroupMode,
             CustomTitle = item.CustomTitle,
             GuideMode = item.GuideMode,
@@ -943,6 +990,10 @@
             item.MediaItem?.MediaItemId,
             item.Playlist?.Id,
             item.PlaybackOrder,
+            item.MarathonGroupBy,
+            item.MarathonShuffleGroups,
+            item.MarathonShuffleItems,
+            item.MarathonBatchSize,
             item.FillWithGroupMode,
             item.MultipleMode,
             item.MultipleCount,
