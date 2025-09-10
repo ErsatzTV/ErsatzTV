@@ -21,6 +21,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - A batch size can be set to limit the number of items to schedule from each group at a time
     - Empty or zero batch size means play all items from each group before advancing
     - Any other value means play the specified number of items before advancing to the next group
+- Log API requests when `Request Logging Minimum Log Level` is set to `Debug`
 
 ### Fixed
 - Fix transcoding content with bt709/pc color metadata

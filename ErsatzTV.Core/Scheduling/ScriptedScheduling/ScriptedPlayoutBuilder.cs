@@ -82,7 +82,7 @@ public class ScriptedPlayoutBuilder(
             var commandResult = await command.ExecuteBufferedAsync(linkedCts.Token);
             if (!string.IsNullOrWhiteSpace(commandResult.StandardOutput))
             {
-                Console.WriteLine(commandResult.StandardOutput);
+                logger.LogDebug("Scripted playout output: {Output}", commandResult.StandardOutput);
             }
 
             if (commandResult.ExitCode != 0)
