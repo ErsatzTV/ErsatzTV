@@ -536,6 +536,13 @@ public class Startup
                     return LogEventLevel.Debug;
                 }
 
+                if (httpContext.Request.Path.ToUriComponent().StartsWith(
+                        "/api",
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    return LogEventLevel.Debug;
+                }
+
                 return LogEventLevel.Verbose;
             };
 
