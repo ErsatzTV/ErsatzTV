@@ -213,3 +213,7 @@ div.ersatztv-light {
 .playout-filler-fallback {
     background-color: var(--mud-palette-warning-darken);
 }
+
+.playout-filler-unscheduled {
+    background-color: var(--mud-palette-error-darken);
+}
