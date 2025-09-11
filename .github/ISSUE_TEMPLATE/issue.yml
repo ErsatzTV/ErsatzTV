@@ -59,6 +59,7 @@ body:
       description: Provide the full version of ErsatzTV, which can be found below the left menu.
       placeholder: |
         25.5.0-bd695412-docker-amd64
+    validations:
       required: true
   - type: textarea
     id: additional-information
