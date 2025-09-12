@@ -12,5 +12,6 @@ public record PlaylistItemViewModel(
     SmartCollectionViewModel SmartCollection,
     NamedMediaItemViewModel MediaItem,
     PlaybackOrder PlaybackOrder,
+    int? Count,
     bool PlayAll,
     bool IncludeInProgramGuide);

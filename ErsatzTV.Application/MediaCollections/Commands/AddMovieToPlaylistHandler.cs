@@ -20,9 +20,11 @@ public class AddMovieToPlaylistHandler(IDbContextFactory<TvContext> dbContextFac
 
     private static async Task<Unit> ApplyAddMovieRequest(TvContext dbContext, Parameters parameters)
     {
+        int index = parameters.Playlist.Items.Count > 0 ? parameters.Playlist.Items.Max(i => i.Index) + 1 : 0;
+
         var playlistItem = new PlaylistItem
         {
-            Index = parameters.Playlist.Items.Max(i => i.Index) + 1,
+            Index = index,
             CollectionType = ProgramScheduleItemCollectionType.Movie,
             MediaItemId = parameters.Movie.Id,
             PlaybackOrder = PlaybackOrder.Shuffle,

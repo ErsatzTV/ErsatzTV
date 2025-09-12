@@ -2,6 +2,7 @@
 using System.Runtime.CompilerServices;
 using ErsatzTV.Annotations;
 using ErsatzTV.Application.Filler;
+using ErsatzTV.Application.Graphics;
 using ErsatzTV.Application.MediaCollections;
 using ErsatzTV.Application.MediaItems;
 using ErsatzTV.Application.Watermarks;
@@ -68,11 +69,17 @@ public class ProgramScheduleItemEditViewModel : INotifyPropertyChanged
                     MultipleMode = MultipleMode.Count;
                 }
 
+                if (_collectionType == ProgramScheduleItemCollectionType.Playlist)
+                {
+                    PlaybackOrder = PlaybackOrder.None;
+                }
+
                 OnPropertyChanged(nameof(Collection));
                 OnPropertyChanged(nameof(MultiCollection));
                 OnPropertyChanged(nameof(MediaItem));
                 OnPropertyChanged(nameof(SmartCollection));
                 OnPropertyChanged(nameof(MultiCollection));
+                OnPropertyChanged(nameof(PlaybackOrder));
             }
 
             if (_collectionType == ProgramScheduleItemCollectionType.MultiCollection)
@@ -93,6 +100,7 @@ public class ProgramScheduleItemEditViewModel : INotifyPropertyChanged
     public FillerPresetViewModel TailFiller { get; set; }
     public FillerPresetViewModel FallbackFiller { get; set; }
     public IEnumerable<WatermarkViewModel> Watermarks { get; set; }
+    public IEnumerable<GraphicsElementViewModel> GraphicsElements { get; set; }
     public string PreferredAudioLanguageCode { get; set; }
     public string PreferredAudioTitle { get; set; }
     public string PreferredSubtitleLanguageCode { get; set; }
@@ -127,11 +135,26 @@ public class ProgramScheduleItemEditViewModel : INotifyPropertyChanged
                 MultipleMode = MultipleMode.Count;
             }
 
+            if (_playbackOrder is not PlaybackOrder.Marathon)
+            {
+                MarathonGroupBy = MarathonGroupBy.None;
+                MarathonShuffleItems = false;
+                MarathonBatchSize = null;
+            }
+
             OnPropertyChanged();
             OnPropertyChanged(nameof(CanFillWithGroups));
             OnPropertyChanged(nameof(MultipleMode));
         }
     }
+
+    public MarathonGroupBy MarathonGroupBy { get; set; }
+
+    public bool MarathonShuffleGroups { get; set; }
+
+    public bool MarathonShuffleItems { get; set; }
+
+    public int? MarathonBatchSize { get; set; }
 
     public MultipleMode MultipleMode { get; set; }
 

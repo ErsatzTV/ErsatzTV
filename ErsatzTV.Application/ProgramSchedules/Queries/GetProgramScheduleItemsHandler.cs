@@ -47,6 +47,8 @@ public class GetProgramScheduleItemsHandler(IDbContextFactory<TvContext> dbConte
             .Include(i => i.FallbackFiller)
             .Include(i => i.ProgramScheduleItemWatermarks)
             .ThenInclude(i => i.Watermark)
+            .Include(i => i.ProgramScheduleItemGraphicsElements)
+            .ThenInclude(i => i.GraphicsElement)
             .ToListAsync(cancellationToken)
             .Map(programScheduleItems => programScheduleItems.Map(ProjectToViewModel)
                 .Map(psi => EnforceProperties(maybeProgramSchedule, psi)).ToList());

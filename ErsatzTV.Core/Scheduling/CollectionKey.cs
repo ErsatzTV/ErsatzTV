@@ -51,6 +51,11 @@ public class CollectionKey : Record<CollectionKey>
             {
                 CollectionType = item.CollectionType
             },
+            ProgramScheduleItemCollectionType.FakePlaylistItem => new CollectionKey
+            {
+                CollectionType = item.CollectionType,
+                CollectionId = item.CollectionId
+            },
             ProgramScheduleItemCollectionType.Movie => new CollectionKey
             {
                 CollectionType = item.CollectionType,

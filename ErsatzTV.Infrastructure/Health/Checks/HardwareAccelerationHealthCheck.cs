@@ -97,7 +97,7 @@ public class HardwareAccelerationHealthCheck : BaseHealthCheck, IHardwareAcceler
             var channels = string.Join(", ", badChannels.Map(c => $"{c.Number} - {c.Name}"));
             return WarningResult(
                 $"The following channels use ffmpeg profiles that are not configured for hardware acceleration ({accel}): {channels}",
-                $"{channels.Length} channels are not configured for hardware acceleration");
+                $"{badChannels.Count} channels are not configured for hardware acceleration");
         }
 
         return None;

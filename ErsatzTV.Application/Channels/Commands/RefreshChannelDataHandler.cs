@@ -11,6 +11,7 @@ using ErsatzTV.Core.Iptv;
 using ErsatzTV.Core.Jellyfin;
 using ErsatzTV.Core.Streaming;
 using ErsatzTV.Infrastructure.Data;
+using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.IO;
@@ -97,9 +98,22 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
         string otherVideoText = await File.ReadAllTextAsync(otherVideoTemplateFileName, cancellationToken);
         var otherVideoTemplate = Template.Parse(otherVideoText, otherVideoTemplateFileName);
 
+        TimeSpan playoutOffset = TimeSpan.Zero;
+        string mirrorChannelNumber = null;
+        Option<Channel> maybeChannel = await dbContext.Channels
+            .AsNoTracking()
+            .Include(c => c.MirrorSourceChannel)
+            .Filter(c => c.PlayoutSource == ChannelPlayoutSource.Mirror && c.MirrorSourceChannelId != null)
+            .SelectOneAsync(c => c.Number == request.ChannelNumber, c => c.Number == request.ChannelNumber, cancellationToken);
+        foreach (Channel channel in maybeChannel)
+        {
+            mirrorChannelNumber = channel.MirrorSourceChannel.Number;
+            playoutOffset = channel.PlayoutOffset ?? TimeSpan.Zero;
+        }
+
         List<Playout> playouts = await dbContext.Playouts
             .AsNoTracking()
-            .Filter(pi => pi.Channel.Number == request.ChannelNumber)
+            .Filter(pi => pi.Channel.Number == (mirrorChannelNumber ?? request.ChannelNumber))
             .Include(p => p.Items)
             .ThenInclude(i => i.MediaItem)
             .ThenInclude(i => (i as Episode).EpisodeMetadata)
@@ -200,6 +214,11 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
                         .OrderBy(pi => pi.Start)
                         .Filter(pi => pi.StartOffset <= finish)
                         .ToList();
+                    foreach (var item in floodSorted)
+                    {
+                        item.Start += playoutOffset;
+                        item.Finish += playoutOffset;
+                    }
                     await WritePlayoutXml(
                         request,
                         floodSorted,
@@ -219,6 +238,11 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
                         .OrderBy(pi => pi.Start)
                         .Filter(pi => pi.StartOffset <= finish)
                         .ToList();
+                    foreach (var item in blockSorted)
+                    {
+                        item.Start += playoutOffset;
+                        item.Finish += playoutOffset;
+                    }
                     await WriteBlockPlayoutXml(
                         request,
                         blockSorted,
@@ -236,7 +260,11 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
                     var externalJsonSorted = (await CollectExternalJsonItems(playout.ScheduleFile))
                         .Filter(pi => pi.StartOffset <= finish)
                         .ToList();
-
+                    foreach (var item in externalJsonSorted)
+                    {
+                        item.Start += playoutOffset;
+                        item.Finish += playoutOffset;
+                    }
                     await WritePlayoutXml(
                         request,
                         externalJsonSorted,

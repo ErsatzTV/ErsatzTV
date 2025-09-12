@@ -1,0 +1,68 @@
+name: Issue Report
+description: Report an issue
+type: Bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this form! Please make sure to fill all fields, including the Title above.
+  - type: checkboxes
+    id: before-posting
+    attributes:
+      label: "This issue respects the following points:"
+      description: All conditions are **required**. Failure to comply with any of these conditions may cause your issue to be closed without comment.
+      options:
+        - label: This is a **bug**, not a question or a configuration issue; Please visit our [forum](https://discuss.ersatztv.org) or [chat](https://discord.ersatztv.org) first to troubleshoot with volunteers before creating a report.
+          required: true
+        - label: This issue is **not** already reported on [GitHub](https://github.com/ErsatzTV/ErsatzTV/issues?q=is%3Aopen+is%3Aissue) _(I've searched it)_.
+          required: true
+        - label: I'm using an up to date version of ErsatzTV (full release or develop release); We generally do not support previous older versions. If possible, please update to the latest version before opening an issue.
+          required: true
+        - label: This report addresses only a single issue; If you encounter multiple issues, please create separate reports for each one.
+          required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: |
+        Description of the problem or issue here.
+    validations:
+      required: true
+  - type: textarea
+    id: repro-steps
+    attributes:
+      label: Steps to reproduce the problem
+      description: |
+        1. Step 1
+        2. Step 2
+        3. Step 3
+    validations:
+      required: true
+  - type: textarea
+    id: actual-behavior
+    attributes:
+      label: What is the current _bug_ behavior?
+      description: Write down the incorrect behavior that currently happens after following the reproduction steps.
+    validations:
+      required: true
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: What is the expected _correct_ behavior?
+      description: Write down the correct expected behavior that is supposed to happen after following the reproduction steps.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Specify full version
+      description: Provide the full version of ErsatzTV, which can be found below the left menu.
+      placeholder: |
+        25.5.0-bd695412-docker-amd64
+    validations:
+      required: true
+  - type: textarea
+    id: additional-information
+    attributes:
+      label: Additional information
+      description: Any additional information that might be useful to this issue.

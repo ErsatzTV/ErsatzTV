@@ -31,6 +31,10 @@ public abstract class ProgramScheduleItem
     public Playlist Playlist { get; set; }
     public string FakeCollectionKey { get; set; }
     public PlaybackOrder PlaybackOrder { get; set; }
+    public MarathonGroupBy MarathonGroupBy { get; set; }
+    public bool MarathonShuffleGroups { get; set; }
+    public bool MarathonShuffleItems { get; set; }
+    public int? MarathonBatchSize { get; set; }
     public int? PreRollFillerId { get; set; }
     public FillerPreset PreRollFiller { get; set; }
     public int? MidRollFillerId { get; set; }
@@ -43,6 +47,8 @@ public abstract class ProgramScheduleItem
     public FillerPreset FallbackFiller { get; set; }
     public List<ChannelWatermark> Watermarks { get; set; }
     public List<ProgramScheduleItemWatermark> ProgramScheduleItemWatermarks { get; set; }
+    public List<GraphicsElement> GraphicsElements { get; set; }
+    public List<ProgramScheduleItemGraphicsElement> ProgramScheduleItemGraphicsElements { get; set; }
     public string PreferredAudioLanguageCode { get; set; }
     public string PreferredAudioTitle { get; set; }
     public string PreferredSubtitleLanguageCode { get; set; }

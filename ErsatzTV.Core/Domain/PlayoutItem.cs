@@ -41,8 +41,24 @@ public class PlayoutItem
         ? new DateTimeOffset(GuideFinish.Value, TimeSpan.Zero).ToLocalTime()
         : null;
 
-    public PlayoutItem ForChapter(MediaChapter chapter) =>
-        new()
+    public PlayoutItem ForChapter(MediaChapter chapter)
+    {
+        var watermarksCopy = new List<PlayoutItemWatermark>();
+        if (PlayoutItemWatermarks != null)
+        {
+            watermarksCopy.AddRange(
+                PlayoutItemWatermarks.Select(wm => new PlayoutItemWatermark { WatermarkId = wm.WatermarkId }));
+        }
+
+        var graphicsElementsCopy = new List<PlayoutItemGraphicsElement>();
+        if (PlayoutItemGraphicsElements != null)
+        {
+            graphicsElementsCopy.AddRange(
+                PlayoutItemGraphicsElements.Select(wm => new PlayoutItemGraphicsElement
+                    { GraphicsElementId = wm.GraphicsElementId }));
+        }
+
+        return new PlayoutItem
         {
             MediaItemId = MediaItemId,
             MediaItem = MediaItem,
@@ -66,8 +82,10 @@ public class PlayoutItem
             BlockKey = BlockKey,
             CollectionKey = CollectionKey,
             CollectionEtag = CollectionEtag,
-            PlayoutItemWatermarks = PlayoutItemWatermarks?.ToList()
+            PlayoutItemWatermarks = watermarksCopy,
+            PlayoutItemGraphicsElements = graphicsElementsCopy
         };
+    }
 
     public string GetDisplayDuration()
     {

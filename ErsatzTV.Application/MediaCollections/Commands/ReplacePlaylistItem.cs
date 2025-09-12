@@ -10,5 +10,6 @@ public record ReplacePlaylistItem(
     int? SmartCollectionId,
     int? MediaItemId,
     PlaybackOrder PlaybackOrder,
+    int? Count,
     bool PlayAll,
     bool IncludeInProgramGuide);

@@ -10,5 +10,6 @@ public enum PlaybackOrder
     ShuffleInOrder = 4,
     MultiEpisodeShuffle = 5,
     SeasonEpisode = 6,
-    RandomRotation = 7
+    RandomRotation = 7,
+    Marathon = 8
 }

@@ -37,6 +37,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
     private readonly IMediaCollectionRepository _mediaCollectionRepository;
     private readonly IMusicVideoCreditsGenerator _musicVideoCreditsGenerator;
     private readonly IWatermarkSelector _watermarkSelector;
+    private readonly IDecoSelector _decoSelector;
     private readonly IPlexPathReplacementService _plexPathReplacementService;
     private readonly ISongVideoGenerator _songVideoGenerator;
     private readonly ITelevisionRepository _televisionRepository;
@@ -55,6 +56,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
         ISongVideoGenerator songVideoGenerator,
         IMusicVideoCreditsGenerator musicVideoCreditsGenerator,
         IWatermarkSelector watermarkSelector,
+        IDecoSelector decoSelector,
         ILogger<GetPlayoutItemProcessByChannelNumberHandler> logger)
         : base(dbContextFactory)
     {
@@ -70,6 +72,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
         _songVideoGenerator = songVideoGenerator;
         _musicVideoCreditsGenerator = musicVideoCreditsGenerator;
         _watermarkSelector = watermarkSelector;
+        _decoSelector = decoSelector;
         _logger = logger;
     }
 
@@ -183,7 +186,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
             .Include(i => i.MediaItem)
             .ThenInclude(mi => (mi as RemoteStream).RemoteStreamMetadata)
             .Include(i => i.Watermarks)
-            .ForChannelAndTime(channel.Id, now)
+            .ForChannelAndTime(channel.MirrorSourceChannelId ?? channel.Id, now)
             .Map(o => o.ToEither<BaseError>(new UnableToLocatePlayoutItem()))
             .BindT(item => ValidatePlayoutItemPath(dbContext, item, cancellationToken));
 
@@ -768,7 +771,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
 
     private DeadAirFallbackResult GetDecoDeadAirFallback(Playout playout, DateTimeOffset now)
     {
-        DecoEntries decoEntries = DecoSelector.GetDecoEntries(playout, now);
+        DecoEntries decoEntries = _decoSelector.GetDecoEntries(playout, now);
 
         // first, check deco template / active deco
         foreach (Deco templateDeco in decoEntries.TemplateDeco)

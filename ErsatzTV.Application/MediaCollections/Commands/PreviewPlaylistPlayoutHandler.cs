@@ -50,12 +50,14 @@ public class PreviewPlaylistPlayoutHandler(
             playout.Templates.ToList(),
             new ProgramSchedule(),
             playout.ProgramScheduleAlternates.ToList(),
-            playout.PlayoutHistory.ToList());
+            playout.PlayoutHistory.ToList(),
+            TimeSpan.Zero);
 
         // TODO: make an explicit method to preview, this is ugly
         playoutBuilder.TrimStart = false;
         playoutBuilder.DebugPlaylist = playout.ProgramSchedule.Items[0].Playlist;
         PlayoutBuildResult result = await playoutBuilder.Build(
+            DateTimeOffset.Now,
             playout,
             referenceData,
             PlayoutBuildMode.Reset,

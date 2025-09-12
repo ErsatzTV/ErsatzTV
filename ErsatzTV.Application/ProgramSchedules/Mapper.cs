@@ -45,6 +45,10 @@ internal static class Mapper
                         _ => null
                     },
                     duration.PlaybackOrder,
+                    duration.MarathonGroupBy,
+                    duration.MarathonShuffleGroups,
+                    duration.MarathonShuffleItems,
+                    duration.MarathonBatchSize,
                     duration.FillWithGroupMode,
                     duration.PlayoutDuration,
                     duration.TailMode,
@@ -67,6 +71,8 @@ internal static class Mapper
                         ? Filler.Mapper.ProjectToViewModel(duration.FallbackFiller)
                         : null,
                     duration.ProgramScheduleItemWatermarks.Map(wm => Watermarks.Mapper.ProjectToViewModel(wm.Watermark))
+                        .ToList(),
+                    duration.ProgramScheduleItemGraphicsElements.Map(ge => Graphics.Mapper.ProjectToViewModel(ge.GraphicsElement))
                         .ToList(),
                     duration.PreferredAudioLanguageCode,
                     duration.PreferredAudioTitle,
@@ -100,6 +106,10 @@ internal static class Mapper
                         _ => null
                     },
                     flood.PlaybackOrder,
+                    flood.MarathonGroupBy,
+                    flood.MarathonShuffleGroups,
+                    flood.MarathonShuffleItems,
+                    flood.MarathonBatchSize,
                     flood.FillWithGroupMode,
                     flood.CustomTitle,
                     flood.GuideMode,
@@ -119,6 +129,8 @@ internal static class Mapper
                         ? Filler.Mapper.ProjectToViewModel(flood.FallbackFiller)
                         : null,
                     flood.ProgramScheduleItemWatermarks.Map(wm => Watermarks.Mapper.ProjectToViewModel(wm.Watermark))
+                        .ToList(),
+                    flood.ProgramScheduleItemGraphicsElements.Map(ge => Graphics.Mapper.ProjectToViewModel(ge.GraphicsElement))
                         .ToList(),
                     flood.PreferredAudioLanguageCode,
                     flood.PreferredAudioTitle,
@@ -152,6 +164,10 @@ internal static class Mapper
                         _ => null
                     },
                     multiple.PlaybackOrder,
+                    multiple.MarathonGroupBy,
+                    multiple.MarathonShuffleGroups,
+                    multiple.MarathonShuffleItems,
+                    multiple.MarathonBatchSize,
                     multiple.FillWithGroupMode,
                     multiple.MultipleMode,
                     multiple.Count,
@@ -173,6 +189,8 @@ internal static class Mapper
                         ? Filler.Mapper.ProjectToViewModel(multiple.FallbackFiller)
                         : null,
                     multiple.ProgramScheduleItemWatermarks.Map(wm => Watermarks.Mapper.ProjectToViewModel(wm.Watermark))
+                        .ToList(),
+                    multiple.ProgramScheduleItemGraphicsElements.Map(ge => Graphics.Mapper.ProjectToViewModel(ge.GraphicsElement))
                         .ToList(),
                     multiple.PreferredAudioLanguageCode,
                     multiple.PreferredAudioTitle,
@@ -206,6 +224,10 @@ internal static class Mapper
                         _ => null
                     },
                     one.PlaybackOrder,
+                    one.MarathonGroupBy,
+                    one.MarathonShuffleGroups,
+                    one.MarathonShuffleItems,
+                    one.MarathonBatchSize,
                     one.FillWithGroupMode,
                     one.CustomTitle,
                     one.GuideMode,
@@ -225,6 +247,8 @@ internal static class Mapper
                         ? Filler.Mapper.ProjectToViewModel(one.FallbackFiller)
                         : null,
                     one.ProgramScheduleItemWatermarks.Map(wm => Watermarks.Mapper.ProjectToViewModel(wm.Watermark))
+                        .ToList(),
+                    one.ProgramScheduleItemGraphicsElements.Map(ge => Graphics.Mapper.ProjectToViewModel(ge.GraphicsElement))
                         .ToList(),
                     one.PreferredAudioLanguageCode,
                     one.PreferredAudioTitle,

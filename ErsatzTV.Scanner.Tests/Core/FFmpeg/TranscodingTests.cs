@@ -348,6 +348,7 @@ public class TranscodingTests
 
         WatermarkSelector watermarkSelector = new WatermarkSelector(
             mockImageCache,
+            new DecoSelector(LoggerFactory.CreateLogger<DecoSelector>()),
             LoggerFactory.CreateLogger<WatermarkSelector>());
 
         List<WatermarkOptions> watermarks = [];
@@ -653,6 +654,7 @@ public class TranscodingTests
 
         WatermarkSelector watermarkSelector = new WatermarkSelector(
             mockImageCache,
+            new DecoSelector(LoggerFactory.CreateLogger<DecoSelector>()),
             LoggerFactory.CreateLogger<WatermarkSelector>());
 
         List<WatermarkOptions> watermarks = [];
