@@ -430,29 +430,10 @@
             PagedPlayoutItemsViewModel data =
                 await Mediator.Send(new GetFuturePlayoutItemsById(_selectedPlayoutId.Value, _showFiller, state.Page, state.PageSize), cancellationToken);
 
-            var itemsWithGaps = new List<PlayoutItemViewModel>();
-            PlayoutItemViewModel prev = null;
-            foreach (var item in data.Page)
-            {
-                if (prev != null && (item.Start - prev.Finish).TotalSeconds > 2)
-                {
-                    System.TimeSpan gapDuration = item.Start - prev.Finish;
-                    itemsWithGaps.Add(new PlayoutItemViewModel(
-                        "UNSCHEDULED",
-                        prev.Finish,
-                        item.Start,
-                        System.TimeSpan.FromSeconds(Math.Round(gapDuration.TotalSeconds)).ToString(gapDuration.TotalHours >= 1 ? @"h\:mm\:ss" :  @"mm\:ss"),
-                        None
-                    ));
-                }
-                itemsWithGaps.Add(item);
-                prev = item;
-            }
-
             return new TableData<PlayoutItemViewModel>
             {
                 TotalItems = data.TotalCount,
-                Items = itemsWithGaps
+                Items = data.Page
             };
         }
 
