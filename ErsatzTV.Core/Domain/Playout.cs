@@ -13,6 +13,7 @@ public class Playout
     public List<ProgramScheduleAlternate> ProgramScheduleAlternates { get; set; }
     public PlayoutScheduleKind ScheduleKind { get; set; }
     public List<PlayoutItem> Items { get; set; }
+    public List<PlayoutGap> Gaps { get; set; }
     public PlayoutAnchor Anchor { get; set; }
     public List<PlayoutProgramScheduleAnchor> ProgramScheduleAnchors { get; set; }
     public List<PlayoutScheduleItemFillGroupIndex> FillGroupIndices { get; set; }
