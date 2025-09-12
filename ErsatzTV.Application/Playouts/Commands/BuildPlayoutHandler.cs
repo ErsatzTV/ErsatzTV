@@ -237,6 +237,8 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
                 new CheckForOverlappingPlayoutItems(request.PlayoutId),
                 cancellationToken);
 
+            await _workerChannel.WriteAsync(new InsertPlayoutGaps(request.PlayoutId), cancellationToken);
+
             string fileName = Path.Combine(FileSystemLayout.ChannelGuideCacheFolder, $"{channelNumber}.xml");
             if (hasChanges || !File.Exists(fileName) ||
                 playout.ScheduleKind is PlayoutScheduleKind.ExternalJson)
