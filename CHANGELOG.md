@@ -22,6 +22,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - Empty or zero batch size means play all items from each group before advancing
     - Any other value means play the specified number of items before advancing to the next group
 - Log API requests when `Request Logging Minimum Log Level` is set to `Debug`
+- Add `Count` setting to each playlist item
+  - Previously, when `Play All` was unchecked, this was implicitly 1
+  - Now, the playlist can play a specific number of items from the collection before moving to the next playlist item
+- Classic schedules: add `Shuffle Playlist Items` setting to shuffle the order of playlist items
+  - Shuffling happens initially (on playout reset), and after all items from the *entire playlist* have been played
 
 ### Fixed
 - Fix transcoding content with bt709/pc color metadata

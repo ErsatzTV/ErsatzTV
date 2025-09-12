@@ -16,6 +16,7 @@ public class PlaylistItem
     public int? SmartCollectionId { get; set; }
     public SmartCollection SmartCollection { get; set; }
     public PlaybackOrder PlaybackOrder { get; set; }
+    public int? Count { get; set; }
     public bool PlayAll { get; set; }
     public bool IncludeInProgramGuide { get; set; }
 }

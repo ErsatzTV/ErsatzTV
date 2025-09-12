@@ -69,11 +69,17 @@ public class ProgramScheduleItemEditViewModel : INotifyPropertyChanged
                     MultipleMode = MultipleMode.Count;
                 }
 
+                if (_collectionType == ProgramScheduleItemCollectionType.Playlist)
+                {
+                    PlaybackOrder = PlaybackOrder.None;
+                }
+
                 OnPropertyChanged(nameof(Collection));
                 OnPropertyChanged(nameof(MultiCollection));
                 OnPropertyChanged(nameof(MediaItem));
                 OnPropertyChanged(nameof(SmartCollection));
                 OnPropertyChanged(nameof(MultiCollection));
+                OnPropertyChanged(nameof(PlaybackOrder));
             }
 
             if (_collectionType == ProgramScheduleItemCollectionType.MultiCollection)
@@ -127,6 +133,13 @@ public class ProgramScheduleItemEditViewModel : INotifyPropertyChanged
             if (_playbackOrder is not PlaybackOrder.Chronological && MultipleMode is MultipleMode.MultiEpisodeGroupSize)
             {
                 MultipleMode = MultipleMode.Count;
+            }
+
+            if (_playbackOrder is not PlaybackOrder.Marathon)
+            {
+                MarathonGroupBy = MarathonGroupBy.None;
+                MarathonShuffleItems = false;
+                MarathonBatchSize = null;
             }
 
             OnPropertyChanged();
