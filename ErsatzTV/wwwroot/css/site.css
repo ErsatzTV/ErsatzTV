@@ -199,21 +199,21 @@ div.ersatztv-light {
 }
 
 .playout-filler-guidemode {
-    background-color: var(--mud-palette-primary-darken);
+    background-color: #002e00;
 }
 
 .playout-filler-preroll, .playout-filler-midroll, .playout-filler-postroll {
-    background-color: var(--mud-palette-dark);
+    background-color: #27272f
 }
 
 .playout-filler-tail {
-    background-color: var(--mud-palette-dark-lighten);
+    background-color: #383843;
 }
 
 .playout-filler-fallback {
-    background-color: var(--mud-palette-warning-darken);
+    background-color: #573a00;
 }
 
 .playout-filler-unscheduled {
-    background-color: var(--mud-palette-error-darken);
+    background-color: #52040d;
 }
