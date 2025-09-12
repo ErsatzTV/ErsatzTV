@@ -2,7 +2,6 @@
 
 public enum FillerKind
 {
-    Unscheduled = -1,
     None = 0,
     PreRoll = 1,
     MidRoll = 2,

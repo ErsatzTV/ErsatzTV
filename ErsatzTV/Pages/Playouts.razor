@@ -442,7 +442,7 @@
                         prev.Finish,
                         item.Start,
                         System.TimeSpan.FromSeconds(Math.Round(gapDuration.TotalSeconds)).ToString(gapDuration.TotalHours >= 1 ? @"h\:mm\:ss" :  @"mm\:ss"),
-                        FillerKind.Unscheduled
+                        None
                     ));
                 }
                 itemsWithGaps.Add(item);
@@ -461,6 +461,8 @@
 
     private string PlayoutItemViewRowClassFunc(PlayoutItemViewModel item, int index)
     {
-        return "playout-filler-" + item.FillerKind.ToString().ToLower();
+        return "playout-filler-" + item.FillerKind.Match(
+            fk => fk.ToString().ToLower(),
+            () => "unscheduled");
     }
 }
