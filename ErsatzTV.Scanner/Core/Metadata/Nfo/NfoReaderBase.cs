@@ -5,7 +5,7 @@ namespace ErsatzTV.Scanner.Core.Metadata.Nfo;
 
 public abstract partial class NfoReaderBase
 {
-    protected static readonly byte[] Buffer = new byte[8 * 1024 * 1024];
+    protected static readonly byte[] Buffer = new byte[8192];
     protected static readonly Regex Pattern = ControlCharacters();
 
     protected static readonly XmlReaderSettings Settings =
