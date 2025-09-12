@@ -53,6 +53,7 @@
             <col/>
             <col/>
             <col/>
+            <col/>
             <col style="width: 240px;"/>
         </MudHidden>
     </ColGroup>
@@ -60,6 +61,7 @@
         <MudTh>Item Type</MudTh>
         <MudTh>Item</MudTh>
         <MudTh>Playback Order</MudTh>
+        <MudTh>Count</MudTh>
         <MudTh>Play All</MudTh>
         <MudTh>Show In EPG</MudTh>
         <MudTh/>
@@ -77,7 +79,12 @@
         </MudTd>
         <MudTd DataLabel="Playback Order">
             <MudText Typo="@(context == _selectedItem ? Typo.subtitle2 : Typo.body2)">
-                @(context.PlaybackOrder > 0 ? context.PlaybackOrder : "")
+                @(context.PlaybackOrder > 0 ? context.PlaybackOrder : string.Empty)
+            </MudText>
+        </MudTd>
+        <MudTd DataLabel="Count">
+            <MudText Typo="@(context == _selectedItem ? Typo.subtitle2 : Typo.body2)">
+                @(context.Count is not null ? context.Count : (context.PlayAll ? string.Empty : "1"))
             </MudText>
         </MudTd>
         <MudTd DataLabel="Play All">
@@ -298,6 +305,12 @@
             }
         </MudSelect>
     </MudStack>
+    <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+        <div class="d-flex">
+            <MudText>Count</MudText>
+        </div>
+        <MudTextField @bind-Value="@_selectedItem.Count" For="@(() => _selectedItem.Count)"/>
+    </MudStack>
 }
 else if (_previewItems is not null)
 {
@@ -466,6 +479,7 @@ else if (_previewItems is not null)
             SmartCollection = item.SmartCollection,
             MediaItem = item.MediaItem,
             PlaybackOrder = item.PlaybackOrder,
+            Count = item.Count,
             PlayAll = item.PlayAll,
             IncludeInProgramGuide = item.IncludeInProgramGuide
         };
@@ -494,6 +508,7 @@ else if (_previewItems is not null)
             MultiCollection = item.MultiCollection,
             SmartCollection = item.SmartCollection,
             MediaItem = item.MediaItem,
+            Count = item.Count,
             PlayAll = item.PlayAll,
             IncludeInProgramGuide = item.IncludeInProgramGuide
         };
@@ -552,6 +567,7 @@ else if (_previewItems is not null)
             item.SmartCollection?.Id,
             item.MediaItem?.MediaItemId,
             item.PlaybackOrder,
+            item.Count,
             item.PlayAll,
             item.IncludeInProgramGuide)).ToList();
 

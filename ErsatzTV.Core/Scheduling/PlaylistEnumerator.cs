@@ -11,10 +11,9 @@ public class PlaylistEnumerator : IMediaCollectionEnumerator
     private readonly System.Collections.Generic.HashSet<int> _remainingMediaItemIds = [];
     private System.Collections.Generic.HashSet<int> _allMediaItemIds;
     private System.Collections.Generic.HashSet<int> _idsToIncludeInEPG;
-    private IList<bool> _playAll;
     private CloneableRandom _random;
     private bool _shufflePlaylistItems;
-    private List<IMediaCollectionEnumerator> _sortedEnumerators;
+    private List<EnumeratorPlayAllCount> _sortedEnumerators;
     private int _itemsTakenFromCurrent;
     private Option<int> _batchSize = Option<int>.None;
 
@@ -24,11 +23,11 @@ public class PlaylistEnumerator : IMediaCollectionEnumerator
 
     public int CountForRandom => _allMediaItemIds.Count;
 
-    public int CountForFiller => _sortedEnumerators.Select((t, i) => _playAll[i] ? t.Count : 1).Sum();
+    public int CountForFiller => _sortedEnumerators.Select(t => t.PlayAll ? t.Enumerator.Count : 1).Sum();
 
     public ImmutableList<PlaylistEnumeratorCollectionKey> ChildEnumerators { get; private set; }
 
-    public bool CurrentEnumeratorPlayAll => _playAll[EnumeratorIndex];
+    public bool CurrentEnumeratorPlayAll => _sortedEnumerators[EnumeratorIndex].PlayAll;
 
     public int EnumeratorIndex { get; private set; }
 
@@ -39,7 +38,7 @@ public class PlaylistEnumerator : IMediaCollectionEnumerator
     public CollectionEnumeratorState State { get; private set; }
 
     public Option<MediaItem> Current => _sortedEnumerators.Count > 0
-        ? _sortedEnumerators[EnumeratorIndex].Current
+        ? _sortedEnumerators[EnumeratorIndex].Enumerator.Current
         : Option<MediaItem>.None;
 
     public Option<bool> CurrentIncludeInProgramGuide
@@ -61,19 +60,34 @@ public class PlaylistEnumerator : IMediaCollectionEnumerator
 
     public void MoveNext()
     {
-        foreach (MediaItem maybeMediaItem in _sortedEnumerators[EnumeratorIndex].Current)
+        foreach (MediaItem maybeMediaItem in _sortedEnumerators[EnumeratorIndex].Enumerator.Current)
         {
             _remainingMediaItemIds.Remove(maybeMediaItem.Id);
         }
 
-        _sortedEnumerators[EnumeratorIndex].MoveNext();
+        _sortedEnumerators[EnumeratorIndex].Enumerator.MoveNext();
         _itemsTakenFromCurrent++;
 
         bool shouldSwitchEnumerator = _batchSize.Match(
             // move to the next enumerator if we've hit the batch size
             batchSize => _itemsTakenFromCurrent >= batchSize,
-            // if we aren't playing all, or if we just finished playing all, move to the next enumerator
-            () => !_playAll[EnumeratorIndex] || _sortedEnumerators[EnumeratorIndex].State.Index == 0);
+            () =>
+            {
+                // if we just finished playing all, move to the next enumerator
+                if (_sortedEnumerators[EnumeratorIndex].PlayAll)
+                {
+                    return _sortedEnumerators[EnumeratorIndex].Enumerator.State.Index == 0;
+                }
+
+                // if we have played the desired count, move to the next enumerator
+                if (_sortedEnumerators[EnumeratorIndex].Count is { } count)
+                {
+                    return _itemsTakenFromCurrent >= count;
+                }
+
+                // otherwise, always move
+                return true;
+            });
 
         if (shouldSwitchEnumerator)
         {
@@ -82,7 +96,8 @@ public class PlaylistEnumerator : IMediaCollectionEnumerator
         }
 
         State.Index += 1;
-        if (_remainingMediaItemIds.Count == 0 && EnumeratorIndex == 0 && _sortedEnumerators[0].State.Index == 0)
+        if (_remainingMediaItemIds.Count == 0 && EnumeratorIndex == 0 &&
+            _sortedEnumerators[0].Enumerator.State.Index == 0)
         {
             State.Index = 0;
             _remainingMediaItemIds.UnionWith(_allMediaItemIds);
@@ -109,7 +124,6 @@ public class PlaylistEnumerator : IMediaCollectionEnumerator
         var result = new PlaylistEnumerator
         {
             _sortedEnumerators = [],
-            _playAll = [],
             _idsToIncludeInEPG = [],
             _shufflePlaylistItems = shufflePlaylistItems,
             _batchSize = batchSize
@@ -135,8 +149,8 @@ public class PlaylistEnumerator : IMediaCollectionEnumerator
             var collectionKey = CollectionKey.ForPlaylistItem(playlistItem);
             if (enumeratorMap.TryGetValue(collectionKey, out IMediaCollectionEnumerator enumerator))
             {
-                result._sortedEnumerators.Add(enumerator);
-                result._playAll.Add(playlistItem.PlayAll);
+                result._sortedEnumerators.Add(
+                    new EnumeratorPlayAllCount(enumerator, playlistItem.PlayAll, playlistItem.Count));
                 continue;
             }
 
@@ -193,8 +207,8 @@ public class PlaylistEnumerator : IMediaCollectionEnumerator
             if (enumerator is not null)
             {
                 enumeratorMap.Add(collectionKey, enumerator);
-                result._sortedEnumerators.Add(enumerator);
-                result._playAll.Add(playlistItem.PlayAll);
+                result._sortedEnumerators.Add(
+                    new EnumeratorPlayAllCount(enumerator, playlistItem.PlayAll, playlistItem.Count));
             }
         }
 
@@ -234,7 +248,7 @@ public class PlaylistEnumerator : IMediaCollectionEnumerator
         }
 
         var childEnumerators = new List<PlaylistEnumeratorCollectionKey>();
-        foreach (IMediaCollectionEnumerator enumerator in result._sortedEnumerators)
+        foreach ((IMediaCollectionEnumerator enumerator, _, _) in result._sortedEnumerators)
         {
             foreach ((CollectionKey collectionKey, _) in enumeratorMap.Find(e => e.Value == enumerator))
             {
@@ -247,15 +261,15 @@ public class PlaylistEnumerator : IMediaCollectionEnumerator
         return result;
     }
 
-    private List<IMediaCollectionEnumerator> ShufflePlaylistItems()
+    private List<EnumeratorPlayAllCount> ShufflePlaylistItems()
     {
         if (_sortedEnumerators.Count < 3)
         {
             return _sortedEnumerators;
         }
 
-        IMediaCollectionEnumerator[] copy = _sortedEnumerators.ToArray();
-        IMediaCollectionEnumerator last = _sortedEnumerators.Last();
+        EnumeratorPlayAllCount[] copy = _sortedEnumerators.ToArray();
+        EnumeratorPlayAllCount last = _sortedEnumerators.Last();
 
         do
         {
@@ -270,4 +284,6 @@ public class PlaylistEnumerator : IMediaCollectionEnumerator
 
         return copy.ToList();
     }
+
+    private record EnumeratorPlayAllCount(IMediaCollectionEnumerator Enumerator, bool PlayAll, int? Count);
 }

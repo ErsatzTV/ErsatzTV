@@ -413,6 +413,17 @@
                           HelperText="How many items to play from each group before advancing; empty or zero will play all items"/>
         </MudStack>
     }
+    else if (_selectedItem.CollectionType is ProgramScheduleItemCollectionType.Playlist)
+    {
+        <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+            <div class="d-flex">
+                <MudText>Shuffle Playlist Items</MudText>
+            </div>
+            <MudCheckBox @bind-Value="_selectedItem.MarathonShuffleGroups"
+                         For="@(() => _selectedItem.MarathonShuffleGroups)"
+                         Dense="true"/>
+        </MudStack>
+    }
     <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
         <div class="d-flex">
             <MudText>Playout Mode</MudText>

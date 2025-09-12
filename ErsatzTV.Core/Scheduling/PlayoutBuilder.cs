@@ -1235,7 +1235,7 @@ public class PlayoutBuilder : IPlayoutBuilder
                     _mediaCollectionRepository,
                     playlistItemMap,
                     state,
-                    shufflePlaylistItems: false,
+                    marathonShuffleGroups,
                     batchSize: Option<int>.None,
                     cancellationToken);
             }

@@ -89,6 +89,7 @@ internal static class Mapper
                 _ => null
             },
             playlistItem.PlaybackOrder,
+            playlistItem.Count,
             playlistItem.PlayAll,
             playlistItem.IncludeInProgramGuide);
 }
