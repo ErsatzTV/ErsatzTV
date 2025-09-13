@@ -1773,6 +1773,31 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.ToTable("Playout", (string)null);
                 });
 
+            modelBuilder.Entity("ErsatzTV.Core.Domain.PlayoutGap", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("Finish")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("PlayoutId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("Start")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PlayoutId");
+
+                    b.HasIndex("Start", "Finish")
+                        .HasDatabaseName("IX_PlayoutGap_Start_Finish");
+
+                    b.ToTable("PlayoutGap", (string)null);
+                });
+
             modelBuilder.Entity("ErsatzTV.Core.Domain.PlayoutItem", b =>
                 {
                     b.Property<int>("Id")
@@ -4571,6 +4596,17 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Navigation("ProgramSchedule");
                 });
 
+            modelBuilder.Entity("ErsatzTV.Core.Domain.PlayoutGap", b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.Playout", "Playout")
+                        .WithMany("Gaps")
+                        .HasForeignKey("PlayoutId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Playout");
+                });
+
             modelBuilder.Entity("ErsatzTV.Core.Domain.PlayoutItem", b =>
                 {
                     b.HasOne("ErsatzTV.Core.Domain.MediaItem", "MediaItem")
@@ -5957,6 +5993,8 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
             modelBuilder.Entity("ErsatzTV.Core.Domain.Playout", b =>
                 {
                     b.Navigation("FillGroupIndices");
+
+                    b.Navigation("Gaps");
 
                     b.Navigation("Items");
 

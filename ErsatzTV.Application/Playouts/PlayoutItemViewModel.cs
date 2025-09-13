@@ -1,3 +1,5 @@
-﻿namespace ErsatzTV.Application.Playouts;
+using ErsatzTV.Core.Domain.Filler;
 
-public record PlayoutItemViewModel(string Title, DateTimeOffset Start, DateTimeOffset Finish, string Duration);
+namespace ErsatzTV.Application.Playouts;
+
+public record PlayoutItemViewModel(string Title, DateTimeOffset Start, DateTimeOffset Finish, string Duration, Option<FillerKind> FillerKind);

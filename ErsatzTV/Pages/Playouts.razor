@@ -4,6 +4,7 @@
 @using ErsatzTV.Application.Playouts
 @using ErsatzTV.Core.Notifications
 @using ErsatzTV.Core.Scheduling
+@using ErsatzTV.Core.Domain.Filler
 @using MediatR.Courier
 @implements IDisposable
 @inject IDialogService Dialog
@@ -222,7 +223,8 @@
                           Dense="true"
                           @bind-RowsPerPage="@_detailRowsPerPage"
                           ServerData="@(new Func<TableState, CancellationToken, Task<TableData<PlayoutItemViewModel>>>(DetailServerReload))"
-                          @ref="_detailTable">
+                          @ref="_detailTable"
+                          RowClassFunc="PlayoutItemViewRowClassFunc">
                     <ToolBarContent>
                         <MudSwitch T="bool" Class="ml-6" @bind-Value="@ShowFiller" Color="Color.Secondary" Label="Show Filler"/>
                     </ToolBarContent>
@@ -427,6 +429,7 @@
         {
             PagedPlayoutItemsViewModel data =
                 await Mediator.Send(new GetFuturePlayoutItemsById(_selectedPlayoutId.Value, _showFiller, state.Page, state.PageSize), cancellationToken);
+
             return new TableData<PlayoutItemViewModel>
             {
                 TotalItems = data.TotalCount,
@@ -437,4 +440,10 @@
         return new TableData<PlayoutItemViewModel> { TotalItems = 0 };
     }
 
+    private string PlayoutItemViewRowClassFunc(PlayoutItemViewModel item, int index)
+    {
+        return "playout-filler-" + item.FillerKind.Match(
+            fk => fk.ToString().ToLower(),
+            () => "unscheduled");
+    }
 }
