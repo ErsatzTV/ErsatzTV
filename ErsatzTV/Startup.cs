@@ -13,6 +13,7 @@ using ErsatzTV.Core;
 using ErsatzTV.Core.Emby;
 using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.FFmpeg;
+using ErsatzTV.Core.Graphics;
 using ErsatzTV.Core.Health;
 using ErsatzTV.Core.Health.Checks;
 using ErsatzTV.Core.Images;
@@ -782,6 +783,7 @@ public class Startup
         services.AddScoped<IGraphicsEngine, GraphicsEngine>();
         services.AddScoped<IGraphicsElementRepository, GraphicsElementRepository>();
         services.AddScoped<ITemplateDataRepository, TemplateDataRepository>();
+        services.AddScoped<IGraphicsElementLoader, GraphicsElementLoader>();
         services.AddScoped<TemplateFunctions>();
         services.AddScoped<IDecoSelector, DecoSelector>();
         services.AddScoped<IWatermarkSelector, WatermarkSelector>();

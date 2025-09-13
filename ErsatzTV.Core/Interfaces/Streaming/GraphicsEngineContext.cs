@@ -8,7 +8,7 @@ public record GraphicsEngineContext(
     string ChannelNumber,
     MediaItem MediaItem,
     List<GraphicsElementContext> Elements,
-    List<PlayoutItemGraphicsElement> ElementReferences,
+    Dictionary<string, object> TemplateVariables,
     Resolution SquarePixelFrameSize,
     Resolution FrameSize,
     int FrameRate,
@@ -30,11 +30,11 @@ public record TextElementDataContext(TextGraphicsElement TextElement, Dictionary
 public record ImageElementContext(ImageGraphicsElement ImageElement) : GraphicsElementContext;
 
 public record SubtitleElementDataContext(
-    SubtitlesGraphicsElement SubtitlesElement,
+    SubtitleGraphicsElement SubtitleElement,
     Dictionary<string, string> Variables)
     : GraphicsElementContext, ITemplateDataContext
 {
-    public int EpgEntries => SubtitlesElement.EpgEntries;
+    public int EpgEntries => SubtitleElement.EpgEntries;
 }
 
 public interface ITemplateDataContext
