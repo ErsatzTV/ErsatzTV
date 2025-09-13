@@ -37,6 +37,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
     private readonly IMediaCollectionRepository _mediaCollectionRepository;
     private readonly IMusicVideoCreditsGenerator _musicVideoCreditsGenerator;
     private readonly IWatermarkSelector _watermarkSelector;
+    private readonly IGraphicsElementSelector _graphicsElementSelector;
     private readonly IDecoSelector _decoSelector;
     private readonly IPlexPathReplacementService _plexPathReplacementService;
     private readonly ISongVideoGenerator _songVideoGenerator;
@@ -56,6 +57,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
         ISongVideoGenerator songVideoGenerator,
         IMusicVideoCreditsGenerator musicVideoCreditsGenerator,
         IWatermarkSelector watermarkSelector,
+        IGraphicsElementSelector graphicsElementSelector,
         IDecoSelector decoSelector,
         ILogger<GetPlayoutItemProcessByChannelNumberHandler> logger)
         : base(dbContextFactory)
@@ -72,6 +74,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
         _songVideoGenerator = songVideoGenerator;
         _musicVideoCreditsGenerator = musicVideoCreditsGenerator;
         _watermarkSelector = watermarkSelector;
+        _graphicsElementSelector = graphicsElementSelector;
         _decoSelector = decoSelector;
         _logger = logger;
     }
@@ -306,6 +309,11 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 }
             }
 
+            List<PlayoutItemGraphicsElement> graphicsElements = _graphicsElementSelector.SelectGraphicsElements(
+                channel,
+                playoutItemWithPath.PlayoutItem,
+                now);
+
             if (playoutItemWithPath.PlayoutItem.MediaItem is Image)
             {
                 audioPath = string.Empty;
@@ -349,7 +357,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 finish,
                 effectiveNow,
                 watermarks,
-                playoutItemWithPath.PlayoutItem.PlayoutItemGraphicsElements,
+                graphicsElements,
                 channel.FFmpegProfile.VaapiDisplay,
                 channel.FFmpegProfile.VaapiDriver,
                 channel.FFmpegProfile.VaapiDevice,

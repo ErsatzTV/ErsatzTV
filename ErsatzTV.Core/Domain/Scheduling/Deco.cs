@@ -14,6 +14,12 @@ public class Deco
     public List<DecoWatermark> DecoWatermarks { get; set; }
     public bool UseWatermarkDuringFiller { get; set; }
 
+    // graphics elements
+    public DecoMode GraphicsElementsMode { get; set; }
+    public List<GraphicsElement> GraphicsElements { get; set; }
+    public List<DecoGraphicsElement> DecoGraphicsElements { get; set; }
+    public bool UseGraphicsElementsDuringFiller { get; set; }
+
     // default filler
     public DecoMode DefaultFillerMode { get; set; }
     public ProgramScheduleItemCollectionType DefaultFillerCollectionType { get; set; }
