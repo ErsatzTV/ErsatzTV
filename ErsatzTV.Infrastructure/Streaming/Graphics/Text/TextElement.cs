@@ -11,10 +11,8 @@ using RichTextKit = Topten.RichTextKit;
 namespace ErsatzTV.Infrastructure.Streaming.Graphics;
 
 public partial class TextElement(
-    TemplateFunctions templateFunctions,
     GraphicsEngineFonts graphicsEngineFonts,
     TextGraphicsElement textElement,
-    Dictionary<string, object> variables,
     ILogger logger)
     : GraphicsElement, IDisposable
 {
@@ -33,7 +31,7 @@ public partial class TextElement(
         _image = null;
     }
 
-    public override async Task InitializeAsync(
+    public override Task InitializeAsync(
         Resolution squarePixelFrameSize,
         Resolution frameSize,
         int frameRate,
@@ -68,16 +66,7 @@ public partial class TextElement(
                 }
             }
 
-            var scriptObject = new ScriptObject();
-            scriptObject.Import(variables, renamer: member => member.Name);
-            scriptObject.Import("convert_timezone", templateFunctions.ConvertTimeZone);
-            scriptObject.Import("format_datetime", templateFunctions.FormatDateTime);
-
-            var context = new TemplateContext { MemberRenamer = member => member.Name };
-            context.PushGlobal(scriptObject);
-            string textToRender = await Template.Parse(textElement.Text).RenderAsync(context);
-
-            RichTextKit.TextBlock textBlock = BuildTextBlock(textToRender);
+            RichTextKit.TextBlock textBlock = BuildTextBlock(textElement.Text);
 
             _image = new SKBitmap(
                 (int)Math.Ceiling(textBlock.MeasuredWidth),
@@ -106,6 +95,8 @@ public partial class TextElement(
             IsFailed = true;
             logger.LogWarning(ex, "Failed to initialize text element; will disable for this content");
         }
+
+        return Task.CompletedTask;
     }
 
     public override ValueTask<Option<PreparedElementImage>> PrepareImage(

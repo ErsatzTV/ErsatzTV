@@ -20,6 +20,7 @@ namespace ErsatzTV.Core.FFmpeg;
 public class FFmpegLibraryProcessService : IFFmpegProcessService
 {
     private readonly IConfigElementRepository _configElementRepository;
+    private readonly IGraphicsElementLoader _graphicsElementLoader;
     private readonly ICustomStreamSelector _customStreamSelector;
     private readonly FFmpegProcessService _ffmpegProcessService;
     private readonly IFFmpegStreamSelector _ffmpegStreamSelector;
@@ -34,6 +35,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         ITempFilePool tempFilePool,
         IPipelineBuilderFactory pipelineBuilderFactory,
         IConfigElementRepository configElementRepository,
+        IGraphicsElementLoader graphicsElementLoader,
         ILogger<FFmpegLibraryProcessService> logger)
     {
         _ffmpegProcessService = ffmpegProcessService;
@@ -42,6 +44,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         _tempFilePool = tempFilePool;
         _pipelineBuilderFactory = pipelineBuilderFactory;
         _configElementRepository = configElementRepository;
+        _graphicsElementLoader = graphicsElementLoader;
         _logger = logger;
     }
 
@@ -406,15 +409,13 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         // only use graphics engine when we have elements
         if (graphicsElementContexts.Count > 0 || graphicsElements.Count > 0)
         {
-            graphicsEngineInput = new GraphicsEngineInput();
-
             FrameSize targetSize = await desiredState.CroppedSize.IfNoneAsync(desiredState.ScaledSize);
 
-            graphicsEngineContext = new GraphicsEngineContext(
+            var context = new GraphicsEngineContext(
                 channel.Number,
                 audioVersion.MediaItem,
                 graphicsElementContexts,
-                graphicsElements,
+                TemplateVariables: [],
                 new Resolution { Width = targetSize.Width, Height = targetSize.Height },
                 channel.FFmpegProfile.Resolution,
                 await playbackSettings.FrameRate.IfNoneAsync(24),
@@ -422,6 +423,14 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                 start,
                 await playbackSettings.StreamSeek.IfNoneAsync(TimeSpan.Zero),
                 finish - now);
+
+            context = await _graphicsElementLoader.LoadAll(context, graphicsElements, cancellationToken);
+
+            if (context.Elements.Count > 0)
+            {
+                graphicsEngineInput = new GraphicsEngineInput();
+                graphicsEngineContext = context;
+            }
         }
 
         var ffmpegState = new FFmpegState(
