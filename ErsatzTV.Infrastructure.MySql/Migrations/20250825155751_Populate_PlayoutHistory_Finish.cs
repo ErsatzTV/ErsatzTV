@@ -10,17 +10,28 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.CreateIndex(
+                name: "IX_PlayoutItem_PlayoutId_Start",
+                table: "PlayoutItem",
+                columns: new[] { "PlayoutId", "Start" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PlayoutHistory_PlayoutId_When",
+                table: "PlayoutHistory",
+                columns: new[] { "PlayoutId", "When" });
+
             migrationBuilder.Sql(
                 @"UPDATE PlayoutHistory
-                    SET Finish =
-                            (SELECT PlayoutItem.Finish
-                             FROM PlayoutItem
-                             WHERE PlayoutItem.PlayoutId = PlayoutHistory.PlayoutId
-                               AND PlayoutItem.Start = PlayoutHistory.`When`)
-                    WHERE EXISTS (SELECT 1
-                                  FROM PlayoutItem
-                                  WHERE PlayoutItem.PlayoutId = PlayoutHistory.PlayoutId
-                                    AND PlayoutItem.Start = PlayoutHistory.`When`);");
+                  JOIN PlayoutItem ON PlayoutHistory.PlayoutId = PlayoutItem.PlayoutId AND PlayoutHistory.`When` = PlayoutItem.Start
+                  SET PlayoutHistory.Finish = PlayoutItem.Finish");
+
+            migrationBuilder.DropIndex(
+                name: "IX_PlayoutItem_PlayoutId_Start",
+                table: "PlayoutItem");
+
+            migrationBuilder.DropIndex(
+                name: "IX_PlayoutHistory_PlayoutId_When",
+                table: "PlayoutHistory");
         }
 
         /// <inheritdoc />
