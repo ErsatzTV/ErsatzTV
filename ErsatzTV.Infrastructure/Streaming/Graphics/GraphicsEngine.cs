@@ -1,19 +1,27 @@
 using System.IO.Pipelines;
+using System.Text.RegularExpressions;
 using ErsatzTV.Core;
+using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Graphics;
 using ErsatzTV.Core.Interfaces.FFmpeg;
+using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Streaming;
 using ErsatzTV.Core.Metadata;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using Scriban;
+using Scriban.Runtime;
 using SkiaSharp;
 
 namespace ErsatzTV.Infrastructure.Streaming.Graphics;
 
-public class GraphicsEngine(
+public partial class GraphicsEngine(
     TemplateFunctions templateFunctions,
     GraphicsEngineFonts graphicsEngineFonts,
     ITempFilePool tempFilePool,
     ITemplateDataRepository templateDataRepository,
+    ILocalFileSystem localFileSystem,
     ILogger<GraphicsEngine> logger)
     : IGraphicsEngine
 {
@@ -21,37 +29,104 @@ public class GraphicsEngine(
     {
         graphicsEngineFonts.LoadFonts(FileSystemLayout.FontsCacheFolder);
 
-        var templateVariables = new Dictionary<string, object>();
-
-        // init template element variables once
-        if (context.Elements.OfType<ITemplateDataContext>().Any())
+        // get max epg entries
+        int epgEntries = 0;
+        foreach (var reference in context.ElementReferences)
         {
-            // common variables
-            templateVariables[MediaItemTemplateDataKey.Resolution] = context.FrameSize;
-            templateVariables[MediaItemTemplateDataKey.StreamSeek] = context.Seek;
-
-            // media item variables
-            Option<Dictionary<string, object>> maybeTemplateData =
-                await templateDataRepository.GetMediaItemTemplateData(context.MediaItem, cancellationToken);
-            foreach (Dictionary<string, object> templateData in maybeTemplateData)
+            if (reference.GraphicsElement.Kind is GraphicsElementKind.Text or GraphicsElementKind.Subtitle)
             {
-                foreach (KeyValuePair<string, object> variable in templateData)
+                foreach (string line in await localFileSystem.ReadAllLines(reference.GraphicsElement.Path))
                 {
-                    templateVariables.Add(variable.Key, variable.Value);
+                    Match match = EpgEntriesRegex().Match(line);
+                    if (match.Success && int.TryParse(match.Groups[1].Value, out int value))
+                    {
+                        epgEntries = Math.Max(epgEntries, value);
+                        break;
+                    }
                 }
             }
+        }
 
-            // epg variables
-            int maxEpg = context.Elements.OfType<ITemplateDataContext>().Max(c => c.EpgEntries);
-            DateTimeOffset startTime = context.ContentStartTime + context.Seek;
-            Option<Dictionary<string, object>> maybeEpgData =
-                await templateDataRepository.GetEpgTemplateData(context.ChannelNumber, startTime, maxEpg);
-            foreach (Dictionary<string, object> templateData in maybeEpgData)
+        // init template element variables once
+        Dictionary<string, object> templateVariables =
+            await InitTemplateVariables(context, epgEntries, cancellationToken);
+
+        // fully process references (using template variables)
+        foreach (var reference in context.ElementReferences)
+        {
+            switch (reference.GraphicsElement.Kind)
             {
-                foreach (KeyValuePair<string, object> variable in templateData)
+                case GraphicsElementKind.Text:
                 {
-                    templateVariables.Add(variable.Key, variable.Value);
+                    Option<TextGraphicsElement> maybeElement = TextGraphicsElement.FromYaml(
+                        await GetTemplatedYaml(reference.GraphicsElement.Path, templateVariables));
+                    if (maybeElement.IsNone)
+                    {
+                        logger.LogWarning(
+                            "Failed to load text graphics element from file {Path}; ignoring",
+                            reference.GraphicsElement.Path);
+                    }
+
+                    foreach (TextGraphicsElement element in maybeElement)
+                    {
+                        var variables = new Dictionary<string, string>();
+                        if (!string.IsNullOrWhiteSpace(reference.Variables))
+                        {
+                            variables = JsonConvert.DeserializeObject<Dictionary<string, string>>(reference.Variables);
+                        }
+
+                        context.Elements.Add(new TextElementDataContext(element, variables));
+                    }
+
+                    break;
                 }
+                case GraphicsElementKind.Image:
+                {
+                    Option<ImageGraphicsElement> maybeElement = ImageGraphicsElement.FromYaml(
+                        await GetTemplatedYaml(reference.GraphicsElement.Path, templateVariables));
+                    if (maybeElement.IsNone)
+                    {
+                        logger.LogWarning(
+                            "Failed to load image graphics element from file {Path}; ignoring",
+                            reference.GraphicsElement.Path);
+                    }
+
+                    foreach (ImageGraphicsElement element in maybeElement)
+                    {
+                        context.Elements.Add(new ImageElementContext(element));
+                    }
+
+                    break;
+                }
+                case GraphicsElementKind.Subtitle:
+                {
+                    Option<SubtitlesGraphicsElement> maybeElement = SubtitlesGraphicsElement.FromYaml(
+                        await GetTemplatedYaml(reference.GraphicsElement.Path, templateVariables));
+                    if (maybeElement.IsNone)
+                    {
+                        logger.LogWarning(
+                            "Failed to load subtitle graphics element from file {Path}; ignoring",
+                            reference.GraphicsElement.Path);
+                    }
+
+                    foreach (SubtitlesGraphicsElement element in maybeElement)
+                    {
+                        var variables = new Dictionary<string, string>();
+                        if (!string.IsNullOrWhiteSpace(reference.Variables))
+                        {
+                            variables = JsonConvert.DeserializeObject<Dictionary<string, string>>(reference.Variables);
+                        }
+
+                        context.Elements.Add(new SubtitleElementDataContext(element, variables));
+                    }
+
+                    break;
+                }
+                default:
+                    logger.LogInformation(
+                        "Ignoring unsupported graphics element kind {Kind}",
+                        nameof(reference.GraphicsElement.Kind));
+                    break;
             }
         }
 
@@ -230,4 +305,65 @@ public class GraphicsEngine(
             }
         }
     }
+
+    private async Task<Dictionary<string, object>> InitTemplateVariables(
+        GraphicsEngineContext context,
+        int epgEntries,
+        CancellationToken cancellationToken)
+    {
+        // common variables
+        var result = new Dictionary<string, object>
+        {
+            [MediaItemTemplateDataKey.Resolution] = context.FrameSize,
+            [MediaItemTemplateDataKey.StreamSeek] = context.Seek
+        };
+
+        // media item variables
+        Option<Dictionary<string, object>> maybeTemplateData =
+            await templateDataRepository.GetMediaItemTemplateData(context.MediaItem, cancellationToken);
+        foreach (Dictionary<string, object> templateData in maybeTemplateData)
+        {
+            foreach (KeyValuePair<string, object> variable in templateData)
+            {
+                result.Add(variable.Key, variable.Value);
+            }
+        }
+
+        // epg variables
+        DateTimeOffset startTime = context.ContentStartTime + context.Seek;
+        Option<Dictionary<string, object>> maybeEpgData =
+            await templateDataRepository.GetEpgTemplateData(context.ChannelNumber, startTime, epgEntries);
+        foreach (Dictionary<string, object> templateData in maybeEpgData)
+        {
+            foreach (KeyValuePair<string, object> variable in templateData)
+            {
+                result.Add(variable.Key, variable.Value);
+            }
+        }
+
+        return result;
+    }
+
+    private async Task<string> GetTemplatedYaml(string fileName, Dictionary<string, object> variables)
+    {
+        string yaml = await localFileSystem.ReadAllText(fileName);
+        try
+        {
+            var scriptObject = new ScriptObject();
+            scriptObject.Import(variables, renamer: member => member.Name);
+            scriptObject.Import("convert_timezone", templateFunctions.ConvertTimeZone);
+            scriptObject.Import("format_datetime", templateFunctions.FormatDateTime);
+
+            var context = new TemplateContext { MemberRenamer = member => member.Name };
+            context.PushGlobal(scriptObject);
+            return await Template.Parse(yaml).RenderAsync(context);
+        }
+        catch (Exception)
+        {
+            return yaml;
+        }
+    }
+
+    [GeneratedRegex(@"epg_entries:\s*(\d+)")]
+    private static partial Regex EpgEntriesRegex();
 }

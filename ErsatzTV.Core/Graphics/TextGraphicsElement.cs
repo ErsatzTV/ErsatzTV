@@ -45,12 +45,10 @@ public class TextGraphicsElement
 
     public string Text { get; set; }
 
-    public static async Task<Option<TextGraphicsElement>> FromFile(string fileName)
+    public static Option<TextGraphicsElement> FromYaml(string yaml)
     {
         try
         {
-            string yaml = await File.ReadAllTextAsync(fileName);
-
             // TODO: validate schema
             // if (await yamlScheduleValidator.ValidateSchedule(yaml, isImport) == false)
             // {

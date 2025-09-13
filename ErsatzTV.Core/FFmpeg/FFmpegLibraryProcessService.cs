@@ -2,7 +2,6 @@
 using CliWrap;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
-using ErsatzTV.Core.Graphics;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Streaming;
@@ -14,7 +13,6 @@ using ErsatzTV.FFmpeg.Pipeline;
 using ErsatzTV.FFmpeg.Preset;
 using ErsatzTV.FFmpeg.State;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using MediaStream = ErsatzTV.Core.Domain.MediaStream;
 
 namespace ErsatzTV.Core.FFmpeg;
@@ -405,88 +403,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             playbackSettings.VideoTrackTimeScale,
             playbackSettings.Deinterlace);
 
-        foreach (PlayoutItemGraphicsElement playoutItemGraphicsElement in graphicsElements)
-        {
-            switch (playoutItemGraphicsElement.GraphicsElement.Kind)
-            {
-                case GraphicsElementKind.Text:
-                {
-                    Option<TextGraphicsElement> maybeElement =
-                        await TextGraphicsElement.FromFile(playoutItemGraphicsElement.GraphicsElement.Path);
-                    if (maybeElement.IsNone)
-                    {
-                        _logger.LogWarning(
-                            "Failed to load text graphics element from file {Path}; ignoring",
-                            playoutItemGraphicsElement.GraphicsElement.Path);
-                    }
-
-                    foreach (TextGraphicsElement element in maybeElement)
-                    {
-                        var variables = new Dictionary<string, string>();
-                        if (!string.IsNullOrWhiteSpace(playoutItemGraphicsElement.Variables))
-                        {
-                            variables = JsonConvert.DeserializeObject<Dictionary<string, string>>(
-                                playoutItemGraphicsElement.Variables);
-                        }
-
-                        graphicsElementContexts.Add(new TextElementDataContext(element, variables));
-                    }
-
-                    break;
-                }
-                case GraphicsElementKind.Image:
-                {
-                    Option<ImageGraphicsElement> maybeElement =
-                        await ImageGraphicsElement.FromFile(playoutItemGraphicsElement.GraphicsElement.Path);
-                    if (maybeElement.IsNone)
-                    {
-                        _logger.LogWarning(
-                            "Failed to load image graphics element from file {Path}; ignoring",
-                            playoutItemGraphicsElement.GraphicsElement.Path);
-                    }
-
-                    foreach (ImageGraphicsElement element in maybeElement)
-                    {
-                        graphicsElementContexts.Add(new ImageElementContext(element));
-                    }
-
-                    break;
-                }
-                case GraphicsElementKind.Subtitle:
-                {
-                    Option<SubtitlesGraphicsElement> maybeElement =
-                        await SubtitlesGraphicsElement.FromFile(playoutItemGraphicsElement.GraphicsElement.Path);
-                    if (maybeElement.IsNone)
-                    {
-                        _logger.LogWarning(
-                            "Failed to load subtitle graphics element from file {Path}; ignoring",
-                            playoutItemGraphicsElement.GraphicsElement.Path);
-                    }
-
-                    foreach (SubtitlesGraphicsElement element in maybeElement)
-                    {
-                        var variables = new Dictionary<string, string>();
-                        if (!string.IsNullOrWhiteSpace(playoutItemGraphicsElement.Variables))
-                        {
-                            variables = JsonConvert.DeserializeObject<Dictionary<string, string>>(
-                                playoutItemGraphicsElement.Variables);
-                        }
-
-                        graphicsElementContexts.Add(new SubtitleElementDataContext(element, variables));
-                    }
-
-                    break;
-                }
-                default:
-                    _logger.LogInformation(
-                        "Ignoring unsupported graphics element kind {Kind}",
-                        nameof(playoutItemGraphicsElement.GraphicsElement.Kind));
-                    break;
-            }
-        }
-
         // only use graphics engine when we have elements
-        if (graphicsElementContexts.Count > 0)
+        if (graphicsElementContexts.Count > 0 || graphicsElements.Count > 0)
         {
             graphicsEngineInput = new GraphicsEngineInput();
 
@@ -496,6 +414,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                 channel.Number,
                 audioVersion.MediaItem,
                 graphicsElementContexts,
+                graphicsElements,
                 new Resolution { Width = targetSize.Width, Height = targetSize.Height },
                 channel.FFmpegProfile.Resolution,
                 await playbackSettings.FrameRate.IfNoneAsync(24),
