@@ -27,6 +27,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Now, the playlist can play a specific number of items from the collection before moving to the next playlist item
 - Classic schedules: add `Shuffle Playlist Items` setting to shuffle the order of playlist items
   - Shuffling happens initially (on playout reset), and after all items from the *entire playlist* have been played
+- Add playout detail row coloring by @peterdey
+  - Filler has unique row colors
+  - Unscheduled gaps are now displayed and have a unique row color
 
 ### Fixed
 - Fix transcoding content with bt709/pc color metadata
