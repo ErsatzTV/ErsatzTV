@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 ### Added
 - Classic schedules: allow selecting multiple graphics elements on schedule items
+- Block schedules: allow selecting multiple graphics elements on decos
 - Add channel `Playout Source` setting
   - `Generated`: default/existing behavior where channel must have its own playout
   - `Mirror`: channel will play content from the specified `Mirror Source Channel`'s playout

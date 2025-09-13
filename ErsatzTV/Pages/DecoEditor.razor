@@ -1,5 +1,6 @@
 ﻿@page "/decos/{Id:int}"
 @using ErsatzTV.Application.Artists
+@using ErsatzTV.Application.Graphics
 @using ErsatzTV.Application.MediaCollections
 @using ErsatzTV.Application.MediaItems
 @using ErsatzTV.Application.Scheduling
@@ -70,6 +71,44 @@
     <MudCheckBox T="bool"
                  Disabled="@(_deco.WatermarkMode != DecoMode.Override)"
                  @bind-Value="_deco.UseWatermarkDuringFiller"
+                 Dense="true"/>
+</MudStack>
+<MudText Typo="Typo.h5" Class="mt-10 mb-2">Graphics Elements</MudText>
+<MudDivider Class="mb-6"/>
+<MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+    <div class="d-flex">
+        <MudText>Graphics Elements Mode</MudText>
+    </div>
+    <MudSelect @bind-Value="_deco.GraphicsElementsMode" For="@(() => _deco.GraphicsElementsMode)">
+        <MudSelectItem Value="DecoMode.Inherit">Inherit</MudSelectItem>
+        <MudSelectItem Value="DecoMode.Disable">Disable</MudSelectItem>
+        <MudSelectItem Value="DecoMode.Override">Replace</MudSelectItem>
+        <MudSelectItem Value="DecoMode.Merge">Merge</MudSelectItem>
+    </MudSelect>
+</MudStack>
+<MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+    <div class="d-flex">
+        <MudText>Graphics Elements</MudText>
+    </div>
+    <MudSelect T="GraphicsElementViewModel"
+               @bind-SelectedValues="_deco.GraphicsElements"
+               Disabled="@(_deco.GraphicsElementsMode is not (DecoMode.Override or DecoMode.Merge))"
+               ToStringFunc="@(ge => ge?.Name)"
+               Clearable="true"
+               MultiSelection="true">
+        @foreach (GraphicsElementViewModel graphicsElement in _graphicsElements)
+        {
+            <MudSelectItem Value="@graphicsElement">@graphicsElement.Name</MudSelectItem>
+        }
+    </MudSelect>
+</MudStack>
+<MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+    <div class="d-flex">
+        <MudText>Use Graphics Elements During Filler</MudText>
+    </div>
+    <MudCheckBox T="bool"
+                 Disabled="@(_deco.GraphicsElementsMode != DecoMode.Override)"
+                 @bind-Value="_deco.UseGraphicsElementsDuringFiller"
                  Dense="true"/>
 </MudStack>
 <MudText Typo="Typo.h5" Class="mt-10 mb-2">Default Filler</MudText>
@@ -344,6 +383,7 @@
     private DecoEditViewModel _deco = new();
 
     private List<WatermarkViewModel> _watermarks = [];
+    private List<GraphicsElementViewModel> _graphicsElements = [];
 
     private List<MediaCollectionViewModel> _mediaCollections = [];
     private List<MultiCollectionViewModel> _multiCollections = [];
@@ -369,6 +409,7 @@
         try
         {
             _watermarks = await Mediator.Send(new GetAllWatermarks(), token);
+            _graphicsElements = await Mediator.Send(new GetAllGraphicsElements(), token);
 
             _mediaCollections = await Mediator.Send(new GetAllCollections(), token)
                 .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
@@ -400,6 +441,10 @@
                     WatermarkMode = deco.WatermarkMode,
                     Watermarks = deco.Watermarks,
                     UseWatermarkDuringFiller = deco.UseWatermarkDuringFiller,
+
+                    GraphicsElementsMode = deco.GraphicsElementsMode,
+                    GraphicsElements = deco.GraphicsElements,
+                    UseGraphicsElementsDuringFiller = deco.UseGraphicsElementsDuringFiller,
 
                     DefaultFillerMode = deco.DefaultFillerMode,
                     DefaultFillerCollectionType = deco.DefaultFillerCollectionType,
@@ -451,6 +496,9 @@
             _deco.WatermarkMode,
             _deco.Watermarks.Map(wm => wm.Id).ToList(),
             _deco.UseWatermarkDuringFiller,
+            _deco.GraphicsElementsMode,
+            _deco.GraphicsElements.Map(ge => ge.Id).ToList(),
+            _deco.UseGraphicsElementsDuringFiller,
             _deco.DefaultFillerMode,
             _deco.DefaultFillerCollectionType,
             _deco.DefaultFillerCollection?.Id,

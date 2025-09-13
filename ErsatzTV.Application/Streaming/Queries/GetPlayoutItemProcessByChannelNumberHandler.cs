@@ -37,6 +37,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
     private readonly IMediaCollectionRepository _mediaCollectionRepository;
     private readonly IMusicVideoCreditsGenerator _musicVideoCreditsGenerator;
     private readonly IWatermarkSelector _watermarkSelector;
+    private readonly IGraphicsElementSelector _graphicsElementSelector;
     private readonly IDecoSelector _decoSelector;
     private readonly IPlexPathReplacementService _plexPathReplacementService;
     private readonly ISongVideoGenerator _songVideoGenerator;
@@ -56,6 +57,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
         ISongVideoGenerator songVideoGenerator,
         IMusicVideoCreditsGenerator musicVideoCreditsGenerator,
         IWatermarkSelector watermarkSelector,
+        IGraphicsElementSelector graphicsElementSelector,
         IDecoSelector decoSelector,
         ILogger<GetPlayoutItemProcessByChannelNumberHandler> logger)
         : base(dbContextFactory)
@@ -72,6 +74,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
         _songVideoGenerator = songVideoGenerator;
         _musicVideoCreditsGenerator = musicVideoCreditsGenerator;
         _watermarkSelector = watermarkSelector;
+        _graphicsElementSelector = graphicsElementSelector;
         _decoSelector = decoSelector;
         _logger = logger;
     }
@@ -94,6 +97,10 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
             .ThenInclude(p => p.Deco)
             .ThenInclude(d => d.DecoWatermarks)
             .ThenInclude(d => d.Watermark)
+            .Include(i => i.Playout)
+            .ThenInclude(p => p.Deco)
+            .ThenInclude(d => d.DecoGraphicsElements)
+            .ThenInclude(d => d.GraphicsElement)
 
             // get graphics elements
             .Include(i => i.PlayoutItemGraphicsElements)
@@ -107,6 +114,13 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
             .ThenInclude(i => i.Deco)
             .ThenInclude(d => d.DecoWatermarks)
             .ThenInclude(d => d.Watermark)
+            .Include(i => i.Playout)
+            .ThenInclude(p => p.Templates)
+            .ThenInclude(t => t.DecoTemplate)
+            .ThenInclude(t => t.Items)
+            .ThenInclude(i => i.Deco)
+            .ThenInclude(d => d.DecoGraphicsElements)
+            .ThenInclude(d => d.GraphicsElement)
             .Include(i => i.MediaItem)
             .ThenInclude(mi => (mi as Episode).EpisodeMetadata)
             .ThenInclude(em => em.Subtitles)
@@ -208,6 +222,9 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 .Include(p => p.Deco)
                 .ThenInclude(d => d.DecoWatermarks)
                 .ThenInclude(d => d.Watermark)
+                .Include(p => p.Deco)
+                .ThenInclude(d => d.DecoGraphicsElements)
+                .ThenInclude(d => d.GraphicsElement)
 
                 // get playout templates (and deco templates/decos)
                 .Include(p => p.Templates)
@@ -306,6 +323,11 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 }
             }
 
+            List<PlayoutItemGraphicsElement> graphicsElements = _graphicsElementSelector.SelectGraphicsElements(
+                channel,
+                playoutItemWithPath.PlayoutItem,
+                now);
+
             if (playoutItemWithPath.PlayoutItem.MediaItem is Image)
             {
                 audioPath = string.Empty;
@@ -349,7 +371,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 finish,
                 effectiveNow,
                 watermarks,
-                playoutItemWithPath.PlayoutItem.PlayoutItemGraphicsElements,
+                graphicsElements,
                 channel.FFmpegProfile.VaapiDisplay,
                 channel.FFmpegProfile.VaapiDriver,
                 channel.FFmpegProfile.VaapiDevice,

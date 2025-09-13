@@ -16,6 +16,8 @@ public class GetDecosByDecoGroupIdHandler(IDbContextFactory<TvContext> dbContext
             .Include(d => d.DecoGroup)
             .Include(d => d.DecoWatermarks)
             .ThenInclude(d => d.Watermark)
+            .Include(d => d.DecoGraphicsElements)
+            .ThenInclude(d => d.GraphicsElement)
             .Filter(b => b.DecoGroupId == request.DecoGroupId)
             .ToListAsync(cancellationToken);
 

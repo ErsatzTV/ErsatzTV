@@ -456,6 +456,21 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.ToTable("ConfigElement", (string)null);
                 });
 
+            modelBuilder.Entity("ErsatzTV.Core.Domain.DecoGraphicsElement", b =>
+                {
+                    b.Property<int>("DecoId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("GraphicsElementId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("DecoId", "GraphicsElementId");
+
+                    b.HasIndex("GraphicsElementId");
+
+                    b.ToTable("DecoGraphicsElement");
+                });
+
             modelBuilder.Entity("ErsatzTV.Core.Domain.DecoWatermark", b =>
                 {
                     b.Property<int>("DecoId")
@@ -2468,8 +2483,14 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Property<bool>("DefaultFillerTrimToFit")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("GraphicsElementsMode")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Name")
                         .HasColumnType("TEXT");
+
+                    b.Property<bool>("UseGraphicsElementsDuringFiller")
+                        .HasColumnType("INTEGER");
 
                     b.Property<bool>("UseWatermarkDuringFiller")
                         .HasColumnType("INTEGER");
@@ -3970,6 +3991,25 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Navigation("Collection");
 
                     b.Navigation("MediaItem");
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.DecoGraphicsElement", b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.Scheduling.Deco", "Deco")
+                        .WithMany("DecoGraphicsElements")
+                        .HasForeignKey("DecoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ErsatzTV.Core.Domain.GraphicsElement", "GraphicsElement")
+                        .WithMany("DecoGraphicsElements")
+                        .HasForeignKey("GraphicsElementId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Deco");
+
+                    b.Navigation("GraphicsElement");
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.DecoWatermark", b =>
@@ -5846,6 +5886,8 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.GraphicsElement", b =>
                 {
+                    b.Navigation("DecoGraphicsElements");
+
                     b.Navigation("PlayoutItemGraphicsElements");
 
                     b.Navigation("ProgramScheduleItemGraphicsElements");
@@ -6063,6 +6105,8 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.Scheduling.Deco", b =>
                 {
+                    b.Navigation("DecoGraphicsElements");
+
                     b.Navigation("DecoWatermarks");
 
                     b.Navigation("Playouts");

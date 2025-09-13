@@ -787,6 +787,7 @@ public class Startup
         services.AddScoped<TemplateFunctions>();
         services.AddScoped<IDecoSelector, DecoSelector>();
         services.AddScoped<IWatermarkSelector, WatermarkSelector>();
+        services.AddScoped<IGraphicsElementSelector, GraphicsElementSelector>();
 
         services.AddScoped<IFFmpegProcessService, FFmpegLibraryProcessService>();
         services.AddScoped<IPipelineBuilderFactory, PipelineBuilderFactory>();

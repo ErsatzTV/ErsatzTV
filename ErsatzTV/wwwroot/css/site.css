@@ -202,7 +202,7 @@ div.ersatztv-light {
     background-color: #002e00;
 }
 
-.playout-filler-preroll, .playout-filler-midroll, .playout-filler-postroll {
+.playout-filler-preroll, .playout-filler-midroll, .playout-filler-postroll, .playout-filler-decodefault {
     background-color: #27272f
 }
 
