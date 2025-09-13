@@ -15,6 +15,9 @@ public static class MediaItemTemplateDataKey
     public static readonly string Directors = "MediaItem_Directors";
     public static readonly string Genres = "MediaItem_Genres";
 
+    // movie
+    public static readonly string ContentRating = "MediaItem_ContentRating";
+
     // episode/show
     public static readonly string ShowTitle = "MediaItem_ShowTitle";
     public static readonly string ShowYear = "MediaItem_ShowYear";

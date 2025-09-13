@@ -8,6 +8,7 @@ public record GraphicsEngineContext(
     string ChannelNumber,
     MediaItem MediaItem,
     List<GraphicsElementContext> Elements,
+    List<PlayoutItemGraphicsElement> ElementReferences,
     Resolution SquarePixelFrameSize,
     Resolution FrameSize,
     int FrameRate,

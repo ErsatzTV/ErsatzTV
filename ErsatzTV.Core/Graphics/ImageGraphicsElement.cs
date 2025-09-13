@@ -36,12 +36,10 @@ public class ImageGraphicsElement
     [YamlMember(Alias = "scale_width_percent", ApplyNamingConventions = false)]
     public double? ScaleWidthPercent { get; set; }
 
-    public static async Task<Option<ImageGraphicsElement>> FromFile(string fileName)
+    public static Option<ImageGraphicsElement> FromYaml(string yaml)
     {
         try
         {
-            string yaml = await File.ReadAllTextAsync(fileName);
-
             // TODO: validate schema
             // if (await yamlScheduleValidator.ValidateSchedule(yaml, isImport) == false)
             // {

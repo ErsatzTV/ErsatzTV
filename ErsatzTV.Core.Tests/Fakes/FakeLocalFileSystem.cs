@@ -63,6 +63,13 @@ public class FakeLocalFileSystem : ILocalFileSystem
         .Select(f => f.Contents)
         .IfNoneAsync(string.Empty);
 
+    public async Task<string[]> ReadAllLines(string path) => await _files
+        .Filter(f => f.Path == path)
+        .HeadOrNone()
+        .Select(f => f.Contents)
+        .IfNoneAsync(string.Empty)
+        .Map(s => s.Split(Environment.NewLine));
+
     public Task<byte[]> ReadAllBytes(string path) => TestBytes.AsTask();
 
     private static List<DirectoryInfo> Split(DirectoryInfo path)

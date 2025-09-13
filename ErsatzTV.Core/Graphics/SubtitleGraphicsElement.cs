@@ -13,12 +13,10 @@ public class SubtitlesGraphicsElement
 
     public string Template { get; set; }
 
-    public static async Task<Option<SubtitlesGraphicsElement>> FromFile(string fileName)
+    public static Option<SubtitlesGraphicsElement> FromYaml(string yaml)
     {
         try
         {
-            string yaml = await File.ReadAllTextAsync(fileName);
-
             // TODO: validate schema
             // if (await yamlScheduleValidator.ValidateSchedule(yaml, isImport) == false)
             // {

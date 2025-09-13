@@ -118,7 +118,8 @@ public class TemplateDataRepository(ILocalFileSystem localFileSystem, IDbContext
                     [MediaItemTemplateDataKey.Directors] =
                         (metadata.Directors ?? []).Map(d => d.Name).OrderBy(identity),
                     [MediaItemTemplateDataKey.Genres] = (metadata.Genres ?? []).Map(g => g.Name).OrderBy(identity),
-                    [MediaItemTemplateDataKey.Duration] = movie.GetHeadVersion().Duration
+                    [MediaItemTemplateDataKey.Duration] = movie.GetHeadVersion().Duration,
+                    [MediaItemTemplateDataKey.ContentRating] = metadata.ContentRating
                 };
             }
         }
