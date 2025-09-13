@@ -17,6 +17,9 @@ public class GetDecoByPlayoutIdHandler(IDbContextFactory<TvContext> dbContextFac
             .Include(p => p.Deco)
             .ThenInclude(d => d.DecoWatermarks)
             .ThenInclude(d => d.Watermark)
+            .Include(p => p.Deco)
+            .ThenInclude(d => d.DecoGraphicsElements)
+            .ThenInclude(d => d.GraphicsElement)
             .SelectOneAsync(p => p.Id, p => p.Id == request.PlayoutId && p.DecoId != null, cancellationToken)
             .MapT(p => Mapper.ProjectToViewModel(p.Deco));
     }

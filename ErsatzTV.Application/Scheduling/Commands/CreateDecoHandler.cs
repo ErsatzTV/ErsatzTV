@@ -30,7 +30,8 @@ public class CreateDecoHandler(IDbContextFactory<TvContext> dbContextFactory)
         {
             DecoGroupId = request.DecoGroupId,
             Name = name,
-            DecoWatermarks = []
+            DecoWatermarks = [],
+            DecoGraphicsElements = []
         });
 
     private static async Task<Validation<BaseError, string>> ValidateDecoName(

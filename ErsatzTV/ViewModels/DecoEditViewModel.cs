@@ -1,3 +1,4 @@
+using ErsatzTV.Application.Graphics;
 using ErsatzTV.Application.MediaCollections;
 using ErsatzTV.Application.MediaItems;
 using ErsatzTV.Application.Watermarks;
@@ -14,6 +15,10 @@ public class DecoEditViewModel
     public DecoMode WatermarkMode { get; set; }
     public IEnumerable<WatermarkViewModel> Watermarks { get; set; }
     public bool UseWatermarkDuringFiller { get; set; }
+
+    public DecoMode GraphicsElementsMode { get; set; }
+    public IEnumerable<GraphicsElementViewModel> GraphicsElements { get; set; }
+    public bool UseGraphicsElementsDuringFiller { get; set; }
 
     public DecoMode DefaultFillerMode { get; set; }
     public ProgramScheduleItemCollectionType DefaultFillerCollectionType { get; set; }

@@ -15,6 +15,8 @@ public class GetDecoByIdHandler(IDbContextFactory<TvContext> dbContextFactory)
             .Include(d => d.DecoGroup)
             .Include(d => d.DecoWatermarks)
             .ThenInclude(d => d.Watermark)
+            .Include(d => d.DecoGraphicsElements)
+            .ThenInclude(d => d.GraphicsElement)
             .SelectOneAsync(b => b.Id, b => b.Id == request.DecoId, cancellationToken)
             .MapT(Mapper.ProjectToViewModel);
     }
