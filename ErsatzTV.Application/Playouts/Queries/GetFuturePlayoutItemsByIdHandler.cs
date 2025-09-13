@@ -108,8 +108,8 @@ public class GetFuturePlayoutItemsByIdHandler(IDbContextFactory<TvContext> dbCon
                     TimeSpan gapDuration = gap.Finish - gap.Start;
                     return new PlayoutItemViewModel(
                         "UNSCHEDULED",
-                        gap.Start,
-                        gap.Finish,
+                        gap.StartOffset,
+                        gap.FinishOffset,
                         TimeSpan.FromSeconds(Math.Round(gapDuration.TotalSeconds)).ToString(
                             gapDuration.TotalHours >= 1 ? @"h\:mm\:ss" : @"mm\:ss",
                             CultureInfo.CurrentUICulture.DateTimeFormat),
