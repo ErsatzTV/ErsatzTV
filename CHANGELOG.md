@@ -47,6 +47,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix watermarks and graphics elements when `Scaling Behavior` is `Crop`
 - Fix hardware acceleration health check message on mobile
 - Fix deco selection logic
+- Fix inefficient database migration that would cause database initialization to get stuck
 
 ### Changed
 - **BREAKING CHANGE**: change how `Scripted Schedule` system works

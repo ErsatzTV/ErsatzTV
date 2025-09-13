@@ -10,17 +10,30 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.CreateIndex(
+                name: "IX_PlayoutItem_PlayoutId_Start",
+                table: "PlayoutItem",
+                columns: new[] { "PlayoutId", "Start" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PlayoutHistory_PlayoutId_When",
+                table: "PlayoutHistory",
+                columns: new[] { "PlayoutId", "When" });
+
             migrationBuilder.Sql(
                 @"UPDATE PlayoutHistory
-                    SET Finish =
-                            (SELECT PlayoutItem.Finish
-                             FROM PlayoutItem
-                             WHERE PlayoutItem.PlayoutId = PlayoutHistory.PlayoutId
-                               AND PlayoutItem.Start = PlayoutHistory.`When`)
-                    WHERE EXISTS (SELECT 1
-                                  FROM PlayoutItem
-                                  WHERE PlayoutItem.PlayoutId = PlayoutHistory.PlayoutId
-                                    AND PlayoutItem.Start = PlayoutHistory.`When`);");
+                    SET Finish = PlayoutItem.Finish
+                    FROM PlayoutItem
+                    WHERE PlayoutHistory.PlayoutId = PlayoutItem.PlayoutId
+                      AND PlayoutHistory.`When` = PlayoutItem.Start;");
+
+            migrationBuilder.DropIndex(
+                name: "IX_PlayoutItem_PlayoutId_Start",
+                table: "PlayoutItem");
+
+            migrationBuilder.DropIndex(
+                name: "IX_PlayoutHistory_PlayoutId_When",
+                table: "PlayoutHistory");
         }
 
         /// <inheritdoc />
