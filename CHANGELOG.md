@@ -33,6 +33,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Unscheduled gaps are now displayed and have a unique row color
 - Process entire graphics element YAML files using scriban
   - This allows things like different images based on `MediaItem_ContentRating` (movie) or `MediaItem_ShowContentRating` (episode)
+- Playlists: add playback order `Shuffle In Order` for collections and smart collections
 
 ### Fixed
 - Fix transcoding content with bt709/pc color metadata
