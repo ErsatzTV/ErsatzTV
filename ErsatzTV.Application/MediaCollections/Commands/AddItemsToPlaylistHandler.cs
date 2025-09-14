@@ -36,22 +36,22 @@ public class AddItemsToPlaylistHandler : IRequestHandler<AddItemsToPlaylist, Eit
         AddItemsToPlaylist request,
         CancellationToken cancellationToken)
     {
-        var allItems = new Dictionary<ProgramScheduleItemCollectionType, List<int>>
+        var allItems = new Dictionary<CollectionType, List<int>>
         {
-            { ProgramScheduleItemCollectionType.Movie, request.MovieIds },
-            { ProgramScheduleItemCollectionType.TelevisionShow, request.ShowIds },
-            { ProgramScheduleItemCollectionType.TelevisionSeason, request.SeasonIds },
-            { ProgramScheduleItemCollectionType.Episode, request.EpisodeIds },
-            { ProgramScheduleItemCollectionType.Artist, request.ArtistIds },
-            { ProgramScheduleItemCollectionType.MusicVideo, request.MusicVideoIds },
-            { ProgramScheduleItemCollectionType.OtherVideo, request.OtherVideoIds },
-            { ProgramScheduleItemCollectionType.Song, request.SongIds },
-            { ProgramScheduleItemCollectionType.Image, request.ImageIds }
+            { CollectionType.Movie, request.MovieIds },
+            { CollectionType.TelevisionShow, request.ShowIds },
+            { CollectionType.TelevisionSeason, request.SeasonIds },
+            { CollectionType.Episode, request.EpisodeIds },
+            { CollectionType.Artist, request.ArtistIds },
+            { CollectionType.MusicVideo, request.MusicVideoIds },
+            { CollectionType.OtherVideo, request.OtherVideoIds },
+            { CollectionType.Song, request.SongIds },
+            { CollectionType.Image, request.ImageIds }
         };
 
         int index = playlist.Items.Count > 0 ? playlist.Items.Max(i => i.Index) + 1 : 0;
 
-        foreach ((ProgramScheduleItemCollectionType collectionType, List<int> ids) in allItems)
+        foreach ((CollectionType collectionType, List<int> ids) in allItems)
         {
             foreach (int id in ids)
             {

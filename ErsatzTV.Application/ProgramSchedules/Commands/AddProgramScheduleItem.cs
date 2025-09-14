@@ -10,7 +10,7 @@ public record AddProgramScheduleItem(
     TimeSpan? StartTime,
     FixedStartTimeBehavior? FixedStartTimeBehavior,
     PlayoutMode PlayoutMode,
-    ProgramScheduleItemCollectionType CollectionType,
+    CollectionType CollectionType,
     int? CollectionId,
     int? MultiCollectionId,
     int? SmartCollectionId,
@@ -42,7 +42,7 @@ public record AddProgramScheduleItem(
     ChannelSubtitleMode? SubtitleMode) : IRequest<Either<BaseError, ProgramScheduleItemViewModel>>,
     IProgramScheduleItemRequest
 {
-    public static AddProgramScheduleItem ForMediaItem(int scheduleId, ProgramScheduleItemCollectionType collectionType, int mediaItemId)
+    public static AddProgramScheduleItem ForMediaItem(int scheduleId, CollectionType collectionType, int mediaItemId)
         => new(
             scheduleId,
             StartType.Dynamic,

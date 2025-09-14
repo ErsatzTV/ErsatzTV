@@ -21,7 +21,7 @@ public class DecoEditViewModel
     public bool UseGraphicsElementsDuringFiller { get; set; }
 
     public DecoMode DefaultFillerMode { get; set; }
-    public ProgramScheduleItemCollectionType DefaultFillerCollectionType { get; set; }
+    public CollectionType DefaultFillerCollectionType { get; set; }
     public MediaCollectionViewModel DefaultFillerCollection { get; set; }
     public MultiCollectionViewModel DefaultFillerMultiCollection { get; set; }
     public SmartCollectionViewModel DefaultFillerSmartCollection { get; set; }
@@ -29,7 +29,7 @@ public class DecoEditViewModel
     public bool DefaultFillerTrimToFit { get; set; }
 
     public DecoMode DeadAirFallbackMode { get; set; }
-    public ProgramScheduleItemCollectionType DeadAirFallbackCollectionType { get; set; }
+    public CollectionType DeadAirFallbackCollectionType { get; set; }
     public MediaCollectionViewModel DeadAirFallbackCollection { get; set; }
     public MultiCollectionViewModel DeadAirFallbackMultiCollection { get; set; }
     public SmartCollectionViewModel DeadAirFallbackSmartCollection { get; set; }

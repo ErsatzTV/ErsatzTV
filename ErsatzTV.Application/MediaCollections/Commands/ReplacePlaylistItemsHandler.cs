@@ -78,61 +78,61 @@ public class ReplacePlaylistItemsHandler(IDbContextFactory<TvContext> dbContextF
     {
         switch (item.CollectionType)
         {
-            case ProgramScheduleItemCollectionType.Collection:
+            case CollectionType.Collection:
                 if (item.CollectionId is null)
                 {
                     return BaseError.New("[Collection] is required for collection type 'Collection'");
                 }
 
                 break;
-            case ProgramScheduleItemCollectionType.TelevisionShow:
+            case CollectionType.TelevisionShow:
                 if (item.MediaItemId is null)
                 {
                     return BaseError.New("[MediaItem] is required for collection type 'TelevisionShow'");
                 }
 
                 break;
-            case ProgramScheduleItemCollectionType.TelevisionSeason:
+            case CollectionType.TelevisionSeason:
                 if (item.MediaItemId is null)
                 {
                     return BaseError.New("[MediaItem] is required for collection type 'TelevisionSeason'");
                 }
 
                 break;
-            case ProgramScheduleItemCollectionType.Artist:
+            case CollectionType.Artist:
                 if (item.MediaItemId is null)
                 {
                     return BaseError.New("[MediaItem] is required for collection type 'Artist'");
                 }
 
                 break;
-            case ProgramScheduleItemCollectionType.MultiCollection:
+            case CollectionType.MultiCollection:
                 if (item.MultiCollectionId is null)
                 {
                     return BaseError.New("[MultiCollection] is required for collection type 'MultiCollection'");
                 }
 
                 break;
-            case ProgramScheduleItemCollectionType.SmartCollection:
+            case CollectionType.SmartCollection:
                 if (item.SmartCollectionId is null)
                 {
                     return BaseError.New("[SmartCollection] is required for collection type 'SmartCollection'");
                 }
 
                 break;
-            case ProgramScheduleItemCollectionType.Movie:
-            case ProgramScheduleItemCollectionType.Episode:
-            case ProgramScheduleItemCollectionType.MusicVideo:
-            case ProgramScheduleItemCollectionType.OtherVideo:
-            case ProgramScheduleItemCollectionType.Song:
-            case ProgramScheduleItemCollectionType.Image:
+            case CollectionType.Movie:
+            case CollectionType.Episode:
+            case CollectionType.MusicVideo:
+            case CollectionType.OtherVideo:
+            case CollectionType.Song:
+            case CollectionType.Image:
                 if (item.MediaItemId is null)
                 {
                     return BaseError.New($"[MediaItem] is required for type '{item.CollectionType}'");
                 }
 
                 break;
-            case ProgramScheduleItemCollectionType.FakeCollection:
+            case CollectionType.FakeCollection:
             default:
                 return BaseError.New("[CollectionType] is invalid");
         }

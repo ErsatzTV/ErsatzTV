@@ -131,15 +131,15 @@
     <MudSelect Disabled="@(_deco.DefaultFillerMode != DecoMode.Override)"
                @bind-Value="_deco.DefaultFillerCollectionType"
                For="@(() => _deco.DefaultFillerCollectionType)">
-        <MudSelectItem Value="ProgramScheduleItemCollectionType.Collection">Collection</MudSelectItem>
-        <MudSelectItem Value="ProgramScheduleItemCollectionType.TelevisionShow">Television Show</MudSelectItem>
-        <MudSelectItem Value="ProgramScheduleItemCollectionType.TelevisionSeason">Television Season</MudSelectItem>
-        <MudSelectItem Value="ProgramScheduleItemCollectionType.Artist">Artist</MudSelectItem>
-        <MudSelectItem Value="ProgramScheduleItemCollectionType.MultiCollection">Multi Collection</MudSelectItem>
-        <MudSelectItem Value="ProgramScheduleItemCollectionType.SmartCollection">Smart Collection</MudSelectItem>
+        <MudSelectItem Value="CollectionType.Collection">Collection</MudSelectItem>
+        <MudSelectItem Value="CollectionType.TelevisionShow">Television Show</MudSelectItem>
+        <MudSelectItem Value="CollectionType.TelevisionSeason">Television Season</MudSelectItem>
+        <MudSelectItem Value="CollectionType.Artist">Artist</MudSelectItem>
+        <MudSelectItem Value="CollectionType.MultiCollection">Multi Collection</MudSelectItem>
+        <MudSelectItem Value="CollectionType.SmartCollection">Smart Collection</MudSelectItem>
     </MudSelect>
 </MudStack>
-@if (_deco.DefaultFillerCollectionType == ProgramScheduleItemCollectionType.Collection)
+@if (_deco.DefaultFillerCollectionType == CollectionType.Collection)
 {
     <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
         <div class="d-flex">
@@ -155,7 +155,7 @@
         </MudSelect>
     </MudStack>
 }
-@if (_deco.DefaultFillerCollectionType == ProgramScheduleItemCollectionType.MultiCollection)
+@if (_deco.DefaultFillerCollectionType == CollectionType.MultiCollection)
 {
     <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
         <div class="d-flex">
@@ -171,7 +171,7 @@
         </MudSelect>
     </MudStack>
 }
-@if (_deco.DefaultFillerCollectionType == ProgramScheduleItemCollectionType.SmartCollection)
+@if (_deco.DefaultFillerCollectionType == CollectionType.SmartCollection)
 {
     <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
         <div class="d-flex">
@@ -187,7 +187,7 @@
         </MudSelect>
     </MudStack>
 }
-@if (_deco.DefaultFillerCollectionType == ProgramScheduleItemCollectionType.TelevisionShow)
+@if (_deco.DefaultFillerCollectionType == CollectionType.TelevisionShow)
 {
     <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
         <div class="d-flex">
@@ -203,7 +203,7 @@
         </MudSelect>
     </MudStack>
 }
-@if (_deco.DefaultFillerCollectionType == ProgramScheduleItemCollectionType.TelevisionSeason)
+@if (_deco.DefaultFillerCollectionType == CollectionType.TelevisionSeason)
 {
     <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
         <div class="d-flex">
@@ -219,7 +219,7 @@
         </MudSelect>
     </MudStack>
 }
-@if (_deco.DefaultFillerCollectionType == ProgramScheduleItemCollectionType.Artist)
+@if (_deco.DefaultFillerCollectionType == CollectionType.Artist)
 {
     <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
         <div class="d-flex">
@@ -266,15 +266,15 @@
     <MudSelect Disabled="@(_deco.DeadAirFallbackMode != DecoMode.Override)"
                @bind-Value="_deco.DeadAirFallbackCollectionType"
                For="@(() => _deco.DeadAirFallbackCollectionType)">
-        <MudSelectItem Value="ProgramScheduleItemCollectionType.Collection">Collection</MudSelectItem>
-        <MudSelectItem Value="ProgramScheduleItemCollectionType.TelevisionShow">Television Show</MudSelectItem>
-        <MudSelectItem Value="ProgramScheduleItemCollectionType.TelevisionSeason">Television Season</MudSelectItem>
-        <MudSelectItem Value="ProgramScheduleItemCollectionType.Artist">Artist</MudSelectItem>
-        <MudSelectItem Value="ProgramScheduleItemCollectionType.MultiCollection">Multi Collection</MudSelectItem>
-        <MudSelectItem Value="ProgramScheduleItemCollectionType.SmartCollection">Smart Collection</MudSelectItem>
+        <MudSelectItem Value="CollectionType.Collection">Collection</MudSelectItem>
+        <MudSelectItem Value="CollectionType.TelevisionShow">Television Show</MudSelectItem>
+        <MudSelectItem Value="CollectionType.TelevisionSeason">Television Season</MudSelectItem>
+        <MudSelectItem Value="CollectionType.Artist">Artist</MudSelectItem>
+        <MudSelectItem Value="CollectionType.MultiCollection">Multi Collection</MudSelectItem>
+        <MudSelectItem Value="CollectionType.SmartCollection">Smart Collection</MudSelectItem>
     </MudSelect>
 </MudStack>
-@if (_deco.DeadAirFallbackCollectionType == ProgramScheduleItemCollectionType.Collection)
+@if (_deco.DeadAirFallbackCollectionType == CollectionType.Collection)
 {
     <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
         <div class="d-flex">
@@ -290,7 +290,7 @@
         </MudSelect>
     </MudStack>
 }
-@if (_deco.DeadAirFallbackCollectionType == ProgramScheduleItemCollectionType.MultiCollection)
+@if (_deco.DeadAirFallbackCollectionType == CollectionType.MultiCollection)
 {
     <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
         <div class="d-flex">
@@ -306,7 +306,7 @@
         </MudSelect>
     </MudStack>
 }
-@if (_deco.DeadAirFallbackCollectionType == ProgramScheduleItemCollectionType.SmartCollection)
+@if (_deco.DeadAirFallbackCollectionType == CollectionType.SmartCollection)
 {
     <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
         <div class="d-flex">
@@ -322,7 +322,7 @@
         </MudSelect>
     </MudStack>
 }
-@if (_deco.DeadAirFallbackCollectionType == ProgramScheduleItemCollectionType.TelevisionShow)
+@if (_deco.DeadAirFallbackCollectionType == CollectionType.TelevisionShow)
 {
     <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
         <div class="d-flex">
@@ -338,7 +338,7 @@
         </MudSelect>
     </MudStack>
 }
-@if (_deco.DeadAirFallbackCollectionType == ProgramScheduleItemCollectionType.TelevisionSeason)
+@if (_deco.DeadAirFallbackCollectionType == CollectionType.TelevisionSeason)
 {
     <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
         <div class="d-flex">
@@ -354,7 +354,7 @@
         </MudSelect>
     </MudStack>
 }
-@if (_deco.DeadAirFallbackCollectionType == ProgramScheduleItemCollectionType.Artist)
+@if (_deco.DeadAirFallbackCollectionType == CollectionType.Artist)
 {
     <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
         <div class="d-flex">

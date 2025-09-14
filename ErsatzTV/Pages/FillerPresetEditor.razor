@@ -45,7 +45,7 @@
                     <MudText>Mode</MudText>
                 </div>
                 <MudSelect @bind-Value="_model.FillerMode" For="@(() => _model.FillerMode)"
-                           Disabled="@(_model.FillerKind is FillerKind.Fallback or FillerKind.Tail || _model.CollectionType is ProgramScheduleItemCollectionType.Playlist)">
+                           Disabled="@(_model.FillerKind is FillerKind.Fallback or FillerKind.Tail || _model.CollectionType is CollectionType.Playlist)">
                     <MudSelectItem Value="@(FillerMode.Duration)">Duration</MudSelectItem>
                     <MudSelectItem Value="@(FillerMode.Count)">Count</MudSelectItem>
                     <MudSelectItem Value="@(FillerMode.Pad)">Pad</MudSelectItem>
@@ -86,19 +86,19 @@
                     <MudText>Collection Type</MudText>
                 </div>
                 <MudSelect @bind-Value="_model.CollectionType" For="@(() => _model.CollectionType)">
-                    <MudSelectItem Value="ProgramScheduleItemCollectionType.Collection">Collection</MudSelectItem>
-                    <MudSelectItem Value="ProgramScheduleItemCollectionType.TelevisionShow">Television Show</MudSelectItem>
-                    <MudSelectItem Value="ProgramScheduleItemCollectionType.TelevisionSeason">Television Season</MudSelectItem>
-                    <MudSelectItem Value="ProgramScheduleItemCollectionType.Artist">Artist</MudSelectItem>
-                    <MudSelectItem Value="ProgramScheduleItemCollectionType.MultiCollection">Multi Collection</MudSelectItem>
-                    <MudSelectItem Value="ProgramScheduleItemCollectionType.SmartCollection">Smart Collection</MudSelectItem>
+                    <MudSelectItem Value="CollectionType.Collection">Collection</MudSelectItem>
+                    <MudSelectItem Value="CollectionType.TelevisionShow">Television Show</MudSelectItem>
+                    <MudSelectItem Value="CollectionType.TelevisionSeason">Television Season</MudSelectItem>
+                    <MudSelectItem Value="CollectionType.Artist">Artist</MudSelectItem>
+                    <MudSelectItem Value="CollectionType.MultiCollection">Multi Collection</MudSelectItem>
+                    <MudSelectItem Value="CollectionType.SmartCollection">Smart Collection</MudSelectItem>
                     @if (_model.FillerKind is not FillerKind.Fallback and not FillerKind.Tail)
                     {
-                        <MudSelectItem Value="ProgramScheduleItemCollectionType.Playlist">Playlist</MudSelectItem>
+                        <MudSelectItem Value="CollectionType.Playlist">Playlist</MudSelectItem>
                     }
                 </MudSelect>
             </MudStack>
-            @if (_model.CollectionType == ProgramScheduleItemCollectionType.Collection)
+            @if (_model.CollectionType == CollectionType.Collection)
             {
                 <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                     <div class="d-flex">
@@ -112,7 +112,7 @@
                     </MudSelect>
                 </MudStack>
             }
-            @if (_model.CollectionType == ProgramScheduleItemCollectionType.MultiCollection)
+            @if (_model.CollectionType == CollectionType.MultiCollection)
             {
                 <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                     <div class="d-flex">
@@ -126,7 +126,7 @@
                     </MudSelect>
                 </MudStack>
             }
-            @if (_model.CollectionType == ProgramScheduleItemCollectionType.SmartCollection)
+            @if (_model.CollectionType == CollectionType.SmartCollection)
             {
                 <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                     <div class="d-flex">
@@ -140,7 +140,7 @@
                     </MudSelect>
                 </MudStack>
             }
-            @if (_model.CollectionType == ProgramScheduleItemCollectionType.TelevisionShow)
+            @if (_model.CollectionType == CollectionType.TelevisionShow)
             {
                 <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                     <div class="d-flex">
@@ -154,7 +154,7 @@
                     </MudSelect>
                 </MudStack>
             }
-            @if (_model.CollectionType == ProgramScheduleItemCollectionType.TelevisionSeason)
+            @if (_model.CollectionType == CollectionType.TelevisionSeason)
             {
                 <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                     <div class="d-flex">
@@ -168,7 +168,7 @@
                     </MudSelect>
                 </MudStack>
             }
-            @if (_model.CollectionType == ProgramScheduleItemCollectionType.Artist)
+            @if (_model.CollectionType == CollectionType.Artist)
             {
                 <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                     <div class="d-flex">
@@ -182,7 +182,7 @@
                     </MudSelect>
                 </MudStack>
             }
-            @if (_model.CollectionType == ProgramScheduleItemCollectionType.Playlist)
+            @if (_model.CollectionType == CollectionType.Playlist)
             {
                 <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                     <div class="d-flex">

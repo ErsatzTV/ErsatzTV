@@ -7,7 +7,7 @@ internal static class Mapper
 {
     internal static MediaCollectionViewModel ProjectToViewModel(Collection collection) =>
         new(
-            ProgramScheduleItemCollectionType.Collection,
+            CollectionType.Collection,
             collection.Id,
             collection.Name,
             collection.UseCustomPlaybackOrder,

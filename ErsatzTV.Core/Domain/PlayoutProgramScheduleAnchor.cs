@@ -16,7 +16,7 @@ public class PlayoutProgramScheduleAnchor
         ? new DateTimeOffset(AnchorDate.Value, TimeSpan.Zero).ToLocalTime()
         : null;
 
-    public ProgramScheduleItemCollectionType CollectionType { get; set; }
+    public CollectionType CollectionType { get; set; }
     public int? CollectionId { get; set; }
     public Collection Collection { get; set; }
     public int? MultiCollectionId { get; set; }

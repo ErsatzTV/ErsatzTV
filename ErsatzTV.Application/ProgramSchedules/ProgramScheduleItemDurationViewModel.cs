@@ -16,7 +16,7 @@ public record ProgramScheduleItemDurationViewModel : ProgramScheduleItemViewMode
         StartType startType,
         TimeSpan? startTime,
         FixedStartTimeBehavior? fixedStartTimeBehavior,
-        ProgramScheduleItemCollectionType collectionType,
+        CollectionType collectionType,
         MediaCollectionViewModel collection,
         MultiCollectionViewModel multiCollection,
         SmartCollectionViewModel smartCollection,

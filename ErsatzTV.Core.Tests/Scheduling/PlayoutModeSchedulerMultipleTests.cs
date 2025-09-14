@@ -25,7 +25,7 @@ public class PlayoutModeSchedulerMultipleTests : SchedulerTestBase
         {
             Id = 1,
             Index = 1,
-            CollectionType = ProgramScheduleItemCollectionType.Collection,
+            CollectionType = CollectionType.Collection,
             Collection = collectionOne,
             CollectionId = collectionOne.Id,
             StartTime = TimeSpan.FromHours(1),
@@ -127,7 +127,7 @@ public class PlayoutModeSchedulerMultipleTests : SchedulerTestBase
         {
             Id = 1,
             Index = 1,
-            CollectionType = ProgramScheduleItemCollectionType.Collection,
+            CollectionType = CollectionType.Collection,
             Collection = collectionOne,
             CollectionId = collectionOne.Id,
             StartTime = TimeSpan.FromHours(1),
@@ -199,7 +199,7 @@ public class PlayoutModeSchedulerMultipleTests : SchedulerTestBase
         {
             Id = 1,
             Index = 1,
-            CollectionType = ProgramScheduleItemCollectionType.Collection,
+            CollectionType = CollectionType.Collection,
             Collection = collectionOne,
             CollectionId = collectionOne.Id,
             StartTime = null,

@@ -227,17 +227,17 @@ public class BlockPlayoutFillerBuilder(
     {
         switch (deco.DefaultFillerCollectionType)
         {
-            case ProgramScheduleItemCollectionType.Collection:
+            case CollectionType.Collection:
                 return deco.DefaultFillerCollectionId.HasValue;
-            case ProgramScheduleItemCollectionType.TelevisionShow:
+            case CollectionType.TelevisionShow:
                 return deco.DefaultFillerMediaItemId.HasValue;
-            case ProgramScheduleItemCollectionType.TelevisionSeason:
+            case CollectionType.TelevisionSeason:
                 return deco.DefaultFillerMediaItemId.HasValue;
-            case ProgramScheduleItemCollectionType.Artist:
+            case CollectionType.Artist:
                 return deco.DefaultFillerMediaItemId.HasValue;
-            case ProgramScheduleItemCollectionType.MultiCollection:
+            case CollectionType.MultiCollection:
                 return deco.DefaultFillerMultiCollectionId.HasValue;
-            case ProgramScheduleItemCollectionType.SmartCollection:
+            case CollectionType.SmartCollection:
                 return deco.DefaultFillerSmartCollectionId.HasValue;
             default:
                 return false;

@@ -120,7 +120,7 @@ public abstract class PlayoutBuilderTestBase
         {
             Id = 1,
             Index = 1,
-            CollectionType = ProgramScheduleItemCollectionType.Collection,
+            CollectionType = CollectionType.Collection,
             Collection = mediaCollection,
             CollectionId = mediaCollection.Id,
             StartTime = null,
@@ -135,7 +135,7 @@ public abstract class PlayoutBuilderTestBase
         {
             Id = 1,
             Index = 1,
-            CollectionType = ProgramScheduleItemCollectionType.SmartCollection,
+            CollectionType = CollectionType.SmartCollection,
             SmartCollection = smartCollection,
             SmartCollectionId = smartCollection.Id,
             StartTime = null,
@@ -143,7 +143,7 @@ public abstract class PlayoutBuilderTestBase
             FallbackFiller = new FillerPreset
             {
                 Id = 1,
-                CollectionType = ProgramScheduleItemCollectionType.SmartCollection,
+                CollectionType = CollectionType.SmartCollection,
                 SmartCollection = fillerCollection,
                 SmartCollectionId = fillerCollection.Id,
                 FillerKind = FillerKind.Fallback

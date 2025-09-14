@@ -140,7 +140,7 @@ public class ReplaceProgramScheduleItemsHandler : ProgramScheduleItemCommandBase
     }
 
     private sealed record CollectionKey(
-        ProgramScheduleItemCollectionType CollectionType,
+        CollectionType CollectionType,
         int? CollectionId,
         int? MediaItemId,
         int? MultiCollectionId,

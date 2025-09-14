@@ -610,19 +610,19 @@ public class PlayoutBuilder : IPlayoutBuilder
                 {
                     var (showId, _, _) when showId > 0 => new CollectionKey
                     {
-                        CollectionType = ProgramScheduleItemCollectionType.TelevisionShow,
+                        CollectionType = CollectionType.TelevisionShow,
                         MediaItemId = showId,
                         FakeCollectionKey = collectionKeyString
                     },
                     var (_, artistId, _) when artistId > 0 => new CollectionKey
                     {
-                        CollectionType = ProgramScheduleItemCollectionType.Artist,
+                        CollectionType = CollectionType.Artist,
                         MediaItemId = artistId,
                         FakeCollectionKey = collectionKeyString
                     },
                     var (_, _, k) when k is not null => new CollectionKey
                     {
-                        CollectionType = ProgramScheduleItemCollectionType.FakeCollection,
+                        CollectionType = CollectionType.FakeCollection,
                         FakeCollectionKey = collectionKeyString
                     },
                     var (_, _, _) => null
@@ -1223,7 +1223,7 @@ public class PlayoutBuilder : IPlayoutBuilder
 
         state ??= new CollectionEnumeratorState { Seed = Random.Next(), Index = 0 };
 
-        if (collectionKey.CollectionType is ProgramScheduleItemCollectionType.Playlist)
+        if (collectionKey.CollectionType is CollectionType.Playlist)
         {
             foreach (int playlistId in Optional(collectionKey.PlaylistId))
             {
@@ -1243,7 +1243,7 @@ public class PlayoutBuilder : IPlayoutBuilder
 
         int collectionId = collectionKey.CollectionId ?? 0;
 
-        if (collectionKey.CollectionType == ProgramScheduleItemCollectionType.Collection &&
+        if (collectionKey.CollectionType == CollectionType.Collection &&
             await _mediaCollectionRepository.IsCustomPlaybackOrder(collectionId))
         {
             Option<Collection> maybeCollectionWithItems =
@@ -1297,7 +1297,7 @@ public class PlayoutBuilder : IPlayoutBuilder
                     activeSchedule.RandomStartPoint,
                     cancellationToken);
             case PlaybackOrder.MultiEpisodeShuffle when
-                collectionKey.CollectionType == ProgramScheduleItemCollectionType.TelevisionShow &&
+                collectionKey.CollectionType == CollectionType.TelevisionShow &&
                 collectionKey.MediaItemId.HasValue:
                 foreach (Show show in await _televisionRepository.GetShow(collectionKey.MediaItemId.Value, cancellationToken))
                 {

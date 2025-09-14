@@ -7,7 +7,7 @@ public interface IProgramScheduleItemRequest
 {
     TimeSpan? StartTime { get; }
     FixedStartTimeBehavior? FixedStartTimeBehavior { get; }
-    ProgramScheduleItemCollectionType CollectionType { get; }
+    CollectionType CollectionType { get; }
     int? CollectionId { get; }
     int? MultiCollectionId { get; }
     int? SmartCollectionId { get; }

@@ -4,7 +4,7 @@ namespace ErsatzTV.Application.MediaCollections;
 
 public record ReplacePlaylistItem(
     int Index,
-    ProgramScheduleItemCollectionType CollectionType,
+    CollectionType CollectionType,
     int? CollectionId,
     int? MultiCollectionId,
     int? SmartCollectionId,

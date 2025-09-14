@@ -10,7 +10,7 @@ namespace ErsatzTV.ViewModels;
 
 public class FillerPresetEditViewModel
 {
-    private ProgramScheduleItemCollectionType _collectionType;
+    private CollectionType _collectionType;
     private int? _count;
     private TimeSpan? _duration;
     private FillerKind _fillerKind;
@@ -69,7 +69,7 @@ public class FillerPresetEditViewModel
 
     public bool AllowWatermarks { get; set; }
 
-    public ProgramScheduleItemCollectionType CollectionType
+    public CollectionType CollectionType
     {
         get => _collectionType;
         set
@@ -83,7 +83,7 @@ public class FillerPresetEditViewModel
             }
 
             _collectionType = value;
-            if (_collectionType is ProgramScheduleItemCollectionType.Playlist)
+            if (_collectionType is CollectionType.Playlist)
             {
                 _fillerMode = FillerMode.Count;
             }

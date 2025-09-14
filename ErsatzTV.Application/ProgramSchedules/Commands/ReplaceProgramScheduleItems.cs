@@ -10,7 +10,7 @@ public record ReplaceProgramScheduleItem(
     TimeSpan? StartTime,
     FixedStartTimeBehavior? FixedStartTimeBehavior,
     PlayoutMode PlayoutMode,
-    ProgramScheduleItemCollectionType CollectionType,
+    CollectionType CollectionType,
     int? CollectionId,
     int? MultiCollectionId,
     int? SmartCollectionId,

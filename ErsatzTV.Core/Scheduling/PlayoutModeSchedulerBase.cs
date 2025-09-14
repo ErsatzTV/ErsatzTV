@@ -365,9 +365,9 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
         }
 
         // convert playlist filler
-        if (allFiller.Any(f => f.CollectionType is ProgramScheduleItemCollectionType.Playlist))
+        if (allFiller.Any(f => f.CollectionType is CollectionType.Playlist))
         {
-            var toRemove = allFiller.Filter(f => f.CollectionType is ProgramScheduleItemCollectionType.Playlist)
+            var toRemove = allFiller.Filter(f => f.CollectionType is CollectionType.Playlist)
                 .ToList();
             allFiller.RemoveAll(toRemove.Contains);
 

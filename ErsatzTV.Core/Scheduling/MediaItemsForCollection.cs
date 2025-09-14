@@ -18,77 +18,77 @@ public static class MediaItemsForCollection
 
         switch (collectionKey.CollectionType)
         {
-            case ProgramScheduleItemCollectionType.Collection:
+            case CollectionType.Collection:
                 result.AddRange(await mediaCollectionRepository.GetItems(collectionKey.CollectionId ?? 0));
                 break;
-            case ProgramScheduleItemCollectionType.TelevisionShow:
+            case CollectionType.TelevisionShow:
                 result.AddRange(await televisionRepository.GetShowItems(collectionKey.MediaItemId ?? 0));
                 break;
-            case ProgramScheduleItemCollectionType.TelevisionSeason:
+            case CollectionType.TelevisionSeason:
                 result.AddRange(await televisionRepository.GetSeasonItems(collectionKey.MediaItemId ?? 0));
                 break;
-            case ProgramScheduleItemCollectionType.Artist:
+            case CollectionType.Artist:
                 result.AddRange(await artistRepository.GetArtistItems(collectionKey.MediaItemId ?? 0));
                 break;
-            case ProgramScheduleItemCollectionType.MultiCollection:
+            case CollectionType.MultiCollection:
                 result.AddRange(
                     await mediaCollectionRepository.GetMultiCollectionItems(
                         collectionKey.MultiCollectionId ?? 0,
                         cancellationToken));
                 break;
-            case ProgramScheduleItemCollectionType.SmartCollection:
+            case CollectionType.SmartCollection:
                 result.AddRange(
                     await mediaCollectionRepository.GetSmartCollectionItems(
                         collectionKey.SmartCollectionId ?? 0,
                         cancellationToken));
                 break;
-            case ProgramScheduleItemCollectionType.Playlist:
+            case CollectionType.Playlist:
                 result.AddRange(
                     await mediaCollectionRepository.GetPlaylistItems(collectionKey.PlaylistId ?? 0, cancellationToken));
                 break;
-            case ProgramScheduleItemCollectionType.Movie:
+            case CollectionType.Movie:
                 foreach (int mediaItemId in Optional(collectionKey.MediaItemId))
                 {
                     result.AddRange(await mediaCollectionRepository.GetMovie(mediaItemId));
                 }
 
                 break;
-            case ProgramScheduleItemCollectionType.Episode:
+            case CollectionType.Episode:
                 foreach (int mediaItemId in Optional(collectionKey.MediaItemId))
                 {
                     result.AddRange(await mediaCollectionRepository.GetEpisode(mediaItemId));
                 }
 
                 break;
-            case ProgramScheduleItemCollectionType.MusicVideo:
+            case CollectionType.MusicVideo:
                 foreach (int mediaItemId in Optional(collectionKey.MediaItemId))
                 {
                     result.AddRange(await mediaCollectionRepository.GetMusicVideo(mediaItemId));
                 }
 
                 break;
-            case ProgramScheduleItemCollectionType.OtherVideo:
+            case CollectionType.OtherVideo:
                 foreach (int mediaItemId in Optional(collectionKey.MediaItemId))
                 {
                     result.AddRange(await mediaCollectionRepository.GetOtherVideo(mediaItemId));
                 }
 
                 break;
-            case ProgramScheduleItemCollectionType.Song:
+            case CollectionType.Song:
                 foreach (int mediaItemId in Optional(collectionKey.MediaItemId))
                 {
                     result.AddRange(await mediaCollectionRepository.GetSong(mediaItemId));
                 }
 
                 break;
-            case ProgramScheduleItemCollectionType.Image:
+            case CollectionType.Image:
                 foreach (int mediaItemId in Optional(collectionKey.MediaItemId))
                 {
                     result.AddRange(await mediaCollectionRepository.GetImage(mediaItemId));
                 }
 
                 break;
-            case ProgramScheduleItemCollectionType.RemoteStream:
+            case CollectionType.RemoteStream:
                 foreach (int mediaItemId in Optional(collectionKey.MediaItemId))
                 {
                     result.AddRange(await mediaCollectionRepository.GetRemoteStream(mediaItemId));

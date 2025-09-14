@@ -77,7 +77,7 @@ public class RefreshPlayoutTests : PlayoutBuilderTestBase
                 AnchorDate = HoursAfterMidnight(24).UtcDateTime,
                 Collection = collectionOne,
                 CollectionId = collectionOne.Id,
-                CollectionType = ProgramScheduleItemCollectionType.Collection,
+                CollectionType = CollectionType.Collection,
                 EnumeratorState = new CollectionEnumeratorState
                 {
                     Index = 1,

@@ -30,17 +30,17 @@ public class FillerPresetEditViewModelValidator : AbstractValidator<FillerPreset
             () => RuleFor(fp => fp.UseChaptersAsMediaItems).NotEqual(true));
 
         When(
-            fp => fp.CollectionType == ProgramScheduleItemCollectionType.Collection,
+            fp => fp.CollectionType == CollectionType.Collection,
             () => RuleFor(fp => fp.Collection).NotNull());
         When(
-            fp => fp.CollectionType == ProgramScheduleItemCollectionType.MultiCollection,
+            fp => fp.CollectionType == CollectionType.MultiCollection,
             () => RuleFor(fp => fp.MultiCollection).NotNull());
         When(
-            fp => fp.CollectionType == ProgramScheduleItemCollectionType.SmartCollection,
+            fp => fp.CollectionType == CollectionType.SmartCollection,
             () => RuleFor(fp => fp.SmartCollection).NotNull());
         When(
-            fp => fp.CollectionType is ProgramScheduleItemCollectionType.Artist or ProgramScheduleItemCollectionType
-                .TelevisionShow or ProgramScheduleItemCollectionType.TelevisionSeason,
+            fp => fp.CollectionType is CollectionType.Artist or CollectionType
+                .TelevisionShow or CollectionType.TelevisionSeason,
             () => RuleFor(fp => fp.MediaItem).NotNull());
     }
 
