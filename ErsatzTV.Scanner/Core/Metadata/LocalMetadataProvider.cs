@@ -1338,14 +1338,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
     {
         try
         {
-            _logger.LogDebug("Reading artist metadata from {NfoFileName}", nfoFileName);
-            _logger.LogDebug("Total memory: {TotalMemory}", GC.GetTotalMemory(false));
-
             Either<BaseError, ArtistNfo> maybeNfo = await _artistNfoReader.ReadFromFile(nfoFileName);
-            
-            _logger.LogDebug("Finished reading artist metadata from {NfoFileName}", nfoFileName);
-            _logger.LogDebug("Total memory: {TotalMemory}", GC.GetTotalMemory(false));
-
             foreach (BaseError error in maybeNfo.LeftToSeq())
             {
                 _logger.LogInformation(
@@ -1375,7 +1368,6 @@ public class LocalMetadataProvider : ILocalMetadataProvider
         catch (Exception ex)
         {
             _logger.LogInformation(ex, "Failed to read artist nfo metadata from {Path}", nfoFileName);
-            _logger.LogDebug("Total memory on failure: {TotalMemory}", GC.GetTotalMemory(false));
             _client.Notify(ex);
             return None;
         }

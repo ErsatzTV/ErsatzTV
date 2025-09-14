@@ -49,6 +49,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix hardware acceleration health check message on mobile
 - Fix deco selection logic
 - Fix inefficient database migration that would cause database initialization to get stuck
+- Classic schedules: fix scheduling behavior when a flood item is before a flexible fixed start item
+  - Sometimes the flood item wouldn't schedule anything
 
 ### Changed
 - **BREAKING CHANGE**: change how `Scripted Schedule` system works

@@ -44,14 +44,16 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
     public static DateTimeOffset GetStartTimeAfter(
         PlayoutBuilderState state,
         ProgramScheduleItem scheduleItem,
-        Option<ILogger> maybeLogger)
+        Option<ILogger> maybeLogger,
+        bool isPeek = false)
     {
         DateTimeOffset startTime = state.CurrentTime.ToLocalTime();
 
-        bool isIncomplete = scheduleItem is ProgramScheduleItemMultiple && state.MultipleRemaining.IsSome ||
-                            scheduleItem is ProgramScheduleItemDuration && state.DurationFinish.IsSome ||
-                            scheduleItem is ProgramScheduleItemFlood && state.InFlood ||
-                            scheduleItem is ProgramScheduleItemDuration && state.InDurationFiller;
+        bool isIncomplete = !isPeek &&
+                            (scheduleItem is ProgramScheduleItemMultiple && state.MultipleRemaining.IsSome ||
+                             scheduleItem is ProgramScheduleItemDuration && state.DurationFinish.IsSome ||
+                             scheduleItem is ProgramScheduleItemFlood && state.InFlood ||
+                             scheduleItem is ProgramScheduleItemDuration && state.InDurationFiller);
 
         if (scheduleItem.StartType == StartType.Fixed && !isIncomplete)
         {
@@ -84,8 +86,14 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
             switch (fixedStartTimeBehavior)
             {
                 case FixedStartTimeBehavior.Flexible:
-                    // only wait for times on the same day
-                    if (result.Day == startTime.Day && result.TimeOfDay > startTime.TimeOfDay)
+                    // if we are peeking from a flood and the flexible time is in the past,
+                    // we should use the next day's time to allow the flood to continue.
+                    if (isPeek && state.InFlood && startTime > result)
+                    {
+                        startTime = result.AddDays(1);
+                    }
+                    // otherwise, only wait for times on the same day
+                    else if (result.Day == startTime.Day && result.TimeOfDay > startTime.TimeOfDay)
                     {
                         startTime = result;
                     }

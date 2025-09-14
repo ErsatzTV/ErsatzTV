@@ -51,7 +51,7 @@ public class PlayoutModeSchedulerFlood : PlayoutModeSchedulerBase<ProgramSchedul
             // never block scheduling when there is only one schedule item (with fixed start and flood)
             DateTimeOffset peekScheduleItemStart =
                 scheduleItem.Id != peekScheduleItem.Id && peekScheduleItem.StartType == StartType.Fixed
-                    ? GetStartTimeAfter(nextState with { InFlood = false }, peekScheduleItem, Option<ILogger>.None)
+                    ? GetStartTimeAfter(nextState with { InFlood = true }, peekScheduleItem, Option<ILogger>.None, true)
                     : DateTimeOffset.MaxValue;
 
             if (itemDuration == TimeSpan.Zero && mediaItem is RemoteStream)
