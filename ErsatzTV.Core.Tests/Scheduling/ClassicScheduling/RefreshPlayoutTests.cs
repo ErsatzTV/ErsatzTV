@@ -93,7 +93,8 @@ public class RefreshPlayoutTests : PlayoutBuilderTestBase
             [],
             playout.ProgramSchedule,
             [],
-            []);
+            [],
+            TimeSpan.Zero);
 
         IConfigElementRepository configRepo = Substitute.For<IConfigElementRepository>();
         var televisionRepo = new FakeTelevisionRepository();

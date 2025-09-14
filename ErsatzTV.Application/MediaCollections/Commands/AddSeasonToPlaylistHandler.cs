@@ -20,9 +20,11 @@ public class AddSeasonToPlaylistHandler(IDbContextFactory<TvContext> dbContextFa
 
     private static async Task<Unit> ApplyAddSeasonRequest(TvContext dbContext, Parameters parameters)
     {
+        int index = parameters.Playlist.Items.Count > 0 ? parameters.Playlist.Items.Max(i => i.Index) + 1 : 0;
+
         var playlistItem = new PlaylistItem
         {
-            Index = parameters.Playlist.Items.Max(i => i.Index) + 1,
+            Index = index,
             CollectionType = ProgramScheduleItemCollectionType.TelevisionSeason,
             MediaItemId = parameters.Season.Id,
             PlaybackOrder = PlaybackOrder.Shuffle,

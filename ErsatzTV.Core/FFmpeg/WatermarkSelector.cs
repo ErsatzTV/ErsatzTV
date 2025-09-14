@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Core.FFmpeg;
 
-public class WatermarkSelector(IImageCache imageCache, ILogger<WatermarkSelector> logger)
+public class WatermarkSelector(IImageCache imageCache, IDecoSelector decoSelector, ILogger<WatermarkSelector> logger)
     : IWatermarkSelector
 {
     public List<WatermarkOptions> SelectWatermarks(
@@ -17,6 +17,8 @@ public class WatermarkSelector(IImageCache imageCache, ILogger<WatermarkSelector
         PlayoutItem playoutItem,
         DateTimeOffset now)
     {
+        logger.LogDebug("Checking for watermark at {Now}", now);
+
         var result = new List<WatermarkOptions>();
 
         if (channel.StreamingMode == StreamingMode.HttpLiveStreamingDirect)
@@ -30,7 +32,7 @@ public class WatermarkSelector(IImageCache imageCache, ILogger<WatermarkSelector
             return result;
         }
 
-        DecoEntries decoEntries = DecoSelector.GetDecoEntries(playoutItem.Playout, now);
+        DecoEntries decoEntries = decoSelector.GetDecoEntries(playoutItem.Playout, now);
 
         // first, check deco template / active deco
         foreach (Deco templateDeco in decoEntries.TemplateDeco)

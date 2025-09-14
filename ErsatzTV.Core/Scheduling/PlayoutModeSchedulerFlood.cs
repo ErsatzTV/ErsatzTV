@@ -51,7 +51,7 @@ public class PlayoutModeSchedulerFlood : PlayoutModeSchedulerBase<ProgramSchedul
             // never block scheduling when there is only one schedule item (with fixed start and flood)
             DateTimeOffset peekScheduleItemStart =
                 scheduleItem.Id != peekScheduleItem.Id && peekScheduleItem.StartType == StartType.Fixed
-                    ? GetStartTimeAfter(nextState with { InFlood = false }, peekScheduleItem, Option<ILogger>.None)
+                    ? GetStartTimeAfter(nextState with { InFlood = true }, peekScheduleItem, Option<ILogger>.None, true)
                     : DateTimeOffset.MaxValue;
 
             if (itemDuration == TimeSpan.Zero && mediaItem is RemoteStream)
@@ -81,7 +81,8 @@ public class PlayoutModeSchedulerFlood : PlayoutModeSchedulerBase<ProgramSchedul
                 PreferredAudioTitle = scheduleItem.PreferredAudioTitle,
                 PreferredSubtitleLanguageCode = scheduleItem.PreferredSubtitleLanguageCode,
                 SubtitleMode = scheduleItem.SubtitleMode,
-                PlayoutItemWatermarks = []
+                PlayoutItemWatermarks = [],
+                PlayoutItemGraphicsElements = []
             };
 
             foreach (ProgramScheduleItemWatermark programScheduleItemWatermark in scheduleItem
@@ -92,6 +93,17 @@ public class PlayoutModeSchedulerFlood : PlayoutModeSchedulerBase<ProgramSchedul
                     {
                         PlayoutItem = playoutItem,
                         WatermarkId = programScheduleItemWatermark.WatermarkId
+                    });
+            }
+
+            foreach (ProgramScheduleItemGraphicsElement programScheduleItemGraphicsElement in scheduleItem
+                         .ProgramScheduleItemGraphicsElements ?? [])
+            {
+                playoutItem.PlayoutItemGraphicsElements.Add(
+                    new PlayoutItemGraphicsElement
+                    {
+                        PlayoutItem = playoutItem,
+                        GraphicsElementId = programScheduleItemGraphicsElement.GraphicsElementId
                     });
             }
 

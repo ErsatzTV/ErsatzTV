@@ -154,7 +154,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
                 case PlayoutScheduleKind.None:
                 case PlayoutScheduleKind.Classic:
                 default:
-                    result = await _playoutBuilder.Build(playout, referenceData, request.Mode, cancellationToken);
+                    result = await _playoutBuilder.Build(request.Start, playout, referenceData, request.Mode, cancellationToken);
                     break;
             }
 
@@ -171,7 +171,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
             {
                 changeCount += await dbContext.PlayoutItems
                     .Where(pi => pi.PlayoutId == playout.Id)
-                    .Where(pi => pi.Finish < removeBefore.UtcDateTime)
+                    .Where(pi => pi.Finish < removeBefore.UtcDateTime - referenceData.MaxPlayoutOffset)
                     .ExecuteDeleteAsync(cancellationToken);
             }
 
@@ -237,11 +237,24 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
                 new CheckForOverlappingPlayoutItems(request.PlayoutId),
                 cancellationToken);
 
+            await _workerChannel.WriteAsync(new InsertPlayoutGaps(request.PlayoutId), cancellationToken);
+
             string fileName = Path.Combine(FileSystemLayout.ChannelGuideCacheFolder, $"{channelNumber}.xml");
             if (hasChanges || !File.Exists(fileName) ||
                 playout.ScheduleKind is PlayoutScheduleKind.ExternalJson)
             {
                 await _workerChannel.WriteAsync(new RefreshChannelData(channelNumber), cancellationToken);
+
+                // refresh guide data for all mirror channels, too
+                List<string> maybeMirrors = await dbContext.Channels
+                    .AsNoTracking()
+                    .Filter(c => c.MirrorSourceChannelId == referenceData.Channel.Id)
+                    .Map(c => c.Number)
+                    .ToListAsync(cancellationToken);
+                foreach (string mirror in maybeMirrors)
+                {
+                    await _workerChannel.WriteAsync(new RefreshChannelData(mirror), cancellationToken);
+                }
             }
 
             await _workerChannel.WriteAsync(new ExtractEmbeddedSubtitles(playout.Id), cancellationToken);
@@ -338,6 +351,20 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
             .Where(c => c.Playouts.Any(p => p.Id == playoutId))
             .FirstOrDefaultAsync();
 
+        TimeSpan maxPlayoutOffset = TimeSpan.Zero;
+        List<Channel> mirrorChannels = await dbContext.Channels
+            .AsNoTracking()
+            .Where(c => c.MirrorSourceChannelId == channel.Id)
+            .ToListAsync();
+        foreach (var mirrorChannel in mirrorChannels)
+        {
+            var offset = mirrorChannel.PlayoutOffset ?? TimeSpan.Zero;
+            if (offset > maxPlayoutOffset)
+            {
+                maxPlayoutOffset = offset;
+            }
+        }
+
         Option<Deco> deco = Option<Deco>.None;
         List<PlayoutItem> existingItems = [];
         List<PlayoutTemplate> playoutTemplates = [];
@@ -375,6 +402,9 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
             .ThenInclude(psi => psi.ProgramScheduleItemWatermarks)
             .ThenInclude(psi => psi.Watermark)
             .Include(ps => ps.Items)
+            .ThenInclude(psi => psi.ProgramScheduleItemGraphicsElements)
+            .ThenInclude(psi => psi.GraphicsElement)
+            .Include(ps => ps.Items)
             .ThenInclude(psi => psi.Collection)
             .Include(ps => ps.Items)
             .ThenInclude(psi => psi.MediaItem)
@@ -397,6 +427,10 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
             .ThenInclude(ps => ps.Items)
             .ThenInclude(psi => psi.ProgramScheduleItemWatermarks)
             .ThenInclude(psi => psi.Watermark)
+            .Include(a => a.ProgramSchedule)
+            .ThenInclude(ps => ps.Items)
+            .ThenInclude(psi => psi.ProgramScheduleItemGraphicsElements)
+            .ThenInclude(psi => psi.GraphicsElement)
             .Include(a => a.ProgramSchedule)
             .ThenInclude(ps => ps.Items)
             .ThenInclude(psi => psi.Collection)
@@ -432,6 +466,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
             playoutTemplates,
             programSchedule,
             programScheduleAlternates,
-            playoutHistory);
+            playoutHistory,
+            maxPlayoutOffset);
     }
 }

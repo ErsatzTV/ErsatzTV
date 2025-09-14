@@ -32,7 +32,11 @@ public class Channel
     public ChannelMusicVideoCreditsMode MusicVideoCreditsMode { get; set; }
     public string MusicVideoCreditsTemplate { get; set; }
     public ChannelSongVideoMode SongVideoMode { get; set; }
+    public ChannelPlayoutSource PlayoutSource { get; set; }
     public ChannelPlayoutMode PlayoutMode { get; set; }
+    public int? MirrorSourceChannelId { get; set; }
+    public Channel MirrorSourceChannel { get; set; }
+    public TimeSpan? PlayoutOffset { get; set; }
     public ChannelTranscodeMode TranscodeMode { get; set; }
     public ChannelIdleBehavior IdleBehavior { get; set; }
     public bool IsEnabled { get; set; }

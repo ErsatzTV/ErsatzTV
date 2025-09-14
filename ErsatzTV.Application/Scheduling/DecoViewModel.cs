@@ -1,3 +1,4 @@
+using ErsatzTV.Application.Graphics;
 using ErsatzTV.Application.Watermarks;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Scheduling;
@@ -12,6 +13,9 @@ public record DecoViewModel(
     DecoMode WatermarkMode,
     List<WatermarkViewModel> Watermarks,
     bool UseWatermarkDuringFiller,
+    DecoMode GraphicsElementsMode,
+    List<GraphicsElementViewModel> GraphicsElements,
+    bool UseGraphicsElementsDuringFiller,
     DecoMode DefaultFillerMode,
     ProgramScheduleItemCollectionType DefaultFillerCollectionType,
     int? DefaultFillerCollectionId,

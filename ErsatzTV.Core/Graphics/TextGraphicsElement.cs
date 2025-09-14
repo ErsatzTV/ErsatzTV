@@ -1,6 +1,5 @@
 using ErsatzTV.FFmpeg.State;
 using YamlDotNet.Serialization;
-using YamlDotNet.Serialization.NamingConventions;
 
 namespace ErsatzTV.Core.Graphics;
 
@@ -44,30 +43,6 @@ public class TextGraphicsElement
     public int EpgEntries { get; set; }
 
     public string Text { get; set; }
-
-    public static async Task<Option<TextGraphicsElement>> FromFile(string fileName)
-    {
-        try
-        {
-            string yaml = await File.ReadAllTextAsync(fileName);
-
-            // TODO: validate schema
-            // if (await yamlScheduleValidator.ValidateSchedule(yaml, isImport) == false)
-            // {
-            //     return Option<YamlPlayoutDefinition>.None;
-            // }
-
-            IDeserializer deserializer = new DeserializerBuilder()
-                .WithNamingConvention(CamelCaseNamingConvention.Instance)
-                .Build();
-
-            return deserializer.Deserialize<TextGraphicsElement>(yaml);
-        }
-        catch (Exception)
-        {
-            return Option<TextGraphicsElement>.None;
-        }
-    }
 }
 
 public class StyleDefinition

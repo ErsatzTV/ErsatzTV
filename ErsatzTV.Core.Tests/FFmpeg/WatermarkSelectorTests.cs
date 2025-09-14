@@ -66,6 +66,7 @@ public class WatermarkSelectorTests
 
         WatermarkSelector = new WatermarkSelector(
             Substitute.For<IImageCache>(),
+            new DecoSelector(loggerFactory.CreateLogger<DecoSelector>()),
             loggerFactory.CreateLogger<WatermarkSelector>());
 
         WatermarkNone = Option<ChannelWatermark>.None;

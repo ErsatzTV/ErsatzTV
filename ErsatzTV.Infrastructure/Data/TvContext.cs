@@ -91,6 +91,7 @@ public class TvContext : DbContext
     public DbSet<PlayoutHistory> PlayoutHistory { get; set; }
     public DbSet<ProgramScheduleAlternate> ProgramScheduleAlternates { get; set; }
     public DbSet<PlayoutItem> PlayoutItems { get; set; }
+    public DbSet<PlayoutGap> PlayoutGaps { get; set; }
     public DbSet<PlayoutProgramScheduleAnchor> PlayoutProgramScheduleItemAnchors { get; set; }
     public DbSet<PlayoutTemplate> PlayoutTemplates { get; set; }
     public DbSet<BlockGroup> BlockGroups { get; set; }

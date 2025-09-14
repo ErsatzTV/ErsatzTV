@@ -157,4 +157,5 @@ public class LocalFileSystem(IClient client, ILogger<LocalFileSystem> logger) : 
     }
 
     public Task<string> ReadAllText(string path) => File.ReadAllTextAsync(path);
+    public Task<string[]> ReadAllLines(string path) => File.ReadAllLinesAsync(path);
 }

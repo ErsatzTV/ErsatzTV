@@ -214,8 +214,10 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
 
         foreach (GraphicsEngineInput graphicsEngineInput in _graphicsEngineInput)
         {
+            var targetSize = desiredState.CroppedSize.IfNone(desiredState.PaddedSize);
+
             graphicsEngineInput.AddOption(
-                new RawVideoInputOption(PixelFormat.BGRA, desiredState.PaddedSize, desiredState.FrameRate.IfNone(24)));
+                new RawVideoInputOption(PixelFormat.BGRA, targetSize, desiredState.FrameRate.IfNone(24)));
         }
 
         Debug.Assert(_videoInputFile.IsSome, "Pipeline builder requires exactly one video input file");

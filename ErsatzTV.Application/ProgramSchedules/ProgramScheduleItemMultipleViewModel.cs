@@ -1,4 +1,5 @@
 ﻿using ErsatzTV.Application.Filler;
+using ErsatzTV.Application.Graphics;
 using ErsatzTV.Application.MediaCollections;
 using ErsatzTV.Application.MediaItems;
 using ErsatzTV.Application.Watermarks;
@@ -22,6 +23,10 @@ public record ProgramScheduleItemMultipleViewModel : ProgramScheduleItemViewMode
         PlaylistViewModel playlist,
         NamedMediaItemViewModel mediaItem,
         PlaybackOrder playbackOrder,
+        MarathonGroupBy marathonGroupBy,
+        bool marathonShuffleGroups,
+        bool marathonShuffleItems,
+        int? marathonBatchSize,
         FillWithGroupMode fillWithGroupMode,
         MultipleMode multipleMode,
         int count,
@@ -33,6 +38,7 @@ public record ProgramScheduleItemMultipleViewModel : ProgramScheduleItemViewMode
         FillerPresetViewModel tailFiller,
         FillerPresetViewModel fallbackFiller,
         List<WatermarkViewModel> watermarks,
+        List<GraphicsElementViewModel> graphicsElements,
         string preferredAudioLanguageCode,
         string preferredAudioTitle,
         string preferredSubtitleLanguageCode,
@@ -50,6 +56,10 @@ public record ProgramScheduleItemMultipleViewModel : ProgramScheduleItemViewMode
         playlist,
         mediaItem,
         playbackOrder,
+        marathonGroupBy,
+        marathonShuffleGroups,
+        marathonShuffleItems,
+        marathonBatchSize,
         fillWithGroupMode,
         customTitle,
         guideMode,
@@ -59,6 +69,7 @@ public record ProgramScheduleItemMultipleViewModel : ProgramScheduleItemViewMode
         tailFiller,
         fallbackFiller,
         watermarks,
+        graphicsElements,
         preferredAudioLanguageCode,
         preferredAudioTitle,
         preferredSubtitleLanguageCode,

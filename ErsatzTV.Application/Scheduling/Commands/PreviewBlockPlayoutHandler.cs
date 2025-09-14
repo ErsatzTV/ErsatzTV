@@ -65,7 +65,8 @@ public class PreviewBlockPlayoutHandler(
             playout.Templates.ToList(),
             playout.ProgramSchedule,
             playout.ProgramScheduleAlternates,
-            playout.PlayoutHistory.ToList());
+            playout.PlayoutHistory.ToList(),
+            TimeSpan.Zero);
 
         PlayoutBuildResult result =
             await blockPlayoutBuilder.Build(

@@ -1,7 +1,9 @@
-﻿using System.Threading.Channels;
+﻿using System.CommandLine.Parsing;
+using System.Threading.Channels;
 using ErsatzTV.Application.Channels;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
@@ -11,7 +13,8 @@ namespace ErsatzTV.Application.Playouts;
 public class
     UpdateScriptedPlayoutHandler(
         IDbContextFactory<TvContext> dbContextFactory,
-        ChannelWriter<IBackgroundServiceRequest> workerChannel)
+        ChannelWriter<IBackgroundServiceRequest> workerChannel,
+        ILocalFileSystem localFileSystem)
     : IRequestHandler<UpdateScriptedPlayout,
         Either<BaseError, PlayoutNameViewModel>>
 {
@@ -48,11 +51,24 @@ public class
             playout.DailyRebuildTime);
     }
 
-    private static Task<Validation<BaseError, Playout>> Validate(
+    private async Task<Validation<BaseError, Playout>> Validate(
         TvContext dbContext,
         UpdateScriptedPlayout request,
         CancellationToken cancellationToken) =>
-        PlayoutMustExist(dbContext, request, cancellationToken);
+        (ValidateScheduleFile(request), await PlayoutMustExist(dbContext, request, cancellationToken))
+        .Apply((_, playout) => playout);
+
+    private Validation<BaseError, string> ValidateScheduleFile(UpdateScriptedPlayout request)
+    {
+        var args = CommandLineParser.SplitCommandLine(request.ScheduleFile).ToList();
+        string scriptFile = args[0];
+        if (!localFileSystem.FileExists(scriptFile))
+        {
+            return BaseError.New("Scripted schedule does not exist!");
+        }
+
+        return request.ScheduleFile;
+    }
 
     private static Task<Validation<BaseError, Playout>> PlayoutMustExist(
         TvContext dbContext,

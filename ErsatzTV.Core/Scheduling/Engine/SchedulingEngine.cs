@@ -27,6 +27,7 @@ public class SchedulingEngine(
     private readonly Dictionary<string, Option<GraphicsElement>> _graphicsElementCache = new();
     private readonly Dictionary<string, Option<ChannelWatermark>> _watermarkCache = new();
     private readonly Dictionary<string, EnumeratorDetails> _enumerators = new();
+    private readonly Dictionary<string, ImmutableList<MediaItem>> _enumeratorMediaItems = new();
     private readonly SchedulingEngineState _state = new(0);
     private PlayoutReferenceData _referenceData;
 
@@ -112,33 +113,36 @@ public class SchedulingEngine(
         PlaybackOrder playbackOrder,
         CancellationToken cancellationToken)
     {
-        if (!_enumerators.ContainsKey(key))
+        if (_enumerators.ContainsKey(key))
         {
-            int index = _enumerators.Count;
-            List<MediaItem> items =
-                await mediaCollectionRepository.GetCollectionItemsByName(collectionName, cancellationToken);
-            if (items.Count == 0)
+            return;
+        }
+
+        int index = _enumerators.Count;
+        List<MediaItem> items =
+            await mediaCollectionRepository.GetCollectionItemsByName(collectionName, cancellationToken);
+        if (items.Count == 0)
+        {
+            logger.LogWarning("Skipping invalid or empty collection {Name}", collectionName);
+            return;
+        }
+
+        _enumeratorMediaItems[key] = items.ToImmutableList();
+        var state = new CollectionEnumeratorState { Seed = _state.Seed + index, Index = 0 };
+        foreach (var enumerator in EnumeratorForContent(items, state, playbackOrder))
+        {
+            string historyKey = HistoryDetails.KeyForSchedulingContent(key, playbackOrder);
+            var details = new EnumeratorDetails(enumerator, historyKey, playbackOrder);
+
+            if (_enumerators.TryAdd(key, details))
             {
-                logger.LogWarning("Skipping invalid or empty collection {Name}", collectionName);
-                return;
-            }
+                logger.LogDebug(
+                    "Added collection {Name} with key {Key} and order {Order}",
+                    collectionName,
+                    key,
+                    playbackOrder);
 
-            var state = new CollectionEnumeratorState { Seed = _state.Seed + index, Index = 0 };
-            foreach (var enumerator in EnumeratorForContent(items, state, playbackOrder))
-            {
-                string historyKey = HistoryDetails.KeyForSchedulingContent(key, playbackOrder);
-                var details = new EnumeratorDetails(enumerator, historyKey, playbackOrder);
-
-                if (_enumerators.TryAdd(key, details))
-                {
-                    logger.LogDebug(
-                        "Added collection {Name} with key {Key} and order {Order}",
-                        collectionName,
-                        key,
-                        playbackOrder);
-
-                    ApplyHistory(historyKey, items, enumerator, playbackOrder);
-                }
+                ApplyHistory(historyKey, items, enumerator, playbackOrder);
             }
         }
     }
@@ -152,11 +156,16 @@ public class SchedulingEngine(
         PlaybackOrder itemPlaybackOrder,
         bool playAllItems)
     {
+        if (_enumerators.ContainsKey(key))
+        {
+            return;
+        }
+
         var helper = new MarathonHelper(mediaCollectionRepository);
 
         int index = _enumerators.Count;
         var state = new CollectionEnumeratorState { Seed = _state.Seed + index, Index = 0 };
-        Option<MarathonContentResult> maybeResult = await helper.GetEnumerator(
+        Option<PlaylistContentResult> maybeResult = await helper.GetEnumerator(
             guids,
             searches,
             groupBy,
@@ -166,7 +175,7 @@ public class SchedulingEngine(
             state,
             CancellationToken.None);
 
-        foreach (MarathonContentResult result in maybeResult)
+        foreach (PlaylistContentResult result in maybeResult)
         {
             foreach (PlaylistEnumerator enumerator in Optional(result.PlaylistEnumerator))
             {
@@ -183,8 +192,6 @@ public class SchedulingEngine(
                 }
             }
         }
-
-        await Task.Delay(10);
     }
 
     public async Task AddMultiCollection(
@@ -193,33 +200,36 @@ public class SchedulingEngine(
         PlaybackOrder playbackOrder,
         CancellationToken cancellationToken)
     {
-        if (!_enumerators.ContainsKey(key))
+        if (_enumerators.ContainsKey(key))
         {
-            int index = _enumerators.Count;
-            List<MediaItem> items =
-                await mediaCollectionRepository.GetMultiCollectionItemsByName(multiCollectionName, cancellationToken);
-            if (items.Count == 0)
+            return;
+        }
+
+        int index = _enumerators.Count;
+        List<MediaItem> items =
+            await mediaCollectionRepository.GetMultiCollectionItemsByName(multiCollectionName, cancellationToken);
+        if (items.Count == 0)
+        {
+            logger.LogWarning("Skipping invalid or empty multi collection {Name}", multiCollectionName);
+            return;
+        }
+
+        _enumeratorMediaItems[key] = items.ToImmutableList();
+        var state = new CollectionEnumeratorState { Seed = _state.Seed + index, Index = 0 };
+        foreach (var enumerator in EnumeratorForContent(items, state, playbackOrder))
+        {
+            string historyKey = HistoryDetails.KeyForSchedulingContent(key, playbackOrder);
+            var details = new EnumeratorDetails(enumerator, historyKey, playbackOrder);
+
+            if (_enumerators.TryAdd(key, details))
             {
-                logger.LogWarning("Skipping invalid or empty multi collection {Name}", multiCollectionName);
-                return;
-            }
+                logger.LogDebug(
+                    "Added multi collection {Name} with key {Key} and order {Order}",
+                    multiCollectionName,
+                    key,
+                    playbackOrder);
 
-            var state = new CollectionEnumeratorState { Seed = _state.Seed + index, Index = 0 };
-            foreach (var enumerator in EnumeratorForContent(items, state, playbackOrder))
-            {
-                string historyKey = HistoryDetails.KeyForSchedulingContent(key, playbackOrder);
-                var details = new EnumeratorDetails(enumerator, historyKey, playbackOrder);
-
-                if (_enumerators.TryAdd(key, details))
-                {
-                    logger.LogDebug(
-                        "Added multi collection {Name} with key {Key} and order {Order}",
-                        multiCollectionName,
-                        key,
-                        playbackOrder);
-
-                    ApplyHistory(historyKey, items, enumerator, playbackOrder);
-                }
+                ApplyHistory(historyKey, items, enumerator, playbackOrder);
             }
         }
     }
@@ -230,36 +240,79 @@ public class SchedulingEngine(
         string playlistGroup,
         CancellationToken cancellationToken)
     {
-        if (!_enumerators.ContainsKey(key))
+        if (_enumerators.ContainsKey(key))
         {
-            int index = _enumerators.Count;
-            Dictionary<PlaylistItem, List<MediaItem>> itemMap =
-                await mediaCollectionRepository.GetPlaylistItemMap(playlistGroup, playlist, cancellationToken);
+            return;
+        }
 
-            var state = new CollectionEnumeratorState { Seed = _state.Seed + index, Index = 0 };
+        int index = _enumerators.Count;
+        Dictionary<PlaylistItem, List<MediaItem>> itemMap =
+            await mediaCollectionRepository.GetPlaylistItemMap(playlistGroup, playlist, cancellationToken);
 
-            var enumerator = await PlaylistEnumerator.Create(
-                mediaCollectionRepository,
-                itemMap,
-                state,
-                false,
-                CancellationToken.None);
+        var state = new CollectionEnumeratorState { Seed = _state.Seed + index, Index = 0 };
 
-            string historyKey = HistoryDetails.KeyForSchedulingContent(key, PlaybackOrder.None);
-            var details = new EnumeratorDetails(enumerator, historyKey, PlaybackOrder.None);
+        var enumerator = await PlaylistEnumerator.Create(
+            mediaCollectionRepository,
+            itemMap,
+            state,
+            shufflePlaylistItems: false,
+            batchSize: Option<int>.None,
+            CancellationToken.None);
 
-            if (_enumerators.TryAdd(key, details))
+        string historyKey = HistoryDetails.KeyForSchedulingContent(key, PlaybackOrder.None);
+        var details = new EnumeratorDetails(enumerator, historyKey, PlaybackOrder.None);
+
+        if (_enumerators.TryAdd(key, details))
+        {
+            logger.LogDebug(
+                "Added playlist {Group} / {Name} with key {Key}",
+                playlistGroup,
+                playlist,
+                key);
+
+            ApplyPlaylistHistory(
+                historyKey,
+                itemMap.ToImmutableDictionary(m => CollectionKey.ForPlaylistItem(m.Key), m => m.Value),
+                enumerator);
+        }
+    }
+
+    public async Task CreatePlaylist(
+        string key,
+        Dictionary<string, int> playlistItems,
+        CancellationToken cancellationToken)
+    {
+        if (_enumerators.ContainsKey(key))
+        {
+            return;
+        }
+
+        var helper = new PlaylistHelper(mediaCollectionRepository);
+
+        int index = _enumerators.Count;
+        var state = new CollectionEnumeratorState { Seed = _state.Seed + index, Index = 0 };
+        Option<PlaylistContentResult> maybeResult = await helper.GetEnumerator(
+            _enumerators,
+            _enumeratorMediaItems,
+            playlistItems,
+            state,
+            CancellationToken.None);
+
+        foreach (PlaylistContentResult result in maybeResult)
+        {
+            foreach (PlaylistEnumerator enumerator in Optional(result.PlaylistEnumerator))
             {
-                logger.LogDebug(
-                    "Added playlist {Group} / {Name} with key {Key}",
-                    playlistGroup,
-                    playlist,
-                    key);
+                string historyKey = HistoryDetails.KeyForSchedulingPlaylistContent(key);
+                var details = new EnumeratorDetails(enumerator, historyKey, PlaybackOrder.None);
 
-                ApplyPlaylistHistory(
-                    historyKey,
-                    itemMap.ToImmutableDictionary(m => CollectionKey.ForPlaylistItem(m.Key), m => m.Value),
-                    enumerator);
+                if (_enumerators.TryAdd(key, details))
+                {
+                    logger.LogDebug("Created playlist with key {Key}", key);
+                    ApplyPlaylistHistory(
+                        historyKey,
+                        result.Content,
+                        enumerator);
+                }
             }
         }
     }
@@ -270,33 +323,36 @@ public class SchedulingEngine(
         PlaybackOrder playbackOrder,
         CancellationToken cancellationToken)
     {
-        if (!_enumerators.ContainsKey(key))
+        if (_enumerators.ContainsKey(key))
         {
-            int index = _enumerators.Count;
-            List<MediaItem> items =
-                await mediaCollectionRepository.GetSmartCollectionItemsByName(smartCollectionName, cancellationToken);
-            if (items.Count == 0)
+            return;
+        }
+
+        int index = _enumerators.Count;
+        List<MediaItem> items =
+            await mediaCollectionRepository.GetSmartCollectionItemsByName(smartCollectionName, cancellationToken);
+        if (items.Count == 0)
+        {
+            logger.LogWarning("Skipping invalid or empty smart collection {Name}", smartCollectionName);
+            return;
+        }
+
+        _enumeratorMediaItems[key] = items.ToImmutableList();
+        var state = new CollectionEnumeratorState { Seed = _state.Seed + index, Index = 0 };
+        foreach (var enumerator in EnumeratorForContent(items, state, playbackOrder))
+        {
+            string historyKey = HistoryDetails.KeyForSchedulingContent(key, playbackOrder);
+            var details = new EnumeratorDetails(enumerator, historyKey, playbackOrder);
+
+            if (_enumerators.TryAdd(key, details))
             {
-                logger.LogWarning("Skipping invalid or empty smart collection {Name}", smartCollectionName);
-                return;
-            }
+                logger.LogDebug(
+                    "Added smart collection {Name} with key {Key} and order {Order}",
+                    smartCollectionName,
+                    key,
+                    playbackOrder);
 
-            var state = new CollectionEnumeratorState { Seed = _state.Seed + index, Index = 0 };
-            foreach (var enumerator in EnumeratorForContent(items, state, playbackOrder))
-            {
-                string historyKey = HistoryDetails.KeyForSchedulingContent(key, playbackOrder);
-                var details = new EnumeratorDetails(enumerator, historyKey, playbackOrder);
-
-                if (_enumerators.TryAdd(key, details))
-                {
-                    logger.LogDebug(
-                        "Added smart collection {Name} with key {Key} and order {Order}",
-                        smartCollectionName,
-                        key,
-                        playbackOrder);
-
-                    ApplyHistory(historyKey, items, enumerator, playbackOrder);
-                }
+                ApplyHistory(historyKey, items, enumerator, playbackOrder);
             }
         }
     }
@@ -307,33 +363,36 @@ public class SchedulingEngine(
         PlaybackOrder playbackOrder,
         CancellationToken cancellationToken)
     {
-        if (!_enumerators.ContainsKey(key))
+        if (_enumerators.ContainsKey(key))
         {
-            int index = _enumerators.Count;
-            List<MediaItem> items =
-                await mediaCollectionRepository.GetSmartCollectionItems(query, string.Empty, cancellationToken);
-            if (items.Count == 0)
+            return;
+        }
+
+        int index = _enumerators.Count;
+        List<MediaItem> items =
+            await mediaCollectionRepository.GetSmartCollectionItems(query, string.Empty, cancellationToken);
+        if (items.Count == 0)
+        {
+            logger.LogWarning("Skipping invalid or empty search query {Query}", query);
+            return;
+        }
+
+        _enumeratorMediaItems[key] = items.ToImmutableList();
+        var state = new CollectionEnumeratorState { Seed = _state.Seed + index, Index = 0 };
+        foreach (var enumerator in EnumeratorForContent(items, state, playbackOrder))
+        {
+            string historyKey = HistoryDetails.KeyForSchedulingContent(key, playbackOrder);
+            var details = new EnumeratorDetails(enumerator, historyKey, playbackOrder);
+
+            if (_enumerators.TryAdd(key, details))
             {
-                logger.LogWarning("Skipping invalid or empty search query {Query}", query);
-                return;
-            }
+                logger.LogDebug(
+                    "Added search query {Query} with key {Key} and order {Order}",
+                    query,
+                    key,
+                    playbackOrder);
 
-            var state = new CollectionEnumeratorState { Seed = _state.Seed + index, Index = 0 };
-            foreach (var enumerator in EnumeratorForContent(items, state, playbackOrder))
-            {
-                string historyKey = HistoryDetails.KeyForSchedulingContent(key, playbackOrder);
-                var details = new EnumeratorDetails(enumerator, historyKey, playbackOrder);
-
-                if (_enumerators.TryAdd(key, details))
-                {
-                    logger.LogDebug(
-                        "Added search query {Query} with key {Key} and order {Order}",
-                        query,
-                        key,
-                        playbackOrder);
-
-                    ApplyHistory(historyKey, items, enumerator, playbackOrder);
-                }
+                ApplyHistory(historyKey, items, enumerator, playbackOrder);
             }
         }
     }
@@ -343,33 +402,36 @@ public class SchedulingEngine(
         Dictionary<string, string> guids,
         PlaybackOrder playbackOrder)
     {
-        if (!_enumerators.ContainsKey(key))
+        if (_enumerators.ContainsKey(key))
         {
-            int index = _enumerators.Count;
-            List<MediaItem> items =
-                await mediaCollectionRepository.GetShowItemsByShowGuids(
-                    guids.Map(g => $"{g.Key}://{g.Value}").ToList());
-            if (items.Count == 0)
+            return;
+        }
+
+        int index = _enumerators.Count;
+        List<MediaItem> items =
+            await mediaCollectionRepository.GetShowItemsByShowGuids(
+                guids.Map(g => $"{g.Key}://{g.Value}").ToList());
+        if (items.Count == 0)
+        {
+            logger.LogWarning("Skipping invalid or empty show with key {Key}", key);
+            return;
+        }
+
+        _enumeratorMediaItems[key] = items.ToImmutableList();
+        var state = new CollectionEnumeratorState { Seed = _state.Seed + index, Index = 0 };
+        foreach (var enumerator in EnumeratorForContent(items, state, playbackOrder))
+        {
+            string historyKey = HistoryDetails.KeyForSchedulingContent(key, playbackOrder);
+            var details = new EnumeratorDetails(enumerator, historyKey, playbackOrder);
+
+            if (_enumerators.TryAdd(key, details))
             {
-                logger.LogWarning("Skipping invalid or empty show with key {Key}", key);
-                return;
-            }
+                logger.LogDebug(
+                    "Added show with key {Key} and order {Order}",
+                    key,
+                    playbackOrder);
 
-            var state = new CollectionEnumeratorState { Seed = _state.Seed + index, Index = 0 };
-            foreach (var enumerator in EnumeratorForContent(items, state, playbackOrder))
-            {
-                string historyKey = HistoryDetails.KeyForSchedulingContent(key, playbackOrder);
-                var details = new EnumeratorDetails(enumerator, historyKey, playbackOrder);
-
-                if (_enumerators.TryAdd(key, details))
-                {
-                    logger.LogDebug(
-                        "Added show with key {Key} and order {Order}",
-                        key,
-                        playbackOrder);
-
-                    ApplyHistory(historyKey, items, enumerator, playbackOrder);
-                }
+                ApplyHistory(historyKey, items, enumerator, playbackOrder);
             }
         }
     }
@@ -586,6 +648,52 @@ public class SchedulingEngine(
         return true;
     }
 
+    public bool PadUntilExact(
+        string content,
+        DateTimeOffset padUntil,
+        string fallback,
+        bool trim,
+        int discardAttempts,
+        bool stopBeforeEnd,
+        bool offlineTail,
+        Option<FillerKind> maybeFillerKind,
+        string customTitle,
+        bool disableWatermarks)
+    {
+        if (!_enumerators.TryGetValue(content, out EnumeratorDetails enumeratorDetails))
+        {
+            logger.LogWarning("Skipping invalid content {Key}", content);
+            return false;
+        }
+
+        EnumeratorDetails fallbackEnumeratorDetails = null;
+        if (!string.IsNullOrEmpty(fallback))
+        {
+            _enumerators.TryGetValue(fallback, out fallbackEnumeratorDetails);
+        }
+
+        DateTimeOffset targetTime = _state.CurrentTime;
+        if (targetTime < padUntil)
+        {
+            // this is wrong when offset changes?
+            targetTime = padUntil.ToLocalTime();
+        }
+
+        _state.CurrentTime = AddDurationInternal(
+            targetTime,
+            stopBeforeEnd,
+            discardAttempts,
+            trim,
+            offlineTail,
+            GetFillerKind(maybeFillerKind),
+            customTitle,
+            disableWatermarks,
+            enumeratorDetails,
+            Optional(fallbackEnumeratorDetails));
+
+        return true;
+    }
+
     private DateTimeOffset AddDurationInternal(
         DateTimeOffset targetTime,
         bool stopBeforeEnd,
@@ -602,18 +710,18 @@ public class SchedulingEngine(
         TimeSpan remainingToFill = targetTime - _state.CurrentTime;
         while (!done && enumeratorDetails.Enumerator.Current.IsSome && remainingToFill > TimeSpan.Zero)
         {
-            // foreach (string preRollSequence in context.GetPreRollSequence())
-            // {
-            //     context.PushFillerKind(FillerKind.PreRoll);
-            //     await executeSequence(preRollSequence);
-            //     context.PopFillerKind();
-            //
-            //     remainingToFill = targetTime - context.CurrentTime;
-            //     if (remainingToFill <= TimeSpan.Zero)
-            //     {
-            //         break;
-            //     }
-            // }
+            foreach (string preRollPlaylist in _state.GetPreRollPlaylist())
+            {
+                AddFillerPlaylist(preRollPlaylist, FillerKind.PreRoll);
+                remainingToFill = targetTime - _state.CurrentTime;
+                if (remainingToFill <= TimeSpan.Zero)
+                {
+                    // TODO: this shouldn't be needed, but prevents overlap
+                    _state.AddedItems.RemoveAll(pi => pi.FinishOffset >= targetTime);
+                    _state.CurrentTime = _state.AddedItems.Max(pi => pi.FinishOffset);
+                    break;
+                }
+            }
 
             foreach (MediaItem mediaItem in enumeratorDetails.Enumerator.Current)
             {
@@ -755,23 +863,46 @@ public class SchedulingEngine(
         return offlineTail ? targetTime : _state.CurrentTime;
     }
 
+    private void AddFillerPlaylist(string playlist, FillerKind fillerKind)
+    {
+        if (!_enumerators.TryGetValue(playlist, out EnumeratorDetails enumeratorDetails))
+        {
+            logger.LogWarning("Skipping invalid filler playlist {Key}", playlist);
+            return;
+        }
+
+        if (enumeratorDetails.Enumerator is PlaylistEnumerator playlistEnumerator)
+        {
+            int count = playlistEnumerator.CountForFiller;
+            AddCountInternal(
+                enumeratorDetails,
+                count,
+                fillerKind,
+                customTitle: null,
+                disableWatermarks: true,
+                disableFiller: true);
+        }
+    }
+
     private bool AddCountInternal(
         EnumeratorDetails enumeratorDetails,
         int count,
         Option<FillerKind> fillerKind,
         string customTitle,
-        bool disableWatermarks)
+        bool disableWatermarks,
+        bool disableFiller = false)
     {
         var result = false;
 
         for (var i = 0; i < count; i++)
         {
-            // foreach (string preRollSequence in context.GetPreRollSequence())
-            // {
-            //     context.PushFillerKind(FillerKind.PreRoll);
-            //     await executeSequence(preRollSequence);
-            //     context.PopFillerKind();
-            // }
+            if (!disableFiller)
+            {
+                foreach (string preRollPlaylist in _state.GetPreRollPlaylist())
+                {
+                    AddFillerPlaylist(preRollPlaylist, FillerKind.PreRoll);
+                }
+            }
 
             foreach (MediaItem mediaItem in enumeratorDetails.Enumerator.Current)
             {
@@ -842,6 +973,17 @@ public class SchedulingEngine(
         }
 
         return result;
+    }
+
+    public Option<MediaItem> PeekNext(string content)
+    {
+        if (!_enumerators.TryGetValue(content, out EnumeratorDetails enumeratorDetails))
+        {
+            logger.LogWarning("Unable to peek next item for invalid content {Key}", content);
+            return Option<MediaItem>.None;
+        }
+
+        return enumeratorDetails.Enumerator.Current;
     }
 
     public void LockGuideGroup(bool advance)
@@ -921,6 +1063,10 @@ public class SchedulingEngine(
         }
     }
 
+    public void PreRollOn(string content) => _state.PreRollOn(content);
+
+    public void PreRollOff() => _state.PreRollOff();
+
     public void SkipItems(string content, int count)
     {
         if (!_enumerators.TryGetValue(content, out EnumeratorDetails enumeratorDetails))
@@ -999,6 +1145,29 @@ public class SchedulingEngine(
         {
             // this is wrong when offset changes
             currentTime = new DateTimeOffset(dayOnly, waitUntil, currentTime.Offset);
+        }
+
+        _state.CurrentTime = currentTime;
+
+        return this;
+    }
+
+    public ISchedulingEngine WaitUntilExact(DateTimeOffset waitUntil, bool rewindOnReset)
+    {
+        var currentTime = _state.CurrentTime;
+
+        if (currentTime > waitUntil)
+        {
+            if (rewindOnReset && _state.Mode == PlayoutBuildMode.Reset)
+            {
+                // maybe wrong when offset changes?
+                currentTime = waitUntil.ToLocalTime();
+            }
+        }
+        else
+        {
+            // this is wrong when offset changes?
+            currentTime = waitUntil.ToLocalTime();
         }
 
         _state.CurrentTime = currentTime;
@@ -1199,7 +1368,7 @@ public class SchedulingEngine(
         }
     }
 
-    private static TimeSpan DurationForMediaItem(MediaItem mediaItem)
+    public TimeSpan DurationForMediaItem(MediaItem mediaItem)
     {
         if (mediaItem is Image image)
         {
@@ -1285,11 +1454,6 @@ public class SchedulingEngine(
             return fillerKind;
         }
 
-        // foreach (FillerKind fillerKind in _state.GetFillerKind())
-        // {
-        //     return fillerKind;
-        // }
-
         return FillerKind.None;
     }
 
@@ -1342,7 +1506,8 @@ public class SchedulingEngine(
 
     public record SerializedState(
         int? GuideGroup,
-        bool? GuideGroupLocked);
+        bool? GuideGroupLocked,
+        string PreRollPlaylist);
 
     private class SchedulingEngineState(int guideGroup) : ISchedulingEngineState
     {
@@ -1350,6 +1515,13 @@ public class SchedulingEngine(
         private bool _guideGroupLocked;
         private readonly Dictionary<int, string> _graphicsElements = [];
         private readonly System.Collections.Generic.HashSet<int> _channelWatermarkIds = [];
+        private readonly Stack<FillerKind> _fillerKind = new();
+        private Option<string> _preRollPlaylist = Option<string>.None;
+
+        // track is_done calls when current_time has not advanced
+        private DateTimeOffset _lastCheckedTime;
+        private int _noProgressCounter;
+        private const int MaxCallsNoProgress = 20;
 
         // state
         public int PlayoutId { get; set; }
@@ -1412,6 +1584,10 @@ public class SchedulingEngine(
         public void ClearChannelWatermarkIds() => _channelWatermarkIds.Clear();
         public List<int> GetChannelWatermarkIds() => _channelWatermarkIds.ToList();
 
+        public void PreRollOn(string playlist) => _preRollPlaylist = playlist;
+        public void PreRollOff() => _preRollPlaylist = Option<string>.None;
+        public Option<string> GetPreRollPlaylist() => _preRollPlaylist;
+
         // result
         public Option<DateTimeOffset> RemoveBefore { get; set; }
         public bool ClearItems { get; set; }
@@ -1419,17 +1595,41 @@ public class SchedulingEngine(
         public System.Collections.Generic.HashSet<int> HistoryToRemove { get; } = [];
         public List<PlayoutHistory> AddedHistory { get; } = [];
 
+        public bool IsDone
+        {
+            get
+            {
+                if (CurrentTime == _lastCheckedTime)
+                {
+                    _noProgressCounter++;
+                    if (_noProgressCounter >= MaxCallsNoProgress)
+                    {
+                        throw new InvalidOperationException(
+                            $"Script execution halted after {MaxCallsNoProgress} consecutive calls to is_done() without time advancing.");
+                    }
+                }
+                else
+                {
+                    _lastCheckedTime = CurrentTime;
+                    _noProgressCounter = 0;
+                }
+
+                return CurrentTime >= Finish;
+            }
+        }
+
         public string SerializeContext()
         {
-            // string preRollSequence = null;
-            // foreach (string sequence in _preRollSequence)
-            // {
-            //     preRollSequence = sequence;
-            // }
+            string preRollPlaylist = null;
+            foreach (string playlist in _preRollPlaylist)
+            {
+                preRollPlaylist = playlist;
+            }
 
             var state = new SerializedState(
                 _guideGroup,
-                _guideGroupLocked);
+                _guideGroupLocked,
+                preRollPlaylist);
 
             return JsonConvert.SerializeObject(state, Formatting.None, JsonSettings);
         }
@@ -1447,9 +1647,4 @@ public class SchedulingEngine(
             }
         }
     }
-
-    private record EnumeratorDetails(
-        IMediaCollectionEnumerator Enumerator,
-        string HistoryKey,
-        PlaybackOrder PlaybackOrder);
 }

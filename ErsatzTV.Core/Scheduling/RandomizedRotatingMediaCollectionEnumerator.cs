@@ -48,9 +48,16 @@ public class RandomizedRotatingMediaCollectionEnumerator : IMediaCollectionEnume
         State = new CollectionEnumeratorState { Seed = state.Seed };
         // we want to move at least once so we start with a random item and not the first
         // because _index defaults to 0
-        while (State.Index <= state.Index)
+        if (State.Index == state.Index)
         {
             MoveNext();
+        }
+        else
+        {
+            while (State.Index <= state.Index)
+            {
+                MoveNext();
+            }
         }
     }
 
@@ -66,6 +73,11 @@ public class RandomizedRotatingMediaCollectionEnumerator : IMediaCollectionEnume
     public void MoveNext()
     {
         var groups = _groupMedia.Keys.ToList();
+        if (groups.Count == 0)
+        {
+            return;
+        }
+
         int nextRandom = _random.Next();
 
         int groupNumber = nextRandom % groups.Count;

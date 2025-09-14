@@ -33,6 +33,18 @@ public class UpdateChannelHandler(
         UpdateChannel update,
         CancellationToken cancellationToken)
     {
+        // don't save mirror when playout exists
+        if (c.Playouts.Count > 0)
+        {
+            update = update with
+            {
+                PlayoutSource = ChannelPlayoutSource.Generated,
+                MirrorSourceChannelId = null
+            };
+        }
+
+        bool hasEpgChange = c.PlayoutSource != update.PlayoutSource || c.ShowInEpg != update.ShowInEpg;
+
         c.Name = update.Name;
         c.Number = update.Number;
         c.Group = update.Group;
@@ -99,10 +111,27 @@ public class UpdateChannelHandler(
             }
         }
 
+        c.PlayoutSource = update.PlayoutSource;
         c.PlayoutMode = update.PlayoutMode;
+
+        if (c.PlayoutSource is ChannelPlayoutSource.Mirror)
+        {
+            c.PlayoutMode = ChannelPlayoutMode.Continuous;
+            hasEpgChange |= c.MirrorSourceChannelId != update.MirrorSourceChannelId;
+            hasEpgChange |= c.PlayoutOffset != update.PlayoutOffset;
+        }
+        else
+        {
+            c.MirrorSourceChannelId = null;
+            c.PlayoutOffset = null;
+        }
+
+        c.MirrorSourceChannelId = update.MirrorSourceChannelId;
+        c.PlayoutOffset = update.PlayoutOffset;
         c.StreamingMode = update.StreamingMode;
         c.WatermarkId = update.WatermarkId;
         c.FallbackFillerId = update.FallbackFillerId;
+
         await dbContext.SaveChangesAsync(cancellationToken);
 
         searchTargets.SearchTargetsChanged();
@@ -119,17 +148,23 @@ public class UpdateChannelHandler(
         }
 
         await workerChannel.WriteAsync(new RefreshChannelList(), cancellationToken);
+        if (hasEpgChange)
+        {
+            await workerChannel.WriteAsync(new RefreshChannelData(c.Number), cancellationToken);
+        }
 
-        return ProjectToViewModel(c);
+        return ProjectToViewModel(c, c.Playouts?.Count ?? 0);
     }
 
     private static async Task<Validation<BaseError, Channel>> Validate(
         TvContext dbContext,
         UpdateChannel request,
         CancellationToken cancellationToken) =>
-        (await ChannelMustExist(dbContext, request, cancellationToken), ValidateName(request),
-            await ValidateNumber(dbContext, request, cancellationToken))
-        .Apply((channelToUpdate, _, _) => channelToUpdate);
+        (await ChannelMustExist(dbContext, request, cancellationToken),
+            ValidateName(request),
+            await ValidateNumber(dbContext, request, cancellationToken),
+            await MirrorSourceMustBeValid(dbContext, request, cancellationToken))
+        .Apply((channelToUpdate, _, _, _) => channelToUpdate);
 
     private static Task<Validation<BaseError, Channel>> ChannelMustExist(
         TvContext dbContext,
@@ -138,8 +173,51 @@ public class UpdateChannelHandler(
         dbContext.Channels
             .Include(c => c.Artwork)
             .Include(c => c.Watermark)
+            .Include(c => c.Playouts)
             .SelectOneAsync(c => c.Id, c => c.Id == updateChannel.ChannelId, cancellationToken)
             .Map(o => o.ToValidation<BaseError>("Channel does not exist."));
+
+    private static async Task<Validation<BaseError, Unit>> MirrorSourceMustBeValid(
+        TvContext dbContext,
+        UpdateChannel request,
+        CancellationToken cancellationToken)
+    {
+        if (request.PlayoutSource is not ChannelPlayoutSource.Mirror)
+        {
+            return Unit.Default;
+        }
+
+        Option<Channel> maybeMirrorSource = await dbContext.Channels
+            .AsNoTracking()
+            .SelectOneAsync(
+                c => c.Id == request.MirrorSourceChannelId,
+                c => c.Id == request.MirrorSourceChannelId,
+                cancellationToken);
+
+        if (maybeMirrorSource.IsNone)
+        {
+            return BaseError.New("Mirror source channel does not exist.");
+        }
+
+        foreach (var mirrorSource in maybeMirrorSource)
+        {
+            if (mirrorSource.PlayoutSource is not ChannelPlayoutSource.Generated)
+            {
+                return BaseError.New(
+                    $"Mirror source channel {mirrorSource.Name} must use generated playout source");
+            }
+        }
+
+        foreach (TimeSpan playoutOffset in Optional(request.PlayoutOffset))
+        {
+            if (playoutOffset < TimeSpan.FromHours(-12) || playoutOffset > TimeSpan.FromHours(12))
+            {
+                return BaseError.New("Playout offset must not be greater than 12 hours");
+            }
+        }
+
+        return Unit.Default;
+    }
 
     private static Validation<BaseError, string> ValidateName(UpdateChannel updateChannel) =>
         updateChannel.NotEmpty(c => c.Name)

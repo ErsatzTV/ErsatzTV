@@ -7,7 +7,65 @@ namespace ErsatzTV.Core.Scheduling.Engine;
 
 public class MarathonHelper(IMediaCollectionRepository mediaCollectionRepository)
 {
-    public async Task<Option<MarathonContentResult>> GetEnumerator(
+    public async Task<Option<PlaylistEnumerator>> GetEnumerator(
+        List<MediaItem> mediaItems,
+        MarathonGroupBy marathonGroupBy,
+        bool marathonShuffleGroups,
+        bool marathonShuffleItems,
+        Option<int> marathonBatchSize,
+        CollectionEnumeratorState state,
+        CancellationToken cancellationToken)
+    {
+        List<IGrouping<GroupKey, MediaItem>> groups = [];
+
+        PlaybackOrder itemPlaybackOrder;
+
+        // group by show
+        switch (marathonGroupBy)
+        {
+            case MarathonGroupBy.Show:
+                groups.AddRange(mediaItems.GroupBy(MediaItemKeyByShow));
+                itemPlaybackOrder = marathonShuffleItems ? PlaybackOrder.Shuffle : PlaybackOrder.SeasonEpisode;
+                break;
+            case MarathonGroupBy.Season:
+                groups.AddRange(mediaItems.GroupBy(MediaItemKeyBySeason));
+                itemPlaybackOrder = marathonShuffleItems ? PlaybackOrder.Shuffle : PlaybackOrder.SeasonEpisode;
+                break;
+            case MarathonGroupBy.Artist:
+                groups.AddRange(mediaItems.GroupBy(MediaItemKeyByArtist));
+                itemPlaybackOrder = marathonShuffleItems ? PlaybackOrder.Shuffle : PlaybackOrder.Chronological;
+                break;
+            case MarathonGroupBy.Album:
+                groups.AddRange(mediaItems.GroupBy(MediaItemKeyByAlbum));
+                itemPlaybackOrder = marathonShuffleItems ? PlaybackOrder.Shuffle : PlaybackOrder.Chronological;
+                break;
+            default:
+                return Option<PlaylistEnumerator>.None;
+        }
+
+        Dictionary<PlaylistItem, List<MediaItem>> itemMap = [];
+
+        for (var index = 0; index < groups.Count; index++)
+        {
+            IGrouping<GroupKey, MediaItem> group = groups[index];
+            PlaylistItem playlistItem = GroupToPlaylistItem(
+                index,
+                marathonBatchSize.IsNone,
+                itemPlaybackOrder,
+                group);
+            itemMap.Add(playlistItem, group.ToList());
+        }
+
+        return await PlaylistEnumerator.Create(
+            mediaCollectionRepository,
+            itemMap,
+            state,
+            marathonShuffleGroups,
+            marathonBatchSize,
+            cancellationToken);
+    }
+
+    public async Task<Option<PlaylistContentResult>> GetEnumerator(
         Dictionary<string, List<string>> guids,
         List<string> searches,
         string groupBy,
@@ -68,9 +126,10 @@ public class MarathonHelper(IMediaCollectionRepository mediaCollectionRepository
             itemMap,
             state,
             shuffleGroups,
+            batchSize: Option<int>.None,
             cancellationToken);
 
-        return new MarathonContentResult(
+        return new PlaylistContentResult(
             enumerator,
             itemMap.ToImmutableDictionary(x => CollectionKey.ForPlaylistItem(x.Key), x => x.Value));
     }

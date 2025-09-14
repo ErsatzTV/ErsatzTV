@@ -56,5 +56,18 @@ public class DecoConfiguration : IEntityTypeConfiguration<Deco>
                     .HasForeignKey(ci => ci.DecoId)
                     .OnDelete(DeleteBehavior.Cascade),
                 j => j.HasKey(ci => new { ci.DecoId, ci.WatermarkId }));
+
+        builder.HasMany(c => c.GraphicsElements)
+            .WithMany(m => m.Decos)
+            .UsingEntity<DecoGraphicsElement>(
+                j => j.HasOne(ci => ci.GraphicsElement)
+                    .WithMany(mi => mi.DecoGraphicsElements)
+                    .HasForeignKey(ci => ci.GraphicsElementId)
+                    .OnDelete(DeleteBehavior.Cascade),
+                j => j.HasOne(ci => ci.Deco)
+                    .WithMany(c => c.DecoGraphicsElements)
+                    .HasForeignKey(ci => ci.DecoId)
+                    .OnDelete(DeleteBehavior.Cascade),
+                j => j.HasKey(ci => new { ci.DecoId, ci.GraphicsElementId }));
     }
 }

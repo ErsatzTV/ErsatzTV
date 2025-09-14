@@ -9,7 +9,8 @@ internal static class Mapper
             GetDisplayTitle(playoutItem.MediaItem, playoutItem.ChapterTitle),
             playoutItem.StartOffset,
             playoutItem.FinishOffset,
-            playoutItem.GetDisplayDuration());
+            playoutItem.GetDisplayDuration(),
+            Some(playoutItem.FillerKind));
 
     internal static PlayoutAlternateScheduleViewModel ProjectToViewModel(
         ProgramScheduleAlternate programScheduleAlternate) =>

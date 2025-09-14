@@ -16,7 +16,7 @@ namespace ErsatzTV.Infrastructure.Streaming.Graphics;
 public class SubtitleElement(
     TemplateFunctions templateFunctions,
     ITempFilePool tempFilePool,
-    SubtitlesGraphicsElement subtitlesElement,
+    SubtitleGraphicsElement subtitleElement,
     Dictionary<string, object> variables,
     ILogger logger)
     : GraphicsElement, IDisposable
@@ -78,7 +78,7 @@ public class SubtitleElement(
 
             var context = new TemplateContext { MemberRenamer = member => member.Name };
             context.PushGlobal(scriptObject);
-            string inputText = await File.ReadAllTextAsync(subtitlesElement.Template, cancellationToken);
+            string inputText = await File.ReadAllTextAsync(subtitleElement.Template, cancellationToken);
             string textToRender = await Template.Parse(inputText).RenderAsync(context);
             await File.WriteAllTextAsync(subtitleTemplateFile, textToRender, cancellationToken);
 

@@ -46,6 +46,7 @@ public class ReplacePlaylistItemsHandler(IDbContextFactory<TvContext> dbContextF
             SmartCollectionId = item.SmartCollectionId,
             MediaItemId = item.MediaItemId,
             PlaybackOrder = item.PlaybackOrder,
+            Count = item.Count,
             PlayAll = item.PlayAll,
             IncludeInProgramGuide = item.IncludeInProgramGuide
         };

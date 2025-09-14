@@ -13,6 +13,7 @@ using ErsatzTV.Core;
 using ErsatzTV.Core.Emby;
 using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.FFmpeg;
+using ErsatzTV.Core.Graphics;
 using ErsatzTV.Core.Health;
 using ErsatzTV.Core.Health.Checks;
 using ErsatzTV.Core.Images;
@@ -89,10 +90,12 @@ using Microsoft.Extensions.Primitives;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.IO;
+using Microsoft.OpenApi.Models;
 using MudBlazor.Services;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Refit;
+using Scalar.AspNetCore;
 using Serilog;
 using Serilog.Events;
 
@@ -143,6 +146,32 @@ public class Startup
         });
 
         services.AddDataProtection().PersistKeysToFileSystem(new DirectoryInfo(FileSystemLayout.DataProtectionFolder));
+
+        services.AddOpenApi("v1", options => { options.ShouldInclude += a => a.GroupName == "general"; });
+
+        services.AddOpenApi(
+            "scripted-schedule-tagged",
+            options => { options.ShouldInclude += a => a.GroupName == "scripted-schedule"; });
+
+        services.AddOpenApi(
+            "scripted-schedule",
+            options =>
+            {
+                options.ShouldInclude += a => a.GroupName == "scripted-schedule";
+                var tag = new OpenApiTag { Name = "ScriptedSchedule" };
+                options.AddOperationTransformer((operation, _, _) =>
+                {
+                    operation.Tags.Clear();
+                    operation.Tags.Add(tag);
+                    return Task.CompletedTask;
+                });
+                options.AddDocumentTransformer((document, _, _) =>
+                {
+                    document.Tags.Clear();
+                    document.Tags.Add(tag);
+                    return Task.CompletedTask;
+                });
+            });
 
         OidcHelper.Init(Configuration);
         JwtHelper.Init(Configuration);
@@ -508,6 +537,13 @@ public class Startup
                     return LogEventLevel.Debug;
                 }
 
+                if (httpContext.Request.Path.ToUriComponent().StartsWith(
+                        "/api",
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    return LogEventLevel.Debug;
+                }
+
                 return LogEventLevel.Verbose;
             };
 
@@ -592,6 +628,23 @@ public class Startup
                     endpoints.MapControllers();
                     endpoints.MapBlazorHub();
                     endpoints.MapFallbackToPage("/_Host");
+
+                    if (CurrentEnvironment.IsDevelopment())
+                    {
+                        endpoints.MapOpenApi();
+                    }
+
+                    endpoints.MapScalarApiReference("/docs", options =>
+                    {
+                        options.AddDocument(
+                            "scripted-schedule",
+                            "Scripted Schedule",
+                            "openapi/scripted-schedule-tagged.json");
+                        options.AddDocument("v1", "General", "openapi/v1.json");
+                        options.HideClientButton = true;
+                        options.DocumentDownloadType = DocumentDownloadType.None;
+                        options.Title = "ErsatzTV API Reference";
+                    });
                 });
             });
 
@@ -641,7 +694,7 @@ public class Startup
 
             services.AddSingleton<ISearchIndex, LuceneSearchIndex>();
         }
-
+        services.AddSingleton<IScriptedPlayoutBuilderService, ScriptedPlayoutBuilderService>();
         services.AddSingleton<IFFmpegSegmenterService, FFmpegSegmenterService>();
         services.AddSingleton<ITempFilePool, TempFilePool>();
         services.AddSingleton<IHlsPlaylistFilter, HlsPlaylistFilter>();
@@ -730,8 +783,11 @@ public class Startup
         services.AddScoped<IGraphicsEngine, GraphicsEngine>();
         services.AddScoped<IGraphicsElementRepository, GraphicsElementRepository>();
         services.AddScoped<ITemplateDataRepository, TemplateDataRepository>();
+        services.AddScoped<IGraphicsElementLoader, GraphicsElementLoader>();
         services.AddScoped<TemplateFunctions>();
+        services.AddScoped<IDecoSelector, DecoSelector>();
         services.AddScoped<IWatermarkSelector, WatermarkSelector>();
+        services.AddScoped<IGraphicsElementSelector, GraphicsElementSelector>();
 
         services.AddScoped<IFFmpegProcessService, FFmpegLibraryProcessService>();
         services.AddScoped<IPipelineBuilderFactory, PipelineBuilderFactory>();

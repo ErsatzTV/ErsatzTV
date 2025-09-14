@@ -1,9 +1,7 @@
 using System.IO.Pipelines;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Interfaces.FFmpeg;
-using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Streaming;
-using ErsatzTV.Core.Metadata;
 using Microsoft.Extensions.Logging;
 using SkiaSharp;
 
@@ -13,47 +11,12 @@ public class GraphicsEngine(
     TemplateFunctions templateFunctions,
     GraphicsEngineFonts graphicsEngineFonts,
     ITempFilePool tempFilePool,
-    ITemplateDataRepository templateDataRepository,
     ILogger<GraphicsEngine> logger)
     : IGraphicsEngine
 {
     public async Task Run(GraphicsEngineContext context, PipeWriter pipeWriter, CancellationToken cancellationToken)
     {
         graphicsEngineFonts.LoadFonts(FileSystemLayout.FontsCacheFolder);
-
-        var templateVariables = new Dictionary<string, object>();
-
-        // init template element variables once
-        if (context.Elements.OfType<ITemplateDataContext>().Any())
-        {
-            // common variables
-            templateVariables[MediaItemTemplateDataKey.Resolution] = context.FrameSize;
-            templateVariables[MediaItemTemplateDataKey.StreamSeek] = context.Seek;
-
-            // media item variables
-            Option<Dictionary<string, object>> maybeTemplateData =
-                await templateDataRepository.GetMediaItemTemplateData(context.MediaItem, cancellationToken);
-            foreach (Dictionary<string, object> templateData in maybeTemplateData)
-            {
-                foreach (KeyValuePair<string, object> variable in templateData)
-                {
-                    templateVariables.Add(variable.Key, variable.Value);
-                }
-            }
-
-            // epg variables
-            int maxEpg = context.Elements.OfType<ITemplateDataContext>().Max(c => c.EpgEntries);
-            DateTimeOffset startTime = context.ContentStartTime + context.Seek;
-            Option<Dictionary<string, object>> maybeEpgData =
-                await templateDataRepository.GetEpgTemplateData(context.ChannelNumber, startTime, maxEpg);
-            foreach (Dictionary<string, object> templateData in maybeEpgData)
-            {
-                foreach (KeyValuePair<string, object> variable in templateData)
-                {
-                    templateVariables.Add(variable.Key, variable.Value);
-                }
-            }
-        }
 
         var elements = new List<IGraphicsElement>();
         foreach (GraphicsElementContext element in context.Elements)
@@ -75,26 +38,13 @@ public class GraphicsEngine(
 
                 case TextElementDataContext textElementContext:
                 {
-                    var variables = templateVariables.ToDictionary();
-                    foreach (KeyValuePair<string, string> variable in textElementContext.Variables)
-                    {
-                        variables.Add(variable.Key, variable.Value);
-                    }
-
-                    var textElement = new TextElement(
-                        templateFunctions,
-                        graphicsEngineFonts,
-                        textElementContext.TextElement,
-                        variables,
-                        logger);
-
-                    elements.Add(textElement);
+                    elements.Add(new TextElement(graphicsEngineFonts, textElementContext.TextElement, logger));
                     break;
                 }
 
                 case SubtitleElementDataContext subtitleElementContext:
                 {
-                    var variables = templateVariables.ToDictionary();
+                    var variables = context.TemplateVariables.ToDictionary();
                     foreach (KeyValuePair<string, string> variable in subtitleElementContext.Variables)
                     {
                         variables.Add(variable.Key, variable.Value);
@@ -103,7 +53,7 @@ public class GraphicsEngine(
                     var subtitleElement = new SubtitleElement(
                         templateFunctions,
                         tempFilePool,
-                        subtitleElementContext.SubtitlesElement,
+                        subtitleElementContext.SubtitleElement,
                         variables,
                         logger);
 

@@ -33,6 +33,36 @@ public class TemplateDataRepository(ILocalFileSystem localFileSystem, IDbContext
     {
         try
         {
+            if (channelNumber.Equals(".troubleshooting", StringComparison.OrdinalIgnoreCase))
+            {
+                var now = DateTimeOffset.Now;
+                var topOfHour = new DateTimeOffset(now.Year, now.Month, now.Day, now.Hour, 0, 0, now.Offset);
+
+                List<EpgProgrammeTemplateData> result = [];
+
+                for (var i = 0; i < count; i++)
+                {
+                    var data = new EpgProgrammeTemplateData
+                    {
+                        Title = $"Fake Epg Title {i}",
+                        SubTitle = $"Fake Epg SubTitle {i}",
+                        Description = string.Empty,
+                        Rating = string.Empty,
+                        Categories = [],
+                        Date = $"Fake Epg Date {i}",
+                        Start = topOfHour + i * TimeSpan.FromHours(1),
+                        Stop = topOfHour + (i + 1) * TimeSpan.FromHours(1),
+                    };
+
+                    result.Add(data);
+                }
+
+                return new Dictionary<string, object>
+                {
+                    [EpgTemplateDataKey.Epg] = result
+                };
+            }
+
             string targetFile = Path.Combine(FileSystemLayout.ChannelGuideCacheFolder, $"{channelNumber}.xml");
             if (localFileSystem.FileExists(targetFile))
             {
@@ -118,7 +148,8 @@ public class TemplateDataRepository(ILocalFileSystem localFileSystem, IDbContext
                     [MediaItemTemplateDataKey.Directors] =
                         (metadata.Directors ?? []).Map(d => d.Name).OrderBy(identity),
                     [MediaItemTemplateDataKey.Genres] = (metadata.Genres ?? []).Map(g => g.Name).OrderBy(identity),
-                    [MediaItemTemplateDataKey.Duration] = movie.GetHeadVersion().Duration
+                    [MediaItemTemplateDataKey.Duration] = movie.GetHeadVersion().Duration,
+                    [MediaItemTemplateDataKey.ContentRating] = metadata.ContentRating
                 };
             }
         }

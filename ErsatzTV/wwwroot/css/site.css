@@ -197,3 +197,23 @@ div.ersatztv-light {
     word-wrap: break-word;
     overflow-wrap: break-word;
 }
+
+.playout-filler-guidemode {
+    background-color: #002e00;
+}
+
+.playout-filler-preroll, .playout-filler-midroll, .playout-filler-postroll, .playout-filler-decodefault {
+    background-color: #27272f
+}
+
+.playout-filler-tail {
+    background-color: #383843;
+}
+
+.playout-filler-fallback {
+    background-color: #573a00;
+}
+
+.playout-filler-unscheduled {
+    background-color: #52040d;
+}

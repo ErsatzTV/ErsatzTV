@@ -25,9 +25,8 @@ public class UpdateDecoHandler(IDbContextFactory<TvContext> dbContextFactory)
     {
         existing.Name = request.Name;
 
-        bool hasWatermark = request.WatermarkMode is (DecoMode.Override or DecoMode.Merge);
-
         // watermark
+        bool hasWatermark = request.WatermarkMode is (DecoMode.Override or DecoMode.Merge);
         existing.WatermarkMode = request.WatermarkMode;
         existing.UseWatermarkDuringFiller = hasWatermark && request.UseWatermarkDuringFiller;
 
@@ -52,6 +51,34 @@ public class UpdateDecoHandler(IDbContextFactory<TvContext> dbContextFactory)
         else
         {
             existing.DecoWatermarks.Clear();
+        }
+
+        // graphics elements
+        bool hasGraphicsElements = request.GraphicsElementsMode is (DecoMode.Override or DecoMode.Merge);
+        existing.GraphicsElementsMode = request.GraphicsElementsMode;
+        existing.UseGraphicsElementsDuringFiller = hasGraphicsElements && request.UseGraphicsElementsDuringFiller;
+
+        if (hasGraphicsElements)
+        {
+            // this is different than schedule item/playout item because we have to merge graphics element ids
+            IEnumerable<int> toAdd =
+                request.GraphicsElementIds.Where(id => existing.DecoGraphicsElements.All(ge => ge.GraphicsElementId != id));
+            IEnumerable<DecoGraphicsElement> toRemove =
+                existing.DecoGraphicsElements.Where(ge => !request.GraphicsElementIds.Contains(ge.GraphicsElementId));
+            existing.DecoGraphicsElements.RemoveAll(toRemove.Contains);
+            foreach (int graphicsElementId in toAdd)
+            {
+                existing.DecoGraphicsElements.Add(
+                    new DecoGraphicsElement
+                    {
+                        DecoId = existing.Id,
+                        GraphicsElementId = graphicsElementId
+                    });
+            }
+        }
+        else
+        {
+            existing.DecoGraphicsElements.Clear();
         }
 
         // default filler
@@ -126,6 +153,7 @@ public class UpdateDecoHandler(IDbContextFactory<TvContext> dbContextFactory)
         CancellationToken cancellationToken) =>
         dbContext.Decos
             .Include(d => d.DecoWatermarks)
+            .Include(d => d.DecoGraphicsElements)
             .SelectOneAsync(d => d.Id, d => d.Id == request.DecoId, cancellationToken)
             .Map(o => o.ToValidation<BaseError>("Deco does not exist"));
 

@@ -15,6 +15,10 @@ public interface IProgramScheduleItemRequest
     int? PlaylistId { get; }
     PlayoutMode PlayoutMode { get; }
     PlaybackOrder PlaybackOrder { get; }
+    MarathonGroupBy MarathonGroupBy { get; }
+    bool MarathonShuffleGroups { get; }
+    bool MarathonShuffleItems { get; }
+    int? MarathonBatchSize { get; }
     FillWithGroupMode FillWithGroupMode { get; }
     MultipleMode MultipleMode { get; }
     int? MultipleCount { get; }
@@ -29,6 +33,7 @@ public interface IProgramScheduleItemRequest
     int? TailFillerId { get; }
     int? FallbackFillerId { get; }
     List<int> WatermarkIds { get; }
+    List<int> GraphicsElementIds { get; }
     string PreferredAudioLanguageCode { get; }
     string PreferredAudioTitle { get; }
     string PreferredSubtitleLanguageCode { get; }

@@ -4,8 +4,76 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Added
+- Classic schedules: allow selecting multiple graphics elements on schedule items
+- Block schedules: allow selecting multiple graphics elements on decos
+- Add channel `Playout Source` setting
+  - `Generated`: default/existing behavior where channel must have its own playout
+  - `Mirror`: channel will play content from the specified `Mirror Source Channel`'s playout
+    - This allows the exact same content on different channels with different channel settings
+    - `Playout Offset` can be used to offset the times of scheduled playout items from the mirror source channel
+      - e.g. -2 hours will cause the mirror channel to play content 2 hours before the mirror source channel
+- Add support for `.aif`, `.aifc`, `.aiff` song files
+- Classic schedules: add playback order `Marathon`
+  - This can be used with collections and smart collections
+  - Items from the collection will be grouped by the `Marathon Group By` setting: `Artist`, `Album`, `Season` or `Show`
+  - The order of groups can optionally be shuffled
+  - The order of items in each group can optionally be shuffled (otherwise `Season, Episode` or `Chronological` as appropriate)
+  - A batch size can be set to limit the number of items to schedule from each group at a time
+    - Empty or zero batch size means play all items from each group before advancing
+    - Any other value means play the specified number of items before advancing to the next group
+- Log API requests when `Request Logging Minimum Log Level` is set to `Debug`
+- Add `Count` setting to each playlist item
+  - Previously, when `Play All` was unchecked, this was implicitly 1
+  - Now, the playlist can play a specific number of items from the collection before moving to the next playlist item
+- Classic schedules: add `Shuffle Playlist Items` setting to shuffle the order of playlist items
+  - Shuffling happens initially (on playout reset), and after all items from the *entire playlist* have been played
+- Add playout detail row coloring by @peterdey
+  - Filler has unique row colors
+  - Unscheduled gaps are now displayed and have a unique row color
+- Process entire graphics element YAML files using scriban
+  - This allows things like different images based on `MediaItem_ContentRating` (movie) or `MediaItem_ShowContentRating` (episode)
+
 ### Fixed
 - Fix transcoding content with bt709/pc color metadata
+- Fix scripted schedule validation (file exists) when creating or editing playout
+- Fix adding single episode, movie, season, show to empty playlists
+- Fix startup with MySql as non-superuser
+  - `local_infile=ON` is required when using MySQL (for bulk inserts when building playouts)
+  - ETV will set this automatically when it has permission
+  - When ETV does not have permission, startup will fail with logged instructions on how to configure MySql
+- Fix scaling anamorphic content in locales that don't use period as a decimal separator (e.g. `,`)
+- Block schedules: fix playout build crash when empty collection uses random playback order
+- Fix watermarks and graphics elements on primary content split by mid-roll filler
+- Fix watermarks and graphics elements when `Scaling Behavior` is `Crop`
+- Fix hardware acceleration health check message on mobile
+- Fix deco selection logic
+- Fix inefficient database migration that would cause database initialization to get stuck
+- Classic schedules: fix scheduling behavior when a flood item is before a flexible fixed start item
+  - Sometimes the flood item wouldn't schedule anything
+- Fix troubleshooting certain text graphics elements by generating fake EPG data
+
+### Changed
+- **BREAKING CHANGE**: change how `Scripted Schedule` system works
+  - No longer uses embedded python (IronPython); instead uses HTTP API
+  - OpenAPI Description has been added at `/openapi/scripted-schedule.json`
+    - This allows scripted scheduling from *many* languages
+  - The scripted schedule file must now be directly executable (though a wrapper can be used to load a venv)
+  - The scripted schedule file will be passed the following arguments (in order):
+    - The API host (e.g. `http://localhost:8409`)
+    - The build id (a UUID string that is required on all API calls)
+    - The playout build mode (e.g. `reset` or `continue`, normally only used for specific logic when resetting a playout)
+  - Custom arguments can be included in the `Scripted Schedule` field in the playout editor
+    - Custom arguments will be passed *after* required arguments
+    - For example, a `Scripted Schedule` of `/home/jason/schedule.sh "party central" 23` will be executed like
+      - `/home/jason/schedule.sh http://localhost:8409 00000000-0000...0000 reset "party central" 23`
+    - This enables wrapper script re-use across multiple scripted schedules
+  - API reference is available at `/docs`
+  - Docker images contain pre-generated python api client and entrypoint script
+    - Entrypoint is at `/app/scripted-schedules/entrypoint.py`
+    - Scripts folder should be mounted to `/app/scripted-schedules/scripts`
+    - Playouts should be created with scripted schedule `/app/scripted-schedules/entrypoint.py script-name` (no trailing `.py`)
+- Automatically ignore Specials/Season 0 when using `Season, Episode` playback order
 
 ## [25.5.0] - 2025-09-01
 ### Added
@@ -2074,7 +2142,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Allow `Shuffle In Order` with Collections and Smart Collections
   - Episodes will be grouped by show, and music videos will be grouped by artist
   - All movies will be a single group (multi-collections are probably better if `Shuffle In Order` is desired for movies)
-  - All groups will be be ordered chronologically (custom ordering is only supported in multi-collections)
+  - All groups will be ordered chronologically (custom ordering is only supported in multi-collections)
 
 ### Fixed
 - Generate XMLTV that validates successfully

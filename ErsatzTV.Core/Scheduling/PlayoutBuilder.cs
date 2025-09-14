@@ -5,11 +5,11 @@ using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Scheduling;
+using ErsatzTV.Core.Scheduling.Engine;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Newtonsoft.Json;
 using Map = LanguageExt.Map;
-using Humanizer;
 
 namespace ErsatzTV.Core.Scheduling;
 
@@ -61,6 +61,7 @@ public class PlayoutBuilder : IPlayoutBuilder
     }
 
     public async Task<PlayoutBuildResult> Build(
+        DateTimeOffset start,
         Playout playout,
         PlayoutReferenceData referenceData,
         PlayoutBuildMode mode,
@@ -79,7 +80,7 @@ public class PlayoutBuilder : IPlayoutBuilder
             return result;
         }
 
-        foreach (PlayoutParameters parameters in await Validate(playout, referenceData, cancellationToken))
+        foreach (PlayoutParameters parameters in await Validate(start, playout, referenceData, cancellationToken))
         {
             // for testing purposes
             // if (mode == PlayoutBuildMode.Reset)
@@ -116,7 +117,7 @@ public class PlayoutBuilder : IPlayoutBuilder
         DateTimeOffset finish,
         CancellationToken cancellationToken)
     {
-        foreach (PlayoutParameters parameters in await Validate(playout, referenceData, cancellationToken))
+        foreach (PlayoutParameters parameters in await Validate(start, playout, referenceData, cancellationToken))
         {
             result = await Build(
                 playout,
@@ -320,6 +321,7 @@ public class PlayoutBuilder : IPlayoutBuilder
     }
 
     private async Task<Option<PlayoutParameters>> Validate(
+        DateTimeOffset start,
         Playout playout,
         PlayoutReferenceData referenceData,
         CancellationToken cancellationToken)
@@ -367,7 +369,7 @@ public class PlayoutBuilder : IPlayoutBuilder
             ConfigElementKey.PlayoutDaysToBuild,
             cancellationToken);
 
-        DateTimeOffset now = DateTimeOffset.Now;
+        DateTimeOffset now = start;
 
         return new PlayoutParameters(
             now,
@@ -530,18 +532,44 @@ public class PlayoutBuilder : IPlayoutBuilder
             // use configured playback order for primary collection, shuffle for filler
             Option<ProgramScheduleItem> maybeScheduleItem = sortedScheduleItems
                 .FirstOrDefault(item => CollectionKey.ForScheduleItem(item) == collectionKey);
-            PlaybackOrder playbackOrder = maybeScheduleItem
-                .Match(item => item.PlaybackOrder, () => PlaybackOrder.Shuffle);
-            IMediaCollectionEnumerator enumerator =
-                await GetMediaCollectionEnumerator(
-                    playout,
-                    activeSchedule,
-                    collectionKey,
-                    mediaItems,
-                    playbackOrder,
-                    randomStartPoint,
-                    cancellationToken);
-            collectionEnumerators.Add(collectionKey, enumerator);
+            foreach (var scheduleItem in maybeScheduleItem)
+            {
+                IMediaCollectionEnumerator enumerator =
+                    await GetMediaCollectionEnumerator(
+                        playout,
+                        activeSchedule,
+                        collectionKey,
+                        mediaItems,
+                        scheduleItem.PlaybackOrder,
+                        scheduleItem.MarathonGroupBy,
+                        scheduleItem.MarathonShuffleGroups,
+                        scheduleItem.MarathonShuffleItems,
+                        scheduleItem.MarathonBatchSize,
+                        randomStartPoint,
+                        cancellationToken);
+
+                collectionEnumerators.Add(collectionKey, enumerator);
+            }
+
+            // filler
+            if (maybeScheduleItem.IsNone)
+            {
+                IMediaCollectionEnumerator enumerator =
+                    await GetMediaCollectionEnumerator(
+                        playout,
+                        activeSchedule,
+                        collectionKey,
+                        mediaItems,
+                        PlaybackOrder.Shuffle,
+                        MarathonGroupBy.None,
+                        marathonShuffleGroups: false,
+                        marathonShuffleItems: false,
+                        marathonBatchSize: null,
+                        randomStartPoint,
+                        cancellationToken);
+
+                collectionEnumerators.Add(collectionKey, enumerator);
+            }
         }
 
         var collectionItemCount = collectionMediaItems.Map((k, v) => (k, v.Count)).Values.ToDictionary();
@@ -618,6 +646,10 @@ public class PlayoutBuilder : IPlayoutBuilder
                     key,
                     fakeCollection.MediaItems,
                     scheduleItem.PlaybackOrder,
+                    scheduleItem.MarathonGroupBy,
+                    scheduleItem.MarathonShuffleGroups,
+                    scheduleItem.MarathonShuffleItems,
+                    scheduleItem.MarathonBatchSize,
                     randomStartPoint,
                     cancellationToken);
 
@@ -1162,6 +1194,10 @@ public class PlayoutBuilder : IPlayoutBuilder
         CollectionKey collectionKey,
         List<MediaItem> mediaItems,
         PlaybackOrder playbackOrder,
+        MarathonGroupBy marathonGroupBy,
+        bool marathonShuffleGroups,
+        bool marathonShuffleItems,
+        int? marathonBatchSize,
         bool randomStartPoint,
         CancellationToken cancellationToken)
     {
@@ -1199,7 +1235,8 @@ public class PlayoutBuilder : IPlayoutBuilder
                     _mediaCollectionRepository,
                     playlistItemMap,
                     state,
-                    false,
+                    marathonShuffleGroups,
+                    batchSize: Option<int>.None,
                     cancellationToken);
             }
         }
@@ -1304,6 +1341,26 @@ public class PlayoutBuilder : IPlayoutBuilder
                         cancellationToken),
                     state,
                     cancellationToken);
+
+            case PlaybackOrder.Marathon:
+                var helper = new MarathonHelper(_mediaCollectionRepository);
+                Option<PlaylistEnumerator> maybeEnumerator = await helper.GetEnumerator(
+                    mediaItems,
+                    marathonGroupBy,
+                    marathonShuffleGroups,
+                    marathonShuffleItems,
+                    marathonBatchSize is > 0 ? marathonBatchSize.Value : Option<int>.None,
+                    state,
+                    cancellationToken);
+
+                foreach (var enumerator in maybeEnumerator)
+                {
+                    return enumerator;
+                }
+
+                // fall through to default case if we can't make the proper enumerator
+                goto default;
+
             default:
                 // TODO: handle this error case differently?
                 return new RandomizedMediaCollectionEnumerator(mediaItems, state);

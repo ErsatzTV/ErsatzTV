@@ -1,0 +1,2132 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "ErsatzTV | scripted-schedule",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/scripted/playout/build/{buildId}/context": {
+      "get": {
+        "tags": [
+          "ScriptedSchedule"
+        ],
+        "summary": "Get the current context",
+        "operationId": "GetContext",
+        "parameters": [
+          {
+            "name": "buildId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlayoutContext"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlayoutContext"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlayoutContext"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/scripted/playout/build/{buildId}/add_collection": {
+      "post": {
+        "tags": [
+          "ScriptedSchedule"
+        ],
+        "summary": "Add a collection",
+        "operationId": "AddCollection",
+        "parameters": [
+          {
+            "name": "buildId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentCollection"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentCollection"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentCollection"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentCollection"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/scripted/playout/build/{buildId}/add_marathon": {
+      "post": {
+        "tags": [
+          "ScriptedSchedule"
+        ],
+        "summary": "Add a marathon",
+        "operationId": "AddMarathon",
+        "parameters": [
+          {
+            "name": "buildId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentMarathon"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentMarathon"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentMarathon"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentMarathon"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/scripted/playout/build/{buildId}/add_multi_collection": {
+      "post": {
+        "tags": [
+          "ScriptedSchedule"
+        ],
+        "summary": "Add a multi-collection",
+        "operationId": "AddMultiCollection",
+        "parameters": [
+          {
+            "name": "buildId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentMultiCollection"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentMultiCollection"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentMultiCollection"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentMultiCollection"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/scripted/playout/build/{buildId}/add_playlist": {
+      "post": {
+        "tags": [
+          "ScriptedSchedule"
+        ],
+        "summary": "Add a playlist",
+        "operationId": "AddPlaylist",
+        "parameters": [
+          {
+            "name": "buildId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentPlaylist"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentPlaylist"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentPlaylist"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentPlaylist"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/scripted/playout/build/{buildId}/create_playlist": {
+      "post": {
+        "tags": [
+          "ScriptedSchedule"
+        ],
+        "summary": "Create a playlist",
+        "operationId": "CreatePlaylist",
+        "parameters": [
+          {
+            "name": "buildId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentCreatePlaylist"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentCreatePlaylist"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentCreatePlaylist"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentCreatePlaylist"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/scripted/playout/build/{buildId}/add_search": {
+      "post": {
+        "tags": [
+          "ScriptedSchedule"
+        ],
+        "summary": "Add a search query",
+        "operationId": "AddSearch",
+        "parameters": [
+          {
+            "name": "buildId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentSearch"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentSearch"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentSearch"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentSearch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/scripted/playout/build/{buildId}/add_smart_collection": {
+      "post": {
+        "tags": [
+          "ScriptedSchedule"
+        ],
+        "summary": "Add a smart collection",
+        "operationId": "AddSmartCollection",
+        "parameters": [
+          {
+            "name": "buildId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentSmartCollection"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentSmartCollection"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentSmartCollection"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentSmartCollection"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/scripted/playout/build/{buildId}/add_show": {
+      "post": {
+        "tags": [
+          "ScriptedSchedule"
+        ],
+        "summary": "Add a show",
+        "operationId": "AddShow",
+        "parameters": [
+          {
+            "name": "buildId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentShow"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentShow"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentShow"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentShow"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/scripted/playout/build/{buildId}/add_all": {
+      "post": {
+        "tags": [
+          "ScriptedSchedule"
+        ],
+        "summary": "Add all content",
+        "operationId": "AddAll",
+        "parameters": [
+          {
+            "name": "buildId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentAll"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentAll"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentAll"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentAll"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlayoutContext"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlayoutContext"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlayoutContext"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/scripted/playout/build/{buildId}/add_count": {
+      "post": {
+        "tags": [
+          "ScriptedSchedule"
+        ],
+        "summary": "Add a specific number of content items",
+        "operationId": "AddCount",
+        "parameters": [
+          {
+            "name": "buildId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlayoutCount"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlayoutCount"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlayoutCount"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlayoutCount"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlayoutContext"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlayoutContext"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlayoutContext"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/scripted/playout/build/{buildId}/add_duration": {
+      "post": {
+        "tags": [
+          "ScriptedSchedule"
+        ],
+        "summary": "Add content for a specific duration",
+        "operationId": "AddDuration",
+        "parameters": [
+          {
+            "name": "buildId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlayoutDuration"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlayoutDuration"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlayoutDuration"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlayoutDuration"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlayoutContext"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlayoutContext"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlayoutContext"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/scripted/playout/build/{buildId}/pad_to_next": {
+      "post": {
+        "tags": [
+          "ScriptedSchedule"
+        ],
+        "summary": "Add content until a specific minutes interval",
+        "operationId": "PadToNext",
+        "parameters": [
+          {
+            "name": "buildId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlayoutPadToNext"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlayoutPadToNext"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlayoutPadToNext"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlayoutPadToNext"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlayoutContext"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlayoutContext"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlayoutContext"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/scripted/playout/build/{buildId}/pad_until": {
+      "post": {
+        "tags": [
+          "ScriptedSchedule"
+        ],
+        "summary": "Add content until a specified time of day",
+        "operationId": "PadUntil",
+        "parameters": [
+          {
+            "name": "buildId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlayoutPadUntil"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlayoutPadUntil"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlayoutPadUntil"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlayoutPadUntil"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlayoutContext"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlayoutContext"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlayoutContext"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/scripted/playout/build/{buildId}/pad_until_exact": {
+      "post": {
+        "tags": [
+          "ScriptedSchedule"
+        ],
+        "summary": "Add content until an exact time",
+        "operationId": "PadUntilExact",
+        "parameters": [
+          {
+            "name": "buildId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlayoutPadUntilExact"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlayoutPadUntilExact"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlayoutPadUntilExact"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlayoutPadUntilExact"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlayoutContext"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlayoutContext"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlayoutContext"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/scripted/playout/build/{buildId}/peek_next/{content}": {
+      "get": {
+        "tags": [
+          "ScriptedSchedule"
+        ],
+        "summary": "Peek the next content item",
+        "operationId": "PeekNext",
+        "parameters": [
+          {
+            "name": "buildId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "content",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PeekItemDuration"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PeekItemDuration"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PeekItemDuration"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/scripted/playout/build/{buildId}/start_epg_group": {
+      "post": {
+        "tags": [
+          "ScriptedSchedule"
+        ],
+        "summary": "Start an EPG group",
+        "operationId": "StartEpgGroup",
+        "parameters": [
+          {
+            "name": "buildId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ControlStartEpgGroup"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ControlStartEpgGroup"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ControlStartEpgGroup"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ControlStartEpgGroup"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/scripted/playout/build/{buildId}/stop_epg_group": {
+      "post": {
+        "tags": [
+          "ScriptedSchedule"
+        ],
+        "summary": "Finish an EPG group",
+        "operationId": "StopEpgGroup",
+        "parameters": [
+          {
+            "name": "buildId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/scripted/playout/build/{buildId}/graphics_on": {
+      "post": {
+        "tags": [
+          "ScriptedSchedule"
+        ],
+        "summary": "Turn on graphics elements",
+        "operationId": "GraphicsOn",
+        "parameters": [
+          {
+            "name": "buildId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ControlGraphicsOn"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ControlGraphicsOn"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ControlGraphicsOn"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ControlGraphicsOn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/scripted/playout/build/{buildId}/graphics_off": {
+      "post": {
+        "tags": [
+          "ScriptedSchedule"
+        ],
+        "summary": "Turn off graphics elements",
+        "operationId": "GraphicsOff",
+        "parameters": [
+          {
+            "name": "buildId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ControlGraphicsOff"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ControlGraphicsOff"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ControlGraphicsOff"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ControlGraphicsOff"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/scripted/playout/build/{buildId}/watermark_on": {
+      "post": {
+        "tags": [
+          "ScriptedSchedule"
+        ],
+        "summary": "Turn on watermarks",
+        "operationId": "WatermarkOn",
+        "parameters": [
+          {
+            "name": "buildId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ControlWatermarkOn"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ControlWatermarkOn"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ControlWatermarkOn"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ControlWatermarkOn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/scripted/playout/build/{buildId}/watermark_off": {
+      "post": {
+        "tags": [
+          "ScriptedSchedule"
+        ],
+        "summary": "Turn off watermarks",
+        "operationId": "WatermarkOff",
+        "parameters": [
+          {
+            "name": "buildId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ControlWatermarkOff"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ControlWatermarkOff"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ControlWatermarkOff"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ControlWatermarkOff"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/scripted/playout/build/{buildId}/pre_roll_on": {
+      "post": {
+        "tags": [
+          "ScriptedSchedule"
+        ],
+        "summary": "Turn on pre-roll playlist",
+        "operationId": "PreRollOn",
+        "parameters": [
+          {
+            "name": "buildId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ControlPreRollOn"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ControlPreRollOn"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ControlPreRollOn"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ControlPreRollOn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/scripted/playout/build/{buildId}/pre_roll_off": {
+      "post": {
+        "tags": [
+          "ScriptedSchedule"
+        ],
+        "summary": "Turn off pre-roll playlist",
+        "operationId": "PreRollOff",
+        "parameters": [
+          {
+            "name": "buildId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/scripted/playout/build/{buildId}/skip_items": {
+      "post": {
+        "tags": [
+          "ScriptedSchedule"
+        ],
+        "summary": "Skip a specific number of items",
+        "operationId": "SkipItems",
+        "parameters": [
+          {
+            "name": "buildId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ControlSkipItems"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ControlSkipItems"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ControlSkipItems"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ControlSkipItems"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/scripted/playout/build/{buildId}/skip_to_item": {
+      "post": {
+        "tags": [
+          "ScriptedSchedule"
+        ],
+        "summary": "Skip to a specific episode",
+        "operationId": "SkipToItem",
+        "parameters": [
+          {
+            "name": "buildId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ControlSkipToItem"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ControlSkipToItem"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ControlSkipToItem"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ControlSkipToItem"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/scripted/playout/build/{buildId}/wait_until_exact": {
+      "post": {
+        "tags": [
+          "ScriptedSchedule"
+        ],
+        "summary": "Wait until an exact time",
+        "operationId": "WaitUntilExact",
+        "parameters": [
+          {
+            "name": "buildId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ControlWaitUntilExact"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ControlWaitUntilExact"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ControlWaitUntilExact"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ControlWaitUntilExact"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlayoutContext"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlayoutContext"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlayoutContext"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/scripted/playout/build/{buildId}/wait_until": {
+      "post": {
+        "tags": [
+          "ScriptedSchedule"
+        ],
+        "summary": "Wait until the specified time of day",
+        "operationId": "WaitUntil",
+        "parameters": [
+          {
+            "name": "buildId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ControlWaitUntil"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ControlWaitUntil"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ControlWaitUntil"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ControlWaitUntil"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlayoutContext"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlayoutContext"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlayoutContext"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ContentAll": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "description": "The 'key' for the content that should be added",
+            "nullable": true
+          },
+          "fillerKind": {
+            "type": "string",
+            "description": "Flags this content as filler, which influences EPG grouping",
+            "nullable": true
+          },
+          "customTitle": {
+            "type": "string",
+            "description": "Overrides the title used in the EPG",
+            "nullable": true
+          },
+          "disableWatermarks": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ContentCollection": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Unique name used to reference this content throughout the scripted schedule",
+            "nullable": true
+          },
+          "collection": {
+            "type": "string",
+            "description": "The name of the existing manual collection",
+            "nullable": true
+          },
+          "order": {
+            "type": "string",
+            "description": "The playback order; only chronological and shuffle are currently supported",
+            "nullable": true
+          }
+        }
+      },
+      "ContentCreatePlaylist": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Unique name used to reference this content throughout the scripted schedule",
+            "nullable": true
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PlaylistItem"
+            },
+            "description": "List of playlist items",
+            "nullable": true
+          }
+        }
+      },
+      "ContentMarathon": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Unique name used to reference this content throughout the scripted schedule",
+            "nullable": true
+          },
+          "groupBy": {
+            "type": "string",
+            "description": "Tells the scheduler how to group the combined content (returned from all guids and searches). Valid values are show, season, artist and album.",
+            "nullable": true
+          },
+          "itemOrder": {
+            "type": "string",
+            "description": "Playback order within each group; only chronological and shuffle are currently supported",
+            "nullable": true
+          },
+          "guids": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "description": "List of external content identifiers",
+            "nullable": true
+          },
+          "searches": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of search queries",
+            "nullable": true
+          },
+          "playAllItems": {
+            "type": "boolean",
+            "description": "When true, will add every item from a group before moving to the next group. When false, will play one item from a group before moving to the next group."
+          },
+          "shuffleGroups": {
+            "type": "boolean",
+            "description": "When true, will randomize the order of groups. When false, will cycle through groups in a fixed order."
+          }
+        }
+      },
+      "ContentMultiCollection": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Unique name used to reference this content throughout the scripted schedule",
+            "nullable": true
+          },
+          "multiCollection": {
+            "type": "string",
+            "description": "The name of the existing multi-collection",
+            "nullable": true
+          },
+          "order": {
+            "type": "string",
+            "description": "The playback order; only chronological and shuffle are currently supported",
+            "nullable": true
+          }
+        }
+      },
+      "ContentPlaylist": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Unique name used to reference this content throughout the scripted schedule",
+            "nullable": true
+          },
+          "playlist": {
+            "type": "string",
+            "description": "The name of the existing playlist",
+            "nullable": true
+          },
+          "playlistGroup": {
+            "type": "string",
+            "description": "The name of the existing playlist group that contains the named playlist",
+            "nullable": true
+          }
+        }
+      },
+      "ContentSearch": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "nullable": true
+          },
+          "query": {
+            "type": "string",
+            "nullable": true
+          },
+          "order": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "ContentShow": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Unique name used to reference this content throughout the scripted schedule",
+            "nullable": true
+          },
+          "guids": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "List of show identifiers",
+            "nullable": true
+          },
+          "order": {
+            "type": "string",
+            "description": "The playback order; only chronological and shuffle are currently supported",
+            "nullable": true
+          }
+        }
+      },
+      "ContentSmartCollection": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Unique name used to reference this content throughout the scripted schedule",
+            "nullable": true
+          },
+          "smartCollection": {
+            "type": "string",
+            "description": "The name of the existing smart collection",
+            "nullable": true
+          },
+          "order": {
+            "type": "string",
+            "description": "The playback order; only chronological and shuffle are currently supported",
+            "nullable": true
+          }
+        }
+      },
+      "ControlGraphicsOff": {
+        "type": "object",
+        "properties": {
+          "graphics": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "A list of graphics elements to turn off. All graphics elements will be turned off if this list is null or empty",
+            "nullable": true
+          }
+        }
+      },
+      "ControlGraphicsOn": {
+        "type": "object",
+        "properties": {
+          "graphics": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "A list of graphics elements to turn on.",
+            "nullable": true
+          },
+          "variables": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "nullable": true
+          }
+        }
+      },
+      "ControlPreRollOn": {
+        "type": "object",
+        "properties": {
+          "playlist": {
+            "type": "string",
+            "description": "The 'key' for the scripted playlist",
+            "nullable": true
+          }
+        }
+      },
+      "ControlSkipItems": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "description": "The 'key' for the content",
+            "nullable": true
+          },
+          "count": {
+            "type": "integer",
+            "description": "The number of items to skip",
+            "format": "int32"
+          }
+        }
+      },
+      "ControlSkipToItem": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "description": "The 'key' for the content",
+            "nullable": true
+          },
+          "season": {
+            "type": "integer",
+            "description": "The season number",
+            "format": "int32"
+          },
+          "episode": {
+            "type": "integer",
+            "description": "The episode number",
+            "format": "int32"
+          }
+        }
+      },
+      "ControlStartEpgGroup": {
+        "type": "object",
+        "properties": {
+          "advance": {
+            "type": "boolean",
+            "description": "When true, will make a new EPG group. When false, will continue the existing EPG group."
+          }
+        }
+      },
+      "ControlWaitUntil": {
+        "type": "object",
+        "properties": {
+          "when": {
+            "type": "string",
+            "description": "The time of day to wait (insert unscheduled time) until",
+            "nullable": true
+          },
+          "tomorrow": {
+            "type": "boolean",
+            "description": "When true, will wait until the specified time tomorrow if it has already passed today."
+          },
+          "rewindOnReset": {
+            "type": "boolean",
+            "description": "When true, the current time of the playout build is allowed to move backward when the playout is reset."
+          }
+        }
+      },
+      "ControlWaitUntilExact": {
+        "type": "object",
+        "properties": {
+          "when": {
+            "type": "string",
+            "description": "The time to wait (insert unscheduled time) until",
+            "format": "date-time"
+          },
+          "rewindOnReset": {
+            "type": "boolean",
+            "description": "When true, the current time of the playout build is allowed to move backward when the playout is reset."
+          }
+        }
+      },
+      "ControlWatermarkOff": {
+        "type": "object",
+        "properties": {
+          "watermark": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "A list of existing watermark names to turn off. All (scripted) watermarks will be turned off if this list is null or empty.",
+            "nullable": true
+          }
+        }
+      },
+      "ControlWatermarkOn": {
+        "type": "object",
+        "properties": {
+          "watermark": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "A list of existing watermark names to turn on",
+            "nullable": true
+          }
+        }
+      },
+      "PeekItemDuration": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "nullable": true
+          },
+          "milliseconds": {
+            "type": "integer",
+            "description": "Duration in milliseconds",
+            "format": "int64"
+          }
+        }
+      },
+      "PlaylistItem": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "description": "The 'key' for the content",
+            "nullable": true
+          },
+          "count": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "PlayoutContext": {
+        "type": "object",
+        "properties": {
+          "currentTime": {
+            "type": "string",
+            "description": "The current time of the playout build",
+            "format": "date-time"
+          },
+          "startTime": {
+            "type": "string",
+            "description": "The start time of the playout build",
+            "format": "date-time"
+          },
+          "finishTime": {
+            "type": "string",
+            "description": "The finish time of the playout build",
+            "format": "date-time"
+          },
+          "isDone": {
+            "type": "boolean",
+            "description": "Indicates whether the current playout build is complete"
+          }
+        }
+      },
+      "PlayoutCount": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "description": "The 'key' for the content that should be added",
+            "nullable": true
+          },
+          "count": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "fillerKind": {
+            "type": "string",
+            "description": "Flags this content as filler, which influences EPG grouping",
+            "nullable": true
+          },
+          "customTitle": {
+            "type": "string",
+            "description": "Overrides the title used in the EPG",
+            "nullable": true
+          },
+          "disableWatermarks": {
+            "type": "boolean"
+          }
+        }
+      },
+      "PlayoutDuration": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "description": "The 'key' for the content that should be added",
+            "nullable": true
+          },
+          "duration": {
+            "type": "string",
+            "description": "The amount of time to add using the referenced content",
+            "nullable": true
+          },
+          "fallback": {
+            "type": "string",
+            "description": "The 'key' for the content that should be used to fill any remaining unscheduled time. One item will be selected to be looped and trimmed to exactly fit.",
+            "nullable": true
+          },
+          "trim": {
+            "type": "boolean",
+            "description": "Controls whether content will be trimmed to exactly fit the specified duration"
+          },
+          "discardAttempts": {
+            "type": "integer",
+            "description": "When trim is false, this is the number of times to discard items from the collection to find something that fits in the remaining duration",
+            "format": "int32"
+          },
+          "stopBeforeEnd": {
+            "type": "boolean",
+            "description": "When false, allows content to run over the specified duration before completing this request"
+          },
+          "offlineTail": {
+            "type": "boolean",
+            "description": "When true, afer scheduling everything that will fit, any remaining time from the specified duration will be unscheduled (offline)"
+          },
+          "fillerKind": {
+            "type": "string",
+            "description": "Flags this content as filler, which influences EPG grouping",
+            "nullable": true
+          },
+          "customTitle": {
+            "type": "string",
+            "description": "Overrides the title used in the EPG",
+            "nullable": true
+          },
+          "disableWatermarks": {
+            "type": "boolean"
+          }
+        }
+      },
+      "PlayoutPadToNext": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "description": "The 'key' for the content that should be added",
+            "nullable": true
+          },
+          "minutes": {
+            "type": "integer",
+            "description": "The minutes interval",
+            "format": "int32"
+          },
+          "fallback": {
+            "type": "string",
+            "description": "The 'key' for the content that should be used to fill any remaining unscheduled time. One item will be selected to be looped and trimmed to exactly fit.",
+            "nullable": true
+          },
+          "trim": {
+            "type": "boolean",
+            "description": "Controls whether content will be trimmed to exactly fit the specified interval"
+          },
+          "discardAttempts": {
+            "type": "integer",
+            "description": "When trim is false, this is the number of times to discard items from the collection to find something that fits in the remaining interval",
+            "format": "int32"
+          },
+          "stopBeforeEnd": {
+            "type": "boolean",
+            "description": "When false, allows content to run over the specified interval before completing this request"
+          },
+          "offlineTail": {
+            "type": "boolean",
+            "description": "When true, afer scheduling everything that will fit, any remaining time from the specified interval will be unscheduled (offline)"
+          },
+          "fillerKind": {
+            "type": "string",
+            "description": "Flags this content as filler, which influences EPG grouping",
+            "nullable": true
+          },
+          "customTitle": {
+            "type": "string",
+            "description": "Overrides the title used in the EPG",
+            "nullable": true
+          },
+          "disableWatermarks": {
+            "type": "boolean"
+          }
+        }
+      },
+      "PlayoutPadUntil": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "description": "The 'key' for the content that should be added",
+            "nullable": true
+          },
+          "when": {
+            "type": "string",
+            "description": "The time of day that content should be added until",
+            "nullable": true
+          },
+          "tomorrow": {
+            "type": "boolean",
+            "description": "Only used when the current playout time is already after the specified pad until time. When true, content will be scheduled until the specified time of day (the next day). When false, no content will be scheduled by this request."
+          },
+          "fallback": {
+            "type": "string",
+            "description": "The 'key' for the content that should be used to fill any remaining unscheduled time. One item will be selected to be looped and trimmed to exactly fit.",
+            "nullable": true
+          },
+          "trim": {
+            "type": "boolean",
+            "description": "Controls whether content will be trimmed to exactly fit until the specified time"
+          },
+          "discardAttempts": {
+            "type": "integer",
+            "description": "When trim is false, this is the number of times to discard items from the collection to find something that fits until the specified time",
+            "format": "int32"
+          },
+          "stopBeforeEnd": {
+            "type": "boolean",
+            "description": "When false, allows content to run over the specified the specified time before completing this request"
+          },
+          "offlineTail": {
+            "type": "boolean",
+            "description": "When true, afer scheduling everything that will fit, any remaining time from the specified interval will be unscheduled (offline)"
+          },
+          "fillerKind": {
+            "type": "string",
+            "description": "Flags this content as filler, which influences EPG grouping",
+            "nullable": true
+          },
+          "customTitle": {
+            "type": "string",
+            "description": "Overrides the title used in the EPG",
+            "nullable": true
+          },
+          "disableWatermarks": {
+            "type": "boolean"
+          }
+        }
+      },
+      "PlayoutPadUntilExact": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "description": "The 'key' for the content that should be added",
+            "nullable": true
+          },
+          "when": {
+            "type": "string",
+            "description": "The time content should be added until",
+            "format": "date-time"
+          },
+          "fallback": {
+            "type": "string",
+            "description": "The 'key' for the content that should be used to fill any remaining unscheduled time. One item will be selected to be looped and trimmed to exactly fit.",
+            "nullable": true
+          },
+          "trim": {
+            "type": "boolean",
+            "description": "Controls whether content will be trimmed to exactly fit until the specified time"
+          },
+          "discardAttempts": {
+            "type": "integer",
+            "description": "When trim is false, this is the number of times to discard items from the collection to find something that fits until the specified time",
+            "format": "int32"
+          },
+          "stopBeforeEnd": {
+            "type": "boolean",
+            "description": "When false, allows content to run over the specified the specified time before completing this request"
+          },
+          "offlineTail": {
+            "type": "boolean",
+            "description": "When true, afer scheduling everything that will fit, any remaining time from the specified interval will be unscheduled (offline)"
+          },
+          "fillerKind": {
+            "type": "string",
+            "description": "Flags this content as filler, which influences EPG grouping",
+            "nullable": true
+          },
+          "customTitle": {
+            "type": "string",
+            "description": "Overrides the title used in the EPG",
+            "nullable": true
+          },
+          "disableWatermarks": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "ScriptedSchedule"
+    }
+  ]
+}

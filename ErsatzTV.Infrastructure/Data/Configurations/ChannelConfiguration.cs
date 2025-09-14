@@ -43,5 +43,11 @@ public class ChannelConfiguration : IEntityTypeConfiguration<Channel>
         builder.Property(c => c.Group)
             .IsRequired()
             .HasDefaultValue("ErsatzTV");
+
+        builder.HasOne(i => i.MirrorSourceChannel)
+            .WithMany()
+            .HasForeignKey(i => i.MirrorSourceChannelId)
+            .OnDelete(DeleteBehavior.SetNull)
+            .IsRequired(false);
     }
 }

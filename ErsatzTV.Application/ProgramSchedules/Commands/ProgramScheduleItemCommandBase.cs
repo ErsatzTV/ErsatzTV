@@ -202,6 +202,10 @@ public abstract class ProgramScheduleItemCommandBase
                 MediaItemId = item.MediaItemId,
                 PlaylistId = item.PlaylistId,
                 PlaybackOrder = item.PlaybackOrder,
+                MarathonGroupBy = item.MarathonGroupBy,
+                MarathonShuffleGroups = item.MarathonShuffleGroups,
+                MarathonShuffleItems = item.MarathonShuffleItems,
+                MarathonBatchSize = item.MarathonBatchSize,
                 FillWithGroupMode = FillWithGroupMode.None,
                 CustomTitle = item.CustomTitle,
                 GuideMode = item.GuideMode,
@@ -228,6 +232,10 @@ public abstract class ProgramScheduleItemCommandBase
                 MediaItemId = item.MediaItemId,
                 PlaylistId = item.PlaylistId,
                 PlaybackOrder = item.PlaybackOrder,
+                MarathonGroupBy = item.MarathonGroupBy,
+                MarathonShuffleGroups = item.MarathonShuffleGroups,
+                MarathonShuffleItems = item.MarathonShuffleItems,
+                MarathonBatchSize = item.MarathonBatchSize,
                 FillWithGroupMode = FillWithGroupMode.None,
                 CustomTitle = item.CustomTitle,
                 GuideMode = item.GuideMode,
@@ -254,6 +262,10 @@ public abstract class ProgramScheduleItemCommandBase
                 MediaItemId = item.MediaItemId,
                 PlaylistId = item.PlaylistId,
                 PlaybackOrder = item.PlaybackOrder,
+                MarathonGroupBy = item.MarathonGroupBy,
+                MarathonShuffleGroups = item.MarathonShuffleGroups,
+                MarathonShuffleItems = item.MarathonShuffleItems,
+                MarathonBatchSize = item.MarathonBatchSize,
                 FillWithGroupMode = item.FillWithGroupMode,
                 MultipleMode = item.MultipleMode,
                 Count = item.MultipleMode is MultipleMode.Count ? item.MultipleCount.GetValueOrDefault() : 0,
@@ -282,6 +294,10 @@ public abstract class ProgramScheduleItemCommandBase
                 MediaItemId = item.MediaItemId,
                 PlaylistId = item.PlaylistId,
                 PlaybackOrder = item.PlaybackOrder,
+                MarathonGroupBy = item.MarathonGroupBy,
+                MarathonShuffleGroups = item.MarathonShuffleGroups,
+                MarathonShuffleItems = item.MarathonShuffleItems,
+                MarathonBatchSize = item.MarathonBatchSize,
                 FillWithGroupMode = item.FillWithGroupMode,
                 PlayoutDuration = item.PlayoutDuration.GetValueOrDefault(),
                 TailMode = item.TailMode,
@@ -311,6 +327,17 @@ public abstract class ProgramScheduleItemCommandBase
                 {
                     ProgramScheduleItem = result,
                     WatermarkId = watermarkId
+                });
+        }
+
+        foreach (int graphicsElementId in item.GraphicsElementIds)
+        {
+            result.ProgramScheduleItemGraphicsElements ??= [];
+            result.ProgramScheduleItemGraphicsElements.Add(
+                new ProgramScheduleItemGraphicsElement
+                {
+                    ProgramScheduleItem = result,
+                    GraphicsElementId = graphicsElementId
                 });
         }
 

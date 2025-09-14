@@ -33,8 +33,20 @@ public class DatabaseMigratorService : BackgroundService
 
         if (TvContext.IsSqlite)
         {
-            // sqlite migrations lock is always stale since mutex ensures single instance of etv
-            await dbContext.Database.ExecuteSqlRawAsync("DROP TABLE IF EXISTS `__EFMigrationsLock`", stoppingToken);
+            int count = await dbContext.Connection.ExecuteScalarAsync<int>(
+                "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='__EFMigrationsLock'");
+            if (count > 0)
+            {
+                count = await dbContext.Connection.ExecuteScalarAsync<int>("SELECT count(*) FROM `__EFMigrationsLock`");
+                if (count > 0)
+                {
+                    _logger.LogWarning(
+                        "Cleaning database migrations lock; this is needed when ETV is terminated during a database migration.");
+
+                    // sqlite migrations lock is always stale since mutex ensures single instance of etv
+                    await dbContext.Database.ExecuteSqlRawAsync("DELETE FROM `__EFMigrationsLock`", stoppingToken);
+                }
+            }
         }
 
         List<string> pendingMigrations = await dbContext.Database
@@ -59,6 +71,7 @@ public class DatabaseMigratorService : BackgroundService
         // then continue migrating
         await dbContext.Database.MigrateAsync(stoppingToken);
 
+        _logger.LogInformation("Initializing database");
         await DbInitializer.Initialize(dbContext, stoppingToken);
 
         _systemStartup.DatabaseIsReady();
@@ -66,13 +79,15 @@ public class DatabaseMigratorService : BackgroundService
         _logger.LogInformation("Done applying database migrations");
     }
 
-    private static async Task PopulatePathHashes(TvContext dbContext)
+    private async Task PopulatePathHashes(TvContext dbContext)
     {
         if (await dbContext.Connection.ExecuteScalarAsync<int>(
                 "SELECT COUNT(*) FROM `MediaFile` WHERE `PathHash` IS NULL OR `PathHash` = ''") == 0)
         {
             return;
         }
+
+        _logger.LogInformation("Populating database path hashes");
 
         if (dbContext.Connection is SqliteConnection sqliteConnection)
         {

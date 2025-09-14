@@ -121,7 +121,7 @@ public class EnumeratorCache(IMediaCollectionRepository mediaCollectionRepositor
                 itemPlaybackOrder = PlaybackOrder.Shuffle;
             }
 
-            Option<MarathonContentResult> maybeResult = await helper.GetEnumerator(
+            Option<PlaylistContentResult> maybeResult = await helper.GetEnumerator(
                 guids,
                 marathon.Searches,
                 marathon.GroupBy,
@@ -131,7 +131,7 @@ public class EnumeratorCache(IMediaCollectionRepository mediaCollectionRepositor
                 state,
                 cancellationToken);
 
-            foreach (MarathonContentResult result in maybeResult)
+            foreach (PlaylistContentResult result in maybeResult)
             {
                 foreach ((CollectionKey collectionKey, List<MediaItem> mediaItems) in result.Content)
                 {
@@ -173,7 +173,8 @@ public class EnumeratorCache(IMediaCollectionRepository mediaCollectionRepositor
                 mediaCollectionRepository,
                 itemMap,
                 state,
-                false,
+                shufflePlaylistItems: false,
+                batchSize: Option<int>.None,
                 cancellationToken);
         }
 

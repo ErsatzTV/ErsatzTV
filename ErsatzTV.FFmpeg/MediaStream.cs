@@ -52,14 +52,18 @@ public record VideoStream(
                 }
 
                 double res = FrameSize.Width / (double)FrameSize.Height;
-                return $"{dar}:{res}";
+                var formattedDar = string.Format(CultureInfo.InvariantCulture, dar % 1 == 0 ? "{0:F0}" : "{0:0.############}", dar);
+                var formattedRes = string.Format(CultureInfo.InvariantCulture, res % 1 == 0 ? "{0:F0}" : "{0:0.############}", res);
+                return $"{formattedDar}:{formattedRes}";
             }
 
             {
                 string[] split = MaybeSampleAspectRatio.Split(':');
                 var num = double.Parse(split[0], CultureInfo.InvariantCulture);
                 var den = double.Parse(split[1], CultureInfo.InvariantCulture);
-                return $"{num}:{den}";
+                var formattedNum = string.Format(CultureInfo.InvariantCulture, num % 1 == 0 ? "{0:F0}" : "{0:0.############}", num);
+                var formattedDen = string.Format(CultureInfo.InvariantCulture, den % 1 == 0 ? "{0:F0}" : "{0:0.############}", den);
+                return $"{formattedNum}:{formattedDen}";
             }
         }
     }

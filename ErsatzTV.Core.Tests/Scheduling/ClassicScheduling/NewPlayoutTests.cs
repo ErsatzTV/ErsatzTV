@@ -27,7 +27,7 @@ public class NewPlayoutTests : PlayoutBuilderTestBase
             TestDataFloodForItems(mediaItems, PlaybackOrder.Random);
 
         PlayoutBuildResult result =
-            await builder.Build(playout, referenceData, PlayoutBuildMode.Reset, CancellationToken);
+            await builder.Build(DateTimeOffset.Now, playout, referenceData, PlayoutBuildMode.Reset, CancellationToken);
 
         result.AddedItems.ShouldBeEmpty();
     }
@@ -84,7 +84,7 @@ public class NewPlayoutTests : PlayoutBuilderTestBase
             TestDataFloodForItems(mediaItems, PlaybackOrder.Random, configRepo);
 
         PlayoutBuildResult result =
-            await builder.Build(playout, referenceData, PlayoutBuildMode.Reset, CancellationToken);
+            await builder.Build(DateTimeOffset.Now, playout, referenceData, PlayoutBuildMode.Reset, CancellationToken);
 
         result.AddedItems.ShouldBeEmpty();
     }
@@ -150,7 +150,7 @@ public class NewPlayoutTests : PlayoutBuilderTestBase
             TestDataFloodForItems(mediaItems, PlaybackOrder.Random, configRepo);
 
         PlayoutBuildResult result =
-            await builder.Build(playout, referenceData, PlayoutBuildMode.Reset, CancellationToken);
+            await builder.Build(DateTimeOffset.Now, playout, referenceData, PlayoutBuildMode.Reset, CancellationToken);
 
         result.AddedItems.ShouldBeEmpty();
     }
@@ -534,7 +534,15 @@ public class NewPlayoutTests : PlayoutBuilderTestBase
         };
 
         var referenceData =
-            new PlayoutReferenceData(playout.Channel, Option<Deco>.None, [], [], playout.ProgramSchedule, [], []);
+            new PlayoutReferenceData(
+                playout.Channel,
+                Option<Deco>.None,
+                [],
+                [],
+                playout.ProgramSchedule,
+                [],
+                [],
+                TimeSpan.Zero);
 
         IConfigElementRepository configRepo = Substitute.For<IConfigElementRepository>();
         var televisionRepo = new FakeTelevisionRepository();
@@ -640,7 +648,15 @@ public class NewPlayoutTests : PlayoutBuilderTestBase
         };
 
         var referenceData =
-            new PlayoutReferenceData(playout.Channel, Option<Deco>.None, [], [], playout.ProgramSchedule, [], []);
+            new PlayoutReferenceData(
+                playout.Channel,
+                Option<Deco>.None,
+                [],
+                [],
+                playout.ProgramSchedule,
+                [],
+                [],
+                TimeSpan.Zero);
 
         IConfigElementRepository configRepo = Substitute.For<IConfigElementRepository>();
         var televisionRepo = new FakeTelevisionRepository();
@@ -797,7 +813,15 @@ public class NewPlayoutTests : PlayoutBuilderTestBase
         };
 
         var referenceData =
-            new PlayoutReferenceData(playout.Channel, Option<Deco>.None, [], [], playout.ProgramSchedule, [], []);
+            new PlayoutReferenceData(
+                playout.Channel,
+                Option<Deco>.None,
+                [],
+                [],
+                playout.ProgramSchedule,
+                [],
+                [],
+                TimeSpan.Zero);
 
         IConfigElementRepository configRepo = Substitute.For<IConfigElementRepository>();
         var televisionRepo = new FakeTelevisionRepository();
@@ -913,7 +937,15 @@ public class NewPlayoutTests : PlayoutBuilderTestBase
         };
 
         var referenceData =
-            new PlayoutReferenceData(playout.Channel, Option<Deco>.None, [], [], playout.ProgramSchedule, [], []);
+            new PlayoutReferenceData(
+                playout.Channel,
+                Option<Deco>.None,
+                [],
+                [],
+                playout.ProgramSchedule,
+                [],
+                [],
+                TimeSpan.Zero);
 
         IConfigElementRepository configRepo = Substitute.For<IConfigElementRepository>();
         var televisionRepo = new FakeTelevisionRepository();
@@ -1028,7 +1060,15 @@ public class NewPlayoutTests : PlayoutBuilderTestBase
         };
 
         var referenceData =
-            new PlayoutReferenceData(playout.Channel, Option<Deco>.None, [], [], playout.ProgramSchedule, [], []);
+            new PlayoutReferenceData(
+                playout.Channel,
+                Option<Deco>.None,
+                [],
+                [],
+                playout.ProgramSchedule,
+                [],
+                [],
+                TimeSpan.Zero);
 
         IConfigElementRepository configRepo = Substitute.For<IConfigElementRepository>();
         var televisionRepo = new FakeTelevisionRepository();
@@ -1144,7 +1184,15 @@ public class NewPlayoutTests : PlayoutBuilderTestBase
         };
 
         var referenceData =
-            new PlayoutReferenceData(playout.Channel, Option<Deco>.None, [], [], playout.ProgramSchedule, [], []);
+            new PlayoutReferenceData(
+                playout.Channel,
+                Option<Deco>.None,
+                [],
+                [],
+                playout.ProgramSchedule,
+                [],
+                [],
+                TimeSpan.Zero);
 
         IConfigElementRepository configRepo = Substitute.For<IConfigElementRepository>();
         var televisionRepo = new FakeTelevisionRepository();
@@ -1265,7 +1313,15 @@ public class NewPlayoutTests : PlayoutBuilderTestBase
         };
 
         var referenceData =
-            new PlayoutReferenceData(playout.Channel, Option<Deco>.None, [], [], playout.ProgramSchedule, [], []);
+            new PlayoutReferenceData(
+                playout.Channel,
+                Option<Deco>.None,
+                [],
+                [],
+                playout.ProgramSchedule,
+                [],
+                [],
+                TimeSpan.Zero);
 
         IConfigElementRepository configRepo = Substitute.For<IConfigElementRepository>();
         var televisionRepo = new FakeTelevisionRepository();
@@ -1386,7 +1442,15 @@ public class NewPlayoutTests : PlayoutBuilderTestBase
         };
 
         var referenceData =
-            new PlayoutReferenceData(playout.Channel, Option<Deco>.None, [], [], playout.ProgramSchedule, [], []);
+            new PlayoutReferenceData(
+                playout.Channel,
+                Option<Deco>.None,
+                [],
+                [],
+                playout.ProgramSchedule,
+                [],
+                [],
+                TimeSpan.Zero);
 
         IConfigElementRepository configRepo = Substitute.For<IConfigElementRepository>();
         var televisionRepo = new FakeTelevisionRepository();
@@ -1516,7 +1580,15 @@ public class NewPlayoutTests : PlayoutBuilderTestBase
         };
 
         var referenceData =
-            new PlayoutReferenceData(playout.Channel, Option<Deco>.None, [], [], playout.ProgramSchedule, [], []);
+            new PlayoutReferenceData(
+                playout.Channel,
+                Option<Deco>.None,
+                [],
+                [],
+                playout.ProgramSchedule,
+                [],
+                [],
+                TimeSpan.Zero);
 
         IConfigElementRepository configRepo = Substitute.For<IConfigElementRepository>();
         var televisionRepo = new FakeTelevisionRepository();
@@ -1639,7 +1711,15 @@ public class NewPlayoutTests : PlayoutBuilderTestBase
         };
 
         var referenceData =
-            new PlayoutReferenceData(playout.Channel, Option<Deco>.None, [], [], playout.ProgramSchedule, [], []);
+            new PlayoutReferenceData(
+                playout.Channel,
+                Option<Deco>.None,
+                [],
+                [],
+                playout.ProgramSchedule,
+                [],
+                [],
+                TimeSpan.Zero);
 
         IConfigElementRepository configRepo = Substitute.For<IConfigElementRepository>();
         var televisionRepo = new FakeTelevisionRepository();
@@ -1728,7 +1808,15 @@ public class NewPlayoutTests : PlayoutBuilderTestBase
         };
 
         var referenceData =
-            new PlayoutReferenceData(playout.Channel, Option<Deco>.None, [], [], playout.ProgramSchedule, [], []);
+            new PlayoutReferenceData(
+                playout.Channel,
+                Option<Deco>.None,
+                [],
+                [],
+                playout.ProgramSchedule,
+                [],
+                [],
+                TimeSpan.Zero);
 
         IConfigElementRepository configRepo = Substitute.For<IConfigElementRepository>();
         var televisionRepo = new FakeTelevisionRepository();

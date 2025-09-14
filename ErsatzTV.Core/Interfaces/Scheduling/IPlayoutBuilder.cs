@@ -9,6 +9,7 @@ public interface IPlayoutBuilder
     Playlist DebugPlaylist { get; set; }
 
     Task<PlayoutBuildResult> Build(
+        DateTimeOffset start,
         Playout playout,
         PlayoutReferenceData referenceData,
         PlayoutBuildMode mode,

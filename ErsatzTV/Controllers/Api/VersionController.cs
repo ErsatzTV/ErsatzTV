@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace ErsatzTV.Controllers.Api;
 
 [ApiController]
+[EndpointGroupName("general")]
 public class VersionController
 {
     private static readonly string Version;
@@ -14,5 +15,7 @@ public class VersionController
             .InformationalVersion ?? "unknown";
 
     [HttpGet("/api/version")]
+    [Tags("Version")]
+    [EndpointSummary("Get version")]
     public string GetVersion() => Version;
 }

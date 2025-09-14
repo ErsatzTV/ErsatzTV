@@ -15,7 +15,7 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "9.0.8");
+            modelBuilder.HasAnnotation("ProductVersion", "9.0.9");
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.Actor", b =>
                 {
@@ -264,6 +264,9 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                         .HasColumnType("INTEGER")
                         .HasDefaultValue(true);
 
+                    b.Property<int?>("MirrorSourceChannelId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("MusicVideoCreditsMode")
                         .HasColumnType("INTEGER");
 
@@ -277,6 +280,12 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<int>("PlayoutMode")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<TimeSpan?>("PlayoutOffset")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("PlayoutSource")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("PreferredAudioLanguageCode")
@@ -322,6 +331,8 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.HasIndex("FFmpegProfileId");
 
                     b.HasIndex("FallbackFillerId");
+
+                    b.HasIndex("MirrorSourceChannelId");
 
                     b.HasIndex("Number")
                         .IsUnique();
@@ -443,6 +454,21 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                         .IsUnique();
 
                     b.ToTable("ConfigElement", (string)null);
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.DecoGraphicsElement", b =>
+                {
+                    b.Property<int>("DecoId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("GraphicsElementId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("DecoId", "GraphicsElementId");
+
+                    b.HasIndex("GraphicsElementId");
+
+                    b.ToTable("DecoGraphicsElement");
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.DecoWatermark", b =>
@@ -1679,6 +1705,9 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Property<int>("CollectionType")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("Count")
+                        .HasColumnType("INTEGER");
+
                     b.Property<bool>("IncludeInProgramGuide")
                         .HasColumnType("INTEGER");
 
@@ -1757,6 +1786,31 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.HasIndex("ProgramScheduleId");
 
                     b.ToTable("Playout", (string)null);
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.PlayoutGap", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("Finish")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("PlayoutId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("Start")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PlayoutId");
+
+                    b.HasIndex("Start", "Finish")
+                        .HasDatabaseName("IX_PlayoutGap_Start_Finish");
+
+                    b.ToTable("PlayoutGap", (string)null);
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.PlayoutItem", b =>
@@ -2103,6 +2157,18 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Property<int>("Index")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("MarathonBatchSize")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("MarathonGroupBy")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("MarathonShuffleGroups")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("MarathonShuffleItems")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int?>("MediaItemId")
                         .HasColumnType("INTEGER");
 
@@ -2175,6 +2241,21 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.ToTable("ProgramScheduleItem", (string)null);
 
                     b.UseTptMappingStrategy();
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.ProgramScheduleItemGraphicsElement", b =>
+                {
+                    b.Property<int>("ProgramScheduleItemId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("GraphicsElementId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("ProgramScheduleItemId", "GraphicsElementId");
+
+                    b.HasIndex("GraphicsElementId");
+
+                    b.ToTable("ProgramScheduleItemGraphicsElement");
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.ProgramScheduleItemWatermark", b =>
@@ -2402,8 +2483,14 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Property<bool>("DefaultFillerTrimToFit")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("GraphicsElementsMode")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Name")
                         .HasColumnType("TEXT");
+
+                    b.Property<bool>("UseGraphicsElementsDuringFiller")
+                        .HasColumnType("INTEGER");
 
                     b.Property<bool>("UseWatermarkDuringFiller")
                         .HasColumnType("INTEGER");
@@ -3868,6 +3955,11 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                         .HasForeignKey("FallbackFillerId")
                         .OnDelete(DeleteBehavior.SetNull);
 
+                    b.HasOne("ErsatzTV.Core.Domain.Channel", "MirrorSourceChannel")
+                        .WithMany()
+                        .HasForeignKey("MirrorSourceChannelId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("ErsatzTV.Core.Domain.ChannelWatermark", "Watermark")
                         .WithMany()
                         .HasForeignKey("WatermarkId")
@@ -3876,6 +3968,8 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Navigation("FFmpegProfile");
 
                     b.Navigation("FallbackFiller");
+
+                    b.Navigation("MirrorSourceChannel");
 
                     b.Navigation("Watermark");
                 });
@@ -3897,6 +3991,25 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Navigation("Collection");
 
                     b.Navigation("MediaItem");
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.DecoGraphicsElement", b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.Scheduling.Deco", "Deco")
+                        .WithMany("DecoGraphicsElements")
+                        .HasForeignKey("DecoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ErsatzTV.Core.Domain.GraphicsElement", "GraphicsElement")
+                        .WithMany("DecoGraphicsElements")
+                        .HasForeignKey("GraphicsElementId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Deco");
+
+                    b.Navigation("GraphicsElement");
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.DecoWatermark", b =>
@@ -4523,6 +4636,17 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Navigation("ProgramSchedule");
                 });
 
+            modelBuilder.Entity("ErsatzTV.Core.Domain.PlayoutGap", b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.Playout", "Playout")
+                        .WithMany("Gaps")
+                        .HasForeignKey("PlayoutId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Playout");
+                });
+
             modelBuilder.Entity("ErsatzTV.Core.Domain.PlayoutItem", b =>
                 {
                     b.HasOne("ErsatzTV.Core.Domain.MediaItem", "MediaItem")
@@ -4806,6 +4930,25 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Navigation("SmartCollection");
 
                     b.Navigation("TailFiller");
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.ProgramScheduleItemGraphicsElement", b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.GraphicsElement", "GraphicsElement")
+                        .WithMany("ProgramScheduleItemGraphicsElements")
+                        .HasForeignKey("GraphicsElementId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ErsatzTV.Core.Domain.ProgramScheduleItem", "ProgramScheduleItem")
+                        .WithMany("ProgramScheduleItemGraphicsElements")
+                        .HasForeignKey("ProgramScheduleItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("GraphicsElement");
+
+                    b.Navigation("ProgramScheduleItem");
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.ProgramScheduleItemWatermark", b =>
@@ -5743,7 +5886,11 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.GraphicsElement", b =>
                 {
+                    b.Navigation("DecoGraphicsElements");
+
                     b.Navigation("PlayoutItemGraphicsElements");
+
+                    b.Navigation("ProgramScheduleItemGraphicsElements");
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.ImageMetadata", b =>
@@ -5889,6 +6036,8 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                 {
                     b.Navigation("FillGroupIndices");
 
+                    b.Navigation("Gaps");
+
                     b.Navigation("Items");
 
                     b.Navigation("PlayoutHistory");
@@ -5918,6 +6067,8 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.ProgramScheduleItem", b =>
                 {
+                    b.Navigation("ProgramScheduleItemGraphicsElements");
+
                     b.Navigation("ProgramScheduleItemWatermarks");
                 });
 
@@ -5954,6 +6105,8 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.Scheduling.Deco", b =>
                 {
+                    b.Navigation("DecoGraphicsElements");
+
                     b.Navigation("DecoWatermarks");
 
                     b.Navigation("Playouts");

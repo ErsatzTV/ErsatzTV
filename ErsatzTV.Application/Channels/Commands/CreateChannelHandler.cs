@@ -39,13 +39,15 @@ public class CreateChannelHandler(
         (ValidateName(request), await ValidateNumber(dbContext, request, cancellationToken),
             await FFmpegProfileMustExist(dbContext, request, cancellationToken),
             await WatermarkMustExist(dbContext, request, cancellationToken),
-            await FillerPresetMustExist(dbContext, request, cancellationToken))
+            await FillerPresetMustExist(dbContext, request, cancellationToken),
+            await MirrorSourceMustBeValid(dbContext, request, cancellationToken))
         .Apply((
             name,
             number,
             ffmpegProfileId,
             watermarkId,
-            fillerPresetId) =>
+            fillerPresetId,
+            _) =>
         {
             var artwork = new List<Artwork>();
             if (!string.IsNullOrWhiteSpace(request.Logo?.Path))
@@ -76,7 +78,10 @@ public class CreateChannelHandler(
                 Group = request.Group,
                 Categories = request.Categories,
                 FFmpegProfileId = ffmpegProfileId,
+                PlayoutSource = request.PlayoutSource,
                 PlayoutMode = request.PlayoutMode,
+                MirrorSourceChannelId = request.MirrorSourceChannelId,
+                PlayoutOffset = request.PlayoutOffset,
                 StreamingMode = request.StreamingMode,
                 Artwork = artwork,
                 StreamSelectorMode = request.StreamSelectorMode,
@@ -93,6 +98,16 @@ public class CreateChannelHandler(
                 IsEnabled = request.IsEnabled,
                 ShowInEpg = request.IsEnabled && request.ShowInEpg
             };
+
+            if (channel.PlayoutSource is ChannelPlayoutSource.Mirror)
+            {
+                channel.PlayoutMode = ChannelPlayoutMode.Continuous;
+            }
+            else
+            {
+                channel.MirrorSourceChannelId = null;
+                channel.PlayoutOffset = null;
+            }
 
             foreach (int id in watermarkId)
             {
@@ -178,5 +193,47 @@ public class CreateChannelHandler(
             .MapT(_ => Optional(createChannel.FallbackFillerId))
             .Map(o => o.ToValidation<BaseError>(
                 $"Fallback filler {createChannel.FallbackFillerId} does not exist."));
+    }
+
+    private static async Task<Validation<BaseError, Unit>> MirrorSourceMustBeValid(
+        TvContext dbContext,
+        CreateChannel createChannel,
+        CancellationToken cancellationToken)
+    {
+        if (createChannel.PlayoutSource is not ChannelPlayoutSource.Mirror)
+        {
+            return Unit.Default;
+        }
+
+        Option<Channel> maybeMirrorSource = await dbContext.Channels
+            .AsNoTracking()
+            .SelectOneAsync(
+                c => c.Id == createChannel.MirrorSourceChannelId,
+                c => c.Id == createChannel.MirrorSourceChannelId,
+                cancellationToken);
+
+        if (maybeMirrorSource.IsNone)
+        {
+            return BaseError.New("Mirror source channel does not exist.");
+        }
+
+        foreach (var mirrorSource in maybeMirrorSource)
+        {
+            if (mirrorSource.PlayoutSource is not ChannelPlayoutSource.Generated)
+            {
+                return BaseError.New(
+                    $"Mirror source channel {mirrorSource.Name} must use generated playout source");
+            }
+        }
+
+        foreach (TimeSpan playoutOffset in Optional(createChannel.PlayoutOffset))
+        {
+            if (playoutOffset < TimeSpan.FromHours(-12) || playoutOffset > TimeSpan.FromHours(12))
+            {
+                return BaseError.New("Playout offset must not be greater than 12 hours");
+            }
+        }
+
+        return Unit.Default;
     }
 }

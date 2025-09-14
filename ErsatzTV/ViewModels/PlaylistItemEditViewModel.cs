@@ -9,6 +9,8 @@ namespace ErsatzTV.ViewModels;
 public class PlaylistItemEditViewModel : INotifyPropertyChanged
 {
     private ProgramScheduleItemCollectionType _collectionType;
+    private int? _count;
+    private bool _playAll;
 
     public int Id { get; set; }
     public int Index { get; set; }
@@ -81,7 +83,51 @@ public class PlaylistItemEditViewModel : INotifyPropertyChanged
 
     public PlaybackOrder PlaybackOrder { get; set; }
 
-    public bool PlayAll { get; set; }
+    public int? Count
+    {
+        get => _count;
+        set
+        {
+            if (value == _count)
+            {
+                return;
+            }
+
+            _count = value;
+            OnPropertyChanged();
+
+            if (_count is not null)
+            {
+                _playAll = false;
+                OnPropertyChanged(nameof(PlayAll));
+            }
+        }
+    }
+
+    public bool PlayAll
+    {
+        get => _playAll;
+        set
+        {
+            if (value == _playAll)
+            {
+                return;
+            }
+
+            _playAll = value;
+            OnPropertyChanged();
+
+            if (_playAll)
+            {
+                _count = null;
+            }
+            else
+            {
+                _count ??= 1;
+            }
+            OnPropertyChanged(nameof(Count));
+        }
+    }
 
     public bool IncludeInProgramGuide { get; set; }
 
