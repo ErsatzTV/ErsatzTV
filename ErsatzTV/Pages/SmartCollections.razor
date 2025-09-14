@@ -1,0 +1,117 @@
+﻿@page "/media/smart-collections"
+@using ErsatzTV.Application.Configuration
+@using ErsatzTV.Application.MediaCollections
+@using ErsatzTV.Extensions
+@implements IDisposable
+@inject IDialogService Dialog
+@inject IMediator Mediator
+
+<MudForm Style="max-height: 100%">
+    <MudPaper Square="true" Style="display: flex; height: 64px; min-height: 64px; width: 100%; z-index: 100; align-items: center">
+    </MudPaper>
+    <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+            <MudText Typo="Typo.h5" Class="mb-2">Smart Collections</MudText>
+            <MudDivider Class="mb-6"/>
+            <MudTable Hover="true"
+                      @bind-RowsPerPage="@_smartCollectionsRowsPerPage"
+                      ServerData="@(new Func<TableState, CancellationToken, Task<TableData<SmartCollectionViewModel>>>(ServerReloadSmartCollections))"
+                      Dense="true"
+                      @ref="_smartCollectionsTable">
+                <ColGroup>
+                    <MudHidden Breakpoint="Breakpoint.Xs">
+                        <col/>
+                        <col style="width: 180px;"/>
+                    </MudHidden>
+                </ColGroup>
+                <HeaderContent>
+                    <MudTh>Name</MudTh>
+                    <MudTh/>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Name">@context.Name</MudTd>
+                    <MudTd>
+                        <div style="align-items: center; display: flex;">
+                            <MudTooltip Text="Edit Smart Collection">
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                               Href="@($"/media/smart-collections/{context.Id}/edit")">
+                                </MudIconButton>
+                            </MudTooltip>
+                            <MudTooltip Text="Search Smart Collection">
+                                <MudIconButton Icon="@Icons.Material.Filled.Search"
+                                               Href="@context.Query.GetRelativeSearchQuery()">
+                                </MudIconButton>
+                            </MudTooltip>
+                            <MudTooltip Text="Delete Smart Collection">
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                               OnClick="@(_ => DeleteSmartCollection(context))">
+                                </MudIconButton>
+                            </MudTooltip>
+                        </div>
+                    </MudTd>
+                </RowTemplate>
+                <PagerContent>
+                    <MudTablePager/>
+                </PagerContent>
+            </MudTable>
+            <div class="mt-6"></div>
+        </MudContainer>
+    </div>
+</MudForm>
+
+@code {
+    private CancellationTokenSource _cts;
+
+    private MudTable<SmartCollectionViewModel> _smartCollectionsTable;
+
+    private int _smartCollectionsRowsPerPage = 10;
+
+    public void Dispose()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
+
+        try
+        {
+            _smartCollectionsRowsPerPage = await Mediator.Send(new GetConfigElementByKey(ConfigElementKey.SmartCollectionsPageSize), token)
+                .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
+        }
+    }
+
+    private async Task DeleteSmartCollection(SmartCollectionViewModel collection)
+    {
+        var parameters = new DialogParameters { { "EntityType", "smart collection" }, { "EntityName", collection.Name } };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        IDialogReference dialog = await Dialog.ShowAsync<DeleteDialog>("Delete Smart Collection", parameters, options);
+        DialogResult result = await dialog.Result;
+        if (result is { Canceled: false })
+        {
+            await Mediator.Send(new DeleteSmartCollection(collection.Id), _cts.Token);
+            if (_smartCollectionsTable != null)
+            {
+                await _smartCollectionsTable.ReloadServerData();
+            }
+        }
+    }
+
+    private async Task<TableData<SmartCollectionViewModel>> ServerReloadSmartCollections(TableState state, CancellationToken cancellationToken)
+    {
+        await Mediator.Send(new SaveConfigElementByKey(ConfigElementKey.SmartCollectionsPageSize, state.PageSize.ToString()), cancellationToken);
+
+        PagedSmartCollectionsViewModel data = await Mediator.Send(new GetPagedSmartCollections(state.Page, state.PageSize), cancellationToken);
+        return new TableData<SmartCollectionViewModel> { TotalItems = data.TotalCount, Items = data.Page };
+    }
+}

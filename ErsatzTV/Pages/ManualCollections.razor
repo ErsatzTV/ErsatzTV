@@ -1,0 +1,124 @@
+﻿@page "/media/collections"
+@using ErsatzTV.Application.Configuration
+@using ErsatzTV.Application.MediaCollections
+@implements IDisposable
+@inject IDialogService Dialog
+@inject IMediator Mediator
+
+<MudForm Style="max-height: 100%">
+    <MudPaper Square="true" Style="display: flex; height: 64px; min-height: 64px; width: 100%; z-index: 100; align-items: center">
+        <div style="display: flex; flex-direction: row; margin-bottom: auto; margin-top: auto; width: 100%" class="ml-6 mr-6">
+            <div style="margin-right: auto" class="d-none d-md-flex">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Href="media/collections/add">
+                    Add Collection
+                </MudButton>
+            </div>
+            <div style="align-items: center; display: flex; margin-left: auto;" class="d-md-none">
+                <div class="flex-grow-1"></div>
+                <MudMenu Icon="@Icons.Material.Filled.MoreVert">
+                    <MudMenuItem Icon="@Icons.Material.Filled.Add" Label="Add Collection" Href="media/collections/add"/>
+                </MudMenu>
+            </div>
+        </div>
+    </MudPaper>
+    <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+            <MudText Typo="Typo.h5" Class="mb-2">Manual Collections</MudText>
+            <MudDivider Class="mb-6"/>
+            <MudTable Hover="true"
+                      @bind-RowsPerPage="@_collectionsRowsPerPage"
+                      ServerData="@(new Func<TableState, CancellationToken, Task<TableData<MediaCollectionViewModel>>>(ServerReloadCollections))"
+                      Dense="true"
+                      @ref="_collectionsTable">
+                <ColGroup>
+                    <MudHidden Breakpoint="Breakpoint.Xs">
+                        <col/>
+                        <col style="width: 120px;"/>
+                    </MudHidden>
+                </ColGroup>
+                <HeaderContent>
+                    <MudTh>Name</MudTh>
+                    <MudTh/>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Name">@context.Name</MudTd>
+                    <MudTd>
+                        <div style="align-items: center; display: flex;">
+                            <MudTooltip Text="Edit Collection">
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                               Href="@($"media/collections/{context.Id}")">
+                                </MudIconButton>
+                            </MudTooltip>
+                            <MudTooltip Text="Delete Collection">
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                               OnClick="@(_ => DeleteMediaCollection(context))">
+                                </MudIconButton>
+                            </MudTooltip>
+                        </div>
+                    </MudTd>
+                </RowTemplate>
+                <PagerContent>
+                    <MudTablePager/>
+                </PagerContent>
+            </MudTable>
+            <div class="mt-6"></div>
+        </MudContainer>
+    </div>
+</MudForm>
+
+@code {
+    private CancellationTokenSource _cts;
+
+    private MudTable<MediaCollectionViewModel> _collectionsTable;
+
+    private int _collectionsRowsPerPage = 10;
+
+    public void Dispose()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
+
+        try
+        {
+            _collectionsRowsPerPage = await Mediator.Send(new GetConfigElementByKey(ConfigElementKey.CollectionsPageSize), token)
+                .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
+        }
+    }
+
+    private async Task DeleteMediaCollection(MediaCollectionViewModel collection)
+    {
+        var parameters = new DialogParameters { { "EntityType", "collection" }, { "EntityName", collection.Name } };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        IDialogReference dialog = await Dialog.ShowAsync<DeleteDialog>("Delete Collection", parameters, options);
+        DialogResult result = await dialog.Result;
+        if (result is { Canceled: false })
+        {
+            await Mediator.Send(new DeleteCollection(collection.Id), _cts.Token);
+            if (_collectionsTable != null)
+            {
+                await _collectionsTable.ReloadServerData();
+            }
+        }
+    }
+
+    private async Task<TableData<MediaCollectionViewModel>> ServerReloadCollections(TableState state, CancellationToken cancellationToken)
+    {
+        await Mediator.Send(new SaveConfigElementByKey(ConfigElementKey.CollectionsPageSize, state.PageSize.ToString()), cancellationToken);
+
+        PagedMediaCollectionsViewModel data = await Mediator.Send(new GetPagedCollections(state.Page, state.PageSize), cancellationToken);
+        return new TableData<MediaCollectionViewModel> { TotalItems = data.TotalCount, Items = data.Page };
+    }
+}
