@@ -116,6 +116,21 @@ public class PipelineBuilderFactory : IPipelineBuilderFactory
                     fontsFolder,
                     _logger),
 
+            HardwareAccelerationMode.V4l2m2m when capabilities is not NoHardwareCapabilities => new
+                V4l2m2mPipelineBuilder(
+                    ffmpegCapabilities,
+                    capabilities,
+                    hardwareAccelerationMode,
+                    videoInputFile,
+                    audioInputFile,
+                    watermarkInputFile,
+                    subtitleInputFile,
+                    concatInputFile,
+                    graphicsEngineInput,
+                    reportsFolder,
+                    fontsFolder,
+                    _logger),
+
             HardwareAccelerationMode.Amf when capabilities is not NoHardwareCapabilities => new AmfPipelineBuilder(
                 ffmpegCapabilities,
                 capabilities,

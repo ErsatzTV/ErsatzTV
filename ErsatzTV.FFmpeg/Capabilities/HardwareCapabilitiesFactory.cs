@@ -109,6 +109,7 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
             HardwareAccelerationMode.Vaapi => await GetVaapiCapabilities(vaapiDisplay, vaapiDriver, vaapiDevice),
             HardwareAccelerationMode.VideoToolbox => new VideoToolboxHardwareCapabilities(ffmpegCapabilities, _logger),
             HardwareAccelerationMode.Amf => new AmfHardwareCapabilities(),
+            HardwareAccelerationMode.V4l2m2m => new V4l2m2mHardwareCapabilities(ffmpegCapabilities),
             _ => new DefaultHardwareCapabilities()
         };
     }

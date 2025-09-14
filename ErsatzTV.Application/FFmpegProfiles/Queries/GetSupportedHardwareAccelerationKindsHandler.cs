@@ -66,6 +66,12 @@ public class
             result.Add(HardwareAccelerationKind.Amf);
         }
 
+        // TODO: fix and enable V4L2 M2M
+        // if (ffmpegCapabilities.HasHardwareAcceleration(HardwareAccelerationMode.V4l2m2m))
+        // {
+        //     result.Add(HardwareAccelerationKind.V4l2m2m);
+        // }
+
         return result;
     }
 
