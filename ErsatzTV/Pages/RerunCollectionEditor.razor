@@ -1,0 +1,352 @@
+﻿@page "/media/rerun-collections/{Id:int}/edit"
+@page "/media/rerun-collections/add"
+@using ErsatzTV.Application.MediaCollections
+@using ErsatzTV.Application.MediaItems
+@using ErsatzTV.Application.Search
+@implements IDisposable
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+@inject IMediator Mediator
+@inject ILogger<RerunCollectionEditor> Logger
+
+<MudForm @ref="_form" @bind-IsValid="@_success" Style="max-height: 100%">
+    <MudPaper Square="true" Style="display: flex; height: 64px; min-height: 64px; width: 100%; z-index: 100; align-items: center">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => HandleSubmitAsync())" Class="ml-6" StartIcon="@Icons.Material.Filled.Save">
+            @(IsEdit ? "Save Rerun Collection" : "Add Rerun Collection")
+        </MudButton>
+    </MudPaper>
+    <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+            <MudText Typo="Typo.h5" Class="mb-2">Rerun Collection</MudText>
+            <MudDivider Class="mb-6"/>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Name</MudText>
+                </div>
+                <MudTextField @bind-Value="_model.Name" For="@(() => _model.Name)" Required="true" RequiredError="Rerun collection name is required!"/>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Collection Type</MudText>
+                </div>
+                <MudSelect @bind-Value="_model.CollectionType" For="@(() => _model.CollectionType)">
+                    <MudSelectItem Value="CollectionType.Collection">Collection</MudSelectItem>
+                    <MudSelectItem Value="CollectionType.TelevisionShow">Television Show</MudSelectItem>
+                    <MudSelectItem Value="CollectionType.TelevisionSeason">Television Season</MudSelectItem>
+                    <MudSelectItem Value="CollectionType.Artist">Artist</MudSelectItem>
+                    <MudSelectItem Value="CollectionType.MultiCollection">Multi Collection</MudSelectItem>
+                    <MudSelectItem Value="CollectionType.SmartCollection">Smart Collection</MudSelectItem>
+                    <MudSelectItem Value="CollectionType.Playlist">Playlist</MudSelectItem>
+                </MudSelect>
+            </MudStack>
+            @if (_model.CollectionType == CollectionType.Collection)
+            {
+                <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                    <div class="d-flex">
+                        <MudText>Collection</MudText>
+                    </div>
+                    <MudAutocomplete T="MediaCollectionViewModel"
+                                     @bind-Value="_model.Collection" SearchFunc="@SearchCollections"
+                                     ToStringFunc="@(c => c?.Name)" Placeholder="Type to search...">
+                        <MoreItemsTemplate>
+                            <MudText Align="Align.Center" Class="px-4 py-1">
+                                Only the first 10 items are shown
+                            </MudText>
+                        </MoreItemsTemplate>
+                    </MudAutocomplete>
+                </MudStack>
+            }
+
+            @if (_model.CollectionType == CollectionType.MultiCollection)
+            {
+                <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                    <div class="d-flex">
+                        <MudText>Multi Collection</MudText>
+                    </div>
+                    <MudAutocomplete T="MultiCollectionViewModel"
+                                     @bind-Value="_model.MultiCollection" SearchFunc="@SearchMultiCollections"
+                                     ToStringFunc="@(c => c?.Name)" Placeholder="Type to search...">
+                        <MoreItemsTemplate>
+                            <MudText Align="Align.Center" Class="px-4 py-1">
+                                Only the first 10 items are shown
+                            </MudText>
+                        </MoreItemsTemplate>
+                    </MudAutocomplete>
+                </MudStack>
+            }
+
+            @if (_model.CollectionType == CollectionType.SmartCollection)
+            {
+                <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                    <div class="d-flex">
+                        <MudText>Smart Collection</MudText>
+                    </div>
+                    <MudAutocomplete T="SmartCollectionViewModel"
+                                     @bind-Value="_model.SmartCollection" SearchFunc="@SearchSmartCollections"
+                                     ToStringFunc="@(c => c?.Name)" Placeholder="Type to search...">
+                        <MoreItemsTemplate>
+                            <MudText Align="Align.Center" Class="px-4 py-1">
+                                Only the first 10 items are shown
+                            </MudText>
+                        </MoreItemsTemplate>
+                    </MudAutocomplete>
+                </MudStack>
+            }
+
+            @if (_model.CollectionType == CollectionType.TelevisionShow)
+            {
+                <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                    <div class="d-flex">
+                        <MudText>Television Show</MudText>
+                    </div>
+                    <MudAutocomplete T="NamedMediaItemViewModel"
+                                     @bind-Value="_model.MediaItem" SearchFunc="@SearchTelevisionShows"
+                                     ToStringFunc="@(c => c?.Name)" Placeholder="Type to search...">
+                        <MoreItemsTemplate>
+                            <MudText Align="Align.Center" Class="px-4 py-1">
+                                Only the first 10 items are shown
+                            </MudText>
+                        </MoreItemsTemplate>
+                    </MudAutocomplete>
+                </MudStack>
+            }
+
+            @if (_model.CollectionType == CollectionType.TelevisionSeason)
+            {
+                <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                    <div class="d-flex">
+                        <MudText>Television Season</MudText>
+                    </div>
+                    <MudAutocomplete T="NamedMediaItemViewModel"
+                                     @bind-Value="_model.MediaItem" SearchFunc="@SearchTelevisionSeasons"
+                                     ToStringFunc="@(c => c?.Name)" Placeholder="Type to search..."
+                                     MaxItems="20">
+                        <MoreItemsTemplate>
+                            <MudText Align="Align.Center" Class="px-4 py-1">
+                                Only the first 20 items are shown
+                            </MudText>
+                        </MoreItemsTemplate>
+                    </MudAutocomplete>
+                </MudStack>
+            }
+
+            @if (_model.CollectionType == CollectionType.Artist)
+            {
+                <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                    <div class="d-flex">
+                        <MudText>Artist</MudText>
+                    </div>
+                    <MudAutocomplete T="NamedMediaItemViewModel"
+                                     @bind-Value="_model.MediaItem" SearchFunc="@SearchArtists"
+                                     ToStringFunc="@(c => c?.Name)" Placeholder="Type to search..."
+                                     MaxItems="10">
+                        <MoreItemsTemplate>
+                            <MudText Align="Align.Center" Class="px-4 py-1">
+                                Only the first 10 items are shown
+                            </MudText>
+                        </MoreItemsTemplate>
+                    </MudAutocomplete>
+                </MudStack>
+            }
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>First Run Playback Order</MudText>
+                </div>
+                <MudSelect @bind-Value="@_model.FirstRunPlaybackOrder" For="@(() => _model.FirstRunPlaybackOrder)">
+                    @switch (_model.CollectionType)
+                    {
+                        case CollectionType.MultiCollection:
+                            <MudSelectItem Value="PlaybackOrder.Shuffle">Shuffle</MudSelectItem>
+                            <MudSelectItem Value="PlaybackOrder.ShuffleInOrder">Shuffle In Order</MudSelectItem>
+                            break;
+                        case CollectionType.Collection:
+                        case CollectionType.SmartCollection:
+                            <MudSelectItem Value="PlaybackOrder.Chronological">Chronological</MudSelectItem>
+                            <MudSelectItem Value="PlaybackOrder.Random">Random</MudSelectItem>
+                            <MudSelectItem Value="PlaybackOrder.Shuffle">Shuffle</MudSelectItem>
+                            <MudSelectItem Value="PlaybackOrder.ShuffleInOrder">Shuffle In Order</MudSelectItem>
+                            break;
+                        case CollectionType.TelevisionShow:
+                            <MudSelectItem Value="PlaybackOrder.Chronological">Chronological</MudSelectItem>
+                            <MudSelectItem Value="PlaybackOrder.SeasonEpisode">Season, Episode</MudSelectItem>
+                            <MudSelectItem Value="PlaybackOrder.Random">Random</MudSelectItem>
+                            <MudSelectItem Value="PlaybackOrder.Shuffle">Shuffle</MudSelectItem>
+                            break;
+                        default:
+                            <MudSelectItem Value="PlaybackOrder.Chronological">Chronological</MudSelectItem>
+                            <MudSelectItem Value="PlaybackOrder.Random">Random</MudSelectItem>
+                            <MudSelectItem Value="PlaybackOrder.Shuffle">Shuffle</MudSelectItem>
+                            break;
+                    }
+                </MudSelect>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Rerun Playback Order</MudText>
+                </div>
+                <MudSelect @bind-Value="@_model.RerunPlaybackOrder" For="@(() => _model.RerunPlaybackOrder)">
+                    @switch (_model.CollectionType)
+                    {
+                        case CollectionType.MultiCollection:
+                            <MudSelectItem Value="PlaybackOrder.Shuffle">Shuffle</MudSelectItem>
+                            <MudSelectItem Value="PlaybackOrder.ShuffleInOrder">Shuffle In Order</MudSelectItem>
+                            break;
+                        case CollectionType.Collection:
+                        case CollectionType.SmartCollection:
+                            <MudSelectItem Value="PlaybackOrder.Chronological">Chronological</MudSelectItem>
+                            <MudSelectItem Value="PlaybackOrder.Random">Random</MudSelectItem>
+                            <MudSelectItem Value="PlaybackOrder.Shuffle">Shuffle</MudSelectItem>
+                            <MudSelectItem Value="PlaybackOrder.ShuffleInOrder">Shuffle In Order</MudSelectItem>
+                            break;
+                        case CollectionType.TelevisionShow:
+                            <MudSelectItem Value="PlaybackOrder.Chronological">Chronological</MudSelectItem>
+                            <MudSelectItem Value="PlaybackOrder.SeasonEpisode">Season, Episode</MudSelectItem>
+                            <MudSelectItem Value="PlaybackOrder.Random">Random</MudSelectItem>
+                            <MudSelectItem Value="PlaybackOrder.Shuffle">Shuffle</MudSelectItem>
+                            break;
+                        default:
+                            <MudSelectItem Value="PlaybackOrder.Chronological">Chronological</MudSelectItem>
+                            <MudSelectItem Value="PlaybackOrder.Random">Random</MudSelectItem>
+                            <MudSelectItem Value="PlaybackOrder.Shuffle">Shuffle</MudSelectItem>
+                            break;
+                    }
+                </MudSelect>
+            </MudStack>
+        </MudContainer>
+    </div>
+</MudForm>
+
+@code {
+    private CancellationTokenSource _cts;
+
+    [Parameter]
+    public int Id { get; set; }
+
+    private readonly RerunCollectionEditViewModel _model = new();
+
+    private MudForm _form;
+    private bool _success;
+
+    public void Dispose()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
+
+        try
+        {
+            if (IsEdit)
+            {
+                Option<RerunCollectionViewModel> maybeCollection = await Mediator.Send(new GetRerunCollectionById(Id), token);
+                maybeCollection.IfSome(collection =>
+                {
+                    _model.Id = collection.Id;
+                    _model.Name = collection.Name;
+                    _model.CollectionType = collection.CollectionType;
+                    _model.Collection = collection.Collection;
+                    _model.MultiCollection = collection.MultiCollection;
+                    _model.SmartCollection = collection.SmartCollection;
+                    _model.MediaItem = collection.MediaItem;
+                    _model.FirstRunPlaybackOrder = collection.FirstRunPlaybackOrder;
+                    _model.RerunPlaybackOrder = collection.RerunPlaybackOrder;
+                });
+            }
+            else
+            {
+                _model.Name = "New Rerun Collection";
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
+        }
+    }
+
+    private bool IsEdit => Id != 0;
+
+        private async Task<IEnumerable<MediaCollectionViewModel>> SearchCollections(string value, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return new List<MediaCollectionViewModel>();
+        }
+
+        return await Mediator.Send(new SearchCollections(value), _cts.Token);
+    }
+
+    private async Task<IEnumerable<MultiCollectionViewModel>> SearchMultiCollections(string value, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return new List<MultiCollectionViewModel>();
+        }
+
+        return await Mediator.Send(new SearchMultiCollections(value), _cts.Token);
+    }
+
+    private async Task<IEnumerable<SmartCollectionViewModel>> SearchSmartCollections(string value, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return new List<SmartCollectionViewModel>();
+        }
+
+        return await Mediator.Send(new SearchSmartCollections(value), _cts.Token);
+    }
+
+    private async Task<IEnumerable<NamedMediaItemViewModel>> SearchTelevisionShows(string value, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return new List<NamedMediaItemViewModel>();
+        }
+
+        return await Mediator.Send(new SearchTelevisionShows(value), _cts.Token);
+    }
+
+    private async Task<IEnumerable<NamedMediaItemViewModel>> SearchTelevisionSeasons(string value, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return new List<NamedMediaItemViewModel>();
+        }
+
+        return await Mediator.Send(new SearchTelevisionSeasons(value), _cts.Token);
+    }
+
+    private async Task<IEnumerable<NamedMediaItemViewModel>> SearchArtists(string value, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return new List<NamedMediaItemViewModel>();
+        }
+
+        return await Mediator.Send(new SearchArtists(value), _cts.Token);
+    }
+
+    private async Task HandleSubmitAsync()
+    {
+        await _form.Validate();
+        if (_success)
+        {
+            Seq<BaseError> errorMessage = IsEdit
+                ? (await Mediator.Send(_model.ToUpdate(), _cts.Token)).LeftToSeq()
+                : (await Mediator.Send(_model.ToCreate(), _cts.Token)).LeftToSeq();
+
+            errorMessage.HeadOrNone().Match(
+                error =>
+                {
+                    Snackbar.Add(error.Value, Severity.Error);
+                    Logger.LogError("Error saving collection: {Error}", error.Value);
+                },
+                () => NavigationManager.NavigateTo("media/rerun-collections"));
+        }
+    }
+}

@@ -23,6 +23,30 @@ internal static class Mapper
     internal static SmartCollectionViewModel ProjectToViewModel(SmartCollection collection) =>
         new(collection.Id, collection.Name, collection.Query);
 
+    internal static RerunCollectionViewModel ProjectToViewModel(RerunCollection collection) =>
+        new(
+            collection.Id,
+            collection.Name,
+            collection.CollectionType,
+            collection.Collection is not null ? ProjectToViewModel(collection.Collection) : null,
+            collection.MultiCollection is not null ? ProjectToViewModel(collection.MultiCollection) : null,
+            collection.SmartCollection is not null ? ProjectToViewModel(collection.SmartCollection) : null,
+            collection.MediaItem switch
+            {
+                Show show => MediaItems.Mapper.ProjectToViewModel(show),
+                Season season => MediaItems.Mapper.ProjectToViewModel(season),
+                Artist artist => MediaItems.Mapper.ProjectToViewModel(artist),
+                Movie movie => MediaItems.Mapper.ProjectToViewModel(movie),
+                Episode episode => MediaItems.Mapper.ProjectToViewModel(episode),
+                MusicVideo musicVideo => MediaItems.Mapper.ProjectToViewModel(musicVideo),
+                OtherVideo otherVideo => MediaItems.Mapper.ProjectToViewModel(otherVideo),
+                Song song => MediaItems.Mapper.ProjectToViewModel(song),
+                Image image => MediaItems.Mapper.ProjectToViewModel(image),
+                _ => null
+            },
+            collection.FirstRunPlaybackOrder,
+            collection.RerunPlaybackOrder);
+
     internal static TraktListViewModel ProjectToViewModel(TraktList traktList) =>
         new(
             traktList.Id,

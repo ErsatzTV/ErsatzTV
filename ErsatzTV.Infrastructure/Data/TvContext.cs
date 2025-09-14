@@ -85,6 +85,7 @@ public class TvContext : DbContext
     public DbSet<CollectionItem> CollectionItems { get; set; }
     public DbSet<MultiCollection> MultiCollections { get; set; }
     public DbSet<SmartCollection> SmartCollections { get; set; }
+    public DbSet<RerunCollection> RerunCollections { get; set; }
     public DbSet<ProgramSchedule> ProgramSchedules { get; set; }
     public DbSet<ProgramScheduleItem> ProgramScheduleItems { get; set; }
     public DbSet<Playout> Playouts { get; set; }
