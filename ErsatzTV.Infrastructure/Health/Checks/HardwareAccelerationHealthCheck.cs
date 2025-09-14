@@ -143,10 +143,12 @@ public class HardwareAccelerationHealthCheck : BaseHealthCheck, IHardwareAcceler
             {
                 result.Add(HardwareAccelerationKind.Amf);
             }
-            else if (_runtimeInfo.IsOSPlatform(OSPlatform.Linux) && encoder.Contains("_v4l2m2m "))
-            {
-                result.Add(HardwareAccelerationKind.V4l2m2m);
-            }
+
+            // TODO: fix and enable V4L2 M2M
+            // else if (_runtimeInfo.IsOSPlatform(OSPlatform.Linux) && encoder.Contains("_v4l2m2m "))
+            // {
+            //     result.Add(HardwareAccelerationKind.V4l2m2m);
+            // }
         }
 
         return result.ToList();
