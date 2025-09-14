@@ -51,6 +51,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix inefficient database migration that would cause database initialization to get stuck
 - Classic schedules: fix scheduling behavior when a flood item is before a flexible fixed start item
   - Sometimes the flood item wouldn't schedule anything
+- Fix troubleshooting certain text graphics elements by generating fake EPG data
 
 ### Changed
 - **BREAKING CHANGE**: change how `Scripted Schedule` system works
