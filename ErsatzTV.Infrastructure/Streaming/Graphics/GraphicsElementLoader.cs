@@ -143,13 +143,13 @@ public partial class GraphicsElementLoader(
     }
 
     private Task<Option<ImageGraphicsElement>> LoadImage(string fileName, Dictionary<string, object> variables) =>
-        GetTemplatedYaml(fileName, variables).Map(FromYaml<ImageGraphicsElement>);
+        GetTemplatedYaml(fileName, variables).BindT(FromYaml<ImageGraphicsElement>);
 
     private Task<Option<TextGraphicsElement>> LoadText(string fileName, Dictionary<string, object> variables) =>
-        GetTemplatedYaml(fileName, variables).Map(FromYaml<TextGraphicsElement>);
+        GetTemplatedYaml(fileName, variables).BindT(FromYaml<TextGraphicsElement>);
 
     private Task<Option<SubtitleGraphicsElement>> LoadSubtitle(string fileName, Dictionary<string, object> variables) =>
-        GetTemplatedYaml(fileName, variables).Map(FromYaml<SubtitleGraphicsElement>);
+        GetTemplatedYaml(fileName, variables).BindT(FromYaml<SubtitleGraphicsElement>);
 
     private async Task<Dictionary<string, object>> InitTemplateVariables(
         GraphicsEngineContext context,
@@ -189,7 +189,7 @@ public partial class GraphicsElementLoader(
         return result;
     }
 
-    private async Task<string> GetTemplatedYaml(string fileName, Dictionary<string, object> variables)
+    private async Task<Option<string>> GetTemplatedYaml(string fileName, Dictionary<string, object> variables)
     {
         string yaml = await localFileSystem.ReadAllText(fileName);
         try
@@ -203,9 +203,10 @@ public partial class GraphicsElementLoader(
             context.PushGlobal(scriptObject);
             return await Template.Parse(yaml).RenderAsync(context);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return yaml;
+            logger.LogWarning(ex, "Failed to load process graphics element YAML definition as template");
+            return Option<string>.None;
         }
     }
 
