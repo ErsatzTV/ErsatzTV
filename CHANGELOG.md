@@ -17,6 +17,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Items will still be scheduled from the rerun collection if it is used before the first run collection
     - Otherwise, the rerun collection would be considered "empty" which prevents the playout build altogether
 
+### Fixed
+- Fix green output when libplacebo tonemapping is used with NVIDIA acceleration
+
 ## [25.6.0] - 2025-09-14
 ### Added
 - Classic schedules: allow selecting multiple graphics elements on schedule items
