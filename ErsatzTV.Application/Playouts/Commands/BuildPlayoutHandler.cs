@@ -28,6 +28,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
     private readonly IFFmpegSegmenterService _ffmpegSegmenterService;
     private readonly IPlayoutBuilder _playoutBuilder;
     private readonly IPlayoutTimeShifter _playoutTimeShifter;
+    private readonly IRerunHelper _rerunHelper;
     private readonly ChannelWriter<IBackgroundServiceRequest> _workerChannel;
     private readonly ISequentialPlayoutBuilder _sequentialPlayoutBuilder;
     private readonly IScriptedPlayoutBuilder _scriptedPlayoutBuilder;
@@ -44,6 +45,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
         IFFmpegSegmenterService ffmpegSegmenterService,
         IEntityLocker entityLocker,
         IPlayoutTimeShifter playoutTimeShifter,
+        IRerunHelper rerunHelper,
         ChannelWriter<IBackgroundServiceRequest> workerChannel)
     {
         _client = client;
@@ -57,6 +59,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
         _ffmpegSegmenterService = ffmpegSegmenterService;
         _entityLocker = entityLocker;
         _playoutTimeShifter = playoutTimeShifter;
+        _rerunHelper = rerunHelper;
         _workerChannel = workerChannel;
     }
 

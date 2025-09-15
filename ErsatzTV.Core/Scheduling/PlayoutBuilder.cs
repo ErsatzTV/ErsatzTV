@@ -1241,7 +1241,7 @@ public class PlayoutBuilder : IPlayoutBuilder
 
         if (collectionKey.CollectionType is CollectionType.RerunFirstRun or CollectionType.RerunRerun)
         {
-            await _rerunHelper.InitWithMediaItems(collectionKey, mediaItems);
+            await _rerunHelper.InitWithMediaItems(playout.Id, collectionKey, mediaItems, cancellationToken);
             return _rerunHelper.CreateEnumerator(collectionKey, state);
         }
 
