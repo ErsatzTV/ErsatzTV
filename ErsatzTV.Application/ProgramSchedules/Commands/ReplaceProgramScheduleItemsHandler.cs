@@ -120,6 +120,7 @@ public class ReplaceProgramScheduleItemsHandler : ProgramScheduleItemCommandBase
                 item.MediaItemId,
                 item.MultiCollectionId,
                 item.SmartCollectionId,
+                item.RerunCollectionId,
                 item.PlaylistId);
 
             if (keyOrders.TryGetValue(key, out System.Collections.Generic.HashSet<PlaybackOrder> playbackOrders))
@@ -140,10 +141,11 @@ public class ReplaceProgramScheduleItemsHandler : ProgramScheduleItemCommandBase
     }
 
     private sealed record CollectionKey(
-        ProgramScheduleItemCollectionType CollectionType,
+        CollectionType CollectionType,
         int? CollectionId,
         int? MediaItemId,
         int? MultiCollectionId,
         int? SmartCollectionId,
+        int? RerunCollectionId,
         int? PlaylistId);
 }

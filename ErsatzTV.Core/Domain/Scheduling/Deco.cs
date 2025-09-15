@@ -22,7 +22,7 @@ public class Deco
 
     // default filler
     public DecoMode DefaultFillerMode { get; set; }
-    public ProgramScheduleItemCollectionType DefaultFillerCollectionType { get; set; }
+    public CollectionType DefaultFillerCollectionType { get; set; }
     public int? DefaultFillerCollectionId { get; set; }
     public Collection DefaultFillerCollection { get; set; }
     public int? DefaultFillerMediaItemId { get; set; }
@@ -35,7 +35,7 @@ public class Deco
 
     // dead air fallback
     public DecoMode DeadAirFallbackMode { get; set; }
-    public ProgramScheduleItemCollectionType DeadAirFallbackCollectionType { get; set; }
+    public CollectionType DeadAirFallbackCollectionType { get; set; }
     public int? DeadAirFallbackCollectionId { get; set; }
     public Collection DeadAirFallbackCollection { get; set; }
     public int? DeadAirFallbackMediaItemId { get; set; }

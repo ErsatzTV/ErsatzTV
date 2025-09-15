@@ -18,7 +18,7 @@ public class SingleMediaItemEnumerator(MediaItem mediaItem) : IMediaCollectionEn
         // do nothing
     }
 
-    public void MoveNext()
+    public void MoveNext(Option<DateTimeOffset> scheduledAt)
     {
         // do nothing
     }

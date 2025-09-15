@@ -15,10 +15,11 @@ public abstract record ProgramScheduleItemViewModel(
     TimeSpan? StartTime,
     FixedStartTimeBehavior? FixedStartTimeBehavior,
     PlayoutMode PlayoutMode,
-    ProgramScheduleItemCollectionType CollectionType,
+    CollectionType CollectionType,
     MediaCollectionViewModel Collection,
     MultiCollectionViewModel MultiCollection,
     SmartCollectionViewModel SmartCollection,
+    RerunCollectionViewModel RerunCollection,
     PlaylistViewModel Playlist,
     NamedMediaItemViewModel MediaItem,
     PlaybackOrder PlaybackOrder,
@@ -43,19 +44,21 @@ public abstract record ProgramScheduleItemViewModel(
 {
     public string Name => CollectionType switch
     {
-        ProgramScheduleItemCollectionType.Collection => Collection?.Name,
-        ProgramScheduleItemCollectionType.TelevisionShow =>
+        CollectionType.Collection => Collection?.Name,
+        CollectionType.TelevisionShow =>
             MediaItem?.Name, // $"{TelevisionShow?.Title} ({TelevisionShow?.Year})",
-        ProgramScheduleItemCollectionType.TelevisionSeason =>
+        CollectionType.TelevisionSeason =>
             MediaItem?.Name, // $"{TelevisionSeason?.Title} ({TelevisionSeason?.Plot})",
-        ProgramScheduleItemCollectionType.Artist =>
+        CollectionType.Artist =>
             MediaItem?.Name,
-        ProgramScheduleItemCollectionType.MultiCollection =>
+        CollectionType.MultiCollection =>
             MultiCollection?.Name,
-        ProgramScheduleItemCollectionType.SmartCollection =>
+        CollectionType.SmartCollection =>
             SmartCollection?.Name,
-        ProgramScheduleItemCollectionType.Playlist =>
+        CollectionType.Playlist =>
             Playlist?.Name,
+        CollectionType.RerunFirstRun or CollectionType.RerunRerun =>
+            RerunCollection?.Name,
         _ => string.Empty
     };
 }

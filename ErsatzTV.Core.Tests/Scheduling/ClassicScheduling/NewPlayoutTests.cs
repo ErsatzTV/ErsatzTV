@@ -550,6 +550,7 @@ public class NewPlayoutTests : PlayoutBuilderTestBase
         IMultiEpisodeShuffleCollectionEnumeratorFactory factory =
             Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
         ILocalFileSystem localFileSystem = Substitute.For<ILocalFileSystem>();
+        IRerunHelper rerunHelper = Substitute.For<IRerunHelper>();
         var builder = new PlayoutBuilder(
             configRepo,
             fakeRepository,
@@ -557,6 +558,7 @@ public class NewPlayoutTests : PlayoutBuilderTestBase
             artistRepo,
             factory,
             localFileSystem,
+            rerunHelper,
             Logger);
 
         DateTimeOffset start = HoursAfterMidnight(0);
@@ -664,6 +666,7 @@ public class NewPlayoutTests : PlayoutBuilderTestBase
         IMultiEpisodeShuffleCollectionEnumeratorFactory factory =
             Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
         ILocalFileSystem localFileSystem = Substitute.For<ILocalFileSystem>();
+        IRerunHelper rerunHelper = Substitute.For<IRerunHelper>();
         var builder = new PlayoutBuilder(
             configRepo,
             fakeRepository,
@@ -671,6 +674,7 @@ public class NewPlayoutTests : PlayoutBuilderTestBase
             artistRepo,
             factory,
             localFileSystem,
+            rerunHelper,
             Logger);
 
         DateTimeOffset start = HoursAfterMidnight(0);
@@ -829,6 +833,7 @@ public class NewPlayoutTests : PlayoutBuilderTestBase
         IMultiEpisodeShuffleCollectionEnumeratorFactory factory =
             Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
         ILocalFileSystem localFileSystem = Substitute.For<ILocalFileSystem>();
+        IRerunHelper rerunHelper = Substitute.For<IRerunHelper>();
         var builder = new PlayoutBuilder(
             configRepo,
             fakeRepository,
@@ -836,6 +841,7 @@ public class NewPlayoutTests : PlayoutBuilderTestBase
             artistRepo,
             factory,
             localFileSystem,
+            rerunHelper,
             Logger);
 
         DateTimeOffset start = HoursAfterMidnight(0);
@@ -953,6 +959,7 @@ public class NewPlayoutTests : PlayoutBuilderTestBase
         IMultiEpisodeShuffleCollectionEnumeratorFactory factory =
             Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
         ILocalFileSystem localFileSystem = Substitute.For<ILocalFileSystem>();
+        IRerunHelper rerunHelper = Substitute.For<IRerunHelper>();
         var builder = new PlayoutBuilder(
             configRepo,
             fakeRepository,
@@ -960,6 +967,7 @@ public class NewPlayoutTests : PlayoutBuilderTestBase
             artistRepo,
             factory,
             localFileSystem,
+            rerunHelper,
             Logger);
 
         DateTimeOffset start = HoursAfterMidnight(0);
@@ -1076,6 +1084,7 @@ public class NewPlayoutTests : PlayoutBuilderTestBase
         IMultiEpisodeShuffleCollectionEnumeratorFactory factory =
             Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
         ILocalFileSystem localFileSystem = Substitute.For<ILocalFileSystem>();
+        IRerunHelper rerunHelper = Substitute.For<IRerunHelper>();
         var builder = new PlayoutBuilder(
             configRepo,
             fakeRepository,
@@ -1083,6 +1092,7 @@ public class NewPlayoutTests : PlayoutBuilderTestBase
             artistRepo,
             factory,
             localFileSystem,
+            rerunHelper,
             Logger);
 
         DateTimeOffset start = HoursAfterMidnight(0);
@@ -1200,6 +1210,7 @@ public class NewPlayoutTests : PlayoutBuilderTestBase
         IMultiEpisodeShuffleCollectionEnumeratorFactory factory =
             Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
         ILocalFileSystem localFileSystem = Substitute.For<ILocalFileSystem>();
+        IRerunHelper rerunHelper = Substitute.For<IRerunHelper>();
         var builder = new PlayoutBuilder(
             configRepo,
             fakeRepository,
@@ -1207,6 +1218,7 @@ public class NewPlayoutTests : PlayoutBuilderTestBase
             artistRepo,
             factory,
             localFileSystem,
+            rerunHelper,
             Logger);
 
         DateTimeOffset start = HoursAfterMidnight(0);
@@ -1329,6 +1341,7 @@ public class NewPlayoutTests : PlayoutBuilderTestBase
         IMultiEpisodeShuffleCollectionEnumeratorFactory factory =
             Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
         ILocalFileSystem localFileSystem = Substitute.For<ILocalFileSystem>();
+        IRerunHelper rerunHelper = Substitute.For<IRerunHelper>();
         var builder = new PlayoutBuilder(
             configRepo,
             fakeRepository,
@@ -1336,6 +1349,7 @@ public class NewPlayoutTests : PlayoutBuilderTestBase
             artistRepo,
             factory,
             localFileSystem,
+            rerunHelper,
             Logger);
 
         DateTimeOffset start = HoursAfterMidnight(0);
@@ -1458,6 +1472,7 @@ public class NewPlayoutTests : PlayoutBuilderTestBase
         IMultiEpisodeShuffleCollectionEnumeratorFactory factory =
             Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
         ILocalFileSystem localFileSystem = Substitute.For<ILocalFileSystem>();
+        IRerunHelper rerunHelper = Substitute.For<IRerunHelper>();
         var builder = new PlayoutBuilder(
             configRepo,
             fakeRepository,
@@ -1465,6 +1480,7 @@ public class NewPlayoutTests : PlayoutBuilderTestBase
             artistRepo,
             factory,
             localFileSystem,
+            rerunHelper,
             Logger);
 
         DateTimeOffset start = HoursAfterMidnight(0);
@@ -1596,6 +1612,7 @@ public class NewPlayoutTests : PlayoutBuilderTestBase
         IMultiEpisodeShuffleCollectionEnumeratorFactory factory =
             Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
         ILocalFileSystem localFileSystem = Substitute.For<ILocalFileSystem>();
+        IRerunHelper rerunHelper = Substitute.For<IRerunHelper>();
         var builder = new PlayoutBuilder(
             configRepo,
             fakeRepository,
@@ -1603,6 +1620,7 @@ public class NewPlayoutTests : PlayoutBuilderTestBase
             artistRepo,
             factory,
             localFileSystem,
+            rerunHelper,
             Logger);
 
         DateTimeOffset start = HoursAfterMidnight(0);
@@ -1727,6 +1745,7 @@ public class NewPlayoutTests : PlayoutBuilderTestBase
         IMultiEpisodeShuffleCollectionEnumeratorFactory factory =
             Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
         ILocalFileSystem localFileSystem = Substitute.For<ILocalFileSystem>();
+        IRerunHelper rerunHelper = Substitute.For<IRerunHelper>();
         var builder = new PlayoutBuilder(
             configRepo,
             fakeRepository,
@@ -1734,6 +1753,7 @@ public class NewPlayoutTests : PlayoutBuilderTestBase
             artistRepo,
             factory,
             localFileSystem,
+            rerunHelper,
             Logger);
 
         DateTimeOffset start = HoursAfterMidnight(0);
@@ -1824,6 +1844,7 @@ public class NewPlayoutTests : PlayoutBuilderTestBase
         IMultiEpisodeShuffleCollectionEnumeratorFactory factory =
             Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
         ILocalFileSystem localFileSystem = Substitute.For<ILocalFileSystem>();
+        IRerunHelper rerunHelper = Substitute.For<IRerunHelper>();
         var builder = new PlayoutBuilder(
             configRepo,
             fakeRepository,
@@ -1831,6 +1852,7 @@ public class NewPlayoutTests : PlayoutBuilderTestBase
             artistRepo,
             factory,
             localFileSystem,
+            rerunHelper,
             Logger);
 
         DateTimeOffset start = HoursAfterMidnight(0);

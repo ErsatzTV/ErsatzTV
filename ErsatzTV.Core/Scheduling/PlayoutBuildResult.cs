@@ -11,6 +11,8 @@ public record PlayoutBuildResult(
     System.Collections.Generic.HashSet<int> ItemsToRemove,
     List<PlayoutHistory> AddedHistory,
     System.Collections.Generic.HashSet<int> HistoryToRemove,
+    List<RerunHistory> AddedRerunHistory,
+    System.Collections.Generic.HashSet<int> RerunHistoryToRemove,
     Option<DateTimeOffset> TimeShiftTo)
 {
     public static PlayoutBuildResult Empty =>
@@ -18,6 +20,8 @@ public record PlayoutBuildResult(
             false,
             Option<DateTimeOffset>.None,
             Option<DateTimeOffset>.None,
+            [],
+            [],
             [],
             [],
             [],

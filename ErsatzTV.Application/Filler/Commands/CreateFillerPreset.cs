@@ -12,7 +12,7 @@ public record CreateFillerPreset(
     int? Count,
     int? PadToNearestMinute,
     bool AllowWatermarks,
-    ProgramScheduleItemCollectionType CollectionType,
+    CollectionType CollectionType,
     int? CollectionId,
     int? MediaItemId,
     int? MultiCollectionId,

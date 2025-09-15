@@ -120,7 +120,7 @@ public class PreviewPlaylistPlayoutHandler(
     private static ProgramScheduleItemFlood MapToScheduleItem(PreviewPlaylistPlayout request) =>
         new()
         {
-            CollectionType = ProgramScheduleItemCollectionType.Playlist,
+            CollectionType = CollectionType.Playlist,
             Playlist = new Playlist
             {
                 Items = request.Data.Items.OrderBy(i => i.Index).Map(MapToPlaylistItem).ToList()

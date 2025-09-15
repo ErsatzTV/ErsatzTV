@@ -10,7 +10,7 @@ public class FillerPreset
     public int? Count { get; set; }
     public int? PadToNearestMinute { get; set; }
     public bool AllowWatermarks { get; set; }
-    public ProgramScheduleItemCollectionType CollectionType { get; set; }
+    public CollectionType CollectionType { get; set; }
     public int? CollectionId { get; set; }
     public Collection Collection { get; set; }
     public int? MediaItemId { get; set; }

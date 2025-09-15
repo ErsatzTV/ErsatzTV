@@ -8,12 +8,12 @@ namespace ErsatzTV.ViewModels;
 
 public class BlockItemEditViewModel : INotifyPropertyChanged
 {
-    private ProgramScheduleItemCollectionType _collectionType;
+    private CollectionType _collectionType;
 
     public int Id { get; set; }
     public int Index { get; set; }
 
-    public ProgramScheduleItemCollectionType CollectionType
+    public CollectionType CollectionType
     {
         get => _collectionType;
         set
@@ -33,7 +33,7 @@ public class BlockItemEditViewModel : INotifyPropertyChanged
                 OnPropertyChanged(nameof(SmartCollection));
             }
 
-            if (_collectionType == ProgramScheduleItemCollectionType.MultiCollection)
+            if (_collectionType == CollectionType.MultiCollection)
             {
                 PlaybackOrder = PlaybackOrder.Shuffle;
             }
@@ -47,12 +47,12 @@ public class BlockItemEditViewModel : INotifyPropertyChanged
 
     public string CollectionName => CollectionType switch
     {
-        ProgramScheduleItemCollectionType.Collection => Collection?.Name,
-        ProgramScheduleItemCollectionType.TelevisionShow => MediaItem?.Name,
-        ProgramScheduleItemCollectionType.TelevisionSeason => MediaItem?.Name,
-        ProgramScheduleItemCollectionType.Artist => MediaItem?.Name,
-        ProgramScheduleItemCollectionType.MultiCollection => MultiCollection?.Name,
-        ProgramScheduleItemCollectionType.SmartCollection => SmartCollection?.Name,
+        CollectionType.Collection => Collection?.Name,
+        CollectionType.TelevisionShow => MediaItem?.Name,
+        CollectionType.TelevisionSeason => MediaItem?.Name,
+        CollectionType.Artist => MediaItem?.Name,
+        CollectionType.MultiCollection => MultiCollection?.Name,
+        CollectionType.SmartCollection => SmartCollection?.Name,
         _ => string.Empty
     };
 

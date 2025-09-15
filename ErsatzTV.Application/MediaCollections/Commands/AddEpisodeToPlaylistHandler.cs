@@ -25,7 +25,7 @@ public class AddEpisodeToPlaylistHandler(IDbContextFactory<TvContext> dbContextF
         var playlistItem = new PlaylistItem
         {
             Index = index,
-            CollectionType = ProgramScheduleItemCollectionType.Episode,
+            CollectionType = CollectionType.Episode,
             MediaItemId = parameters.Episode.Id,
             PlaybackOrder = PlaybackOrder.Shuffle,
             IncludeInProgramGuide = true

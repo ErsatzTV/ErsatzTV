@@ -25,7 +25,7 @@ public class SeasonEpisodeContentTests
         {
             chronologicalContent.Current.IsSome.ShouldBeTrue();
             chronologicalContent.Current.Map(x => x.Id).IfNone(-1).ShouldBe(i);
-            chronologicalContent.MoveNext();
+            chronologicalContent.MoveNext(Option<DateTimeOffset>.None);
         }
     }
 
@@ -40,7 +40,7 @@ public class SeasonEpisodeContentTests
         for (var i = 0; i < 10; i++)
         {
             chronologicalContent.State.Index.ShouldBe(i % 10);
-            chronologicalContent.MoveNext();
+            chronologicalContent.MoveNext(Option<DateTimeOffset>.None);
         }
     }
 
@@ -57,7 +57,7 @@ public class SeasonEpisodeContentTests
             chronologicalContent.Current.IsSome.ShouldBeTrue();
             chronologicalContent.Current.Map(x => x.Id).IfNone(-1).ShouldBe(i);
             chronologicalContent.State.Index.ShouldBe(i - 1);
-            chronologicalContent.MoveNext();
+            chronologicalContent.MoveNext(Option<DateTimeOffset>.None);
         }
     }
 
@@ -89,7 +89,7 @@ public class SeasonEpisodeContentTests
         for (var i = 0; i < 16; i++)
         {
             chronologicalContent.State.Index.ShouldBe(i % 8);
-            chronologicalContent.MoveNext();
+            chronologicalContent.MoveNext(Option<DateTimeOffset>.None);
         }
     }
 

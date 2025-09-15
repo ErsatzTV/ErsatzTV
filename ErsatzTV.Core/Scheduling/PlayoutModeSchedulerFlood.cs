@@ -145,7 +145,7 @@ public class PlayoutModeSchedulerFlood : PlayoutModeSchedulerBase<ProgramSchedul
                         : nextState.NextGuideGroup
                 };
 
-                contentEnumerator.MoveNext();
+                contentEnumerator.MoveNext(itemStartTime);
             }
             else
             {

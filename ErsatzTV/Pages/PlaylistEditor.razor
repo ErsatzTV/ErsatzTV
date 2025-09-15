@@ -124,21 +124,21 @@
             <MudText>Collection Type</MudText>
         </div>
         <MudSelect @bind-Value="_selectedItem.CollectionType" For="@(() => _selectedItem.CollectionType)">
-            <MudSelectItem Value="ProgramScheduleItemCollectionType.Collection">Collection</MudSelectItem>
-            <MudSelectItem Value="ProgramScheduleItemCollectionType.TelevisionShow">Television Show</MudSelectItem>
-            <MudSelectItem Value="ProgramScheduleItemCollectionType.TelevisionSeason">Television Season</MudSelectItem>
-            <MudSelectItem Value="ProgramScheduleItemCollectionType.Artist">Artist</MudSelectItem>
-            <MudSelectItem Value="ProgramScheduleItemCollectionType.MultiCollection">Multi Collection</MudSelectItem>
-            <MudSelectItem Value="ProgramScheduleItemCollectionType.SmartCollection">Smart Collection</MudSelectItem>
-            <MudSelectItem Value="ProgramScheduleItemCollectionType.Movie">Movie</MudSelectItem>
-            <MudSelectItem Value="ProgramScheduleItemCollectionType.Episode">Episode</MudSelectItem>
-            <MudSelectItem Value="ProgramScheduleItemCollectionType.MusicVideo">Music Video</MudSelectItem>
-            <MudSelectItem Value="ProgramScheduleItemCollectionType.OtherVideo">Other Video</MudSelectItem>
-            <MudSelectItem Value="ProgramScheduleItemCollectionType.Song">Song</MudSelectItem>
-            <MudSelectItem Value="ProgramScheduleItemCollectionType.Image">Image</MudSelectItem>
+            <MudSelectItem Value="CollectionType.Collection">Collection</MudSelectItem>
+            <MudSelectItem Value="CollectionType.TelevisionShow">Television Show</MudSelectItem>
+            <MudSelectItem Value="CollectionType.TelevisionSeason">Television Season</MudSelectItem>
+            <MudSelectItem Value="CollectionType.Artist">Artist</MudSelectItem>
+            <MudSelectItem Value="CollectionType.MultiCollection">Multi Collection</MudSelectItem>
+            <MudSelectItem Value="CollectionType.SmartCollection">Smart Collection</MudSelectItem>
+            <MudSelectItem Value="CollectionType.Movie">Movie</MudSelectItem>
+            <MudSelectItem Value="CollectionType.Episode">Episode</MudSelectItem>
+            <MudSelectItem Value="CollectionType.MusicVideo">Music Video</MudSelectItem>
+            <MudSelectItem Value="CollectionType.OtherVideo">Other Video</MudSelectItem>
+            <MudSelectItem Value="CollectionType.Song">Song</MudSelectItem>
+            <MudSelectItem Value="CollectionType.Image">Image</MudSelectItem>
         </MudSelect>
     </MudStack>
-    @if (_selectedItem.CollectionType == ProgramScheduleItemCollectionType.Collection)
+    @if (_selectedItem.CollectionType == CollectionType.Collection)
     {
         <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
             <div class="d-flex">
@@ -156,7 +156,7 @@
         </MudStack>
     }
 
-    @if (_selectedItem.CollectionType == ProgramScheduleItemCollectionType.MultiCollection)
+    @if (_selectedItem.CollectionType == CollectionType.MultiCollection)
     {
         <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
             <div class="d-flex">
@@ -174,7 +174,7 @@
         </MudStack>
     }
 
-    @if (_selectedItem.CollectionType == ProgramScheduleItemCollectionType.SmartCollection)
+    @if (_selectedItem.CollectionType == CollectionType.SmartCollection)
     {
         <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
             <div class="d-flex">
@@ -192,7 +192,7 @@
         </MudStack>
     }
 
-    @if (_selectedItem.CollectionType == ProgramScheduleItemCollectionType.TelevisionShow)
+    @if (_selectedItem.CollectionType == CollectionType.TelevisionShow)
     {
         <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
             <div class="d-flex">
@@ -210,7 +210,7 @@
         </MudStack>
     }
 
-    @if (_selectedItem.CollectionType == ProgramScheduleItemCollectionType.TelevisionSeason)
+    @if (_selectedItem.CollectionType == CollectionType.TelevisionSeason)
     {
         <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
             <div class="d-flex">
@@ -229,7 +229,7 @@
         </MudStack>
     }
 
-    @if (_selectedItem.CollectionType == ProgramScheduleItemCollectionType.Artist)
+    @if (_selectedItem.CollectionType == CollectionType.Artist)
     {
         <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
             <div class="d-flex">
@@ -248,7 +248,7 @@
         </MudStack>
     }
 
-    @if (_selectedItem.CollectionType == ProgramScheduleItemCollectionType.Movie)
+    @if (_selectedItem.CollectionType == CollectionType.Movie)
     {
         <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
             <div class="d-flex">
@@ -273,30 +273,30 @@
         </div>
         <MudSelect @bind-Value="@_selectedItem.PlaybackOrder"
                    For="@(() => _selectedItem.PlaybackOrder)"
-                   Disabled="@(_selectedItem.CollectionType is ProgramScheduleItemCollectionType.Movie or ProgramScheduleItemCollectionType.Episode or ProgramScheduleItemCollectionType.MusicVideo or ProgramScheduleItemCollectionType.OtherVideo or ProgramScheduleItemCollectionType.Song or ProgramScheduleItemCollectionType.Image)">
+                   Disabled="@(_selectedItem.CollectionType is CollectionType.Movie or CollectionType.Episode or CollectionType.MusicVideo or CollectionType.OtherVideo or CollectionType.Song or CollectionType.Image)">
             @switch (_selectedItem.CollectionType)
             {
-                case ProgramScheduleItemCollectionType.MultiCollection:
+                case CollectionType.MultiCollection:
                     <MudSelectItem Value="PlaybackOrder.Shuffle">Shuffle</MudSelectItem>
                     @* <MudSelectItem Value="PlaybackOrder.ShuffleInOrder">Shuffle In Order</MudSelectItem> *@
                     break;
-                case ProgramScheduleItemCollectionType.Collection:
-                case ProgramScheduleItemCollectionType.SmartCollection:
+                case CollectionType.Collection:
+                case CollectionType.SmartCollection:
                     <MudSelectItem Value="PlaybackOrder.Chronological">Chronological</MudSelectItem>
                     <MudSelectItem Value="PlaybackOrder.Shuffle">Shuffle</MudSelectItem>
                     <MudSelectItem Value="PlaybackOrder.Random">Random</MudSelectItem>
                     <MudSelectItem Value="PlaybackOrder.ShuffleInOrder">Shuffle In Order</MudSelectItem>
                     break;
-                case ProgramScheduleItemCollectionType.TelevisionShow:
+                case CollectionType.TelevisionShow:
                     <MudSelectItem Value="PlaybackOrder.SeasonEpisode">Season, Episode</MudSelectItem>
                     <MudSelectItem Value="PlaybackOrder.Chronological">Chronological</MudSelectItem>
                     <MudSelectItem Value="PlaybackOrder.Shuffle">Shuffle</MudSelectItem>
                     <MudSelectItem Value="PlaybackOrder.Random">Random</MudSelectItem>
                     @* <MudSelectItem Value="PlaybackOrder.MultiEpisodeShuffle">Multi-Episode Shuffle</MudSelectItem> *@
                     break;
-                case ProgramScheduleItemCollectionType.TelevisionSeason:
-                case ProgramScheduleItemCollectionType.Artist:
-                case ProgramScheduleItemCollectionType.FakeCollection:
+                case CollectionType.TelevisionSeason:
+                case CollectionType.Artist:
+                case CollectionType.FakeCollection:
                 default:
                     <MudSelectItem Value="PlaybackOrder.Chronological">Chronological</MudSelectItem>
                     <MudSelectItem Value="PlaybackOrder.Shuffle">Shuffle</MudSelectItem>
@@ -490,7 +490,7 @@ else if (_previewItems is not null)
         {
             Index = _playlist.Items.Map(i => i.Index).DefaultIfEmpty().Max() + 1,
             PlaybackOrder = PlaybackOrder.Chronological,
-            CollectionType = ProgramScheduleItemCollectionType.Collection
+            CollectionType = CollectionType.Collection
         };
 
         _playlist.Items.Add(item);

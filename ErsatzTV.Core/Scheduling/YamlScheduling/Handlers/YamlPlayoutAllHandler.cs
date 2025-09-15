@@ -107,7 +107,7 @@ public class YamlPlayoutAllHandler(EnumeratorCache enumeratorCache) : YamlPlayou
                         context.AddedHistory.Add(history);
                     }
 
-                    enumerator.MoveNext();
+                    enumerator.MoveNext(playoutItem.StartOffset);
                 }
 
                 foreach (string postRollSequence in context.GetPostRollSequence())

@@ -779,6 +779,7 @@ public class Startup
         services.AddScoped<IHardwareCapabilitiesFactory, HardwareCapabilitiesFactory>();
         services.AddScoped<IMultiEpisodeShuffleCollectionEnumeratorFactory,
             MultiEpisodeShuffleCollectionEnumeratorFactory>();
+        services.AddScoped<IRerunHelper, RerunHelper>();
         services.AddScoped<IChannelLogoGenerator, ChannelLogoGenerator>();
         services.AddScoped<IGraphicsEngine, GraphicsEngine>();
         services.AddScoped<IGraphicsElementRepository, GraphicsElementRepository>();

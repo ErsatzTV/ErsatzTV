@@ -203,10 +203,10 @@ public abstract class TraktCommandBase
 
                         playlistItem.CollectionType = item.Kind switch
                         {
-                            TraktListItemKind.Movie => ProgramScheduleItemCollectionType.Movie,
-                            TraktListItemKind.Show => ProgramScheduleItemCollectionType.TelevisionShow,
-                            TraktListItemKind.Season => ProgramScheduleItemCollectionType.TelevisionSeason,
-                            _ => ProgramScheduleItemCollectionType.Episode
+                            TraktListItemKind.Movie => CollectionType.Movie,
+                            TraktListItemKind.Show => CollectionType.TelevisionShow,
+                            TraktListItemKind.Season => CollectionType.TelevisionSeason,
+                            _ => CollectionType.Episode
                         };
 
                         playlistItem.MediaItemId = item.MediaItemId;

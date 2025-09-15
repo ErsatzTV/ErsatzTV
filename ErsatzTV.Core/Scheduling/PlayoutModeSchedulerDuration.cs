@@ -110,7 +110,7 @@ public class PlayoutModeSchedulerDuration : PlayoutModeSchedulerBase<ProgramSche
                     itemDuration,
                     scheduleItem.PlayoutDuration);
 
-                contentEnumerator.MoveNext();
+                contentEnumerator.MoveNext(Option<DateTimeOffset>.None);
                 continue;
             }
 
@@ -137,7 +137,7 @@ public class PlayoutModeSchedulerDuration : PlayoutModeSchedulerBase<ProgramSche
                         itemDuration,
                         remainingDuration);
 
-                    contentEnumerator.MoveNext();
+                    contentEnumerator.MoveNext(Option<DateTimeOffset>.None);
                 }
             }
             else
@@ -235,7 +235,7 @@ public class PlayoutModeSchedulerDuration : PlayoutModeSchedulerBase<ProgramSche
                             : nextState.NextGuideGroup
                     };
 
-                    contentEnumerator.MoveNext();
+                    contentEnumerator.MoveNext(itemStartTime);
                 }
                 else
                 {

@@ -25,7 +25,7 @@ public class AddSeasonToPlaylistHandler(IDbContextFactory<TvContext> dbContextFa
         var playlistItem = new PlaylistItem
         {
             Index = index,
-            CollectionType = ProgramScheduleItemCollectionType.TelevisionSeason,
+            CollectionType = CollectionType.TelevisionSeason,
             MediaItemId = parameters.Season.Id,
             PlaybackOrder = PlaybackOrder.Shuffle,
             IncludeInProgramGuide = true

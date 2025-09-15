@@ -34,6 +34,9 @@ internal static class Mapper
                     duration.SmartCollection != null
                         ? MediaCollections.Mapper.ProjectToViewModel(duration.SmartCollection)
                         : null,
+                    duration.RerunCollection != null
+                        ? MediaCollections.Mapper.ProjectToViewModel(duration.RerunCollection)
+                        : null,
                     duration.Playlist != null
                         ? MediaCollections.Mapper.ProjectToViewModel(duration.Playlist)
                         : null,
@@ -95,6 +98,9 @@ internal static class Mapper
                     flood.SmartCollection != null
                         ? MediaCollections.Mapper.ProjectToViewModel(flood.SmartCollection)
                         : null,
+                    flood.RerunCollection != null
+                        ? MediaCollections.Mapper.ProjectToViewModel(flood.RerunCollection)
+                        : null,
                     flood.Playlist != null
                         ? MediaCollections.Mapper.ProjectToViewModel(flood.Playlist)
                         : null,
@@ -152,6 +158,9 @@ internal static class Mapper
                         : null,
                     multiple.SmartCollection != null
                         ? MediaCollections.Mapper.ProjectToViewModel(multiple.SmartCollection)
+                        : null,
+                    multiple.RerunCollection != null
+                        ? MediaCollections.Mapper.ProjectToViewModel(multiple.RerunCollection)
                         : null,
                     multiple.Playlist != null
                         ? MediaCollections.Mapper.ProjectToViewModel(multiple.Playlist)
@@ -212,6 +221,9 @@ internal static class Mapper
                         : null,
                     one.SmartCollection != null
                         ? MediaCollections.Mapper.ProjectToViewModel(one.SmartCollection)
+                        : null,
+                    one.RerunCollection != null
+                        ? MediaCollections.Mapper.ProjectToViewModel(one.RerunCollection)
                         : null,
                     one.Playlist != null
                         ? MediaCollections.Mapper.ProjectToViewModel(one.Playlist)

@@ -42,7 +42,7 @@ public class ShuffleInOrderCollectionEnumerator : IMediaCollectionEnumerator
         State = new CollectionEnumeratorState { Seed = state.Seed };
         while (State.Index < state.Index)
         {
-            MoveNext();
+            MoveNext(Option<DateTimeOffset>.None);
         }
     }
 
@@ -63,7 +63,7 @@ public class ShuffleInOrderCollectionEnumerator : IMediaCollectionEnumerator
     public Option<MediaItem> Current => _shuffled.Length != 0 ? _shuffled[State.Index % _mediaItemCount] : None;
     public Option<bool> CurrentIncludeInProgramGuide { get; }
 
-    public void MoveNext()
+    public void MoveNext(Option<DateTimeOffset> scheduledAt)
     {
         if ((State.Index + 1) % _shuffled.Length == 0)
         {

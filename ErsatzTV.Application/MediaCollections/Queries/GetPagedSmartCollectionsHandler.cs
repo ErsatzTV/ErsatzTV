@@ -4,18 +4,14 @@ using static ErsatzTV.Application.MediaCollections.Mapper;
 
 namespace ErsatzTV.Application.MediaCollections;
 
-public class GetPagedSmartCollectionsHandler : IRequestHandler<GetPagedSmartCollections, PagedSmartCollectionsViewModel>
+public class GetPagedSmartCollectionsHandler(IDbContextFactory<TvContext> dbContextFactory)
+    : IRequestHandler<GetPagedSmartCollections, PagedSmartCollectionsViewModel>
 {
-    private readonly IDbContextFactory<TvContext> _dbContextFactory;
-
-    public GetPagedSmartCollectionsHandler(IDbContextFactory<TvContext> dbContextFactory) =>
-        _dbContextFactory = dbContextFactory;
-
     public async Task<PagedSmartCollectionsViewModel> Handle(
         GetPagedSmartCollections request,
         CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         int count = await dbContext.SmartCollections.CountAsync(cancellationToken);
         List<SmartCollectionViewModel> page = await dbContext.SmartCollections
             .AsNoTracking()

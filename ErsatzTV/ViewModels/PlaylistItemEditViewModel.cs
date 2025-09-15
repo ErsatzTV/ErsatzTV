@@ -8,14 +8,14 @@ namespace ErsatzTV.ViewModels;
 
 public class PlaylistItemEditViewModel : INotifyPropertyChanged
 {
-    private ProgramScheduleItemCollectionType _collectionType;
+    private CollectionType _collectionType;
     private int? _count;
     private bool _playAll;
 
     public int Id { get; set; }
     public int Index { get; set; }
 
-    public ProgramScheduleItemCollectionType CollectionType
+    public CollectionType CollectionType
     {
         get => _collectionType;
         set
@@ -35,7 +35,7 @@ public class PlaylistItemEditViewModel : INotifyPropertyChanged
                 OnPropertyChanged(nameof(SmartCollection));
             }
 
-            if (_collectionType == ProgramScheduleItemCollectionType.MultiCollection)
+            if (_collectionType == CollectionType.MultiCollection)
             {
                 PlaybackOrder = PlaybackOrder.Shuffle;
             }
@@ -49,35 +49,35 @@ public class PlaylistItemEditViewModel : INotifyPropertyChanged
 
     public string ItemType => CollectionType switch
     {
-        ProgramScheduleItemCollectionType.Collection => "Collection",
-        ProgramScheduleItemCollectionType.TelevisionShow => "Show",
-        ProgramScheduleItemCollectionType.TelevisionSeason => "Season",
-        ProgramScheduleItemCollectionType.Artist => "Artist",
-        ProgramScheduleItemCollectionType.MultiCollection => "Multi-Collection",
-        ProgramScheduleItemCollectionType.SmartCollection => "Smart Collection",
-        ProgramScheduleItemCollectionType.Movie => "Movie",
-        ProgramScheduleItemCollectionType.Episode => "Episode",
-        ProgramScheduleItemCollectionType.MusicVideo => "Music Video",
-        ProgramScheduleItemCollectionType.OtherVideo => "Other Video",
-        ProgramScheduleItemCollectionType.Song => "Song",
-        ProgramScheduleItemCollectionType.Image => "Image",
+        CollectionType.Collection => "Collection",
+        CollectionType.TelevisionShow => "Show",
+        CollectionType.TelevisionSeason => "Season",
+        CollectionType.Artist => "Artist",
+        CollectionType.MultiCollection => "Multi-Collection",
+        CollectionType.SmartCollection => "Smart Collection",
+        CollectionType.Movie => "Movie",
+        CollectionType.Episode => "Episode",
+        CollectionType.MusicVideo => "Music Video",
+        CollectionType.OtherVideo => "Other Video",
+        CollectionType.Song => "Song",
+        CollectionType.Image => "Image",
         _ => string.Empty
     };
 
     public string ItemName => CollectionType switch
     {
-        ProgramScheduleItemCollectionType.Collection => Collection?.Name,
-        ProgramScheduleItemCollectionType.TelevisionShow => MediaItem?.Name,
-        ProgramScheduleItemCollectionType.TelevisionSeason => MediaItem?.Name,
-        ProgramScheduleItemCollectionType.Artist => MediaItem?.Name,
-        ProgramScheduleItemCollectionType.MultiCollection => MultiCollection?.Name,
-        ProgramScheduleItemCollectionType.SmartCollection => SmartCollection?.Name,
-        ProgramScheduleItemCollectionType.Movie => MediaItem?.Name,
-        ProgramScheduleItemCollectionType.Episode => MediaItem?.Name,
-        ProgramScheduleItemCollectionType.MusicVideo => MediaItem?.Name,
-        ProgramScheduleItemCollectionType.OtherVideo => MediaItem?.Name,
-        ProgramScheduleItemCollectionType.Song => MediaItem?.Name,
-        ProgramScheduleItemCollectionType.Image => MediaItem?.Name,
+        CollectionType.Collection => Collection?.Name,
+        CollectionType.TelevisionShow => MediaItem?.Name,
+        CollectionType.TelevisionSeason => MediaItem?.Name,
+        CollectionType.Artist => MediaItem?.Name,
+        CollectionType.MultiCollection => MultiCollection?.Name,
+        CollectionType.SmartCollection => SmartCollection?.Name,
+        CollectionType.Movie => MediaItem?.Name,
+        CollectionType.Episode => MediaItem?.Name,
+        CollectionType.MusicVideo => MediaItem?.Name,
+        CollectionType.OtherVideo => MediaItem?.Name,
+        CollectionType.Song => MediaItem?.Name,
+        CollectionType.Image => MediaItem?.Name,
         _ => string.Empty
     };
 

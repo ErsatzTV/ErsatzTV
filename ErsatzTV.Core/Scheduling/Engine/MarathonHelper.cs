@@ -138,55 +138,55 @@ public class MarathonHelper(IMediaCollectionRepository mediaCollectionRepository
         mediaItem switch
         {
             Episode e => new GroupKey(
-                ProgramScheduleItemCollectionType.TelevisionShow,
+                CollectionType.TelevisionShow,
                 null,
                 null,
                 null,
                 e.Season?.ShowId ?? 0),
-            _ => new GroupKey(ProgramScheduleItemCollectionType.TelevisionShow, null, null, null, 0)
+            _ => new GroupKey(CollectionType.TelevisionShow, null, null, null, 0)
         };
 
     private static GroupKey MediaItemKeyBySeason(MediaItem mediaItem) =>
         mediaItem switch
         {
             Episode e => new GroupKey(
-                ProgramScheduleItemCollectionType.TelevisionSeason,
+                CollectionType.TelevisionSeason,
                 null,
                 null,
                 null,
                 e.SeasonId),
-            _ => new GroupKey(ProgramScheduleItemCollectionType.TelevisionSeason, null, null, null, 0)
+            _ => new GroupKey(CollectionType.TelevisionSeason, null, null, null, 0)
         };
 
     private static GroupKey MediaItemKeyByArtist(MediaItem mediaItem) =>
         mediaItem switch
         {
             MusicVideo mv => new GroupKey(
-                ProgramScheduleItemCollectionType.Artist,
+                CollectionType.Artist,
                 null,
                 null,
                 null,
                 mv.ArtistId),
-            _ => new GroupKey(ProgramScheduleItemCollectionType.Artist, null, null, null, 0)
+            _ => new GroupKey(CollectionType.Artist, null, null, null, 0)
         };
 
     private static GroupKey MediaItemKeyByAlbum(MediaItem mediaItem) =>
         mediaItem switch
         {
             Song s => new GroupKey(
-                ProgramScheduleItemCollectionType.Collection,
+                CollectionType.Collection,
                 s.SongMetadata.HeadOrNone().Map(sm => sm.Album.GetStableHashCode()).IfNone(0),
                 null,
                 null,
                 null),
             MusicVideo mv => new GroupKey(
-                ProgramScheduleItemCollectionType.Collection,
+                CollectionType.Collection,
                 mv.MusicVideoMetadata.HeadOrNone()
                     .Map(mvm => $"{mv.ArtistId}-${mvm.Album}".GetStableHashCode()).IfNone(0),
                 null,
                 null,
                 null),
-            _ => new GroupKey(ProgramScheduleItemCollectionType.Collection, 0, null, null, null)
+            _ => new GroupKey(CollectionType.Collection, 0, null, null, null)
         };
 
     private static PlaylistItem GroupToPlaylistItem(
@@ -211,7 +211,7 @@ public class MarathonHelper(IMediaCollectionRepository mediaCollectionRepository
         };
 
     private record GroupKey(
-        ProgramScheduleItemCollectionType CollectionType,
+        CollectionType CollectionType,
         int? CollectionId,
         int? MultiCollectionId,
         int? SmartCollectionId,

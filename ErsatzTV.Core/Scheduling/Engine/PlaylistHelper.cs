@@ -38,7 +38,7 @@ public class PlaylistHelper(IMediaCollectionRepository mediaCollectionRepository
                 {
                     Index = playlistIndex,
 
-                    CollectionType = ProgramScheduleItemCollectionType.FakePlaylistItem,
+                    CollectionType = CollectionType.FakePlaylistItem,
                     CollectionId = playlistIndex,
 
                     PlayAll = false,

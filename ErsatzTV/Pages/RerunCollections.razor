@@ -1,0 +1,124 @@
+﻿@page "/media/rerun-collections"
+@using ErsatzTV.Application.Configuration
+@using ErsatzTV.Application.MediaCollections
+@implements IDisposable
+@inject IDialogService Dialog
+@inject IMediator Mediator
+
+<MudForm Style="max-height: 100%">
+    <MudPaper Square="true" Style="display: flex; height: 64px; min-height: 64px; width: 100%; z-index: 100; align-items: center">
+        <div style="display: flex; flex-direction: row; margin-bottom: auto; margin-top: auto; width: 100%" class="ml-6 mr-6">
+            <div style="margin-right: auto" class="d-none d-md-flex">
+                <MudButton Class="ml-3" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Href="media/rerun-collections/add">
+                    Add Rerun Collection
+                </MudButton>
+            </div>
+            <div style="align-items: center; display: flex; margin-left: auto;" class="d-md-none">
+                <div class="flex-grow-1"></div>
+                <MudMenu Icon="@Icons.Material.Filled.MoreVert">
+                    <MudMenuItem Icon="@Icons.Material.Filled.Add" Label="Add Rerun Collection" Href="media/rerun-collections/add"/>
+                </MudMenu>
+            </div>
+        </div>
+    </MudPaper>
+    <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+            <MudText Typo="Typo.h5" Class="mb-2">Rerun Collections</MudText>
+            <MudDivider Class="mb-6"/>
+            <MudTable Hover="true"
+                      @bind-RowsPerPage="@_rerunCollectionsRowsPerPage"
+                      ServerData="@(new Func<TableState, CancellationToken, Task<TableData<RerunCollectionViewModel>>>(ServerReloadRerunCollections))"
+                      Dense="true"
+                      @ref="_rerunCollectionsTable">
+                <ColGroup>
+                    <MudHidden Breakpoint="Breakpoint.Xs">
+                        <col/>
+                        <col style="width: 120px;"/>
+                    </MudHidden>
+                </ColGroup>
+                <HeaderContent>
+                    <MudTh>Name</MudTh>
+                    <MudTh/>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Name">@context.Name</MudTd>
+                    <MudTd>
+                        <div style="align-items: center; display: flex;">
+                            <MudTooltip Text="Edit Rerun Collection">
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                               Href="@($"/media/rerun-collections/{context.Id}/edit")">
+                                </MudIconButton>
+                            </MudTooltip>
+                            <MudTooltip Text="Delete Rerun Collection">
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                               OnClick="@(_ => DeleteRerunCollection(context))">
+                                </MudIconButton>
+                            </MudTooltip>
+                        </div>
+                    </MudTd>
+                </RowTemplate>
+                <PagerContent>
+                    <MudTablePager/>
+                </PagerContent>
+            </MudTable>
+            <div class="mt-6"></div>
+        </MudContainer>
+    </div>
+</MudForm>
+
+@code {
+    private CancellationTokenSource _cts;
+
+    private MudTable<RerunCollectionViewModel> _rerunCollectionsTable;
+
+    private int _rerunCollectionsRowsPerPage = 10;
+
+    public void Dispose()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
+
+        try
+        {
+            _rerunCollectionsRowsPerPage = await Mediator.Send(new GetConfigElementByKey(ConfigElementKey.RerunCollectionsPageSize), token)
+                .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
+        }
+    }
+
+    private async Task DeleteRerunCollection(RerunCollectionViewModel collection)
+    {
+        var parameters = new DialogParameters { { "EntityType", "rerun collection" }, { "EntityName", collection.Name } };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        IDialogReference dialog = await Dialog.ShowAsync<DeleteDialog>("Delete Rerun Collection", parameters, options);
+        DialogResult result = await dialog.Result;
+        if (result is { Canceled: false })
+        {
+            await Mediator.Send(new DeleteRerunCollection(collection.Id), _cts.Token);
+            if (_rerunCollectionsTable != null)
+            {
+                await _rerunCollectionsTable.ReloadServerData();
+            }
+        }
+    }
+
+    private async Task<TableData<RerunCollectionViewModel>> ServerReloadRerunCollections(TableState state, CancellationToken cancellationToken)
+    {
+        await Mediator.Send(new SaveConfigElementByKey(ConfigElementKey.RerunCollectionsPageSize, state.PageSize.ToString()), cancellationToken);
+
+        PagedRerunCollectionsViewModel data = await Mediator.Send(new GetPagedRerunCollections(state.Page, state.PageSize), cancellationToken);
+        return new TableData<RerunCollectionViewModel> { TotalItems = data.TotalCount, Items = data.Page };
+    }
+}

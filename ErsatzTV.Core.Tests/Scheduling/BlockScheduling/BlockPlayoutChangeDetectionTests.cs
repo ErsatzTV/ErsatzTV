@@ -161,7 +161,7 @@ public static class BlockPlayoutChangeDetectionTests
                             Id = 1,
                             Index = 1,
                             BlockId = 1,
-                            CollectionType = ProgramScheduleItemCollectionType.TelevisionShow,
+                            CollectionType = CollectionType.TelevisionShow,
                             MediaItemId = 1,
                             PlaybackOrder = PlaybackOrder.Chronological
                         }
@@ -179,7 +179,7 @@ public static class BlockPlayoutChangeDetectionTests
                             Id = 2,
                             Index = 1,
                             BlockId = 2,
-                            CollectionType = ProgramScheduleItemCollectionType.TelevisionShow,
+                            CollectionType = CollectionType.TelevisionShow,
                             MediaItemId = 2,
                             PlaybackOrder = PlaybackOrder.Chronological
                         }
@@ -197,7 +197,7 @@ public static class BlockPlayoutChangeDetectionTests
                             Id = 3,
                             Index = 1,
                             BlockId = 3,
-                            CollectionType = ProgramScheduleItemCollectionType.TelevisionShow,
+                            CollectionType = CollectionType.TelevisionShow,
                             MediaItemId = 3,
                             PlaybackOrder = PlaybackOrder.Chronological
                         }

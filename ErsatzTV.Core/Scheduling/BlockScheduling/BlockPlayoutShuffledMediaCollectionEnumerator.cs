@@ -45,7 +45,7 @@ public class BlockPlayoutShuffledMediaCollectionEnumerator : IMediaCollectionEnu
     public Option<MediaItem> Current => _shuffled.Any() ? _shuffled[State.Index % _mediaItemCount] : None;
     public Option<bool> CurrentIncludeInProgramGuide { get; }
 
-    public void MoveNext()
+    public void MoveNext(Option<DateTimeOffset> scheduledAt)
     {
         State.Index++;
         if (State.Index % _mediaItemCount == 0)

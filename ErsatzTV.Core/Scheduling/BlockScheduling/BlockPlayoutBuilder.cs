@@ -242,7 +242,7 @@ public class BlockPlayoutBuilder(
                     result.AddedHistory.Add(nextHistory);
 
                     currentTime += itemDuration;
-                    enumerator.MoveNext();
+                    enumerator.MoveNext(playoutItem.StartOffset);
                 }
 
                 if (pastTime)
