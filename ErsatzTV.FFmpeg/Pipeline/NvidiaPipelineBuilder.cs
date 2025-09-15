@@ -209,8 +209,8 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
         currentState = SetCrop(videoInputFile, desiredState, currentState);
         SetStillImageLoop(videoInputFile, videoStream, ffmpegState, desiredState, pipelineSteps);
 
-        if (currentState.BitDepth == 8 && context.HasSubtitleOverlay || context.HasWatermark ||
-            context.HasGraphicsEngine)
+        if (currentState.BitDepth == 8 && (context.HasSubtitleOverlay || context.HasWatermark ||
+            context.HasGraphicsEngine))
         {
             Option<IPixelFormat> desiredPixelFormat = Some((IPixelFormat)new PixelFormatYuv420P());
 
@@ -282,7 +282,11 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
             currentState,
             watermarkOverlayFilterSteps);
 
-        currentState = SetGraphicsEngine(graphicsEngineInput, currentState, graphicsEngineOverlayFilterSteps);
+        currentState = SetGraphicsEngine(
+            graphicsEngineInput,
+            currentState,
+            desiredState,
+            graphicsEngineOverlayFilterSteps);
 
         // after everything else is done, apply the encoder
         if (pipelineSteps.OfType<IEncoder>().All(e => e.Kind != StreamKind.Video))
@@ -649,18 +653,42 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
     private static FrameState SetGraphicsEngine(
         Option<GraphicsEngineInput> graphicsEngineInput,
         FrameState currentState,
+        FrameState desiredState,
         List<IPipelineFilterStep> graphicsEngineOverlayFilterSteps)
     {
         foreach (GraphicsEngineInput graphicsEngine in graphicsEngineInput)
         {
-            graphicsEngine.FilterSteps.Add(new PixelFormatFilter(new PixelFormatYuva420P()));
+            if (currentState.BitDepth == 8)
+            {
+                graphicsEngine.FilterSteps.Add(new PixelFormatFilter(new PixelFormatYuva420P()));
 
-            graphicsEngine.FilterSteps.Add(
-                new HardwareUploadCudaFilter(currentState with { FrameDataLocation = FrameDataLocation.Software }));
+                graphicsEngine.FilterSteps.Add(
+                    new HardwareUploadCudaFilter(currentState with { FrameDataLocation = FrameDataLocation.Software }));
 
-            var graphicsEngineFilter = new OverlayGraphicsEngineCudaFilter();
-            graphicsEngineOverlayFilterSteps.Add(graphicsEngineFilter);
-            currentState = graphicsEngineFilter.NextState(currentState);
+                var graphicsEngineFilter = new OverlayGraphicsEngineCudaFilter();
+                graphicsEngineOverlayFilterSteps.Add(graphicsEngineFilter);
+                currentState = graphicsEngineFilter.NextState(currentState);
+            }
+            else
+            {
+                foreach (IPixelFormat desiredPixelFormat in desiredState.PixelFormat)
+                {
+                    IPixelFormat pf = desiredPixelFormat;
+                    if (desiredPixelFormat is PixelFormatNv12 nv12)
+                    {
+                        foreach (IPixelFormat availablePixelFormat in AvailablePixelFormats.ForPixelFormat(
+                                     nv12.Name,
+                                     null))
+                        {
+                            pf = availablePixelFormat;
+                        }
+                    }
+
+                    var graphicsEngineFilter = new OverlayGraphicsEngineFilter(pf);
+                    graphicsEngineOverlayFilterSteps.Add(graphicsEngineFilter);
+                    currentState = graphicsEngineFilter.NextState(currentState);
+                }
+            }
         }
 
         return currentState;
@@ -787,7 +815,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
             {
                 if (ffmpegState.IsHdrTonemap)
                 {
-                    var filter = new TonemapCudaFilter(ffmpegState, new PixelFormatNv12(FFmpegFormat.YUV420P));
+                    var filter = new TonemapCudaFilter(ffmpegState, pixelFormat);
                     currentState = filter.NextState(currentState);
                     videoStream.ResetColorParams(ColorParams.Default);
                     videoInputFile.FilterSteps.Add(filter);
