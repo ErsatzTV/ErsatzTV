@@ -10,6 +10,7 @@ public class CollectionKey : Record<CollectionKey>
     public int? CollectionId { get; set; }
     public int? MultiCollectionId { get; set; }
     public int? SmartCollectionId { get; set; }
+    public int? RerunCollectionId { get; set; }
     public int? MediaItemId { get; set; }
     public int? PlaylistId { get; set; }
     public string FakeCollectionKey { get; set; }
@@ -266,6 +267,18 @@ public class CollectionKey : Record<CollectionKey>
             {
                 CollectionType = item.CollectionType,
                 SmartCollectionId = item.SmartCollectionId,
+                FakeCollectionKey = item.FakeCollectionKey
+            },
+            CollectionType.RerunFirstRun => new CollectionKey
+            {
+                CollectionType = item.CollectionType,
+                RerunCollectionId = item.RerunCollectionId,
+                FakeCollectionKey = item.FakeCollectionKey
+            },
+            CollectionType.RerunRerun => new CollectionKey
+            {
+                CollectionType = item.CollectionType,
+                RerunCollectionId = item.RerunCollectionId,
                 FakeCollectionKey = item.FakeCollectionKey
             },
             CollectionType.Playlist => new CollectionKey

@@ -66,6 +66,7 @@ public abstract class PlayoutBuilderTestBase
         IMultiEpisodeShuffleCollectionEnumeratorFactory factory =
             Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
         ILocalFileSystem localFileSystem = Substitute.For<ILocalFileSystem>();
+        IRerunHelper rerunHelper = Substitute.For<IRerunHelper>();
         var builder = new PlayoutBuilder(
             configRepo,
             collectionRepo,
@@ -73,6 +74,7 @@ public abstract class PlayoutBuilderTestBase
             artistRepo,
             factory,
             localFileSystem,
+            rerunHelper,
             Logger);
 
         var items = new List<ProgramScheduleItem> { Flood(mediaCollection, playbackOrder) };
@@ -180,6 +182,7 @@ public abstract class PlayoutBuilderTestBase
         IMultiEpisodeShuffleCollectionEnumeratorFactory factory =
             Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
         ILocalFileSystem localFileSystem = Substitute.For<ILocalFileSystem>();
+        IRerunHelper rerunHelper = Substitute.For<IRerunHelper>();
         var builder = new PlayoutBuilder(
             configRepo,
             collectionRepo,
@@ -187,6 +190,7 @@ public abstract class PlayoutBuilderTestBase
             artistRepo,
             factory,
             localFileSystem,
+            rerunHelper,
             Logger);
 
         var items = new List<ProgramScheduleItem> { Flood(mediaCollection, fillerCollection, playbackOrder) };

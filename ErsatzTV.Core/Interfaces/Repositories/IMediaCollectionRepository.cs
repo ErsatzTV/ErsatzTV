@@ -29,6 +29,7 @@ public interface IMediaCollectionRepository
         string query,
         string smartCollectionName,
         CancellationToken cancellationToken);
+    Task<List<MediaItem>> GetRerunCollectionItems(int id, CancellationToken cancellationToken);
     Task<List<MediaItem>> GetShowItemsByShowGuids(List<string> guids);
     Task<List<MediaItem>> GetPlaylistItems(int id, CancellationToken cancellationToken);
     Task<List<Movie>> GetMovie(int id);

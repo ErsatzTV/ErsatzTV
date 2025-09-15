@@ -2049,6 +2049,9 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<int>("PlayoutId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("RerunCollectionId")
+                        .HasColumnType("int");
+
                     b.Property<int?>("SmartCollectionId")
                         .HasColumnType("int");
 
@@ -2063,6 +2066,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.HasIndex("PlaylistId");
 
                     b.HasIndex("PlayoutId");
+
+                    b.HasIndex("RerunCollectionId");
 
                     b.HasIndex("SmartCollectionId");
 
@@ -4980,6 +4985,11 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("ErsatzTV.Core.Domain.RerunCollection", "RerunCollection")
+                        .WithMany()
+                        .HasForeignKey("RerunCollectionId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
                     b.HasOne("ErsatzTV.Core.Domain.SmartCollection", "SmartCollection")
                         .WithMany()
                         .HasForeignKey("SmartCollectionId")
@@ -5015,6 +5025,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Navigation("Playlist");
 
                     b.Navigation("Playout");
+
+                    b.Navigation("RerunCollection");
 
                     b.Navigation("SmartCollection");
                 });

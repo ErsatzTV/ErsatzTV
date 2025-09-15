@@ -30,6 +30,12 @@ public class PlayoutProgramScheduleAnchorConfiguration : IEntityTypeConfiguratio
             .OnDelete(DeleteBehavior.Cascade)
             .IsRequired(false);
 
+        builder.HasOne(i => i.RerunCollection)
+            .WithMany()
+            .HasForeignKey(i => i.RerunCollectionId)
+            .OnDelete(DeleteBehavior.Cascade)
+            .IsRequired(false);
+
         builder.HasOne(i => i.MediaItem)
             .WithMany()
             .HasForeignKey(i => i.MediaItemId)

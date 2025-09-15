@@ -42,6 +42,7 @@ public class FakeMediaCollectionRepository : IMediaCollectionRepository
         CancellationToken cancellationToken) =>
         throw new NotSupportedException();
 
+    public Task<List<MediaItem>> GetRerunCollectionItems(int id, CancellationToken cancellationToken) => throw new NotSupportedException();
     public Task<List<MediaItem>> GetShowItemsByShowGuids(List<string> guids) => throw new NotSupportedException();
     public Task<List<MediaItem>> GetPlaylistItems(int id, CancellationToken cancellationToken) => throw new NotSupportedException();
     public Task<List<Movie>> GetMovie(int id) => throw new NotSupportedException();

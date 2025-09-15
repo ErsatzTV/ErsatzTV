@@ -21,6 +21,7 @@ public class PlayoutBuilder : IPlayoutBuilder
     private readonly IArtistRepository _artistRepository;
     private readonly IConfigElementRepository _configElementRepository;
     private readonly ILocalFileSystem _localFileSystem;
+    private readonly IRerunHelper _rerunHelper;
     private readonly IMediaCollectionRepository _mediaCollectionRepository;
     private readonly IMultiEpisodeShuffleCollectionEnumeratorFactory _multiEpisodeFactory;
     private readonly ITelevisionRepository _televisionRepository;
@@ -34,6 +35,7 @@ public class PlayoutBuilder : IPlayoutBuilder
         IArtistRepository artistRepository,
         IMultiEpisodeShuffleCollectionEnumeratorFactory multiEpisodeFactory,
         ILocalFileSystem localFileSystem,
+        IRerunHelper rerunHelper,
         ILogger<PlayoutBuilder> logger)
     {
         _configElementRepository = configElementRepository;
@@ -42,6 +44,7 @@ public class PlayoutBuilder : IPlayoutBuilder
         _artistRepository = artistRepository;
         _multiEpisodeFactory = multiEpisodeFactory;
         _localFileSystem = localFileSystem;
+        _rerunHelper = rerunHelper;
         _logger = logger;
     }
 
@@ -181,6 +184,9 @@ public class PlayoutBuilder : IPlayoutBuilder
         var smartCollectionIds =
             playout.ProgramScheduleAnchors.Map(a => Optional(a.SmartCollectionId)).Somes().ToHashSet();
 
+        var rerunCollectionIds =
+            playout.ProgramScheduleAnchors.Map(a => Optional(a.RerunCollectionId)).Somes().ToHashSet();
+
         var mediaItemIds = playout.ProgramScheduleAnchors.Map(a => Optional(a.MediaItemId)).Somes().ToHashSet();
 
         playout.ProgramScheduleAnchors.Clear();
@@ -202,6 +208,13 @@ public class PlayoutBuilder : IPlayoutBuilder
         foreach (int smartCollectionId in smartCollectionIds)
         {
             PlayoutProgramScheduleAnchor minAnchor = allAnchors.Filter(a => a.SmartCollectionId == smartCollectionId)
+                .MinBy(a => a.AnchorDateOffset.IfNone(DateTimeOffset.MaxValue).Ticks);
+            playout.ProgramScheduleAnchors.Add(minAnchor);
+        }
+
+        foreach (int rerunCollectionId in rerunCollectionIds)
+        {
+            PlayoutProgramScheduleAnchor minAnchor = allAnchors.Filter(a => a.RerunCollectionId == rerunCollectionId)
                 .MinBy(a => a.AnchorDateOffset.IfNone(DateTimeOffset.MaxValue).Ticks);
             playout.ProgramScheduleAnchors.Add(minAnchor);
         }
@@ -1145,6 +1158,7 @@ public class PlayoutBuilder : IPlayoutBuilder
                 && a.MediaItemId == collectionKey.MediaItemId
                 && a.FakeCollectionKey == collectionKey.FakeCollectionKey
                 && a.SmartCollectionId == collectionKey.SmartCollectionId
+                && a.RerunCollectionId == collectionKey.RerunCollectionId
                 && a.MultiCollectionId == collectionKey.MultiCollectionId
                 && a.PlaylistId == collectionKey.PlaylistId
                 && a.AnchorDate is null);
@@ -1165,6 +1179,7 @@ public class PlayoutBuilder : IPlayoutBuilder
                     CollectionId = collectionKey.CollectionId,
                     MultiCollectionId = collectionKey.MultiCollectionId,
                     SmartCollectionId = collectionKey.SmartCollectionId,
+                    RerunCollectionId = collectionKey.RerunCollectionId,
                     MediaItemId = collectionKey.MediaItemId,
                     PlaylistId = collectionKey.PlaylistId,
                     FakeCollectionKey = collectionKey.FakeCollectionKey,
@@ -1207,6 +1222,7 @@ public class PlayoutBuilder : IPlayoutBuilder
                                  && a.CollectionId == collectionKey.CollectionId
                                  && a.MultiCollectionId == collectionKey.MultiCollectionId
                                  && a.SmartCollectionId == collectionKey.SmartCollectionId
+                                 && a.RerunCollectionId == collectionKey.RerunCollectionId
                                  && a.MediaItemId == collectionKey.MediaItemId
                                  && a.PlaylistId == collectionKey.PlaylistId);
 
@@ -1222,6 +1238,12 @@ public class PlayoutBuilder : IPlayoutBuilder
         }
 
         state ??= new CollectionEnumeratorState { Seed = Random.Next(), Index = 0 };
+
+        if (collectionKey.CollectionType is CollectionType.RerunFirstRun or CollectionType.RerunRerun)
+        {
+            await _rerunHelper.InitWithMediaItems(collectionKey, mediaItems);
+            return _rerunHelper.CreateEnumerator(collectionKey, state);
+        }
 
         if (collectionKey.CollectionType is CollectionType.Playlist)
         {

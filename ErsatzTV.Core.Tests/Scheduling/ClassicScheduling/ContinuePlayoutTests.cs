@@ -541,6 +541,7 @@ public class ContinuePlayoutTests : PlayoutBuilderTestBase
         IMultiEpisodeShuffleCollectionEnumeratorFactory factory =
             Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
         ILocalFileSystem localFileSystem = Substitute.For<ILocalFileSystem>();
+        IRerunHelper rerunHelper = Substitute.For<IRerunHelper>();
         var builder = new PlayoutBuilder(
             configRepo,
             fakeRepository,
@@ -548,6 +549,7 @@ public class ContinuePlayoutTests : PlayoutBuilderTestBase
             artistRepo,
             factory,
             localFileSystem,
+            rerunHelper,
             Logger);
 
         DateTimeOffset start = HoursAfterMidnight(0);
@@ -661,6 +663,7 @@ public class ContinuePlayoutTests : PlayoutBuilderTestBase
         IMultiEpisodeShuffleCollectionEnumeratorFactory factory =
             Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
         ILocalFileSystem localFileSystem = Substitute.For<ILocalFileSystem>();
+        IRerunHelper rerunHelper = Substitute.For<IRerunHelper>();
         var builder = new PlayoutBuilder(
             configRepo,
             fakeRepository,
@@ -668,6 +671,7 @@ public class ContinuePlayoutTests : PlayoutBuilderTestBase
             artistRepo,
             factory,
             localFileSystem,
+            rerunHelper,
             Logger);
 
         DateTimeOffset start = HoursAfterMidnight(0);
@@ -783,6 +787,7 @@ public class ContinuePlayoutTests : PlayoutBuilderTestBase
         IMultiEpisodeShuffleCollectionEnumeratorFactory factory =
             Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
         ILocalFileSystem localFileSystem = Substitute.For<ILocalFileSystem>();
+        IRerunHelper rerunHelper = Substitute.For<IRerunHelper>();
         var builder = new PlayoutBuilder(
             configRepo,
             fakeRepository,
@@ -790,6 +795,7 @@ public class ContinuePlayoutTests : PlayoutBuilderTestBase
             artistRepo,
             factory,
             localFileSystem,
+            rerunHelper,
             Logger);
 
         PlayoutBuildResult result = await builder.Build(

@@ -42,6 +42,12 @@ public static class MediaItemsForCollection
                         collectionKey.SmartCollectionId ?? 0,
                         cancellationToken));
                 break;
+            case CollectionType.RerunFirstRun or CollectionType.RerunRerun:
+                result.AddRange(
+                    await mediaCollectionRepository.GetRerunCollectionItems(
+                        collectionKey.RerunCollectionId ?? 0,
+                        cancellationToken));
+                break;
             case CollectionType.Playlist:
                 result.AddRange(
                     await mediaCollectionRepository.GetPlaylistItems(collectionKey.PlaylistId ?? 0, cancellationToken));
