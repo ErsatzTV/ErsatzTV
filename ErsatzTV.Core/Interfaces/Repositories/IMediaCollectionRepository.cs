@@ -49,6 +49,7 @@ public interface IMediaCollectionRepository
     Task<List<int>> PlayoutIdsUsingCollection(int collectionId);
     Task<List<int>> PlayoutIdsUsingMultiCollection(int multiCollectionId);
     Task<List<int>> PlayoutIdsUsingSmartCollection(int smartCollectionId);
+    Task<List<int>> PlayoutIdsUsingRerunCollection(int rerunCollectionId);
     Task<bool> IsCustomPlaybackOrder(int collectionId);
     Task<Option<string>> GetNameFromKey(CollectionKey emptyCollection, CancellationToken cancellationToken);
     List<CollectionWithItems> GroupIntoFakeCollections(List<MediaItem> items, string fakeKey = null);

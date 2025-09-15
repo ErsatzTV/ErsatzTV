@@ -70,6 +70,9 @@ public class FakeMediaCollectionRepository : IMediaCollectionRepository
     public Task<List<int>> PlayoutIdsUsingSmartCollection(int smartCollectionId) =>
         throw new NotSupportedException();
 
+    public Task<List<int>> PlayoutIdsUsingRerunCollection(int rerunCollectionId) =>
+        throw new NotSupportedException();
+
     public Task<bool> IsCustomPlaybackOrder(int collectionId) => false.AsTask();
     public Task<Option<string>> GetNameFromKey(CollectionKey emptyCollection, CancellationToken cancellationToken) => Option<string>.None.AsTask();
 

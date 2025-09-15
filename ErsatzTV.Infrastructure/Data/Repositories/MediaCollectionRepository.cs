@@ -1034,6 +1034,17 @@ public class MediaCollectionRepository : IMediaCollectionRepository
             .Map(result => result.ToList());
     }
 
+    public async Task<List<int>> PlayoutIdsUsingRerunCollection(int rerunCollectionId)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.QueryAsync<int>(
+                @"SELECT DISTINCT p.PlayoutId
+                    FROM PlayoutProgramScheduleAnchor p
+                    WHERE p.RerunCollectionId = @RerunCollectionId",
+                new { RerunCollectionId = rerunCollectionId })
+            .Map(result => result.ToList());
+    }
+
     public async Task<bool> IsCustomPlaybackOrder(int collectionId)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
