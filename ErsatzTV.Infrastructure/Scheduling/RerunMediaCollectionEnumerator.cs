@@ -30,13 +30,14 @@ public class RerunMediaCollectionEnumerator : IMediaCollectionEnumerator
 
     public void MoveNext(Option<DateTimeOffset> scheduledAt)
     {
-        // TODO: do we need this async so it can write to the db? how do we give it the opportunity to do that?
         if (_collectionKey.CollectionType is CollectionType.RerunFirstRun)
         {
             foreach (var current in Current)
             {
-                Console.WriteLine($"adding {current.Id} to history");
-                _rerunHelper.AddToHistory(_collectionKey, current.Id);
+                foreach (var when in scheduledAt)
+                {
+                    _rerunHelper.AddToHistory(_collectionKey, current.Id, when);
+                }
             }
         }
 

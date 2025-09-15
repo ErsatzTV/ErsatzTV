@@ -163,6 +163,19 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
 
             var changeCount = 0;
 
+            if (result.RerunHistoryToRemove.Count > 0)
+            {
+                changeCount += await dbContext.RerunHistory
+                    .Where(rh => result.RerunHistoryToRemove.Contains(rh.Id))
+                    .ExecuteDeleteAsync(cancellationToken);
+            }
+
+            if (result.AddedRerunHistory.Count > 0)
+            {
+                changeCount += 1;
+                await dbContext.BulkInsertAsync(result.AddedRerunHistory, cancellationToken: cancellationToken);
+            }
+
             if (result.ClearItems)
             {
                 changeCount += await dbContext.PlayoutItems

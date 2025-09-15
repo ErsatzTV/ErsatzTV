@@ -92,6 +92,12 @@ public class PlayoutBuilder : IPlayoutBuilder
             // }
 
             result = await Build(playout, referenceData, result, mode, parameters, cancellationToken);
+
+            result = result with
+            {
+                RerunHistoryToRemove = _rerunHelper.GetHistoryToRemove(),
+                AddedRerunHistory = _rerunHelper.GetHistoryToAdd()
+            };
         }
 
         return result;
@@ -274,6 +280,7 @@ public class PlayoutBuilder : IPlayoutBuilder
             referenceData.Channel.Name);
 
         result = result with { ClearItems = true };
+        _rerunHelper.ClearHistory = true;
         playout.Anchor = null;
         playout.ProgramScheduleAnchors.Clear();
         playout.OnDemandCheckpoint = null;

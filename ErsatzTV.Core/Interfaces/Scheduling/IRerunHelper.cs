@@ -1,10 +1,13 @@
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Domain.Scheduling;
 using ErsatzTV.Core.Scheduling;
 
 namespace ErsatzTV.Core.Interfaces.Scheduling;
 
 public interface IRerunHelper
 {
+    bool ClearHistory { get; set; }
+
     Task InitWithMediaItems(
         int playoutId,
         CollectionKey collectionKey,
@@ -21,5 +24,9 @@ public interface IRerunHelper
 
     int RerunCount(CollectionKey collectionKey);
 
-    void AddToHistory(CollectionKey collectionKey, int mediaItemId);
+    void AddToHistory(CollectionKey collectionKey, int mediaItemId, DateTimeOffset scheduledAt);
+
+    System.Collections.Generic.HashSet<int> GetHistoryToRemove();
+
+    List<RerunHistory> GetHistoryToAdd();
 }
