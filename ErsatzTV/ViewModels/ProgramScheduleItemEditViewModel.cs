@@ -92,6 +92,7 @@ public class ProgramScheduleItemEditViewModel : INotifyPropertyChanged
     public MediaCollectionViewModel Collection { get; set; }
     public MultiCollectionViewModel MultiCollection { get; set; }
     public SmartCollectionViewModel SmartCollection { get; set; }
+    public RerunCollectionViewModel RerunCollection { get; set; }
     public NamedMediaItemViewModel MediaItem { get; set; }
     public PlaylistViewModel Playlist { get; set; }
     public FillerPresetViewModel PreRollFiller { get; set; }
@@ -115,6 +116,7 @@ public class ProgramScheduleItemEditViewModel : INotifyPropertyChanged
         CollectionType.MultiCollection => MultiCollection?.Name,
         CollectionType.SmartCollection => SmartCollection?.Name,
         CollectionType.Playlist => Playlist?.Name,
+        CollectionType.RerunFirstRun or CollectionType.RerunRerun => RerunCollection?.Name,
         _ => string.Empty
     };
 

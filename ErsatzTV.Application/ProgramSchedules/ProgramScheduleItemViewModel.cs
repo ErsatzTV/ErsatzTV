@@ -19,6 +19,7 @@ public abstract record ProgramScheduleItemViewModel(
     MediaCollectionViewModel Collection,
     MultiCollectionViewModel MultiCollection,
     SmartCollectionViewModel SmartCollection,
+    RerunCollectionViewModel RerunCollection,
     PlaylistViewModel Playlist,
     NamedMediaItemViewModel MediaItem,
     PlaybackOrder PlaybackOrder,
@@ -56,6 +57,8 @@ public abstract record ProgramScheduleItemViewModel(
             SmartCollection?.Name,
         CollectionType.Playlist =>
             Playlist?.Name,
+        CollectionType.RerunFirstRun or CollectionType.RerunRerun =>
+            RerunCollection?.Name,
         _ => string.Empty
     };
 }

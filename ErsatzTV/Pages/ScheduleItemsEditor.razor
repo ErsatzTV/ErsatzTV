@@ -196,6 +196,8 @@
             <MudSelectItem Value="CollectionType.MultiCollection">Multi Collection</MudSelectItem>
             <MudSelectItem Value="CollectionType.SmartCollection">Smart Collection</MudSelectItem>
             <MudSelectItem Value="CollectionType.Playlist">Playlist</MudSelectItem>
+            <MudSelectItem Value="CollectionType.RerunFirstRun">Rerun (First Run)</MudSelectItem>
+            <MudSelectItem Value="CollectionType.RerunRerun">Rerun (Rerun)</MudSelectItem>
         </MudSelect>
     </MudStack>
     @if (_selectedItem.CollectionType == CollectionType.Collection)
@@ -333,6 +335,42 @@
                     <MudSelectItem Value="@playlist">@playlist.Name</MudSelectItem>
                 }
             </MudSelect>
+        </MudStack>
+    }
+
+    @if (_selectedItem.CollectionType == CollectionType.RerunFirstRun)
+    {
+        <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+            <div class="d-flex">
+                <MudText>Rerun (First Run)</MudText>
+            </div>
+            <MudAutocomplete T="RerunCollectionViewModel"
+                             @bind-Value="_selectedItem.RerunCollection" SearchFunc="@SearchRerunCollections"
+                             ToStringFunc="@(c => c?.Name)" Placeholder="Type to search...">
+                <MoreItemsTemplate>
+                    <MudText Align="Align.Center" Class="px-4 py-1">
+                        Only the first 10 items are shown
+                    </MudText>
+                </MoreItemsTemplate>
+            </MudAutocomplete>
+        </MudStack>
+    }
+
+    @if (_selectedItem.CollectionType == CollectionType.RerunRerun)
+    {
+        <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+            <div class="d-flex">
+                <MudText>Rerun (Rerun)</MudText>
+            </div>
+            <MudAutocomplete T="RerunCollectionViewModel"
+                             @bind-Value="_selectedItem.RerunCollection" SearchFunc="@SearchRerunCollections"
+                             ToStringFunc="@(c => c?.Name)" Placeholder="Type to search...">
+                <MoreItemsTemplate>
+                    <MudText Align="Align.Center" Class="px-4 py-1">
+                        Only the first 10 items are shown
+                    </MudText>
+                </MoreItemsTemplate>
+            </MudAutocomplete>
         </MudStack>
     }
 
@@ -798,6 +836,16 @@
         return await Mediator.Send(new SearchSmartCollections(value), _cts.Token);
     }
 
+    private async Task<IEnumerable<RerunCollectionViewModel>> SearchRerunCollections(string value, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return new List<RerunCollectionViewModel>();
+        }
+
+        return await Mediator.Send(new SearchRerunCollections(value), _cts.Token);
+    }
+
     private async Task<IEnumerable<NamedMediaItemViewModel>> SearchTelevisionShows(string value, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(value))
@@ -850,6 +898,7 @@
             Collection = item.Collection,
             MultiCollection = item.MultiCollection,
             SmartCollection = item.SmartCollection,
+            RerunCollection = item.RerunCollection,
             Playlist = item.Playlist,
             MediaItem = item.MediaItem,
             PlaybackOrder = item.PlaybackOrder,
@@ -999,6 +1048,7 @@
             item.Collection?.Id,
             item.MultiCollection?.Id,
             item.SmartCollection?.Id,
+            item.RerunCollection?.Id,
             item.MediaItem?.MediaItemId,
             item.Playlist?.Id,
             item.PlaybackOrder,

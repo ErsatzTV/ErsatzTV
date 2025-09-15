@@ -23,6 +23,7 @@ public class GetProgramScheduleItemsHandler(IDbContextFactory<TvContext> dbConte
             .Include(i => i.Collection)
             .Include(i => i.MultiCollection)
             .Include(i => i.SmartCollection)
+            .Include(i => i.RerunCollection)
             .Include(i => i.Playlist)
             .Include(i => i.MediaItem)
             .ThenInclude(i => (i as Movie).MovieMetadata)

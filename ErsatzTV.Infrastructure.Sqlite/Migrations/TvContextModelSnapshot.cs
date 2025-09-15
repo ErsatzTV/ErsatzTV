@@ -2202,6 +2202,9 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Property<int>("ProgramScheduleId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("RerunCollectionId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int?>("SmartCollectionId")
                         .HasColumnType("INTEGER");
 
@@ -2233,6 +2236,8 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.HasIndex("PreRollFillerId");
 
                     b.HasIndex("ProgramScheduleId");
+
+                    b.HasIndex("RerunCollectionId");
 
                     b.HasIndex("SmartCollectionId");
 
@@ -4971,6 +4976,11 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                         .HasForeignKey("ProgramScheduleId")
                         .OnDelete(DeleteBehavior.Cascade);
 
+                    b.HasOne("ErsatzTV.Core.Domain.RerunCollection", "RerunCollection")
+                        .WithMany()
+                        .HasForeignKey("RerunCollectionId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
                     b.HasOne("ErsatzTV.Core.Domain.SmartCollection", "SmartCollection")
                         .WithMany()
                         .HasForeignKey("SmartCollectionId")
@@ -4998,6 +5008,8 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Navigation("PreRollFiller");
 
                     b.Navigation("ProgramSchedule");
+
+                    b.Navigation("RerunCollection");
 
                     b.Navigation("SmartCollection");
 

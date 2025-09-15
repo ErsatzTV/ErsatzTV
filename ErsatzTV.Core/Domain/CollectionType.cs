@@ -9,6 +9,8 @@ public enum CollectionType
     MultiCollection = 4,
     SmartCollection = 5,
     Playlist = 6,
+    RerunFirstRun = 7,
+    RerunRerun = 8,
 
     Movie = 10,
     Episode = 20,

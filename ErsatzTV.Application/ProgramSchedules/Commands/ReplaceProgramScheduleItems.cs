@@ -14,6 +14,7 @@ public record ReplaceProgramScheduleItem(
     int? CollectionId,
     int? MultiCollectionId,
     int? SmartCollectionId,
+    int? RerunCollectionId,
     int? MediaItemId,
     int? PlaylistId,
     PlaybackOrder PlaybackOrder,
