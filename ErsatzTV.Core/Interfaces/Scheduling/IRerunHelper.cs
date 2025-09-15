@@ -14,7 +14,10 @@ public interface IRerunHelper
         List<MediaItem> mediaItems,
         CancellationToken cancellationToken);
 
-    IMediaCollectionEnumerator CreateEnumerator(CollectionKey collectionKey, CollectionEnumeratorState state);
+    IMediaCollectionEnumerator CreateEnumerator(
+        CollectionKey collectionKey,
+        CollectionEnumeratorState state,
+        CancellationToken cancellationToken);
 
     bool IsFirstRun(CollectionKey collectionKey, int mediaItemId);
 

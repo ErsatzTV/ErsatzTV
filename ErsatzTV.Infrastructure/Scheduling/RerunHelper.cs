@@ -70,7 +70,10 @@ public class RerunHelper(IDbContextFactory<TvContext> dbContextFactory) : IRerun
         }
     }
 
-    public IMediaCollectionEnumerator CreateEnumerator(CollectionKey collectionKey, CollectionEnumeratorState state)
+    public IMediaCollectionEnumerator CreateEnumerator(
+        CollectionKey collectionKey,
+        CollectionEnumeratorState state,
+        CancellationToken cancellationToken)
     {
         var playbackOrder = collectionKey.CollectionType is CollectionType.RerunFirstRun
             ? _firstRunOrder[collectionKey.RerunCollectionId!.Value]
@@ -81,7 +84,8 @@ public class RerunHelper(IDbContextFactory<TvContext> dbContextFactory) : IRerun
             collectionKey,
             _mediaItems[collectionKey.RerunCollectionId!.Value],
             playbackOrder,
-            state);
+            state,
+            cancellationToken);
     }
 
     public bool IsFirstRun(CollectionKey collectionKey, int mediaItemId) =>

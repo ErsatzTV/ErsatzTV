@@ -17,7 +17,15 @@ public class RerunMediaCollectionEnumerator : IMediaCollectionEnumerator
     }
 
     public CollectionEnumeratorState State => _enumerator.State;
-    public Option<MediaItem> Current => _enumerator.Current;
+    public Option<MediaItem> Current
+    {
+        get
+        {
+            MoveToNextValid();
+            return _enumerator.Current;
+        }
+    }
+
     public Option<bool> CurrentIncludeInProgramGuide => _enumerator.CurrentIncludeInProgramGuide;
     public int Count => _enumerator.Count;
     public Option<TimeSpan> MinimumDuration => _enumerator.MinimumDuration;
@@ -78,13 +86,17 @@ public class RerunMediaCollectionEnumerator : IMediaCollectionEnumerator
         CollectionKey collectionKey,
         List<MediaItem> mediaItems,
         PlaybackOrder playbackOrder,
-        CollectionEnumeratorState state)
+        CollectionEnumeratorState state,
+        CancellationToken cancellationToken)
     {
-        // TODO: proper enumerator based on playback order
         IMediaCollectionEnumerator enumerator = playbackOrder switch
         {
             PlaybackOrder.Chronological => new ChronologicalMediaCollectionEnumerator(mediaItems, state),
             PlaybackOrder.SeasonEpisode => new SeasonEpisodeMediaCollectionEnumerator(mediaItems, state),
+            PlaybackOrder.Shuffle => new ShuffledMediaCollectionEnumerator(
+                mediaItems.Map(i => new GroupedMediaItem(i, null)).ToList(),
+                state,
+                cancellationToken),
             _ => new RandomizedMediaCollectionEnumerator(mediaItems, state)
         };
 
