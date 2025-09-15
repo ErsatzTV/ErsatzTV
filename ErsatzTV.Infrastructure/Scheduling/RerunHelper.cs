@@ -110,8 +110,10 @@ public class RerunHelper(IDbContextFactory<TvContext> dbContextFactory) : IRerun
             When = scheduledAt.UtcDateTime
         };
 
-        _history[collectionKey.RerunCollectionId!.Value].Add(mediaItemId);
-        _historyToAdd[collectionKey.RerunCollectionId!.Value].Add(history);
+        if (_history[collectionKey.RerunCollectionId!.Value].Add(mediaItemId))
+        {
+            _historyToAdd[collectionKey.RerunCollectionId!.Value].Add(history);
+        }
     }
 
     public System.Collections.Generic.HashSet<int> GetHistoryToRemove() =>

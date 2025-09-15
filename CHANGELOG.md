@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Added
+- Add new collection type `Rerun Collection`
+  - This collection type will show up as *two* collection types in classic schedules
+    - `Rerun (First Run)`
+    - `Rerun (Rerun)`
+  - The playback order for each of these collection types can be set on the rerun collection itself
+    - e.g. `Season, Episode` order for first run, `Shuffle` for rerun
+  - When a first run item is added to a playout, it will immediately be made available in the rerun collection
+  - Note that items will still be scheduled from rerun collection if used before first run collection
+    - Otherwise, the rerun collection would be considered "empty" which prevents the classic playout build altogether
 
 ## [25.6.0] - 2025-09-14
 ### Added

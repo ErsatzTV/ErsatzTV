@@ -44,8 +44,8 @@ public class ProgramScheduleItemEditViewModel : INotifyPropertyChanged
     public bool CanFillWithGroups =>
         PlayoutMode is PlayoutMode.Multiple or PlayoutMode.Duration
         && PlaybackOrder is not PlaybackOrder.ShuffleInOrder
-        && CollectionType is Core.Domain.CollectionType.Collection
-            or Core.Domain.CollectionType.MultiCollection or Core.Domain.CollectionType.SmartCollection;
+        && CollectionType is CollectionType.Collection or CollectionType.MultiCollection
+            or CollectionType.SmartCollection;
 
     public PlayoutMode PlayoutMode { get; set; }
 
@@ -62,6 +62,7 @@ public class ProgramScheduleItemEditViewModel : INotifyPropertyChanged
                 MultiCollection = null;
                 MediaItem = null;
                 SmartCollection = null;
+                RerunCollection = null;
 
                 if (_collectionType != CollectionType.Playlist &&
                     MultipleMode is MultipleMode.PlaylistItemSize)
@@ -69,7 +70,9 @@ public class ProgramScheduleItemEditViewModel : INotifyPropertyChanged
                     MultipleMode = MultipleMode.Count;
                 }
 
-                if (_collectionType == CollectionType.Playlist)
+                if (_collectionType is CollectionType.Playlist
+                    or CollectionType.RerunFirstRun
+                    or CollectionType.RerunRerun)
                 {
                     PlaybackOrder = PlaybackOrder.None;
                 }
@@ -78,6 +81,7 @@ public class ProgramScheduleItemEditViewModel : INotifyPropertyChanged
                 OnPropertyChanged(nameof(MultiCollection));
                 OnPropertyChanged(nameof(MediaItem));
                 OnPropertyChanged(nameof(SmartCollection));
+                OnPropertyChanged(nameof(RerunCollection));
                 OnPropertyChanged(nameof(MultiCollection));
                 OnPropertyChanged(nameof(PlaybackOrder));
             }

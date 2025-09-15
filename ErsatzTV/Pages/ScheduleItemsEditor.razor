@@ -380,7 +380,7 @@
         </div>
         <MudSelect @bind-Value="@_selectedItem.PlaybackOrder"
                    For="@(() => _selectedItem.PlaybackOrder)"
-                   Disabled="@(_selectedItem.CollectionType is CollectionType.Playlist)">
+                   Disabled="@(_selectedItem.CollectionType is CollectionType.Playlist or CollectionType.RerunFirstRun or CollectionType.RerunRerun)">
             @switch (_selectedItem.CollectionType)
             {
                 case CollectionType.MultiCollection:
@@ -404,6 +404,12 @@
                     break;
                 case CollectionType.Playlist:
                     <MudSelectItem Value="PlaybackOrder.None">Playlist</MudSelectItem>
+                    break;
+                case CollectionType.RerunFirstRun:
+                    <MudSelectItem Value="PlaybackOrder.None">None</MudSelectItem>
+                    break;
+                case CollectionType.RerunRerun:
+                    <MudSelectItem Value="PlaybackOrder.None">None</MudSelectItem>
                     break;
                 default:
                     <MudSelectItem Value="PlaybackOrder.Chronological">Chronological</MudSelectItem>

@@ -75,6 +75,12 @@ public class GetProgramScheduleItemsHandler(IDbContextFactory<TvContext> dbConte
             {
                 item = item with { FillWithGroupMode = FillWithGroupMode.None };
             }
+
+            if (item.CollectionType is CollectionType.Playlist or CollectionType.RerunFirstRun
+                or CollectionType.RerunRerun)
+            {
+                item = item with { PlaybackOrder = PlaybackOrder.None };
+            }
         }
 
         return item;
