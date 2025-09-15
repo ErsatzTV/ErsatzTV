@@ -58,14 +58,14 @@ public class PlaylistEnumerator : IMediaCollectionEnumerator
 
     public Option<TimeSpan> MinimumDuration { get; private set; }
 
-    public void MoveNext()
+    public void MoveNext(Option<DateTimeOffset> scheduledAt)
     {
         foreach (MediaItem maybeMediaItem in _sortedEnumerators[EnumeratorIndex].Enumerator.Current)
         {
             _remainingMediaItemIds.Remove(maybeMediaItem.Id);
         }
 
-        _sortedEnumerators[EnumeratorIndex].Enumerator.MoveNext();
+        _sortedEnumerators[EnumeratorIndex].Enumerator.MoveNext(scheduledAt);
         _itemsTakenFromCurrent++;
 
         bool shouldSwitchEnumerator = _batchSize.Match(
@@ -238,7 +238,7 @@ public class PlaylistEnumerator : IMediaCollectionEnumerator
 
         while (result.State.Index < state.Index)
         {
-            result.MoveNext();
+            result.MoveNext(Option<DateTimeOffset>.None);
 
             // previous state is no longer valid; playlist now has fewer items
             if (result.State.Index == 0)

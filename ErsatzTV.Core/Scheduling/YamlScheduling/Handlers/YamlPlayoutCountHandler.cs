@@ -132,7 +132,7 @@ public class YamlPlayoutCountHandler(EnumeratorCache enumeratorCache) : YamlPlay
                         context.AddedHistory.Add(history);
                     }
 
-                    enumerator.MoveNext();
+                    enumerator.MoveNext(playoutItem.StartOffset);
                 }
 
                 foreach (string postRollSequence in context.GetPostRollSequence())

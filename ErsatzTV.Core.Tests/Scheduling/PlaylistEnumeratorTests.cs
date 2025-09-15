@@ -67,11 +67,11 @@ public class PlaylistEnumeratorTests
         var items = new List<int>();
         items.AddRange(enumerator.Current.Map(mi => mi.Id));
 
-        enumerator.MoveNext();
+        enumerator.MoveNext(Option<DateTimeOffset>.None);
         while (enumerator.State.Index > 0)
         {
             items.AddRange(enumerator.Current.Map(mi => mi.Id));
-            enumerator.MoveNext();
+            enumerator.MoveNext(Option<DateTimeOffset>.None);
         }
 
         items.Count.ShouldBe(8);
@@ -135,11 +135,11 @@ public class PlaylistEnumeratorTests
         var items = new List<int>();
         items.AddRange(enumerator.Current.Map(mi => mi.Id));
 
-        enumerator.MoveNext();
+        enumerator.MoveNext(Option<DateTimeOffset>.None);
         while (enumerator.State.Index > 0)
         {
             items.AddRange(enumerator.Current.Map(mi => mi.Id));
-            enumerator.MoveNext();
+            enumerator.MoveNext(Option<DateTimeOffset>.None);
         }
 
         items.Count.ShouldBe(8);
@@ -206,7 +206,7 @@ public class PlaylistEnumeratorTests
         for (var i = 0; i < 4; i++)
         {
             items.AddRange(enumerator.Current.Map(mi => mi.Id));
-            enumerator.MoveNext();
+            enumerator.MoveNext(Option<DateTimeOffset>.None);
         }
 
         // with seed 1, shuffle order of (1,2,3) is (2,3,1)
@@ -276,7 +276,7 @@ public class PlaylistEnumeratorTests
         for (var i = 0; i < 4; i++)
         {
             items.AddRange(enumerator.Current.Map(mi => mi.Id));
-            enumerator.MoveNext();
+            enumerator.MoveNext(Option<DateTimeOffset>.None);
         }
 
         // with seed 1, shuffle order of (1,2,3) is (2,3,1)

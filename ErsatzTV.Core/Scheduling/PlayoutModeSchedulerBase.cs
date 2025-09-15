@@ -178,7 +178,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                     CurrentTime = nextState.CurrentTime + itemDuration
                 };
 
-                enumerator.MoveNext();
+                enumerator.MoveNext(playoutItem.StartOffset);
             }
         }
 
@@ -223,7 +223,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                     CurrentTime = nextItemStart.UtcDateTime
                 };
 
-                enumerator.MoveNext();
+                enumerator.MoveNext(playoutItem.StartOffset);
             }
         }
 
@@ -800,7 +800,9 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                 };
 
                 result.Add(playoutItem);
-                enumerator.MoveNext();
+
+                // TODO: this won't work with reruns
+                enumerator.MoveNext(Option<DateTimeOffset>.None);
             }
         }
 
@@ -845,7 +847,9 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
 
                     remainingToFill -= itemDuration;
                     result.Add(playoutItem);
-                    enumerator.MoveNext();
+
+                    // TODO: this won't work with reruns
+                    enumerator.MoveNext(Option<DateTimeOffset>.None);
                 }
                 else
                 {
@@ -857,7 +861,8 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                             remainingToFill);
                     }
 
-                    enumerator.MoveNext();
+                    // TODO: this won't work with reruns
+                    enumerator.MoveNext(Option<DateTimeOffset>.None);
                 }
             }
         }
@@ -892,7 +897,8 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                     DisableWatermarks = !scheduleItem.FallbackFiller.AllowWatermarks
                 };
 
-                enumerator.MoveNext();
+                // TODO: this won't work with reruns
+                enumerator.MoveNext(Option<DateTimeOffset>.None);
 
                 return result;
             }

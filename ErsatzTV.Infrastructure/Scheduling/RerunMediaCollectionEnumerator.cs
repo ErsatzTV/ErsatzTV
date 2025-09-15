@@ -28,7 +28,7 @@ public class RerunMediaCollectionEnumerator : IMediaCollectionEnumerator
         MoveToNextValid();
     }
 
-    public void MoveNext()
+    public void MoveNext(Option<DateTimeOffset> scheduledAt)
     {
         // TODO: do we need this async so it can write to the db? how do we give it the opportunity to do that?
         if (_collectionKey.CollectionType is CollectionType.RerunFirstRun)
@@ -40,7 +40,7 @@ public class RerunMediaCollectionEnumerator : IMediaCollectionEnumerator
             }
         }
 
-        _enumerator.MoveNext();
+        _enumerator.MoveNext(scheduledAt);
         MoveToNextValid();
     }
 
@@ -53,7 +53,7 @@ public class RerunMediaCollectionEnumerator : IMediaCollectionEnumerator
             {
                 while (_enumerator.Current.Match(current => _rerunHelper.IsRerun(_collectionKey, current.Id), false))
                 {
-                    _enumerator.MoveNext();
+                    _enumerator.MoveNext(Option<DateTimeOffset>.None);
                 }
 
                 break;
@@ -64,7 +64,7 @@ public class RerunMediaCollectionEnumerator : IMediaCollectionEnumerator
             {
                 while (_enumerator.Current.Match(current => _rerunHelper.IsFirstRun(_collectionKey, current.Id), false))
                 {
-                    _enumerator.MoveNext();
+                    _enumerator.MoveNext(Option<DateTimeOffset>.None);
                 }
 
                 break;

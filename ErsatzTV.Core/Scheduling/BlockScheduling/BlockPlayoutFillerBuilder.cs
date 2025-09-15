@@ -177,7 +177,7 @@ public class BlockPlayoutFillerBuilder(
                         result.AddedHistory.Add(nextHistory);
 
                         current += itemDuration;
-                        enumerator.MoveNext();
+                        enumerator.MoveNext(filler.StartOffset);
                     }
 
                     if (pastTime)

@@ -171,13 +171,13 @@ public class YamlPlayoutDurationHandler(EnumeratorCache enumeratorCache) : YamlP
                     remainingToFill -= itemDuration;
                     context.CurrentTime += itemDuration;
 
-                    enumerator.MoveNext();
+                    enumerator.MoveNext(playoutItem.StartOffset);
                 }
                 else if (discardAttempts > 0)
                 {
                     // item won't fit; try the next one
                     discardAttempts--;
-                    enumerator.MoveNext();
+                    enumerator.MoveNext(Option<DateTimeOffset>.None);
                 }
                 else if (trim)
                 {
@@ -205,7 +205,7 @@ public class YamlPlayoutDurationHandler(EnumeratorCache enumeratorCache) : YamlP
                     remainingToFill = TimeSpan.Zero;
                     context.CurrentTime = targetTime;
 
-                    enumerator.MoveNext();
+                    enumerator.MoveNext(playoutItem.StartOffset);
                 }
                 else if (fallbackEnumerator.IsSome)
                 {
@@ -238,7 +238,7 @@ public class YamlPlayoutDurationHandler(EnumeratorCache enumeratorCache) : YamlP
                                 context.AddedHistory.Add(history);
                             }
 
-                            fallback.MoveNext();
+                            fallback.MoveNext(playoutItem.StartOffset);
                         }
                     }
                 }

@@ -86,7 +86,7 @@ public class MultiEpisodeShuffleCollectionEnumerator : IMediaCollectionEnumerato
         State = new CollectionEnumeratorState { Seed = state.Seed };
         while (State.Index < state.Index)
         {
-            MoveNext();
+            MoveNext(Option<DateTimeOffset>.None);
         }
     }
 
@@ -107,7 +107,7 @@ public class MultiEpisodeShuffleCollectionEnumerator : IMediaCollectionEnumerato
     public Option<MediaItem> Current => _shuffled.Any() ? _shuffled[State.Index % _mediaItemCount] : None;
     public Option<bool> CurrentIncludeInProgramGuide { get; }
 
-    public void MoveNext()
+    public void MoveNext(Option<DateTimeOffset> scheduledAt)
     {
         if ((State.Index + 1) % _mediaItemCount == 0)
         {

@@ -37,7 +37,7 @@ public class RandomizedContentTests
             randomizedContent.Current.IsSome.ShouldBeTrue();
             randomizedContent.Current.Do(c => list.Add(c.Id));
 
-            randomizedContent.MoveNext();
+            randomizedContent.MoveNext(Option<DateTimeOffset>.None);
         }
 
         list.ShouldNotBe([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
@@ -56,7 +56,7 @@ public class RandomizedContentTests
         {
             randomizedContent.State.Index.ShouldBe(i);
 
-            randomizedContent.MoveNext();
+            randomizedContent.MoveNext(Option<DateTimeOffset>.None);
         }
     }
 
@@ -75,7 +75,7 @@ public class RandomizedContentTests
             randomizedContent.Current.Map(c => c.Id).IfNone(-1).ShouldBe(_expected[i - 2]);
             randomizedContent.State.Index.ShouldBe(i);
 
-            randomizedContent.MoveNext();
+            randomizedContent.MoveNext(Option<DateTimeOffset>.None);
         }
     }
 

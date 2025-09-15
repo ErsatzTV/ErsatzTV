@@ -32,7 +32,7 @@ public class ShuffledContentTests
         {
             shuffledContent.Current.IsSome.ShouldBeTrue();
             shuffledContent.Current.Do(x => list.Add(x.Id));
-            shuffledContent.MoveNext();
+            shuffledContent.MoveNext(Option<DateTimeOffset>.None);
         }
 
         for (var i = 0; i < list.Count - 1; i++)
@@ -59,7 +59,7 @@ public class ShuffledContentTests
         {
             shuffledContent.Current.IsSome.ShouldBeTrue();
             shuffledContent.Current.Do(x => list.Add(x.Id));
-            shuffledContent.MoveNext();
+            shuffledContent.MoveNext(Option<DateTimeOffset>.None);
         }
 
         list.ShouldBe([1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
@@ -80,7 +80,7 @@ public class ShuffledContentTests
         {
             shuffledContent.Current.IsSome.ShouldBeTrue();
             shuffledContent.Current.Do(x => list.Add(x.Id));
-            shuffledContent.MoveNext();
+            shuffledContent.MoveNext(Option<DateTimeOffset>.None);
         }
 
         list.ShouldNotBe([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
@@ -99,7 +99,7 @@ public class ShuffledContentTests
         for (var i = 0; i < 10; i++)
         {
             shuffledContent.State.Index.ShouldBe(i);
-            shuffledContent.MoveNext();
+            shuffledContent.MoveNext(Option<DateTimeOffset>.None);
         }
     }
 
@@ -117,7 +117,7 @@ public class ShuffledContentTests
             shuffledContent.Current.IsSome.ShouldBeTrue();
             shuffledContent.Current.Map(x => x.Id).IfNone(-1).ShouldBe(i);
             shuffledContent.State.Index.ShouldBe(i - 1);
-            shuffledContent.MoveNext();
+            shuffledContent.MoveNext(Option<DateTimeOffset>.None);
         }
     }
 

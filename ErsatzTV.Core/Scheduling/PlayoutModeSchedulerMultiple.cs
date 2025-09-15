@@ -156,7 +156,7 @@ public class PlayoutModeSchedulerMultiple : PlayoutModeSchedulerBase<ProgramSche
                     : nextState.NextGuideGroup
             };
 
-            contentEnumerator.MoveNext();
+            contentEnumerator.MoveNext(playoutItem.StartOffset);
         }
 
         if (nextState.MultipleRemaining.IfNone(-1) == 0)

@@ -31,7 +31,7 @@ public sealed class SeasonEpisodeMediaCollectionEnumerator : IMediaCollectionEnu
 
         while (State.Index < state.Index)
         {
-            MoveNext();
+            MoveNext(Option<DateTimeOffset>.None);
         }
     }
 
@@ -44,7 +44,7 @@ public sealed class SeasonEpisodeMediaCollectionEnumerator : IMediaCollectionEnu
     public Option<MediaItem> Current => _sortedMediaItems.Count != 0 ? _sortedMediaItems[State.Index] : None;
     public Option<bool> CurrentIncludeInProgramGuide { get; }
 
-    public void MoveNext()
+    public void MoveNext(Option<DateTimeOffset> scheduledAt)
     {
         if (_sortedMediaItems.Count == 0)
         {

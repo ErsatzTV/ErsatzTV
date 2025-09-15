@@ -50,13 +50,13 @@ public class RandomizedRotatingMediaCollectionEnumerator : IMediaCollectionEnume
         // because _index defaults to 0
         if (State.Index == state.Index)
         {
-            MoveNext();
+            MoveNext(Option<DateTimeOffset>.None);
         }
         else
         {
             while (State.Index <= state.Index)
             {
-                MoveNext();
+                MoveNext(Option<DateTimeOffset>.None);
             }
         }
     }
@@ -70,7 +70,7 @@ public class RandomizedRotatingMediaCollectionEnumerator : IMediaCollectionEnume
     public Option<MediaItem> Current => _mediaItems.Any() ? _mediaItems[_index] : None;
     public Option<bool> CurrentIncludeInProgramGuide { get; }
 
-    public void MoveNext()
+    public void MoveNext(Option<DateTimeOffset> scheduledAt)
     {
         var groups = _groupMedia.Keys.ToList();
         if (groups.Count == 0)

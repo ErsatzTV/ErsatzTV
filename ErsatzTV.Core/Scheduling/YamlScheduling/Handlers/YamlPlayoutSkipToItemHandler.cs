@@ -59,7 +59,7 @@ public class YamlPlayoutSkipToItemHandler(EnumeratorCache enumeratorCache) : IYa
                         }
                     }
 
-                    enumerator.MoveNext();
+                    enumerator.MoveNext(Option<DateTimeOffset>.None);
                 }
             }
         }

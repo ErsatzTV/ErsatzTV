@@ -210,7 +210,7 @@ internal static class HistoryDetails
 
             if (!current)
             {
-                enumerator.MoveNext();
+                enumerator.MoveNext(Option<DateTimeOffset>.None);
             }
         }
     }
