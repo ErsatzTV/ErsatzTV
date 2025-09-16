@@ -42,6 +42,7 @@ public class FakeMediaCollectionRepository : IMediaCollectionRepository
         CancellationToken cancellationToken) =>
         throw new NotSupportedException();
 
+    public Task<List<MediaItem>> GetRerunCollectionItems(int id, CancellationToken cancellationToken) => throw new NotSupportedException();
     public Task<List<MediaItem>> GetShowItemsByShowGuids(List<string> guids) => throw new NotSupportedException();
     public Task<List<MediaItem>> GetPlaylistItems(int id, CancellationToken cancellationToken) => throw new NotSupportedException();
     public Task<List<Movie>> GetMovie(int id) => throw new NotSupportedException();
@@ -67,6 +68,9 @@ public class FakeMediaCollectionRepository : IMediaCollectionRepository
         throw new NotSupportedException();
 
     public Task<List<int>> PlayoutIdsUsingSmartCollection(int smartCollectionId) =>
+        throw new NotSupportedException();
+
+    public Task<List<int>> PlayoutIdsUsingRerunCollection(int rerunCollectionId) =>
         throw new NotSupportedException();
 
     public Task<bool> IsCustomPlaybackOrder(int collectionId) => false.AsTask();

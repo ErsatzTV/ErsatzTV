@@ -63,7 +63,7 @@ public class YamlPlayoutSkipItemsHandler(EnumeratorCache enumeratorCache) : IYam
 
             for (var i = 0; i < skipCount; i++)
             {
-                enumerator.MoveNext();
+                enumerator.MoveNext(Option<DateTimeOffset>.None);
             }
         }
 

@@ -7,7 +7,7 @@ namespace ErsatzTV.Application.Scheduling;
 public record BlockItemViewModel(
     int Id,
     int Index,
-    ProgramScheduleItemCollectionType CollectionType,
+    CollectionType CollectionType,
     MediaCollectionViewModel Collection,
     MultiCollectionViewModel MultiCollection,
     SmartCollectionViewModel SmartCollection,

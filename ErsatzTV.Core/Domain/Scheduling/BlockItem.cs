@@ -6,7 +6,7 @@ public class BlockItem
     public int Index { get; set; }
     public int BlockId { get; set; }
     public Block Block { get; set; }
-    public ProgramScheduleItemCollectionType CollectionType { get; set; }
+    public CollectionType CollectionType { get; set; }
     public int? CollectionId { get; set; }
     public Collection Collection { get; set; }
     public int? MediaItemId { get; set; }

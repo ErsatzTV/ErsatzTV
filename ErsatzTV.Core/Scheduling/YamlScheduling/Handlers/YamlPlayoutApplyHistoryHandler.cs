@@ -130,7 +130,7 @@ public class YamlPlayoutApplyHistoryHandler(EnumeratorCache enumeratorCache)
 
                     // only move next at the end, because that may also move
                     // the enumerator index
-                    playlistEnumerator.MoveNext();
+                    playlistEnumerator.MoveNext(Option<DateTimeOffset>.None);
                 }
             }
             else

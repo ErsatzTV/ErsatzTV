@@ -28,6 +28,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
     private readonly IFFmpegSegmenterService _ffmpegSegmenterService;
     private readonly IPlayoutBuilder _playoutBuilder;
     private readonly IPlayoutTimeShifter _playoutTimeShifter;
+    private readonly IRerunHelper _rerunHelper;
     private readonly ChannelWriter<IBackgroundServiceRequest> _workerChannel;
     private readonly ISequentialPlayoutBuilder _sequentialPlayoutBuilder;
     private readonly IScriptedPlayoutBuilder _scriptedPlayoutBuilder;
@@ -44,6 +45,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
         IFFmpegSegmenterService ffmpegSegmenterService,
         IEntityLocker entityLocker,
         IPlayoutTimeShifter playoutTimeShifter,
+        IRerunHelper rerunHelper,
         ChannelWriter<IBackgroundServiceRequest> workerChannel)
     {
         _client = client;
@@ -57,6 +59,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
         _ffmpegSegmenterService = ffmpegSegmenterService;
         _entityLocker = entityLocker;
         _playoutTimeShifter = playoutTimeShifter;
+        _rerunHelper = rerunHelper;
         _workerChannel = workerChannel;
     }
 
@@ -159,6 +162,19 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
             }
 
             var changeCount = 0;
+
+            if (result.RerunHistoryToRemove.Count > 0)
+            {
+                changeCount += await dbContext.RerunHistory
+                    .Where(rh => result.RerunHistoryToRemove.Contains(rh.Id))
+                    .ExecuteDeleteAsync(cancellationToken);
+            }
+
+            if (result.AddedRerunHistory.Count > 0)
+            {
+                changeCount += 1;
+                await dbContext.BulkInsertAsync(result.AddedRerunHistory, cancellationToken: cancellationToken);
+            }
 
             if (result.ClearItems)
             {

@@ -27,7 +27,7 @@ public class PlaylistEnumeratorTests
                     Id = 1,
                     PlaybackOrder = PlaybackOrder.Chronological,
                     PlayAll = false,
-                    CollectionType = ProgramScheduleItemCollectionType.Collection,
+                    CollectionType = CollectionType.Collection,
                     CollectionId = 1
                 },
                 [FakeMovie(10)]
@@ -38,7 +38,7 @@ public class PlaylistEnumeratorTests
                     Id = 2,
                     PlaybackOrder = PlaybackOrder.Chronological,
                     PlayAll = true,
-                    CollectionType = ProgramScheduleItemCollectionType.Collection,
+                    CollectionType = CollectionType.Collection,
                     CollectionId = 2
                 },
                 [FakeMovie(20), FakeMovie(21)]
@@ -49,7 +49,7 @@ public class PlaylistEnumeratorTests
                     Id = 3,
                     PlaybackOrder = PlaybackOrder.Chronological,
                     PlayAll = false,
-                    CollectionType = ProgramScheduleItemCollectionType.Collection,
+                    CollectionType = CollectionType.Collection,
                     CollectionId = 3
                 },
                 [FakeMovie(30), FakeMovie(31)]
@@ -67,11 +67,11 @@ public class PlaylistEnumeratorTests
         var items = new List<int>();
         items.AddRange(enumerator.Current.Map(mi => mi.Id));
 
-        enumerator.MoveNext();
+        enumerator.MoveNext(Option<DateTimeOffset>.None);
         while (enumerator.State.Index > 0)
         {
             items.AddRange(enumerator.Current.Map(mi => mi.Id));
-            enumerator.MoveNext();
+            enumerator.MoveNext(Option<DateTimeOffset>.None);
         }
 
         items.Count.ShouldBe(8);
@@ -95,7 +95,7 @@ public class PlaylistEnumeratorTests
                     Id = 1,
                     PlaybackOrder = PlaybackOrder.Chronological,
                     PlayAll = false,
-                    CollectionType = ProgramScheduleItemCollectionType.Collection,
+                    CollectionType = CollectionType.Collection,
                     CollectionId = 1
                 },
                 [FakeMovie(10)]
@@ -106,7 +106,7 @@ public class PlaylistEnumeratorTests
                     Id = 2,
                     PlaybackOrder = PlaybackOrder.Chronological,
                     PlayAll = false,
-                    CollectionType = ProgramScheduleItemCollectionType.Collection,
+                    CollectionType = CollectionType.Collection,
                     CollectionId = 2
                 },
                 [FakeMovie(20), FakeMovie(21)]
@@ -117,7 +117,7 @@ public class PlaylistEnumeratorTests
                     Id = 3,
                     PlaybackOrder = PlaybackOrder.Chronological,
                     PlayAll = true,
-                    CollectionType = ProgramScheduleItemCollectionType.Collection,
+                    CollectionType = CollectionType.Collection,
                     CollectionId = 3
                 },
                 [FakeMovie(30), FakeMovie(31)]
@@ -135,11 +135,11 @@ public class PlaylistEnumeratorTests
         var items = new List<int>();
         items.AddRange(enumerator.Current.Map(mi => mi.Id));
 
-        enumerator.MoveNext();
+        enumerator.MoveNext(Option<DateTimeOffset>.None);
         while (enumerator.State.Index > 0)
         {
             items.AddRange(enumerator.Current.Map(mi => mi.Id));
-            enumerator.MoveNext();
+            enumerator.MoveNext(Option<DateTimeOffset>.None);
         }
 
         items.Count.ShouldBe(8);
@@ -161,7 +161,7 @@ public class PlaylistEnumeratorTests
                     Index = 0,
                     PlaybackOrder = PlaybackOrder.Chronological,
                     PlayAll = false,
-                    CollectionType = ProgramScheduleItemCollectionType.Collection,
+                    CollectionType = CollectionType.Collection,
                     CollectionId = 1
                 },
                 [FakeMovie(10)]
@@ -173,7 +173,7 @@ public class PlaylistEnumeratorTests
                     Index = 1,
                     PlaybackOrder = PlaybackOrder.Chronological,
                     PlayAll = true,
-                    CollectionType = ProgramScheduleItemCollectionType.Collection,
+                    CollectionType = CollectionType.Collection,
                     CollectionId = 2
                 },
                 [FakeMovie(20), FakeMovie(21)]
@@ -185,7 +185,7 @@ public class PlaylistEnumeratorTests
                     Index = 2,
                     PlaybackOrder = PlaybackOrder.Chronological,
                     PlayAll = false,
-                    CollectionType = ProgramScheduleItemCollectionType.Collection,
+                    CollectionType = CollectionType.Collection,
                     CollectionId = 3
                 },
                 [FakeMovie(30)]
@@ -206,7 +206,7 @@ public class PlaylistEnumeratorTests
         for (var i = 0; i < 4; i++)
         {
             items.AddRange(enumerator.Current.Map(mi => mi.Id));
-            enumerator.MoveNext();
+            enumerator.MoveNext(Option<DateTimeOffset>.None);
         }
 
         // with seed 1, shuffle order of (1,2,3) is (2,3,1)
@@ -231,7 +231,7 @@ public class PlaylistEnumeratorTests
                     PlaybackOrder = PlaybackOrder.Chronological,
                     PlayAll = false,
                     Count = 2,
-                    CollectionType = ProgramScheduleItemCollectionType.Collection,
+                    CollectionType = CollectionType.Collection,
                     CollectionId = 1
                 },
                 [FakeMovie(10), FakeMovie(11), FakeMovie(12)]
@@ -243,7 +243,7 @@ public class PlaylistEnumeratorTests
                     Index = 1,
                     PlaybackOrder = PlaybackOrder.Chronological,
                     PlayAll = false,
-                    CollectionType = ProgramScheduleItemCollectionType.Collection,
+                    CollectionType = CollectionType.Collection,
                     CollectionId = 2
                 },
                 [FakeMovie(20)]
@@ -255,7 +255,7 @@ public class PlaylistEnumeratorTests
                     Index = 2,
                     PlaybackOrder = PlaybackOrder.Chronological,
                     PlayAll = false,
-                    CollectionType = ProgramScheduleItemCollectionType.Collection,
+                    CollectionType = CollectionType.Collection,
                     CollectionId = 3
                 },
                 [FakeMovie(30)]
@@ -276,7 +276,7 @@ public class PlaylistEnumeratorTests
         for (var i = 0; i < 4; i++)
         {
             items.AddRange(enumerator.Current.Map(mi => mi.Id));
-            enumerator.MoveNext();
+            enumerator.MoveNext(Option<DateTimeOffset>.None);
         }
 
         // with seed 1, shuffle order of (1,2,3) is (2,3,1)

@@ -96,7 +96,7 @@ public class PlayoutModeSchedulerOne : PlayoutModeSchedulerBase<ProgramScheduleI
             };
 
             nextState.ScheduleItemsEnumerator.MoveNext();
-            contentEnumerator.MoveNext();
+            contentEnumerator.MoveNext(itemStartTime);
 
             // LogScheduledItem(scheduleItem, mediaItem, itemStartTime);
 

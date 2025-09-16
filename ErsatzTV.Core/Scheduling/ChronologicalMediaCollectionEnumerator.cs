@@ -32,7 +32,7 @@ public sealed class ChronologicalMediaCollectionEnumerator : IMediaCollectionEnu
 
         while (State.Index < state.Index)
         {
-            MoveNext();
+            MoveNext(Option<DateTimeOffset>.None);
         }
     }
 
@@ -45,7 +45,8 @@ public sealed class ChronologicalMediaCollectionEnumerator : IMediaCollectionEnu
     public Option<MediaItem> Current => _sortedMediaItems.Count != 0 ? _sortedMediaItems[State.Index] : None;
     public Option<bool> CurrentIncludeInProgramGuide { get; }
 
-    public void MoveNext() => State.Index = (State.Index + 1) % _sortedMediaItems.Count;
+    public void MoveNext(Option<DateTimeOffset> scheduledAt) =>
+        State.Index = (State.Index + 1) % _sortedMediaItems.Count;
 
     public Option<TimeSpan> MinimumDuration => _lazyMinimumDuration.Value;
 

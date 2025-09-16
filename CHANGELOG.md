@@ -5,6 +5,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 ### Added
+- Add new collection type `Rerun Collection`
+  - This collection type will show up as *two* collection types in classic schedules
+    - `Rerun (First Run)`
+    - `Rerun (Rerun)`
+  - The playback order for each of these collection types can be set on the rerun collection itself
+    - e.g. `Season, Episode` order for first run, `Shuffle` for rerun
+  - When a first run item is added to a playout, it will immediately be made available in the rerun collection
+  - Rerun history is currently scoped to the playout, and only supported in classic schedules
+    - This means resetting the playout will reset the rerun history
+  - Items will still be scheduled from the rerun collection if it is used before the first run collection
+    - Otherwise, the rerun collection would be considered "empty" which prevents the playout build altogether
+
+### Fixed
+- Fix green output when libplacebo tonemapping is used with NVIDIA acceleration
+
+## [25.6.0] - 2025-09-14
+### Added
 - Classic schedules: allow selecting multiple graphics elements on schedule items
 - Block schedules: allow selecting multiple graphics elements on decos
 - Add channel `Playout Source` setting
@@ -33,6 +50,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Unscheduled gaps are now displayed and have a unique row color
 - Process entire graphics element YAML files using scriban
   - This allows things like different images based on `MediaItem_ContentRating` (movie) or `MediaItem_ShowContentRating` (episode)
+- Playlists: add playback order `Shuffle In Order` for collections and smart collections
 
 ### Fixed
 - Fix transcoding content with bt709/pc color metadata
@@ -2697,7 +2715,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/ErsatzTV/ErsatzTV/compare/v25.5.0...HEAD
+[Unreleased]: https://github.com/ErsatzTV/ErsatzTV/compare/v25.6.0...HEAD
+[25.6.0]: https://github.com/ErsatzTV/ErsatzTV/compare/v25.6.0...v25.5.0
 [25.5.0]: https://github.com/ErsatzTV/ErsatzTV/compare/v25.4.0...v25.5.0
 [25.4.0]: https://github.com/ErsatzTV/ErsatzTV/compare/v25.3.1...v25.4.0
 [25.3.1]: https://github.com/ErsatzTV/ErsatzTV/compare/v25.3.0...v25.3.1

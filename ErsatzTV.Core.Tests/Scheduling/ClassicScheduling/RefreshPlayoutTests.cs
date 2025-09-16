@@ -77,7 +77,7 @@ public class RefreshPlayoutTests : PlayoutBuilderTestBase
                 AnchorDate = HoursAfterMidnight(24).UtcDateTime,
                 Collection = collectionOne,
                 CollectionId = collectionOne.Id,
-                CollectionType = ProgramScheduleItemCollectionType.Collection,
+                CollectionType = CollectionType.Collection,
                 EnumeratorState = new CollectionEnumeratorState
                 {
                     Index = 1,
@@ -102,6 +102,7 @@ public class RefreshPlayoutTests : PlayoutBuilderTestBase
         IMultiEpisodeShuffleCollectionEnumeratorFactory factory =
             Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
         ILocalFileSystem localFileSystem = Substitute.For<ILocalFileSystem>();
+        IRerunHelper rerunHelper = Substitute.For<IRerunHelper>();
         var builder = new PlayoutBuilder(
             configRepo,
             fakeRepository,
@@ -109,6 +110,7 @@ public class RefreshPlayoutTests : PlayoutBuilderTestBase
             artistRepo,
             factory,
             localFileSystem,
+            rerunHelper,
             Logger);
 
         DateTimeOffset start = HoursAfterMidnight(24);

@@ -34,6 +34,12 @@ public class ProgramScheduleItemConfiguration : IEntityTypeConfiguration<Program
             .OnDelete(DeleteBehavior.Cascade)
             .IsRequired(false);
 
+        builder.HasOne(i => i.RerunCollection)
+            .WithMany()
+            .HasForeignKey(i => i.RerunCollectionId)
+            .OnDelete(DeleteBehavior.Cascade)
+            .IsRequired(false);
+
         builder.HasOne(i => i.Playlist)
             .WithMany()
             .HasForeignKey(i => i.PlaylistId)

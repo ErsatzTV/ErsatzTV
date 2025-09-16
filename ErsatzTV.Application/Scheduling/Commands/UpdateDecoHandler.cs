@@ -92,13 +92,13 @@ public class UpdateDecoHandler(IDbContextFactory<TvContext> dbContextFactory)
         {
             switch (request.DefaultFillerCollectionType)
             {
-                case ProgramScheduleItemCollectionType.Collection:
+                case CollectionType.Collection:
                     existing.DefaultFillerCollectionId = request.DefaultFillerCollectionId;
                     break;
-                case ProgramScheduleItemCollectionType.MultiCollection:
+                case CollectionType.MultiCollection:
                     existing.DefaultFillerMultiCollectionId = request.DefaultFillerMultiCollectionId;
                     break;
-                case ProgramScheduleItemCollectionType.SmartCollection:
+                case CollectionType.SmartCollection:
                     existing.DefaultFillerSmartCollectionId = request.DefaultFillerSmartCollectionId;
                     break;
                 default:
@@ -120,13 +120,13 @@ public class UpdateDecoHandler(IDbContextFactory<TvContext> dbContextFactory)
         {
             switch (request.DeadAirFallbackCollectionType)
             {
-                case ProgramScheduleItemCollectionType.Collection:
+                case CollectionType.Collection:
                     existing.DeadAirFallbackCollectionId = request.DeadAirFallbackCollectionId;
                     break;
-                case ProgramScheduleItemCollectionType.MultiCollection:
+                case CollectionType.MultiCollection:
                     existing.DeadAirFallbackMultiCollectionId = request.DeadAirFallbackMultiCollectionId;
                     break;
-                case ProgramScheduleItemCollectionType.SmartCollection:
+                case CollectionType.SmartCollection:
                     existing.DeadAirFallbackSmartCollectionId = request.DeadAirFallbackSmartCollectionId;
                     break;
                 default:

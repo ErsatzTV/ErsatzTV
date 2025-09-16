@@ -849,7 +849,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
     private sealed record DisableDeadAirFallback : DeadAirFallbackResult;
 
     private sealed record CustomDeadAirFallback(
-        ProgramScheduleItemCollectionType CollectionType,
+        CollectionType CollectionType,
         int? CollectionId,
         int? MediaItemId,
         int? MultiCollectionId,

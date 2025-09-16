@@ -10,5 +10,5 @@ public interface IMediaCollectionEnumerator
     int Count { get; }
     Option<TimeSpan> MinimumDuration { get; }
     void ResetState(CollectionEnumeratorState state);
-    void MoveNext();
+    void MoveNext(Option<DateTimeOffset> scheduledAt);
 }

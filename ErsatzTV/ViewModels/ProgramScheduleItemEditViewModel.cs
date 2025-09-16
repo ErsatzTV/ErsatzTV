@@ -13,7 +13,7 @@ namespace ErsatzTV.ViewModels;
 
 public class ProgramScheduleItemEditViewModel : INotifyPropertyChanged
 {
-    private ProgramScheduleItemCollectionType _collectionType;
+    private CollectionType _collectionType;
     private int? _discardToFillAttempts;
     private FixedStartTimeBehavior? _fixedStartTimeBehavior;
     private int? _multipleCount;
@@ -44,12 +44,12 @@ public class ProgramScheduleItemEditViewModel : INotifyPropertyChanged
     public bool CanFillWithGroups =>
         PlayoutMode is PlayoutMode.Multiple or PlayoutMode.Duration
         && PlaybackOrder is not PlaybackOrder.ShuffleInOrder
-        && CollectionType is ProgramScheduleItemCollectionType.Collection
-            or ProgramScheduleItemCollectionType.MultiCollection or ProgramScheduleItemCollectionType.SmartCollection;
+        && CollectionType is CollectionType.Collection or CollectionType.MultiCollection
+            or CollectionType.SmartCollection;
 
     public PlayoutMode PlayoutMode { get; set; }
 
-    public ProgramScheduleItemCollectionType CollectionType
+    public CollectionType CollectionType
     {
         get => _collectionType;
         set
@@ -62,14 +62,17 @@ public class ProgramScheduleItemEditViewModel : INotifyPropertyChanged
                 MultiCollection = null;
                 MediaItem = null;
                 SmartCollection = null;
+                RerunCollection = null;
 
-                if (_collectionType != ProgramScheduleItemCollectionType.Playlist &&
+                if (_collectionType != CollectionType.Playlist &&
                     MultipleMode is MultipleMode.PlaylistItemSize)
                 {
                     MultipleMode = MultipleMode.Count;
                 }
 
-                if (_collectionType == ProgramScheduleItemCollectionType.Playlist)
+                if (_collectionType is CollectionType.Playlist
+                    or CollectionType.RerunFirstRun
+                    or CollectionType.RerunRerun)
                 {
                     PlaybackOrder = PlaybackOrder.None;
                 }
@@ -78,11 +81,12 @@ public class ProgramScheduleItemEditViewModel : INotifyPropertyChanged
                 OnPropertyChanged(nameof(MultiCollection));
                 OnPropertyChanged(nameof(MediaItem));
                 OnPropertyChanged(nameof(SmartCollection));
+                OnPropertyChanged(nameof(RerunCollection));
                 OnPropertyChanged(nameof(MultiCollection));
                 OnPropertyChanged(nameof(PlaybackOrder));
             }
 
-            if (_collectionType == ProgramScheduleItemCollectionType.MultiCollection)
+            if (_collectionType == CollectionType.MultiCollection)
             {
                 PlaybackOrder = PlaybackOrder.Shuffle;
             }
@@ -92,6 +96,7 @@ public class ProgramScheduleItemEditViewModel : INotifyPropertyChanged
     public MediaCollectionViewModel Collection { get; set; }
     public MultiCollectionViewModel MultiCollection { get; set; }
     public SmartCollectionViewModel SmartCollection { get; set; }
+    public RerunCollectionViewModel RerunCollection { get; set; }
     public NamedMediaItemViewModel MediaItem { get; set; }
     public PlaylistViewModel Playlist { get; set; }
     public FillerPresetViewModel PreRollFiller { get; set; }
@@ -108,13 +113,14 @@ public class ProgramScheduleItemEditViewModel : INotifyPropertyChanged
 
     public string CollectionName => CollectionType switch
     {
-        ProgramScheduleItemCollectionType.Collection => Collection?.Name,
-        ProgramScheduleItemCollectionType.TelevisionShow => MediaItem?.Name,
-        ProgramScheduleItemCollectionType.TelevisionSeason => MediaItem?.Name,
-        ProgramScheduleItemCollectionType.Artist => MediaItem?.Name,
-        ProgramScheduleItemCollectionType.MultiCollection => MultiCollection?.Name,
-        ProgramScheduleItemCollectionType.SmartCollection => SmartCollection?.Name,
-        ProgramScheduleItemCollectionType.Playlist => Playlist?.Name,
+        CollectionType.Collection => Collection?.Name,
+        CollectionType.TelevisionShow => MediaItem?.Name,
+        CollectionType.TelevisionSeason => MediaItem?.Name,
+        CollectionType.Artist => MediaItem?.Name,
+        CollectionType.MultiCollection => MultiCollection?.Name,
+        CollectionType.SmartCollection => SmartCollection?.Name,
+        CollectionType.Playlist => Playlist?.Name,
+        CollectionType.RerunFirstRun or CollectionType.RerunRerun => RerunCollection?.Name,
         _ => string.Empty
     };
 

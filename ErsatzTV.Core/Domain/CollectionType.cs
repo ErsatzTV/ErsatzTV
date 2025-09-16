@@ -1,6 +1,6 @@
 ﻿namespace ErsatzTV.Core.Domain;
 
-public enum ProgramScheduleItemCollectionType
+public enum CollectionType
 {
     Collection = 0,
     TelevisionShow = 1,
@@ -9,6 +9,8 @@ public enum ProgramScheduleItemCollectionType
     MultiCollection = 4,
     SmartCollection = 5,
     Playlist = 6,
+    RerunFirstRun = 7,
+    RerunRerun = 8,
 
     Movie = 10,
     Episode = 20,

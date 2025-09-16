@@ -23,6 +23,7 @@ public class GetProgramScheduleItemsHandler(IDbContextFactory<TvContext> dbConte
             .Include(i => i.Collection)
             .Include(i => i.MultiCollection)
             .Include(i => i.SmartCollection)
+            .Include(i => i.RerunCollection)
             .Include(i => i.Playlist)
             .Include(i => i.MediaItem)
             .ThenInclude(i => (i as Movie).MovieMetadata)
@@ -73,6 +74,12 @@ public class GetProgramScheduleItemsHandler(IDbContextFactory<TvContext> dbConte
             if (item.PlaybackOrder is PlaybackOrder.ShuffleInOrder)
             {
                 item = item with { FillWithGroupMode = FillWithGroupMode.None };
+            }
+
+            if (item.CollectionType is CollectionType.Playlist or CollectionType.RerunFirstRun
+                or CollectionType.RerunRerun)
+            {
+                item = item with { PlaybackOrder = PlaybackOrder.None };
             }
         }
 

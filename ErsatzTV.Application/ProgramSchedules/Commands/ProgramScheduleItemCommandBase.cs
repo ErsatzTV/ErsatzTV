@@ -73,7 +73,7 @@ public abstract class ProgramScheduleItemCommandBase
                 break;
             case PlayoutMode.Multiple:
                 if (item.MultipleMode is MultipleMode.PlaylistItemSize &&
-                    item.CollectionType is not ProgramScheduleItemCollectionType.Playlist)
+                    item.CollectionType is not CollectionType.Playlist)
                 {
                     return BaseError.New(
                         "[MultipleMode] cannot be [PlaylistItemSize] when collection is not a playlist");
@@ -126,49 +126,63 @@ public abstract class ProgramScheduleItemCommandBase
     {
         switch (item.CollectionType)
         {
-            case ProgramScheduleItemCollectionType.Collection:
+            case CollectionType.Collection:
                 if (item.CollectionId is null)
                 {
                     return BaseError.New("[Collection] is required for collection type 'Collection'");
                 }
 
                 break;
-            case ProgramScheduleItemCollectionType.TelevisionShow:
+            case CollectionType.TelevisionShow:
                 if (item.MediaItemId is null)
                 {
                     return BaseError.New("[MediaItem] is required for collection type 'TelevisionShow'");
                 }
 
                 break;
-            case ProgramScheduleItemCollectionType.TelevisionSeason:
+            case CollectionType.TelevisionSeason:
                 if (item.MediaItemId is null)
                 {
                     return BaseError.New("[MediaItem] is required for collection type 'TelevisionSeason'");
                 }
 
                 break;
-            case ProgramScheduleItemCollectionType.Artist:
+            case CollectionType.Artist:
                 if (item.MediaItemId is null)
                 {
                     return BaseError.New("[MediaItem] is required for collection type 'Artist'");
                 }
 
                 break;
-            case ProgramScheduleItemCollectionType.MultiCollection:
+            case CollectionType.MultiCollection:
                 if (item.MultiCollectionId is null)
                 {
                     return BaseError.New("[MultiCollection] is required for collection type 'MultiCollection'");
                 }
 
                 break;
-            case ProgramScheduleItemCollectionType.SmartCollection:
+            case CollectionType.SmartCollection:
                 if (item.SmartCollectionId is null)
                 {
                     return BaseError.New("[SmartCollection] is required for collection type 'SmartCollection'");
                 }
 
                 break;
-            case ProgramScheduleItemCollectionType.Playlist:
+            case CollectionType.RerunFirstRun:
+                if (item.RerunCollectionId is null)
+                {
+                    return BaseError.New("[RerunCollection] is required for collection type 'RerunFirstRun'");
+                }
+
+                break;
+            case CollectionType.RerunRerun:
+                if (item.RerunCollectionId is null)
+                {
+                    return BaseError.New("[RerunCollection] is required for collection type 'RerunRerun'");
+                }
+
+                break;
+            case CollectionType.Playlist:
                 if (item.PlaylistId is null)
                 {
                     return BaseError.New("[Playlist] is required for collection type 'Playlist'");
@@ -199,6 +213,7 @@ public abstract class ProgramScheduleItemCommandBase
                 CollectionId = item.CollectionId,
                 MultiCollectionId = item.MultiCollectionId,
                 SmartCollectionId = item.SmartCollectionId,
+                RerunCollectionId = item.RerunCollectionId,
                 MediaItemId = item.MediaItemId,
                 PlaylistId = item.PlaylistId,
                 PlaybackOrder = item.PlaybackOrder,
@@ -229,6 +244,7 @@ public abstract class ProgramScheduleItemCommandBase
                 CollectionId = item.CollectionId,
                 MultiCollectionId = item.MultiCollectionId,
                 SmartCollectionId = item.SmartCollectionId,
+                RerunCollectionId = item.RerunCollectionId,
                 MediaItemId = item.MediaItemId,
                 PlaylistId = item.PlaylistId,
                 PlaybackOrder = item.PlaybackOrder,
@@ -259,6 +275,7 @@ public abstract class ProgramScheduleItemCommandBase
                 CollectionId = item.CollectionId,
                 MultiCollectionId = item.MultiCollectionId,
                 SmartCollectionId = item.SmartCollectionId,
+                RerunCollectionId = item.RerunCollectionId,
                 MediaItemId = item.MediaItemId,
                 PlaylistId = item.PlaylistId,
                 PlaybackOrder = item.PlaybackOrder,
@@ -291,6 +308,7 @@ public abstract class ProgramScheduleItemCommandBase
                 CollectionId = item.CollectionId,
                 MultiCollectionId = item.MultiCollectionId,
                 SmartCollectionId = item.SmartCollectionId,
+                RerunCollectionId = item.RerunCollectionId,
                 MediaItemId = item.MediaItemId,
                 PlaylistId = item.PlaylistId,
                 PlaybackOrder = item.PlaybackOrder,

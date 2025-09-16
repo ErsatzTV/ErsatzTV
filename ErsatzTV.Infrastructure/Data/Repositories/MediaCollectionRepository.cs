@@ -47,7 +47,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
             switch (playlistItem.CollectionType)
             {
-                case ProgramScheduleItemCollectionType.Collection:
+                case CollectionType.Collection:
                     foreach (int collectionId in Optional(playlistItem.CollectionId))
                     {
                         mediaItems.AddRange(await GetMovieItems(dbContext, collectionId));
@@ -64,7 +64,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
                     break;
 
-                case ProgramScheduleItemCollectionType.TelevisionShow:
+                case CollectionType.TelevisionShow:
                     foreach (int mediaItemId in Optional(playlistItem.MediaItemId))
                     {
                         mediaItems.AddRange(await GetShowItemsFromShowId(dbContext, mediaItemId));
@@ -72,7 +72,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
                     break;
 
-                case ProgramScheduleItemCollectionType.TelevisionSeason:
+                case CollectionType.TelevisionSeason:
                     foreach (int mediaItemId in Optional(playlistItem.MediaItemId))
                     {
                         mediaItems.AddRange(await GetSeasonItemsFromSeasonId(dbContext, mediaItemId));
@@ -80,7 +80,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
                     break;
 
-                case ProgramScheduleItemCollectionType.Artist:
+                case CollectionType.Artist:
                     foreach (int mediaItemId in Optional(playlistItem.MediaItemId))
                     {
                         mediaItems.AddRange(await GetArtistItemsFromArtistId(dbContext, mediaItemId));
@@ -88,7 +88,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
                     break;
 
-                case ProgramScheduleItemCollectionType.MultiCollection:
+                case CollectionType.MultiCollection:
                     foreach (int multiCollectionId in Optional(playlistItem.MultiCollectionId))
                     {
                         mediaItems.AddRange(await GetMultiCollectionItems(multiCollectionId, cancellationToken));
@@ -96,7 +96,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
                     break;
 
-                case ProgramScheduleItemCollectionType.SmartCollection:
+                case CollectionType.SmartCollection:
                     foreach (int smartCollectionId in Optional(playlistItem.SmartCollectionId))
                     {
                         mediaItems.AddRange(await GetSmartCollectionItems(smartCollectionId, cancellationToken));
@@ -104,7 +104,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
                     break;
 
-                case ProgramScheduleItemCollectionType.Movie:
+                case CollectionType.Movie:
                     foreach (int mediaItemId in Optional(playlistItem.MediaItemId))
                     {
                         mediaItems.AddRange(await GetMovieItems(dbContext, [mediaItemId]));
@@ -112,7 +112,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
                     break;
 
-                case ProgramScheduleItemCollectionType.Episode:
+                case CollectionType.Episode:
                     foreach (int mediaItemId in Optional(playlistItem.MediaItemId))
                     {
                         mediaItems.AddRange(await GetEpisodeItems(dbContext, [mediaItemId]));
@@ -120,7 +120,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
                     break;
 
-                case ProgramScheduleItemCollectionType.MusicVideo:
+                case CollectionType.MusicVideo:
                     foreach (int mediaItemId in Optional(playlistItem.MediaItemId))
                     {
                         mediaItems.AddRange(await GetMusicVideoItems(dbContext, [mediaItemId]));
@@ -128,7 +128,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
                     break;
 
-                case ProgramScheduleItemCollectionType.OtherVideo:
+                case CollectionType.OtherVideo:
                     foreach (int mediaItemId in Optional(playlistItem.MediaItemId))
                     {
                         mediaItems.AddRange(await GetOtherVideoItems(dbContext, [mediaItemId]));
@@ -136,7 +136,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
                     break;
 
-                case ProgramScheduleItemCollectionType.Song:
+                case CollectionType.Song:
                     foreach (int mediaItemId in Optional(playlistItem.MediaItemId))
                     {
                         mediaItems.AddRange(await GetSongItems(dbContext, [mediaItemId]));
@@ -144,7 +144,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
                     break;
 
-                case ProgramScheduleItemCollectionType.Image:
+                case CollectionType.Image:
                     foreach (int mediaItemId in Optional(playlistItem.MediaItemId))
                     {
                         mediaItems.AddRange(await GetImageItems(dbContext, [mediaItemId]));
@@ -152,7 +152,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
                     break;
 
-                case ProgramScheduleItemCollectionType.RemoteStream:
+                case CollectionType.RemoteStream:
                     foreach (int mediaItemId in Optional(playlistItem.MediaItemId))
                     {
                         mediaItems.AddRange(await GetRemoteStreamItems(dbContext, [mediaItemId]));
@@ -203,7 +203,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
             switch (playlistItem.CollectionType)
             {
-                case ProgramScheduleItemCollectionType.Collection:
+                case CollectionType.Collection:
                     foreach (int collectionId in Optional(playlistItem.CollectionId))
                     {
                         mediaItems.AddRange(await GetMovieItems(dbContext, collectionId));
@@ -220,7 +220,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
                     break;
 
-                case ProgramScheduleItemCollectionType.TelevisionShow:
+                case CollectionType.TelevisionShow:
                     foreach (int mediaItemId in Optional(playlistItem.MediaItemId))
                     {
                         mediaItems.AddRange(await GetShowItemsFromShowId(dbContext, mediaItemId));
@@ -228,7 +228,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
                     break;
 
-                case ProgramScheduleItemCollectionType.TelevisionSeason:
+                case CollectionType.TelevisionSeason:
                     foreach (int mediaItemId in Optional(playlistItem.MediaItemId))
                     {
                         mediaItems.AddRange(await GetSeasonItemsFromSeasonId(dbContext, mediaItemId));
@@ -236,7 +236,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
                     break;
 
-                case ProgramScheduleItemCollectionType.Artist:
+                case CollectionType.Artist:
                     foreach (int mediaItemId in Optional(playlistItem.MediaItemId))
                     {
                         mediaItems.AddRange(await GetArtistItemsFromArtistId(dbContext, mediaItemId));
@@ -244,7 +244,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
                     break;
 
-                case ProgramScheduleItemCollectionType.MultiCollection:
+                case CollectionType.MultiCollection:
                     foreach (int multiCollectionId in Optional(playlistItem.MultiCollectionId))
                     {
                         mediaItems.AddRange(await GetMultiCollectionItems(multiCollectionId, cancellationToken));
@@ -252,7 +252,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
                     break;
 
-                case ProgramScheduleItemCollectionType.SmartCollection:
+                case CollectionType.SmartCollection:
                     foreach (int smartCollectionId in Optional(playlistItem.SmartCollectionId))
                     {
                         mediaItems.AddRange(await GetSmartCollectionItems(smartCollectionId, cancellationToken));
@@ -260,7 +260,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
                     break;
 
-                case ProgramScheduleItemCollectionType.Movie:
+                case CollectionType.Movie:
                     foreach (int mediaItemId in Optional(playlistItem.MediaItemId))
                     {
                         mediaItems.AddRange(await GetMovieItems(dbContext, [mediaItemId]));
@@ -268,7 +268,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
                     break;
 
-                case ProgramScheduleItemCollectionType.Episode:
+                case CollectionType.Episode:
                     foreach (int mediaItemId in Optional(playlistItem.MediaItemId))
                     {
                         mediaItems.AddRange(await GetEpisodeItems(dbContext, [mediaItemId]));
@@ -276,7 +276,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
                     break;
 
-                case ProgramScheduleItemCollectionType.MusicVideo:
+                case CollectionType.MusicVideo:
                     foreach (int mediaItemId in Optional(playlistItem.MediaItemId))
                     {
                         mediaItems.AddRange(await GetMusicVideoItems(dbContext, [mediaItemId]));
@@ -284,7 +284,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
                     break;
 
-                case ProgramScheduleItemCollectionType.OtherVideo:
+                case CollectionType.OtherVideo:
                     foreach (int mediaItemId in Optional(playlistItem.MediaItemId))
                     {
                         mediaItems.AddRange(await GetOtherVideoItems(dbContext, [mediaItemId]));
@@ -292,7 +292,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
                     break;
 
-                case ProgramScheduleItemCollectionType.Song:
+                case CollectionType.Song:
                     foreach (int mediaItemId in Optional(playlistItem.MediaItemId))
                     {
                         mediaItems.AddRange(await GetSongItems(dbContext, [mediaItemId]));
@@ -300,7 +300,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
                     break;
 
-                case ProgramScheduleItemCollectionType.Image:
+                case CollectionType.Image:
                     foreach (int mediaItemId in Optional(playlistItem.MediaItemId))
                     {
                         mediaItems.AddRange(await GetImageItems(dbContext, [mediaItemId]));
@@ -308,7 +308,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
                     break;
 
-                case ProgramScheduleItemCollectionType.RemoteStream:
+                case CollectionType.RemoteStream:
                     foreach (int mediaItemId in Optional(playlistItem.MediaItemId))
                     {
                         mediaItems.AddRange(await GetRemoteStreamItems(dbContext, [mediaItemId]));
@@ -544,6 +544,138 @@ public class MediaCollectionRepository : IMediaCollectionRepository
         return result.DistinctBy(x => x.Id).ToList();
     }
 
+    public async Task<List<MediaItem>> GetRerunCollectionItems(int id, CancellationToken cancellationToken)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+
+        Option<RerunCollection> maybeCollection = await dbContext.RerunCollections
+            .AsNoTracking()
+            .SelectOneAsync(rc => rc.Id, rc => rc.Id == id, cancellationToken);
+
+        var result = new List<MediaItem>();
+
+        foreach (RerunCollection rerunCollection in maybeCollection)
+        {
+            switch (rerunCollection.CollectionType)
+            {
+                case CollectionType.Collection:
+                    foreach (int collectionId in Optional(rerunCollection.CollectionId))
+                    {
+                        result.AddRange(await GetMovieItems(dbContext, collectionId));
+                        result.AddRange(await GetShowItems(dbContext, collectionId));
+                        result.AddRange(await GetSeasonItems(dbContext, collectionId));
+                        result.AddRange(await GetEpisodeItems(dbContext, collectionId));
+                        result.AddRange(await GetArtistItems(dbContext, collectionId));
+                        result.AddRange(await GetMusicVideoItems(dbContext, collectionId));
+                        result.AddRange(await GetOtherVideoItems(dbContext, collectionId));
+                        result.AddRange(await GetSongItems(dbContext, collectionId));
+                        result.AddRange(await GetImageItems(dbContext, collectionId));
+                        result.AddRange(await GetRemoteStreamItems(dbContext, collectionId));
+                    }
+
+                    break;
+
+                case CollectionType.TelevisionShow:
+                    foreach (int mediaItemId in Optional(rerunCollection.MediaItemId))
+                    {
+                        result.AddRange(await GetShowItemsFromShowId(dbContext, mediaItemId));
+                    }
+
+                    break;
+
+                case CollectionType.TelevisionSeason:
+                    foreach (int mediaItemId in Optional(rerunCollection.MediaItemId))
+                    {
+                        result.AddRange(await GetSeasonItemsFromSeasonId(dbContext, mediaItemId));
+                    }
+
+                    break;
+
+                case CollectionType.Artist:
+                    foreach (int mediaItemId in Optional(rerunCollection.MediaItemId))
+                    {
+                        result.AddRange(await GetArtistItemsFromArtistId(dbContext, mediaItemId));
+                    }
+
+                    break;
+
+                case CollectionType.MultiCollection:
+                    foreach (int multiCollectionId in Optional(rerunCollection.MultiCollectionId))
+                    {
+                        result.AddRange(await GetMultiCollectionItems(multiCollectionId, cancellationToken));
+                    }
+
+                    break;
+
+                case CollectionType.SmartCollection:
+                    foreach (int smartCollectionId in Optional(rerunCollection.SmartCollectionId))
+                    {
+                        result.AddRange(await GetSmartCollectionItems(smartCollectionId, cancellationToken));
+                    }
+
+                    break;
+
+                case CollectionType.Movie:
+                    foreach (int mediaItemId in Optional(rerunCollection.MediaItemId))
+                    {
+                        result.AddRange(await GetMovieItems(dbContext, [mediaItemId]));
+                    }
+
+                    break;
+
+                case CollectionType.Episode:
+                    foreach (int mediaItemId in Optional(rerunCollection.MediaItemId))
+                    {
+                        result.AddRange(await GetEpisodeItems(dbContext, [mediaItemId]));
+                    }
+
+                    break;
+
+                case CollectionType.MusicVideo:
+                    foreach (int mediaItemId in Optional(rerunCollection.MediaItemId))
+                    {
+                        result.AddRange(await GetMusicVideoItems(dbContext, [mediaItemId]));
+                    }
+
+                    break;
+
+                case CollectionType.OtherVideo:
+                    foreach (int mediaItemId in Optional(rerunCollection.MediaItemId))
+                    {
+                        result.AddRange(await GetOtherVideoItems(dbContext, [mediaItemId]));
+                    }
+
+                    break;
+
+                case CollectionType.Song:
+                    foreach (int mediaItemId in Optional(rerunCollection.MediaItemId))
+                    {
+                        result.AddRange(await GetSongItems(dbContext, [mediaItemId]));
+                    }
+
+                    break;
+
+                case CollectionType.Image:
+                    foreach (int mediaItemId in Optional(rerunCollection.MediaItemId))
+                    {
+                        result.AddRange(await GetImageItems(dbContext, [mediaItemId]));
+                    }
+
+                    break;
+
+                case CollectionType.RemoteStream:
+                    foreach (int mediaItemId in Optional(rerunCollection.MediaItemId))
+                    {
+                        result.AddRange(await GetRemoteStreamItems(dbContext, [mediaItemId]));
+                    }
+
+                    break;
+            }
+        }
+
+        return result.DistinctBy(x => x.Id).ToList();
+    }
+
     public async Task<List<MediaItem>> GetShowItemsByShowGuids(List<string> guids)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
@@ -689,7 +821,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
         {
             switch (playlistItem.CollectionType)
             {
-                case ProgramScheduleItemCollectionType.Collection:
+                case CollectionType.Collection:
                     foreach (int collectionId in Optional(playlistItem.CollectionId))
                     {
                         result.AddRange(await GetMovieItems(dbContext, collectionId));
@@ -706,7 +838,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
                     break;
 
-                case ProgramScheduleItemCollectionType.TelevisionShow:
+                case CollectionType.TelevisionShow:
                     foreach (int mediaItemId in Optional(playlistItem.MediaItemId))
                     {
                         result.AddRange(await GetShowItemsFromShowId(dbContext, mediaItemId));
@@ -714,7 +846,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
                     break;
 
-                case ProgramScheduleItemCollectionType.TelevisionSeason:
+                case CollectionType.TelevisionSeason:
                     foreach (int mediaItemId in Optional(playlistItem.MediaItemId))
                     {
                         result.AddRange(await GetSeasonItemsFromSeasonId(dbContext, mediaItemId));
@@ -722,7 +854,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
                     break;
 
-                case ProgramScheduleItemCollectionType.Artist:
+                case CollectionType.Artist:
                     foreach (int mediaItemId in Optional(playlistItem.MediaItemId))
                     {
                         result.AddRange(await GetArtistItemsFromArtistId(dbContext, mediaItemId));
@@ -730,7 +862,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
                     break;
 
-                case ProgramScheduleItemCollectionType.MultiCollection:
+                case CollectionType.MultiCollection:
                     foreach (int multiCollectionId in Optional(playlistItem.MultiCollectionId))
                     {
                         result.AddRange(await GetMultiCollectionItems(multiCollectionId, cancellationToken));
@@ -738,7 +870,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
                     break;
 
-                case ProgramScheduleItemCollectionType.SmartCollection:
+                case CollectionType.SmartCollection:
                     foreach (int smartCollectionId in Optional(playlistItem.SmartCollectionId))
                     {
                         result.AddRange(await GetSmartCollectionItems(smartCollectionId, cancellationToken));
@@ -746,7 +878,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
                     break;
 
-                case ProgramScheduleItemCollectionType.Movie:
+                case CollectionType.Movie:
                     foreach (int mediaItemId in Optional(playlistItem.MediaItemId))
                     {
                         result.AddRange(await GetMovieItems(dbContext, [mediaItemId]));
@@ -754,7 +886,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
                     break;
 
-                case ProgramScheduleItemCollectionType.Episode:
+                case CollectionType.Episode:
                     foreach (int mediaItemId in Optional(playlistItem.MediaItemId))
                     {
                         result.AddRange(await GetEpisodeItems(dbContext, [mediaItemId]));
@@ -762,7 +894,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
                     break;
 
-                case ProgramScheduleItemCollectionType.MusicVideo:
+                case CollectionType.MusicVideo:
                     foreach (int mediaItemId in Optional(playlistItem.MediaItemId))
                     {
                         result.AddRange(await GetMusicVideoItems(dbContext, [mediaItemId]));
@@ -770,7 +902,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
                     break;
 
-                case ProgramScheduleItemCollectionType.OtherVideo:
+                case CollectionType.OtherVideo:
                     foreach (int mediaItemId in Optional(playlistItem.MediaItemId))
                     {
                         result.AddRange(await GetOtherVideoItems(dbContext, [mediaItemId]));
@@ -778,7 +910,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
                     break;
 
-                case ProgramScheduleItemCollectionType.Song:
+                case CollectionType.Song:
                     foreach (int mediaItemId in Optional(playlistItem.MediaItemId))
                     {
                         result.AddRange(await GetSongItems(dbContext, [mediaItemId]));
@@ -786,7 +918,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
                     break;
 
-                case ProgramScheduleItemCollectionType.Image:
+                case CollectionType.Image:
                     foreach (int mediaItemId in Optional(playlistItem.MediaItemId))
                     {
                         result.AddRange(await GetImageItems(dbContext, [mediaItemId]));
@@ -794,7 +926,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
                     break;
 
-                case ProgramScheduleItemCollectionType.RemoteStream:
+                case CollectionType.RemoteStream:
                     foreach (int mediaItemId in Optional(playlistItem.MediaItemId))
                     {
                         result.AddRange(await GetRemoteStreamItems(dbContext, [mediaItemId]));
@@ -902,6 +1034,17 @@ public class MediaCollectionRepository : IMediaCollectionRepository
             .Map(result => result.ToList());
     }
 
+    public async Task<List<int>> PlayoutIdsUsingRerunCollection(int rerunCollectionId)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.QueryAsync<int>(
+                @"SELECT DISTINCT p.PlayoutId
+                    FROM PlayoutProgramScheduleAnchor p
+                    WHERE p.RerunCollectionId = @RerunCollectionId",
+                new { RerunCollectionId = rerunCollectionId })
+            .Map(result => result.ToList());
+    }
+
     public async Task<bool> IsCustomPlaybackOrder(int collectionId)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
@@ -916,31 +1059,31 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
         return emptyCollection.CollectionType switch
         {
-            ProgramScheduleItemCollectionType.Artist => await dbContext.Artists
+            CollectionType.Artist => await dbContext.Artists
                 .AsNoTracking()
                 .Include(a => a.ArtistMetadata)
                 .SelectOneAsync(a => a.Id, a => a.Id == emptyCollection.MediaItemId.Value, cancellationToken)
                 .MapT(a => a.ArtistMetadata.Head().Title),
-            ProgramScheduleItemCollectionType.Collection => await dbContext.Collections
+            CollectionType.Collection => await dbContext.Collections
                 .AsNoTracking()
                 .SelectOneAsync(c => c.Id, c => c.Id == emptyCollection.CollectionId.Value, cancellationToken)
                 .MapT(c => c.Name),
-            ProgramScheduleItemCollectionType.MultiCollection => await dbContext.MultiCollections
+            CollectionType.MultiCollection => await dbContext.MultiCollections
                 .AsNoTracking()
                 .SelectOneAsync(c => c.Id, c => c.Id == emptyCollection.MultiCollectionId.Value, cancellationToken)
                 .MapT(c => c.Name),
-            ProgramScheduleItemCollectionType.SmartCollection => await dbContext.SmartCollections
+            CollectionType.SmartCollection => await dbContext.SmartCollections
                 .AsNoTracking()
                 .SelectOneAsync(c => c.Id, c => c.Id == emptyCollection.SmartCollectionId.Value, cancellationToken)
                 .MapT(c => c.Name),
-            ProgramScheduleItemCollectionType.TelevisionSeason => await dbContext.Seasons
+            CollectionType.TelevisionSeason => await dbContext.Seasons
                 .AsNoTracking()
                 .Include(s => s.SeasonMetadata)
                 .Include(s => s.Show)
                 .ThenInclude(s => s.ShowMetadata)
                 .SelectOneAsync(a => a.Id, a => a.Id == emptyCollection.MediaItemId.Value, cancellationToken)
                 .MapT(s => $"{s.Show.ShowMetadata.Head().Title} Season {s.SeasonNumber}"),
-            ProgramScheduleItemCollectionType.TelevisionShow => await dbContext.Shows.Include(s => s.ShowMetadata)
+            CollectionType.TelevisionShow => await dbContext.Shows.Include(s => s.ShowMetadata)
                 .AsNoTracking()
                 .SelectOneAsync(a => a.Id, a => a.Id == emptyCollection.MediaItemId.Value, cancellationToken)
                 .MapT(s => s.ShowMetadata.Head().Title),

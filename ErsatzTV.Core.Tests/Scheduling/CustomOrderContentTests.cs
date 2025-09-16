@@ -25,7 +25,7 @@ public class CustomOrderContentTests
         {
             customOrderContent.Current.IsSome.ShouldBeTrue();
             customOrderContent.Current.Map(x => x.Id).IfNone(-1).ShouldBe(i);
-            customOrderContent.MoveNext();
+            customOrderContent.MoveNext(Option<DateTimeOffset>.None);
         }
     }
 
@@ -41,7 +41,7 @@ public class CustomOrderContentTests
         for (var i = 0; i < 10; i++)
         {
             customOrderContent.State.Index.ShouldBe(i % 10);
-            customOrderContent.MoveNext();
+            customOrderContent.MoveNext(Option<DateTimeOffset>.None);
         }
     }
 
@@ -59,7 +59,7 @@ public class CustomOrderContentTests
             customOrderContent.Current.IsSome.ShouldBeTrue();
             customOrderContent.Current.Map(x => x.Id).IfNone(-1).ShouldBe(i);
             customOrderContent.State.Index.ShouldBe(5 - i + 5); // 5 through 10
-            customOrderContent.MoveNext();
+            customOrderContent.MoveNext(Option<DateTimeOffset>.None);
         }
     }
 

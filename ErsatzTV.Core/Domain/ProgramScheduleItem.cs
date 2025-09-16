@@ -11,7 +11,7 @@ public abstract class ProgramScheduleItem
     public StartType StartType => StartTime.HasValue ? StartType.Fixed : StartType.Dynamic;
     public TimeSpan? StartTime { get; set; }
     public FixedStartTimeBehavior? FixedStartTimeBehavior { get; set; }
-    public ProgramScheduleItemCollectionType CollectionType { get; set; }
+    public CollectionType CollectionType { get; set; }
     public GuideMode GuideMode { get; set; }
     public string CustomTitle { get; set; }
     public int ProgramScheduleId { get; set; }
@@ -27,6 +27,8 @@ public abstract class ProgramScheduleItem
     public MultiCollection MultiCollection { get; set; }
     public int? SmartCollectionId { get; set; }
     public SmartCollection SmartCollection { get; set; }
+    public int? RerunCollectionId { get; set; }
+    public RerunCollection RerunCollection { get; set; }
     public int? PlaylistId { get; set; }
     public Playlist Playlist { get; set; }
     public string FakeCollectionKey { get; set; }

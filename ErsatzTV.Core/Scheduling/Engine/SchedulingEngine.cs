@@ -779,13 +779,13 @@ public class SchedulingEngine(
                     remainingToFill -= itemDuration;
                     _state.CurrentTime += itemDuration;
 
-                    enumeratorDetails.Enumerator.MoveNext();
+                    enumeratorDetails.Enumerator.MoveNext(playoutItem.StartOffset);
                 }
                 else if (discardAttempts > 0)
                 {
                     // item won't fit; try the next one
                     discardAttempts--;
-                    enumeratorDetails.Enumerator.MoveNext();
+                    enumeratorDetails.Enumerator.MoveNext(Option<DateTimeOffset>.None);
                 }
                 else if (trim)
                 {
@@ -806,7 +806,7 @@ public class SchedulingEngine(
                     remainingToFill = TimeSpan.Zero;
                     _state.CurrentTime = targetTime;
 
-                    enumeratorDetails.Enumerator.MoveNext();
+                    enumeratorDetails.Enumerator.MoveNext(playoutItem.StartOffset);
                 }
                 else if (maybeFallbackEnumeratorDetails.IsSome)
                 {
@@ -836,7 +836,7 @@ public class SchedulingEngine(
                                 _state.AddedHistory.Add(history);
                             }
 
-                            fallbackEnumeratorDetails.Enumerator.MoveNext();
+                            fallbackEnumeratorDetails.Enumerator.MoveNext(playoutItem.StartOffset);
                         }
                     }
                 }
@@ -959,7 +959,7 @@ public class SchedulingEngine(
                     _state.AddedHistory.Add(history);
                 }
 
-                enumeratorDetails.Enumerator.MoveNext();
+                enumeratorDetails.Enumerator.MoveNext(playoutItem.StartOffset);
 
                 result = true;
             }
@@ -1077,7 +1077,7 @@ public class SchedulingEngine(
 
         for (var i = 0; i < count; i++)
         {
-            enumeratorDetails.Enumerator.MoveNext();
+            enumeratorDetails.Enumerator.MoveNext(Option<DateTimeOffset>.None);
         }
     }
 
@@ -1115,7 +1115,7 @@ public class SchedulingEngine(
                     }
                 }
 
-                enumeratorDetails.Enumerator.MoveNext();
+                enumeratorDetails.Enumerator.MoveNext(Option<DateTimeOffset>.None);
             }
         }
     }
@@ -1312,7 +1312,7 @@ public class SchedulingEngine(
 
             // only move next at the end, because that may also move
             // the enumerator index
-            playlistEnumerator.MoveNext();
+            playlistEnumerator.MoveNext(Option<DateTimeOffset>.None);
         }
     }
 

@@ -4,7 +4,7 @@ namespace ErsatzTV.Application.Scheduling;
 
 public record ReplaceBlockItem(
     int Index,
-    ProgramScheduleItemCollectionType CollectionType,
+    CollectionType CollectionType,
     int? CollectionId,
     int? MultiCollectionId,
     int? SmartCollectionId,
