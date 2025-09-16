@@ -6,6 +6,7 @@ public class FFmpegFormat
     public const string YUV420P = "yuv420p";
     public const string YUV444P = "yuv444p";
     public const string YUVA420P = "yuva420p";
+    public const string YUVA420P10 = "yuva420p10";
     public const string P010LE = "p010le";
     public const string NV12 = "nv12";
     public const string NV15 = "nv15";
