@@ -4,9 +4,7 @@
 @using ErsatzTV.Application.FFmpegProfiles
 @using ErsatzTV.Application.Resolutions
 @using ErsatzTV.Core.FFmpeg
-@using ErsatzTV.FFmpeg
 @using ErsatzTV.FFmpeg.Format
-@using ErsatzTV.FFmpeg.Preset
 @using ErsatzTV.Validators
 @using FluentValidation.Results
 @using Microsoft.Extensions.Caching.Memory
@@ -89,7 +87,10 @@
                 <MudText>Preset</MudText>
             </div>
             @{
-                ICollection<string> presets = AvailablePresets.ForAccelAndFormat(MapAccel(_model.HardwareAcceleration), MapVideoFormat(_model.VideoFormat));
+                ICollection<string> presets = FFmpegLibraryHelper.PresetsForFFmpegProfile(
+                    _model.HardwareAcceleration,
+                    _model.VideoFormat,
+                    _model.BitDepth);
             }
             <MudSelect @bind-Value="_model.VideoPreset"
                        For="@(() => _model.VideoPreset)"
@@ -421,26 +422,4 @@
             // do nothing
         }
     }
-
-    private static HardwareAccelerationMode MapAccel(HardwareAccelerationKind kind) =>
-        kind switch
-        {
-            HardwareAccelerationKind.Amf => HardwareAccelerationMode.Amf,
-            HardwareAccelerationKind.Nvenc => HardwareAccelerationMode.Nvenc,
-            HardwareAccelerationKind.Qsv => HardwareAccelerationMode.Qsv,
-            HardwareAccelerationKind.Vaapi => HardwareAccelerationMode.Vaapi,
-            HardwareAccelerationKind.VideoToolbox => HardwareAccelerationMode.VideoToolbox,
-            HardwareAccelerationKind.V4l2m2m => HardwareAccelerationMode.V4l2m2m,
-            HardwareAccelerationKind.Rkmpp => HardwareAccelerationMode.Rkmpp,
-            _ => HardwareAccelerationMode.None
-        };
-
-    private static string MapVideoFormat(FFmpegProfileVideoFormat format) =>
-        format switch
-        {
-            FFmpegProfileVideoFormat.H264 => VideoFormat.H264,
-            FFmpegProfileVideoFormat.Hevc => VideoFormat.Hevc,
-            _ => VideoFormat.Mpeg2Video
-        };
-
 }

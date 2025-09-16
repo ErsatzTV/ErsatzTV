@@ -23,6 +23,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 - Fix green output when libplacebo tonemapping is used with NVIDIA acceleration and 10-bit output in FFmpeg Profile
+- Fix playback when invalid video preset has been saved in FFmpegProfile
+  - This can happen when NVIDIA accel falls back to libx264 software encoder for 10-bit h264 output
 
 ## [25.6.0] - 2025-09-14
 ### Added

@@ -1,6 +1,10 @@
 ﻿using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.Search;
+using ErsatzTV.FFmpeg;
+using ErsatzTV.FFmpeg.Format;
+using ErsatzTV.FFmpeg.Preset;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
@@ -64,6 +68,18 @@ public class
         p.AudioSampleRate = update.AudioSampleRate;
         p.NormalizeFramerate = update.NormalizeFramerate;
         p.DeinterlaceVideo = update.DeinterlaceVideo;
+
+        // don't save invalid preset
+        ICollection<string> presets = FFmpegLibraryHelper.PresetsForFFmpegProfile(
+            p.HardwareAcceleration,
+            p.VideoFormat,
+            p.BitDepth);
+
+        if (!presets.Contains(p.VideoPreset))
+        {
+            p.VideoPreset = VideoPreset.Unset;
+        }
+
         await dbContext.SaveChangesAsync(cancellationToken);
 
         _searchTargets.SearchTargetsChanged();

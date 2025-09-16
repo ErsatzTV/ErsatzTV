@@ -81,6 +81,7 @@ public class Program
 
             // streaming
             .MinimumLevel.Override("ErsatzTV.Application.Streaming", LoggingLevelSwitches.StreamingLevelSwitch)
+            .MinimumLevel.Override("ErsatzTV.Application.Troubleshooting", LoggingLevelSwitches.StreamingLevelSwitch)
             .MinimumLevel.Override("ErsatzTV.FFmpeg", LoggingLevelSwitches.StreamingLevelSwitch)
             .MinimumLevel.Override("ErsatzTV.Core.FFmpeg", LoggingLevelSwitches.StreamingLevelSwitch)
             .MinimumLevel.Override("ErsatzTV.Controllers.IptvController", LoggingLevelSwitches.StreamingLevelSwitch)
