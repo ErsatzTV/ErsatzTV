@@ -27,6 +27,7 @@ public class SubtitleElement(
     private PipeReader _pipeReader;
     private SKPointI _point;
     private SKBitmap _videoFrame;
+    private bool _isFinished;
 
     public void Dispose()
     {
@@ -85,6 +86,7 @@ public class SubtitleElement(
             string subtitleFile = Path.GetFileName(subtitleTemplateFile);
             List<string> arguments =
             [
+                "-nostdin", "-hide_banner", "-nostats", "-loglevel", "error",
                 "-f", "lavfi",
                 "-i",
                 $"color=c=black@0.0:s={frameSize.Width}x{frameSize.Height}:r={frameRate},format=bgra,subtitles='{subtitleFile}':alpha=1",
@@ -105,6 +107,8 @@ public class SubtitleElement(
                 _cancellationTokenSource.Token);
 
             _commandTask = command.ExecuteAsync(linkedToken.Token);
+
+            _ = _commandTask.Task.ContinueWith(_ => pipe.Writer.Complete(), TaskScheduler.Default);
         }
         catch (Exception ex)
         {
@@ -120,6 +124,11 @@ public class SubtitleElement(
         TimeSpan channelTime,
         CancellationToken cancellationToken)
     {
+        if (_isFinished)
+        {
+            return Option<PreparedElementImage>.None;
+        }
+
         while (true)
         {
             ReadResult readResult = await _pipeReader.ReadAsync(cancellationToken);
@@ -147,14 +156,19 @@ public class SubtitleElement(
 
                 if (readResult.IsCompleted)
                 {
+                    _isFinished = true;
+
                     await _pipeReader.CompleteAsync();
                     return Option<PreparedElementImage>.None;
                 }
             }
             finally
             {
-                // advance the reader, consuming the processed frame and examining the entire buffer
-                _pipeReader.AdvanceTo(consumed, examined);
+                if (!_isFinished)
+                {
+                    // advance the reader, consuming the processed frame and examining the entire buffer
+                    _pipeReader.AdvanceTo(consumed, examined);
+                }
             }
         }
     }

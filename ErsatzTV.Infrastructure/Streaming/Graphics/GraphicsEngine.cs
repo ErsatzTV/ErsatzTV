@@ -1,6 +1,9 @@
 using System.IO.Pipelines;
 using ErsatzTV.Core;
+using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.FFmpeg;
+using ErsatzTV.Core.Interfaces.Metadata;
+using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Streaming;
 using Microsoft.Extensions.Logging;
 using SkiaSharp;
@@ -11,12 +14,18 @@ public class GraphicsEngine(
     TemplateFunctions templateFunctions,
     GraphicsEngineFonts graphicsEngineFonts,
     ITempFilePool tempFilePool,
+    IConfigElementRepository configElementRepository,
+    ILocalStatisticsProvider localStatisticsProvider,
     ILogger<GraphicsEngine> logger)
     : IGraphicsEngine
 {
     public async Task Run(GraphicsEngineContext context, PipeWriter pipeWriter, CancellationToken cancellationToken)
     {
         graphicsEngineFonts.LoadFonts(FileSystemLayout.FontsCacheFolder);
+
+        Option<string> ffprobePath = await configElementRepository.GetValue<string>(
+            ConfigElementKey.FFprobePath,
+            cancellationToken);
 
         var elements = new List<IGraphicsElement>();
         foreach (GraphicsElementContext element in context.Elements)
@@ -37,10 +46,17 @@ public class GraphicsEngine(
                     break;
 
                 case TextElementDataContext textElementContext:
-                {
                     elements.Add(new TextElement(graphicsEngineFonts, textElementContext.TextElement, logger));
                     break;
-                }
+
+                case MotionElementDataContext motionElementDataContext:
+                    elements.Add(
+                        new MotionElement(
+                            motionElementDataContext.MotionElement,
+                            ffprobePath,
+                            localStatisticsProvider,
+                            logger));
+                    break;
 
                 case SubtitleElementDataContext subtitleElementContext:
                 {

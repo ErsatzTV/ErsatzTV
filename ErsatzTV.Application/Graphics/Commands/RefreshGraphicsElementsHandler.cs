@@ -66,6 +66,24 @@ public class RefreshGraphicsElementsHandler(
             await dbContext.AddAsync(graphicsElement, cancellationToken);
         }
 
+        // add new motion elements
+        var newMotionPaths = localFileSystem.ListFiles(FileSystemLayout.GraphicsElementsMotionTemplatesFolder)
+            .Where(f => allExisting.All(e => e.Path != f))
+            .ToList();
+
+        foreach (string path in newMotionPaths)
+        {
+            logger.LogDebug("Adding new graphics element from file {File}", path);
+
+            var graphicsElement = new GraphicsElement
+            {
+                Path = path,
+                Kind = GraphicsElementKind.Motion
+            };
+
+            await dbContext.AddAsync(graphicsElement, cancellationToken);
+        }
+
         // add new subtitle elements
         var newSubtitlePaths = localFileSystem.ListFiles(FileSystemLayout.GraphicsElementsSubtitleTemplatesFolder)
             .Where(f => allExisting.All(e => e.Path != f))

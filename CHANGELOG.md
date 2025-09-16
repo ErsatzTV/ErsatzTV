@@ -20,6 +20,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - This is supported using jellyfin-ffmpeg7 on devices like Orange Pi 5 Plus and NanoPi R6S
 - Block schedules: allow selecting multiple watermarks on block items
 - Block schedules: allow selecting multiple graphics elements on block items
+- Add `motion` graphics element type
+  - Supported in playback troubleshooting and all scheduling types
+  - Supports video files with alpha channel (e.g. vp8/vp9 webm, apple prores 4444)
+  - Supports EPG and Media Item replacement in entire template
+    - EPG data is sourced from XMLTV for the current time
+      - EPG data can also load a configurable number of subsequent (up next) entries
+    - Media Item data is sourced from the currently playing media item
+  - Template supports:
+    - Content (`video_path`)
+    - Placement (`location`, `horizontal_margin_percent`, `vertical_margin_percent`)
+    - Scaling (`scale`, `scale_width_percent`)
+    - Timing (`start_seconds`)
+    - Draw order (`z_index`)
 
 ### Fixed
 - Fix green output when libplacebo tonemapping is used with NVIDIA acceleration and 10-bit output in FFmpeg Profile

@@ -55,13 +55,7 @@ public partial class GraphicsElementLoader(
 
                     foreach (TextGraphicsElement element in maybeElement)
                     {
-                        var variables = new Dictionary<string, string>();
-                        if (!string.IsNullOrWhiteSpace(reference.Variables))
-                        {
-                            variables = JsonConvert.DeserializeObject<Dictionary<string, string>>(reference.Variables);
-                        }
-
-                        context.Elements.Add(new TextElementDataContext(element, variables));
+                        context.Elements.Add(new TextElementDataContext(element));
                     }
 
                     break;
@@ -79,6 +73,25 @@ public partial class GraphicsElementLoader(
                     }
 
                     context.Elements.AddRange(maybeElement.Select(element => new ImageElementContext(element)));
+
+                    break;
+                }
+                case GraphicsElementKind.Motion:
+                {
+                    Option<MotionGraphicsElement> maybeElement = await LoadMotion(
+                        reference.GraphicsElement.Path,
+                        templateVariables);
+                    if (maybeElement.IsNone)
+                    {
+                        logger.LogWarning(
+                            "Failed to load motion graphics element from file {Path}; ignoring",
+                            reference.GraphicsElement.Path);
+                    }
+
+                    foreach (MotionGraphicsElement element in maybeElement)
+                    {
+                        context.Elements.Add(new MotionElementDataContext(element));
+                    }
 
                     break;
                 }
@@ -147,6 +160,9 @@ public partial class GraphicsElementLoader(
 
     private Task<Option<TextGraphicsElement>> LoadText(string fileName, Dictionary<string, object> variables) =>
         GetTemplatedYaml(fileName, variables).BindT(FromYaml<TextGraphicsElement>);
+
+    private Task<Option<MotionGraphicsElement>> LoadMotion(string fileName, Dictionary<string, object> variables) =>
+        GetTemplatedYaml(fileName, variables).BindT(FromYaml<MotionGraphicsElement>);
 
     private Task<Option<SubtitleGraphicsElement>> LoadSubtitle(string fileName, Dictionary<string, object> variables) =>
         GetTemplatedYaml(fileName, variables).BindT(FromYaml<SubtitleGraphicsElement>);
