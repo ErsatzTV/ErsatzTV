@@ -16,9 +16,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - This means resetting the playout will reset the rerun history
   - Items will still be scheduled from the rerun collection if it is used before the first run collection
     - Otherwise, the rerun collection would be considered "empty" which prevents the playout build altogether
+- Add `Rkmpp` hardware acceleration by @peterdey
+  - This is supported using jellyfin-ffmpeg7 on devices like Orange Pi 5 Plus and NanoPi R6S
 
 ### Fixed
-- Fix green output when libplacebo tonemapping is used with NVIDIA acceleration
+- Fix green output when libplacebo tonemapping is used with NVIDIA acceleration and 10-bit output in FFmpeg Profile
 
 ## [25.6.0] - 2025-09-14
 ### Added
