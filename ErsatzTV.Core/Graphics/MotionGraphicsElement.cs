@@ -31,8 +31,8 @@ public class MotionGraphicsElement
     [YamlMember(Alias = "epg_entries", ApplyNamingConventions = false)]
     public int EpgEntries { get; set; }
 
-    // public bool Scale { get; set; }
-    //
-    // [YamlMember(Alias = "scale_width_percent", ApplyNamingConventions = false)]
-    // public double? ScaleWidthPercent { get; set; }
+    public bool Scale { get; set; }
+
+    [YamlMember(Alias = "scale_width_percent", ApplyNamingConventions = false)]
+    public double? ScaleWidthPercent { get; set; }
 }

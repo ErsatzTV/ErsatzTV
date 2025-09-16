@@ -61,22 +61,43 @@ public class MotionElement(
             var pipe = new Pipe();
             _pipeReader = pipe.Reader;
 
-            var sizeAndDecoder = await ProbeMotionElement(frameSize);
+            SizeAndDecoder sizeAndDecoder = await ProbeMotionElement(frameSize);
+            Resolution sourceSize = sizeAndDecoder.Size;
 
-            _frameSize = sizeAndDecoder.Size.Width * sizeAndDecoder.Size.Height * 4;
+            int scaledWidth = sourceSize.Width;
+            int scaledHeight = sourceSize.Height;
+
+            if (motionElement.Scale)
+            {
+                scaledWidth = (int)Math.Round((motionElement.ScaleWidthPercent ?? 100) / 100.0 * frameSize.Width);
+                double aspectRatio = (double)sourceSize.Height / sourceSize.Width;
+                scaledHeight = (int)Math.Round(scaledWidth * aspectRatio);
+            }
+
+            // ensure even dimensions
+            if (scaledWidth % 2 != 0)
+            {
+                scaledWidth++;
+            }
+
+            if (scaledHeight % 2 != 0)
+            {
+                scaledHeight++;
+            }
+
+            var targetSize = new Resolution { Width = scaledWidth, Height = scaledHeight };
+
+            _frameSize = targetSize.Width * targetSize.Height * 4;
 
             _canvasBitmap = new SKBitmap(frameSize.Width, frameSize.Height, SKColorType.Bgra8888, SKAlphaType.Unpremul);
 
             _motionFrameBitmap = new SKBitmap(
-                sizeAndDecoder.Size.Width,
-                sizeAndDecoder.Size.Height,
+                targetSize.Width,
+                targetSize.Height,
                 SKColorType.Bgra8888,
                 SKAlphaType.Unpremul);
 
             _point = SKPointI.Empty;
-
-            int scaledWidth = sizeAndDecoder.Size.Width;
-            int scaledHeight = sizeAndDecoder.Size.Height;
 
             (int horizontalMargin, int verticalMargin) = NormalMargins(
                 frameSize,
@@ -87,8 +108,8 @@ public class MotionElement(
                 motionElement.Location,
                 frameSize.Width,
                 frameSize.Height,
-                scaledWidth,
-                scaledHeight,
+                targetSize.Width,
+                targetSize.Height,
                 horizontalMargin,
                 verticalMargin);
 
@@ -102,6 +123,15 @@ public class MotionElement(
             arguments.AddRange(
             [
                 "-i", motionElement.VideoPath,
+            ]);
+
+            if (motionElement.Scale)
+            {
+                arguments.AddRange(["-vf", $"scale={targetSize.Width}:{targetSize.Height}"]);
+            }
+
+            arguments.AddRange(
+            [
                 "-f", "image2pipe",
                 "-pix_fmt", "bgra",
                 "-vcodec", "rawvideo",
