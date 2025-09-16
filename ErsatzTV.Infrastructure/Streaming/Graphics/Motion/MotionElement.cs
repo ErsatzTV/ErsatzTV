@@ -25,6 +25,7 @@ public class MotionElement(
     private SKBitmap _canvasBitmap;
     private SKBitmap _motionFrameBitmap;
     private bool _isFinished;
+    private TimeSpan _startTime;
 
     public void Dispose()
     {
@@ -60,6 +61,8 @@ public class MotionElement(
         {
             var pipe = new Pipe();
             _pipeReader = pipe.Reader;
+
+            _startTime = TimeSpan.FromSeconds(motionElement.StartSeconds ?? 0);
 
             SizeAndDecoder sizeAndDecoder = await ProbeMotionElement(frameSize);
             Resolution sourceSize = sizeAndDecoder.Size;
@@ -166,7 +169,7 @@ public class MotionElement(
         TimeSpan channelTime,
         CancellationToken cancellationToken)
     {
-        if (_isFinished)
+        if (contentTime < _startTime || _isFinished)
         {
             return Option<PreparedElementImage>.None;
         }
