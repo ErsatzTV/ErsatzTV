@@ -684,6 +684,8 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
                         }
                     }
 
+                    graphicsEngine.FilterSteps.Add(new PixelFormatFilter(new PixelFormatYuva420P10Le()));
+
                     var graphicsEngineFilter = new OverlayGraphicsEngineFilter(pf);
                     graphicsEngineOverlayFilterSteps.Add(graphicsEngineFilter);
                     currentState = graphicsEngineFilter.NextState(currentState);

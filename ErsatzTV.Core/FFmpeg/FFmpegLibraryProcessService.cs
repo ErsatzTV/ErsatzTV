@@ -338,7 +338,11 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
 
         string videoFormat = GetVideoFormat(playbackSettings);
         Option<string> maybeVideoProfile = GetVideoProfile(videoFormat, channel.FFmpegProfile.VideoProfile);
-        Option<string> maybeVideoPreset = GetVideoPreset(hwAccel, videoFormat, channel.FFmpegProfile.VideoPreset);
+        Option<string> maybeVideoPreset = GetVideoPreset(
+            hwAccel,
+            videoFormat,
+            channel.FFmpegProfile.VideoPreset,
+            FFmpegLibraryHelper.MapBitDepth(channel.FFmpegProfile.BitDepth));
 
         Option<string> hlsPlaylistPath = outputFormat == OutputFormatKind.Hls
             ? Path.Combine(FileSystemLayout.TranscodeFolder, channel.Number, "live.m3u8")
@@ -765,7 +769,11 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
 
         string videoFormat = GetVideoFormat(playbackSettings);
         Option<string> maybeVideoProfile = GetVideoProfile(videoFormat, channel.FFmpegProfile.VideoProfile);
-        Option<string> maybeVideoPreset = GetVideoPreset(hwAccel, videoFormat, channel.FFmpegProfile.VideoPreset);
+        Option<string> maybeVideoPreset = GetVideoPreset(
+            hwAccel,
+            videoFormat,
+            channel.FFmpegProfile.VideoPreset,
+            FFmpegLibraryHelper.MapBitDepth(channel.FFmpegProfile.BitDepth));
 
         Option<string> hlsPlaylistPath = Path.Combine(FileSystemLayout.TranscodeFolder, channel.Number, "live.m3u8");
 
@@ -1112,9 +1120,10 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
     private static Option<string> GetVideoPreset(
         HardwareAccelerationMode hardwareAccelerationMode,
         string videoFormat,
-        string videoPreset) =>
+        string videoPreset,
+        int bitDepth) =>
         AvailablePresets
-            .ForAccelAndFormat(hardwareAccelerationMode, videoFormat)
+            .ForAccelAndFormat(hardwareAccelerationMode, videoFormat, bitDepth)
             .Find(p => string.Equals(p, videoPreset, StringComparison.OrdinalIgnoreCase));
 
     private static HardwareAccelerationMode GetHardwareAccelerationMode(
