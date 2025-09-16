@@ -37,10 +37,12 @@ public class GraphicsEngine(
                     break;
 
                 case TextElementDataContext textElementContext:
-                {
                     elements.Add(new TextElement(graphicsEngineFonts, textElementContext.TextElement, logger));
                     break;
-                }
+
+                case MotionElementDataContext motionElementDataContext:
+                    elements.Add(new MotionElement(motionElementDataContext.MotionElement, logger));
+                    break;
 
                 case SubtitleElementDataContext subtitleElementContext:
                 {

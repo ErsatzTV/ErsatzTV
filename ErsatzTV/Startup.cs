@@ -372,6 +372,7 @@ public class Startup
             FileSystemLayout.GraphicsElementsTextTemplatesFolder,
             FileSystemLayout.GraphicsElementsImageTemplatesFolder,
             FileSystemLayout.GraphicsElementsSubtitleTemplatesFolder,
+            FileSystemLayout.GraphicsElementsMotionTemplatesFolder,
             FileSystemLayout.ScriptsFolder,
             FileSystemLayout.MultiEpisodeShuffleTemplatesFolder,
             FileSystemLayout.AudioStreamSelectorScriptsFolder

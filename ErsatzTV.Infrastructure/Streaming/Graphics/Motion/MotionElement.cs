@@ -3,22 +3,13 @@ using System.IO.Pipelines;
 using CliWrap;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
-using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Graphics;
-using ErsatzTV.Core.Interfaces.FFmpeg;
 using Microsoft.Extensions.Logging;
-using Scriban;
-using Scriban.Runtime;
 using SkiaSharp;
 
 namespace ErsatzTV.Infrastructure.Streaming.Graphics;
 
-public class SubtitleElement(
-    TemplateFunctions templateFunctions,
-    ITempFilePool tempFilePool,
-    SubtitleGraphicsElement subtitleElement,
-    Dictionary<string, object> variables,
-    ILogger logger)
+public class MotionElement(MotionGraphicsElement motionElement, ILogger logger)
     : GraphicsElement, IDisposable
 {
     private CancellationTokenSource _cancellationTokenSource;
@@ -52,7 +43,7 @@ public class SubtitleElement(
         _videoFrame?.Dispose();
     }
 
-    public override async Task InitializeAsync(
+    public override Task InitializeAsync(
         Resolution squarePixelFrameSize,
         Resolution frameSize,
         int frameRate,
@@ -70,31 +61,21 @@ public class SubtitleElement(
             // subtitles contain their own positioning info
             _point = SKPointI.Empty;
 
-            string subtitleTemplateFile = tempFilePool.GetNextTempFile(TempFileCategory.Subtitle);
+            List<string> arguments = ["-nostdin", "-hide_banner", "-nostats", "-loglevel", "error"];
 
-            var scriptObject = new ScriptObject();
-            scriptObject.Import(variables, renamer: member => member.Name);
-            scriptObject.Import("convert_timezone", templateFunctions.ConvertTimeZone);
-            scriptObject.Import("format_datetime", templateFunctions.FormatDateTime);
+            if (!string.IsNullOrWhiteSpace(motionElement.VideoDecoder))
+            {
+                arguments.AddRange(["-c:v", motionElement.VideoDecoder]);
+            }
 
-            var context = new TemplateContext { MemberRenamer = member => member.Name };
-            context.PushGlobal(scriptObject);
-            string inputText = await File.ReadAllTextAsync(subtitleElement.Template, cancellationToken);
-            string textToRender = await Template.Parse(inputText).RenderAsync(context);
-            await File.WriteAllTextAsync(subtitleTemplateFile, textToRender, cancellationToken);
-
-            string subtitleFile = Path.GetFileName(subtitleTemplateFile);
-            List<string> arguments =
+            arguments.AddRange(
             [
-                "-nostdin", "-hide_banner", "-nostats", "-loglevel", "error",
-                "-f", "lavfi",
-                "-i",
-                $"color=c=black@0.0:s={frameSize.Width}x{frameSize.Height}:r={frameRate},format=bgra,subtitles='{subtitleFile}':alpha=1",
+                "-i", motionElement.VideoPath,
                 "-f", "image2pipe",
                 "-pix_fmt", "bgra",
                 "-vcodec", "rawvideo",
                 "-"
-            ];
+            ]);
 
             Command command = Cli.Wrap("ffmpeg")
                 .WithArguments(arguments)
@@ -113,8 +94,10 @@ public class SubtitleElement(
         catch (Exception ex)
         {
             IsFailed = true;
-            logger.LogWarning(ex, "Failed to initialize subtitle element; will disable for this content");
+            logger.LogWarning(ex, "Failed to initialize motion element; will disable for this content");
         }
+
+        return Task.CompletedTask;
     }
 
     public override async ValueTask<Option<PreparedElementImage>> PrepareImage(
