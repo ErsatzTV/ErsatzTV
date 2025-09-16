@@ -175,36 +175,4 @@ public abstract class ImageElementBase : GraphicsElement, IDisposable
 
         return _scaledFrames.Last();
     }
-
-    private static WatermarkMargins NormalMargins(
-        Resolution frameSize,
-        double horizontalMarginPercent,
-        double verticalMarginPercent)
-    {
-        double horizontalMargin = Math.Round(horizontalMarginPercent / 100.0 * frameSize.Width);
-        double verticalMargin = Math.Round(verticalMarginPercent / 100.0 * frameSize.Height);
-
-        return new WatermarkMargins((int)Math.Round(horizontalMargin), (int)Math.Round(verticalMargin));
-    }
-
-    private static WatermarkMargins SourceContentMargins(
-        Resolution squarePixelFrameSize,
-        Resolution frameSize,
-        double horizontalMarginPercent,
-        double verticalMarginPercent)
-    {
-        int horizontalPadding = frameSize.Width - squarePixelFrameSize.Width;
-        int verticalPadding = frameSize.Height - squarePixelFrameSize.Height;
-
-        double horizontalMargin = Math.Round(
-            horizontalMarginPercent / 100.0 * squarePixelFrameSize.Width
-            + horizontalPadding / 2.0);
-        double verticalMargin = Math.Round(
-            verticalMarginPercent / 100.0 * squarePixelFrameSize.Height
-            + verticalPadding / 2.0);
-
-        return new WatermarkMargins((int)Math.Round(horizontalMargin), (int)Math.Round(verticalMargin));
-    }
-
-    private sealed record WatermarkMargins(int HorizontalMargin, int VerticalMargin);
 }

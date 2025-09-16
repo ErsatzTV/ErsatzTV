@@ -31,7 +31,7 @@ public record ImageElementContext(ImageGraphicsElement ImageElement) : GraphicsE
 public record MotionElementDataContext(MotionGraphicsElement MotionElement)
     : GraphicsElementContext, ITemplateDataContext
 {
-    public int EpgEntries => 0;
+    public int EpgEntries => MotionElement.EpgEntries;
 }
 
 public record SubtitleElementDataContext(

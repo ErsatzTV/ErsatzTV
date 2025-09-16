@@ -8,9 +8,6 @@ public class MotionGraphicsElement
     [YamlMember(Alias = "video_path", ApplyNamingConventions = false)]
     public string VideoPath { get; set; }
 
-    [YamlMember(Alias = "video_decoder", ApplyNamingConventions = false)]
-    public string VideoDecoder { get; set; }
-
     // [YamlMember(Alias = "opacity_percent", ApplyNamingConventions = false)]
     // public int? OpacityPercent { get; set; }
     //
@@ -30,6 +27,9 @@ public class MotionGraphicsElement
 
     [YamlMember(Alias = "z_index", ApplyNamingConventions = false)]
     public int? ZIndex { get; set; }
+
+    [YamlMember(Alias = "epg_entries", ApplyNamingConventions = false)]
+    public int EpgEntries { get; set; }
 
     // public bool Scale { get; set; }
     //

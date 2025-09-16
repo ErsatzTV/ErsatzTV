@@ -4,12 +4,17 @@ using CliWrap;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Graphics;
+using ErsatzTV.Core.Interfaces.Metadata;
 using Microsoft.Extensions.Logging;
 using SkiaSharp;
 
 namespace ErsatzTV.Infrastructure.Streaming.Graphics;
 
-public class MotionElement(MotionGraphicsElement motionElement, ILogger logger)
+public class MotionElement(
+    MotionGraphicsElement motionElement,
+    Option<string> ffprobePath,
+    ILocalStatisticsProvider localStatisticsProvider,
+    ILogger logger)
     : GraphicsElement, IDisposable
 {
     private CancellationTokenSource _cancellationTokenSource;
@@ -17,7 +22,8 @@ public class MotionElement(MotionGraphicsElement motionElement, ILogger logger)
     private int _frameSize;
     private PipeReader _pipeReader;
     private SKPointI _point;
-    private SKBitmap _videoFrame;
+    private SKBitmap _canvasBitmap;
+    private SKBitmap _motionFrameBitmap;
     private bool _isFinished;
 
     public void Dispose()
@@ -40,10 +46,11 @@ public class MotionElement(MotionGraphicsElement motionElement, ILogger logger)
 
         _cancellationTokenSource?.Dispose();
 
-        _videoFrame?.Dispose();
+        _canvasBitmap?.Dispose();
+        _motionFrameBitmap?.Dispose();
     }
 
-    public override Task InitializeAsync(
+    public override async Task InitializeAsync(
         Resolution squarePixelFrameSize,
         Resolution frameSize,
         int frameRate,
@@ -54,18 +61,42 @@ public class MotionElement(MotionGraphicsElement motionElement, ILogger logger)
             var pipe = new Pipe();
             _pipeReader = pipe.Reader;
 
-            // video size is the same as the main frame size
-            _frameSize = frameSize.Width * frameSize.Height * 4;
-            _videoFrame = new SKBitmap(frameSize.Width, frameSize.Height, SKColorType.Bgra8888, SKAlphaType.Unpremul);
+            var sizeAndDecoder = await ProbeMotionElement(frameSize);
 
-            // subtitles contain their own positioning info
+            _frameSize = sizeAndDecoder.Size.Width * sizeAndDecoder.Size.Height * 4;
+
+            _canvasBitmap = new SKBitmap(frameSize.Width, frameSize.Height, SKColorType.Bgra8888, SKAlphaType.Unpremul);
+
+            _motionFrameBitmap = new SKBitmap(
+                sizeAndDecoder.Size.Width,
+                sizeAndDecoder.Size.Height,
+                SKColorType.Bgra8888,
+                SKAlphaType.Unpremul);
+
             _point = SKPointI.Empty;
+
+            int scaledWidth = sizeAndDecoder.Size.Width;
+            int scaledHeight = sizeAndDecoder.Size.Height;
+
+            (int horizontalMargin, int verticalMargin) = NormalMargins(
+                frameSize,
+                motionElement.HorizontalMarginPercent ?? 0,
+                motionElement.VerticalMarginPercent ?? 0);
+
+            _point = CalculatePosition(
+                motionElement.Location,
+                frameSize.Width,
+                frameSize.Height,
+                scaledWidth,
+                scaledHeight,
+                horizontalMargin,
+                verticalMargin);
 
             List<string> arguments = ["-nostdin", "-hide_banner", "-nostats", "-loglevel", "error"];
 
-            if (!string.IsNullOrWhiteSpace(motionElement.VideoDecoder))
+            foreach (string decoder in sizeAndDecoder.Decoder)
             {
-                arguments.AddRange(["-c:v", motionElement.VideoDecoder]);
+                arguments.AddRange(["-c:v", decoder]);
             }
 
             arguments.AddRange(
@@ -96,8 +127,6 @@ public class MotionElement(MotionGraphicsElement motionElement, ILogger logger)
             IsFailed = true;
             logger.LogWarning(ex, "Failed to initialize motion element; will disable for this content");
         }
-
-        return Task.CompletedTask;
     }
 
     public override async ValueTask<Option<PreparedElementImage>> PrepareImage(
@@ -125,16 +154,23 @@ public class MotionElement(MotionGraphicsElement motionElement, ILogger logger)
                 {
                     ReadOnlySequence<byte> sequence = buffer.Slice(0, _frameSize);
 
-                    using (SKPixmap pixmap = _videoFrame.PeekPixels())
+                    using (SKPixmap pixmap = _motionFrameBitmap.PeekPixels())
                     {
                         sequence.CopyTo(pixmap.GetPixelSpan());
+                    }
+
+                    _canvasBitmap.Erase(SKColors.Transparent);
+
+                    using (var canvas = new SKCanvas(_canvasBitmap))
+                    {
+                        canvas.DrawBitmap(_motionFrameBitmap, _point);
                     }
 
                     // mark this frame as consumed
                     consumed = sequence.End;
 
                     // we are done, return the frame
-                    return new PreparedElementImage(_videoFrame, _point, 1.0f, false);
+                    return new PreparedElementImage(_canvasBitmap, SKPointI.Empty, 1.0f, false);
                 }
 
                 if (readResult.IsCompleted)
@@ -155,4 +191,44 @@ public class MotionElement(MotionGraphicsElement motionElement, ILogger logger)
             }
         }
     }
+
+    private async Task<SizeAndDecoder> ProbeMotionElement(Resolution frameSize)
+    {
+        try
+        {
+            foreach (string ffprobe in ffprobePath)
+            {
+                Either<BaseError, MediaVersion> maybeMediaVersion =
+                    await localStatisticsProvider.GetStatistics(ffprobe, motionElement.VideoPath);
+
+                foreach (var mediaVersion in maybeMediaVersion.RightToSeq())
+                {
+                    Option<string> decoder = Option<string>.None;
+
+                    foreach (var videoStream in mediaVersion.Streams.Where(s =>
+                                 s.MediaStreamKind is MediaStreamKind.Video))
+                    {
+                        decoder = videoStream.Codec switch
+                        {
+                            "vp8" => "libvpx",
+                            "vp9" => "libvpx-vp9",
+                            _ => Option<string>.None
+                        };
+                    }
+
+                    return new SizeAndDecoder(
+                        new Resolution { Width = mediaVersion.Width, Height = mediaVersion.Height },
+                        decoder);
+                }
+            }
+        }
+        catch (Exception)
+        {
+            // do nothing
+        }
+
+        return new SizeAndDecoder(frameSize, Option<string>.None);
+    }
+
+    private record SizeAndDecoder(Resolution Size, Option<string> Decoder);
 }
