@@ -235,6 +235,36 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.ToTable("Artwork", (string)null);
                 });
 
+            modelBuilder.Entity("ErsatzTV.Core.Domain.BlockItemGraphicsElement", b =>
+                {
+                    b.Property<int>("BlockItemId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("GraphicsElementId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("BlockItemId", "GraphicsElementId");
+
+                    b.HasIndex("GraphicsElementId");
+
+                    b.ToTable("BlockItemGraphicsElement");
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.BlockItemWatermark", b =>
+                {
+                    b.Property<int>("BlockItemId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("WatermarkId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("BlockItemId", "WatermarkId");
+
+                    b.HasIndex("WatermarkId");
+
+                    b.ToTable("BlockItemWatermark");
+                });
+
             modelBuilder.Entity("ErsatzTV.Core.Domain.Channel", b =>
                 {
                     b.Property<int>("Id")
@@ -4024,6 +4054,44 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 
+            modelBuilder.Entity("ErsatzTV.Core.Domain.BlockItemGraphicsElement", b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.Scheduling.BlockItem", "BlockItem")
+                        .WithMany("BlockItemGraphicsElements")
+                        .HasForeignKey("BlockItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ErsatzTV.Core.Domain.GraphicsElement", "GraphicsElement")
+                        .WithMany("BlockItemGraphicsElements")
+                        .HasForeignKey("GraphicsElementId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("BlockItem");
+
+                    b.Navigation("GraphicsElement");
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.BlockItemWatermark", b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.Scheduling.BlockItem", "BlockItem")
+                        .WithMany("BlockItemWatermarks")
+                        .HasForeignKey("BlockItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ErsatzTV.Core.Domain.ChannelWatermark", "Watermark")
+                        .WithMany("BlockItemWatermarks")
+                        .HasForeignKey("WatermarkId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("BlockItem");
+
+                    b.Navigation("Watermark");
+                });
+
             modelBuilder.Entity("ErsatzTV.Core.Domain.Channel", b =>
                 {
                     b.HasOne("ErsatzTV.Core.Domain.FFmpegProfile", "FFmpegProfile")
@@ -6003,6 +6071,8 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.ChannelWatermark", b =>
                 {
+                    b.Navigation("BlockItemWatermarks");
+
                     b.Navigation("DecoWatermarks");
 
                     b.Navigation("PlayoutItemWatermarks");
@@ -6040,6 +6110,8 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.GraphicsElement", b =>
                 {
+                    b.Navigation("BlockItemGraphicsElements");
+
                     b.Navigation("DecoGraphicsElements");
 
                     b.Navigation("PlayoutItemGraphicsElements");
@@ -6255,6 +6327,13 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
             modelBuilder.Entity("ErsatzTV.Core.Domain.Scheduling.BlockGroup", b =>
                 {
                     b.Navigation("Blocks");
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.Scheduling.BlockItem", b =>
+                {
+                    b.Navigation("BlockItemGraphicsElements");
+
+                    b.Navigation("BlockItemWatermarks");
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.Scheduling.Deco", b =>

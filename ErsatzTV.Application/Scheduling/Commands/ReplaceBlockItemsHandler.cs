@@ -44,8 +44,9 @@ public class ReplaceBlockItemsHandler(IDbContextFactory<TvContext> dbContextFact
         return block.Items.Map(Mapper.ProjectToViewModel).ToList();
     }
 
-    private static BlockItem BuildItem(Block block, int index, ReplaceBlockItem item) =>
-        new()
+    private static BlockItem BuildItem(Block block, int index, ReplaceBlockItem item)
+    {
+        var result = new BlockItem
         {
             BlockId = block.Id,
             Index = index,
@@ -56,8 +57,35 @@ public class ReplaceBlockItemsHandler(IDbContextFactory<TvContext> dbContextFact
             MediaItemId = item.MediaItemId,
             PlaybackOrder = item.PlaybackOrder,
             IncludeInProgramGuide = item.IncludeInProgramGuide,
-            DisableWatermarks = item.DisableWatermarks
+            DisableWatermarks = item.DisableWatermarks,
+            BlockItemWatermarks = [],
+            BlockItemGraphicsElements = []
         };
+
+        foreach (int watermarkId in item.WatermarkIds)
+        {
+            result.BlockItemWatermarks ??= [];
+            result.BlockItemWatermarks.Add(
+                new BlockItemWatermark
+                {
+                    BlockItem = result,
+                    WatermarkId = watermarkId
+                });
+        }
+
+        foreach (int graphicsElementId in item.GraphicsElementIds)
+        {
+            result.BlockItemGraphicsElements ??= [];
+            result.BlockItemGraphicsElements.Add(
+                new BlockItemGraphicsElement
+                {
+                    BlockItem = result,
+                    GraphicsElementId = graphicsElementId
+                });
+        }
+
+        return result;
+    }
 
     private static Task<Validation<BaseError, Block>> Validate(
         TvContext dbContext,
@@ -74,6 +102,11 @@ public class ReplaceBlockItemsHandler(IDbContextFactory<TvContext> dbContextFact
         CancellationToken cancellationToken) =>
         dbContext.Blocks
             .Include(b => b.Items)
+            .ThenInclude(i => i.BlockItemWatermarks)
+            .ThenInclude(wm => wm.Watermark)
+            .Include(b => b.Items)
+            .ThenInclude(i => i.BlockItemGraphicsElements)
+            .ThenInclude(ge => ge.GraphicsElement)
             .SelectOneAsync(b => b.Id, b => b.Id == blockId, cancellationToken)
             .Map(o => o.ToValidation<BaseError>("[BlockId] does not exist."));
 

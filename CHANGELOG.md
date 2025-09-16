@@ -18,6 +18,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - Otherwise, the rerun collection would be considered "empty" which prevents the playout build altogether
 - Add `Rkmpp` hardware acceleration by @peterdey
   - This is supported using jellyfin-ffmpeg7 on devices like Orange Pi 5 Plus and NanoPi R6S
+- Block schedules: allow selecting multiple watermarks on block items
+- Block schedules: allow selecting multiple graphics elements on block items
 
 ### Fixed
 - Fix green output when libplacebo tonemapping is used with NVIDIA acceleration and 10-bit output in FFmpeg Profile

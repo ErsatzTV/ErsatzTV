@@ -31,6 +31,10 @@ public class GetBlockItemsHandler(IDbContextFactory<TvContext> dbContextFactory)
             .Include(i => i.MediaItem)
             .ThenInclude(i => (i as Artist).ArtistMetadata)
             .ThenInclude(am => am.Artwork)
+            .Include(i => i.BlockItemWatermarks)
+            .ThenInclude(i => i.Watermark)
+            .Include(i => i.BlockItemGraphicsElements)
+            .ThenInclude(i => i.GraphicsElement)
             .ToListAsync(cancellationToken);
 
         if (allItems.All(bi => !bi.IncludeInProgramGuide))

@@ -18,4 +18,8 @@ public class BlockItem
     public PlaybackOrder PlaybackOrder { get; set; }
     public bool IncludeInProgramGuide { get; set; }
     public bool DisableWatermarks { get; set; }
+    public List<ChannelWatermark> Watermarks { get; set; }
+    public List<BlockItemWatermark> BlockItemWatermarks { get; set; }
+    public List<GraphicsElement> GraphicsElements { get; set; }
+    public List<BlockItemGraphicsElement> BlockItemGraphicsElements { get; set; }
 }

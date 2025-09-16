@@ -207,8 +207,31 @@ public class BlockPlayoutBuilder(
                         GuideFinish = blockFinish.UtcDateTime,
                         BlockKey = JsonConvert.SerializeObject(effectiveBlock.BlockKey),
                         CollectionKey = JsonConvert.SerializeObject(collectionKey, JsonSettings),
-                        CollectionEtag = collectionEtags[collectionKey]
+                        CollectionEtag = collectionEtags[collectionKey],
+                        PlayoutItemWatermarks = [],
+                        PlayoutItemGraphicsElements = []
                     };
+
+                    foreach (BlockItemWatermark blockItemWatermark in blockItem.BlockItemWatermarks ?? [])
+                    {
+                        playoutItem.PlayoutItemWatermarks.Add(
+                            new PlayoutItemWatermark
+                            {
+                                PlayoutItem = playoutItem,
+                                WatermarkId = blockItemWatermark.WatermarkId
+                            });
+                    }
+
+                    foreach (BlockItemGraphicsElement blockItemGraphicsElement in blockItem.BlockItemGraphicsElements ??
+                             [])
+                    {
+                        playoutItem.PlayoutItemGraphicsElements.Add(
+                            new PlayoutItemGraphicsElement
+                            {
+                                PlayoutItem = playoutItem,
+                                GraphicsElementId = blockItemGraphicsElement.GraphicsElementId
+                            });
+                    }
 
                     if (effectiveBlock.Block.StopScheduling is BlockStopScheduling.BeforeDurationEnd
                         && playoutItem.FinishOffset > blockFinish)
