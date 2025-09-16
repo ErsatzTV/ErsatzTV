@@ -129,6 +129,9 @@ public class HardwareAccelerationHealthCheck : BaseHealthCheck, IHardwareAcceler
                 case "videotoolbox":
                     result.Add(HardwareAccelerationKind.VideoToolbox);
                     break;
+                case "rkmpp":
+                    result.Add(HardwareAccelerationKind.Rkmpp);
+                    break;
             }
         }
 
