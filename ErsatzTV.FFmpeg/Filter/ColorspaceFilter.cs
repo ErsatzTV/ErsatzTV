@@ -77,7 +77,9 @@ public class ColorspaceFilter : BaseFilter
             string inputOverrides = string.Empty;
             if (cp.IsMixed || _forceInputOverrides)
             {
-                string range = string.IsNullOrWhiteSpace(cp.ColorRange) ? "tv" : cp.ColorRange;
+                string range = string.IsNullOrWhiteSpace(cp.ColorRange)
+                    ? string.Empty
+                    : $"irange={cp.ColorRange}:";
 
                 string transfer = string.IsNullOrWhiteSpace(cp.ColorTransfer) || string.Equals(
                     cp.ColorTransfer,
@@ -101,7 +103,7 @@ public class ColorspaceFilter : BaseFilter
                     : cp.ColorSpace;
 
                 inputOverrides =
-                    $"irange={range}:ispace={space}:itrc={transfer}:iprimaries={primaries}:";
+                    $"{range}ispace={space}:itrc={transfer}:iprimaries={primaries}:";
             }
 
             string colorspace = _desiredPixelFormat.BitDepth switch

@@ -26,6 +26,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix playback when invalid video preset has been saved in FFmpegProfile
   - This can happen when NVIDIA accel falls back to libx264 software encoder for 10-bit h264 output
 - Fix 10-bit output when using NVIDIA and graphics engine (watermark or other overlays)
+- Fix playback of Jellyfin content with unknown color range
 
 ## [25.6.0] - 2025-09-14
 ### Added
