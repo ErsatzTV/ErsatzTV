@@ -1,7 +1,9 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using ErsatzTV.Application.Graphics;
 using ErsatzTV.Application.MediaCollections;
 using ErsatzTV.Application.MediaItems;
+using ErsatzTV.Application.Watermarks;
 using ErsatzTV.Core.Domain;
 
 namespace ErsatzTV.ViewModels;
@@ -61,6 +63,10 @@ public class BlockItemEditViewModel : INotifyPropertyChanged
     public bool IncludeInProgramGuide { get; set; }
 
     public bool DisableWatermarks { get; set; }
+
+    public IEnumerable<WatermarkViewModel> Watermarks { get; set; }
+
+    public IEnumerable<GraphicsElementViewModel> GraphicsElements { get; set; }
 
     public event PropertyChangedEventHandler PropertyChanged;
 

@@ -25,6 +25,8 @@ public class ChannelWatermark
     public List<PlayoutItemWatermark> PlayoutItemWatermarks { get; set; }
     public List<ProgramScheduleItem> ProgramScheduleItems { get; set; }
     public List<ProgramScheduleItemWatermark> ProgramScheduleItemWatermarks { get; set; }
+    public List<BlockItem> BlockItems { get; set; }
+    public List<BlockItemWatermark> BlockItemWatermarks { get; set; }
     public List<Deco> Decos { get; set; }
     public List<DecoWatermark> DecoWatermarks { get; set; }
     public int ZIndex { get; set; }

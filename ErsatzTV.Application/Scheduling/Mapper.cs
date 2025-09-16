@@ -64,7 +64,9 @@ internal static class Mapper
             },
             blockItem.PlaybackOrder,
             blockItem.IncludeInProgramGuide,
-            blockItem.DisableWatermarks);
+            blockItem.DisableWatermarks,
+            blockItem.BlockItemWatermarks.Map(wm => Watermarks.Mapper.ProjectToViewModel(wm.Watermark)).ToList(),
+            blockItem.BlockItemGraphicsElements.Map(ge => Graphics.Mapper.ProjectToViewModel(ge.GraphicsElement)).ToList());
 
     internal static TemplateGroupViewModel ProjectToViewModel(TemplateGroup templateGroup) =>
         new(templateGroup.Id, templateGroup.Name, templateGroup.Templates.Count);

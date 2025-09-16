@@ -1,5 +1,7 @@
+using ErsatzTV.Application.Graphics;
 using ErsatzTV.Application.MediaCollections;
 using ErsatzTV.Application.MediaItems;
+using ErsatzTV.Application.Watermarks;
 using ErsatzTV.Core.Domain;
 
 namespace ErsatzTV.Application.Scheduling;
@@ -14,4 +16,6 @@ public record BlockItemViewModel(
     NamedMediaItemViewModel MediaItem,
     PlaybackOrder PlaybackOrder,
     bool IncludeInProgramGuide,
-    bool DisableWatermarks);
+    bool DisableWatermarks,
+    List<WatermarkViewModel> Watermarks,
+    List<GraphicsElementViewModel> GraphicsElements);

@@ -1,8 +1,10 @@
 ﻿@page "/blocks/{Id:int}"
+@using ErsatzTV.Application.Graphics
 @using ErsatzTV.Application.MediaCollections
 @using ErsatzTV.Application.MediaItems
 @using ErsatzTV.Application.Scheduling
 @using ErsatzTV.Application.Search
+@using ErsatzTV.Application.Watermarks
 @using ErsatzTV.Core.Domain.Scheduling
 @implements IDisposable
 @inject NavigationManager NavigationManager
@@ -287,6 +289,36 @@
             }
         </MudSelect>
     </MudStack>
+    <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+        <div class="d-flex">
+            <MudText>Watermarks</MudText>
+        </div>
+        <MudSelect T="WatermarkViewModel"
+                   @bind-SelectedValues="_selectedItem.Watermarks"
+                   ToStringFunc="@(wm => wm?.Name)"
+                   Clearable="true"
+                   MultiSelection="true">
+            @foreach (WatermarkViewModel watermark in _watermarks)
+            {
+                <MudSelectItem Value="@watermark">@watermark.Name</MudSelectItem>
+            }
+        </MudSelect>
+    </MudStack>
+    <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+        <div class="d-flex">
+            <MudText>Graphics Elements</MudText>
+        </div>
+        <MudSelect T="GraphicsElementViewModel"
+                   @bind-SelectedValues="_selectedItem.GraphicsElements"
+                   ToStringFunc="@(ge => ge?.Name)"
+                   Clearable="true"
+                   MultiSelection="true">
+            @foreach (GraphicsElementViewModel graphicsElement in _graphicsElements)
+            {
+                <MudSelectItem Value="@graphicsElement">@graphicsElement.Name</MudSelectItem>
+            }
+        </MudSelect>
+    </MudStack>
 }
 else if (_previewItems != null)
 {
@@ -321,6 +353,8 @@ else if (_previewItems != null)
 
     private BlockItemsEditViewModel _block = new() { Items = [] };
     private BlockItemEditViewModel _selectedItem;
+    private List<WatermarkViewModel> _watermarks = [];
+    private List<GraphicsElementViewModel> _graphicsElements = [];
     private List<PlayoutItemPreviewViewModel> _previewItems;
     private int _durationHours;
     private int _durationMinutes = 15;
@@ -346,6 +380,11 @@ else if (_previewItems != null)
                 NavigationManager.NavigateTo("blocks");
                 return;
             }
+
+            _watermarks = await Mediator.Send(new GetAllWatermarks(), token)
+                .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
+            _graphicsElements = await Mediator.Send(new GetAllGraphicsElements(), token)
+                .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
 
             foreach (BlockViewModel block in maybeBlock)
             {
@@ -451,7 +490,9 @@ else if (_previewItems != null)
             MediaItem = item.MediaItem,
             PlaybackOrder = item.PlaybackOrder,
             IncludeInProgramGuide = item.IncludeInProgramGuide,
-            DisableWatermarks = item.DisableWatermarks
+            DisableWatermarks = item.DisableWatermarks,
+            Watermarks = item.Watermarks,
+            GraphicsElements = item.GraphicsElements
         };
 
     private void AddBlockItem()
@@ -460,7 +501,9 @@ else if (_previewItems != null)
         {
             Index = _block.Items.Map(i => i.Index).DefaultIfEmpty().Max() + 1,
             PlaybackOrder = PlaybackOrder.Chronological,
-            CollectionType = CollectionType.Collection
+            CollectionType = CollectionType.Collection,
+            Watermarks = [],
+            GraphicsElements = []
         };
 
         _block.Items.Add(item);
@@ -479,7 +522,9 @@ else if (_previewItems != null)
             SmartCollection = item.SmartCollection,
             MediaItem = item.MediaItem,
             IncludeInProgramGuide = item.IncludeInProgramGuide,
-            DisableWatermarks = item.DisableWatermarks
+            DisableWatermarks = item.DisableWatermarks,
+            Watermarks = item.Watermarks.ToList(),
+            GraphicsElements = item.GraphicsElements.ToList()
         };
 
         foreach (BlockItemEditViewModel i in _block.Items.Filter(bi => bi.Index >= newItem.Index))
@@ -537,7 +582,10 @@ else if (_previewItems != null)
             item.MediaItem?.MediaItemId,
             item.PlaybackOrder,
             item.IncludeInProgramGuide,
-            item.DisableWatermarks)).ToList();
+            item.DisableWatermarks,
+            item.Watermarks.Map(wm => wm.Id).ToList(),
+            item.GraphicsElements.Map(wm => wm.Id).ToList())
+        ).ToList();
 
         _block.Minutes = _durationHours * 60 + _durationMinutes;
 

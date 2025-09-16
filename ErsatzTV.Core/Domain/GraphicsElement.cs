@@ -11,6 +11,8 @@ public class GraphicsElement
     public List<PlayoutItemGraphicsElement> PlayoutItemGraphicsElements { get; set; }
     public List<ProgramScheduleItem> ProgramScheduleItems { get; set; }
     public List<ProgramScheduleItemGraphicsElement> ProgramScheduleItemGraphicsElements { get; set; }
+    public List<BlockItem> BlockItems { get; set; }
+    public List<BlockItemGraphicsElement> BlockItemGraphicsElements { get; set; }
     public List<Deco> Decos { get; set; }
     public List<DecoGraphicsElement> DecoGraphicsElements { get; set; }
 

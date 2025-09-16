@@ -11,4 +11,6 @@ public record ReplaceBlockItem(
     int? MediaItemId,
     PlaybackOrder PlaybackOrder,
     bool IncludeInProgramGuide,
-    bool DisableWatermarks);
+    bool DisableWatermarks,
+    List<int> WatermarkIds,
+    List<int> GraphicsElementIds);
