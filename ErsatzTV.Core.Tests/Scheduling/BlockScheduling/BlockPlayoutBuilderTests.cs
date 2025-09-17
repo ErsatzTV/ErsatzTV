@@ -104,7 +104,7 @@ public class BlockPlayoutBuilderTests
                 PlayoutHistory = []
             };
 
-            var now = new DateTimeOffset(2024, 1, 10, 9, 15, 0, TimeSpan.FromHours(-6));
+            var now = HoursAfterMidnight(9).AddMinutes(15);
 
             var mediaItems = new List<MediaItem>
             {
@@ -234,7 +234,7 @@ public class BlockPlayoutBuilderTests
                 PlayoutHistory = []
             };
 
-            var now = new DateTimeOffset(2024, 1, 10, 9, 15, 0, TimeSpan.FromHours(-6));
+            var now = HoursAfterMidnight(9).AddMinutes(15);
 
             var mediaItems = new List<MediaItem>
             {
@@ -392,7 +392,7 @@ public class BlockPlayoutBuilderTests
                 PlayoutHistory = []
             };
 
-            var now = new DateTimeOffset(2024, 1, 10, 9, 15, 0, TimeSpan.FromHours(-6));
+            var now = HoursAfterMidnight(9).AddMinutes(15);
 
             var mediaItems = new List<MediaItem>
             {
@@ -472,5 +472,11 @@ public class BlockPlayoutBuilderTests
             result.AddedItems.Count.ShouldBe(1);
             result.AddedItems[0].StartOffset.TimeOfDay.ShouldBe(TimeSpan.FromHours(9));
         }
+    }
+
+    protected static DateTimeOffset HoursAfterMidnight(int hours)
+    {
+        DateTimeOffset now = DateTimeOffset.Now;
+        return now - now.TimeOfDay + TimeSpan.FromHours(hours);
     }
 }
