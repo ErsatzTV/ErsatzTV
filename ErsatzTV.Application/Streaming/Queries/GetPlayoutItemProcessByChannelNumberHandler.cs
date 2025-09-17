@@ -42,6 +42,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
     private readonly IPlexPathReplacementService _plexPathReplacementService;
     private readonly ISongVideoGenerator _songVideoGenerator;
     private readonly ITelevisionRepository _televisionRepository;
+    private readonly bool _isDebugNoSync;
 
     public GetPlayoutItemProcessByChannelNumberHandler(
         IDbContextFactory<TvContext> dbContextFactory,
@@ -77,6 +78,12 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
         _graphicsElementSelector = graphicsElementSelector;
         _decoSelector = decoSelector;
         _logger = logger;
+
+#if DEBUG_NO_SYNC
+        _isDebugNoSync = true;
+#else
+        _isDebugNoSync = false;
+#endif
     }
 
     protected override async Task<Either<BaseError, PlayoutItemProcessModel>> GetProcess(
@@ -233,7 +240,10 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 .ThenInclude(i => i.Deco)
                 .ThenInclude(d => d.DecoWatermarks)
                 .ThenInclude(d => d.Watermark)
-                .SelectOneAsync(p => p.ChannelId, p => p.ChannelId == channel.Id, cancellationToken);
+                .SelectOneAsync(
+                    p => p.ChannelId,
+                    p => p.ChannelId == (channel.MirrorSourceChannelId ?? channel.Id),
+                    cancellationToken);
 
             foreach (Playout playout in maybePlayout)
             {
@@ -262,6 +272,35 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
             catch (Exception ex)
             {
                 _logger.LogDebug(ex, "Failed to get playout item title");
+            }
+
+            DateTimeOffset start = playoutItemWithPath.PlayoutItem.StartOffset;
+            DateTimeOffset finish = playoutItemWithPath.PlayoutItem.FinishOffset;
+            TimeSpan inPoint = playoutItemWithPath.PlayoutItem.InPoint;
+            TimeSpan outPoint = playoutItemWithPath.PlayoutItem.OutPoint;
+            DateTimeOffset effectiveNow = request.StartAtZero ? start : now;
+            TimeSpan duration = finish - effectiveNow;
+
+            if (_isDebugNoSync)
+            {
+                Command doesNotExistProcess = await _ffmpegProcessService.ForError(
+                    ffmpegPath,
+                    channel,
+                    duration,
+                    $"DEBUG_NO_SYNC:\n{Mapper.GetDisplayTitle(playoutItemWithPath.PlayoutItem.MediaItem, Option<string>.None)}\nFrom: {start} To: {finish}",
+                    request.HlsRealtime,
+                    request.PtsOffset,
+                    channel.FFmpegProfile.VaapiDisplay,
+                    channel.FFmpegProfile.VaapiDriver,
+                    channel.FFmpegProfile.VaapiDevice,
+                    Optional(channel.FFmpegProfile.QsvExtraHardwareFrames));
+
+                return new PlayoutItemProcessModel(
+                    doesNotExistProcess,
+                    Option<GraphicsEngineContext>.None,
+                    duration,
+                    finish,
+                    true);
             }
 
             MediaVersion version = playoutItemWithPath.PlayoutItem.MediaItem.GetHeadVersion();
@@ -337,13 +376,6 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 .GetValue<bool>(ConfigElementKey.FFmpegSaveReports, cancellationToken)
                 .Map(result => result.IfNone(false));
 
-            DateTimeOffset start = playoutItemWithPath.PlayoutItem.StartOffset;
-            DateTimeOffset finish = playoutItemWithPath.PlayoutItem.FinishOffset;
-            TimeSpan inPoint = playoutItemWithPath.PlayoutItem.InPoint;
-            TimeSpan outPoint = playoutItemWithPath.PlayoutItem.OutPoint;
-            DateTimeOffset effectiveNow = request.StartAtZero ? start : now;
-            TimeSpan duration = finish - effectiveNow;
-
             _logger.LogDebug(
                 "S: {Start}, F: {Finish}, In: {InPoint}, Out: {OutPoint}, EffNow: {EffectiveNow}, Dur: {Duration}",
                 start,
@@ -402,15 +434,17 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
 
         foreach (BaseError error in maybePlayoutItem.LeftToSeq())
         {
-            Option<TimeSpan> maybeDuration = await dbContext.PlayoutItems
-                .Filter(pi => pi.Playout.ChannelId == channel.Id)
+            Option<DateTimeOffset> maybeNextStart = await dbContext.PlayoutItems
+                .Filter(pi => pi.Playout.ChannelId == (channel.MirrorSourceChannelId ?? channel.Id))
                 .Filter(pi => pi.Start > now.UtcDateTime)
                 .OrderBy(pi => pi.Start)
                 .FirstOrDefaultAsync(cancellationToken)
                 .Map(Optional)
-                .MapT(pi => pi.StartOffset - now);
+                .MapT(pi => pi.StartOffset);
 
-            DateTimeOffset finish = maybeDuration.Match(d => now.Add(d), () => now);
+            Option<TimeSpan> maybeDuration = maybeNextStart.Map(s => s - now);
+
+            DateTimeOffset finish = maybeNextStart.Match(s => s, () => now);
 
             _logger.LogWarning(
                 "Error locating playout item {@Error}. Will display error from {Start} to {Finish}",
@@ -623,7 +657,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
             MediaItem item = items[new Random().Next(items.Count)];
 
             Option<TimeSpan> maybeDuration = await dbContext.PlayoutItems
-                .Filter(pi => pi.Playout.ChannelId == channel.Id)
+                .Filter(pi => pi.Playout.ChannelId == (channel.MirrorSourceChannelId ?? channel.Id))
                 .Filter(pi => pi.Start > now.UtcDateTime)
                 .OrderBy(pi => pi.Start)
                 .FirstOrDefaultAsync(cancellationToken)
@@ -680,6 +714,12 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
         CancellationToken cancellationToken)
     {
         string path = await GetPlayoutItemPath(playoutItem, cancellationToken);
+
+        if (_isDebugNoSync)
+        {
+            // pretend it exists so we get a nice error message
+            return new PlayoutItemWithPath(playoutItem, path);
+        }
 
         // check filesystem first
         if (_localFileSystem.FileExists(path))
