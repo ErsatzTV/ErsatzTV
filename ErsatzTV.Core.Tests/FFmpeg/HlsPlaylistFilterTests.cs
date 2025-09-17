@@ -551,6 +551,54 @@ live000065.ts
 "));
     }
 
+    [Test]
+    public void HlsPlaylistFilter_ShouldHandleDiscontinuitySequenceOnSegmentRemoval()
+    {
+        var start = new DateTimeOffset(2025, 9, 17, 10, 11, 5, 31, TimeSpan.FromHours(-5));
+        string[] input = NormalizeLineEndings(
+            @"#EXTM3U
+#EXT-X-VERSION:6
+#EXT-X-TARGETDURATION:4
+#EXT-X-MEDIA-SEQUENCE:46
+#EXT-X-DISCONTINUITY-SEQUENCE:2
+#EXT-X-INDEPENDENT-SEGMENTS
+#EXTINF:1.734000,
+#EXT-X-PROGRAM-DATE-TIME:2025-09-17T10:11:05.031-0500
+live000046.ts
+#EXT-X-DISCONTINUITY
+#EXTINF:4.004000,
+#EXT-X-PROGRAM-DATE-TIME:2025-09-17T10:11:06.765-0500
+live000047.ts
+#EXTINF:4.004000,
+#EXT-X-PROGRAM-DATE-TIME:2025-09-17T10:11:10.769-0500
+live000048.ts
+").Split(Environment.NewLine);
+
+        // filter 'live000046.ts'
+        var filterBefore = start.AddSeconds(2);
+
+        TrimPlaylistResult result = _hlsPlaylistFilter.TrimPlaylist(start, filterBefore, input, 2);
+
+        result.Sequence.ShouldBe(47);
+
+        string expectedPlaylist = NormalizeLineEndings(
+            @"#EXTM3U
+#EXT-X-VERSION:6
+#EXT-X-TARGETDURATION:4
+#EXT-X-MEDIA-SEQUENCE:47
+#EXT-X-DISCONTINUITY-SEQUENCE:3
+#EXT-X-INDEPENDENT-SEGMENTS
+#EXTINF:4.004000,
+#EXT-X-PROGRAM-DATE-TIME:2025-09-17T10:11:06.765-0500
+live000047.ts
+#EXTINF:4.004000,
+#EXT-X-PROGRAM-DATE-TIME:2025-09-17T10:11:10.769-0500
+live000048.ts
+");
+
+        result.Playlist.ShouldBe(expectedPlaylist);
+    }
+
     private static string NormalizeLineEndings(string str) =>
         str
             .Replace("\r\n", "\n")
