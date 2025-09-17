@@ -56,6 +56,7 @@ public class SubtitleElement(
         Resolution squarePixelFrameSize,
         Resolution frameSize,
         int frameRate,
+        TimeSpan seek,
         CancellationToken cancellationToken)
     {
         try
@@ -112,7 +113,7 @@ public class SubtitleElement(
         }
         catch (Exception ex)
         {
-            IsFailed = true;
+            IsFinished = true;
             logger.LogWarning(ex, "Failed to initialize subtitle element; will disable for this content");
         }
     }

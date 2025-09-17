@@ -86,6 +86,7 @@ public class GraphicsEngine(
                     context.SquarePixelFrameSize,
                     context.FrameSize,
                     context.FrameRate,
+                    context.Seek,
                     cancellationToken)));
 
         long frameCount = 0;
@@ -122,7 +123,7 @@ public class GraphicsEngine(
 
                 // prepare images outside mutate to allow async image generation
                 var preparedElementImages = new List<PreparedElementImage>();
-                foreach (IGraphicsElement element in elements.Where(e => !e.IsFailed).OrderBy(e => e.ZIndex))
+                foreach (IGraphicsElement element in elements.Where(e => !e.IsFinished).OrderBy(e => e.ZIndex))
                 {
                     try
                     {
@@ -137,7 +138,7 @@ public class GraphicsEngine(
                     }
                     catch (Exception ex)
                     {
-                        element.IsFailed = true;
+                        element.IsFinished = true;
                         logger.LogWarning(
                             ex,
                             "Failed to draw graphics element of type {Type}; will disable for this content",

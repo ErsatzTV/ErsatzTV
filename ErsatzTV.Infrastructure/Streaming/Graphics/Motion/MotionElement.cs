@@ -1,4 +1,5 @@
 using System.Buffers;
+using System.Globalization;
 using System.IO.Pipelines;
 using CliWrap;
 using ErsatzTV.Core;
@@ -55,17 +56,32 @@ public class MotionElement(
         Resolution squarePixelFrameSize,
         Resolution frameSize,
         int frameRate,
+        TimeSpan seek,
         CancellationToken cancellationToken)
     {
         try
         {
+            _startTime = TimeSpan.FromSeconds(motionElement.StartSeconds ?? 0);
+            ProbeResult probeResult = await ProbeMotionElement(frameSize);
+            var overlayDuration = probeResult.Duration;
+
+            // already past the time when this is supposed to play; don't do any more work
+            if (_startTime + overlayDuration < seek)
+            {
+                IsFinished = true;
+                return;
+            }
+
             var pipe = new Pipe();
             _pipeReader = pipe.Reader;
 
-            _startTime = TimeSpan.FromSeconds(motionElement.StartSeconds ?? 0);
+            var overlaySeekTime = TimeSpan.Zero;
+            if (_startTime < seek)
+            {
+                overlaySeekTime = seek - _startTime;
+            }
 
-            SizeAndDecoder sizeAndDecoder = await ProbeMotionElement(frameSize);
-            Resolution sourceSize = sizeAndDecoder.Size;
+            Resolution sourceSize = probeResult.Size;
 
             int scaledWidth = sourceSize.Width;
             int scaledHeight = sourceSize.Height;
@@ -118,9 +134,14 @@ public class MotionElement(
 
             List<string> arguments = ["-nostdin", "-hide_banner", "-nostats", "-loglevel", "error"];
 
-            foreach (string decoder in sizeAndDecoder.Decoder)
+            foreach (string decoder in probeResult.Decoder)
             {
                 arguments.AddRange(["-c:v", decoder]);
+            }
+
+            if (overlaySeekTime > TimeSpan.Zero)
+            {
+                arguments.AddRange(["-ss", overlaySeekTime.TotalSeconds.ToString(CultureInfo.InvariantCulture)]);
             }
 
             arguments.AddRange(
@@ -128,13 +149,15 @@ public class MotionElement(
                 "-i", motionElement.VideoPath,
             ]);
 
+            var videoFilter = $"fps={frameRate}";
             if (motionElement.Scale)
             {
-                arguments.AddRange(["-vf", $"scale={targetSize.Width}:{targetSize.Height}"]);
+                videoFilter += $",scale={targetSize.Width}:{targetSize.Height}";
             }
 
             arguments.AddRange(
             [
+                "-vf", videoFilter,
                 "-f", "image2pipe",
                 "-pix_fmt", "bgra",
                 "-vcodec", "rawvideo",
@@ -157,7 +180,7 @@ public class MotionElement(
         }
         catch (Exception ex)
         {
-            IsFailed = true;
+            IsFinished = true;
             logger.LogWarning(ex, "Failed to initialize motion element; will disable for this content");
         }
     }
@@ -169,7 +192,7 @@ public class MotionElement(
         TimeSpan channelTime,
         CancellationToken cancellationToken)
     {
-        if (contentTime < _startTime || _isFinished)
+        if (_isFinished || contentTime < _startTime)
         {
             return Option<PreparedElementImage>.None;
         }
@@ -225,7 +248,7 @@ public class MotionElement(
         }
     }
 
-    private async Task<SizeAndDecoder> ProbeMotionElement(Resolution frameSize)
+    private async Task<ProbeResult> ProbeMotionElement(Resolution frameSize)
     {
         try
         {
@@ -249,9 +272,10 @@ public class MotionElement(
                         };
                     }
 
-                    return new SizeAndDecoder(
+                    return new ProbeResult(
                         new Resolution { Width = mediaVersion.Width, Height = mediaVersion.Height },
-                        decoder);
+                        decoder,
+                        mediaVersion.Duration);
                 }
             }
         }
@@ -260,8 +284,8 @@ public class MotionElement(
             // do nothing
         }
 
-        return new SizeAndDecoder(frameSize, Option<string>.None);
+        return new ProbeResult(frameSize, Option<string>.None, TimeSpan.Zero);
     }
 
-    private record SizeAndDecoder(Resolution Size, Option<string> Decoder);
+    private record ProbeResult(Resolution Size, Option<string> Decoder, TimeSpan Duration);
 }
