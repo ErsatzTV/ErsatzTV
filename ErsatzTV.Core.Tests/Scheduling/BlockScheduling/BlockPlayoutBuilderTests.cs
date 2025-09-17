@@ -16,10 +16,6 @@ namespace ErsatzTV.Core.Tests.Scheduling.BlockScheduling;
 
 public class BlockPlayoutBuilderTests
 {
-    [SetUp]
-    public void SetUp() => _cancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(10)).Token;
-
-    private CancellationToken _cancellationToken;
     private readonly ILogger<BlockPlayoutBuilder> _logger;
 
     public BlockPlayoutBuilderTests()
@@ -39,7 +35,8 @@ public class BlockPlayoutBuilderTests
     public class Build : BlockPlayoutBuilderTests
     {
         [Test]
-        public async Task Should_Start_At_Beginning_Of_Current_Block()
+        [CancelAfter(10_000)]
+        public async Task Should_Start_At_Beginning_Of_Current_Block(CancellationToken cancellationToken)
         {
             var collection = new SmartCollection
             {
@@ -56,6 +53,7 @@ public class BlockPlayoutBuilderTests
                 [
                     new BlockItem
                     {
+                        Id = 1,
                         CollectionType = CollectionType.SmartCollection,
                         PlaybackOrder = PlaybackOrder.Chronological,
                         Index = 1,
@@ -157,7 +155,316 @@ public class BlockPlayoutBuilderTests
                 playout,
                 referenceData,
                 PlayoutBuildMode.Reset,
-                _cancellationToken);
+                cancellationToken);
+
+            // this test only cares about "today"
+            result.AddedItems.RemoveAll(i => i.StartOffset.Date > now.Date);
+
+            result.AddedItems.Count.ShouldBe(1);
+            result.AddedItems[0].StartOffset.TimeOfDay.ShouldBe(TimeSpan.FromHours(9));
+        }
+
+        [Test]
+        [CancelAfter(10_000)]
+        public async Task Should_Discard_Item_That_Will_Never_Fit(CancellationToken cancellationToken)
+        {
+            var collection = new SmartCollection
+            {
+                Id = 1,
+                Query = "asdf"
+            };
+
+            var block = new Block
+            {
+                Id = 1,
+                Name = "Test Block",
+                Minutes = 30,
+                Items =
+                [
+                    new BlockItem
+                    {
+                        Id = 1,
+                        CollectionType = CollectionType.SmartCollection,
+                        PlaybackOrder = PlaybackOrder.Chronological,
+                        Index = 1,
+                        SmartCollection = collection,
+                        SmartCollectionId = collection.Id
+                    }
+                ],
+                StopScheduling = BlockStopScheduling.BeforeDurationEnd
+            };
+
+            var template = new Template
+            {
+                Id = 1,
+                Items = []
+            };
+
+            var templateItem = new TemplateItem
+            {
+                Block = block,
+                BlockId = block.Id,
+                StartTime = TimeSpan.FromHours(9),
+                Template = template,
+                TemplateId = template.Id
+            };
+
+            template.Items.Add(templateItem);
+
+            var playoutTemplate = new PlayoutTemplate
+            {
+                Id = 1,
+                Index = 1,
+                Template = template,
+                TemplateId = template.Id,
+                DaysOfMonth = PlayoutTemplate.AllDaysOfMonth(),
+                DaysOfWeek = PlayoutTemplate.AllDaysOfWeek(),
+                MonthsOfYear = PlayoutTemplate.AllMonthsOfYear()
+            };
+
+            var playout = new Playout
+            {
+                Id = 1,
+                Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" },
+                Templates =
+                [
+                    playoutTemplate
+                ],
+                Items = [],
+                PlayoutHistory = []
+            };
+
+            var now = new DateTimeOffset(2024, 1, 10, 9, 15, 0, TimeSpan.FromHours(-6));
+
+            var mediaItems = new List<MediaItem>
+            {
+                new Movie
+                {
+                    Id = 1,
+                    MovieMetadata = [new MovieMetadata { ReleaseDate = DateTime.Today }],
+                    MediaVersions =
+                    [
+                        new MediaVersion
+                        {
+                            Duration = TimeSpan.FromHours(1),
+                            MediaFiles = [new MediaFile { Path = "/fake/path/1" }]
+                        }
+                    ]
+                },
+                new Movie
+                {
+                    Id = 2,
+                    MovieMetadata = [new MovieMetadata { ReleaseDate = DateTime.Today.AddDays(1) }],
+                    MediaVersions =
+                    [
+                        new MediaVersion
+                        {
+                            Duration = TimeSpan.FromMinutes(25),
+                            MediaFiles = [new MediaFile { Path = "/fake/path/2" }]
+                        }
+                    ]
+                }
+            };
+
+            var collectionRepo = new FakeMediaCollectionRepository(
+                Map((collection.Id, mediaItems))
+            );
+
+            IConfigElementRepository configRepo = Substitute.For<IConfigElementRepository>();
+            configRepo
+                .GetValue<int>(Arg.Is(ConfigElementKey.PlayoutDaysToBuild), Arg.Any<CancellationToken>())
+                .Returns(Some(1));
+
+            var builder = new BlockPlayoutBuilder(
+                configRepo,
+                collectionRepo,
+                Substitute.For<ITelevisionRepository>(),
+                Substitute.For<IArtistRepository>(),
+                Substitute.For<ICollectionEtag>(),
+                _logger);
+
+            var referenceData = new PlayoutReferenceData(
+                playout.Channel,
+                Option<Deco>.None,
+                [],
+                playout.Templates.ToList(),
+                null,
+                [],
+                [],
+                TimeSpan.Zero);
+
+            PlayoutBuildResult result = await builder.Build(
+                now,
+                playout,
+                referenceData,
+                PlayoutBuildMode.Reset,
+                cancellationToken);
+
+            // this test only cares about "today"
+            result.AddedItems.RemoveAll(i => i.StartOffset.Date > now.Date);
+
+            result.AddedItems.Count.ShouldBe(1);
+            result.AddedItems[0].StartOffset.TimeOfDay.ShouldBe(TimeSpan.FromHours(9));
+        }
+
+        [Test]
+        [CancelAfter(10_000)]
+        public async Task Should_Discard_Collection_That_Will_Never_Fit(CancellationToken cancellationToken)
+        {
+            var collection = new SmartCollection
+            {
+                Id = 1,
+                Query = "asdf"
+            };
+
+            var collection2 = new SmartCollection
+            {
+                Id = 2,
+                Query = "asdf2"
+            };
+
+            var block = new Block
+            {
+                Id = 1,
+                Name = "Test Block",
+                Minutes = 30,
+                Items =
+                [
+                    new BlockItem
+                    {
+                        Id = 1,
+                        CollectionType = CollectionType.SmartCollection,
+                        PlaybackOrder = PlaybackOrder.Chronological,
+                        Index = 1,
+                        SmartCollection = collection,
+                        SmartCollectionId = collection.Id
+                    },
+                    new BlockItem
+                    {
+                        Id = 2,
+                        CollectionType = CollectionType.SmartCollection,
+                        PlaybackOrder = PlaybackOrder.Chronological,
+                        Index = 2,
+                        SmartCollection = collection2,
+                        SmartCollectionId = collection2.Id
+                    }
+                ],
+                StopScheduling = BlockStopScheduling.BeforeDurationEnd
+            };
+
+            var template = new Template
+            {
+                Id = 1,
+                Items = []
+            };
+
+            var templateItem = new TemplateItem
+            {
+                Block = block,
+                BlockId = block.Id,
+                StartTime = TimeSpan.FromHours(9),
+                Template = template,
+                TemplateId = template.Id
+            };
+
+            template.Items.Add(templateItem);
+
+            var playoutTemplate = new PlayoutTemplate
+            {
+                Id = 1,
+                Index = 1,
+                Template = template,
+                TemplateId = template.Id,
+                DaysOfMonth = PlayoutTemplate.AllDaysOfMonth(),
+                DaysOfWeek = PlayoutTemplate.AllDaysOfWeek(),
+                MonthsOfYear = PlayoutTemplate.AllMonthsOfYear()
+            };
+
+            var playout = new Playout
+            {
+                Id = 1,
+                Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" },
+                Templates =
+                [
+                    playoutTemplate
+                ],
+                Items = [],
+                PlayoutHistory = []
+            };
+
+            var now = new DateTimeOffset(2024, 1, 10, 9, 15, 0, TimeSpan.FromHours(-6));
+
+            var mediaItems = new List<MediaItem>
+            {
+                new Movie
+                {
+                    Id = 1,
+                    MovieMetadata = [new MovieMetadata { ReleaseDate = DateTime.Today }],
+                    MediaVersions =
+                    [
+                        new MediaVersion
+                        {
+                            Duration = TimeSpan.FromHours(1),
+                            MediaFiles = [new MediaFile { Path = "/fake/path/1" }]
+                        }
+                    ]
+                }
+            };
+
+            var mediaItems2 = new List<MediaItem>
+            {
+                new Movie
+                {
+                    Id = 2,
+                    MovieMetadata = [new MovieMetadata { ReleaseDate = DateTime.Today.AddDays(1) }],
+                    MediaVersions =
+                    [
+                        new MediaVersion
+                        {
+                            Duration = TimeSpan.FromMinutes(25),
+                            MediaFiles = [new MediaFile { Path = "/fake/path/2" }]
+                        }
+                    ]
+                }
+            };
+
+            var collectionRepo = new FakeMediaCollectionRepository(
+                new Map<int, List<MediaItem>>(
+                [
+                    (collection.Id, mediaItems),
+                    (collection2.Id, mediaItems2)
+                ])
+            );
+
+            IConfigElementRepository configRepo = Substitute.For<IConfigElementRepository>();
+            configRepo
+                .GetValue<int>(Arg.Is(ConfigElementKey.PlayoutDaysToBuild), Arg.Any<CancellationToken>())
+                .Returns(Some(1));
+
+            var builder = new BlockPlayoutBuilder(
+                configRepo,
+                collectionRepo,
+                Substitute.For<ITelevisionRepository>(),
+                Substitute.For<IArtistRepository>(),
+                Substitute.For<ICollectionEtag>(),
+                _logger);
+
+            var referenceData = new PlayoutReferenceData(
+                playout.Channel,
+                Option<Deco>.None,
+                [],
+                playout.Templates.ToList(),
+                null,
+                [],
+                [],
+                TimeSpan.Zero);
+
+            PlayoutBuildResult result = await builder.Build(
+                now,
+                playout,
+                referenceData,
+                PlayoutBuildMode.Reset,
+                cancellationToken);
 
             // this test only cares about "today"
             result.AddedItems.RemoveAll(i => i.StartOffset.Date > now.Date);
