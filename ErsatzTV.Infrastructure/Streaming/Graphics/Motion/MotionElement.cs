@@ -25,8 +25,8 @@ public class MotionElement(
     private SKPointI _point;
     private SKBitmap _canvasBitmap;
     private SKBitmap _motionFrameBitmap;
-    private bool _isFinished;
     private TimeSpan _startTime;
+    private MotionElementState _state;
 
     public void Dispose()
     {
@@ -192,7 +192,7 @@ public class MotionElement(
         TimeSpan channelTime,
         CancellationToken cancellationToken)
     {
-        if (_isFinished || contentTime < _startTime)
+        if (_state is MotionElementState.Finished || contentTime < _startTime)
         {
             return Option<PreparedElementImage>.None;
         }
@@ -231,7 +231,7 @@ public class MotionElement(
 
                 if (readResult.IsCompleted)
                 {
-                    _isFinished = true;
+                    _state = MotionElementState.Finished;
 
                     await _pipeReader.CompleteAsync();
                     return Option<PreparedElementImage>.None;
@@ -239,7 +239,7 @@ public class MotionElement(
             }
             finally
             {
-                if (!_isFinished)
+                if (_state is not MotionElementState.Finished)
                 {
                     // advance the reader, consuming the processed frame and examining the entire buffer
                     _pipeReader.AdvanceTo(consumed, examined);
