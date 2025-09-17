@@ -48,6 +48,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Block schedules: skip media items that will never fit in block duration
 - Fix HLS playlist generation for clients that actually care about discontinuities (like hls.js)
   - This should resolve most playback issues with built-in channel preview
+- Fix deco dead air fallback selection and duration on mirror channels
+- Fix fallback filler duration on mirror channels
 
 ## [25.6.0] - 2025-09-14
 ### Added
