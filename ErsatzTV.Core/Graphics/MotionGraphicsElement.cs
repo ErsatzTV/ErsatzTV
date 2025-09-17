@@ -17,6 +17,12 @@ public class MotionGraphicsElement
     [YamlMember(Alias = "start_seconds", ApplyNamingConventions = false)]
     public double? StartSeconds { get; set; }
 
+    [YamlMember(Alias = "end_behavior", ApplyNamingConventions = false)]
+    public MotionEndBehavior EndBehavior { get; set; } = MotionEndBehavior.Disappear;
+
+    [YamlMember(Alias = "hold_seconds", ApplyNamingConventions = false)]
+    public double? HoldSeconds { get; set; }
+
     public WatermarkLocation Location { get; set; }
 
     [YamlMember(Alias = "horizontal_margin_percent", ApplyNamingConventions = false)]

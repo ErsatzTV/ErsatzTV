@@ -1,5 +1,6 @@
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.FFmpeg;
+using ErsatzTV.Core.Interfaces.Streaming;
 using ErsatzTV.FFmpeg.State;
 using Microsoft.Extensions.Logging;
 using NCalc;
@@ -28,12 +29,7 @@ public class WatermarkElement : ImageElementBase
 
     public bool IsValid => _imagePath != null && _watermark != null;
 
-    public override async Task InitializeAsync(
-        Resolution squarePixelFrameSize,
-        Resolution frameSize,
-        int frameRate,
-        TimeSpan seek,
-        CancellationToken cancellationToken)
+    public override async Task InitializeAsync(GraphicsEngineContext context, CancellationToken cancellationToken)
     {
         try
         {
@@ -68,8 +64,8 @@ public class WatermarkElement : ImageElementBase
             }
 
             await LoadImage(
-                squarePixelFrameSize,
-                frameSize,
+                context.SquarePixelFrameSize,
+                context.FrameSize,
                 _imagePath,
                 _watermark.Location,
                 _watermark.Size == WatermarkSize.Scaled,

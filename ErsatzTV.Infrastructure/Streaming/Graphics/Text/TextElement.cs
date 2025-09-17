@@ -1,6 +1,6 @@
 using System.Text.RegularExpressions;
-using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Graphics;
+using ErsatzTV.Core.Interfaces.Streaming;
 using Microsoft.Extensions.Logging;
 using NCalc;
 using SkiaSharp;
@@ -29,12 +29,7 @@ public partial class TextElement(
         _image = null;
     }
 
-    public override Task InitializeAsync(
-        Resolution squarePixelFrameSize,
-        Resolution frameSize,
-        int frameRate,
-        TimeSpan seek,
-        CancellationToken cancellationToken)
+    public override Task InitializeAsync(GraphicsEngineContext context, CancellationToken cancellationToken)
     {
         try
         {
@@ -77,13 +72,14 @@ public partial class TextElement(
             }
 
             var horizontalMargin =
-                (int)Math.Round((textElement.HorizontalMarginPercent ?? 0) / 100.0 * frameSize.Width);
-            var verticalMargin = (int)Math.Round((textElement.VerticalMarginPercent ?? 0) / 100.0 * frameSize.Height);
+                (int)Math.Round((textElement.HorizontalMarginPercent ?? 0) / 100.0 * context.FrameSize.Width);
+            var verticalMargin =
+                (int)Math.Round((textElement.VerticalMarginPercent ?? 0) / 100.0 * context.FrameSize.Height);
 
             _location = CalculatePosition(
                 textElement.Location,
-                frameSize.Width,
-                frameSize.Height,
+                context.FrameSize.Width,
+                context.FrameSize.Height,
                 _image.Width,
                 _image.Height,
                 horizontalMargin,
