@@ -46,6 +46,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix playback of Jellyfin content with unknown color range
 - Block schedules: skip collections (block items) that will never fit in block duration
 - Block schedules: skip media items that will never fit in block duration
+- Fix HLS playlist generation for clients that actually care about discontinuities (like hls.js)
+  - This should resolve most playback issues with built-in channel preview
 
 ## [25.6.0] - 2025-09-14
 ### Added

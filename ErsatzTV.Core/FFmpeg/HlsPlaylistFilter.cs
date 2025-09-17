@@ -61,11 +61,11 @@ public class HlsPlaylistFilter : IHlsPlaylistFilter
                     continue;
                 }
 
-                var duration = TimeSpan.FromSeconds(
-                    double.Parse(
-                        lines[i].TrimEnd(',').Split(':')[1],
-                        NumberStyles.Number,
-                        CultureInfo.InvariantCulture));
+                var durationDecimal = decimal.Parse(
+                    lines[i].TrimEnd(',').Split(':')[1],
+                    NumberStyles.Number,
+                    CultureInfo.InvariantCulture);
+                var duration = TimeSpan.FromTicks((long)(durationDecimal * TimeSpan.TicksPerSecond));
 
                 items.Add(new PlaylistSegment(currentTime, lines[i], lines[i + 2]));
 
@@ -168,11 +168,17 @@ public class HlsPlaylistFilter : IHlsPlaylistFilter
             switch (items[i])
             {
                 case PlaylistDiscontinuity:
-                    if (i == items.Count - 1 || allSegments.Contains(items[i + 1]))
+                    if (i < items.Count - 1 && allSegments.Contains(items[i + 1]))
+                    {
+                        if (items[i + 1] is PlaylistSegment nextSegment && allSegments.Head() != nextSegment)
+                        {
+                            output.AppendLine("#EXT-X-DISCONTINUITY");
+                        }
+                    }
+                    else if (i == items.Count - 1 && allSegments.Count > 0) // discontinuity at the end
                     {
                         output.AppendLine("#EXT-X-DISCONTINUITY");
                     }
-
                     break;
                 case PlaylistSegment segment:
                     if (allSegments.Contains(segment))
