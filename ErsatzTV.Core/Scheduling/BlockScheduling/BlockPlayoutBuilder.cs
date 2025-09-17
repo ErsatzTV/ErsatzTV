@@ -173,99 +173,138 @@ public class BlockPlayoutBuilder(
                     collectionMediaItems);
 
                 var pastTime = false;
+                var done = false;
 
-                foreach (MediaItem mediaItem in enumerator.Current)
+                while (!done && !pastTime)
                 {
-                    logger.LogDebug(
-                        "current item: {Id} / {Title}",
-                        mediaItem.Id,
-                        mediaItem is Episode e ? GetTitle(e) : string.Empty);
-
-                    TimeSpan itemDuration = DurationForMediaItem(mediaItem);
-
-                    var collectionKey = CollectionKey.ForBlockItem(blockItem);
-
-                    // create a playout item
-                    var playoutItem = new PlayoutItem
-                    {
-                        PlayoutId = playout.Id,
-                        MediaItemId = mediaItem.Id,
-                        Start = currentTime.UtcDateTime,
-                        Finish = currentTime.UtcDateTime + itemDuration,
-                        InPoint = TimeSpan.Zero,
-                        OutPoint = itemDuration,
-                        FillerKind = blockItem.IncludeInProgramGuide ? FillerKind.None : FillerKind.GuideMode,
-                        DisableWatermarks = blockItem.DisableWatermarks,
-                        //CustomTitle = scheduleItem.CustomTitle,
-                        //WatermarkId = scheduleItem.WatermarkId,
-                        //PreferredAudioLanguageCode = scheduleItem.PreferredAudioLanguageCode,
-                        //PreferredAudioTitle = scheduleItem.PreferredAudioTitle,
-                        //PreferredSubtitleLanguageCode = scheduleItem.PreferredSubtitleLanguageCode,
-                        //SubtitleMode = scheduleItem.SubtitleMode
-                        GuideGroup = effectiveBlock.TemplateItemId,
-                        GuideStart = effectiveBlock.Start.UtcDateTime,
-                        GuideFinish = blockFinish.UtcDateTime,
-                        BlockKey = JsonConvert.SerializeObject(effectiveBlock.BlockKey),
-                        CollectionKey = JsonConvert.SerializeObject(collectionKey, JsonSettings),
-                        CollectionEtag = collectionEtags[collectionKey],
-                        PlayoutItemWatermarks = [],
-                        PlayoutItemGraphicsElements = []
-                    };
-
-                    foreach (BlockItemWatermark blockItemWatermark in blockItem.BlockItemWatermarks ?? [])
-                    {
-                        playoutItem.PlayoutItemWatermarks.Add(
-                            new PlayoutItemWatermark
-                            {
-                                PlayoutItem = playoutItem,
-                                WatermarkId = blockItemWatermark.WatermarkId
-                            });
-                    }
-
-                    foreach (BlockItemGraphicsElement blockItemGraphicsElement in blockItem.BlockItemGraphicsElements ??
-                             [])
-                    {
-                        playoutItem.PlayoutItemGraphicsElements.Add(
-                            new PlayoutItemGraphicsElement
-                            {
-                                PlayoutItem = playoutItem,
-                                GraphicsElementId = blockItemGraphicsElement.GraphicsElementId
-                            });
-                    }
-
-                    if (effectiveBlock.Block.StopScheduling is BlockStopScheduling.BeforeDurationEnd
-                        && playoutItem.FinishOffset > blockFinish)
+                    foreach (MediaItem mediaItem in enumerator.Current)
                     {
                         logger.LogDebug(
-                            "Current time {Time} for block {Block} would go beyond block finish {Finish}; will not schedule more items",
-                            currentTime,
-                            effectiveBlock.Block.Name,
-                            blockFinish);
+                            "current item: {Id} / {Title}",
+                            mediaItem.Id,
+                            PlayoutBuilder.DisplayTitle(mediaItem));
 
-                        pastTime = true;
-                        break;
+                        TimeSpan itemDuration = DurationForMediaItem(mediaItem);
+
+                        // item will never fit in block
+                        var blockDuration = TimeSpan.FromMinutes(effectiveBlock.Block.Minutes);
+                        if (effectiveBlock.Block.StopScheduling is BlockStopScheduling.BeforeDurationEnd &&
+                            itemDuration > blockDuration)
+                        {
+                            foreach (TimeSpan minimumDuration in enumerator.MinimumDuration)
+                            {
+                                if (minimumDuration > blockDuration)
+                                {
+                                    Logger.LogError(
+                                        "Collection with minimum duration {Duration:hh\\:mm\\:ss} will never fit in block with duration {BlockDuration:hh\\:mm\\:ss}; skipping this block item!",
+                                        minimumDuration,
+                                        blockDuration);
+
+                                    done = true;
+                                }
+                            }
+
+                            if (done)
+                            {
+                                break;
+                            }
+
+                            Logger.LogWarning(
+                                "Skipping playout item {Title} with duration {Duration:hh\\:mm\\:ss} that will never fit in block with duration {BlockDuration:hh\\:mm\\:ss}",
+                                PlayoutBuilder.DisplayTitle(mediaItem),
+                                itemDuration,
+                                blockDuration);
+
+                            enumerator.MoveNext(Option<DateTimeOffset>.None);
+                            continue;
+                        }
+
+                        var collectionKey = CollectionKey.ForBlockItem(blockItem);
+
+                        // create a playout item
+                        var playoutItem = new PlayoutItem
+                        {
+                            PlayoutId = playout.Id,
+                            MediaItemId = mediaItem.Id,
+                            Start = currentTime.UtcDateTime,
+                            Finish = currentTime.UtcDateTime + itemDuration,
+                            InPoint = TimeSpan.Zero,
+                            OutPoint = itemDuration,
+                            FillerKind = blockItem.IncludeInProgramGuide ? FillerKind.None : FillerKind.GuideMode,
+                            DisableWatermarks = blockItem.DisableWatermarks,
+                            //CustomTitle = scheduleItem.CustomTitle,
+                            //WatermarkId = scheduleItem.WatermarkId,
+                            //PreferredAudioLanguageCode = scheduleItem.PreferredAudioLanguageCode,
+                            //PreferredAudioTitle = scheduleItem.PreferredAudioTitle,
+                            //PreferredSubtitleLanguageCode = scheduleItem.PreferredSubtitleLanguageCode,
+                            //SubtitleMode = scheduleItem.SubtitleMode
+                            GuideGroup = effectiveBlock.TemplateItemId,
+                            GuideStart = effectiveBlock.Start.UtcDateTime,
+                            GuideFinish = blockFinish.UtcDateTime,
+                            BlockKey = JsonConvert.SerializeObject(effectiveBlock.BlockKey),
+                            CollectionKey = JsonConvert.SerializeObject(collectionKey, JsonSettings),
+                            CollectionEtag = collectionEtags[collectionKey],
+                            PlayoutItemWatermarks = [],
+                            PlayoutItemGraphicsElements = []
+                        };
+
+                        foreach (BlockItemWatermark blockItemWatermark in blockItem.BlockItemWatermarks ?? [])
+                        {
+                            playoutItem.PlayoutItemWatermarks.Add(
+                                new PlayoutItemWatermark
+                                {
+                                    PlayoutItem = playoutItem,
+                                    WatermarkId = blockItemWatermark.WatermarkId
+                                });
+                        }
+
+                        foreach (BlockItemGraphicsElement blockItemGraphicsElement in blockItem
+                                     .BlockItemGraphicsElements ??
+                                 [])
+                        {
+                            playoutItem.PlayoutItemGraphicsElements.Add(
+                                new PlayoutItemGraphicsElement
+                                {
+                                    PlayoutItem = playoutItem,
+                                    GraphicsElementId = blockItemGraphicsElement.GraphicsElementId
+                                });
+                        }
+
+                        if (effectiveBlock.Block.StopScheduling is BlockStopScheduling.BeforeDurationEnd
+                            && playoutItem.FinishOffset > blockFinish)
+                        {
+                            logger.LogDebug(
+                                "Current time {Time} for block {Block} would go beyond block finish {Finish}; will not schedule more items",
+                                currentTime,
+                                effectiveBlock.Block.Name,
+                                blockFinish);
+
+                            pastTime = true;
+                            break;
+                        }
+
+                        result.AddedItems.Add(playoutItem);
+
+                        // create a playout history record
+                        var nextHistory = new PlayoutHistory
+                        {
+                            PlayoutId = playout.Id,
+                            BlockId = blockItem.BlockId,
+                            PlaybackOrder = blockItem.PlaybackOrder,
+                            Index = enumerator.State.Index,
+                            When = currentTime.UtcDateTime,
+                            Finish = playoutItem.FinishOffset.UtcDateTime,
+                            Key = historyKey,
+                            Details = HistoryDetails.ForMediaItem(mediaItem)
+                        };
+
+                        //logger.LogDebug("Adding history item: {When}: {History}", nextHistory.When, nextHistory.Details);
+                        result.AddedHistory.Add(nextHistory);
+
+                        currentTime += itemDuration;
+                        enumerator.MoveNext(playoutItem.StartOffset);
+                        done = true;
                     }
-
-                    result.AddedItems.Add(playoutItem);
-
-                    // create a playout history record
-                    var nextHistory = new PlayoutHistory
-                    {
-                        PlayoutId = playout.Id,
-                        BlockId = blockItem.BlockId,
-                        PlaybackOrder = blockItem.PlaybackOrder,
-                        Index = enumerator.State.Index,
-                        When = currentTime.UtcDateTime,
-                        Finish = playoutItem.FinishOffset.UtcDateTime,
-                        Key = historyKey,
-                        Details = HistoryDetails.ForMediaItem(mediaItem)
-                    };
-
-                    //logger.LogDebug("Adding history item: {When}: {History}", nextHistory.When, nextHistory.Details);
-                    result.AddedHistory.Add(nextHistory);
-
-                    currentTime += itemDuration;
-                    enumerator.MoveNext(playoutItem.StartOffset);
                 }
 
                 if (pastTime)
@@ -334,23 +373,6 @@ public class BlockPlayoutBuilder(
         };
 
         return enumerator;
-    }
-
-    private static string GetTitle(Episode e)
-    {
-        string showTitle = e.Season.Show.ShowMetadata.HeadOrNone()
-            .Map(sm => $"{sm.Title} - ").IfNone(string.Empty);
-        var episodeNumbers = e.EpisodeMetadata.Map(em => em.EpisodeNumber).ToList();
-        var episodeTitles = e.EpisodeMetadata.Map(em => em.Title).ToList();
-        if (episodeNumbers.Count == 0 || episodeTitles.Count == 0)
-        {
-            return "[unknown episode]";
-        }
-
-        var numbersString = $"e{string.Join('e', episodeNumbers.Map(n => $"{n:00}"))}";
-        var titlesString = $"{string.Join('/', episodeTitles)}";
-
-        return $"{showTitle}s{e.Season.SeasonNumber:00}{numbersString} - {titlesString}";
     }
 
     private static PlayoutBuildResult CleanUpHistory(
