@@ -27,7 +27,7 @@ public class MotionElement(
     private SKBitmap _canvasBitmap;
     private SKBitmap _motionFrameBitmap;
     private TimeSpan _startTime;
-    private TimeSpan _holdDuration;
+    private TimeSpan _endTime;
     private MotionElementState _state;
 
     public void Dispose()
@@ -59,14 +59,16 @@ public class MotionElement(
         try
         {
             _startTime = TimeSpan.FromSeconds(motionElement.StartSeconds ?? 0);
-            _holdDuration = TimeSpan.FromSeconds(motionElement.HoldSeconds ?? 0);
+            var holdDuration = TimeSpan.FromSeconds(motionElement.HoldSeconds ?? 0);
             ProbeResult probeResult = await ProbeMotionElement(context.FrameSize);
             var overlayDuration = motionElement.EndBehavior switch
             {
                 MotionEndBehavior.Loop => context.Duration,
-                MotionEndBehavior.Hold => probeResult.Duration + _holdDuration,
+                MotionEndBehavior.Hold => probeResult.Duration + holdDuration,
                 _ => probeResult.Duration
             };
+
+            _endTime = _startTime + overlayDuration;
 
             // already past the time when this is supposed to play; don't do any more work
             if (_startTime + overlayDuration < context.Seek)
@@ -192,7 +194,7 @@ public class MotionElement(
                 .WithWorkingDirectory(FileSystemLayout.TempFilePoolFolder)
                 .WithStandardOutputPipe(PipeTarget.ToStream(pipe.Writer.AsStream()));
 
-            logger.LogDebug("ffmpeg motion element arguments {FFmpegArguments}", command.Arguments);
+            //logger.LogDebug("ffmpeg motion element arguments {FFmpegArguments}", command.Arguments);
 
             _cancellationTokenSource = new CancellationTokenSource();
             var linkedToken = CancellationTokenSource.CreateLinkedTokenSource(
@@ -221,6 +223,17 @@ public class MotionElement(
         {
             if (_state is MotionElementState.Finished || contentTime < _startTime)
             {
+                return Option<PreparedElementImage>.None;
+            }
+
+            if (_state is MotionElementState.Holding)
+            {
+                if (contentTime <= _endTime)
+                {
+                    return new PreparedElementImage(_canvasBitmap, SKPointI.Empty, 1.0f, false);
+                }
+
+                _state = MotionElementState.Finished;
                 return Option<PreparedElementImage>.None;
             }
 
@@ -258,15 +271,24 @@ public class MotionElement(
 
                     if (readResult.IsCompleted)
                     {
-                        _state = MotionElementState.Finished;
-
                         await _pipeReader.CompleteAsync();
+
+                        if (motionElement.EndBehavior is MotionEndBehavior.Hold)
+                        {
+                            _state = MotionElementState.Holding;
+                            return new PreparedElementImage(_canvasBitmap, SKPointI.Empty, 1.0f, false);
+                        }
+                        else
+                        {
+                            _state = MotionElementState.Finished;
+                        }
+
                         return Option<PreparedElementImage>.None;
                     }
                 }
                 finally
                 {
-                    if (_state is not MotionElementState.Finished)
+                    if (_state is not (MotionElementState.Finished or MotionElementState.Holding))
                     {
                         // advance the reader, consuming the processed frame and examining the entire buffer
                         _pipeReader.AdvanceTo(consumed, examined);
