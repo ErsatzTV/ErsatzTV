@@ -32,6 +32,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - Placement (`location`, `horizontal_margin_percent`, `vertical_margin_percent`)
     - Scaling (`scale`, `scale_width_percent`)
     - Timing (`start_seconds`)
+    - End behavior (`end_behavior`)
+      - `disappear` (default) - disappear after playing once
+      - `loop` - loop forever
+      - `hold` - hold last frame forever, or `hold_seconds`
     - Draw order (`z_index`)
 
 ### Fixed
