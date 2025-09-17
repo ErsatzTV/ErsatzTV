@@ -32,6 +32,7 @@ public class WatermarkElement : ImageElementBase
         Resolution squarePixelFrameSize,
         Resolution frameSize,
         int frameRate,
+        TimeSpan seek,
         CancellationToken cancellationToken)
     {
         try
@@ -80,7 +81,7 @@ public class WatermarkElement : ImageElementBase
         }
         catch (Exception ex)
         {
-            IsFailed = true;
+            IsFinished = true;
             _logger.LogWarning(ex, "Failed to initialize watermark element; will disable for this content");
         }
     }

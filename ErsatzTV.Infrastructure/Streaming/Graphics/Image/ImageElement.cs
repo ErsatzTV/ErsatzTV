@@ -15,6 +15,7 @@ public class ImageElement(ImageGraphicsElement imageGraphicsElement, ILogger log
         Resolution squarePixelFrameSize,
         Resolution frameSize,
         int frameRate,
+        TimeSpan seek,
         CancellationToken cancellationToken)
     {
         try
@@ -51,7 +52,7 @@ public class ImageElement(ImageGraphicsElement imageGraphicsElement, ILogger log
         }
         catch (Exception ex)
         {
-            IsFailed = true;
+            IsFinished = true;
             logger.LogWarning(ex, "Failed to initialize image element; will disable for this content");
         }
     }

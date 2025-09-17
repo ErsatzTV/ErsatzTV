@@ -8,12 +8,13 @@ public abstract class GraphicsElement : IGraphicsElement
 {
     public int ZIndex { get; protected set; }
 
-    public bool IsFailed { get; set; }
+    public bool IsFinished { get; set; }
 
     public abstract Task InitializeAsync(
         Resolution squarePixelFrameSize,
         Resolution frameSize,
         int frameRate,
+        TimeSpan seek,
         CancellationToken cancellationToken);
 
     public abstract ValueTask<Option<PreparedElementImage>> PrepareImage(

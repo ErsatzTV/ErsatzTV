@@ -3,8 +3,6 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Graphics;
 using Microsoft.Extensions.Logging;
 using NCalc;
-using Scriban;
-using Scriban.Runtime;
 using SkiaSharp;
 using RichTextKit = Topten.RichTextKit;
 
@@ -35,6 +33,7 @@ public partial class TextElement(
         Resolution squarePixelFrameSize,
         Resolution frameSize,
         int frameRate,
+        TimeSpan seek,
         CancellationToken cancellationToken)
     {
         try
@@ -92,7 +91,7 @@ public partial class TextElement(
         }
         catch (Exception ex)
         {
-            IsFailed = true;
+            IsFinished = true;
             logger.LogWarning(ex, "Failed to initialize text element; will disable for this content");
         }
 

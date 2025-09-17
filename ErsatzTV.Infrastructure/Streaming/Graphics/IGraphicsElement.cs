@@ -6,12 +6,13 @@ public interface IGraphicsElement
 {
     int ZIndex { get; }
 
-    bool IsFailed { get; set; }
+    bool IsFinished { get; set; }
 
     Task InitializeAsync(
         Resolution squarePixelFrameSize,
         Resolution frameSize,
         int frameRate,
+        TimeSpan seek,
         CancellationToken cancellationToken);
 
     ValueTask<Option<PreparedElementImage>> PrepareImage(
