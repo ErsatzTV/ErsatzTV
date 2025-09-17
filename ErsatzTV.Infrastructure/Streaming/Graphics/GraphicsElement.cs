@@ -1,4 +1,5 @@
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Interfaces.Streaming;
 using ErsatzTV.FFmpeg.State;
 using SkiaSharp;
 
@@ -10,12 +11,7 @@ public abstract class GraphicsElement : IGraphicsElement
 
     public bool IsFinished { get; set; }
 
-    public abstract Task InitializeAsync(
-        Resolution squarePixelFrameSize,
-        Resolution frameSize,
-        int frameRate,
-        TimeSpan seek,
-        CancellationToken cancellationToken);
+    public abstract Task InitializeAsync(GraphicsEngineContext context, CancellationToken cancellationToken);
 
     public abstract ValueTask<Option<PreparedElementImage>> PrepareImage(
         TimeSpan timeOfDay,

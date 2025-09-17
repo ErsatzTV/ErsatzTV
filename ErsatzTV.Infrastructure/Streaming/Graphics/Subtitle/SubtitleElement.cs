@@ -2,10 +2,10 @@ using System.Buffers;
 using System.IO.Pipelines;
 using CliWrap;
 using ErsatzTV.Core;
-using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Graphics;
 using ErsatzTV.Core.Interfaces.FFmpeg;
+using ErsatzTV.Core.Interfaces.Streaming;
 using Microsoft.Extensions.Logging;
 using Scriban;
 using Scriban.Runtime;
@@ -52,12 +52,7 @@ public class SubtitleElement(
         _videoFrame?.Dispose();
     }
 
-    public override async Task InitializeAsync(
-        Resolution squarePixelFrameSize,
-        Resolution frameSize,
-        int frameRate,
-        TimeSpan seek,
-        CancellationToken cancellationToken)
+    public override async Task InitializeAsync(GraphicsEngineContext context, CancellationToken cancellationToken)
     {
         try
         {
@@ -65,8 +60,12 @@ public class SubtitleElement(
             _pipeReader = pipe.Reader;
 
             // video size is the same as the main frame size
-            _frameSize = frameSize.Width * frameSize.Height * 4;
-            _videoFrame = new SKBitmap(frameSize.Width, frameSize.Height, SKColorType.Bgra8888, SKAlphaType.Unpremul);
+            _frameSize = context.FrameSize.Width * context.FrameSize.Height * 4;
+            _videoFrame = new SKBitmap(
+                context.FrameSize.Width,
+                context.FrameSize.Height,
+                SKColorType.Bgra8888,
+                SKAlphaType.Unpremul);
 
             // subtitles contain their own positioning info
             _point = SKPointI.Empty;
@@ -78,10 +77,10 @@ public class SubtitleElement(
             scriptObject.Import("convert_timezone", templateFunctions.ConvertTimeZone);
             scriptObject.Import("format_datetime", templateFunctions.FormatDateTime);
 
-            var context = new TemplateContext { MemberRenamer = member => member.Name };
-            context.PushGlobal(scriptObject);
+            var templateContext = new TemplateContext { MemberRenamer = member => member.Name };
+            templateContext.PushGlobal(scriptObject);
             string inputText = await File.ReadAllTextAsync(subtitleElement.Template, cancellationToken);
-            string textToRender = await Template.Parse(inputText).RenderAsync(context);
+            string textToRender = await Template.Parse(inputText).RenderAsync(templateContext);
             await File.WriteAllTextAsync(subtitleTemplateFile, textToRender, cancellationToken);
 
             string subtitleFile = Path.GetFileName(subtitleTemplateFile);
@@ -90,7 +89,7 @@ public class SubtitleElement(
                 "-nostdin", "-hide_banner", "-nostats", "-loglevel", "error",
                 "-f", "lavfi",
                 "-i",
-                $"color=c=black@0.0:s={frameSize.Width}x{frameSize.Height}:r={frameRate},format=bgra,subtitles='{subtitleFile}':alpha=1",
+                $"color=c=black@0.0:s={context.FrameSize.Width}x{context.FrameSize.Height}:r={context.FrameRate},format=bgra,subtitles='{subtitleFile}':alpha=1",
                 "-f", "image2pipe",
                 "-pix_fmt", "bgra",
                 "-vcodec", "rawvideo",

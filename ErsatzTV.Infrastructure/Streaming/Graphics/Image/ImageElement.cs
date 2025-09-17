@@ -1,5 +1,5 @@
-using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Graphics;
+using ErsatzTV.Core.Interfaces.Streaming;
 using Microsoft.Extensions.Logging;
 using NCalc;
 using SkiaSharp;
@@ -11,12 +11,7 @@ public class ImageElement(ImageGraphicsElement imageGraphicsElement, ILogger log
     private Option<Expression> _maybeOpacityExpression;
     private float _opacity;
 
-    public override async Task InitializeAsync(
-        Resolution squarePixelFrameSize,
-        Resolution frameSize,
-        int frameRate,
-        TimeSpan seek,
-        CancellationToken cancellationToken)
+    public override async Task InitializeAsync(GraphicsEngineContext context, CancellationToken cancellationToken)
     {
         try
         {
@@ -39,8 +34,8 @@ public class ImageElement(ImageGraphicsElement imageGraphicsElement, ILogger log
             }
 
             await LoadImage(
-                squarePixelFrameSize,
-                frameSize,
+                context.SquarePixelFrameSize,
+                context.FrameSize,
                 imageGraphicsElement.Image,
                 imageGraphicsElement.Location,
                 imageGraphicsElement.Scale,
