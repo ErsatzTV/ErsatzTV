@@ -181,6 +181,19 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
                     true);
                 currentState = filter.NextState(currentState);
                 videoInputFile.FilterSteps.Add(filter);
+
+                if (desiredState.BitDepth == 8)
+                {
+                    var filter2 = new ScaleCudaFilter(
+                        currentState with { PixelFormat = new PixelFormatYuv420P() },
+                        videoStream.FrameSize,
+                        videoStream.FrameSize,
+                        Option<FrameSize>.None,
+                        false,
+                        false);
+                    currentState = filter2.NextState(currentState);
+                    videoInputFile.FilterSteps.Add(filter2);
+                }
             }
         }
 
@@ -214,7 +227,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
         {
             Option<IPixelFormat> desiredPixelFormat = Some((IPixelFormat)new PixelFormatYuv420P());
 
-            if (desiredPixelFormat != currentState.PixelFormat)
+            if (desiredPixelFormat.Map(pf => pf.FFmpegName) != currentState.PixelFormat.Map(pf => pf.FFmpegName))
             {
                 if (currentState.FrameDataLocation == FrameDataLocation.Software)
                 {
@@ -244,8 +257,8 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
         }
 
         // need to upload for any sort of overlay
-        if (currentState.FrameDataLocation == FrameDataLocation.Software &&
-            currentState.BitDepth == 8 && !context.HasSubtitleText
+        if (currentState is { FrameDataLocation: FrameDataLocation.Software, BitDepth: 8 }
+            && !context.HasSubtitleText
             && (context.HasSubtitleOverlay || context.HasWatermark || context.HasGraphicsEngine))
         {
             var hardwareUpload = new HardwareUploadCudaFilter(currentState);
@@ -263,10 +276,9 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
             fontsFolder,
             subtitleOverlayFilterSteps);
 
-        // need to use software overlay for watermark with fade points
-        // because `-loop 1` seems to cause a green line at the bottom of the resulting video with overlay_cuda
-        if (context.HasWatermark && watermarkInputFile
-                .Map(wm => wm.DesiredState.MaybeFadePoints.Map(fp => fp.Count > 0).IfNone(false)).IfNone(false))
+        // need to use software overlay with 10 bit primary content and graphics engine
+        if (currentState.FrameDataLocation is FrameDataLocation.Hardware && context.HasGraphicsEngine &&
+            currentState.BitDepth == 10)
         {
             var hardwareDownload = new CudaHardwareDownloadFilter(currentState.PixelFormat, None);
             currentState = hardwareDownload.NextState(currentState);
@@ -434,12 +446,12 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
                     }
                     else
                     {
-                        pipelineSteps.Add(new PixelFormatOutputOption(format));
+                        pipelineSteps.Add(new PixelFormatOutputOption(format, ffmpegState.EncoderHardwareAccelerationMode));
                     }
                 }
                 else
                 {
-                    pipelineSteps.Add(new PixelFormatOutputOption(format));
+                    pipelineSteps.Add(new PixelFormatOutputOption(format, ffmpegState.EncoderHardwareAccelerationMode));
                 }
             }
 
