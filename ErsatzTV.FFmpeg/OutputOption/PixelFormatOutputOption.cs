@@ -2,14 +2,17 @@
 
 namespace ErsatzTV.FFmpeg.OutputOption;
 
-public class PixelFormatOutputOption : OutputOption
+public class PixelFormatOutputOption(
+    IPixelFormat pixelFormat,
+    HardwareAccelerationMode encoderMode = HardwareAccelerationMode.None)
+    : OutputOption
 {
-    private readonly IPixelFormat _pixelFormat;
 
-    public PixelFormatOutputOption(IPixelFormat pixelFormat) => _pixelFormat = pixelFormat;
-
-    public override string[] OutputOptions => ["-pix_fmt", _pixelFormat.Name];
+    public override string[] OutputOptions =>
+    [
+        "-pix_fmt", encoderMode is HardwareAccelerationMode.Nvenc ? pixelFormat.FFmpegName : pixelFormat.Name
+    ];
 
     public override FrameState NextState(FrameState currentState) =>
-        currentState with { PixelFormat = Some(_pixelFormat) };
+        currentState with { PixelFormat = Some(pixelFormat) };
 }
