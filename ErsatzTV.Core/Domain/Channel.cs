@@ -11,6 +11,7 @@ public class Channel
     public int Id { get; set; }
     public Guid UniqueId { get; init; }
     public string Number { get; set; }
+    public double SortNumber { get; set; }
     public string Name { get; set; }
     public string Group { get; set; }
     public string Categories { get; set; }

@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Globalization;
+using System.Text.RegularExpressions;
 using System.Threading.Channels;
 using ErsatzTV.Application.Subtitles;
 using ErsatzTV.Core;
@@ -47,6 +48,7 @@ public class UpdateChannelHandler(
 
         c.Name = update.Name;
         c.Number = update.Number;
+        c.SortNumber = double.Parse(update.Number, CultureInfo.InvariantCulture);
         c.Group = update.Group;
         c.Categories = update.Categories;
         c.FFmpegProfileId = update.FFmpegProfileId;
