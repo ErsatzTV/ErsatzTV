@@ -60,6 +60,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 - Filler presets: use separate text fields for `hours`, `minutes` and `seconds` duration
+- Use autocomplete fields for collection searching in deco editor
+  - This greatly improves the editor performance
 
 ## [25.6.0] - 2025-09-14
 ### Added

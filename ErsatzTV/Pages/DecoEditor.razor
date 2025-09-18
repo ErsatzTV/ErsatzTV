@@ -4,6 +4,7 @@
 @using ErsatzTV.Application.MediaCollections
 @using ErsatzTV.Application.MediaItems
 @using ErsatzTV.Application.Scheduling
+@using ErsatzTV.Application.Search
 @using ErsatzTV.Application.Television
 @using ErsatzTV.Application.Watermarks
 @using ErsatzTV.Core.Domain.Scheduling
@@ -180,6 +181,157 @@
             </MudTd>
         </RowTemplate>
     </MudTable>
+    @if (_selectedBreakContent is not null)
+    {
+        <MudText Typo="Typo.h5" Class="mt-10 mb-2">Block Item</MudText>
+        <MudDivider Class="mb-6"/>
+        <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+            <div class="d-flex">
+                <MudText>Collection Type</MudText>
+            </div>
+            <MudSelect @bind-Value="_selectedBreakContent.CollectionType" For="@(() => _selectedBreakContent.CollectionType)">
+                <MudSelectItem Value="CollectionType.Collection">Collection</MudSelectItem>
+                <MudSelectItem Value="CollectionType.TelevisionShow">Television Show</MudSelectItem>
+                <MudSelectItem Value="CollectionType.TelevisionSeason">Television Season</MudSelectItem>
+                @* <MudSelectItem Value="ProgramScheduleItemCollectionType.Artist">Artist</MudSelectItem> *@
+                @* <MudSelectItem Value="ProgramScheduleItemCollectionType.MultiCollection">Multi Collection</MudSelectItem> *@
+                <MudSelectItem Value="CollectionType.SmartCollection">Smart Collection</MudSelectItem>
+            </MudSelect>
+        </MudStack>
+        @if (_selectedBreakContent.CollectionType == CollectionType.Collection)
+        {
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Collection</MudText>
+                </div>
+                <MudAutocomplete T="MediaCollectionViewModel"
+                                 @bind-Value="_selectedBreakContent.Collection"
+                                 SearchFunc="@SearchCollections"
+                                 ToStringFunc="@(c => c?.Name)" Placeholder="Type to search...">
+                    <MoreItemsTemplate>
+                        <MudText Align="Align.Center" Class="px-4 py-1">
+                            Only the first 10 items are shown
+                        </MudText>
+                    </MoreItemsTemplate>
+                </MudAutocomplete>
+            </MudStack>
+        }
+
+        @if (_selectedBreakContent.CollectionType == CollectionType.MultiCollection)
+        {
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Multi Collection</MudText>
+                </div>
+                <MudAutocomplete T="MultiCollectionViewModel"
+                                 @bind-Value="_selectedBreakContent.MultiCollection"
+                                 SearchFunc="@SearchMultiCollections"
+                                 ToStringFunc="@(c => c?.Name)" Placeholder="Type to search...">
+                    <MoreItemsTemplate>
+                        <MudText Align="Align.Center" Class="px-4 py-1">
+                            Only the first 10 items are shown
+                        </MudText>
+                    </MoreItemsTemplate>
+                </MudAutocomplete>
+            </MudStack>
+        }
+
+        @if (_selectedBreakContent.CollectionType == CollectionType.SmartCollection)
+        {
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Smart Collection</MudText>
+                </div>
+                <MudAutocomplete T="SmartCollectionViewModel"
+                                 @bind-Value="_selectedBreakContent.SmartCollection"
+                                 SearchFunc="@SearchSmartCollections"
+                                 ToStringFunc="@(c => c?.Name)" Placeholder="Type to search...">
+                    <MoreItemsTemplate>
+                        <MudText Align="Align.Center" Class="px-4 py-1">
+                            Only the first 10 items are shown
+                        </MudText>
+                    </MoreItemsTemplate>
+                </MudAutocomplete>
+            </MudStack>
+        }
+
+        @if (_selectedBreakContent.CollectionType == CollectionType.TelevisionShow)
+        {
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Television Show</MudText>
+                </div>
+                <MudAutocomplete T="NamedMediaItemViewModel"
+                                 @bind-Value="_selectedBreakContent.MediaItem"
+                                 SearchFunc="@SearchTelevisionShows"
+                                 ToStringFunc="@(c => c?.Name)" Placeholder="Type to search...">
+                    <MoreItemsTemplate>
+                        <MudText Align="Align.Center" Class="px-4 py-1">
+                            Only the first 10 items are shown
+                        </MudText>
+                    </MoreItemsTemplate>
+                </MudAutocomplete>
+            </MudStack>
+        }
+
+        @if (_selectedBreakContent.CollectionType == CollectionType.TelevisionSeason)
+        {
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Television Season</MudText>
+                </div>
+                <MudAutocomplete T="NamedMediaItemViewModel"
+                                 @bind-Value="_selectedBreakContent.MediaItem"
+                                 SearchFunc="@SearchTelevisionSeasons"
+                                 ToStringFunc="@(c => c?.Name)" Placeholder="Type to search..."
+                                 MaxItems="20">
+                    <MoreItemsTemplate>
+                        <MudText Align="Align.Center" Class="px-4 py-1">
+                            Only the first 20 items are shown
+                        </MudText>
+                    </MoreItemsTemplate>
+                </MudAutocomplete>
+            </MudStack>
+        }
+
+        @* <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5"> *@
+        @*     <div class="d-flex"> *@
+        @*         <MudText>Playback Order</MudText> *@
+        @*     </div> *@
+        @*     <MudSelect @bind-Value="@_selectedBreakContent.PlaybackOrder" For="@(() => _selectedBreakContent.PlaybackOrder)"> *@
+        @*         @switch (_selectedBreakContent.CollectionType) *@
+        @*         { *@
+        @*             case CollectionType.MultiCollection: *@
+        @*                 <MudSelectItem Value="PlaybackOrder.Shuffle">Shuffle</MudSelectItem> *@
+        @*                 $1$ <MudSelectItem Value="PlaybackOrder.ShuffleInOrder">Shuffle In Order</MudSelectItem> #1# *@
+        @*                 break; *@
+        @*             case CollectionType.Collection: *@
+        @*             case CollectionType.SmartCollection: *@
+        @*                 <MudSelectItem Value="PlaybackOrder.Chronological">Chronological</MudSelectItem> *@
+        @*                 <MudSelectItem Value="PlaybackOrder.Shuffle">Shuffle</MudSelectItem> *@
+        @*                 <MudSelectItem Value="PlaybackOrder.Random">Random</MudSelectItem> *@
+        @*                 <MudSelectItem Value="PlaybackOrder.RandomRotation">Random Rotation</MudSelectItem> *@
+        @*                 $1$ <MudSelectItem Value="PlaybackOrder.ShuffleInOrder">Shuffle In Order</MudSelectItem> #1# *@
+        @*                 break; *@
+        @*             case CollectionType.TelevisionShow: *@
+        @*                 <MudSelectItem Value="PlaybackOrder.SeasonEpisode">Season, Episode</MudSelectItem> *@
+        @*                 <MudSelectItem Value="PlaybackOrder.Chronological">Chronological</MudSelectItem> *@
+        @*                 <MudSelectItem Value="PlaybackOrder.Shuffle">Shuffle</MudSelectItem> *@
+        @*                 <MudSelectItem Value="PlaybackOrder.Random">Random</MudSelectItem> *@
+        @*                 $1$ <MudSelectItem Value="PlaybackOrder.MultiEpisodeShuffle">Multi-Episode Shuffle</MudSelectItem> #1# *@
+        @*                 break; *@
+        @*             case CollectionType.TelevisionSeason: *@
+        @*             case CollectionType.Artist: *@
+        @*             case CollectionType.FakeCollection: *@
+        @*             default: *@
+        @*                 <MudSelectItem Value="PlaybackOrder.Chronological">Chronological</MudSelectItem> *@
+        @*                 <MudSelectItem Value="PlaybackOrder.Shuffle">Shuffle</MudSelectItem> *@
+        @*                 <MudSelectItem Value="PlaybackOrder.Random">Random</MudSelectItem> *@
+        @*                 break; *@
+        @*         } *@
+        @*     </MudSelect> *@
+        @* </MudStack> *@
+    }
 }
 <MudText Typo="Typo.h5" Class="mt-10 mb-2">Default Filler</MudText>
 <MudDivider Class="mb-6"/>
@@ -215,14 +367,17 @@
         <div class="d-flex">
             <MudText>Collection</MudText>
         </div>
-        <MudSelect T="MediaCollectionViewModel"
-                   Disabled="@(_deco.DefaultFillerMode != DecoMode.Override)"
-                   @bind-value="_deco.DefaultFillerCollection">
-            @foreach (MediaCollectionViewModel collection in _mediaCollections)
-            {
-                <MudSelectItem Value="@collection">@collection.Name</MudSelectItem>
-            }
-        </MudSelect>
+        <MudAutocomplete T="MediaCollectionViewModel"
+                         Disabled="@(_deco.DefaultFillerMode != DecoMode.Override)"
+                         @bind-value="_deco.DefaultFillerCollection"
+                         SearchFunc="@SearchCollections"
+                         ToStringFunc="@(c => c?.Name)" Placeholder="Type to search...">
+            <MoreItemsTemplate>
+                <MudText Align="Align.Center" Class="px-4 py-1">
+                    Only the first 10 items are shown
+                </MudText>
+            </MoreItemsTemplate>
+        </MudAutocomplete>
     </MudStack>
 }
 @if (_deco.DefaultFillerCollectionType == CollectionType.MultiCollection)
@@ -231,14 +386,17 @@
         <div class="d-flex">
             <MudText>Multi Collection</MudText>
         </div>
-        <MudSelect T="MultiCollectionViewModel"
-                   Disabled="@(_deco.DefaultFillerMode != DecoMode.Override)"
-                   @bind-value="_deco.DefaultFillerMultiCollection">
-            @foreach (MultiCollectionViewModel collection in _multiCollections)
-            {
-                <MudSelectItem Value="@collection">@collection.Name</MudSelectItem>
-            }
-        </MudSelect>
+        <MudAutocomplete T="MultiCollectionViewModel"
+                         Disabled="@(_deco.DefaultFillerMode != DecoMode.Override)"
+                         @bind-value="_deco.DefaultFillerMultiCollection"
+                         SearchFunc="@SearchMultiCollections"
+                         ToStringFunc="@(c => c?.Name)" Placeholder="Type to search...">
+            <MoreItemsTemplate>
+                <MudText Align="Align.Center" Class="px-4 py-1">
+                    Only the first 10 items are shown
+                </MudText>
+            </MoreItemsTemplate>
+        </MudAutocomplete>
     </MudStack>
 }
 @if (_deco.DefaultFillerCollectionType == CollectionType.SmartCollection)
@@ -247,14 +405,17 @@
         <div class="d-flex">
             <MudText>Smart Collection</MudText>
         </div>
-        <MudSelect T="SmartCollectionViewModel"
-                   Disabled="@(_deco.DefaultFillerMode != DecoMode.Override)"
-                   @bind-value="_deco.DefaultFillerSmartCollection">
-            @foreach (SmartCollectionViewModel collection in _smartCollections)
-            {
-                <MudSelectItem Value="@collection">@collection.Name</MudSelectItem>
-            }
-        </MudSelect>
+        <MudAutocomplete T="SmartCollectionViewModel"
+                         Disabled="@(_deco.DefaultFillerMode != DecoMode.Override)"
+                         @bind-value="_deco.DefaultFillerSmartCollection"
+                         SearchFunc="@SearchSmartCollections"
+                         ToStringFunc="@(c => c?.Name)" Placeholder="Type to search...">
+            <MoreItemsTemplate>
+                <MudText Align="Align.Center" Class="px-4 py-1">
+                    Only the first 10 items are shown
+                </MudText>
+            </MoreItemsTemplate>
+        </MudAutocomplete>
     </MudStack>
 }
 @if (_deco.DefaultFillerCollectionType == CollectionType.TelevisionShow)
@@ -263,14 +424,17 @@
         <div class="d-flex">
             <MudText>Television Show</MudText>
         </div>
-        <MudSelect T="NamedMediaItemViewModel"
-                   Disabled="@(_deco.DefaultFillerMode != DecoMode.Override)"
-                   @bind-value="_deco.DefaultFillerMediaItem">
-            @foreach (NamedMediaItemViewModel show in _televisionShows)
-            {
-                <MudSelectItem Value="@show">@show.Name</MudSelectItem>
-            }
-        </MudSelect>
+        <MudAutocomplete T="NamedMediaItemViewModel"
+                         Disabled="@(_deco.DefaultFillerMode != DecoMode.Override)"
+                         @bind-value="_deco.DefaultFillerMediaItem"
+                         SearchFunc="@SearchTelevisionShows"
+                         ToStringFunc="@(c => c?.Name)" Placeholder="Type to search...">
+            <MoreItemsTemplate>
+                <MudText Align="Align.Center" Class="px-4 py-1">
+                    Only the first 10 items are shown
+                </MudText>
+            </MoreItemsTemplate>
+        </MudAutocomplete>
     </MudStack>
 }
 @if (_deco.DefaultFillerCollectionType == CollectionType.TelevisionSeason)
@@ -279,14 +443,18 @@
         <div class="d-flex">
             <MudText>Television Season</MudText>
         </div>
-        <MudSelect T="NamedMediaItemViewModel"
-                   Disabled="@(_deco.DefaultFillerMode != DecoMode.Override)"
-                   @bind-value="_deco.DefaultFillerMediaItem">
-            @foreach (NamedMediaItemViewModel season in _televisionSeasons)
-            {
-                <MudSelectItem Value="@season">@season.Name</MudSelectItem>
-            }
-        </MudSelect>
+        <MudAutocomplete T="NamedMediaItemViewModel"
+                         Disabled="@(_deco.DefaultFillerMode != DecoMode.Override)"
+                         @bind-Value="_deco.DefaultFillerMediaItem"
+                         SearchFunc="@SearchTelevisionSeasons"
+                         ToStringFunc="@(c => c?.Name)" Placeholder="Type to search..."
+                         MaxItems="20">
+            <MoreItemsTemplate>
+                <MudText Align="Align.Center" Class="px-4 py-1">
+                    Only the first 20 items are shown
+                </MudText>
+            </MoreItemsTemplate>
+        </MudAutocomplete>
     </MudStack>
 }
 @if (_deco.DefaultFillerCollectionType == CollectionType.Artist)
@@ -295,14 +463,18 @@
         <div class="d-flex">
             <MudText>Artist</MudText>
         </div>
-        <MudSelect T="NamedMediaItemViewModel"
-                   Disabled="@(_deco.DefaultFillerMode != DecoMode.Override)"
-                   @bind-value="_deco.DefaultFillerMediaItem">
-            @foreach (NamedMediaItemViewModel artist in _artists)
-            {
-                <MudSelectItem Value="@artist">@artist.Name</MudSelectItem>
-            }
-        </MudSelect>
+        <MudAutocomplete T="NamedMediaItemViewModel"
+                         Disabled="@(_deco.DefaultFillerMode != DecoMode.Override)"
+                         @bind-Value="_deco.DefaultFillerMediaItem"
+                         SearchFunc="@SearchArtists"
+                         ToStringFunc="@(c => c?.Name)" Placeholder="Type to search..."
+                         MaxItems="20">
+            <MoreItemsTemplate>
+                <MudText Align="Align.Center" Class="px-4 py-1">
+                    Only the first 20 items are shown
+                </MudText>
+            </MoreItemsTemplate>
+        </MudAutocomplete>
     </MudStack>
 }
 <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
@@ -350,14 +522,17 @@
         <div class="d-flex">
             <MudText>Collection</MudText>
         </div>
-        <MudSelect T="MediaCollectionViewModel"
-                   Disabled="@(_deco.DeadAirFallbackMode != DecoMode.Override)"
-                   @bind-value="_deco.DeadAirFallbackCollection">
-            @foreach (MediaCollectionViewModel collection in _mediaCollections)
-            {
-                <MudSelectItem Value="@collection">@collection.Name</MudSelectItem>
-            }
-        </MudSelect>
+        <MudAutocomplete T="MediaCollectionViewModel"
+                         Disabled="@(_deco.DeadAirFallbackMode != DecoMode.Override)"
+                         @bind-value="_deco.DeadAirFallbackCollection"
+                         SearchFunc="@SearchCollections"
+                         ToStringFunc="@(c => c?.Name)" Placeholder="Type to search...">
+            <MoreItemsTemplate>
+                <MudText Align="Align.Center" Class="px-4 py-1">
+                    Only the first 10 items are shown
+                </MudText>
+            </MoreItemsTemplate>
+        </MudAutocomplete>
     </MudStack>
 }
 @if (_deco.DeadAirFallbackCollectionType == CollectionType.MultiCollection)
@@ -366,14 +541,17 @@
         <div class="d-flex">
             <MudText>Multi Collection</MudText>
         </div>
-        <MudSelect T="MultiCollectionViewModel"
-                   Disabled="@(_deco.DeadAirFallbackMode != DecoMode.Override)"
-                   @bind-value="_deco.DeadAirFallbackMultiCollection">
-            @foreach (MultiCollectionViewModel collection in _multiCollections)
-            {
-                <MudSelectItem Value="@collection">@collection.Name</MudSelectItem>
-            }
-        </MudSelect>
+        <MudAutocomplete T="MultiCollectionViewModel"
+                         Disabled="@(_deco.DeadAirFallbackMode != DecoMode.Override)"
+                         @bind-value="_deco.DeadAirFallbackMultiCollection"
+                         SearchFunc="@SearchMultiCollections"
+                         ToStringFunc="@(c => c?.Name)" Placeholder="Type to search...">
+            <MoreItemsTemplate>
+                <MudText Align="Align.Center" Class="px-4 py-1">
+                    Only the first 10 items are shown
+                </MudText>
+            </MoreItemsTemplate>
+        </MudAutocomplete>
     </MudStack>
 }
 @if (_deco.DeadAirFallbackCollectionType == CollectionType.SmartCollection)
@@ -382,14 +560,17 @@
         <div class="d-flex">
             <MudText>Smart Collection</MudText>
         </div>
-        <MudSelect T="SmartCollectionViewModel"
-                   Disabled="@(_deco.DeadAirFallbackMode != DecoMode.Override)"
-                   @bind-value="_deco.DeadAirFallbackSmartCollection">
-            @foreach (SmartCollectionViewModel collection in _smartCollections)
-            {
-                <MudSelectItem Value="@collection">@collection.Name</MudSelectItem>
-            }
-        </MudSelect>
+        <MudAutocomplete T="SmartCollectionViewModel"
+                         Disabled="@(_deco.DeadAirFallbackMode != DecoMode.Override)"
+                         @bind-value="_deco.DeadAirFallbackSmartCollection"
+                         SearchFunc="@SearchSmartCollections"
+                         ToStringFunc="@(c => c?.Name)" Placeholder="Type to search...">
+            <MoreItemsTemplate>
+                <MudText Align="Align.Center" Class="px-4 py-1">
+                    Only the first 10 items are shown
+                </MudText>
+            </MoreItemsTemplate>
+        </MudAutocomplete>
     </MudStack>
 }
 @if (_deco.DeadAirFallbackCollectionType == CollectionType.TelevisionShow)
@@ -398,14 +579,17 @@
         <div class="d-flex">
             <MudText>Television Show</MudText>
         </div>
-        <MudSelect T="NamedMediaItemViewModel"
-                   Disabled="@(_deco.DeadAirFallbackMode != DecoMode.Override)"
-                   @bind-value="_deco.DeadAirFallbackMediaItem">
-            @foreach (NamedMediaItemViewModel show in _televisionShows)
-            {
-                <MudSelectItem Value="@show">@show.Name</MudSelectItem>
-            }
-        </MudSelect>
+        <MudAutocomplete T="NamedMediaItemViewModel"
+                         Disabled="@(_deco.DeadAirFallbackMode != DecoMode.Override)"
+                         @bind-value="_deco.DeadAirFallbackMediaItem"
+                         SearchFunc="@SearchTelevisionShows"
+                         ToStringFunc="@(c => c?.Name)" Placeholder="Type to search...">
+            <MoreItemsTemplate>
+                <MudText Align="Align.Center" Class="px-4 py-1">
+                    Only the first 10 items are shown
+                </MudText>
+            </MoreItemsTemplate>
+        </MudAutocomplete>
     </MudStack>
 }
 @if (_deco.DeadAirFallbackCollectionType == CollectionType.TelevisionSeason)
@@ -414,14 +598,18 @@
         <div class="d-flex">
             <MudText>Television Season</MudText>
         </div>
-        <MudSelect T="NamedMediaItemViewModel"
-                   Disabled="@(_deco.DeadAirFallbackMode != DecoMode.Override)"
-                   @bind-value="_deco.DeadAirFallbackMediaItem">
-            @foreach (NamedMediaItemViewModel season in _televisionSeasons)
-            {
-                <MudSelectItem Value="@season">@season.Name</MudSelectItem>
-            }
-        </MudSelect>
+        <MudAutocomplete T="NamedMediaItemViewModel"
+                         Disabled="@(_deco.DeadAirFallbackMode != DecoMode.Override)"
+                         @bind-value="_deco.DeadAirFallbackMediaItem"
+                         SearchFunc="@SearchTelevisionSeasons"
+                         ToStringFunc="@(c => c?.Name)" Placeholder="Type to search..."
+                         MaxItems="20">
+            <MoreItemsTemplate>
+                <MudText Align="Align.Center" Class="px-4 py-1">
+                    Only the first 20 items are shown
+                </MudText>
+            </MoreItemsTemplate>
+        </MudAutocomplete>
     </MudStack>
 }
 @if (_deco.DeadAirFallbackCollectionType == CollectionType.Artist)
@@ -430,14 +618,18 @@
         <div class="d-flex">
             <MudText>Artist</MudText>
         </div>
-        <MudSelect T="NamedMediaItemViewModel"
-                   Disabled="@(_deco.DeadAirFallbackMode != DecoMode.Override)"
-                   @bind-value="_deco.DeadAirFallbackMediaItem">
-            @foreach (NamedMediaItemViewModel artist in _artists)
-            {
-                <MudSelectItem Value="@artist">@artist.Name</MudSelectItem>
-            }
-        </MudSelect>
+        <MudAutocomplete T="NamedMediaItemViewModel"
+                         Disabled="@(_deco.DeadAirFallbackMode != DecoMode.Override)"
+                         @bind-value="_deco.DeadAirFallbackMediaItem"
+                         SearchFunc="@SearchArtists"
+                         ToStringFunc="@(c => c?.Name)" Placeholder="Type to search..."
+                         MaxItems="20">
+            <MoreItemsTemplate>
+                <MudText Align="Align.Center" Class="px-4 py-1">
+                    Only the first 20 items are shown
+                </MudText>
+            </MoreItemsTemplate>
+        </MudAutocomplete>
     </MudStack>
 }
 </MudContainer>
@@ -454,13 +646,6 @@
 
     private List<WatermarkViewModel> _watermarks = [];
     private List<GraphicsElementViewModel> _graphicsElements = [];
-
-    private List<MediaCollectionViewModel> _mediaCollections = [];
-    private List<MultiCollectionViewModel> _multiCollections = [];
-    private List<SmartCollectionViewModel> _smartCollections = [];
-    private List<NamedMediaItemViewModel> _televisionShows = [];
-    private List<NamedMediaItemViewModel> _televisionSeasons = [];
-    private List<NamedMediaItemViewModel> _artists = [];
 
     private DecoBreakContentEditViewModel _selectedBreakContent;
 
@@ -482,19 +667,6 @@
         {
             _watermarks = await Mediator.Send(new GetAllWatermarks(), token);
             _graphicsElements = await Mediator.Send(new GetAllGraphicsElements(), token);
-
-            _mediaCollections = await Mediator.Send(new GetAllCollections(), token)
-                .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
-            _multiCollections = await Mediator.Send(new GetAllMultiCollections(), token)
-                .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
-            _smartCollections = await Mediator.Send(new GetAllSmartCollections(), token)
-                .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
-            _televisionShows = await Mediator.Send(new GetAllTelevisionShows(), token)
-                .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
-            _televisionSeasons = await Mediator.Send(new GetAllTelevisionSeasons(), token)
-                .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
-            _artists = await Mediator.Send(new GetAllArtists(), token)
-                .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
 
             Option<DecoViewModel> maybeDeco = await Mediator.Send(new GetDecoById(Id), token);
             if (maybeDeco.IsNone)
@@ -522,36 +694,18 @@
 
                     DefaultFillerMode = deco.DefaultFillerMode,
                     DefaultFillerCollectionType = deco.DefaultFillerCollectionType,
-                    DefaultFillerCollection = deco.DefaultFillerCollectionId.HasValue
-                        ? _mediaCollections.Find(c => c.Id == deco.DefaultFillerCollectionId!.Value)
-                        : null,
-                    DefaultFillerMediaItem = deco.DefaultFillerMediaItemId.HasValue
-                        ? _televisionShows.Append(_televisionSeasons).Append(_artists).ToList()
-                            .Find(vm => vm.MediaItemId == deco.DefaultFillerMediaItemId!.Value)
-                        : null,
-                    DefaultFillerMultiCollection = deco.DefaultFillerMultiCollectionId.HasValue
-                        ? _multiCollections.Find(c => c.Id == deco.DefaultFillerMultiCollectionId!.Value)
-                        : null,
-                    DefaultFillerSmartCollection = deco.DefaultFillerSmartCollectionId.HasValue
-                        ? _smartCollections.Find(c => c.Id == deco.DefaultFillerSmartCollectionId!.Value)
-                        : null,
+                    DefaultFillerCollection = deco.DefaultFillerCollection,
+                    DefaultFillerMediaItem = deco.DefaultFillerMediaItem,
+                    DefaultFillerMultiCollection = deco.DefaultFillerMultiCollection,
+                    DefaultFillerSmartCollection = deco.DefaultFillerSmartCollection,
                     DefaultFillerTrimToFit = deco.DefaultFillerTrimToFit,
 
                     DeadAirFallbackMode = deco.DeadAirFallbackMode,
                     DeadAirFallbackCollectionType = deco.DeadAirFallbackCollectionType,
-                    DeadAirFallbackCollection = deco.DeadAirFallbackCollectionId.HasValue
-                        ? _mediaCollections.Find(c => c.Id == deco.DeadAirFallbackCollectionId!.Value)
-                        : null,
-                    DeadAirFallbackMediaItem = deco.DeadAirFallbackMediaItemId.HasValue
-                        ? _televisionShows.Append(_televisionSeasons).Append(_artists).ToList()
-                            .Find(vm => vm.MediaItemId == deco.DeadAirFallbackMediaItemId!.Value)
-                        : null,
-                    DeadAirFallbackMultiCollection = deco.DeadAirFallbackMultiCollectionId.HasValue
-                        ? _multiCollections.Find(c => c.Id == deco.DeadAirFallbackMultiCollectionId!.Value)
-                        : null,
-                    DeadAirFallbackSmartCollection = deco.DeadAirFallbackSmartCollectionId.HasValue
-                        ? _smartCollections.Find(c => c.Id == deco.DeadAirFallbackSmartCollectionId!.Value)
-                        : null
+                    DeadAirFallbackCollection = deco.DeadAirFallbackCollection,
+                    DeadAirFallbackMediaItem = deco.DeadAirFallbackMediaItem,
+                    DeadAirFallbackMultiCollection = deco.DeadAirFallbackMultiCollection,
+                    DeadAirFallbackSmartCollection = deco.DeadAirFallbackSmartCollection
                 };
             }
         }
@@ -599,6 +753,66 @@
                 Logger.LogError("Unexpected error saving deco: {Error}", error.Value);
             },
             () => NavigationManager.NavigateTo("decos"));
+    }
+
+    private async Task<IEnumerable<MediaCollectionViewModel>> SearchCollections(string value, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return new List<MediaCollectionViewModel>();
+        }
+
+        return await Mediator.Send(new SearchCollections(value), _cts.Token);
+    }
+
+    private async Task<IEnumerable<MultiCollectionViewModel>> SearchMultiCollections(string value, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return new List<MultiCollectionViewModel>();
+        }
+
+        return await Mediator.Send(new SearchMultiCollections(value), _cts.Token);
+    }
+
+    private async Task<IEnumerable<SmartCollectionViewModel>> SearchSmartCollections(string value, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return new List<SmartCollectionViewModel>();
+        }
+
+        return await Mediator.Send(new SearchSmartCollections(value), _cts.Token);
+    }
+
+    private async Task<IEnumerable<NamedMediaItemViewModel>> SearchTelevisionShows(string value, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return new List<NamedMediaItemViewModel>();
+        }
+
+        return await Mediator.Send(new SearchTelevisionShows(value), _cts.Token);
+    }
+
+    private async Task<IEnumerable<NamedMediaItemViewModel>> SearchTelevisionSeasons(string value, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return new List<NamedMediaItemViewModel>();
+        }
+
+        return await Mediator.Send(new SearchTelevisionSeasons(value), _cts.Token);
+    }
+
+    private async Task<IEnumerable<NamedMediaItemViewModel>> SearchArtists(string value, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return new List<NamedMediaItemViewModel>();
+        }
+
+        return await Mediator.Send(new SearchArtists(value), _cts.Token);
     }
 
     private void AddBreakContent()

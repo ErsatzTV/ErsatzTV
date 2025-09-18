@@ -99,17 +99,41 @@ internal static class Mapper
             deco.BreakContentMode,
             deco.DefaultFillerMode,
             deco.DefaultFillerCollectionType,
-            deco.DefaultFillerCollectionId,
-            deco.DefaultFillerMediaItemId,
-            deco.DefaultFillerMultiCollectionId,
-            deco.DefaultFillerSmartCollectionId,
+            deco.DefaultFillerCollection is not null
+                ? MediaCollections.Mapper.ProjectToViewModel(deco.DefaultFillerCollection)
+                : null,
+            deco.DefaultFillerMediaItem switch
+            {
+                Show show => MediaItems.Mapper.ProjectToViewModel(show),
+                Season season => MediaItems.Mapper.ProjectToViewModel(season),
+                Artist artist => MediaItems.Mapper.ProjectToViewModel(artist),
+                _ => null
+            },
+            deco.DefaultFillerMultiCollection is not null
+                ? MediaCollections.Mapper.ProjectToViewModel(deco.DefaultFillerMultiCollection)
+                : null,
+            deco.DefaultFillerSmartCollection is not null
+                ? MediaCollections.Mapper.ProjectToViewModel(deco.DefaultFillerSmartCollection)
+                : null,
             deco.DefaultFillerTrimToFit,
             deco.DeadAirFallbackMode,
             deco.DeadAirFallbackCollectionType,
-            deco.DeadAirFallbackCollectionId,
-            deco.DeadAirFallbackMediaItemId,
-            deco.DeadAirFallbackMultiCollectionId,
-            deco.DeadAirFallbackSmartCollectionId);
+            deco.DeadAirFallbackCollection is not null
+                ? MediaCollections.Mapper.ProjectToViewModel(deco.DeadAirFallbackCollection)
+                : null,
+            deco.DeadAirFallbackMediaItem switch
+            {
+                Show show => MediaItems.Mapper.ProjectToViewModel(show),
+                Season season => MediaItems.Mapper.ProjectToViewModel(season),
+                Artist artist => MediaItems.Mapper.ProjectToViewModel(artist),
+                _ => null
+            },
+            deco.DeadAirFallbackMultiCollection is not null
+                ? MediaCollections.Mapper.ProjectToViewModel(deco.DeadAirFallbackMultiCollection)
+                : null,
+            deco.DeadAirFallbackSmartCollection is not null
+                ? MediaCollections.Mapper.ProjectToViewModel(deco.DeadAirFallbackSmartCollection)
+                : null);
 
     internal static DecoTemplateGroupViewModel ProjectToViewModel(DecoTemplateGroup decoTemplateGroup) =>
         new(decoTemplateGroup.Id, decoTemplateGroup.Name, decoTemplateGroup.DecoTemplates.Count);
