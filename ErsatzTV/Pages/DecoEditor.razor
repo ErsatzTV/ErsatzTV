@@ -1,11 +1,9 @@
 ﻿@page "/decos/{Id:int}"
-@using ErsatzTV.Application.Artists
 @using ErsatzTV.Application.Graphics
 @using ErsatzTV.Application.MediaCollections
 @using ErsatzTV.Application.MediaItems
 @using ErsatzTV.Application.Scheduling
 @using ErsatzTV.Application.Search
-@using ErsatzTV.Application.Television
 @using ErsatzTV.Application.Watermarks
 @using ErsatzTV.Core.Domain.Scheduling
 @implements IDisposable
@@ -134,7 +132,7 @@
     </MudStack>
     <MudText Typo="Typo.h5" Class="mt-10 mb-2">Break Content Items</MudText>
     <MudDivider Class="mb-6"/>
-    <MudTable Class="mt-6" Hover="true" Items="_deco.BreakContent.OrderBy(i => i.Index)" Dense="true" @bind-SelectedItem="_selectedBreakContent" RowClassFunc="@SelectedRowClassFunc">
+    <MudTable Class="mt-6" Hover="true" Items="_deco.BreakContent" Dense="true" @bind-SelectedItem="_selectedBreakContent" RowClassFunc="@SelectedRowClassFunc">
         <ColGroup>
             <MudHidden Breakpoint="Breakpoint.Xs">
                 <col/>
@@ -166,14 +164,6 @@
                     @* <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" *@
                     @*                OnClick="@(_ => CopyItem(context))"> *@
                     @* </MudIconButton> *@
-                    @* <MudIconButton Icon="@Icons.Material.Filled.ArrowUpward" *@
-                    @*                OnClick="@(_ => MoveItemUp(context))" *@
-                    @*                Disabled="@(_block.Items.All(x => x.Index >= context.Index))"> *@
-                    @* </MudIconButton> *@
-                    @* <MudIconButton Icon="@Icons.Material.Filled.ArrowDownward" *@
-                    @*                OnClick="@(_ => MoveItemDown(context))" *@
-                    @*                Disabled="@(_block.Items.All(x => x.Index <= context.Index))"> *@
-                    @* </MudIconButton> *@
                     <MudIconButton Icon="@Icons.Material.Filled.Delete"
                                    OnClick="@(_ => RemoveBreakContent(context))">
                     </MudIconButton>
@@ -183,8 +173,19 @@
     </MudTable>
     @if (_selectedBreakContent is not null)
     {
-        <MudText Typo="Typo.h5" Class="mt-10 mb-2">Block Item</MudText>
+        <MudText Typo="Typo.h5" Class="mt-10 mb-2">Break Content Item</MudText>
         <MudDivider Class="mb-6"/>
+        <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+            <div class="d-flex">
+                <MudText>Placement</MudText>
+            </div>
+            <MudSelect @bind-Value="_selectedBreakContent.Placement" For="@(() => _selectedBreakContent.Placement)" Disabled="true">
+                <MudSelectItem Value="DecoBreakPlacement.BlockStart">Block Start</MudSelectItem>
+                <MudSelectItem Value="DecoBreakPlacement.BetweenBlockItems">Between Block Items</MudSelectItem>
+                <MudSelectItem Value="DecoBreakPlacement.ChapterMarkers">At Chapter Markers</MudSelectItem>
+                <MudSelectItem Value="DecoBreakPlacement.BlockFinish">Block Finish</MudSelectItem>
+            </MudSelect>
+        </MudStack>
         <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
             <div class="d-flex">
                 <MudText>Collection Type</MudText>
@@ -193,9 +194,10 @@
                 <MudSelectItem Value="CollectionType.Collection">Collection</MudSelectItem>
                 <MudSelectItem Value="CollectionType.TelevisionShow">Television Show</MudSelectItem>
                 <MudSelectItem Value="CollectionType.TelevisionSeason">Television Season</MudSelectItem>
-                @* <MudSelectItem Value="ProgramScheduleItemCollectionType.Artist">Artist</MudSelectItem> *@
-                @* <MudSelectItem Value="ProgramScheduleItemCollectionType.MultiCollection">Multi Collection</MudSelectItem> *@
+                @* <MudSelectItem Value="CollectionType.Artist">Artist</MudSelectItem> *@
+                @* <MudSelectItem Value="CollectionType.MultiCollection">Multi Collection</MudSelectItem> *@
                 <MudSelectItem Value="CollectionType.SmartCollection">Smart Collection</MudSelectItem>
+                @* <MudSelectItem Value="CollectionType.Playlist">Playlist</MudSelectItem> *@
             </MudSelect>
         </MudStack>
         @if (_selectedBreakContent.CollectionType == CollectionType.Collection)
@@ -293,44 +295,6 @@
                 </MudAutocomplete>
             </MudStack>
         }
-
-        @* <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5"> *@
-        @*     <div class="d-flex"> *@
-        @*         <MudText>Playback Order</MudText> *@
-        @*     </div> *@
-        @*     <MudSelect @bind-Value="@_selectedBreakContent.PlaybackOrder" For="@(() => _selectedBreakContent.PlaybackOrder)"> *@
-        @*         @switch (_selectedBreakContent.CollectionType) *@
-        @*         { *@
-        @*             case CollectionType.MultiCollection: *@
-        @*                 <MudSelectItem Value="PlaybackOrder.Shuffle">Shuffle</MudSelectItem> *@
-        @*                 $1$ <MudSelectItem Value="PlaybackOrder.ShuffleInOrder">Shuffle In Order</MudSelectItem> #1# *@
-        @*                 break; *@
-        @*             case CollectionType.Collection: *@
-        @*             case CollectionType.SmartCollection: *@
-        @*                 <MudSelectItem Value="PlaybackOrder.Chronological">Chronological</MudSelectItem> *@
-        @*                 <MudSelectItem Value="PlaybackOrder.Shuffle">Shuffle</MudSelectItem> *@
-        @*                 <MudSelectItem Value="PlaybackOrder.Random">Random</MudSelectItem> *@
-        @*                 <MudSelectItem Value="PlaybackOrder.RandomRotation">Random Rotation</MudSelectItem> *@
-        @*                 $1$ <MudSelectItem Value="PlaybackOrder.ShuffleInOrder">Shuffle In Order</MudSelectItem> #1# *@
-        @*                 break; *@
-        @*             case CollectionType.TelevisionShow: *@
-        @*                 <MudSelectItem Value="PlaybackOrder.SeasonEpisode">Season, Episode</MudSelectItem> *@
-        @*                 <MudSelectItem Value="PlaybackOrder.Chronological">Chronological</MudSelectItem> *@
-        @*                 <MudSelectItem Value="PlaybackOrder.Shuffle">Shuffle</MudSelectItem> *@
-        @*                 <MudSelectItem Value="PlaybackOrder.Random">Random</MudSelectItem> *@
-        @*                 $1$ <MudSelectItem Value="PlaybackOrder.MultiEpisodeShuffle">Multi-Episode Shuffle</MudSelectItem> #1# *@
-        @*                 break; *@
-        @*             case CollectionType.TelevisionSeason: *@
-        @*             case CollectionType.Artist: *@
-        @*             case CollectionType.FakeCollection: *@
-        @*             default: *@
-        @*                 <MudSelectItem Value="PlaybackOrder.Chronological">Chronological</MudSelectItem> *@
-        @*                 <MudSelectItem Value="PlaybackOrder.Shuffle">Shuffle</MudSelectItem> *@
-        @*                 <MudSelectItem Value="PlaybackOrder.Random">Random</MudSelectItem> *@
-        @*                 break; *@
-        @*         } *@
-        @*     </MudSelect> *@
-        @* </MudStack> *@
     }
 }
 <MudText Typo="Typo.h5" Class="mt-10 mb-2">Default Filler</MudText>
@@ -691,6 +655,7 @@
                     UseGraphicsElementsDuringFiller = deco.UseGraphicsElementsDuringFiller,
 
                     BreakContentMode = deco.BreakContentMode,
+                    BreakContent = deco.BreakContent.Map(ProjectToEditViewModel).ToList(),
 
                     DefaultFillerMode = deco.DefaultFillerMode,
                     DefaultFillerCollectionType = deco.DefaultFillerCollectionType,
@@ -715,8 +680,24 @@
         }
     }
 
+    private static DecoBreakContentEditViewModel ProjectToEditViewModel(DecoBreakContentViewModel vm) =>
+        new()
+        {
+            Id = vm.Id,
+            CollectionType = vm.CollectionType,
+            Collection = vm.Collection,
+            MediaItem = vm.MediaItem,
+            MultiCollection = vm.MultiCollection,
+            SmartCollection = vm.SmartCollection,
+            Placement = vm.Placement
+        };
+
     private async Task SaveChanges()
     {
+        var breakContent = _deco.BreakContent
+            .Map(vm => new UpdateDecoBreakContent(vm.Id, vm.CollectionType, vm.Collection?.Id, vm.MediaItem?.MediaItemId, vm.MultiCollection?.Id, vm.SmartCollection?.Id, vm.Playlist?.Id, vm.Placement))
+            .ToList();
+
         var request = new UpdateDeco(
             Id,
             _deco.DecoGroupId,
@@ -728,6 +709,7 @@
             _deco.GraphicsElements.Map(ge => ge.Id).ToList(),
             _deco.UseGraphicsElementsDuringFiller,
             _deco.BreakContentMode,
+            breakContent,
             _deco.DefaultFillerMode,
             _deco.DefaultFillerCollectionType,
             _deco.DefaultFillerCollection?.Id,
@@ -819,7 +801,6 @@
     {
         var item = new DecoBreakContentEditViewModel
         {
-            Index = _deco.BreakContent.Map(i => i.Index).DefaultIfEmpty().Max() + 1,
             CollectionType = CollectionType.Collection,
             Collection = null,
             Placement = DecoBreakPlacement.BlockStart
@@ -831,6 +812,11 @@
     private void RemoveBreakContent(DecoBreakContentEditViewModel item)
     {
         _deco.BreakContent.Remove(item);
+
+        if (_selectedBreakContent == item)
+        {
+            _selectedBreakContent = null;
+        }
     }
 
     private string SelectedRowClassFunc(DecoBreakContentEditViewModel element, int rowNumber) => _selectedBreakContent != null && _selectedBreakContent == element ? "selected" : string.Empty;

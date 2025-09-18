@@ -4,6 +4,16 @@ using ErsatzTV.Core.Domain.Scheduling;
 
 namespace ErsatzTV.Application.Scheduling;
 
+public record UpdateDecoBreakContent(
+    int Id,
+    CollectionType CollectionType,
+    int? CollectionId,
+    int? MediaItemId,
+    int? MultiCollectionId,
+    int? SmartCollectionId,
+    int? PlaylistId,
+    DecoBreakPlacement Placement);
+
 public record UpdateDeco(
     int DecoId,
     int DecoGroupId,
@@ -15,6 +25,7 @@ public record UpdateDeco(
     List<int> GraphicsElementIds,
     bool UseGraphicsElementsDuringFiller,
     DecoMode BreakContentMode,
+    List<UpdateDecoBreakContent> BreakContent,
     DecoMode DefaultFillerMode,
     CollectionType DefaultFillerCollectionType,
     int? DefaultFillerCollectionId,

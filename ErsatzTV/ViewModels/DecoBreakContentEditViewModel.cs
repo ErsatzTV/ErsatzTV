@@ -12,7 +12,6 @@ public class DecoBreakContentEditViewModel : INotifyPropertyChanged
     private CollectionType _collectionType;
 
     public int Id { get; set; }
-    public int Index { get; set; }
 
     public CollectionType CollectionType
     {

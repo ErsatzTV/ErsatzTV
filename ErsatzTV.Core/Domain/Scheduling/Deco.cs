@@ -47,7 +47,7 @@ public class Deco
 
     // break content
     public DecoMode BreakContentMode {  get; set; }
-    public ICollection<DecoBreakContent> BreakContent { get; set; }
+    public List<DecoBreakContent> BreakContent { get; set; }
 
     // can be added directly to (block) playouts
     public ICollection<Playout> Playouts { get; set; }

@@ -97,6 +97,7 @@ internal static class Mapper
             deco.DecoGraphicsElements.Map(ge => Graphics.Mapper.ProjectToViewModel(ge.GraphicsElement)).ToList(),
             deco.UseGraphicsElementsDuringFiller,
             deco.BreakContentMode,
+            deco.BreakContent.Map(ProjectToViewModel).ToList(),
             deco.DefaultFillerMode,
             deco.DefaultFillerCollectionType,
             deco.DefaultFillerCollection is not null
@@ -134,6 +135,31 @@ internal static class Mapper
             deco.DeadAirFallbackSmartCollection is not null
                 ? MediaCollections.Mapper.ProjectToViewModel(deco.DeadAirFallbackSmartCollection)
                 : null);
+
+    internal static DecoBreakContentViewModel ProjectToViewModel(DecoBreakContent decoBreakContent) =>
+        new(
+            decoBreakContent.Id,
+            decoBreakContent.CollectionType,
+            decoBreakContent.Collection is not null
+                ? MediaCollections.Mapper.ProjectToViewModel(decoBreakContent.Collection)
+                : null,
+            decoBreakContent.MediaItem switch
+            {
+                Show show => MediaItems.Mapper.ProjectToViewModel(show),
+                Season season => MediaItems.Mapper.ProjectToViewModel(season),
+                Artist artist => MediaItems.Mapper.ProjectToViewModel(artist),
+                _ => null
+            },
+            decoBreakContent.MultiCollection is not null
+                ? MediaCollections.Mapper.ProjectToViewModel(decoBreakContent.MultiCollection)
+                : null,
+            decoBreakContent.SmartCollection is not null
+                ? MediaCollections.Mapper.ProjectToViewModel(decoBreakContent.SmartCollection)
+                : null,
+            decoBreakContent.Playlist is not null
+                ? MediaCollections.Mapper.ProjectToViewModel(decoBreakContent.Playlist)
+                : null,
+            decoBreakContent.Placement);
 
     internal static DecoTemplateGroupViewModel ProjectToViewModel(DecoTemplateGroup decoTemplateGroup) =>
         new(decoTemplateGroup.Id, decoTemplateGroup.Name, decoTemplateGroup.DecoTemplates.Count);
