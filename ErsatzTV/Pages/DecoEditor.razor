@@ -112,6 +112,7 @@
 </MudStack>
 <MudText Typo="Typo.h5" Class="mt-10 mb-2">Break Content</MudText>
 <MudDivider Class="mb-6"/>
+<MudText Typo="Typo.body2" Class="mb-6">Break content can be used to play specific items (using playlists), and to pad blocks to their full configured duration.</MudText>
 <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
     <div class="d-flex">
         <MudText>Break Content Mode</MudText>
@@ -132,7 +133,7 @@
     </MudStack>
     <MudText Typo="Typo.h5" Class="mt-10 mb-2">Break Content Items</MudText>
     <MudDivider Class="mb-6"/>
-    <MudTable Class="mt-6" Hover="true" Items="_deco.BreakContent" Dense="true" @bind-SelectedItem="_selectedBreakContent" RowClassFunc="@SelectedRowClassFunc">
+    <MudTable T="DecoBreakContentEditViewModel" Class="mt-6" Hover="true" Items="_deco.BreakContent" Dense="true" SelectedItemChanged="@(vm => SelectedBreakContentChanged(vm))" RowClassFunc="@SelectedRowClassFunc">
         <ColGroup>
             <MudHidden Breakpoint="Breakpoint.Xs">
                 <col/>
@@ -197,7 +198,7 @@
                 @* <MudSelectItem Value="CollectionType.Artist">Artist</MudSelectItem> *@
                 @* <MudSelectItem Value="CollectionType.MultiCollection">Multi Collection</MudSelectItem> *@
                 <MudSelectItem Value="CollectionType.SmartCollection">Smart Collection</MudSelectItem>
-                @* <MudSelectItem Value="CollectionType.Playlist">Playlist</MudSelectItem> *@
+                <MudSelectItem Value="CollectionType.Playlist">Playlist</MudSelectItem>
             </MudSelect>
         </MudStack>
         @if (_selectedBreakContent.CollectionType == CollectionType.Collection)
@@ -293,6 +294,34 @@
                         </MudText>
                     </MoreItemsTemplate>
                 </MudAutocomplete>
+            </MudStack>
+        }
+
+        @if (_selectedBreakContent.CollectionType == CollectionType.Playlist)
+        {
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Playlist Group</MudText>
+                </div>
+                <MudSelect T="PlaylistGroupViewModel"
+                           Value="@_selectedPlaylistGroup"
+                           ValueChanged="@(vm => UpdatePlaylistGroupItems(vm))">
+                    @foreach (PlaylistGroupViewModel playlistGroup in _playlistGroups)
+                    {
+                        <MudSelectItem Value="@playlistGroup">@playlistGroup.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Playlist</MudText>
+                </div>
+                <MudSelect T="PlaylistViewModel" @bind-value="_selectedBreakContent.Playlist">
+                    @foreach (PlaylistViewModel playlist in _playlists)
+                    {
+                        <MudSelectItem Value="@playlist">@playlist.Name</MudSelectItem>
+                    }
+                </MudSelect>
             </MudStack>
         }
     }
@@ -610,9 +639,11 @@
 
     private List<WatermarkViewModel> _watermarks = [];
     private List<GraphicsElementViewModel> _graphicsElements = [];
+    private readonly List<PlaylistGroupViewModel> _playlistGroups = [];
+    private readonly List<PlaylistViewModel> _playlists = [];
 
     private DecoBreakContentEditViewModel _selectedBreakContent;
-
+    private PlaylistGroupViewModel _selectedPlaylistGroup;
 
     public void Dispose()
     {
@@ -631,6 +662,7 @@
         {
             _watermarks = await Mediator.Send(new GetAllWatermarks(), token);
             _graphicsElements = await Mediator.Send(new GetAllGraphicsElements(), token);
+            _playlistGroups.AddRange(await Mediator.Send(new GetAllPlaylistGroups(), token));
 
             Option<DecoViewModel> maybeDeco = await Mediator.Send(new GetDecoById(Id), token);
             if (maybeDeco.IsNone)
@@ -689,6 +721,7 @@
             MediaItem = vm.MediaItem,
             MultiCollection = vm.MultiCollection,
             SmartCollection = vm.SmartCollection,
+            Playlist = vm.Playlist,
             Placement = vm.Placement
         };
 
@@ -795,6 +828,28 @@
         }
 
         return await Mediator.Send(new SearchArtists(value), _cts.Token);
+    }
+
+    private async Task SelectedBreakContentChanged(DecoBreakContentEditViewModel vm)
+    {
+        _selectedBreakContent = vm;
+
+        foreach (int playlistGroupId in Optional(_selectedBreakContent.Playlist?.PlaylistGroupId))
+        {
+            foreach (PlaylistGroupViewModel group in Optional(_playlistGroups.Find(g => g.Id == playlistGroupId)))
+            {
+                _selectedPlaylistGroup = group;
+                await UpdatePlaylistGroupItems(group);
+            }
+        }
+    }
+
+    private async Task UpdatePlaylistGroupItems(PlaylistGroupViewModel playlistGroup)
+    {
+        _selectedPlaylistGroup = playlistGroup;
+
+        _playlists.Clear();
+        _playlists.AddRange(await Mediator.Send(new GetPlaylistsByPlaylistGroupId(playlistGroup.Id), _cts.Token));
     }
 
     private void AddBreakContent()
