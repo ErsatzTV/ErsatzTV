@@ -36,10 +36,15 @@
                         <col style="width: 120px;"/>
                     </MudHidden>
                 </ColGroup>
-                <HeaderContent>
-                    <MudTh>Name</MudTh>
-                    <MudTh/>
-                </HeaderContent>
+                <ToolBarContent>
+                    <MudTextField T="string"
+                                  ValueChanged="@(s => OnSearch(s))"
+                                  Placeholder="Search for rerun collections"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.FilterList"
+                                  Clearable="true">
+                    </MudTextField>
+                </ToolBarContent>
                 <RowTemplate>
                     <MudTd DataLabel="Name">@context.Name</MudTd>
                     <MudTd>
@@ -72,6 +77,7 @@
     private MudTable<RerunCollectionViewModel> _rerunCollectionsTable;
 
     private int _rerunCollectionsRowsPerPage = 10;
+    private string _searchString;
 
     public void Dispose()
     {
@@ -118,7 +124,13 @@
     {
         await Mediator.Send(new SaveConfigElementByKey(ConfigElementKey.RerunCollectionsPageSize, state.PageSize.ToString()), cancellationToken);
 
-        PagedRerunCollectionsViewModel data = await Mediator.Send(new GetPagedRerunCollections(state.Page, state.PageSize), cancellationToken);
+        PagedRerunCollectionsViewModel data = await Mediator.Send(new GetPagedRerunCollections(_searchString, state.Page, state.PageSize), cancellationToken);
         return new TableData<RerunCollectionViewModel> { TotalItems = data.TotalCount, Items = data.Page };
+    }
+
+    private void OnSearch(string query)
+    {
+        _searchString = query;
+        _rerunCollectionsTable.ReloadServerData();
     }
 }

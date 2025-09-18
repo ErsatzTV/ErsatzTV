@@ -1,3 +1,3 @@
 ﻿namespace ErsatzTV.Application.MediaCollections;
 
-public record GetPagedCollections(int PageNum, int PageSize) : IRequest<PagedMediaCollectionsViewModel>;
+public record GetPagedCollections(string Query, int PageNum, int PageSize) : IRequest<PagedMediaCollectionsViewModel>;

@@ -180,7 +180,8 @@ div.ersatztv-light {
 }
 
 .form-field-stack div.mud-input-control,
-.form-field-stack ul.mud-treeview {
+.form-field-stack ul.mud-treeview,
+.mud-toolbar .mud-input-text {
     max-width: 500px;
 }
 

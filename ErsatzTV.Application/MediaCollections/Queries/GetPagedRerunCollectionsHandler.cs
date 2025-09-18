@@ -1,4 +1,5 @@
-﻿using ErsatzTV.Infrastructure.Data;
+﻿using ErsatzTV.Core.Domain;
+using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using static ErsatzTV.Application.MediaCollections.Mapper;
 
@@ -13,8 +14,17 @@ public class GetPagedRerunCollectionsHandler(IDbContextFactory<TvContext> dbCont
     {
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         int count = await dbContext.RerunCollections.CountAsync(cancellationToken);
-        List<RerunCollectionViewModel> page = await dbContext.RerunCollections
-            .AsNoTracking()
+
+        IQueryable<RerunCollection> query = dbContext.RerunCollections.AsNoTracking();
+
+        if (!string.IsNullOrWhiteSpace(request.Query))
+        {
+            query = query.Where(s => EF.Functions.Like(
+                EF.Functions.Collate(s.Name, TvContext.CaseInsensitiveCollation),
+                $"%{request.Query}%"));
+        }
+
+        List<RerunCollectionViewModel> page = await query
             .OrderBy(f => EF.Functions.Collate(f.Name, TvContext.CaseInsensitiveCollation))
             .Skip(request.PageNum * request.PageSize)
             .Take(request.PageSize)
