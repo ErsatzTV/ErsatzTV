@@ -62,6 +62,21 @@ public partial class TextElement(
 
             RichTextKit.TextBlock textBlock = BuildTextBlock(textElement.Text);
 
+            if (textElement.WidthPercent.HasValue)
+            {
+                var maxWidth = (float)Math.Round(textElement.WidthPercent.Value / 100.0 * context.FrameSize.Width);
+
+                switch (textElement.Fit)
+                {
+                    case TextFit.Wrap:
+                        textBlock.MaxWidth = maxWidth;
+                        break;
+                    case TextFit.Scale:
+                        FitTextBlock(textBlock, maxWidth);
+                        break;
+                }
+            }
+
             _image = new SKBitmap(
                 (int)Math.Ceiling(textBlock.MeasuredWidth),
                 (int)Math.Ceiling(textBlock.MeasuredHeight));
@@ -215,6 +230,66 @@ public partial class TextElement(
             return style;
         }
     }
+
+    private static void FitTextBlock(RichTextKit.TextBlock block, float maxWidth)
+    {
+        if (block.MeasuredWidth <= maxWidth)
+        {
+            return;
+        }
+
+        var originalContent = block.StyleRuns
+            .Select(run => (run.ToString(), run.Style))
+            .ToList();
+
+        float scale = maxWidth / block.MeasuredWidth;
+
+        const float MIN_FONT_SIZE = 5.0f;
+
+        while (true)
+        {
+            block.Clear();
+            var isAtMinSize = false;
+
+            foreach ((string text, RichTextKit.IStyle style) in originalContent)
+            {
+                var newStyle = new RichTextKit.Style
+                {
+                    FontFamily = style.FontFamily,
+                    FontItalic = style.FontItalic,
+                    FontSize = style.FontSize,
+                    FontWidth = style.FontWidth,
+                    FontWeight = style.FontWeight,
+                    LetterSpacing = style.LetterSpacing,
+                    TextColor = style.TextColor
+                };
+
+                float newSize = newStyle.FontSize * scale;
+
+                if (newSize < MIN_FONT_SIZE)
+                {
+                    newSize = MIN_FONT_SIZE;
+                    isAtMinSize = true;
+                }
+
+                newStyle.FontSize = newSize;
+                block.AddText(text, newStyle);
+            }
+
+            if (block.MeasuredWidth <= maxWidth)
+            {
+                break;
+            }
+
+            if (isAtMinSize)
+            {
+                break;
+            }
+
+            scale -= 0.01f;
+        }
+    }
+
 
     [GeneratedRegex(@"\[(\w+)\](.*?)\[/\1\]")]
     private static partial Regex StyleRegex();

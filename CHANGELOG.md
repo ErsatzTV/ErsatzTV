@@ -37,8 +37,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
       - `loop` - loop forever
       - `hold` - hold last frame forever, or `hold_seconds`
     - Draw order (`z_index`)
-- Add search fields to filter collections, schedules, playouts tables
+- Add search fields to filter collections, schedules and playouts tables
 - Add selected row background color to schedules and playouts tables
+- Graphics engine text element: add `width_percent` and `text_fit` to support wrapping and scaling text
+  - `text_fit: none` or unspecified will keep existing behavior (render text exactly as configured)
+  - `text_fit: wrap` will wrap text to the given `width_percent`
+  - `text_fit: scale` will scale text *smaller* to fit the given `width_percent`
+    - Text that already fits with the configured style will not be adjusted
 
 ### Fixed
 - Fix green output when libplacebo tonemapping is used with NVIDIA acceleration and 10-bit output in FFmpeg Profile
