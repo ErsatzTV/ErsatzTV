@@ -56,7 +56,27 @@
                 <div class="d-flex">
                     <MudText>Duration</MudText>
                 </div>
-                <MudTimePicker @bind-Time="@_model.Duration" For="@(() => _model.Duration)" Disabled="@(_model.FillerMode != FillerMode.Duration)"/>
+                <MudTextField T="int"
+                              @bind-Value="_model.DurationHours"
+                              Adornment="Adornment.End"
+                              AdornmentText="hours"
+                              Disabled="@(_model.FillerMode != FillerMode.Duration)"/>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex"></div>
+                <MudTextField T="int"
+                              @bind-Value="_model.DurationMinutes"
+                              Adornment="Adornment.End"
+                              AdornmentText="minutes"
+                              Disabled="@(_model.FillerMode != FillerMode.Duration)"/>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex"></div>
+                <MudTextField T="int"
+                              @bind-Value="_model.DurationSeconds"
+                              Adornment="Adornment.End"
+                              AdornmentText="seconds"
+                              Disabled="@(_model.FillerMode != FillerMode.Duration)"/>
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                 <div class="d-flex">

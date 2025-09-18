@@ -13,6 +13,9 @@ public class FillerPresetEditViewModel
     private CollectionType _collectionType;
     private int? _count;
     private TimeSpan? _duration;
+    private int _durationHours;
+    private int _durationMinutes;
+    private int _durationSeconds;
     private FillerKind _fillerKind;
     private FillerMode _fillerMode;
     private int? _padToNearestMinute;
@@ -52,7 +55,44 @@ public class FillerPresetEditViewModel
     public TimeSpan? Duration
     {
         get => FillerMode == FillerMode.Duration ? _duration : null;
-        set => _duration = value;
+        set
+        {
+            _duration = value;
+            CheckDuration();
+        }
+    }
+
+    public int DurationHours
+    {
+        get => _durationHours;
+        set
+        {
+            _duration = TimeSpan.FromHours(value) + TimeSpan.FromMinutes(_duration?.Minutes ?? 0) +
+                        TimeSpan.FromSeconds(_duration?.Seconds ?? 0);
+            CheckDuration();
+        }
+    }
+
+    public int DurationMinutes
+    {
+        get => _durationMinutes;
+        set
+        {
+            _duration = TimeSpan.FromHours(_duration?.Hours ?? 0) + TimeSpan.FromMinutes(value) +
+                        TimeSpan.FromSeconds(_duration?.Seconds ?? 0);
+            CheckDuration();
+        }
+    }
+
+    public int DurationSeconds
+    {
+        get => _durationSeconds;
+        set
+        {
+            _duration = TimeSpan.FromHours(_duration?.Hours ?? 0) + TimeSpan.FromMinutes(_duration?.Minutes ?? 0) +
+                        TimeSpan.FromSeconds(value);
+            CheckDuration();
+        }
     }
 
     public int? Count
@@ -106,7 +146,7 @@ public class FillerPresetEditViewModel
             Name,
             FillerKind,
             FillerMode,
-            Duration.Map(FixDuration),
+            Duration,
             Count,
             PadToNearestMinute,
             AllowWatermarks,
@@ -124,7 +164,7 @@ public class FillerPresetEditViewModel
             Name,
             FillerKind,
             FillerMode,
-            Duration.Map(FixDuration),
+            Duration,
             Count,
             PadToNearestMinute,
             AllowWatermarks,
@@ -137,6 +177,32 @@ public class FillerPresetEditViewModel
             Expression,
             UseChaptersAsMediaItems);
 
-    private static TimeSpan FixDuration(TimeSpan duration) =>
-        duration > TimeSpan.FromDays(1) ? duration.Subtract(TimeSpan.FromDays(1)) : duration;
+    private void CheckDuration()
+    {
+        if (_fillerMode is FillerMode.Duration)
+        {
+            _duration ??= TimeSpan.Zero;
+
+            if (_duration > TimeSpan.FromHours(24))
+            {
+                _duration = TimeSpan.FromHours(24);
+            }
+
+            if (_duration < TimeSpan.FromSeconds(1))
+            {
+                _duration = TimeSpan.FromSeconds(1);
+            }
+
+            _durationHours = (int)_duration.Value.TotalHours;
+            _durationMinutes = _duration.Value.Minutes;
+            _durationSeconds = _duration.Value.Seconds;
+        }
+        else
+        {
+            _duration = null;
+            _durationHours = 0;
+            _durationMinutes = 0;
+            _durationSeconds = 0;
+        }
+    }
 }

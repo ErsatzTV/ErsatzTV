@@ -58,6 +58,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix deco dead air fallback selection and duration on mirror channels
 - Fix fallback filler duration on mirror channels
 
+### Changed
+- Filler presets: use separate text fields for `hours`, `minutes` and `seconds` duration
+
 ## [25.6.0] - 2025-09-14
 ### Added
 - Classic schedules: allow selecting multiple graphics elements on schedule items
