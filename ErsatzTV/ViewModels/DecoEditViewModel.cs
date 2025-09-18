@@ -36,4 +36,5 @@ public class DecoEditViewModel
     public NamedMediaItemViewModel DeadAirFallbackMediaItem { get; set; }
 
     public DecoMode BreakContentMode { get; set; }
+    public List<DecoBreakContentEditViewModel> BreakContent { get; set; } = [];
 }

@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using ErsatzTV.Application.MediaCollections;
 using ErsatzTV.Application.MediaItems;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Domain.Scheduling;
 
 namespace ErsatzTV.ViewModels;
 
@@ -42,6 +43,8 @@ public class DecoBreakContentEditViewModel : INotifyPropertyChanged
     public SmartCollectionViewModel SmartCollection { get; set; }
     public NamedMediaItemViewModel MediaItem { get; set; }
     public PlaylistViewModel Playlist { get; set; }
+
+    public DecoBreakPlacement Placement { get; set; }
 
     public string CollectionName => CollectionType switch
     {

@@ -123,6 +123,64 @@
         <MudSelectItem Value="DecoMode.Override">Override</MudSelectItem>
     </MudSelect>
 </MudStack>
+@if (_deco.BreakContentMode is DecoMode.Merge or DecoMode.Override)
+{
+    <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+        <div class="d-flex"></div>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => AddBreakContent())" StartIcon="@Icons.Material.Filled.Add">
+            Add Break Content
+        </MudButton>
+    </MudStack>
+    <MudText Typo="Typo.h5" Class="mt-10 mb-2">Break Content Items</MudText>
+    <MudDivider Class="mb-6"/>
+    <MudTable Class="mt-6" Hover="true" Items="_deco.BreakContent.OrderBy(i => i.Index)" Dense="true" @bind-SelectedItem="_selectedBreakContent" RowClassFunc="@SelectedRowClassFunc">
+        <ColGroup>
+            <MudHidden Breakpoint="Breakpoint.Xs">
+                <col/>
+                <col/>
+                <col/>
+                <col style="width: 60px;"/>
+            </MudHidden>
+        </ColGroup>
+        <HeaderContent>
+            <MudTh>Type</MudTh>
+            <MudTh>Name</MudTh>
+            <MudTh>Placement</MudTh>
+            <MudTh/>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Type">@context.CollectionType.ToString()</MudTd>
+            <MudTd DataLabel="Name">@context.CollectionName</MudTd>
+            <MudTd DataLabel="Placement">
+                @(context.Placement switch {
+                    DecoBreakPlacement.BlockStart => "Block Start",
+                    DecoBreakPlacement.BlockFinish => "Block Finish",
+                    DecoBreakPlacement.BetweenBlockItems => "Between Block Items",
+                    DecoBreakPlacement.ChapterMarkers => "At Chapter Markers",
+                    _ => string.Empty
+                })
+            </MudTd>
+            <MudTd>
+                <div class="d-flex">
+                    @* <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" *@
+                    @*                OnClick="@(_ => CopyItem(context))"> *@
+                    @* </MudIconButton> *@
+                    @* <MudIconButton Icon="@Icons.Material.Filled.ArrowUpward" *@
+                    @*                OnClick="@(_ => MoveItemUp(context))" *@
+                    @*                Disabled="@(_block.Items.All(x => x.Index >= context.Index))"> *@
+                    @* </MudIconButton> *@
+                    @* <MudIconButton Icon="@Icons.Material.Filled.ArrowDownward" *@
+                    @*                OnClick="@(_ => MoveItemDown(context))" *@
+                    @*                Disabled="@(_block.Items.All(x => x.Index <= context.Index))"> *@
+                    @* </MudIconButton> *@
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                   OnClick="@(_ => RemoveBreakContent(context))">
+                    </MudIconButton>
+                </div>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+}
 <MudText Typo="Typo.h5" Class="mt-10 mb-2">Default Filler</MudText>
 <MudDivider Class="mb-6"/>
 <MudText Typo="Typo.body2" Class="mb-6">After all blocks have been scheduled, a second pass will be made to fill unscheduled time using random items from this collection.</MudText>
@@ -404,6 +462,8 @@
     private List<NamedMediaItemViewModel> _televisionSeasons = [];
     private List<NamedMediaItemViewModel> _artists = [];
 
+    private DecoBreakContentEditViewModel _selectedBreakContent;
+
 
     public void Dispose()
     {
@@ -541,4 +601,23 @@
             () => NavigationManager.NavigateTo("decos"));
     }
 
+    private void AddBreakContent()
+    {
+        var item = new DecoBreakContentEditViewModel
+        {
+            Index = _deco.BreakContent.Map(i => i.Index).DefaultIfEmpty().Max() + 1,
+            CollectionType = CollectionType.Collection,
+            Collection = null,
+            Placement = DecoBreakPlacement.BlockStart
+        };
+
+        _deco.BreakContent.Add(item);
+    }
+
+    private void RemoveBreakContent(DecoBreakContentEditViewModel item)
+    {
+        _deco.BreakContent.Remove(item);
+    }
+
+    private string SelectedRowClassFunc(DecoBreakContentEditViewModel element, int rowNumber) => _selectedBreakContent != null && _selectedBreakContent == element ? "selected" : string.Empty;
 }
