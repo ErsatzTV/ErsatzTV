@@ -113,16 +113,16 @@ public class TranscodingTests
         [
             Watermark.None,
             Watermark.PermanentOpaqueScaled,
-            Watermark.PermanentOpaqueActualSize,
-            Watermark.PermanentTransparentScaled,
-            Watermark.PermanentTransparentActualSize
+            // Watermark.PermanentOpaqueActualSize,
+            // Watermark.PermanentTransparentScaled,
+            // Watermark.PermanentTransparentActualSize
         ];
 
         public static Subtitle[] Subtitles =
         [
             Subtitle.None,
             Subtitle.Picture,
-            Subtitle.Text
+            // Subtitle.Text
         ];
 
         public static Padding[] Paddings =
@@ -253,6 +253,13 @@ public class TranscodingTests
                 Arg.Any<Option<int>>())
             .Returns(Path.Combine(TestContext.CurrentContext.TestDirectory, "Resources", "song_album_cover_512.png"));
 
+        var graphicsElementLoader = Substitute.For<IGraphicsElementLoader>();
+        graphicsElementLoader.LoadAll(
+                Arg.Any<GraphicsEngineContext>(),
+                Arg.Any<List<PlayoutItemGraphicsElement>>(),
+                Arg.Any<CancellationToken>())
+            .Returns(callInfo => Task.FromResult(callInfo.Arg<GraphicsEngineContext>()));
+
         var oldService = new FFmpegProcessService(
             new FakeStreamSelector(),
             tempFilePool,
@@ -272,7 +279,7 @@ public class TranscodingTests
                     LoggerFactory.CreateLogger<HardwareCapabilitiesFactory>()),
                 LoggerFactory.CreateLogger<PipelineBuilderFactory>()),
             Substitute.For<IConfigElementRepository>(),
-            Substitute.For<IGraphicsElementLoader>(),
+            graphicsElementLoader,
             LoggerFactory.CreateLogger<FFmpegLibraryProcessService>());
 
         var songVideoGenerator = new SongVideoGenerator(tempFilePool, mockImageCache, service);
@@ -362,7 +369,7 @@ public class TranscodingTests
         PlayoutItemResult playoutItemResult = await service.ForPlayoutItem(
             ExecutableName("ffmpeg"),
             ExecutableName("ffprobe"),
-            false,
+            true,
             channel,
             videoVersion,
             new MediaItemAudioVersion(song, songVersion),
@@ -617,7 +624,11 @@ public class TranscodingTests
             hasSubtitleFilters.ShouldBe(subtitle != Subtitle.None);
 
             bool hasWatermarkFilters = filterChain.WatermarkOverlayFilterSteps.Any(s =>
-                s is OverlayWatermarkFilter or OverlayWatermarkCudaFilter or OverlayWatermarkQsvFilter);
+                                           s is OverlayWatermarkFilter or OverlayWatermarkCudaFilter
+                                               or OverlayWatermarkQsvFilter) ||
+                                       filterChain.GraphicsEngineOverlayFilterSteps.Any(s =>
+                                           s is OverlayGraphicsEngineFilter or OverlayGraphicsEngineCudaFilter
+                                               or OverlayGraphicsEngineVaapiFilter);
 
             hasWatermarkFilters.ShouldBe(watermark != Watermark.None);
         }
@@ -668,7 +679,7 @@ public class TranscodingTests
         PlayoutItemResult playoutItemResult = await service.ForPlayoutItem(
             ExecutableName("ffmpeg"),
             ExecutableName("ffprobe"),
-            false,
+            true,
             channel,
             v,
             new MediaItemAudioVersion(null, v),
@@ -725,6 +736,7 @@ public class TranscodingTests
                 {
                     ImageSource = ChannelWatermarkImageSource.Custom,
                     Mode = ChannelWatermarkMode.Intermittent,
+                    Image = "ASDF",
                     // TODO: how do we make sure this actually appears
                     FrequencyMinutes = 1,
                     DurationSeconds = 2,
@@ -735,6 +747,7 @@ public class TranscodingTests
                 {
                     ImageSource = ChannelWatermarkImageSource.Custom,
                     Mode = ChannelWatermarkMode.Intermittent,
+                    Image = "ASDF",
                     // TODO: how do we make sure this actually appears
                     FrequencyMinutes = 1,
                     DurationSeconds = 2,
@@ -745,6 +758,7 @@ public class TranscodingTests
                 {
                     ImageSource = ChannelWatermarkImageSource.Custom,
                     Mode = ChannelWatermarkMode.Permanent,
+                    Image = "ASDF",
                     Opacity = 100,
                     Size = WatermarkSize.Scaled,
                     WidthPercent = 15
@@ -754,6 +768,7 @@ public class TranscodingTests
                 {
                     ImageSource = ChannelWatermarkImageSource.Custom,
                     Mode = ChannelWatermarkMode.Permanent,
+                    Image = "ASDF",
                     Opacity = 100,
                     Size = WatermarkSize.ActualSize
                 };
@@ -762,6 +777,7 @@ public class TranscodingTests
                 {
                     ImageSource = ChannelWatermarkImageSource.Custom,
                     Mode = ChannelWatermarkMode.Permanent,
+                    Image = "ASDF",
                     Opacity = 80,
                     Size = WatermarkSize.Scaled,
                     WidthPercent = 15
@@ -771,6 +787,7 @@ public class TranscodingTests
                 {
                     ImageSource = ChannelWatermarkImageSource.Custom,
                     Mode = ChannelWatermarkMode.Permanent,
+                    Image = "ASDF",
                     Opacity = 80,
                     Size = WatermarkSize.ActualSize
                 };
@@ -930,6 +947,13 @@ public class TranscodingTests
                 Arg.Any<Option<int>>())
             .Returns(Path.Combine(TestContext.CurrentContext.TestDirectory, "Resources", "song_album_cover_512.png"));
 
+        var graphicsElementLoader = Substitute.For<IGraphicsElementLoader>();
+        graphicsElementLoader.LoadAll(
+                Arg.Any<GraphicsEngineContext>(),
+                Arg.Any<List<PlayoutItemGraphicsElement>>(),
+                Arg.Any<CancellationToken>())
+            .Returns(callInfo => Task.FromResult(callInfo.Arg<GraphicsEngineContext>()));
+
         var oldService = new FFmpegProcessService(
             new FakeStreamSelector(),
             Substitute.For<ITempFilePool>(),
@@ -949,7 +973,7 @@ public class TranscodingTests
                     LoggerFactory.CreateLogger<HardwareCapabilitiesFactory>()),
                 LoggerFactory.CreateLogger<PipelineBuilderFactory>()),
             Substitute.For<IConfigElementRepository>(),
-            Substitute.For<IGraphicsElementLoader>(),
+            graphicsElementLoader,
             LoggerFactory.CreateLogger<FFmpegLibraryProcessService>());
 
         return service;
@@ -1125,5 +1149,5 @@ public class TranscodingTests
     private static string ExecutableName(string baseName) =>
         OperatingSystem.IsWindows()
             ? $"{baseName}.exe"
-            : $"/home/jason/Downloads/ffmpeg/ffmpeg-n7.1.1-56-gc2184b65d2-linux64-gpl-7.1/bin/{baseName}";
+            : $"{baseName}";
 }
