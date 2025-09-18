@@ -4,7 +4,6 @@
 @using ErsatzTV.Application.Playouts
 @using ErsatzTV.Core.Notifications
 @using ErsatzTV.Core.Scheduling
-@using ErsatzTV.Core.Domain.Filler
 @using MediatR.Courier
 @implements IDisposable
 @inject IDialogService Dialog
@@ -56,7 +55,8 @@
                       SelectedItemChanged="@(async (PlayoutNameViewModel x) => await PlayoutSelected(x))"
                       @bind-RowsPerPage="@_rowsPerPage"
                       ServerData="@(new Func<TableState, CancellationToken, Task<TableData<PlayoutNameViewModel>>>(ServerReload))"
-                      @ref="_table">
+                      @ref="_table"
+                      RowClassFunc="@SelectedRowClassFunc">
                 <ColGroup>
                     <MudHidden Breakpoint="Breakpoint.Xs">
                         <col/>
@@ -65,16 +65,21 @@
                         <col style="width: 225px;"/>
                     </MudHidden>
                 </ColGroup>
+                <ToolBarContent>
+                    <MudTextField T="string"
+                                  ValueChanged="@(s => OnSearch(s))"
+                                  Placeholder="Search for playouts"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.FilterList"
+                                  Clearable="true">
+                    </MudTextField>
+                </ToolBarContent>
                 <HeaderContent>
                     <MudTh>
-                        <MudTableSortLabel SortBy="new Func<PlayoutViewModel, object>(x => decimal.Parse(x.Channel.Number, CultureInfo.InvariantCulture))">
-                            Channel
-                        </MudTableSortLabel>
+                        Channel
                     </MudTh>
                     <MudTh Class="d-none d-md-table-cell">
-                        <MudTableSortLabel SortBy="new Func<PlayoutViewModel, object>(x => x.ProgramSchedule.Name)">
-                            Default Schedule
-                        </MudTableSortLabel>
+                        Default Schedule
                     </MudTh>
                     <MudTh Class="d-none d-md-table-cell">Schedule Kind</MudTh>
                     <MudTh/>
@@ -258,6 +263,7 @@
     private MudTable<PlayoutItemViewModel> _detailTable;
     private int _rowsPerPage = 10;
     private int _detailRowsPerPage = 10;
+    private string _searchString;
     private int? _selectedPlayoutId;
     private bool _showFiller;
 
@@ -409,15 +415,8 @@
     {
         await Mediator.Send(new SaveConfigElementByKey(ConfigElementKey.PlayoutsPageSize, state.PageSize.ToString()), cancellationToken);
 
-        List<PlayoutNameViewModel> playouts = await Mediator.Send(new GetAllPlayouts(), cancellationToken);
-        IOrderedEnumerable<PlayoutNameViewModel> sorted = playouts.OrderBy(p => decimal.Parse(p.ChannelNumber, CultureInfo.InvariantCulture));
-
-        // TODO: properly page this data
-        return new TableData<PlayoutNameViewModel>
-        {
-            TotalItems = playouts.Count,
-            Items = sorted.Skip(state.Page * state.PageSize).Take(state.PageSize)
-        };
+        PagedPlayoutsViewModel data = await Mediator.Send(new GetPagedPlayouts(_searchString, state.Page, state.PageSize), cancellationToken);
+        return new TableData<PlayoutNameViewModel> { TotalItems = data.TotalCount, Items = data.Page };
     }
 
     private async Task<TableData<PlayoutItemViewModel>> DetailServerReload(TableState state, CancellationToken cancellationToken)
@@ -440,10 +439,19 @@
         return new TableData<PlayoutItemViewModel> { TotalItems = 0 };
     }
 
+    private void OnSearch(string query)
+    {
+        _selectedPlayoutId = null;
+        _searchString = query;
+        _table.ReloadServerData();
+    }
+
     private string PlayoutItemViewRowClassFunc(PlayoutItemViewModel item, int index)
     {
         return "playout-filler-" + item.FillerKind.Match(
             fk => fk.ToString().ToLower(),
             () => "unscheduled");
     }
+
+    private string SelectedRowClassFunc(PlayoutNameViewModel element, int rowNumber) => _selectedPlayoutId != null && _selectedPlayoutId == element.PlayoutId ? "selected" : string.Empty;
 }

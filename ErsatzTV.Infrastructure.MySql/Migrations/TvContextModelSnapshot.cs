@@ -348,6 +348,9 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<int>("SongVideoMode")
                         .HasColumnType("int");
 
+                    b.Property<double>("SortNumber")
+                        .HasColumnType("double");
+
                     b.Property<string>("StreamSelector")
                         .HasColumnType("longtext");
 

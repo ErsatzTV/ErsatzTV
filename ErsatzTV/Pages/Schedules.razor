@@ -22,7 +22,8 @@
                       SelectedItemChanged="@(async (ProgramScheduleViewModel x) => await ScheduleSelected(x))"
                       @bind-RowsPerPage="@_rowsPerPage"
                       ServerData="@(new Func<TableState, CancellationToken, Task<TableData<ProgramScheduleViewModel>>>(ServerReload))"
-                      @ref="_table">
+                      @ref="_table"
+                      RowClassFunc="@SelectedRowClassFunc">
                 <ColGroup>
                     <MudHidden Breakpoint="Breakpoint.Xs">
                         <col/>
@@ -211,4 +212,6 @@
         _searchString = query;
         _table.ReloadServerData();
     }
+
+    private string SelectedRowClassFunc(ProgramScheduleViewModel element, int rowNumber) => _selectedSchedule != null && _selectedSchedule == element ? "selected" : string.Empty;
 }

@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Globalization;
+using System.Text.RegularExpressions;
 using System.Threading.Channels;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
@@ -75,6 +76,7 @@ public class CreateChannelHandler(
             {
                 Name = name,
                 Number = number,
+                SortNumber = double.Parse(number, CultureInfo.InvariantCulture),
                 Group = request.Group,
                 Categories = request.Categories,
                 FFmpegProfileId = ffmpegProfileId,
