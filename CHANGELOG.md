@@ -37,6 +37,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
       - `loop` - loop forever
       - `hold` - hold last frame forever, or `hold_seconds`
     - Draw order (`z_index`)
+- Add search fields to filter collections and schedules tables
 
 ### Fixed
 - Fix green output when libplacebo tonemapping is used with NVIDIA acceleration and 10-bit output in FFmpeg Profile

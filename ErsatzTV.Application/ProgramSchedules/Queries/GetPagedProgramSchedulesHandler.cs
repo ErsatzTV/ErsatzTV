@@ -1,21 +1,21 @@
 ﻿using ErsatzTV.Core.Domain;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
-using static ErsatzTV.Application.MediaCollections.Mapper;
+using static ErsatzTV.Application.ProgramSchedules.Mapper;
 
-namespace ErsatzTV.Application.MediaCollections;
+namespace ErsatzTV.Application.ProgramSchedules;
 
-public class GetPagedSmartCollectionsHandler(IDbContextFactory<TvContext> dbContextFactory)
-    : IRequestHandler<GetPagedSmartCollections, PagedSmartCollectionsViewModel>
+public class GetPagedProgramSchedulesHandler(IDbContextFactory<TvContext> dbContextFactory)
+    : IRequestHandler<GetPagedProgramSchedules, PagedProgramSchedulesViewModel>
 {
-    public async Task<PagedSmartCollectionsViewModel> Handle(
-        GetPagedSmartCollections request,
+    public async Task<PagedProgramSchedulesViewModel> Handle(
+        GetPagedProgramSchedules request,
         CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
-        int count = await dbContext.SmartCollections.CountAsync(cancellationToken);
+        int count = await dbContext.ProgramSchedules.CountAsync(cancellationToken);
 
-        IQueryable<SmartCollection> query = dbContext.SmartCollections.AsNoTracking();
+        IQueryable<ProgramSchedule> query = dbContext.ProgramSchedules.AsNoTracking();
 
         if (!string.IsNullOrWhiteSpace(request.Query))
         {
@@ -24,13 +24,13 @@ public class GetPagedSmartCollectionsHandler(IDbContextFactory<TvContext> dbCont
                 $"%{request.Query}%"));
         }
 
-        List<SmartCollectionViewModel> page = await query
+        List<ProgramScheduleViewModel> page = await query
             .OrderBy(s => EF.Functions.Collate(s.Name, TvContext.CaseInsensitiveCollation))
             .Skip(request.PageNum * request.PageSize)
             .Take(request.PageSize)
             .ToListAsync(cancellationToken)
             .Map(list => list.Map(ProjectToViewModel).ToList());
 
-        return new PagedSmartCollectionsViewModel(count, page);
+        return new PagedProgramSchedulesViewModel(count, page);
     }
 }

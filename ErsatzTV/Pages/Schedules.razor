@@ -1,7 +1,6 @@
 ﻿@page "/schedules"
 @using ErsatzTV.Application.Configuration
 @using ErsatzTV.Application.ProgramSchedules
-@using NaturalSort.Extension
 @implements IDisposable
 @inject IDialogService Dialog
 @inject IMediator Mediator
@@ -30,14 +29,15 @@
                         <col style="width: 240px;"/>
                     </MudHidden>
                 </ColGroup>
-                <HeaderContent>
-                    <MudTh>
-                        <MudTableSortLabel SortBy="new Func<ProgramScheduleViewModel, object>(x => x.Name)">
-                            Name
-                        </MudTableSortLabel>
-                    </MudTh>
-                    <MudTh/>
-                </HeaderContent>
+                <ToolBarContent>
+                    <MudTextField T="string"
+                                  ValueChanged="@(s => OnSearch(s))"
+                                  Placeholder="Search for schedules"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.FilterList"
+                                  Clearable="true">
+                    </MudTextField>
+                </ToolBarContent>
                 <RowTemplate>
                     <MudTd>@context.Name</MudTd>
                     <MudTd>
@@ -109,6 +109,7 @@
     private MudTable<ProgramScheduleItemViewModel> _detailTable;
     private int _rowsPerPage = 10;
     private int _detailRowsPerPage = 10;
+    private string _searchString;
     private ProgramScheduleViewModel _selectedSchedule;
 
     public void Dispose()
@@ -185,15 +186,8 @@
     {
         await Mediator.Send(new SaveConfigElementByKey(ConfigElementKey.SchedulesPageSize, state.PageSize.ToString()), cancellationToken);
 
-        List<ProgramScheduleViewModel> schedules = await Mediator.Send(new GetAllProgramSchedules(), cancellationToken);
-        IOrderedEnumerable<ProgramScheduleViewModel> sorted = schedules.OrderBy(s => s.Name, new NaturalSortComparer(StringComparison.CurrentCultureIgnoreCase));
-
-        // TODO: properly page this data
-        return new TableData<ProgramScheduleViewModel>
-        {
-            TotalItems = schedules.Count,
-            Items = sorted.Skip(state.Page * state.PageSize).Take(state.PageSize)
-        };
+        PagedProgramSchedulesViewModel data = await Mediator.Send(new GetPagedProgramSchedules(_searchString, state.Page, state.PageSize), cancellationToken);
+        return new TableData<ProgramScheduleViewModel> { TotalItems = data.TotalCount, Items = data.Page };
     }
 
     private async Task<TableData<ProgramScheduleItemViewModel>> DetailServerReload(TableState state, CancellationToken cancellationToken)
@@ -211,4 +205,10 @@
         };
     }
 
+    private void OnSearch(string query)
+    {
+        _selectedSchedule = null;
+        _searchString = query;
+        _table.ReloadServerData();
+    }
 }
