@@ -44,6 +44,11 @@ public class DecoConfiguration : IEntityTypeConfiguration<Deco>
             .OnDelete(DeleteBehavior.Cascade)
             .IsRequired(false);
 
+        builder.HasMany(d => d.BreakContent)
+            .WithOne(bc => bc.Deco)
+            .HasForeignKey(bc => bc.DecoId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         builder.HasMany(c => c.Watermarks)
             .WithMany(m => m.Decos)
             .UsingEntity<DecoWatermark>(
