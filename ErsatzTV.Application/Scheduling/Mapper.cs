@@ -96,6 +96,7 @@ internal static class Mapper
             deco.GraphicsElementsMode,
             deco.DecoGraphicsElements.Map(ge => Graphics.Mapper.ProjectToViewModel(ge.GraphicsElement)).ToList(),
             deco.UseGraphicsElementsDuringFiller,
+            deco.BreakContentMode,
             deco.DefaultFillerMode,
             deco.DefaultFillerCollectionType,
             deco.DefaultFillerCollectionId,

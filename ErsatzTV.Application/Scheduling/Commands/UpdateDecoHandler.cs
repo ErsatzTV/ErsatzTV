@@ -81,6 +81,9 @@ public class UpdateDecoHandler(IDbContextFactory<TvContext> dbContextFactory)
             existing.DecoGraphicsElements.Clear();
         }
 
+        // break content
+        existing.BreakContentMode = request.BreakContentMode;
+
         // default filler
         existing.DefaultFillerMode = request.DefaultFillerMode;
         existing.DefaultFillerCollectionType = request.DefaultFillerCollectionType;

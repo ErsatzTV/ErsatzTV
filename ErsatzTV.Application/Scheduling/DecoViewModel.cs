@@ -16,6 +16,7 @@ public record DecoViewModel(
     DecoMode GraphicsElementsMode,
     List<GraphicsElementViewModel> GraphicsElements,
     bool UseGraphicsElementsDuringFiller,
+    DecoMode BreakContentMode,
     DecoMode DefaultFillerMode,
     CollectionType DefaultFillerCollectionType,
     int? DefaultFillerCollectionId,

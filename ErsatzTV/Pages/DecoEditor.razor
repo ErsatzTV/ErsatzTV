@@ -111,6 +111,18 @@
                  @bind-Value="_deco.UseGraphicsElementsDuringFiller"
                  Dense="true"/>
 </MudStack>
+<MudText Typo="Typo.h5" Class="mt-10 mb-2">Break Content</MudText>
+<MudDivider Class="mb-6"/>
+<MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+    <div class="d-flex">
+        <MudText>Break Content Mode</MudText>
+    </div>
+    <MudSelect @bind-Value="_deco.BreakContentMode" For="@(() => _deco.BreakContentMode)">
+        <MudSelectItem Value="DecoMode.Inherit">Inherit</MudSelectItem>
+        <MudSelectItem Value="DecoMode.Disable">Disable</MudSelectItem>
+        <MudSelectItem Value="DecoMode.Override">Override</MudSelectItem>
+    </MudSelect>
+</MudStack>
 <MudText Typo="Typo.h5" Class="mt-10 mb-2">Default Filler</MudText>
 <MudDivider Class="mb-6"/>
 <MudText Typo="Typo.body2" Class="mb-6">After all blocks have been scheduled, a second pass will be made to fill unscheduled time using random items from this collection.</MudText>
@@ -446,6 +458,8 @@
                     GraphicsElements = deco.GraphicsElements,
                     UseGraphicsElementsDuringFiller = deco.UseGraphicsElementsDuringFiller,
 
+                    BreakContentMode = deco.BreakContentMode,
+
                     DefaultFillerMode = deco.DefaultFillerMode,
                     DefaultFillerCollectionType = deco.DefaultFillerCollectionType,
                     DefaultFillerCollection = deco.DefaultFillerCollectionId.HasValue
@@ -499,6 +513,7 @@
             _deco.GraphicsElementsMode,
             _deco.GraphicsElements.Map(ge => ge.Id).ToList(),
             _deco.UseGraphicsElementsDuringFiller,
+            _deco.BreakContentMode,
             _deco.DefaultFillerMode,
             _deco.DefaultFillerCollectionType,
             _deco.DefaultFillerCollection?.Id,

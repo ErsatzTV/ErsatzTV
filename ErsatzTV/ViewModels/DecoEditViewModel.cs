@@ -34,4 +34,6 @@ public class DecoEditViewModel
     public MultiCollectionViewModel DeadAirFallbackMultiCollection { get; set; }
     public SmartCollectionViewModel DeadAirFallbackSmartCollection { get; set; }
     public NamedMediaItemViewModel DeadAirFallbackMediaItem { get; set; }
+
+    public DecoMode BreakContentMode { get; set; }
 }

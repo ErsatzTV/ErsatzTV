@@ -14,6 +14,7 @@ public record UpdateDeco(
     DecoMode GraphicsElementsMode,
     List<int> GraphicsElementIds,
     bool UseGraphicsElementsDuringFiller,
+    DecoMode BreakContentMode,
     DecoMode DefaultFillerMode,
     CollectionType DefaultFillerCollectionType,
     int? DefaultFillerCollectionId,
