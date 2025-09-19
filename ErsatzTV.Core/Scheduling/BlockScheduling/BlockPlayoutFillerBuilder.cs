@@ -138,7 +138,6 @@ public class BlockPlayoutFillerBuilder(
                 var history = allHistory.FirstOrDefault(h => h.When == item.Start);
                 if (history is null)
                 {
-                    logger.LogError("Unable to locate history for playout item at {When} in {Count} items", item.Start, allHistory.Count);
                     throw new InvalidOperationException($"Unable to locate history for playout item at {item.Start}");
                 }
                 itemsAndHistory.Add(new ItemAndHistory(item, history));
@@ -159,12 +158,12 @@ public class BlockPlayoutFillerBuilder(
                     continue;
                 }
 
-                logger.LogInformation(
-                    "Block {Id} MAYBE ADD BREAK CONTENT from {Start} to {Finish} with {Remaining} remaining",
-                    blockGroup.Key,
-                    blockStart,
-                    blockFinish,
-                    remaining);
+                // logger.LogDebug(
+                //     "Block {Id} add break content from {Start} to {Finish} with {Remaining} remaining",
+                //     blockGroup.Key,
+                //     blockStart,
+                //     blockFinish,
+                //     remaining);
 
                 foreach (var blockStartContent in deco.BreakContent.Where(bc =>
                              bc.Placement is DecoBreakPlacement.BlockStart))
@@ -261,7 +260,6 @@ public class BlockPlayoutFillerBuilder(
                 }
 
                 DateTimeOffset adjustedTime = blockStart;
-                // TODO: what do we do with history? need to also find matching history and adjust its timing
                 foreach ((PlayoutItem playoutItem, PlayoutHistory playoutHistory) in itemsAndHistory)
                 {
                     bool changed = playoutItem.Start != adjustedTime;
@@ -286,12 +284,6 @@ public class BlockPlayoutFillerBuilder(
                         result.ItemsToRemove.Add(playoutItem.Id);
                         result.AddedItems.Add(playoutItem.Clone());
                     }
-
-                    logger.LogInformation(
-                        "Item and history: {Item}/{BlockKey} and {History}",
-                        playoutItem.StartOffset,
-                        playoutItem.BlockKey ?? playoutItem.GetDisplayDuration(),
-                        playoutHistory.When);
                 }
             }
         }
