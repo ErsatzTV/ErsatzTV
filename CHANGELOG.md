@@ -44,6 +44,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - `text_fit: wrap` will wrap text to the given `width_percent`
   - `text_fit: scale` will scale text *smaller* to fit the given `width_percent`
     - Text that already fits with the configured style will not be adjusted
+- Block schedules: add **experimental** `Break Content` to decos
+  - Break content is similar to filler from classic schedules
+  - Break content is currently limited to placement `Break Start` (play before anything else in the block)
+    - Future work will add other placement options
+  - Break content is currently limited to playlists (which do *not* pad - they simply play through the playlist one time)
+    - Future work will add other collection options which will pad to the full block duration
 
 ### Fixed
 - Fix green output when libplacebo tonemapping is used with NVIDIA acceleration and 10-bit output in FFmpeg Profile
