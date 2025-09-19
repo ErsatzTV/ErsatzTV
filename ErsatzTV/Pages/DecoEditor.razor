@@ -191,13 +191,15 @@
             <div class="d-flex">
                 <MudText>Collection Type</MudText>
             </div>
-            <MudSelect @bind-Value="_selectedBreakContent.CollectionType" For="@(() => _selectedBreakContent.CollectionType)">
-                <MudSelectItem Value="CollectionType.Collection">Collection</MudSelectItem>
-                <MudSelectItem Value="CollectionType.TelevisionShow">Television Show</MudSelectItem>
-                <MudSelectItem Value="CollectionType.TelevisionSeason">Television Season</MudSelectItem>
+            <MudSelect @bind-Value="_selectedBreakContent.CollectionType" For="@(() => _selectedBreakContent.CollectionType)" Disabled="true">
+                @* <MudSelectItem Value="CollectionType.Collection">Collection</MudSelectItem> *@
+                @* <MudSelectItem Value="CollectionType.TelevisionShow">Television Show</MudSelectItem> *@
+                @* <MudSelectItem Value="CollectionType.TelevisionSeason">Television Season</MudSelectItem> *@
+
                 @* <MudSelectItem Value="CollectionType.Artist">Artist</MudSelectItem> *@
                 @* <MudSelectItem Value="CollectionType.MultiCollection">Multi Collection</MudSelectItem> *@
-                <MudSelectItem Value="CollectionType.SmartCollection">Smart Collection</MudSelectItem>
+
+                @* <MudSelectItem Value="CollectionType.SmartCollection">Smart Collection</MudSelectItem> *@
                 <MudSelectItem Value="CollectionType.Playlist">Playlist</MudSelectItem>
             </MudSelect>
         </MudStack>
@@ -856,8 +858,10 @@
     {
         var item = new DecoBreakContentEditViewModel
         {
-            CollectionType = CollectionType.Collection,
-            Collection = null,
+            //CollectionType = CollectionType.Collection,
+            //Collection = null,
+            CollectionType = CollectionType.Playlist,
+            Playlist = null,
             Placement = DecoBreakPlacement.BlockStart
         };
 
