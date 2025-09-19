@@ -129,7 +129,12 @@ public class BlockPlayoutFillerBuilder(
             var itemsAndHistory = new List<ItemAndHistory>();
             foreach (var item in itemsInBlock)
             {
-                var history = allHistory.First(h => h.When == item.Start);
+                var history = allHistory.FirstOrDefault(h => h.When == item.Start);
+                if (history is null)
+                {
+                    logger.LogError("Unable to locate history for playout item at {When} in {Count} items", item.Start, allHistory.Count);
+                    throw new InvalidOperationException($"Unable to locate history for playout item at {item.Start}");
+                }
                 itemsAndHistory.Add(new ItemAndHistory(item, history));
             }
 
@@ -256,16 +261,16 @@ public class BlockPlayoutFillerBuilder(
                     bool changed = playoutItem.Start != adjustedTime;
 
                     TimeSpan duration = playoutItem.Finish - playoutItem.Start;
+
                     playoutItem.Start = adjustedTime.UtcDateTime;
                     playoutItem.Finish = (adjustedTime + duration).UtcDateTime;
+
+                    playoutHistory.When = playoutItem.Start;
+                    playoutHistory.Finish = playoutItem.Finish;
+
                     adjustedTime = playoutItem.FinishOffset;
 
-                    if (playoutHistory.Id == 0)
-                    {
-                        playoutHistory.When = playoutItem.Start;
-                        playoutHistory.Finish = playoutItem.Finish;
-                    }
-                    else if (changed)
+                    if (changed && playoutHistory.Id > 0)
                     {
                         // change existing history
                         result.HistoryToRemove.Add(playoutHistory.Id);

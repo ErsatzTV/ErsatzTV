@@ -157,7 +157,7 @@ public static class BlockPlayoutEnumerator
         var playlistMediaItems = new Dictionary<CollectionKey, List<MediaItem>>();
         foreach ((PlaylistItem playlistItem, List<MediaItem> mediaItems) in itemMap)
         {
-            playlistMediaItems.Add(CollectionKey.ForPlaylistItem(playlistItem), mediaItems);
+            playlistMediaItems.TryAdd(CollectionKey.ForPlaylistItem(playlistItem), mediaItems);
         }
 
         var state = new CollectionEnumeratorState { Seed = playoutSeed + seedOffset, Index = 0 };
