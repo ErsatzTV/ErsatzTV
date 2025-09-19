@@ -14,16 +14,37 @@ public class CheckForOverlappingPlayoutItemsHandler(
     {
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
-        bool hasConflict = await dbContext.PlayoutItems
+        IAsyncEnumerable<PlayoutItemDto> items = dbContext.PlayoutItems
+            .AsNoTracking()
             .Where(pi => pi.PlayoutId == request.PlayoutId)
-            .AnyAsync(
-                a => dbContext.PlayoutItems
-                    .Where(b => b.PlayoutId == a.PlayoutId)
-                    .Any(b =>
-                        a.Id < b.Id &&
-                        a.Start < b.Finish &&
-                        a.Finish > b.Start),
-                cancellationToken);
+            .OrderBy(pi => pi.Start)
+            .Select(pi => new PlayoutItemDto(pi.Start, pi.Finish))
+            .AsAsyncEnumerable();
+
+        var hasConflict = false;
+        DateTime? maxFinish = null;
+        var isFirstItem = true;
+
+        await foreach (var item in items.WithCancellation(cancellationToken))
+        {
+            if (isFirstItem)
+            {
+                maxFinish = item.Finish;
+                isFirstItem = false;
+                continue;
+            }
+
+            if (item.Start < maxFinish)
+            {
+                hasConflict = true;
+                break;
+            }
+
+            if (item.Finish > maxFinish)
+            {
+                maxFinish = item.Finish;
+            }
+        }
 
         if (hasConflict)
         {
@@ -41,4 +62,6 @@ public class CheckForOverlappingPlayoutItemsHandler(
             }
         }
     }
+
+    private sealed record PlayoutItemDto(DateTime Start, DateTime Finish);
 }

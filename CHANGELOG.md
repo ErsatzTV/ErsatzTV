@@ -57,6 +57,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - This should resolve most playback issues with built-in channel preview
 - Fix deco dead air fallback selection and duration on mirror channels
 - Fix fallback filler duration on mirror channels
+- Fix slow startup caused by check for overlapping playout items
 
 ### Changed
 - Filler presets: use separate text fields for `hours`, `minutes` and `seconds` duration
