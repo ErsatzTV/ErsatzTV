@@ -1,5 +1,6 @@
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Scheduling;
+using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using Microsoft.Extensions.Logging;
 
@@ -114,7 +115,7 @@ public static class BlockPlayoutEnumerator
         DateTimeOffset currentTime,
         int playoutSeed,
         List<PlayoutHistory> playoutHistory,
-        Deco deco,
+        int seedOffset,
         string historyKey)
     {
         DateTime historyTime = currentTime.UtcDateTime;
@@ -124,7 +125,7 @@ public static class BlockPlayoutEnumerator
             .OrderByDescending(h => h.When)
             .HeadOrNone();
 
-        var state = new CollectionEnumeratorState { Seed = playoutSeed + deco.Id, Index = 0 };
+        var state = new CollectionEnumeratorState { Seed = playoutSeed + seedOffset, Index = 0 };
         foreach (PlayoutHistory h in maybeHistory)
         {
             state.Index = h.Index + 1;
@@ -138,6 +139,128 @@ public static class BlockPlayoutEnumerator
         // it shouldn't matter which order the remaining items are shuffled in,
         // as long as already-played items are not included
         return new BlockPlayoutShuffledMediaCollectionEnumerator(mediaItems, state);
+    }
+
+    public static async Task<IMediaCollectionEnumerator> PlaylistForFiller(
+        IMediaCollectionRepository mediaCollectionRepository,
+        int playlistId,
+        DateTimeOffset currentTime,
+        int playoutSeed,
+        IReadOnlyCollection<PlayoutHistory> playoutHistory,
+        int seedOffset,
+        string historyKey,
+        CancellationToken cancellationToken)
+    {
+        Dictionary<PlaylistItem, List<MediaItem>> itemMap =
+            await mediaCollectionRepository.GetPlaylistItemMap(playlistId, cancellationToken);
+
+        var playlistMediaItems = new Dictionary<CollectionKey, List<MediaItem>>();
+        foreach ((PlaylistItem playlistItem, List<MediaItem> mediaItems) in itemMap)
+        {
+            playlistMediaItems.TryAdd(CollectionKey.ForPlaylistItem(playlistItem), mediaItems);
+        }
+
+        var state = new CollectionEnumeratorState { Seed = playoutSeed + seedOffset, Index = 0 };
+
+        var enumerator = await PlaylistEnumerator.Create(
+            mediaCollectionRepository,
+            itemMap,
+            state,
+            shufflePlaylistItems: false,
+            batchSize: Option<int>.None,
+            cancellationToken);
+
+        DateTime historyTime = currentTime.UtcDateTime;
+        Option<DateTime> maxWhen = await playoutHistory
+            .Filter(h => h.Key == historyKey)
+            .Filter(h => h.When < historyTime)
+            .Map(h => h.When)
+            .OrderByDescending(h => h)
+            .HeadOrNone()
+            .IfNoneAsync(DateTime.MinValue);
+
+        var maybeHistory = playoutHistory
+            .Filter(h => h.Key == historyKey)
+            .Filter(h => h.When == maxWhen)
+            .ToList();
+
+        Option<PlayoutHistory> maybePrimaryHistory = maybeHistory
+            .Filter(h => string.IsNullOrWhiteSpace(h.ChildKey))
+            .HeadOrNone();
+
+        foreach (PlayoutHistory primaryHistory in maybePrimaryHistory)
+        {
+            var hasSetEnumeratorIndex = false;
+
+            var childEnumeratorKeys = enumerator.ChildEnumerators.Map(x => x.CollectionKey).ToList();
+            foreach ((IMediaCollectionEnumerator childEnumerator, CollectionKey collectionKey) in
+                     enumerator.ChildEnumerators)
+            {
+                PlaybackOrder itemPlaybackOrder = childEnumerator switch
+                {
+                    ChronologicalMediaCollectionEnumerator => PlaybackOrder.Chronological,
+                    RandomizedMediaCollectionEnumerator => PlaybackOrder.Random,
+                    ShuffledMediaCollectionEnumerator => PlaybackOrder.Shuffle,
+                    _ => PlaybackOrder.None
+                };
+
+                Option<PlayoutHistory> maybeApplicableHistory = maybeHistory
+                    .Filter(h => h.ChildKey == HistoryDetails.KeyForCollectionKey(collectionKey))
+                    .HeadOrNone();
+
+                List<MediaItem> collectionItems = playlistMediaItems[collectionKey];
+                if (collectionItems.Count == 0)
+                {
+                    continue;
+                }
+
+                foreach (PlayoutHistory h in maybeApplicableHistory)
+                {
+                    // logger.LogDebug(
+                    //     "History is applicable: {When}: {ChildKey} / {History} / {IsCurrentChild}",
+                    //     h.When,
+                    //     h.ChildKey,
+                    //     h.Details,
+                    //     h.IsCurrentChild);
+
+                    enumerator.ResetState(
+                        new CollectionEnumeratorState
+                        {
+                            Seed = enumerator.State.Seed,
+                            Index = h.Index + (h.IsCurrentChild ? 1 : 0)
+                        });
+
+                    if (itemPlaybackOrder is PlaybackOrder.Chronological)
+                    {
+                        HistoryDetails.MoveToNextItem(
+                            collectionItems,
+                            h.Details,
+                            childEnumerator,
+                            itemPlaybackOrder,
+                            true);
+                    }
+
+                    if (h.IsCurrentChild)
+                    {
+                        // try to find enumerator based on collection key
+                        enumerator.SetEnumeratorIndex(childEnumeratorKeys.IndexOf(collectionKey));
+                        hasSetEnumeratorIndex = true;
+                    }
+                }
+            }
+
+            if (!hasSetEnumeratorIndex)
+            {
+                // falling back to enumerator based on index
+                enumerator.SetEnumeratorIndex(primaryHistory.Index);
+            }
+
+            // only move next at the end, because that may also move
+            // the enumerator index
+            enumerator.MoveNext(Option<DateTimeOffset>.None);
+        }
+
+        return enumerator;
     }
 
     public static IMediaCollectionEnumerator RandomRotation(

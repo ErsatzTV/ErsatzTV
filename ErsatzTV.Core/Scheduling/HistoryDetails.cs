@@ -102,6 +102,23 @@ internal static class HistoryDetails
         return JsonConvert.SerializeObject(key, Formatting.None, JsonSettings);
     }
 
+    public static string ForBreakContent(DecoBreakContent breakContent)
+    {
+        dynamic key = new
+        {
+            DecoBreakContentId = breakContent.Id,
+            PlaybackOrder = PlaybackOrder.Shuffle,
+            breakContent.CollectionType,
+            breakContent.CollectionId,
+            breakContent.MultiCollectionId,
+            breakContent.SmartCollectionId,
+            breakContent.MediaItemId,
+            breakContent.PlaylistId
+        };
+
+        return JsonConvert.SerializeObject(key, Formatting.None, JsonSettings);
+    }
+
     public static string ForDefaultFiller(Deco deco)
     {
         dynamic key = new

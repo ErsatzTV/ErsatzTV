@@ -1,4 +1,6 @@
 using ErsatzTV.Application.Graphics;
+using ErsatzTV.Application.MediaCollections;
+using ErsatzTV.Application.MediaItems;
 using ErsatzTV.Application.Watermarks;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Scheduling;
@@ -16,16 +18,18 @@ public record DecoViewModel(
     DecoMode GraphicsElementsMode,
     List<GraphicsElementViewModel> GraphicsElements,
     bool UseGraphicsElementsDuringFiller,
+    DecoMode BreakContentMode,
+    List<DecoBreakContentViewModel> BreakContent,
     DecoMode DefaultFillerMode,
     CollectionType DefaultFillerCollectionType,
-    int? DefaultFillerCollectionId,
-    int? DefaultFillerMediaItemId,
-    int? DefaultFillerMultiCollectionId,
-    int? DefaultFillerSmartCollectionId,
+    MediaCollectionViewModel DefaultFillerCollection,
+    NamedMediaItemViewModel DefaultFillerMediaItem,
+    MultiCollectionViewModel DefaultFillerMultiCollection,
+    SmartCollectionViewModel DefaultFillerSmartCollection,
     bool DefaultFillerTrimToFit,
     DecoMode DeadAirFallbackMode,
     CollectionType DeadAirFallbackCollectionType,
-    int? DeadAirFallbackCollectionId,
-    int? DeadAirFallbackMediaItemId,
-    int? DeadAirFallbackMultiCollectionId,
-    int? DeadAirFallbackSmartCollectionId);
+    MediaCollectionViewModel DeadAirFallbackCollection,
+    NamedMediaItemViewModel DeadAirFallbackMediaItem,
+    MultiCollectionViewModel DeadAirFallbackMultiCollection,
+    SmartCollectionViewModel DeadAirFallbackSmartCollection);

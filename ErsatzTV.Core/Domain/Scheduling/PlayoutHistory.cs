@@ -29,4 +29,19 @@ public class PlayoutHistory
 
     // details about the item
     public string Details { get; set; }
+
+    public PlayoutHistory Clone() =>
+        new()
+        {
+            PlayoutId = PlayoutId,
+            BlockId = BlockId,
+            PlaybackOrder = PlaybackOrder,
+            Index = Index,
+            Key = Key,
+            ChildKey = ChildKey,
+            IsCurrentChild = IsCurrentChild,
+            When = When,
+            Finish = Finish,
+            Details = Details
+        };
 }

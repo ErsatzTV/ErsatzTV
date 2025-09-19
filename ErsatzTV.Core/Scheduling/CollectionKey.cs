@@ -230,6 +230,81 @@ public class CollectionKey : Record<CollectionKey>
             _ => throw new ArgumentOutOfRangeException(nameof(deco))
         };
 
+    public static CollectionKey ForBreakContent(DecoBreakContent breakContent) =>
+        breakContent.CollectionType switch
+        {
+            CollectionType.Collection => new CollectionKey
+            {
+                CollectionType = breakContent.CollectionType,
+                CollectionId = breakContent.CollectionId
+            },
+            CollectionType.TelevisionShow => new CollectionKey
+            {
+                CollectionType = breakContent.CollectionType,
+                MediaItemId = breakContent.MediaItemId
+            },
+            CollectionType.TelevisionSeason => new CollectionKey
+            {
+                CollectionType = breakContent.CollectionType,
+                MediaItemId = breakContent.MediaItemId
+            },
+            CollectionType.Artist => new CollectionKey
+            {
+                CollectionType = breakContent.CollectionType,
+                MediaItemId = breakContent.MediaItemId
+            },
+            CollectionType.MultiCollection => new CollectionKey
+            {
+                CollectionType = breakContent.CollectionType,
+                MultiCollectionId = breakContent.MultiCollectionId
+            },
+            CollectionType.SmartCollection => new CollectionKey
+            {
+                CollectionType = breakContent.CollectionType,
+                SmartCollectionId = breakContent.SmartCollectionId
+            },
+            CollectionType.Playlist => new CollectionKey
+            {
+                CollectionType = breakContent.CollectionType,
+                PlaylistId = breakContent.PlaylistId
+            },
+            CollectionType.FakeCollection => new CollectionKey
+            {
+                CollectionType = breakContent.CollectionType
+            },
+            CollectionType.Movie => new CollectionKey
+            {
+                CollectionType = breakContent.CollectionType,
+                MediaItemId = breakContent.MediaItemId
+            },
+            CollectionType.Episode => new CollectionKey
+            {
+                CollectionType = breakContent.CollectionType,
+                MediaItemId = breakContent.MediaItemId
+            },
+            CollectionType.MusicVideo => new CollectionKey
+            {
+                CollectionType = breakContent.CollectionType,
+                MediaItemId = breakContent.MediaItemId
+            },
+            CollectionType.OtherVideo => new CollectionKey
+            {
+                CollectionType = breakContent.CollectionType,
+                MediaItemId = breakContent.MediaItemId
+            },
+            CollectionType.Song => new CollectionKey
+            {
+                CollectionType = breakContent.CollectionType,
+                MediaItemId = breakContent.MediaItemId
+            },
+            CollectionType.Image => new CollectionKey
+            {
+                CollectionType = breakContent.CollectionType,
+                MediaItemId = breakContent.MediaItemId
+            },
+            _ => throw new ArgumentOutOfRangeException(nameof(breakContent))
+        };
+
     public static CollectionKey ForScheduleItem(ProgramScheduleItem item) =>
         item.CollectionType switch
         {

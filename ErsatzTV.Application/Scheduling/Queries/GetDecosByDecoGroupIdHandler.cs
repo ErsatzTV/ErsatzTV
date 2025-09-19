@@ -13,6 +13,7 @@ public class GetDecosByDecoGroupIdHandler(IDbContextFactory<TvContext> dbContext
 
         List<Deco> decos = await dbContext.Decos
             .AsNoTracking()
+            .Include(d => d.BreakContent)
             .Include(d => d.DecoGroup)
             .Include(d => d.DecoWatermarks)
             .ThenInclude(d => d.Watermark)

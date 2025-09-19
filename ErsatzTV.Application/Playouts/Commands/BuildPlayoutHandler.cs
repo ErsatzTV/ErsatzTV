@@ -389,6 +389,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
         {
             deco = await dbContext.Decos
                 .AsNoTracking()
+                .Include(d => d.BreakContent)
                 .Where(d => d.Playouts.Any(p => p.Id == playoutId))
                 .FirstOrDefaultAsync()
                 .Map(Optional);
@@ -414,6 +415,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
                 .Include(t => t.DecoTemplate)
                 .ThenInclude(t => t.Items)
                 .ThenInclude(i => i.Deco)
+                .ThenInclude(d => d.BreakContent)
                 .ToListAsync();
         }
 
