@@ -32,6 +32,7 @@ public class BlockPlayoutFillerBuilder(
             .ToList();
 
         var allItems = result.AddedItems.ToList();
+        var removeBefore = await result.RemoveBefore.IfNoneAsync(DateTimeOffset.MaxValue);
 
         if (mode is PlayoutBuildMode.Reset)
         {
@@ -39,6 +40,11 @@ public class BlockPlayoutFillerBuilder(
             // except block items that are hidden from the guide (guide mode)
             foreach (PlayoutItem item in filteredExistingItems)
             {
+                if (item.Finish < removeBefore)
+                {
+                    continue;
+                }
+
                 if (item.FillerKind is FillerKind.None or FillerKind.GuideMode)
                 {
                     allItems.Add(item);

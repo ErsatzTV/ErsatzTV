@@ -57,6 +57,9 @@ public class BlockPlayoutBuilder(
         List<EffectiveBlock> blocksToSchedule =
             EffectiveBlock.GetEffectiveBlocks(referenceData.PlayoutTemplates, start, daysToBuild);
 
+        // always start at the beginning of the block
+        start = blocksToSchedule.Min(b => b.Start);
+
         // get all collection items for the playout
         Map<CollectionKey, List<MediaItem>> collectionMediaItems =
             await GetCollectionMediaItems(blocksToSchedule, cancellationToken);
