@@ -59,6 +59,27 @@ public class BlockPlayoutFillerBuilder(
 
         var collectionEnumerators = new Dictionary<CollectionKey, IMediaCollectionEnumerator>();
 
+        result = await AddDefaultFiller(
+            playout,
+            referenceData,
+            result,
+            collectionEnumerators,
+            allItems,
+            filteredExistingHistory,
+            cancellationToken);
+
+        return result;
+    }
+
+    private async Task<PlayoutBuildResult> AddDefaultFiller(
+        Playout playout,
+        PlayoutReferenceData referenceData,
+        PlayoutBuildResult result,
+        Dictionary<CollectionKey, IMediaCollectionEnumerator> collectionEnumerators,
+        List<PlayoutItem> allItems,
+        List<PlayoutHistory> filteredExistingHistory,
+        CancellationToken cancellationToken)
+    {
         // find all unscheduled periods
         var queue = new Queue<PlayoutItem>(allItems.OrderBy(i => i.Start));
         while (queue.Count > 1)
@@ -187,7 +208,6 @@ public class BlockPlayoutFillerBuilder(
                 }
             }
         }
-
 
         return result;
     }
