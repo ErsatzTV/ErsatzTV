@@ -41,6 +41,50 @@ public class PlayoutItem
         ? new DateTimeOffset(GuideFinish.Value, TimeSpan.Zero).ToLocalTime()
         : null;
 
+    public PlayoutItem Clone()
+    {
+        var watermarksCopy = new List<PlayoutItemWatermark>();
+        if (PlayoutItemWatermarks != null)
+        {
+            watermarksCopy.AddRange(
+                PlayoutItemWatermarks.Select(wm => new PlayoutItemWatermark { WatermarkId = wm.WatermarkId }));
+        }
+
+        var graphicsElementsCopy = new List<PlayoutItemGraphicsElement>();
+        if (PlayoutItemGraphicsElements != null)
+        {
+            graphicsElementsCopy.AddRange(
+                PlayoutItemGraphicsElements.Select(wm => new PlayoutItemGraphicsElement
+                    { GraphicsElementId = wm.GraphicsElementId }));
+        }
+
+        return new PlayoutItem
+        {
+            MediaItemId = MediaItemId,
+            Start = Start,
+            Finish = Finish,
+            GuideStart = GuideStart,
+            GuideFinish = GuideFinish,
+            CustomTitle = CustomTitle,
+            GuideGroup = GuideGroup,
+            FillerKind = FillerKind,
+            PlayoutId = PlayoutId,
+            InPoint = InPoint,
+            OutPoint = OutPoint,
+            ChapterTitle = ChapterTitle,
+            DisableWatermarks = DisableWatermarks,
+            PreferredAudioLanguageCode = PreferredAudioLanguageCode,
+            PreferredAudioTitle = PreferredAudioTitle,
+            PreferredSubtitleLanguageCode = PreferredSubtitleLanguageCode,
+            SubtitleMode = SubtitleMode,
+            BlockKey = BlockKey,
+            CollectionKey = CollectionKey,
+            CollectionEtag = CollectionEtag,
+            PlayoutItemWatermarks = watermarksCopy,
+            PlayoutItemGraphicsElements = graphicsElementsCopy
+        };
+    }
+
     public PlayoutItem ForChapter(MediaChapter chapter)
     {
         var watermarksCopy = new List<PlayoutItemWatermark>();

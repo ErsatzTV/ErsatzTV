@@ -59,17 +59,32 @@ public class BlockPlayoutFillerBuilder(
 
         var collectionEnumerators = new Dictionary<CollectionKey, IMediaCollectionEnumerator>();
 
-        result = await AddBreakContent(
+        var breakContentResult = await AddBreakContent(
             playout,
             referenceData,
-            result,
             mode,
             collectionEnumerators,
             allItems,
             filteredExistingHistory,
+            result.AddedHistory,
             cancellationToken);
 
-        // TODO: result and allItems may need to merge somehow?
+        // merge break content result
+        result.AddedItems.AddRange(breakContentResult.AddedItems);
+        result.AddedHistory.AddRange(breakContentResult.AddedHistory);
+        foreach (int id in breakContentResult.ItemsToRemove)
+        {
+            result.ItemsToRemove.Add(id);
+        }
+        foreach (int id in breakContentResult.HistoryToRemove)
+        {
+            result.HistoryToRemove.Add(id);
+        }
+
+        allItems = referenceData.ExistingItems
+            .Where(i => !result.ItemsToRemove.Contains(i.Id))
+            .ToList();
+        allItems.AddRange(result.AddedItems);
 
         result = await AddDefaultFiller(
             playout,
@@ -86,20 +101,22 @@ public class BlockPlayoutFillerBuilder(
     private async Task<PlayoutBuildResult> AddBreakContent(
         Playout playout,
         PlayoutReferenceData referenceData,
-        PlayoutBuildResult result,
         PlayoutBuildMode mode,
         Dictionary<CollectionKey, IMediaCollectionEnumerator> collectionEnumerators,
-        List<PlayoutItem> allItems,
-        List<PlayoutHistory> filteredExistingHistory,
+        IReadOnlyCollection<PlayoutItem> allItems,
+        IReadOnlyCollection<PlayoutHistory> filteredExistingHistory,
+        IReadOnlyCollection<PlayoutHistory> addedHistory,
         CancellationToken cancellationToken)
     {
+        var result = PlayoutBuildResult.Empty;
+
         // TODO: support other modes
         if (mode is not PlayoutBuildMode.Reset)
         {
             return result;
         }
 
-        var allHistory = filteredExistingHistory.Append(result.AddedHistory).ToList();
+        var allHistory = filteredExistingHistory.Append(addedHistory).ToList();
 
         // guide group is template item id
         // they are reused over multiple days, so we only want to group consecutive items
@@ -151,7 +168,7 @@ public class BlockPlayoutFillerBuilder(
                         collectionKey,
                         historyKey,
                         currentTime,
-                        () => filteredExistingHistory.Append(result.AddedHistory).ToList(),
+                        () => filteredExistingHistory.Append(addedHistory).Append(result.AddedHistory).ToList(),
                         playout.Seed,
                         deco.Id,
                         cancellationToken);
@@ -217,6 +234,9 @@ public class BlockPlayoutFillerBuilder(
                                 }
                                 else
                                 {
+                                    result.AddedItems.Add(filler);
+                                    result.AddedHistory.Add(nextHistory);
+
                                     toInsert.Add(new ItemAndHistory(filler, nextHistory));
                                     remaining -= itemDuration;
                                     playlistEnumerator.MoveNext(currentTime);
@@ -233,12 +253,28 @@ public class BlockPlayoutFillerBuilder(
                 // TODO: what do we do with history? need to also find matching history and adjust its timing
                 foreach ((PlayoutItem playoutItem, PlayoutHistory playoutHistory) in itemsAndHistory)
                 {
+                    bool changed = playoutItem.Start != adjustedTime;
+
                     TimeSpan duration = playoutItem.Finish - playoutItem.Start;
                     playoutItem.Start = adjustedTime.UtcDateTime;
                     playoutItem.Finish = (adjustedTime + duration).UtcDateTime;
                     adjustedTime = playoutItem.FinishOffset;
 
-                    playoutHistory.When = playoutItem.Start;
+                    if (playoutHistory.Id == 0)
+                    {
+                        playoutHistory.When = playoutItem.Start;
+                        playoutHistory.Finish = playoutItem.Finish;
+                    }
+                    else if (changed)
+                    {
+                        // change existing history
+                        result.HistoryToRemove.Add(playoutHistory.Id);
+                        result.AddedHistory.Add(playoutHistory.Clone());
+
+                        // change existing item
+                        result.ItemsToRemove.Add(playoutItem.Id);
+                        result.AddedItems.Add(playoutItem.Clone());
+                    }
 
                     logger.LogInformation(
                         "Item and history: {Item}/{BlockKey} and {History}",
