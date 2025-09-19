@@ -59,6 +59,18 @@ public class BlockPlayoutFillerBuilder(
 
         var collectionEnumerators = new Dictionary<CollectionKey, IMediaCollectionEnumerator>();
 
+        result = await AddBreakContent(
+            playout,
+            referenceData,
+            result,
+            mode,
+            collectionEnumerators,
+            allItems,
+            filteredExistingHistory,
+            cancellationToken);
+
+        // TODO: result and allItems may need to merge somehow?
+
         result = await AddDefaultFiller(
             playout,
             referenceData,
@@ -67,6 +79,175 @@ public class BlockPlayoutFillerBuilder(
             allItems,
             filteredExistingHistory,
             cancellationToken);
+
+        return result;
+    }
+
+    private async Task<PlayoutBuildResult> AddBreakContent(
+        Playout playout,
+        PlayoutReferenceData referenceData,
+        PlayoutBuildResult result,
+        PlayoutBuildMode mode,
+        Dictionary<CollectionKey, IMediaCollectionEnumerator> collectionEnumerators,
+        List<PlayoutItem> allItems,
+        List<PlayoutHistory> filteredExistingHistory,
+        CancellationToken cancellationToken)
+    {
+        // TODO: support other modes
+        if (mode is not PlayoutBuildMode.Reset)
+        {
+            return result;
+        }
+
+        var allHistory = filteredExistingHistory.Append(result.AddedHistory).ToList();
+
+        // guide group is template item id
+        // they are reused over multiple days, so we only want to group consecutive items
+        IEnumerable<IGrouping<int, PlayoutItem>> consecutiveBlocks = allItems.GroupConsecutiveBy(item => item.GuideGroup);
+        foreach (IGrouping<int, PlayoutItem> blockGroup in consecutiveBlocks)
+        {
+            var itemsInBlock = blockGroup.ToList();
+
+            // find all item and history pairs (to move together)
+            var itemsAndHistory = new List<ItemAndHistory>();
+            foreach (var item in itemsInBlock)
+            {
+                var history = allHistory.First(h => h.When == item.Start);
+                itemsAndHistory.Add(new ItemAndHistory(item, history));
+            }
+
+            var head = itemsInBlock[0];
+            DateTimeOffset blockStart = new DateTimeOffset(head.GuideStart!.Value, TimeSpan.Zero).ToLocalTime();
+            DateTimeOffset blockFinish = new DateTimeOffset(head.GuideFinish!.Value, TimeSpan.Zero).ToLocalTime();
+            TimeSpan blockDuration = blockFinish - blockStart;
+            TimeSpan totalItemDuration = TimeSpan.FromTicks(itemsInBlock.Sum(i => (i.Finish - i.Start).Ticks));
+            TimeSpan remaining = blockDuration - totalItemDuration;
+
+            // find applicable deco
+            foreach (Deco deco in GetDecoFor(referenceData, blockStart))
+            {
+                if (deco.BreakContent.Count == 0)
+                {
+                    continue;
+                }
+
+                logger.LogInformation(
+                    "Block {Id} MAYBE ADD BREAK CONTENT from {Start} to {Finish} with {Remaining} remaining",
+                    blockGroup.Key,
+                    blockStart,
+                    blockFinish,
+                    remaining);
+
+                foreach (var blockStartContent in deco.BreakContent.Where(bc =>
+                             bc.Placement is DecoBreakPlacement.BlockStart))
+                {
+                    DateTimeOffset currentTime = blockStart;
+
+                    var collectionKey = CollectionKey.ForBreakContent(blockStartContent);
+                    string historyKey = HistoryDetails.ForBreakContent(blockStartContent);
+
+                    var enumerator = await GetEnumerator(
+                        collectionEnumerators,
+                        collectionKey,
+                        historyKey,
+                        currentTime,
+                        () => filteredExistingHistory.Append(result.AddedHistory).ToList(),
+                        playout.Seed,
+                        deco.Id,
+                        cancellationToken);
+
+                    int count = enumerator switch
+                    {
+                        PlaylistEnumerator pe => pe.CountForFiller,
+                        _ => enumerator.Count
+                    };
+
+                    if (count == 0)
+                    {
+                        break;
+                    }
+
+                    // TODO: support more than playlist enumerator
+                    if (enumerator is PlaylistEnumerator playlistEnumerator)
+                    {
+                        List<ItemAndHistory> toInsert = [];
+
+                        for (var i = 0; i < playlistEnumerator.CountForFiller; i++)
+                        {
+                            foreach (MediaItem mediaItem in enumerator.Current)
+                            {
+                                TimeSpan itemDuration = DurationForMediaItem(mediaItem);
+
+                                var filler = new PlayoutItem
+                                {
+                                    PlayoutId = playout.Id,
+                                    MediaItemId = mediaItem.Id,
+                                    Start = blockStart.UtcDateTime,
+                                    Finish = blockStart.UtcDateTime + itemDuration,
+                                    InPoint = TimeSpan.Zero,
+                                    OutPoint = itemDuration,
+
+                                    // FillerKind.Fallback will loop and avoid hw accel, so don't use that
+                                    FillerKind = FillerKind.DecoDefault,
+
+                                    CollectionKey = JsonConvert.SerializeObject(collectionKey, JsonSettings),
+                                    GuideStart = head.GuideStart,
+                                    GuideFinish = head.GuideFinish,
+                                    GuideGroup = head.GuideGroup
+                                };
+
+                                var nextHistory = new PlayoutHistory
+                                {
+                                    PlayoutId = playout.Id,
+                                    PlaybackOrder = PlaybackOrder.None,
+                                    Index = enumerator.State.Index,
+                                    When = blockStart.UtcDateTime,
+                                    Finish = filler.FinishOffset.UtcDateTime,
+                                    Key = historyKey,
+                                    Details = HistoryDetails.ForMediaItem(mediaItem)
+                                };
+
+                                if (itemDuration > remaining)
+                                {
+                                    logger.LogDebug(
+                                        "Block start item {Item} with duration {Duration} is too long for block with remaining time {Time}",
+                                        mediaItem.Id,
+                                        itemDuration,
+                                        remaining);
+                                }
+                                else
+                                {
+                                    toInsert.Add(new ItemAndHistory(filler, nextHistory));
+                                    remaining -= itemDuration;
+                                    playlistEnumerator.MoveNext(currentTime);
+                                    currentTime += itemDuration;
+                                }
+                            }
+                        }
+
+                        itemsAndHistory.InsertRange(0, toInsert);
+                    }
+                }
+
+                DateTimeOffset adjustedTime = blockStart;
+                // TODO: what do we do with history? need to also find matching history and adjust its timing
+                foreach ((PlayoutItem playoutItem, PlayoutHistory playoutHistory) in itemsAndHistory)
+                {
+                    TimeSpan duration = playoutItem.Finish - playoutItem.Start;
+                    playoutItem.Start = adjustedTime.UtcDateTime;
+                    playoutItem.Finish = (adjustedTime + duration).UtcDateTime;
+                    adjustedTime = playoutItem.FinishOffset;
+
+                    playoutHistory.When = playoutItem.Start;
+
+                    logger.LogInformation(
+                        "Item and history: {Item}/{BlockKey} and {History}",
+                        playoutItem.StartOffset,
+                        playoutItem.BlockKey ?? playoutItem.GetDisplayDuration(),
+                        playoutHistory.When);
+                }
+            }
+        }
 
         return result;
     }
@@ -106,33 +287,15 @@ public class BlockPlayoutFillerBuilder(
                 var collectionKey = CollectionKey.ForDecoDefaultFiller(deco);
                 string historyKey = HistoryDetails.ForDefaultFiller(deco);
 
-                // load collection items from db on demand
-                if (!collectionEnumerators.TryGetValue(collectionKey, out IMediaCollectionEnumerator enumerator))
-                {
-                    List<MediaItem> collectionItems = await MediaItemsForCollection.Collect(
-                        mediaCollectionRepository,
-                        televisionRepository,
-                        artistRepository,
-                        collectionKey,
-                        cancellationToken);
-
-                    enumerator = BlockPlayoutEnumerator.Shuffle(
-                        collectionItems,
-                        start,
-                        playout.Seed,
-                        filteredExistingHistory.Append(result.AddedHistory).ToList(),
-                        deco,
-                        historyKey);
-
-                    if (enumerator.Count == 0)
-                    {
-                        logger.LogWarning(
-                            "Block filler contains empty collection {@Key}; no filler will be scheduled",
-                            collectionKey);
-                    }
-
-                    collectionEnumerators.Add(collectionKey, enumerator);
-                }
+                var enumerator = await GetEnumerator(
+                    collectionEnumerators,
+                    collectionKey,
+                    historyKey,
+                    start,
+                    () => filteredExistingHistory.Append(result.AddedHistory).ToList(),
+                    playout.Seed,
+                    deco.Id,
+                    cancellationToken);
 
                 // skip this deco if the collection has no items
                 if (enumerator.Count == 0)
@@ -212,6 +375,68 @@ public class BlockPlayoutFillerBuilder(
         return result;
     }
 
+    private async Task<IMediaCollectionEnumerator> GetEnumerator(
+        Dictionary<CollectionKey, IMediaCollectionEnumerator> collectionEnumerators,
+        CollectionKey collectionKey,
+        string historyKey,
+        DateTimeOffset currentTime,
+        Func<List<PlayoutHistory>> allHistory,
+        int playoutSeed,
+        int seedOffset,
+        CancellationToken cancellationToken)
+    {
+        // load collection items from db on demand
+        if (!collectionEnumerators.TryGetValue(collectionKey, out IMediaCollectionEnumerator enumerator))
+        {
+            if (collectionKey.CollectionType is CollectionType.Playlist)
+            {
+                enumerator = await BlockPlayoutEnumerator.PlaylistForFiller(
+                    mediaCollectionRepository,
+                    collectionKey.PlaylistId!.Value,
+                    currentTime,
+                    playoutSeed,
+                    allHistory(),
+                    seedOffset,
+                    historyKey,
+                    cancellationToken);
+            }
+            else
+            {
+                List<MediaItem> collectionItems = await MediaItemsForCollection.Collect(
+                    mediaCollectionRepository,
+                    televisionRepository,
+                    artistRepository,
+                    collectionKey,
+                    cancellationToken);
+
+                enumerator = BlockPlayoutEnumerator.Shuffle(
+                    collectionItems,
+                    currentTime,
+                    playoutSeed,
+                    allHistory(),
+                    seedOffset,
+                    historyKey);
+            }
+
+            int count = enumerator switch
+            {
+                PlaylistEnumerator pe => pe.CountForFiller,
+                _ => enumerator.Count
+            };
+
+            if (count == 0)
+            {
+                logger.LogWarning(
+                    "Block filler contains empty collection {@Key}; no filler will be scheduled",
+                    collectionKey);
+            }
+
+            collectionEnumerators.Add(collectionKey, enumerator);
+        }
+
+        return enumerator;
+    }
+
     private static Option<Deco> GetDecoFor(PlayoutReferenceData referenceData, DateTimeOffset start)
     {
         Option<PlayoutTemplate> maybeTemplate =
@@ -274,4 +499,6 @@ public class BlockPlayoutFillerBuilder(
         MediaVersion version = mediaItem.GetHeadVersion();
         return version.Duration;
     }
+
+    private record ItemAndHistory(PlayoutItem PlayoutItem, PlayoutHistory History);
 }
