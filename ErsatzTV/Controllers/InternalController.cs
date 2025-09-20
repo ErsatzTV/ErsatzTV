@@ -7,6 +7,7 @@ using ErsatzTV.Application.Jellyfin;
 using ErsatzTV.Application.MediaItems;
 using ErsatzTV.Application.Plex;
 using ErsatzTV.Application.Streaming;
+using ErsatzTV.Application.Subtitles;
 using ErsatzTV.Application.Subtitles.Queries;
 using ErsatzTV.Core;
 using ErsatzTV.Core.FFmpeg;
@@ -202,21 +203,23 @@ public class InternalController : ControllerBase
     [HttpGet("/media/subtitle/{id:int}")]
     public async Task<IActionResult> GetSubtitle(int id, [FromQuery] long? seekToMs)
     {
-        Either<BaseError, string> maybePath = await _mediator.Send(new GetSubtitlePathById(id));
+        Either<BaseError, SubtitlePathAndCodec> maybePath = await _mediator.Send(new GetSubtitlePathById(id));
 
-        foreach (string path in maybePath.RightToSeq())
+        foreach (SubtitlePathAndCodec pathAndCodec in maybePath.RightToSeq())
         {
-            string mimeType = Path.GetExtension(path).ToLowerInvariant() switch
+            string mimeType = Path.GetExtension(pathAndCodec.Path ?? string.Empty).ToLowerInvariant() switch
             {
                 ".ass" or ".ssa" => "text/x-ssa",
                 ".vtt" => "text/vtt",
+                _ when pathAndCodec.Codec.ToLowerInvariant() is "ass" or "ssa" => "text/x-ssa",
+                _ when pathAndCodec.Codec.ToLowerInvariant() is "vtt" => "text/vtt",
                 _ => "application/x-subrip"
             };
 
             if (seekToMs is > 0)
             {
                 Either<BaseError, SeekTextSubtitleProcess> maybeProcess = await _mediator.Send(
-                    new GetSeekTextSubtitleProcess(path, TimeSpan.FromMilliseconds(seekToMs.Value)));
+                    new GetSeekTextSubtitleProcess(pathAndCodec, TimeSpan.FromMilliseconds(seekToMs.Value)));
                 foreach (SeekTextSubtitleProcess processModel in maybeProcess.RightToSeq())
                 {
                     Command command = processModel.Process;
@@ -250,12 +253,12 @@ public class InternalController : ControllerBase
                 return new NotFoundResult();
             }
 
-            if (path.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+            if (pathAndCodec.Path.StartsWith("http", StringComparison.OrdinalIgnoreCase))
             {
-                return new RedirectResult(path);
+                return new RedirectResult(pathAndCodec.Path);
             }
 
-            return new PhysicalFileResult(path, mimeType);
+            return new PhysicalFileResult(pathAndCodec.Path, mimeType);
         }
 
         return new NotFoundResult();

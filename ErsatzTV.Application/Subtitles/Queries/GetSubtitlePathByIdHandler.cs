@@ -9,9 +9,9 @@ using Microsoft.EntityFrameworkCore;
 namespace ErsatzTV.Application.Subtitles.Queries;
 
 public class GetSubtitlePathByIdHandler(IDbContextFactory<TvContext> dbContextFactory)
-    : IRequestHandler<GetSubtitlePathById, Either<BaseError, string>>
+    : IRequestHandler<GetSubtitlePathById, Either<BaseError, SubtitlePathAndCodec>>
 {
-    public async Task<Either<BaseError, string>> Handle(
+    public async Task<Either<BaseError, SubtitlePathAndCodec>> Handle(
         GetSubtitlePathById request,
         CancellationToken cancellationToken)
     {
@@ -22,33 +22,35 @@ public class GetSubtitlePathByIdHandler(IDbContextFactory<TvContext> dbContextFa
 
         foreach (var subtitle in maybeSubtitle)
         {
+            string path = subtitle.Path;
+
             if (subtitle is { SubtitleKind: SubtitleKind.Embedded, IsExtracted: true })
             {
-                return Path.Combine(FileSystemLayout.SubtitleCacheFolder, subtitle.Path);
+                path = Path.Combine(FileSystemLayout.SubtitleCacheFolder, subtitle.Path);
             }
 
             foreach (string plexUrl in await GetPlexUrl(request.Id, dbContext, maybeSubtitle))
             {
-                return plexUrl;
+                path = plexUrl;
             }
 
             foreach (string jellyfinUrl in await GetJellyfinUrl(request.Id, dbContext, maybeSubtitle))
             {
-                return jellyfinUrl;
+                path = jellyfinUrl;
             }
 
             foreach (string embyUrl in await GetEmbyUrl(request.Id, dbContext, maybeSubtitle))
             {
-                return embyUrl;
+                path = embyUrl;
             }
 
-            return subtitle.Path;
+            return new SubtitlePathAndCodec(path, subtitle.Codec);
         }
 
         return BaseError.New($"Unable to locate subtitle with id {request.Id}");
     }
 
-        protected static async Task<Option<string>> GetPlexUrl(
+    protected static async Task<Option<string>> GetPlexUrl(
         int subtitleId,
         TvContext dbContext,
         Option<Subtitle> maybeSubtitle)

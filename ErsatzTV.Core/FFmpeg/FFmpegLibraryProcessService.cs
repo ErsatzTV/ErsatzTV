@@ -967,7 +967,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             watermarkWidthPercent,
             cancellationToken);
 
-    public async Task<Command> SeekTextSubtitle(string ffmpegPath, string inputFile, TimeSpan seek)
+    public async Task<Command> SeekTextSubtitle(string ffmpegPath, string inputFile, string codec, TimeSpan seek)
     {
         var videoInputFile = new VideoInputFile(
             inputFile,
@@ -975,7 +975,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             {
                 new(
                     0,
-                    string.Empty,
+                    codec,
                     string.Empty,
                     None,
                     ColorParams.Default,
@@ -1002,7 +1002,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             FileSystemLayout.FontsCacheFolder,
             ffmpegPath);
 
-        FFmpegPipeline pipeline = pipelineBuilder.Seek(inputFile, seek);
+        FFmpegPipeline pipeline = pipelineBuilder.Seek(inputFile, codec, seek);
 
         return GetCommand(ffmpegPath, videoInputFile, None, None, None, None, pipeline, false);
     }

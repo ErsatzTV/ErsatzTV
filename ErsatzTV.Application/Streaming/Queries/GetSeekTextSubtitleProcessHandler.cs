@@ -31,7 +31,8 @@ public class GetSeekTextSubtitleProcessHandler(
     {
         Command process = await ffmpegProcessService.SeekTextSubtitle(
             ffmpegPath,
-            request.SubtitlePath,
+            request.PathAndCodec.Path,
+            request.PathAndCodec.Codec,
             request.Seek);
 
         return new SeekTextSubtitleProcess(process);
