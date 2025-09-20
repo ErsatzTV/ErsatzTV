@@ -83,6 +83,10 @@
         <div style="align-items: center; display: flex;" class="d-none d-md-flex">
             @if (SystemStartup.IsDatabaseReady && SystemStartup.IsSearchIndexReady)
             {
+                @if (BuildConfiguration != "release")
+                {
+                    <MudText Color="Color.Warning" Class="mx-4">@System.Environment.MachineName</MudText>
+                }
                 <MudLink Color="Color.Info" Href="iptv/channels.m3u" Target="_blank" Underline="Underline.None">M3U</MudLink>
                 <MudLink Color="Color.Info" Href="iptv/xmltv.xml" Target="_blank" Class="mx-4" Underline="Underline.None">XMLTV</MudLink>
                 <MudLink Color="Color.Primary" Href="docs" Target="_blank" Underline="Underline.None" Style="font-weight: bold">API</MudLink>
@@ -210,6 +214,10 @@
                 <MudContainer Style="text-align: right" Class="mr-6">
                     <MudText Typo="Typo.body2">ErsatzTV Version</MudText>
                     <MudText Typo="Typo.body2" Color="Color.Info">@InfoVersion</MudText>
+                    @if (BuildConfiguration != "release")
+                    {
+                        <MudText Typo="Typo.body2" Color="Color.Warning">@BuildConfiguration</MudText>
+                    }
                 </MudContainer>
             </MudNavMenu>
         </MudDrawer>
@@ -221,6 +229,7 @@
 
 @code {
     private static readonly string InfoVersion = Assembly.GetEntryAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? "unknown";
+    private static readonly string BuildConfiguration = Assembly.GetEntryAssembly().GetCustomAttribute<AssemblyConfigurationAttribute>()?.Configuration?.ToLower() ?? "unset";
 
     private CancellationTokenSource _cts;
 

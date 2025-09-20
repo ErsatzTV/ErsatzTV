@@ -40,11 +40,12 @@ COPY ErsatzTV.Infrastructure.Sqlite/. ./ErsatzTV.Infrastructure.Sqlite/
 COPY ErsatzTV.Infrastructure.MySql/. ./ErsatzTV.Infrastructure.MySql/
 COPY ErsatzTV.Scanner/. ./ErsatzTV.Scanner/
 ARG INFO_VERSION="unknown"
+ARG BUILD_CONFIG="release"
 WORKDIR /source/ErsatzTV.Scanner
-RUN dotnet publish ErsatzTV.Scanner.csproj -c release -o /app -r linux-x64 --self-contained false --no-restore /p:DebugType=Embedded /p:InformationalVersion=${INFO_VERSION}
+RUN dotnet publish ErsatzTV.Scanner.csproj -c ${BUILD_CONFIG} -o /app -r linux-x64 --self-contained false --no-restore /p:DebugType=Embedded /p:InformationalVersion=${INFO_VERSION}
 WORKDIR /source/ErsatzTV
 RUN sed -i '/Scanner/d' ErsatzTV.csproj
-RUN dotnet publish ErsatzTV.csproj -c release -o /app -r linux-x64 --self-contained false --no-restore /p:DebugType=Embedded /p:InformationalVersion=${INFO_VERSION}
+RUN dotnet publish ErsatzTV.csproj -c ${BUILD_CONFIG} -o /app -r linux-x64 --self-contained false --no-restore /p:DebugType=Embedded /p:InformationalVersion=${INFO_VERSION}
 
 # final stage/image
 FROM runtime-base
