@@ -90,5 +90,5 @@ public interface IFFmpegProcessService
         int watermarkWidthPercent,
         CancellationToken cancellationToken);
 
-    Task<Command> SeekTextSubtitle(string ffmpegPath, string inputFile, TimeSpan seek);
+    Task<Command> SeekTextSubtitle(string ffmpegPath, string inputFile, string codec, TimeSpan seek);
 }

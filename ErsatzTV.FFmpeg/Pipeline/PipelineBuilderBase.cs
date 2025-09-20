@@ -75,12 +75,14 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         return new FFmpegPipeline(pipelineSteps, false);
     }
 
-    public FFmpegPipeline Seek(string inputFile, TimeSpan seek)
+    public FFmpegPipeline Seek(string inputFile, string codec, TimeSpan seek)
     {
         IPipelineStep outputFormat = Path.GetExtension(inputFile).ToLowerInvariant() switch
         {
             ".ass" or ".ssa" => new OutputFormatAss(),
             ".vtt" => new OutputFormatWebVtt(),
+            _ when codec.ToLowerInvariant() is "ass" or "ssa" => new OutputFormatAss(),
+            _ when codec.ToLowerInvariant() is "vtt" => new OutputFormatWebVtt(),
             _ => new OutputFormatSrt()
         };
 

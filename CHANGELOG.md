@@ -65,6 +65,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix fallback filler duration on mirror channels
 - Fix slow startup caused by check for overlapping playout items
 - Fix green line in *most* cases when overlaying content using NVIDIA acceleration and H264 output
+- Fix non-SRT (e.g. SSA/ASS) external subtitle playback from media servers
 
 ### Changed
 - Filler presets: use separate text fields for `hours`, `minutes` and `seconds` duration
