@@ -46,7 +46,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - Text that already fits with the configured style will not be adjusted
 - Block schedules: add **experimental** `Break Content` to decos
   - Break content is similar to filler from classic schedules
-  - Break content is currently limited to placement `Break Start` (play before anything else in the block)
+  - Break content is currently limited to placement `Block Start` (play before anything else in the block)
     - Future work will add other placement options
   - Break content is currently limited to playlists (which do *not* pad - they simply play through the playlist one time)
     - Future work will add other collection options which will pad to the full block duration
@@ -64,6 +64,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix deco dead air fallback selection and duration on mirror channels
 - Fix fallback filler duration on mirror channels
 - Fix slow startup caused by check for overlapping playout items
+- Fix green line in *most* cases when overlaying content using NVIDIA acceleration
 
 ### Changed
 - Filler presets: use separate text fields for `hours`, `minutes` and `seconds` duration
