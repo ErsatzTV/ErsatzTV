@@ -329,6 +329,17 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
             context,
             pipelineSteps);
 
+        if (ffmpegState.DecoderHardwareAccelerationMode is HardwareAccelerationMode.Nvenc &&
+            ffmpegState.EncoderHardwareAccelerationMode is HardwareAccelerationMode.Nvenc &&
+            (videoStream.FrameSize == desiredState.ScaledSize || (context is { HasSubtitleOverlay: true, HasGraphicsEngine: true } && desiredState.PaddedSize == desiredState.ScaledSize)) &&
+            (context.HasSubtitleOverlay || context.HasGraphicsEngine || context.HasWatermark))
+        {
+            pipelineSteps.Add(
+                new NvidiaGreenLineWorkaroundFilter(
+                    desiredState.VideoFormat,
+                    desiredState.CroppedSize.IfNone(desiredState.PaddedSize)));
+        }
+
         return new FilterChain(
             videoInputFile.FilterSteps,
             watermarkInputFile.Map(wm => wm.FilterSteps).IfNone([]),
