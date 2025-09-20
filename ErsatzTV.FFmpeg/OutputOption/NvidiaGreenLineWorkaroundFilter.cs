@@ -8,7 +8,7 @@ public class NvidiaGreenLineWorkaroundFilter(string videoFormat, FrameSize frame
     {
         get
         {
-            if (videoFormat is not (VideoFormat.Hevc or VideoFormat.H264))
+            if (videoFormat is not VideoFormat.H264)
             {
                 return [];
             }

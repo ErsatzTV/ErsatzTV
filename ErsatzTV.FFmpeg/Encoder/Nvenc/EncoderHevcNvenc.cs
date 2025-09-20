@@ -7,10 +7,12 @@ public class EncoderHevcNvenc : EncoderBase
 {
     private readonly bool _bFrames;
     private readonly Option<string> _maybeVideoPreset;
+    private readonly bool _allowBFrames;
 
-    public EncoderHevcNvenc(IHardwareCapabilities hardwareCapabilities, Option<string> maybeVideoPreset)
+    public EncoderHevcNvenc(IHardwareCapabilities hardwareCapabilities, Option<string> maybeVideoPreset, bool allowBFrames)
     {
         _maybeVideoPreset = maybeVideoPreset;
+        _allowBFrames = allowBFrames;
         if (hardwareCapabilities is NvidiaHardwareCapabilities nvidia)
         {
             _bFrames = nvidia.HevcBFrames;
@@ -28,7 +30,7 @@ public class EncoderHevcNvenc : EncoderBase
             {
                 "-c:v", "hevc_nvenc",
                 "-tag:v", "hvc1",
-                "-b_ref_mode", _bFrames ? "1" : "0"
+                "-b_ref_mode", _allowBFrames && _bFrames ? "1" : "0"
             };
 
             foreach (string videoPreset in _maybeVideoPreset)
