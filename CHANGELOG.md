@@ -66,7 +66,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix slow startup caused by check for overlapping playout items
 - Fix green line in *most* cases when overlaying content using NVIDIA acceleration and H264 output
 - Fix non-SRT (e.g. SSA/ASS) external subtitle playback from media servers
-- Fix extracted subtitles getting into invalid state after media server scans
+- Fix extracted text subtitle playback from media servers
+- Fix extracted text subtitles getting into invalid state after media server deep scans
+  - Targeted deep scans will now extract text subtitles for the scanned show
 
 ### Changed
 - Filler presets: use separate text fields for `hours`, `minutes` and `seconds` duration
