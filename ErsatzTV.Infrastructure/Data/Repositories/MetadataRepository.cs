@@ -692,13 +692,27 @@ public class MetadataRepository : IMetadataRepository
                     Subtitle existingSubtitle =
                         existing.Subtitles.First(s => s.StreamIndex == incomingSubtitle.StreamIndex);
 
-                    existingSubtitle.Codec = incomingSubtitle.Codec;
                     existingSubtitle.Default = incomingSubtitle.Default;
                     existingSubtitle.Forced = incomingSubtitle.Forced;
                     existingSubtitle.SDH = incomingSubtitle.SDH;
                     existingSubtitle.Language = incomingSubtitle.Language;
-                    existingSubtitle.SubtitleKind = incomingSubtitle.SubtitleKind;
                     existingSubtitle.DateUpdated = incomingSubtitle.DateUpdated;
+
+                    // when the kind, codec, or path changes, we need to extract again
+                    if (existingSubtitle.IsExtracted)
+                    {
+                        bool differentKind = existingSubtitle.SubtitleKind != incomingSubtitle.SubtitleKind;
+                        bool differentCodec = existingSubtitle.Codec != incomingSubtitle.Codec;
+                        bool differentPath = existingSubtitle.Path != incomingSubtitle.Path;
+
+                        if (differentKind || differentCodec || differentPath)
+                        {
+                            existingSubtitle.IsExtracted = false;
+                        }
+                    }
+
+                    existingSubtitle.SubtitleKind = incomingSubtitle.SubtitleKind;
+                    existingSubtitle.Codec = incomingSubtitle.Codec;
                     existingSubtitle.Path = incomingSubtitle.Path;
 
                     dbContext.Entry(existingSubtitle).State = EntityState.Modified;
