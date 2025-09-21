@@ -32,10 +32,11 @@ COPY ErsatzTV.Infrastructure.MySql/. ./ErsatzTV.Infrastructure.MySql/
 COPY ErsatzTV.Scanner/. ./ErsatzTV.Scanner/
 WORKDIR /source/ErsatzTV.Scanner
 ARG INFO_VERSION="unknown"
-RUN dotnet publish ErsatzTV.Scanner.csproj --framework net9.0 -c release -o /app --runtime linux-arm --no-self-contained --no-restore -p:DebugType=Embedded -p:PublishSingleFile=false -p:PublishTrimmed=false -p:InformationalVersion=${INFO_VERSION}
+ARG BUILD_CONFIG="release"
+RUN dotnet publish ErsatzTV.Scanner.csproj --framework net9.0 -c ${BUILD_CONFIG} -o /app --runtime linux-arm --no-self-contained --no-restore -p:DebugType=Embedded -p:PublishSingleFile=false -p:PublishTrimmed=false -p:InformationalVersion=${INFO_VERSION}
 WORKDIR /source/ErsatzTV
 RUN sed -i '/Scanner/d' ErsatzTV.csproj
-RUN dotnet publish ErsatzTV.csproj --framework net9.0 -c release -o /app --runtime linux-arm --no-self-contained --no-restore -p:DebugType=Embedded -p:PublishSingleFile=false -p:PublishTrimmed=false -p:InformationalVersion=${INFO_VERSION}
+RUN dotnet publish ErsatzTV.csproj --framework net9.0 -c ${BUILD_CONFIG} -o /app --runtime linux-arm --no-self-contained --no-restore -p:DebugType=Embedded -p:PublishSingleFile=false -p:PublishTrimmed=false -p:InformationalVersion=${INFO_VERSION}
 
 # final stage/image
 FROM runtime-base
