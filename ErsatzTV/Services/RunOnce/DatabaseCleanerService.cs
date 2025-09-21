@@ -31,6 +31,7 @@ public class DatabaseCleanerService(
 
         await DeleteInvalidMediaItems(dbContext);
         await GenerateFallbackMetadata(scope, dbContext, stoppingToken);
+        await ResetExternalSubtitleState(dbContext, stoppingToken);
 
         systemStartup.DatabaseIsCleaned();
 
@@ -81,5 +82,12 @@ public class DatabaseCleanerService(
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    private static async Task ResetExternalSubtitleState(TvContext dbContext, CancellationToken cancellationToken)
+    {
+        await dbContext.Database.ExecuteSqlRawAsync(
+            "UPDATE `Subtitle` SET `IsExtracted`=0 WHERE `Path` IS NULL",
+            cancellationToken);
     }
 }
