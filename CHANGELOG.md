@@ -66,6 +66,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix slow startup caused by check for overlapping playout items
 - Fix green line in *most* cases when overlaying content using NVIDIA acceleration and H264 output
 - Fix non-SRT (e.g. SSA/ASS) external subtitle playback from media servers
+- Clean up some invalid external subtitle data to prevent playback failures
 
 ### Changed
 - Filler presets: use separate text fields for `hours`, `minutes` and `seconds` duration

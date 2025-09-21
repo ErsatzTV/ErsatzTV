@@ -328,11 +328,11 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
                 {
                     foreach (SubtitleToExtract subtitle in subtitlesToExtract)
                     {
-                        subtitle.Subtitle.IsExtracted = true;
-                        subtitle.Subtitle.Path = subtitle.OutputPath;
+                        await dbContext.Connection.ExecuteAsync(
+                            "UPDATE `Subtitle` SET `IsExtracted` = 1, `Path` = @Path WHERE `Id` = @SubtitleId",
+                            new { SubtitleId = subtitle.Subtitle.Id, Path = subtitle.OutputPath });
                     }
 
-                    await dbContext.SaveChangesAsync(cancellationToken);
                     _logger.LogDebug("Successfully extracted {Count} subtitles", subtitlesToExtract.Count);
                 }
                 else
@@ -358,6 +358,7 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
         int mediaItemId,
         CancellationToken cancellationToken) =>
         await dbContext.MediaItems
+            .AsNoTracking()
             .Include(mi => (mi as Episode).MediaVersions)
             .ThenInclude(mv => mv.MediaFiles)
             .Include(mi => (mi as Episode).MediaVersions)
