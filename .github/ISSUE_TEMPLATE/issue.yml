@@ -31,11 +31,20 @@ body:
   - type: textarea
     id: repro-steps
     attributes:
-      label: Steps to reproduce the problem
+      label: Steps to reproduce the problem.
       description: |
         1. Step 1
         2. Step 2
         3. Step 3
+
+        If this is a playback issue, follow these steps and post the resulting zip:
+          1. Search for the required content using the search bar.
+          2. Use the overflow/three dots menu on the content and select Troubleshoot Playback.
+          3. Select the appropriate Playback Settings that trigger the undesired behavior.
+          4. Click Play to start playback.
+          5. Repeat steps 3 and 4 until the undesired behavior is reproduced.
+          6. Click Download Results to have ErsatzTV collect relevant troubleshooting logs (ffmpeg log, ffmpeg profile, hardware capabilities, media info, etc) and compress them in a zip file.
+          7. Attach the zip to this field.
     validations:
       required: true
   - type: textarea
