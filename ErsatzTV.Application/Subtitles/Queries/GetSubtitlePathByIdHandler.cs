@@ -22,29 +22,28 @@ public class GetSubtitlePathByIdHandler(IDbContextFactory<TvContext> dbContextFa
 
         foreach (var subtitle in maybeSubtitle)
         {
-            string path = subtitle.Path;
-
             if (subtitle is { SubtitleKind: SubtitleKind.Embedded, IsExtracted: true })
             {
-                path = Path.Combine(FileSystemLayout.SubtitleCacheFolder, subtitle.Path);
+                string path = Path.Combine(FileSystemLayout.SubtitleCacheFolder, subtitle.Path);
+                return new SubtitlePathAndCodec(path, subtitle.Codec);
             }
 
             foreach (string plexUrl in await GetPlexUrl(request.Id, dbContext, maybeSubtitle))
             {
-                path = plexUrl;
+                return new SubtitlePathAndCodec(plexUrl, subtitle.Codec);
             }
 
             foreach (string jellyfinUrl in await GetJellyfinUrl(request.Id, dbContext, maybeSubtitle))
             {
-                path = jellyfinUrl;
+                return new SubtitlePathAndCodec(jellyfinUrl, subtitle.Codec);
             }
 
             foreach (string embyUrl in await GetEmbyUrl(request.Id, dbContext, maybeSubtitle))
             {
-                path = embyUrl;
+                return new SubtitlePathAndCodec(embyUrl, subtitle.Codec);
             }
 
-            return new SubtitlePathAndCodec(path, subtitle.Codec);
+            return new SubtitlePathAndCodec(subtitle.Path, subtitle.Codec);
         }
 
         return BaseError.New($"Unable to locate subtitle with id {request.Id}");

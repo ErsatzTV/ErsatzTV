@@ -117,6 +117,9 @@ public class WorkerService : BackgroundService
                         case ExtractEmbeddedSubtitles extractEmbeddedSubtitles:
                             await mediator.Send(extractEmbeddedSubtitles, stoppingToken);
                             break;
+                        case ExtractEmbeddedShowSubtitles extractEmbeddedShowSubtitles:
+                            await mediator.Send(extractEmbeddedShowSubtitles, stoppingToken);
+                            break;
 #endif
                         case ReleaseMemory aggressivelyReleaseMemory:
                             await mediator.Send(aggressivelyReleaseMemory, stoppingToken);
