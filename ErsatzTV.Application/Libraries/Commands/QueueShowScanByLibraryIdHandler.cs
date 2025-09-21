@@ -1,6 +1,8 @@
+using System.Threading.Channels;
 using ErsatzTV.Application.Emby;
 using ErsatzTV.Application.Jellyfin;
 using ErsatzTV.Application.Plex;
+using ErsatzTV.Application.Subtitles;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Locking;
@@ -15,6 +17,7 @@ public class QueueShowScanByLibraryIdHandler(
     IDbContextFactory<TvContext> dbContextFactory,
     IEntityLocker locker,
     IMediator mediator,
+    ChannelWriter<IBackgroundServiceRequest> workerChannel,
     ILogger<QueueShowScanByLibraryIdHandler> logger)
     : IRequestHandler<QueueShowScanByLibraryId, bool>
 {
@@ -57,30 +60,41 @@ public class QueueShowScanByLibraryIdHandler(
 
             try
             {
+                var success = false;
                 switch (library)
                 {
                     case PlexLibrary:
                         Either<BaseError, string> plexResult = await mediator.Send(
                             new SynchronizePlexShowById(library.Id, request.ShowId, request.DeepScan),
                             cancellationToken);
-                        return plexResult.IsRight;
+                        success = plexResult.IsRight;
+                        break;
                     case JellyfinLibrary:
                         Either<BaseError, string> jellyfinResult = await mediator.Send(
                             new SynchronizeJellyfinShowById(library.Id, request.ShowId, request.DeepScan),
                             cancellationToken);
-                        return jellyfinResult.IsRight;
+                        success = jellyfinResult.IsRight;
+                        break;
                     case EmbyLibrary:
                         Either<BaseError, string> embyResult = await mediator.Send(
                             new SynchronizeEmbyShowById(library.Id, request.ShowId, request.DeepScan),
                             cancellationToken);
-                        return embyResult.IsRight;
+                        success = embyResult.IsRight;
+                        break;
                     case LocalLibrary:
                         logger.LogWarning("Single show scanning is not supported for local libraries");
-                        return false;
+                        break;
                     default:
                         logger.LogWarning("Unknown library type for library {Id}", library.Id);
-                        return false;
+                        break;
                 }
+
+                if (success && request.DeepScan)
+                {
+                    await workerChannel.WriteAsync(new ExtractEmbeddedShowSubtitles(request.ShowId), cancellationToken);
+                }
+
+                return success;
             }
             finally
             {
