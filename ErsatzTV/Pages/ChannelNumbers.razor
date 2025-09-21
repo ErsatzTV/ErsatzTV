@@ -1,0 +1,109 @@
+@page "/channels/numbers"
+@using ErsatzTV.Application.Channels
+@implements IDisposable
+@inject IMediator Mediator
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+@inject ILogger<ChannelNumbers> Logger
+
+<MudForm Style="max-height: 100%">
+    <MudPaper Square="true" Style="display: flex; height: 64px; min-height: 64px; width: 100%; z-index: 100; align-items: center">
+        <div style="display: flex; flex-direction: row; margin-bottom: auto; margin-top: auto; width: 100%; align-items: center" class="ml-6 mr-6">
+            <div class="d-none d-md-flex">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="@SaveChannels">
+                    Save Channels
+                </MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Error" Class="ml-3" StartIcon="@Icons.Material.Filled.Undo" OnClick="@ReloadAllChannels">
+                    Reset Channels
+                </MudButton>
+            </div>
+            <div style="align-items: center; display: flex; margin-left: auto;" class="d-md-none">
+                <div class="flex-grow-1"></div>
+                <MudMenu Icon="@Icons.Material.Filled.MoreVert">
+                    <MudMenuItem Icon="@Icons.Material.Filled.Save" Label="Save Channels" OnClick="@SaveChannels"/>
+                    <MudMenuItem Icon="@Icons.Material.Filled.Undo" Label="Reset Channels" OnClick="@ReloadAllChannels"/>
+                </MudMenu>
+            </div>
+        </div>
+    </MudPaper>
+    <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+            <MudText Typo="Typo.h5" Class="mb-2">Edit Channel Numbers</MudText>
+            <MudDivider Class="mb-6"/>
+            <Sortable TItem="ChannelSortViewModel" Items="_channels" OnUpdate="OnUpdate">
+                <MudPaper Class="@($"pa-2 ma-2 ")"
+                          Style="@($"max-width: 500px; {(context.HasChanged ? "background-color: var(--mud-palette-dark-lighten)" : "")}")">
+                    <div class="d-flex align-center">
+                        <MudText Style="min-width: 6ch">@context.Number</MudText>
+
+                        <MudText Class="flex-grow-1">
+                            @context.Name
+                        </MudText>
+
+                        <MudText Style="@(context.HasChanged ? "" : "visibility: hidden;")">
+                            (@context.OriginalNumber)
+                        </MudText>
+                    </div>
+                </MudPaper>
+            </Sortable>
+        </MudContainer>
+    </div>
+</MudForm>
+
+@code {
+    private CancellationTokenSource _cts;
+    private List<ChannelSortViewModel> _channels = [];
+    private List<string> _channelNumbers = [];
+
+    public void Dispose()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await ReloadAllChannels();
+    }
+
+    private async Task ReloadAllChannels()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
+
+        try
+        {
+            _channels = await Mediator.Send(new GetAllChannelsForSort(), token);
+            _channelNumbers = _channels.Map(c => c.Number).ToList();
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
+        }
+    }
+
+    private async Task SaveChannels()
+    {
+        var changedChannels = _channels.Where(c => c.HasChanged).ToList();
+        Option<BaseError> maybeError = await Mediator.Send(new UpdateChannelNumbers(changedChannels), _cts.Token);
+        maybeError.Match(
+            error =>
+            {
+                Snackbar.Add(error.Value, Severity.Error);
+                Logger.LogError("Unexpected error saving channel numbers: {Error}", error.Value);
+            },
+            () => NavigationManager.NavigateTo("channels"));
+    }
+
+    private void OnUpdate(SortableEventArgs<ChannelSortViewModel> obj)
+    {
+        for (var i = 0; i < _channels.Count; i++)
+        {
+            _channels[i].Number = _channelNumbers[i];
+        }
+
+        StateHasChanged();
+    }
+}

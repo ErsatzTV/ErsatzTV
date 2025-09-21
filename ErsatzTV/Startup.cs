@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Channels;
+using BlazorSortable;
 using Bugsnag.AspNet.Core;
 using Dapper;
 using ErsatzTV.Application;
@@ -337,6 +338,8 @@ public class Startup
             .AddHubOptions(hubOptions => hubOptions.MaximumReceiveMessageSize = 1024 * 1024);
 
         services.AddMudServices();
+
+        services.AddSortable();
 
         var coreAssembly = Assembly.GetAssembly(typeof(LibraryScanProgress));
         if (coreAssembly != null)
