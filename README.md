@@ -3,7 +3,7 @@
 ErsatzTV lets you transform your media library into a personalized, live TV experience - complete with EPG, channel scheduling, and seamless streaming to all your devices. Rediscover your content, your way.
 
 [![discord](https://img.shields.io/badge/join_discord-510b80?style=for-the-badge&logo=discord)](https://discord.ersatztv.org)
-[![roadmap](https://img.shields.io/badge/vote_on_features-darkgreen?style=for-the-badge)](https://github.com/orgs/semaphoreui/projects/11)
+[![roadmap](https://img.shields.io/badge/vote_on_features-darkgreen?style=for-the-badge)](https://features.ersatztv.org/)
 [![community](https://img.shields.io/badge/join_the_community-blue?style=for-the-badge)](https://discuss.ersatztv.org)
 
 ![epg-example](https://ersatztv.org/images/home/epg-example.png)
