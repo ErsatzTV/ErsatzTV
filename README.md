@@ -1,25 +1,32 @@
 # ErsatzTV
 
-**ErsatzTV** is beta software for configuring and streaming custom live channels using your media library. The software may be unstable and is under active development.
+ErsatzTV lets you transform your media library into a personalized, live TV experience - complete with EPG, channel scheduling, and seamless streaming to all your devices. Rediscover your content, your way.
 
-Documentation is available at [ersatztv.org](https://ersatztv.org/).
+[![discord](https://img.shields.io/badge/join_discord-510b80?style=for-the-badge&logo=discord)](https://discord.ersatztv.org)
+[![roadmap](https://img.shields.io/badge/vote_on_features-darkgreen?style=for-the-badge)](https://github.com/orgs/semaphoreui/projects/11)
+[![community](https://img.shields.io/badge/join_the_community-blue?style=for-the-badge)](https://discuss.ersatztv.org)
 
-Want to join the community or have a question? Join us at the [ErsatzTV Community](https://discuss.ersatztv.org/) or on [Discord](https://discord.gg/hHaJm3yGy6).
+![epg-example](https://ersatztv.org/images/home/epg-example.png)
 
-## Current Features
+## How It Works
 
-- Use local media files and optional sidecar [NFO metadata](https://kodi.wiki/view/NFO_files); no need for a full media server
-- IPTV server and HDHomeRun emulation support a wide range of client applications
-- Channel-specific streaming mode (MPEG-TS or HLS) and transcoding settings
-- Collection-based scheduling, with collections containing television shows, seasons, episodes and movies
-- Powerful scheduling options such as chronological collection playback throughout the day or over multiple days
-- Hardware-accelerated transcoding options (QSV, NVENC, VAAPI)
-- [Plex](https://www.plex.tv/) media and metadata
-- [Jellyfin](https://jellyfin.org/) media and metadata
-- [Emby](https://emby.media/) media and metadata
-- Song and music video libraries
-- Pre-roll, mid-roll, post-roll filler options
-- Subtitle burn-in
+1. **Install ErsatzTV**: Download and set up the server on your system.
+2. **Add Your Media**: Connect your media libraries and collections.
+3. **Create Channels**: Design and schedule your own live channels.
+4. **Stream Anywhere**: Watch on any device with IPTV and EPG support.
+
+## Key Features
+
+- **Custom channels**: Create and schedule your own live TV channels.
+- **IPTV & EPG**: Stream with IPTV and Electronic Program Guide support.
+- **Hardware Transcoding**: High-performance streaming with hardware acceleration (NVENC, QSV, VAAPI, AMF, VideoToolbox)
+- **Media Server Integration**: Connect Plex, Jellyfin, Emby and more.
+- **Music & Subtitles**: Mix music videos and enjoy subtitle support.
+- **Open Source**: Free, open, and community-driven project.
+
+## Documentation
+
+Documentation is available at [ersatztv.org](https://ersatztv.org/docs/).
 
 ## License
 
