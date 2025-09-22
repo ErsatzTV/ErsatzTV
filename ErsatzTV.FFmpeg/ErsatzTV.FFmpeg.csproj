@@ -11,7 +11,7 @@
 
     <ItemGroup>
         <PackageReference Include="CliWrap" Version="3.9.0" />
-        <PackageReference Include="Hardware.Info" Version="101.0.1.1" />
+        <PackageReference Include="Hardware.Info" Version="101.1.0" />
         <PackageReference Include="LanguageExt.Core" Version="4.4.9" />
         <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="9.0.9" />
         <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.9" />
