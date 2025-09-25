@@ -38,6 +38,7 @@ public class PreviewPlaylistPlayoutHandler(
             {
                 Items = [MapToScheduleItem(request)]
             },
+            ProgramScheduleAnchors = [],
             ProgramScheduleAlternates = [],
             FillGroupIndices = [],
             Templates = []
@@ -48,7 +49,7 @@ public class PreviewPlaylistPlayoutHandler(
             Option<Deco>.None,
             playout.Items,
             playout.Templates.ToList(),
-            new ProgramSchedule(),
+            playout.ProgramSchedule,
             playout.ProgramScheduleAlternates.ToList(),
             playout.PlayoutHistory.ToList(),
             TimeSpan.Zero);
