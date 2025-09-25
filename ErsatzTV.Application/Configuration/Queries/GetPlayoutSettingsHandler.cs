@@ -19,10 +19,16 @@ public class GetPlayoutSettingsHandler : IRequestHandler<GetPlayoutSettings, Pla
         Option<bool> skipMissingItems =
             await _configElementRepository.GetValue<bool>(ConfigElementKey.PlayoutSkipMissingItems, cancellationToken);
 
+        Option<int> scriptedScheduleTimeoutSeconds =
+            await _configElementRepository.GetValue<int>(
+                ConfigElementKey.PlayoutScriptedScheduleTimeoutSeconds,
+                cancellationToken);
+
         return new PlayoutSettingsViewModel
         {
             DaysToBuild = await daysToBuild.IfNoneAsync(2),
-            SkipMissingItems = await skipMissingItems.IfNoneAsync(false)
+            SkipMissingItems = await skipMissingItems.IfNoneAsync(false),
+            ScriptedScheduleTimeoutSeconds = await scriptedScheduleTimeoutSeconds.IfNoneAsync(30)
         };
     }
 }
