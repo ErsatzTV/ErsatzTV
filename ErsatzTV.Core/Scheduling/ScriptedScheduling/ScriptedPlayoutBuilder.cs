@@ -29,6 +29,8 @@ public class ScriptedPlayoutBuilder(
 
         Guid buildId = scriptedPlayoutBuilderService.StartSession(schedulingEngine);
 
+        var timeoutSeconds = 30;
+
         try
         {
             var args = CommandLineParser.SplitCommandLine(playout.ScheduleFile).ToList();
@@ -72,7 +74,16 @@ public class ScriptedPlayoutBuilder(
 
             schedulingEngine.RestoreOrReset(Optional(playout.Anchor));
 
-            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            Option<int> maybeTimeoutSeconds = await configElementRepository.GetValue<int>(
+                ConfigElementKey.PlayoutScriptedScheduleTimeoutSeconds,
+                cancellationToken);
+
+            foreach (int seconds in maybeTimeoutSeconds)
+            {
+                timeoutSeconds = seconds;
+            }
+
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSeconds));
             using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cts.Token);
 
             Command command = Cli.Wrap(scriptFile)
@@ -99,8 +110,8 @@ public class ScriptedPlayoutBuilder(
         }
         catch (OperationCanceledException)
         {
-            logger.LogWarning("Scripted playout build timed out after 30 seconds");
-            throw new TimeoutException("Scripted playout build timed out after 30 seconds");
+            logger.LogWarning("Scripted playout build timed out after {TimeoutSeconds} seconds", timeoutSeconds);
+            throw new TimeoutException($"Scripted playout build timed out after {timeoutSeconds} seconds");
         }
         catch (Exception ex)
         {

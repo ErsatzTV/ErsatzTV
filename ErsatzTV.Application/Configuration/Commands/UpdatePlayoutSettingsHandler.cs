@@ -32,15 +32,31 @@ public class UpdatePlayoutSettingsHandler : IRequestHandler<UpdatePlayoutSetting
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, Unit> validation = await Validate(request);
-        return await validation.Apply<Unit, Unit>(_ => ApplyUpdate(dbContext, request.PlayoutSettings, cancellationToken));
+        return await validation.Apply<Unit, Unit>(_ => ApplyUpdate(
+            dbContext,
+            request.PlayoutSettings,
+            cancellationToken));
     }
 
-    private async Task<Unit> ApplyUpdate(TvContext dbContext, PlayoutSettingsViewModel playoutSettings, CancellationToken cancellationToken)
+    private async Task<Unit> ApplyUpdate(
+        TvContext dbContext,
+        PlayoutSettingsViewModel playoutSettings,
+        CancellationToken cancellationToken)
     {
-        await _configElementRepository.Upsert(ConfigElementKey.PlayoutDaysToBuild, playoutSettings.DaysToBuild, cancellationToken);
+        await _configElementRepository.Upsert(
+            ConfigElementKey.PlayoutDaysToBuild,
+            playoutSettings.DaysToBuild,
+            cancellationToken);
+
         await _configElementRepository.Upsert(
             ConfigElementKey.PlayoutSkipMissingItems,
-            playoutSettings.SkipMissingItems, cancellationToken);
+            playoutSettings.SkipMissingItems,
+            cancellationToken);
+
+        await _configElementRepository.Upsert(
+            ConfigElementKey.PlayoutScriptedScheduleTimeoutSeconds,
+            playoutSettings.ScriptedScheduleTimeoutSeconds,
+            cancellationToken);
 
         // continue all playouts to proper number of days
         List<Playout> playouts = await dbContext.Playouts
