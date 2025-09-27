@@ -7,6 +7,8 @@ namespace ErsatzTV.ViewModels;
 
 public class FFmpegProfileEditViewModel
 {
+    private string _videoProfile;
+
     public FFmpegProfileEditViewModel()
     {
     }
@@ -62,7 +64,20 @@ public class FFmpegProfileEditViewModel
     public int VideoBitrate { get; set; }
     public int VideoBufferSize { get; set; }
     public FFmpegProfileVideoFormat VideoFormat { get; set; }
-    public string VideoProfile { get; set; }
+
+    public string VideoProfile
+    {
+        get =>
+            (HardwareAcceleration, VideoFormat, BitDepth) switch
+            {
+                (HardwareAccelerationKind.Nvenc, FFmpegProfileVideoFormat.H264, FFmpegProfileBitDepth.TenBit) => FFmpeg
+                    .Format.VideoProfile.High444p,
+                (_, FFmpegProfileVideoFormat.H264, _) => _videoProfile,
+                _ => string.Empty
+            };
+        set => _videoProfile = value;
+    }
+
     public string VideoPreset { get; set; }
     public bool AllowBFrames { get; set; }
     public FFmpegProfileBitDepth BitDepth { get; set; }

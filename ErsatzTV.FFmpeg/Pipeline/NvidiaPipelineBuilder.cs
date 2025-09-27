@@ -311,7 +311,8 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
                     (HardwareAccelerationMode.Nvenc, VideoFormat.H264) =>
                         new EncoderH264Nvenc(desiredState.VideoProfile, desiredState.VideoPreset),
 
-                    (_, _) => GetSoftwareEncoder(ffmpegState, currentState, desiredState)
+                    // don't pass NVENC profile down to libx264
+                    (_, _) => GetSoftwareEncoder(ffmpegState, currentState, desiredState with { VideoProfile = Option<string>.None })
                 };
 
             foreach (IEncoder encoder in maybeEncoder)
@@ -391,7 +392,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
 
             if (ffmpegState.EncoderHardwareAccelerationMode == HardwareAccelerationMode.None)
             {
-                _logger.LogDebug("Using software encoder");
+                //_logger.LogDebug("Using software encoder");
 
                 if ((context.HasSubtitleOverlay || context.HasWatermark || context.HasGraphicsEngine) &&
                     currentState.FrameDataLocation == FrameDataLocation.Hardware)

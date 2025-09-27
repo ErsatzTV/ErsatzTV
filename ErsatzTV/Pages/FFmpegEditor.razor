@@ -79,7 +79,14 @@
                        Clearable="true">
                 <MudSelectItem Value="@VideoProfile.Main">main</MudSelectItem>
                 <MudSelectItem Value="@VideoProfile.High">high</MudSelectItem>
-                <MudSelectItem Value="@VideoProfile.High10">high10</MudSelectItem>
+                @if (_model.HardwareAcceleration is HardwareAccelerationKind.Nvenc)
+                {
+                    <MudSelectItem Value="@VideoProfile.High444p">high444p</MudSelectItem>
+                }
+                else
+                {
+                    <MudSelectItem Value="@VideoProfile.High10">high10</MudSelectItem>
+                }
             </MudSelect>
         </MudStack>
         <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
