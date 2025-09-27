@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using System.Globalization;
 using System.Text;
 using ErsatzTV.FFmpeg.Format;
@@ -62,19 +63,71 @@ internal static class CudaHelper
 
         foreach (var description in CuDevice.GetDescriptions())
         {
-            var device = description.Device;
-
-            string name = device.GetName();
-            int nullIndex = name.IndexOf('\0');
-            if (nullIndex > 0)
+            try
             {
-                name = name[..nullIndex];
+                var device = description.Device;
+
+                string name = device.GetName();
+                int nullIndex = name.IndexOf('\0');
+                if (nullIndex > 0)
+                {
+                    name = name[..nullIndex];
+                }
+
+                int major = device.GetAttribute(CuDeviceAttribute.ComputeCapabilityMajor);
+                int minor = device.GetAttribute(CuDeviceAttribute.ComputeCapabilityMinor);
+
+                using var context = device.CreateContext();
+                var sessionParams = new NvEncOpenEncodeSessionExParams
+                {
+                    Version = LibNvEnc.NV_ENC_OPEN_ENCODE_SESSION_EX_PARAMS_VER,
+                    ApiVersion = LibNvEnc.NVENCAPI_VERSION,
+                    Device = context.Handle,
+                    DeviceType = NvEncDeviceType.Cuda
+                };
+
+                var codecs = new List<CudaCodec>();
+                var encoder = LibNvEnc.OpenEncoder(ref sessionParams);
+                try
+                {
+                    IReadOnlyList<Guid> codecGuids = encoder.GetEncodeGuids();
+                    foreach ((string codecName, Guid codecGuid) in AllCodecs)
+                    {
+                        if (codecGuids.Contains(codecGuid))
+                        {
+                            IReadOnlyList<Guid> codecProfileGuids = encoder.GetEncodeProfileGuids(codecGuid);
+
+                            var bitDepths = new List<int> { 8 };
+
+                            var cap = new NvEncCapsParam { CapsToQuery = NvEncCaps.Support10bitEncode };
+                            var capsVal = 0;
+                            encoder.GetEncodeCaps(codecGuid, ref cap, ref capsVal);
+                            if (capsVal > 0)
+                            {
+                                bitDepths.Add(10);
+                            }
+
+                            var cudaCodec = new CudaCodec(
+                                codecName,
+                                codecGuid,
+                                codecProfileGuids,
+                                bitDepths.ToImmutableList());
+
+                            codecs.Add(cudaCodec);
+                        }
+                    }
+                }
+                finally
+                {
+                    encoder.DestroyEncoder();
+                }
+
+                result.Add(new CudaDevice(device.Handle, name, new Version(major, minor), codecs));
             }
-
-            int major = device.GetAttribute(CuDeviceAttribute.ComputeCapabilityMajor);
-            int minor = device.GetAttribute(CuDeviceAttribute.ComputeCapabilityMinor);
-
-            result.Add(new CudaDevice(device.Handle, name, new Version(major, minor)));
+            catch (Exception)
+            {
+                // do nothing
+            }
         }
 
         return result;
@@ -84,47 +137,15 @@ internal static class CudaHelper
     {
         var sb = new StringBuilder();
 
-        try
+        sb.AppendLine("  Encoding:");
+        foreach (CudaCodec cudaCodec in device.Codecs)
         {
-            var dev = CuDevice.GetDevice(device.Handle);
-            using var context = dev.CreateContext();
-            var sessionParams = new NvEncOpenEncodeSessionExParams
-            {
-                Version = LibNvEnc.NV_ENC_OPEN_ENCODE_SESSION_EX_PARAMS_VER,
-                ApiVersion = LibNvEnc.NVENCAPI_VERSION,
-                Device = context.Handle,
-                DeviceType = NvEncDeviceType.Cuda
-            };
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    - Supports {cudaCodec.Name} 8-bit");
 
-            var encoder = LibNvEnc.OpenEncoder(ref sessionParams);
-            try
+            if (cudaCodec.BitDepths.Contains(10))
             {
-                sb.AppendLine("  Encoding:");
-                IReadOnlyList<Guid> codecGuids = encoder.GetEncodeGuids();
-                foreach ((string codecName, Guid codecGuid)  in AllCodecs)
-                {
-                    if (codecGuids.Contains(codecGuid))
-                    {
-                        sb.AppendLine(CultureInfo.InvariantCulture, $"    - Supports {codecName} 8-bit");
-
-                        var cap = new NvEncCapsParam { CapsToQuery = NvEncCaps.Support10bitEncode };
-                        var capsVal = 0;
-                        encoder.GetEncodeCaps(codecGuid, ref cap, ref capsVal);
-                        if (capsVal > 0)
-                        {
-                            sb.AppendLine(CultureInfo.InvariantCulture, $"    - Supports {codecName} 10-bit");
-                        }
-                    }
-                }
+                sb.AppendLine(CultureInfo.InvariantCulture, $"    - Supports {cudaCodec.Name} 10-bit");
             }
-            finally
-            {
-                encoder.DestroyEncoder();
-            }
-        }
-        catch (Exception)
-        {
-            // do nothing
         }
 
         return sb.ToString();

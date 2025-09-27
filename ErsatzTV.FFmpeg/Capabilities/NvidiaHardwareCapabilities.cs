@@ -95,92 +95,55 @@ public class NvidiaHardwareCapabilities : IHardwareCapabilities
     {
         int bitDepth = maybePixelFormat.Map(pf => pf.BitDepth).IfNone(8);
 
-        try
+        _logger.LogDebug(
+            "Checking NvEnc {Format} / {Profile} / {BitDepth}-bit",
+            videoFormat,
+            videoProfile,
+            bitDepth);
+
+        var codec = _cudaDevice.Codecs.FirstOrDefault(c => c.Name.Equals(
+            videoFormat,
+            StringComparison.OrdinalIgnoreCase));
+
+        if (codec == null)
         {
-            var dev = CuDevice.GetDevice(0);
-            using var context = dev.CreateContext();
-            var sessionParams = new NvEncOpenEncodeSessionExParams
-            {
-                Version = LibNvEnc.NV_ENC_OPEN_ENCODE_SESSION_EX_PARAMS_VER,
-                ApiVersion = LibNvEnc.NVENCAPI_VERSION,
-                Device = context.Handle,
-                DeviceType = NvEncDeviceType.Cuda
-            };
-
-            var encoder = LibNvEnc.OpenEncoder(ref sessionParams);
-            try
-            {
-                _logger.LogDebug(
-                    "Checking NvEnc {Format} / {Profile} / {BitDepth}-bit",
-                    videoFormat,
-                    videoProfile,
-                    bitDepth);
-
-                var codecGuid = videoFormat switch
-                {
-                    VideoFormat.Hevc => NvEncCodecGuids.Hevc,
-                    _ => NvEncCodecGuids.H264
-                };
-
-                IReadOnlyList<Guid> codecGuids = encoder.GetEncodeGuids();
-                if (!codecGuids.Contains(codecGuid))
-                {
-                    _logger.LogWarning("NvEnc {Format} is not supported; will use software encode", videoFormat);
-                    return FFmpegCapability.Software;
-                }
-
-                var profileGuid = (videoFormat, videoProfile.IfNone(string.Empty), bitDepth) switch
-                {
-                    (VideoFormat.Hevc, _, 8) => NvEncProfileGuids.HevcMain,
-                    (VideoFormat.Hevc, _, 10) => NvEncProfileGuids.HevcMain10,
-
-                    (VideoFormat.H264, _, 10) => NvEncProfileGuids.H264High444,
-                    (VideoFormat.H264, VideoProfile.High, _) => NvEncProfileGuids.H264High,
-                    // high10 is for libx264, nvenc needs high444
-                    (VideoFormat.H264, VideoProfile.High10, _) => NvEncProfileGuids.H264High444,
-
-                    _ => NvEncProfileGuids.H264Main
-                };
-
-                IReadOnlyList<Guid> profileGuids = encoder.GetEncodeProfileGuids(codecGuid);
-                if (!profileGuids.Contains(profileGuid))
-                {
-                    _logger.LogWarning(
-                        "NvEnc {Format} / {Profile} is not supported; will use software encode",
-                        videoFormat,
-                        videoProfile);
-                    return FFmpegCapability.Software;
-                }
-
-                if (bitDepth == 10)
-                {
-                    var cap = new NvEncCapsParam { CapsToQuery = NvEncCaps.Support10bitEncode };
-                    var capsVal = 0;
-                    encoder.GetEncodeCaps(codecGuid, ref cap, ref capsVal);
-                    if (capsVal == 0)
-                    {
-                        _logger.LogWarning(
-                            "NvEnc {Format} / {Profile} / {BitDepth}-bit is not supported; will use software encode",
-                            videoFormat,
-                            videoProfile,
-                            bitDepth);
-                        return FFmpegCapability.Software;
-                    }
-                }
-
-                return FFmpegCapability.Hardware;
-            }
-            finally
-            {
-                encoder.DestroyEncoder();
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Unexpected error checking NvEnc capabilities; falling back to software");
+            _logger.LogWarning("NvEnc {Format} is not supported; will use software encode", videoFormat);
+            return FFmpegCapability.Software;
         }
 
-        return FFmpegCapability.Software;
+        var profileGuid = (videoFormat, videoProfile.IfNone(string.Empty), bitDepth) switch
+        {
+            (VideoFormat.Hevc, _, 8) => NvEncProfileGuids.HevcMain,
+            (VideoFormat.Hevc, _, 10) => NvEncProfileGuids.HevcMain10,
+
+            (VideoFormat.H264, _, 10) => NvEncProfileGuids.H264High444,
+            (VideoFormat.H264, VideoProfile.High, _) => NvEncProfileGuids.H264High,
+            // high10 is for libx264, nvenc needs high444
+            (VideoFormat.H264, VideoProfile.High10, _) => NvEncProfileGuids.H264High444,
+
+            _ => NvEncProfileGuids.H264Main
+        };
+
+        if (!codec.ProfileGuids.Contains(profileGuid))
+        {
+            _logger.LogWarning(
+                "NvEnc {Format} / {Profile} is not supported; will use software encode",
+                videoFormat,
+                videoProfile);
+            return FFmpegCapability.Software;
+        }
+
+        if (!codec.BitDepths.Contains(bitDepth))
+        {
+            _logger.LogWarning(
+                "NvEnc {Format} / {Profile} / {BitDepth}-bit is not supported; will use software encode",
+                videoFormat,
+                videoProfile,
+                bitDepth);
+            return FFmpegCapability.Software;
+        }
+
+        return FFmpegCapability.Hardware;
     }
 
     public Option<RateControlMode> GetRateControlMode(string videoFormat, Option<IPixelFormat> maybePixelFormat) =>
