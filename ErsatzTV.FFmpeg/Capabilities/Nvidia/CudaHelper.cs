@@ -12,10 +12,32 @@ internal static class CudaHelper
     private static bool _initialized;
     private static readonly Lock Lock = new();
 
-    private static readonly Dictionary<string, Guid> AllCodecs = new()
+    private static readonly Dictionary<string, Guid> AllEncoders = new()
     {
         [VideoFormat.H264] = NvEncCodecGuids.H264,
         [VideoFormat.Hevc] = NvEncCodecGuids.Hevc
+    };
+
+    private sealed record Decoder(CuVideoChromaFormat ChromaFormat, CuVideoCodec VideoCodec, int BitDepth);
+
+    private static readonly Dictionary<string, Decoder> AllDecoders = new()
+    {
+        [$"{VideoFormat.Mpeg2Video} 8-bit"] = new Decoder(CuVideoChromaFormat.YUV420, CuVideoCodec.MPEG2, 8),
+        [$"{VideoFormat.Mpeg2Video} 10-bit"] = new Decoder(CuVideoChromaFormat.YUV420, CuVideoCodec.MPEG2, 10),
+        [$"{VideoFormat.Mpeg4} 8-bit"] = new Decoder(CuVideoChromaFormat.YUV420, CuVideoCodec.MPEG4, 8),
+        [$"{VideoFormat.Mpeg4} 10-bit"] = new Decoder(CuVideoChromaFormat.YUV420, CuVideoCodec.MPEG4, 10),
+        [$"{VideoFormat.Vc1} 8-bit"] = new Decoder(CuVideoChromaFormat.YUV420, CuVideoCodec.VC1, 8),
+        [$"{VideoFormat.Vc1} 10-bit"] = new Decoder(CuVideoChromaFormat.YUV420, CuVideoCodec.VC1, 10),
+        [$"{VideoFormat.H264} 8-bit"] = new Decoder(CuVideoChromaFormat.YUV420, CuVideoCodec.H264, 8),
+        [$"{VideoFormat.H264} 10-bit"] = new Decoder(CuVideoChromaFormat.YUV420, CuVideoCodec.H264, 10),
+        [$"{VideoFormat.Hevc} 8-bit"] = new Decoder(CuVideoChromaFormat.YUV420, CuVideoCodec.HEVC, 8),
+        [$"{VideoFormat.Hevc} 10-bit"] = new Decoder(CuVideoChromaFormat.YUV420, CuVideoCodec.HEVC, 10),
+        [$"{VideoFormat.Vp8} 8-bit"] = new Decoder(CuVideoChromaFormat.YUV420, CuVideoCodec.VP8, 8),
+        [$"{VideoFormat.Vp8} 10-bit"] = new Decoder(CuVideoChromaFormat.YUV420, CuVideoCodec.VP8, 10),
+        [$"{VideoFormat.Vp9} 8-bit"] = new Decoder(CuVideoChromaFormat.YUV420, CuVideoCodec.VP9, 8),
+        [$"{VideoFormat.Vp9} 10-bit"] = new Decoder(CuVideoChromaFormat.YUV420, CuVideoCodec.VP9, 10),
+        [$"{VideoFormat.Av1} 8-bit"] = new Decoder(CuVideoChromaFormat.YUV420, (CuVideoCodec)11, 8), // AV1
+        [$"{VideoFormat.Av1} 10-bit"] = new Decoder(CuVideoChromaFormat.YUV420, (CuVideoCodec)11, 10) // AV1
     };
 
     private static bool EnsureInit()
@@ -78,6 +100,34 @@ internal static class CudaHelper
                 int minor = device.GetAttribute(CuDeviceAttribute.ComputeCapabilityMinor);
 
                 using var context = device.CreateContext();
+
+                var encoders = new List<CudaCodec>();
+                var decoders = new List<CudaDecoder>();
+
+                foreach ((string decoderName, Decoder decoder) in AllDecoders)
+                {
+                    var caps = new CuVideoDecodeCaps
+                    {
+                        BitDepthMinus8 = decoder.BitDepth - 8,
+                        ChromaFormat = decoder.ChromaFormat,
+                        CodecType = decoder.VideoCodec
+                    };
+
+                    var decoderCaps = LibCuVideo.GetDecoderCaps(ref caps);
+                    if (decoderCaps != CuResult.Success)
+                    {
+                        Console.WriteLine("Failed to check decode capability: " + result);
+                        continue;
+                    }
+
+                    if (!caps.IsSupported)
+                    {
+                        continue;
+                    }
+
+                    decoders.Add(new CudaDecoder(decoderName, decoder.VideoCodec, decoder.BitDepth));
+                }
+
                 var sessionParams = new NvEncOpenEncodeSessionExParams
                 {
                     Version = LibNvEnc.NV_ENC_OPEN_ENCODE_SESSION_EX_PARAMS_VER,
@@ -86,12 +136,11 @@ internal static class CudaHelper
                     DeviceType = NvEncDeviceType.Cuda
                 };
 
-                var codecs = new List<CudaCodec>();
                 var encoder = LibNvEnc.OpenEncoder(ref sessionParams);
                 try
                 {
                     IReadOnlyList<Guid> codecGuids = encoder.GetEncodeGuids();
-                    foreach ((string codecName, Guid codecGuid) in AllCodecs)
+                    foreach ((string codecName, Guid codecGuid) in AllEncoders)
                     {
                         if (codecGuids.Contains(codecGuid))
                         {
@@ -113,7 +162,7 @@ internal static class CudaHelper
                                 codecProfileGuids,
                                 bitDepths.ToImmutableList());
 
-                            codecs.Add(cudaCodec);
+                            encoders.Add(cudaCodec);
                         }
                     }
                 }
@@ -122,7 +171,7 @@ internal static class CudaHelper
                     encoder.DestroyEncoder();
                 }
 
-                result.Add(new CudaDevice(device.Handle, name, new Version(major, minor), codecs));
+                result.Add(new CudaDevice(device.Handle, name, new Version(major, minor), encoders, decoders));
             }
             catch (Exception)
             {
@@ -137,8 +186,9 @@ internal static class CudaHelper
     {
         var sb = new StringBuilder();
 
+        sb.AppendLine();
         sb.AppendLine("  Encoding:");
-        foreach (CudaCodec cudaCodec in device.Codecs)
+        foreach (CudaCodec cudaCodec in device.Encoders)
         {
             sb.AppendLine(CultureInfo.InvariantCulture, $"    - Supports {cudaCodec.Name} 8-bit");
 
@@ -146,6 +196,13 @@ internal static class CudaHelper
             {
                 sb.AppendLine(CultureInfo.InvariantCulture, $"    - Supports {cudaCodec.Name} 10-bit");
             }
+        }
+
+        sb.AppendLine();
+        sb.AppendLine("  Decoding:");
+        foreach (CudaDecoder cudaDecoder in device.Decoders)
+        {
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    - Supports {cudaDecoder.Name}");
         }
 
         return sb.ToString();
