@@ -36,6 +36,14 @@ public static class NvEncSharpRedirector
                 return NativeLibrary.Load("nvcuda.dll", assembly, searchPath);
         }
 
+        if (libraryName.Equals("nvcuvid.dll", StringComparison.OrdinalIgnoreCase))
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                return NativeLibrary.Load("libnvcuvid.so.1", assembly, searchPath);
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                return NativeLibrary.Load("nvcuvid.dll", assembly, searchPath);
+        }
+
         return IntPtr.Zero;
     }
 
