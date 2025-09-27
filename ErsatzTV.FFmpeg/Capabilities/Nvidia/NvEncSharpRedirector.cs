@@ -15,7 +15,7 @@ public static class NvEncSharpRedirector
         if (libraryName.Equals("nvEncodeAPI64.dll", StringComparison.OrdinalIgnoreCase))
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-                return NativeLibrary.Load("libnvidia-encode.so", assembly, searchPath);
+                return NativeLibrary.Load("libnvidia-encode.so.1", assembly, searchPath);
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 return NativeLibrary.Load("nvEncodeAPI64.dll", assembly, searchPath);
         }
@@ -23,7 +23,7 @@ public static class NvEncSharpRedirector
         if (libraryName.Equals("nvEncodeAPI.dll", StringComparison.OrdinalIgnoreCase))
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-                return NativeLibrary.Load("libnvidia-encode.so", assembly, searchPath);
+                return NativeLibrary.Load("libnvidia-encode.so.1", assembly, searchPath);
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 return NativeLibrary.Load("nvEncodeAPI.dll", assembly, searchPath);
         }
@@ -31,7 +31,7 @@ public static class NvEncSharpRedirector
         if (libraryName.Equals("nvcuda.dll", StringComparison.OrdinalIgnoreCase))
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-                return NativeLibrary.Load("libcuda.so", assembly, searchPath);
+                return NativeLibrary.Load("libcuda.so.1", assembly, searchPath);
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 return NativeLibrary.Load("nvcuda.dll", assembly, searchPath);
         }
