@@ -9,13 +9,17 @@ public class EncoderHevcNvenc : EncoderBase
     private readonly Option<string> _maybeVideoPreset;
     private readonly bool _allowBFrames;
 
-    public EncoderHevcNvenc(IHardwareCapabilities hardwareCapabilities, Option<string> maybeVideoPreset, bool allowBFrames)
+    public EncoderHevcNvenc(
+        IHardwareCapabilities hardwareCapabilities,
+        Option<string> maybeVideoPreset,
+        int bitDepth,
+        bool allowBFrames)
     {
         _maybeVideoPreset = maybeVideoPreset;
         _allowBFrames = allowBFrames;
         if (hardwareCapabilities is NvidiaHardwareCapabilities nvidia)
         {
-            _bFrames = nvidia.HevcBFrames;
+            _bFrames = nvidia.HevcBFrames(bitDepth);
         }
     }
 

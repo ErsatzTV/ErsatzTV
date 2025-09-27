@@ -74,7 +74,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix extracted text subtitles getting into invalid state after media server deep scans
   - Targeted deep scans will now extract text subtitles for the scanned show
 - Fix playlist preview
-- Use NvEnc API to detect encoder capability instead of heuristic based on GPU model/architecture
+- Use NVIDIA NvEnc API to detect encoder capability instead of heuristic based on GPU model/architecture
+- Use NVIDIA Cuvid API to detect decoder capability instead of heuristic based on GPU model/architecture
 
 ### Changed
 - Filler presets: use separate text fields for `hours`, `minutes` and `seconds` duration

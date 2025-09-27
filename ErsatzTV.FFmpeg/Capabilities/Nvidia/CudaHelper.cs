@@ -156,11 +156,17 @@ internal static class CudaHelper
                                 bitDepths.Add(10);
                             }
 
+                            cap = new NvEncCapsParam { CapsToQuery = NvEncCaps.SupportBframeRefMode };
+                            capsVal = 0;
+                            encoder.GetEncodeCaps(codecGuid, ref cap, ref capsVal);
+                            bool bFrameRefMode = capsVal > 0;
+
                             var cudaCodec = new CudaCodec(
                                 codecName,
                                 codecGuid,
                                 codecProfileGuids,
-                                bitDepths.ToImmutableList());
+                                bitDepths.ToImmutableList(),
+                                bFrameRefMode);
 
                             encoders.Add(cudaCodec);
                         }
@@ -190,11 +196,13 @@ internal static class CudaHelper
         sb.AppendLine("  Encoding:");
         foreach (CudaCodec cudaCodec in device.Encoders)
         {
-            sb.AppendLine(CultureInfo.InvariantCulture, $"    - Supports {cudaCodec.Name} 8-bit");
+            string bFrames = cudaCodec.BFrames ? " (with B-frames)" : string.Empty;
+
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    - Supports {cudaCodec.Name} 8-bit{bFrames}");
 
             if (cudaCodec.BitDepths.Contains(10))
             {
-                sb.AppendLine(CultureInfo.InvariantCulture, $"    - Supports {cudaCodec.Name} 10-bit");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"    - Supports {cudaCodec.Name} 10-bit{bFrames}");
             }
         }
 

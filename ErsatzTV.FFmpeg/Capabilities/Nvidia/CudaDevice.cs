@@ -9,6 +9,11 @@ public record CudaDevice(
     IReadOnlyList<CudaCodec> Encoders,
     IReadOnlyList<CudaDecoder> Decoders);
 
-public record CudaCodec(string Name, Guid CodecGuid, IReadOnlyList<Guid> ProfileGuids, IReadOnlyList<int> BitDepths);
+public record CudaCodec(
+    string Name,
+    Guid CodecGuid,
+    IReadOnlyList<Guid> ProfileGuids,
+    IReadOnlyList<int> BitDepths,
+    bool BFrames);
 
 public record CudaDecoder(string Name, CuVideoCodec VideoCodec, int BitDepth);
