@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using CliWrap;
 using CliWrap.Buffered;
+using ErsatzTV.FFmpeg.Capabilities.Nvidia;
 using ErsatzTV.FFmpeg.Capabilities.Qsv;
 using ErsatzTV.FFmpeg.Capabilities.Vaapi;
 using ErsatzTV.FFmpeg.Capabilities.VideoToolbox;
@@ -18,8 +19,7 @@ namespace ErsatzTV.FFmpeg.Capabilities;
 
 public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
 {
-    private const string ArchitectureCacheKey = "ffmpeg.hardware.nvidia.architecture";
-    private const string ModelCacheKey = "ffmpeg.hardware.nvidia.model";
+    private const string CudaDeviceKey = "ffmpeg.hardware.cuda.device";
 
     private static readonly CompositeFormat
         VaapiCacheKeyFormat = CompositeFormat.Parse("ffmpeg.hardware.vaapi.{0}.{1}.{2}");
@@ -104,7 +104,7 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
 
         return hardwareAccelerationMode switch
         {
-            HardwareAccelerationMode.Nvenc => await GetNvidiaCapabilities(ffmpegPath, ffmpegCapabilities),
+            HardwareAccelerationMode.Nvenc => GetNvidiaCapabilities(ffmpegCapabilities),
             HardwareAccelerationMode.Qsv => await GetQsvCapabilities(ffmpegPath, vaapiDevice),
             HardwareAccelerationMode.Vaapi => await GetVaapiCapabilities(vaapiDisplay, vaapiDriver, vaapiDevice),
             HardwareAccelerationMode.VideoToolbox => new VideoToolboxHardwareCapabilities(ffmpegCapabilities, _logger),
@@ -121,6 +121,24 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
         {
             return string.Empty;
         }
+
+        Option<List<CudaDevice>> maybeDevices = CudaHelper.GetDevices();
+        foreach (List<CudaDevice> devices in maybeDevices.Where(list => list.Count > 0))
+        {
+            var sb = new StringBuilder();
+            foreach (CudaDevice device in devices)
+            {
+                sb.AppendLine(
+                    CultureInfo.InvariantCulture,
+                    $"GPU #{device.Handle} < {device.Model} > has Compute SM {device.Version.Major}.{device.Version.Minor}");
+
+                sb.AppendLine(CudaHelper.GetDeviceDetails(device));
+            }
+
+            return sb.ToString();
+        }
+
+        // if we don't have a list of cuda devices, fall back to ffmpeg check
 
         string[] arguments =
         {
@@ -497,41 +515,24 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
         }
     }
 
-    private async Task<IHardwareCapabilities> GetNvidiaCapabilities(
-        string ffmpegPath,
-        IFFmpegCapabilities ffmpegCapabilities)
+    private IHardwareCapabilities GetNvidiaCapabilities(IFFmpegCapabilities ffmpegCapabilities)
     {
-        if (_memoryCache.TryGetValue(ArchitectureCacheKey, out int cachedArchitecture)
-            && _memoryCache.TryGetValue(ModelCacheKey, out string? cachedModel)
-            && cachedModel is not null)
+        if (_memoryCache.TryGetValue(CudaDeviceKey, out CudaDevice? cudaDevice) && cudaDevice is not null)
         {
-            return new NvidiaHardwareCapabilities(
-                cachedArchitecture,
-                cachedModel,
-                ffmpegCapabilities,
-                _logger);
+            return new NvidiaHardwareCapabilities(cudaDevice, ffmpegCapabilities, _logger);
         }
 
-        string output = await GetNvidiaOutput(ffmpegPath);
-
-        Option<string> maybeLine = Optional(output.Split("\n").FirstOrDefault(x => x.Contains("GPU")));
-        foreach (string line in maybeLine)
+        Option<List<CudaDevice>> maybeDevices = CudaHelper.GetDevices();
+        foreach (CudaDevice firstDevice in maybeDevices.Map(list => list.HeadOrNone()))
         {
-            const string ARCHITECTURE_PATTERN = @"SM\s+(\d+\.\d+)";
-            Match match = Regex.Match(line, ARCHITECTURE_PATTERN);
-            if (match.Success && int.TryParse(match.Groups[1].Value.Replace(".", string.Empty), out int architecture))
-            {
-                const string MODEL_PATTERN = @"(GTX\s+[0-9a-zA-Z]+[\sTtIi]+)";
-                Match modelMatch = Regex.Match(line, MODEL_PATTERN);
-                string model = modelMatch.Success ? modelMatch.Groups[1].Value.Trim() : "unknown";
-                _logger.LogDebug(
-                    "Detected NVIDIA GPU model {Model} architecture SM {Architecture}",
-                    model,
-                    architecture);
-                _memoryCache.Set(ArchitectureCacheKey, architecture);
-                _memoryCache.Set(ModelCacheKey, model);
-                return new NvidiaHardwareCapabilities(architecture, model, ffmpegCapabilities, _logger);
-            }
+            _logger.LogDebug(
+                "Detected NVIDIA GPU model {Model} architecture SM {Major}.{Minor}",
+                firstDevice.Model,
+                firstDevice.Version.Major,
+                firstDevice.Version.Minor);
+
+            _memoryCache.Set(CudaDeviceKey, firstDevice);
+            return new NvidiaHardwareCapabilities(firstDevice, ffmpegCapabilities, _logger);
         }
 
         _logger.LogWarning(

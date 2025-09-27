@@ -1,6 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.FFmpeg.Capabilities;
+using ErsatzTV.FFmpeg.Capabilities.Nvidia;
 using ErsatzTV.FFmpeg.Runtime;
 using Microsoft.Extensions.Caching.Memory;
 
@@ -16,6 +17,8 @@ public class PlatformSettingsService(IServiceScopeFactory serviceScopeFactory) :
         IRuntimeInfo runtimeInfo = scope.ServiceProvider.GetRequiredService<IRuntimeInfo>();
         if (runtimeInfo != null && runtimeInfo.IsOSPlatform(OSPlatform.Linux))
         {
+            NvEncSharpRedirector.Init();
+
             if (Directory.Exists("/dev/dri"))
             {
                 ILocalFileSystem localFileSystem = scope.ServiceProvider.GetRequiredService<ILocalFileSystem>();

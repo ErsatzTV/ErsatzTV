@@ -127,10 +127,16 @@ public class FFmpegProfileEditViewModelValidator : AbstractValidator<FFmpegProfi
                 .WithMessage("Mpeg2Video does not support 10-bit content"));
 
         When(
-            x => x.VideoFormat == FFmpegProfileVideoFormat.H264 && x.BitDepth == FFmpegProfileBitDepth.TenBit,
+            x => x.HardwareAcceleration != HardwareAccelerationKind.Nvenc && x.VideoFormat == FFmpegProfileVideoFormat.H264 && x.BitDepth == FFmpegProfileBitDepth.TenBit,
             () => RuleFor(x => x.VideoProfile)
                 .Must(vp => vp == VideoProfile.High10)
                 .WithMessage("VideoProfile must be high10 with 10-bit h264"));
+
+        When(
+            x => x.HardwareAcceleration == HardwareAccelerationKind.Nvenc && x.VideoFormat == FFmpegProfileVideoFormat.H264 && x.BitDepth == FFmpegProfileBitDepth.TenBit,
+            () => RuleFor(x => x.VideoProfile)
+                .Must(vp => vp == VideoProfile.High444p)
+                .WithMessage("VideoProfile must be high444p with NVIDIA 10-bit h264"));
 
         When(
             x => x.VideoFormat == FFmpegProfileVideoFormat.H264 && x.BitDepth == FFmpegProfileBitDepth.EightBit,

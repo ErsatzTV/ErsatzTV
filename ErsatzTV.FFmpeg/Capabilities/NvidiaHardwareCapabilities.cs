@@ -1,30 +1,32 @@
+using ErsatzTV.FFmpeg.Capabilities.Nvidia;
 using ErsatzTV.FFmpeg.Format;
+using Lennox.NvEncSharp;
 using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.FFmpeg.Capabilities;
 
 public class NvidiaHardwareCapabilities : IHardwareCapabilities
 {
-    private readonly int _architecture;
+    private readonly CudaDevice _cudaDevice;
     private readonly IFFmpegCapabilities _ffmpegCapabilities;
     private readonly ILogger _logger;
-    private readonly List<string> _maxwellGm206 = new() { "GTX 750", "GTX 950", "GTX 960", "GTX 965M" };
-    private readonly string _model;
+    private readonly List<string> _maxwellGm206 = ["GTX 750", "GTX 950", "GTX 960", "GTX 965M"];
+    private readonly Version _maxwell = new(5, 2);
+    private readonly Version _pascal = new(6, 0);
+    private readonly Version _ampere = new(8, 6);
 
     public NvidiaHardwareCapabilities(
-        int architecture,
-        string model,
+        CudaDevice cudaDevice,
         IFFmpegCapabilities ffmpegCapabilities,
         ILogger logger)
     {
-        _architecture = architecture;
-        _model = model;
+        _cudaDevice = cudaDevice;
         _ffmpegCapabilities = ffmpegCapabilities;
         _logger = logger;
     }
 
     // this fails with some 1650 cards, so let's try greater than 75
-    public bool HevcBFrames => _architecture > 75;
+    public bool HevcBFrames => _cudaDevice.Version >= new Version(7, 5);
 
     public FFmpegCapability CanDecode(
         string videoFormat,
@@ -39,13 +41,13 @@ public class NvidiaHardwareCapabilities : IHardwareCapabilities
         bool isHardware = videoFormat switch
         {
             // some second gen maxwell can decode hevc, otherwise pascal is required
-            VideoFormat.Hevc => _architecture == 52 && _maxwellGm206.Contains(_model) || _architecture >= 60,
+            VideoFormat.Hevc => _cudaDevice.Version == _maxwell && _maxwellGm206.Contains(_cudaDevice.Model) || _cudaDevice.Version >= _pascal,
 
             // pascal is required to decode vp9 10-bit
-            VideoFormat.Vp9 when bitDepth == 10 => !isHdr && _architecture >= 60,
+            VideoFormat.Vp9 when bitDepth == 10 => !isHdr && _cudaDevice.Version >= _pascal,
 
             // some second gen maxwell can decode vp9, otherwise pascal is required
-            VideoFormat.Vp9 => !isHdr && _architecture == 52 && _maxwellGm206.Contains(_model) || _architecture >= 60,
+            VideoFormat.Vp9 => !isHdr && _cudaDevice.Version == _maxwell && _maxwellGm206.Contains(_cudaDevice.Model) || _cudaDevice.Version >= _pascal,
 
             // no hardware decoding of 10-bit h264
             VideoFormat.H264 => bitDepth < 10,
@@ -58,7 +60,7 @@ public class NvidiaHardwareCapabilities : IHardwareCapabilities
             VideoFormat.Mpeg4 => false,
 
             // ampere is required for av1 decoding
-            VideoFormat.Av1 => _architecture >= 86,
+            VideoFormat.Av1 => _cudaDevice.Version >= _ampere,
 
             // generated images are decoded into software
             VideoFormat.GeneratedImage => false,
@@ -93,21 +95,92 @@ public class NvidiaHardwareCapabilities : IHardwareCapabilities
     {
         int bitDepth = maybePixelFormat.Map(pf => pf.BitDepth).IfNone(8);
 
-        bool isHardware = videoFormat switch
+        try
         {
-            // pascal is required to encode 10-bit hevc
-            VideoFormat.Hevc when bitDepth == 10 => _architecture >= 60,
+            var dev = CuDevice.GetDevice(0);
+            using var context = dev.CreateContext();
+            var sessionParams = new NvEncOpenEncodeSessionExParams
+            {
+                Version = LibNvEnc.NV_ENC_OPEN_ENCODE_SESSION_EX_PARAMS_VER,
+                ApiVersion = LibNvEnc.NVENCAPI_VERSION,
+                Device = context.Handle,
+                DeviceType = NvEncDeviceType.Cuda
+            };
 
-            // second gen maxwell is required to encode hevc
-            VideoFormat.Hevc => _architecture >= 52,
+            var encoder = LibNvEnc.OpenEncoder(ref sessionParams);
+            try
+            {
+                _logger.LogDebug(
+                    "Checking NvEnc {Format} / {Profile} / {BitDepth}-bit",
+                    videoFormat,
+                    videoProfile,
+                    bitDepth);
 
-            // nvidia cannot encode 10-bit h264
-            VideoFormat.H264 when bitDepth == 10 => false,
+                var codecGuid = videoFormat switch
+                {
+                    VideoFormat.Hevc => NvEncCodecGuids.Hevc,
+                    _ => NvEncCodecGuids.H264
+                };
 
-            _ => true
-        };
+                IReadOnlyList<Guid> codecGuids = encoder.GetEncodeGuids();
+                if (!codecGuids.Contains(codecGuid))
+                {
+                    _logger.LogWarning("NvEnc {Format} is not supported; will use software encode", videoFormat);
+                    return FFmpegCapability.Software;
+                }
 
-        return isHardware ? FFmpegCapability.Hardware : FFmpegCapability.Software;
+                var profileGuid = (videoFormat, videoProfile.IfNone(string.Empty), bitDepth) switch
+                {
+                    (VideoFormat.Hevc, _, 8) => NvEncProfileGuids.HevcMain,
+                    (VideoFormat.Hevc, _, 10) => NvEncProfileGuids.HevcMain10,
+
+                    (VideoFormat.H264, _, 10) => NvEncProfileGuids.H264High444,
+                    (VideoFormat.H264, VideoProfile.High, _) => NvEncProfileGuids.H264High,
+                    // high10 is for libx264, nvenc needs high444
+                    (VideoFormat.H264, VideoProfile.High10, _) => NvEncProfileGuids.H264High444,
+
+                    _ => NvEncProfileGuids.H264Main
+                };
+
+                IReadOnlyList<Guid> profileGuids = encoder.GetEncodeProfileGuids(codecGuid);
+                if (!profileGuids.Contains(profileGuid))
+                {
+                    _logger.LogWarning(
+                        "NvEnc {Format} / {Profile} is not supported; will use software encode",
+                        videoFormat,
+                        videoProfile);
+                    return FFmpegCapability.Software;
+                }
+
+                if (bitDepth == 10)
+                {
+                    var cap = new NvEncCapsParam { CapsToQuery = NvEncCaps.Support10bitEncode };
+                    var capsVal = 0;
+                    encoder.GetEncodeCaps(codecGuid, ref cap, ref capsVal);
+                    if (capsVal == 0)
+                    {
+                        _logger.LogWarning(
+                            "NvEnc {Format} / {Profile} / {BitDepth}-bit is not supported; will use software encode",
+                            videoFormat,
+                            videoProfile,
+                            bitDepth);
+                        return FFmpegCapability.Software;
+                    }
+                }
+
+                return FFmpegCapability.Hardware;
+            }
+            finally
+            {
+                encoder.DestroyEncoder();
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Unexpected error checking NvEnc capabilities; falling back to software");
+        }
+
+        return FFmpegCapability.Software;
     }
 
     public Option<RateControlMode> GetRateControlMode(string videoFormat, Option<IPixelFormat> maybePixelFormat) =>
