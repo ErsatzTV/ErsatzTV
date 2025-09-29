@@ -391,7 +391,9 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                     SmartCollectionId = playlistFiller.SmartCollectionId,
                     SmartCollection = playlistFiller.SmartCollection,
                     PlaylistId = playlistFiller.PlaylistId,
-                    Playlist = playlistFiller.Playlist
+                    Playlist = playlistFiller.Playlist,
+                    Expression = playlistFiller.Expression,
+                    UseChaptersAsMediaItems = playlistFiller.UseChaptersAsMediaItems
                 };
 
                 // if filler count is 2, we need to schedule 2 * (number of items in one full playlist iteration)

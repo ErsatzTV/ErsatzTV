@@ -76,6 +76,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix playlist preview
 - Use NVIDIA NvEnc API to detect encoder capability instead of heuristic based on GPU model/architecture
 - Use NVIDIA Cuvid API to detect decoder capability instead of heuristic based on GPU model/architecture
+- Fix filler expression not being respected when using a playlist as filler
 
 ### Changed
 - Filler presets: use separate text fields for `hours`, `minutes` and `seconds` duration
