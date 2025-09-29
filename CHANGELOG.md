@@ -77,6 +77,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Use NVIDIA NvEnc API to detect encoder capability instead of heuristic based on GPU model/architecture
 - Use NVIDIA Cuvid API to detect decoder capability instead of heuristic based on GPU model/architecture
 - Fix filler expression not being respected when using a playlist as filler
+- Use "repeat count" metadata from animated GIFs in graphics engine (i.e. watermarks)
+  - GIFs flagged to loop forever will loop forever
+  - GIFs with a specific loop count will loop the specified number of times and then hold the final frame
+    - Note that looping is relative to the start of the content, so this works best with permanent watermarks
 
 ### Changed
 - Filler presets: use separate text fields for `hours`, `minutes` and `seconds` duration
