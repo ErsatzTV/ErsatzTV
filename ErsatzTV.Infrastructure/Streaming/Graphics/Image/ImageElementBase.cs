@@ -19,6 +19,7 @@ public abstract class ImageElementBase : GraphicsElement, IDisposable
     private readonly List<double> _frameDelays = [];
     private readonly List<SKBitmap> _scaledFrames = [];
     private double _animatedDurationSeconds;
+    private ushort _repeatCount;
 
     private Image _sourceImage;
 
@@ -82,6 +83,11 @@ public abstract class ImageElementBase : GraphicsElement, IDisposable
             scaledHeight,
             horizontalMargin,
             verticalMargin);
+
+        if (_sourceImage.Metadata.DecodedImageFormat == GifFormat.Instance)
+        {
+            _repeatCount = _sourceImage.Metadata.GetFormatMetadata(GifFormat.Instance).RepeatCount;
+        }
 
         _animatedDurationSeconds = 0;
 
@@ -159,6 +165,11 @@ public abstract class ImageElementBase : GraphicsElement, IDisposable
         if (_scaledFrames.Count <= 1)
         {
             return _scaledFrames[0];
+        }
+
+        if (_repeatCount > 0 && timestamp.TotalSeconds >= _animatedDurationSeconds * _repeatCount)
+        {
+            return _scaledFrames.Last();
         }
 
         double currentTime = timestamp.TotalSeconds % _animatedDurationSeconds;

@@ -26,6 +26,6 @@ public class UpdateLibraryRefreshIntervalHandler :
         Optional(request.LibraryRefreshInterval)
             .Where(lri => lri is >= 0 and < 1_000_000)
             .Map(_ => Unit.Default)
-            .ToValidation<BaseError>("Library refresh interval must be zero or greated")
+            .ToValidation<BaseError>("Library refresh interval must be zero or greater")
             .AsTask();
 }
