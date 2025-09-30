@@ -4,6 +4,7 @@ using ErsatzTV.Application.MediaItems;
 using ErsatzTV.Application.Troubleshooting;
 using ErsatzTV.Application.Troubleshooting.Queries;
 using ErsatzTV.Core;
+using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Troubleshooting;
@@ -27,6 +28,8 @@ public class TroubleshootController(
         [FromQuery]
         int ffmpegProfile,
         [FromQuery]
+        StreamingMode streamingMode,
+        [FromQuery]
         List<int> watermark,
         [FromQuery]
         List<int> graphicsElement,
@@ -42,6 +45,7 @@ public class TroubleshootController(
 
             Either<BaseError, PlayoutItemResult> result = await mediator.Send(
                 new PrepareTroubleshootingPlayback(
+                    streamingMode,
                     mediaItem,
                     ffmpegProfile,
                     watermark,
@@ -125,6 +129,8 @@ public class TroubleshootController(
         [FromQuery]
         int ffmpegProfile,
         [FromQuery]
+        StreamingMode streamingMode,
+        [FromQuery]
         List<int> watermark,
         [FromQuery]
         List<int> graphicsElement,
@@ -135,7 +141,7 @@ public class TroubleshootController(
         Option<int> ss = seekSeconds > 0 ? seekSeconds : Option<int>.None;
 
         Option<string> maybeArchivePath = await mediator.Send(
-            new ArchiveTroubleshootingResults(mediaItem, ffmpegProfile, watermark, graphicsElement, ss),
+            new ArchiveTroubleshootingResults(mediaItem, ffmpegProfile, streamingMode, watermark, graphicsElement, ss),
             cancellationToken);
 
         foreach (string archivePath in maybeArchivePath)

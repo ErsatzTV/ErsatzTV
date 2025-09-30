@@ -7,6 +7,7 @@ public enum OutputFormatKind
     MpegTs,
     Mp4,
     Hls,
+    HlsMp4,
 
     Nut
 }

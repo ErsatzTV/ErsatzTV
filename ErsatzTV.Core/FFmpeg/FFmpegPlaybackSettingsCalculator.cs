@@ -60,11 +60,13 @@ public static class FFmpegPlaybackSettingsCalculator
             FormatFlags = streamingMode switch
             {
                 StreamingMode.HttpLiveStreamingSegmenter => SegmenterFormatFlags,
+                StreamingMode.HttpLiveStreamingSegmenterFmp4 => SegmenterFormatFlags,
                 _ => CommonFormatFlags
             },
             RealtimeOutput = streamingMode switch
             {
                 StreamingMode.HttpLiveStreamingSegmenter => hlsRealtime,
+                StreamingMode.HttpLiveStreamingSegmenterFmp4 => hlsRealtime,
                 StreamingMode.HttpLiveStreamingSegmenterV2 => hlsRealtime,
                 _ => true
             },
@@ -85,6 +87,7 @@ public static class FFmpegPlaybackSettingsCalculator
                 break;
             case StreamingMode.TransportStreamHybrid:
             case StreamingMode.HttpLiveStreamingSegmenter:
+            case StreamingMode.HttpLiveStreamingSegmenterFmp4:
             case StreamingMode.HttpLiveStreamingSegmenterV2:
             case StreamingMode.TransportStream:
                 result.HardwareAcceleration = ffmpegProfile.HardwareAcceleration;
@@ -218,6 +221,7 @@ public static class FFmpegPlaybackSettingsCalculator
             RealtimeOutput = streamingMode switch
             {
                 StreamingMode.HttpLiveStreamingSegmenter => hlsRealtime,
+                StreamingMode.HttpLiveStreamingSegmenterFmp4 => hlsRealtime,
                 StreamingMode.HttpLiveStreamingSegmenterV2 => hlsRealtime,
                 _ => true
             },

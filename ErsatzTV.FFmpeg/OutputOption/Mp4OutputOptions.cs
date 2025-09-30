@@ -2,6 +2,8 @@
 
 public class Mp4OutputOptions : OutputOption
 {
-    public override string[] OutputOptions => new[]
-        { "-movflags", "+faststart+frag_keyframe+separate_moof+omit_tfhd_offset+empty_moov+delay_moov" };
+    public override string[] OutputOptions =>
+    [
+        "-movflags", "+empty_moov+omit_tfhd_offset+frag_keyframe+default_base_moof"
+    ];
 }

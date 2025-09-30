@@ -10,6 +10,7 @@ public class OutputFormatHls : IPipelineStep
     private readonly bool _isFirstTranscode;
     private readonly bool _isTroubleshooting;
     private readonly Option<string> _mediaFrameRate;
+    private readonly OutputFormatKind _outputFormat;
     private readonly bool _oneSecondGop;
     private readonly string _playlistPath;
     private readonly string _segmentTemplate;
@@ -17,6 +18,7 @@ public class OutputFormatHls : IPipelineStep
     public OutputFormatHls(
         FrameState desiredState,
         Option<string> mediaFrameRate,
+        OutputFormatKind outputFormat,
         string segmentTemplate,
         string playlistPath,
         bool isFirstTranscode,
@@ -25,6 +27,7 @@ public class OutputFormatHls : IPipelineStep
     {
         _desiredState = desiredState;
         _mediaFrameRate = mediaFrameRate;
+        _outputFormat = outputFormat;
         _segmentTemplate = segmentTemplate;
         _playlistPath = playlistPath;
         _isFirstTranscode = isFirstTranscode;
@@ -58,13 +61,35 @@ public class OutputFormatHls : IPipelineStep
                 _segmentTemplate
             ];
 
+            var independentSegments = "+independent_segments";
+            var secondLevelSegmentIndex = "";
+
+            switch (_outputFormat)
+            {
+                case OutputFormatKind.Hls:
+                    result.AddRange(
+                    [
+                        "-hls_segment_type", "mpegts"
+                    ]);
+                    break;
+                case OutputFormatKind.HlsMp4:
+                    result.AddRange(
+                    [
+                        "-hls_segment_type", "fmp4",
+                        "-hls_fmp4_init_filename", $"{DateTimeOffset.Now.ToUnixTimeSeconds()}_init.mp4",
+                        "-strftime", "1",
+                    ]);
+                    secondLevelSegmentIndex = "+second_level_segment_index";
+                    break;
+            }
+
             string pdt = _isTroubleshooting ? string.Empty : "program_date_time+omit_endlist+";
 
             if (_isFirstTranscode)
             {
                 result.AddRange(
                 [
-                    "-hls_flags", $"{pdt}append_list+independent_segments",
+                    "-hls_flags", $"{pdt}append_list{independentSegments}{secondLevelSegmentIndex}",
                     _playlistPath
                 ]);
             }
@@ -72,7 +97,7 @@ public class OutputFormatHls : IPipelineStep
             {
                 result.AddRange(
                 [
-                    "-hls_flags", $"{pdt}append_list+discont_start+independent_segments",
+                    "-hls_flags", $"{pdt}append_list+discont_start{independentSegments}{secondLevelSegmentIndex}",
                     "-mpegts_flags", "+initial_discontinuity",
                     _playlistPath
                 ]);

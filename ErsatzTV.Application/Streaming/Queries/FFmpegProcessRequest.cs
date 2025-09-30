@@ -1,10 +1,11 @@
 ﻿using ErsatzTV.Core;
+using ErsatzTV.Core.Domain;
 
 namespace ErsatzTV.Application.Streaming;
 
 public record FFmpegProcessRequest(
     string ChannelNumber,
-    string Mode,
+    StreamingMode Mode,
     DateTimeOffset Now,
     bool StartAtZero,
     bool HlsRealtime,

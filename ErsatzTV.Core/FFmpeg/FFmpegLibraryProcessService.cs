@@ -242,6 +242,9 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             case StreamingMode.HttpLiveStreamingSegmenter:
                 outputFormat = OutputFormatKind.Hls;
                 break;
+            case StreamingMode.HttpLiveStreamingSegmenterFmp4:
+                outputFormat = OutputFormatKind.HlsMp4;
+                break;
             case StreamingMode.HttpLiveStreamingSegmenterV2:
                 outputFormat = OutputFormatKind.Nut;
                 break;
@@ -344,13 +347,16 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             channel.FFmpegProfile.VideoPreset,
             FFmpegLibraryHelper.MapBitDepth(channel.FFmpegProfile.BitDepth));
 
-        Option<string> hlsPlaylistPath = outputFormat == OutputFormatKind.Hls
+        Option<string> hlsPlaylistPath = outputFormat is OutputFormatKind.Hls or OutputFormatKind.HlsMp4
             ? Path.Combine(FileSystemLayout.TranscodeFolder, channel.Number, "live.m3u8")
             : Option<string>.None;
 
-        Option<string> hlsSegmentTemplate = outputFormat == OutputFormatKind.Hls
-            ? Path.Combine(FileSystemLayout.TranscodeFolder, channel.Number, "live%06d.ts")
-            : Option<string>.None;
+        Option<string> hlsSegmentTemplate = outputFormat switch
+        {
+            OutputFormatKind.Hls => Path.Combine(FileSystemLayout.TranscodeFolder, channel.Number, "live%06d.ts"),
+            OutputFormatKind.HlsMp4 => Path.Combine(FileSystemLayout.TranscodeFolder, channel.Number, "live_%s_%%06d.m4s"),
+            _ => Option<string>.None
+        };
 
         FrameSize scaledSize = ffmpegVideoStream.SquarePixelFrameSize(
             new FrameSize(channel.FFmpegProfile.Resolution.Width, channel.FFmpegProfile.Resolution.Height));
@@ -568,18 +574,24 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             case StreamingMode.HttpLiveStreamingSegmenter:
                 outputFormat = OutputFormatKind.Hls;
                 break;
+            case StreamingMode.HttpLiveStreamingSegmenterFmp4:
+                outputFormat = OutputFormatKind.HlsMp4;
+                break;
             case StreamingMode.HttpLiveStreamingSegmenterV2:
                 outputFormat = OutputFormatKind.Nut;
                 break;
         }
 
-        Option<string> hlsPlaylistPath = outputFormat == OutputFormatKind.Hls
+        Option<string> hlsPlaylistPath = outputFormat is OutputFormatKind.Hls or OutputFormatKind.HlsMp4
             ? Path.Combine(FileSystemLayout.TranscodeFolder, channel.Number, "live.m3u8")
             : Option<string>.None;
 
-        Option<string> hlsSegmentTemplate = outputFormat == OutputFormatKind.Hls
-            ? Path.Combine(FileSystemLayout.TranscodeFolder, channel.Number, "live%06d.ts")
-            : Option<string>.None;
+        Option<string> hlsSegmentTemplate = outputFormat switch
+        {
+            OutputFormatKind.Hls => Path.Combine(FileSystemLayout.TranscodeFolder, channel.Number, "live%06d.ts"),
+            OutputFormatKind.HlsMp4 => Path.Combine(FileSystemLayout.TranscodeFolder, channel.Number, "live_%s_%%06d.m4s"),
+            _ => Option<string>.None
+        };
 
         string videoPath = Path.Combine(FileSystemLayout.ResourcesCacheFolder, "background.png");
 

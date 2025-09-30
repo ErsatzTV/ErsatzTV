@@ -1,5 +1,6 @@
 ﻿using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.FFmpeg;
+using ErsatzTV.FFmpeg.OutputFormat;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NUnit.Framework;
@@ -25,7 +26,7 @@ public class HlsPlaylistFilterTests
         var start = new DateTimeOffset(2021, 10, 9, 8, 0, 0, TimeSpan.FromHours(-5));
         string[] input = NormalizeLineEndings(
             @"#EXTM3U
-#EXT-X-VERSION:6
+#EXT-X-VERSION:7
 #EXT-X-TARGETDURATION:4
 #EXT-X-MEDIA-SEQUENCE:1137
 #EXT-X-INDEPENDENT-SEGMENTS
@@ -40,14 +41,19 @@ live001138.ts
 #EXT-X-PROGRAM-DATE-TIME:2021-10-08T08:34:57.320-0500
 live001139.ts").Split(Environment.NewLine);
 
-        TrimPlaylistResult result = _hlsPlaylistFilter.TrimPlaylist(start, start.AddSeconds(-30), input);
+        TrimPlaylistResult result = _hlsPlaylistFilter.TrimPlaylist(
+            OutputFormatKind.Hls,
+            start,
+            start.AddSeconds(-30),
+            [],
+            input);
 
         result.PlaylistStart.ShouldBe(start);
         result.Sequence.ShouldBe(1137);
         result.Playlist.ShouldBe(
             NormalizeLineEndings(
                 @"#EXTM3U
-#EXT-X-VERSION:6
+#EXT-X-VERSION:7
 #EXT-X-TARGETDURATION:4
 #EXT-X-MEDIA-SEQUENCE:1137
 #EXT-X-DISCONTINUITY-SEQUENCE:1
@@ -70,7 +76,7 @@ live001139.ts
         var start = new DateTimeOffset(2021, 10, 9, 8, 0, 0, TimeSpan.FromHours(-5));
         string[] input = NormalizeLineEndings(
             @"#EXTM3U
-#EXT-X-VERSION:6
+#EXT-X-VERSION:7
 #EXT-X-TARGETDURATION:4
 #EXT-X-MEDIA-SEQUENCE:1137
 #EXT-X-INDEPENDENT-SEGMENTS
@@ -85,14 +91,20 @@ live001138.ts
 #EXT-X-PROGRAM-DATE-TIME:2021-10-08T08:34:57.320-0500
 live001139.ts").Split(Environment.NewLine);
 
-        TrimPlaylistResult result = _hlsPlaylistFilter.TrimPlaylist(start, start.AddSeconds(-30), input, 2);
+        TrimPlaylistResult result = _hlsPlaylistFilter.TrimPlaylist(
+            OutputFormatKind.Hls,
+            start,
+            start.AddSeconds(-30),
+            [],
+            input,
+            2);
 
         result.PlaylistStart.ShouldBe(start);
         result.Sequence.ShouldBe(1137);
         result.Playlist.ShouldBe(
             NormalizeLineEndings(
                 @"#EXTM3U
-#EXT-X-VERSION:6
+#EXT-X-VERSION:7
 #EXT-X-TARGETDURATION:4
 #EXT-X-MEDIA-SEQUENCE:1137
 #EXT-X-DISCONTINUITY-SEQUENCE:1
@@ -112,7 +124,7 @@ live001138.ts
         var start = new DateTimeOffset(2021, 10, 9, 8, 0, 0, TimeSpan.FromHours(-5));
         string[] input = NormalizeLineEndings(
             @"#EXTM3U
-#EXT-X-VERSION:6
+#EXT-X-VERSION:7
 #EXT-X-TARGETDURATION:4
 #EXT-X-MEDIA-SEQUENCE:1137
 #EXT-X-INDEPENDENT-SEGMENTS
@@ -128,8 +140,10 @@ live001138.ts
 live001139.ts").Split(Environment.NewLine);
 
         TrimPlaylistResult result = _hlsPlaylistFilter.TrimPlaylist(
+            OutputFormatKind.Hls,
             start,
             start.AddSeconds(-30),
+            [],
             input,
             int.MaxValue,
             true);
@@ -139,7 +153,7 @@ live001139.ts").Split(Environment.NewLine);
         result.Playlist.ShouldBe(
             NormalizeLineEndings(
                 @"#EXTM3U
-#EXT-X-VERSION:6
+#EXT-X-VERSION:7
 #EXT-X-TARGETDURATION:4
 #EXT-X-MEDIA-SEQUENCE:1137
 #EXT-X-DISCONTINUITY-SEQUENCE:1
@@ -163,7 +177,7 @@ live001139.ts
         var start = new DateTimeOffset(2021, 10, 9, 8, 0, 0, TimeSpan.FromHours(-5));
         string[] input = NormalizeLineEndings(
             @"#EXTM3U
-#EXT-X-VERSION:6
+#EXT-X-VERSION:7
 #EXT-X-TARGETDURATION:4
 #EXT-X-MEDIA-SEQUENCE:1137
 #EXT-X-INDEPENDENT-SEGMENTS
@@ -178,14 +192,20 @@ live001138.ts
 #EXT-X-PROGRAM-DATE-TIME:2021-10-08T08:34:57.320-0500
 live001139.ts").Split(Environment.NewLine);
 
-        TrimPlaylistResult result = _hlsPlaylistFilter.TrimPlaylist(start, start.AddSeconds(6), input, 1);
+        TrimPlaylistResult result = _hlsPlaylistFilter.TrimPlaylist(
+            OutputFormatKind.Hls,
+            start,
+            start.AddSeconds(6),
+            [],
+            input,
+            1);
 
         result.PlaylistStart.ShouldBe(start.AddSeconds(8));
         result.Sequence.ShouldBe(1139);
         result.Playlist.ShouldBe(
             NormalizeLineEndings(
                 @"#EXTM3U
-#EXT-X-VERSION:6
+#EXT-X-VERSION:7
 #EXT-X-TARGETDURATION:4
 #EXT-X-MEDIA-SEQUENCE:1139
 #EXT-X-DISCONTINUITY-SEQUENCE:1
@@ -202,7 +222,7 @@ live001139.ts
         var start = new DateTimeOffset(2021, 10, 9, 8, 0, 0, TimeSpan.FromHours(-5));
         string[] input = NormalizeLineEndings(
             @"#EXTM3U
-#EXT-X-VERSION:6
+#EXT-X-VERSION:7
 #EXT-X-TARGETDURATION:4
 #EXT-X-MEDIA-SEQUENCE:1137
 #EXT-X-INDEPENDENT-SEGMENTS
@@ -218,14 +238,19 @@ live001138.ts
 #EXT-X-PROGRAM-DATE-TIME:2021-10-08T08:34:57.320-0500
 live001139.ts").Split(Environment.NewLine);
 
-        TrimPlaylistResult result = _hlsPlaylistFilter.TrimPlaylist(start, start.AddSeconds(6), input);
+        TrimPlaylistResult result = _hlsPlaylistFilter.TrimPlaylist(
+            OutputFormatKind.Hls,
+            start,
+            start.AddSeconds(6),
+            [],
+            input);
 
         result.PlaylistStart.ShouldBe(start);
         result.Sequence.ShouldBe(1137);
         result.Playlist.ShouldBe(
             NormalizeLineEndings(
                 @"#EXTM3U
-#EXT-X-VERSION:6
+#EXT-X-VERSION:7
 #EXT-X-TARGETDURATION:4
 #EXT-X-MEDIA-SEQUENCE:1137
 #EXT-X-DISCONTINUITY-SEQUENCE:1
@@ -249,7 +274,7 @@ live001139.ts
         var start = new DateTimeOffset(2022, 5, 25, 20, 8, 0, TimeSpan.FromHours(-5));
         string[] input = NormalizeLineEndings(
             @"#EXTM3U
-#EXT-X-VERSION:6
+#EXT-X-VERSION:7
 #EXT-X-TARGETDURATION:4
 #EXT-X-MEDIA-SEQUENCE:0
 #EXT-X-DISCONTINUITY
@@ -506,14 +531,19 @@ live000081.ts
 #EXT-X-PROGRAM-DATE-TIME:2022-05-25T20:13:26.007-0500
 live000082.ts").Split(Environment.NewLine);
 
-        TrimPlaylistResult result = _hlsPlaylistFilter.TrimPlaylist(start, start.AddSeconds(220), input);
+        TrimPlaylistResult result = _hlsPlaylistFilter.TrimPlaylist(
+            OutputFormatKind.Hls,
+            start,
+            start.AddSeconds(220),
+            [],
+            input);
 
         // result.PlaylistStart.ShouldBe(start);
         result.Sequence.ShouldBe(56);
         result.Playlist.ShouldBe(
             NormalizeLineEndings(
                 @"#EXTM3U
-#EXT-X-VERSION:6
+#EXT-X-VERSION:7
 #EXT-X-TARGETDURATION:4
 #EXT-X-MEDIA-SEQUENCE:56
 #EXT-X-DISCONTINUITY-SEQUENCE:2
@@ -557,7 +587,7 @@ live000065.ts
         var start = new DateTimeOffset(2025, 9, 17, 10, 11, 5, 31, TimeSpan.FromHours(-5));
         string[] input = NormalizeLineEndings(
             @"#EXTM3U
-#EXT-X-VERSION:6
+#EXT-X-VERSION:7
 #EXT-X-TARGETDURATION:4
 #EXT-X-MEDIA-SEQUENCE:46
 #EXT-X-DISCONTINUITY-SEQUENCE:2
@@ -577,13 +607,19 @@ live000048.ts
         // filter 'live000046.ts'
         var filterBefore = start.AddSeconds(2);
 
-        TrimPlaylistResult result = _hlsPlaylistFilter.TrimPlaylist(start, filterBefore, input, 2);
+        TrimPlaylistResult result = _hlsPlaylistFilter.TrimPlaylist(
+            OutputFormatKind.Hls,
+            start,
+            filterBefore,
+            [],
+            input,
+            2);
 
         result.Sequence.ShouldBe(47);
 
         string expectedPlaylist = NormalizeLineEndings(
             @"#EXTM3U
-#EXT-X-VERSION:6
+#EXT-X-VERSION:7
 #EXT-X-TARGETDURATION:4
 #EXT-X-MEDIA-SEQUENCE:47
 #EXT-X-DISCONTINUITY-SEQUENCE:3

@@ -178,7 +178,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         OutputOption.OutputOption outputOption = new FastStartOutputOption();
 
         var isFmp4Hls = false;
-        if (ffmpegState.OutputFormat is OutputFormatKind.Hls)
+        if (ffmpegState.OutputFormat is OutputFormatKind.Hls or OutputFormatKind.HlsMp4)
         {
             foreach (string segmentTemplate in ffmpegState.HlsSegmentTemplate)
             {
@@ -186,7 +186,11 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
             }
         }
 
-        if (ffmpegState.OutputFormat == OutputFormatKind.Mp4 || isFmp4Hls)
+        if (ffmpegState.OutputFormat == OutputFormatKind.Mp4 && desiredState.VideoFormat == VideoFormat.Copy)
+        {
+            outputOption = new HlsDirectMp4OutputOptions();
+        }
+        else if (isFmp4Hls)
         {
             outputOption = new Mp4OutputOptions();
         }
@@ -362,6 +366,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
                 pipelineSteps.Add(new PipeProtocol());
                 break;
             case OutputFormatKind.Hls:
+            case OutputFormatKind.HlsMp4:
                 foreach (string playlistPath in ffmpegState.HlsPlaylistPath)
                 {
                     foreach (string segmentTemplate in ffmpegState.HlsSegmentTemplate)
@@ -372,6 +377,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
                             new OutputFormatHls(
                                 desiredState,
                                 videoStream.FrameRate,
+                                ffmpegState.OutputFormat,
                                 segmentTemplate,
                                 playlistPath,
                                 ffmpegState.PtsOffset == 0,
