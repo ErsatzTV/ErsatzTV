@@ -105,6 +105,8 @@ public class NvidiaHardwareCapabilities(CudaDevice cudaDevice, IFFmpegCapabiliti
             // high10 is for libx264, nvenc needs high444
             (VideoFormat.H264, VideoProfile.High10, _) => NvEncProfileGuids.H264High444,
 
+            (VideoFormat.Av1, _, _) => CudaHelper.Av1ProfileGuid,
+
             _ => NvEncProfileGuids.H264Main
         };
 

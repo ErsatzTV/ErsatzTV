@@ -33,6 +33,7 @@ public static class FFmpegLibraryHelper
         {
             FFmpegProfileVideoFormat.H264 => VideoFormat.H264,
             FFmpegProfileVideoFormat.Hevc => VideoFormat.Hevc,
+            FFmpegProfileVideoFormat.Av1 => VideoFormat.Av1,
             _ => VideoFormat.Mpeg2Video
         };
 

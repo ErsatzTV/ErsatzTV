@@ -1,0 +1,14 @@
+﻿using ErsatzTV.FFmpeg.Format;
+
+namespace ErsatzTV.FFmpeg.Encoder.Nvenc;
+
+public class EncoderAv1Nvenc : EncoderBase
+{
+    public override string Name => "av1_nvenc";
+    public override StreamKind Kind => StreamKind.Video;
+
+    public override FrameState NextState(FrameState currentState) => currentState with
+    {
+        VideoFormat = VideoFormat.Av1
+    };
+}

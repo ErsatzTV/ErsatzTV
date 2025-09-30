@@ -587,7 +587,7 @@ public class HlsSessionWorker : IHlsSessionWorker
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error transcoding channel {Channel}", _channelNumber);
+            _logger.LogError(ex, "Error transcoding channel {Channel} - {Message}", _channelNumber, ex.Message);
 
             try
             {

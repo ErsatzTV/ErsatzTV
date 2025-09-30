@@ -12,10 +12,14 @@ internal static class CudaHelper
     private static bool _initialized;
     private static readonly Lock Lock = new();
 
+    public static Guid Av1CodecGuid = Guid.Parse("0A352289-0AA7-4759-862D-5D15CD16D254");
+    public static Guid Av1ProfileGuid = Guid.Parse("5f2a39f5-f14e-4f95-9a9e-b76d568fcf97");
+
     private static readonly Dictionary<string, Guid> AllEncoders = new()
     {
         [VideoFormat.H264] = NvEncCodecGuids.H264,
-        [VideoFormat.Hevc] = NvEncCodecGuids.Hevc
+        [VideoFormat.Hevc] = NvEncCodecGuids.Hevc,
+        [VideoFormat.Av1] = Av1CodecGuid
     };
 
     private sealed record Decoder(CuVideoChromaFormat ChromaFormat, CuVideoCodec VideoCodec, int BitDepth);

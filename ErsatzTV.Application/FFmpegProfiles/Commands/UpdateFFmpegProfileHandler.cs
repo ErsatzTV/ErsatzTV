@@ -57,6 +57,12 @@ public class
             ? FFmpegProfileBitDepth.EightBit
             : update.BitDepth;
 
+        if (p.HardwareAcceleration is not HardwareAccelerationKind.Nvenc &&
+            p.VideoFormat is FFmpegProfileVideoFormat.Av1)
+        {
+            p.VideoFormat = FFmpegProfileVideoFormat.Hevc;
+        }
+
         p.VideoBitrate = update.VideoBitrate;
         p.VideoBufferSize = update.VideoBufferSize;
         p.TonemapAlgorithm = update.TonemapAlgorithm;
