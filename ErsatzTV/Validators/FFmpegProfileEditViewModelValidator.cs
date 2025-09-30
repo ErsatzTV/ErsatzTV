@@ -26,7 +26,8 @@ public class FFmpegProfileEditViewModelValidator : AbstractValidator<FFmpegProfi
     [
         FFmpegProfileVideoFormat.H264,
         FFmpegProfileVideoFormat.Hevc,
-        FFmpegProfileVideoFormat.Mpeg2Video
+        FFmpegProfileVideoFormat.Mpeg2Video,
+        FFmpegProfileVideoFormat.Av1
     ];
 
     private static readonly List<FFmpegProfileVideoFormat> VideoToolboxFormats =
@@ -86,7 +87,7 @@ public class FFmpegProfileEditViewModelValidator : AbstractValidator<FFmpegProfi
             () =>
             {
                 RuleFor(x => x.VideoFormat).Must(c => VaapiFormats.Contains(c))
-                    .WithMessage("VAAPI supports formats (h264, hevc, mpeg2video)");
+                    .WithMessage("VAAPI supports formats (h264, hevc, av1, mpeg2video)");
             });
 
         When(
