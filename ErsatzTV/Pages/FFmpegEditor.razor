@@ -67,7 +67,7 @@
                 <MudSelectItem Value="@FFmpegProfileVideoFormat.H264">h264</MudSelectItem>
                 <MudSelectItem Value="@FFmpegProfileVideoFormat.Hevc">hevc</MudSelectItem>
                 <MudSelectItem Value="@FFmpegProfileVideoFormat.Mpeg2Video">mpeg-2</MudSelectItem>
-                @if (_model.HardwareAcceleration is (HardwareAccelerationKind.Nvenc or HardwareAccelerationKind.Vaapi))
+                @if (_model.HardwareAcceleration is (HardwareAccelerationKind.Nvenc or HardwareAccelerationKind.Vaapi or HardwareAccelerationKind.Qsv))
                 {
                     <MudSelectItem Value="@FFmpegProfileVideoFormat.Av1">av1</MudSelectItem>
                 }

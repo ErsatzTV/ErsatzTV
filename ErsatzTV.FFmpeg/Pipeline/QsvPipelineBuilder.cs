@@ -77,6 +77,11 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
             encodeCapability = FFmpegCapability.Software;
         }
 
+        if (desiredState.VideoFormat is VideoFormat.Av1 && ffmpegState.OutputFormat is not OutputFormatKind.HlsMp4)
+        {
+            throw new NotSupportedException("AV1 output is only supported with HLS Segmenter (fmp4)");
+        }
+
         bool isHevcOrH264 = videoStream.Codec is /*VideoFormat.Hevc or*/ VideoFormat.H264;
         bool is10Bit = videoStream.PixelFormat.Map(pf => pf.BitDepth).IfNone(8) == 10;
 
@@ -229,6 +234,7 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
             Option<IEncoder> maybeEncoder =
                 (ffmpegState.EncoderHardwareAccelerationMode, desiredState.VideoFormat) switch
                 {
+                    (HardwareAccelerationMode.Qsv, VideoFormat.Av1) => new EncoderAv1Qsv(),
                     (HardwareAccelerationMode.Qsv, VideoFormat.Hevc) => new EncoderHevcQsv(desiredState.VideoPreset),
                     (HardwareAccelerationMode.Qsv, VideoFormat.H264) => new EncoderH264Qsv(
                         desiredState.VideoProfile,

@@ -256,9 +256,6 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
                     (HardwareAccelerationMode.Vaapi, VideoFormat.Mpeg2Video) =>
                         new EncoderMpeg2Vaapi(rateControlMode),
 
-                    (HardwareAccelerationMode.None, VideoFormat.Av1) => throw new NotSupportedException(
-                        "AV1 software encoding is not supported"),
-
                     (_, _) => GetSoftwareEncoder(ffmpegState, currentState, desiredState)
                 };
 

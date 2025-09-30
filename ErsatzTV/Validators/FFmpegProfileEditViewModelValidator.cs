@@ -12,7 +12,8 @@ public class FFmpegProfileEditViewModelValidator : AbstractValidator<FFmpegProfi
     [
         FFmpegProfileVideoFormat.H264,
         FFmpegProfileVideoFormat.Hevc,
-        FFmpegProfileVideoFormat.Mpeg2Video
+        FFmpegProfileVideoFormat.Mpeg2Video,
+        FFmpegProfileVideoFormat.Av1
     ];
 
     private static readonly List<FFmpegProfileVideoFormat> NvencFormats =
