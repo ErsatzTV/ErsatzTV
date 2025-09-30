@@ -49,8 +49,14 @@ internal static class Mapper
     internal static ResolutionViewModel ProjectToViewModel(Resolution resolution) =>
         new(resolution.Height, resolution.Width);
 
-    internal static ResolutionAndBitrateViewModel ProjectToViewModel(Resolution resolution, int bitrate) =>
-        new(resolution.Height, resolution.Width, bitrate);
+    internal static ChannelStreamingSpecsViewModel ProjectToSpecsViewModel(Channel channel) =>
+        new(
+            channel.FFmpegProfile.Resolution.Height,
+            channel.FFmpegProfile.Resolution.Width,
+            (int)((channel.FFmpegProfile.VideoBitrate * 1000 + channel.FFmpegProfile.AudioBitrate * 1000) * 1.2),
+            channel.FFmpegProfile.VideoFormat,
+            channel.FFmpegProfile.VideoProfile,
+            channel.FFmpegProfile.AudioFormat);
 
     private static ArtworkContentTypeModel GetLogo(Channel channel)
     {

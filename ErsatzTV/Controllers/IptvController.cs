@@ -316,14 +316,41 @@ public class IptvController : ControllerBase
                 "Failed to return ffmpeg multi-variant playlist; falling back to generated playlist");
         }
 
-        Option<ResolutionAndBitrateViewModel> maybeResolutionAndBitrate =
-            await _mediator.Send(new GetChannelResolutionAndBitrate(channelNumber));
+        Option<ChannelStreamingSpecsViewModel> maybeStreamingSpecs =
+            await _mediator.Send(new GetChannelStreamingSpecs(channelNumber));
         string resolution = string.Empty;
         var bitrate = "10000000";
-        foreach (ResolutionAndBitrateViewModel res in maybeResolutionAndBitrate)
+        foreach (ChannelStreamingSpecsViewModel streamingSpecs in maybeStreamingSpecs)
         {
-            resolution = $",RESOLUTION={res.Width}x{res.Height}";
-            bitrate = res.Bitrate.ToString(CultureInfo.InvariantCulture);
+            string videoCodec = streamingSpecs.VideoFormat switch
+            {
+                FFmpegProfileVideoFormat.Av1 => "av01.0.01M.08",
+                FFmpegProfileVideoFormat.Hevc => "hvc1.1.6.L93.B0",
+                FFmpegProfileVideoFormat.H264 => "avc1.4D4028",
+                _ => string.Empty
+            };
+
+            string audioCodec = streamingSpecs.AudioFormat switch
+            {
+                FFmpegProfileAudioFormat.Ac3 => "ac-3",
+                FFmpegProfileAudioFormat.Aac => "mp4a.40.2",
+                _ => string.Empty
+            };
+
+            List<string> codecStrings = [];
+            if (!string.IsNullOrWhiteSpace(videoCodec))
+            {
+                codecStrings.Add(videoCodec);
+            }
+
+            if (!string.IsNullOrWhiteSpace(audioCodec))
+            {
+                codecStrings.Add(audioCodec);
+            }
+
+            string codecs = codecStrings.Count > 0 ? $",CODECS=\"{string.Join(",", codecStrings)}\"" : string.Empty;
+            resolution = $",RESOLUTION={streamingSpecs.Width}x{streamingSpecs.Height}{codecs}";
+            bitrate = streamingSpecs.Bitrate.ToString(CultureInfo.InvariantCulture);
         }
 
         return $@"#EXTM3U

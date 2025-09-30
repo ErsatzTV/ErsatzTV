@@ -89,6 +89,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - GIFs flagged to loop forever will loop forever
   - GIFs with a specific loop count will loop the specified number of times and then hold the final frame
     - Note that looping is relative to the start of the content, so this works best with permanent watermarks
+- Fix some more hls.js warnins by adding codec information to multi-variant playlists
 
 ### Changed
 - Filler presets: use separate text fields for `hours`, `minutes` and `seconds` duration
