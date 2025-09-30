@@ -193,6 +193,13 @@ public class VaapiHardwareCapabilities : IHardwareCapabilities
                     VaapiEntrypoint: VaapiEntrypoint.Encode or VaapiEntrypoint.EncodeLowPower
                 }),
 
+            VideoFormat.Av1 =>
+                _profileEntrypoints.Any(e => e is
+                {
+                    VaapiProfile: VaapiProfile.Av1Profile0,
+                    VaapiEntrypoint: VaapiEntrypoint.Encode or VaapiEntrypoint.EncodeLowPower
+                }),
+
             VideoFormat.Mpeg2Video =>
                 _profileEntrypoints.Any(e => e is
                 {

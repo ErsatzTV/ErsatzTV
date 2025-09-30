@@ -312,15 +312,23 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
                 (ffmpegState.EncoderHardwareAccelerationMode, desiredState.VideoFormat) switch
                 {
                     (HardwareAccelerationMode.Nvenc, VideoFormat.Hevc) =>
-                        new EncoderHevcNvenc(_hardwareCapabilities, desiredState.VideoPreset, desiredState.BitDepth, desiredState.AllowBFrames),
+                        new EncoderHevcNvenc(
+                            _hardwareCapabilities,
+                            desiredState.VideoPreset,
+                            desiredState.BitDepth,
+                            desiredState.AllowBFrames),
                     (HardwareAccelerationMode.Nvenc, VideoFormat.H264) =>
                         new EncoderH264Nvenc(desiredState.VideoProfile, desiredState.VideoPreset),
 
                     (HardwareAccelerationMode.Nvenc, VideoFormat.Av1) => new EncoderAv1Nvenc(),
-                    (HardwareAccelerationMode.None, VideoFormat.Av1) => throw new NotSupportedException("AV1 software encoding is not supported"),
+                    (HardwareAccelerationMode.None, VideoFormat.Av1) => throw new NotSupportedException(
+                        "AV1 software encoding is not supported"),
 
                     // don't pass NVENC profile down to libx264
-                    (_, _) => GetSoftwareEncoder(ffmpegState, currentState, desiredState with { VideoProfile = Option<string>.None })
+                    (_, _) => GetSoftwareEncoder(
+                        ffmpegState,
+                        currentState,
+                        desiredState with { VideoProfile = Option<string>.None })
                 };
 
             foreach (IEncoder encoder in maybeEncoder)

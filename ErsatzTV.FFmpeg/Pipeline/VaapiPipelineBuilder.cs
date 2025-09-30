@@ -80,6 +80,11 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
             encodeCapability = FFmpegCapability.Software;
         }
 
+        if (desiredState.VideoFormat is VideoFormat.Av1 && ffmpegState.OutputFormat is not OutputFormatKind.HlsMp4)
+        {
+            throw new NotSupportedException("AV1 output is only supported with HLS Segmenter (fmp4)");
+        }
+
         foreach (string vaapiDevice in ffmpegState.VaapiDevice)
         {
             pipelineSteps.Add(new VaapiHardwareAccelerationOption(vaapiDevice, decodeCapability));
@@ -242,12 +247,17 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
             Option<IEncoder> maybeEncoder =
                 (ffmpegState.EncoderHardwareAccelerationMode, desiredState.VideoFormat) switch
                 {
+                    (HardwareAccelerationMode.Vaapi, VideoFormat.Av1) =>
+                        new EncoderAv1Vaapi(rateControlMode),
                     (HardwareAccelerationMode.Vaapi, VideoFormat.Hevc) =>
                         new EncoderHevcVaapi(rateControlMode),
                     (HardwareAccelerationMode.Vaapi, VideoFormat.H264) =>
                         new EncoderH264Vaapi(desiredState.VideoProfile, rateControlMode),
                     (HardwareAccelerationMode.Vaapi, VideoFormat.Mpeg2Video) =>
                         new EncoderMpeg2Vaapi(rateControlMode),
+
+                    (HardwareAccelerationMode.None, VideoFormat.Av1) => throw new NotSupportedException(
+                        "AV1 software encoding is not supported"),
 
                     (_, _) => GetSoftwareEncoder(ffmpegState, currentState, desiredState)
                 };

@@ -60,7 +60,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Allow HEVC playback in channel preview
   - This is restricted to compatible browsers
   - Preview button will be red when preview is disabled due to browser incompatibility
-- Add AV1 encoding support with NVIDIA acceleration
+- Add AV1 encoding support with NVIDIA and VAAPI acceleration
   - This also requires `HLS Segmenter (fmp4)`
 
 ### Fixed
