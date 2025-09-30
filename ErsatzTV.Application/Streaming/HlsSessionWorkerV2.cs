@@ -6,6 +6,7 @@ using CliWrap;
 using CliWrap.Buffered;
 using ErsatzTV.Application.Playouts;
 using ErsatzTV.Core;
+using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Metadata;
@@ -315,7 +316,7 @@ public class HlsSessionWorkerV2 : IHlsSessionWorker
 
         var request = new GetPlayoutItemProcessByChannelNumber(
             _channelNumber,
-            "segmenter-v2",
+            StreamingMode.HttpLiveStreamingSegmenterV2,
             _transcodedUntil,
             startAtZero,
             realtime,

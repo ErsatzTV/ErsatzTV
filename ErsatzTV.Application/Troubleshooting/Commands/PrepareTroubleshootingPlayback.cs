@@ -1,9 +1,11 @@
 using ErsatzTV.Core;
+using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 
 namespace ErsatzTV.Application.Troubleshooting;
 
 public record PrepareTroubleshootingPlayback(
+    StreamingMode StreamingMode,
     int MediaItemId,
     int FFmpegProfileId,
     List<int> WatermarkIds,

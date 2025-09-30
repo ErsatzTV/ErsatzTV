@@ -61,16 +61,7 @@ public abstract class FFmpegProcessHandler<T> : IRequestHandler<T, Either<BaseEr
             .SelectOneAsync(c => c.Number, c => c.Number == request.ChannelNumber, cancellationToken)
             .MapT(channel =>
             {
-                channel.StreamingMode = request.Mode.ToLowerInvariant() switch
-                {
-                    "hls-direct" => StreamingMode.HttpLiveStreamingDirect,
-                    "segmenter" => StreamingMode.HttpLiveStreamingSegmenter,
-                    "segmenter-v2" => StreamingMode.HttpLiveStreamingSegmenterV2,
-                    "ts" => StreamingMode.TransportStreamHybrid,
-                    "ts-legacy" => StreamingMode.TransportStream,
-                    _ => channel.StreamingMode
-                };
-
+                channel.StreamingMode = request.Mode;
                 return channel;
             })
             .Map(o => o.ToValidation<BaseError>($"Channel number {request.ChannelNumber} does not exist."));

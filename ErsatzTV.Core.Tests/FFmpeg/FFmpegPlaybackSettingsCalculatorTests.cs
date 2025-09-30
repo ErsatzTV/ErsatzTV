@@ -38,6 +38,27 @@ public class FFmpegPlaybackSettingsCalculatorTests
         }
 
         [Test]
+        public void Should_Not_GenPts_ForHlsSegmenterFmp4()
+        {
+            FFmpegProfile ffmpegProfile = TestProfile();
+
+            FFmpegPlaybackSettings actual = FFmpegPlaybackSettingsCalculator.CalculateSettings(
+                StreamingMode.HttpLiveStreamingSegmenterFmp4,
+                ffmpegProfile,
+                TestVersion,
+                new MediaStream(),
+                DateTimeOffset.Now,
+                DateTimeOffset.Now,
+                TimeSpan.Zero,
+                TimeSpan.Zero,
+                false,
+                StreamInputKind.Vod,
+                None);
+
+            actual.FormatFlags.ShouldNotContain("+genpts");
+        }
+
+        [Test]
         public void Should_UseSpecifiedThreadCount_ForTransportStream()
         {
             // MPEG-TS requires realtime output which is hardcoded to a single thread
@@ -69,6 +90,27 @@ public class FFmpegPlaybackSettingsCalculatorTests
 
             FFmpegPlaybackSettings actual = FFmpegPlaybackSettingsCalculator.CalculateSettings(
                 StreamingMode.HttpLiveStreamingSegmenter,
+                ffmpegProfile,
+                TestVersion,
+                new MediaStream(),
+                DateTimeOffset.Now,
+                DateTimeOffset.Now,
+                TimeSpan.Zero,
+                TimeSpan.Zero,
+                false,
+                StreamInputKind.Vod,
+                None);
+
+            actual.ThreadCount.ShouldBe(7);
+        }
+
+        [Test]
+        public void Should_UseSpecifiedThreadCount_ForHttpLiveStreamingSegmenterFmp4()
+        {
+            FFmpegProfile ffmpegProfile = TestProfile() with { ThreadCount = 7 };
+
+            FFmpegPlaybackSettings actual = FFmpegPlaybackSettingsCalculator.CalculateSettings(
+                StreamingMode.HttpLiveStreamingSegmenterFmp4,
                 ffmpegProfile,
                 TestVersion,
                 new MediaStream(),

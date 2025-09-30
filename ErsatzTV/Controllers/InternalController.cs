@@ -10,6 +10,7 @@ using ErsatzTV.Application.Streaming;
 using ErsatzTV.Application.Subtitles;
 using ErsatzTV.Application.Subtitles.Queries;
 using ErsatzTV.Core;
+using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Streaming;
@@ -281,7 +282,7 @@ public class InternalController : ControllerBase
     {
         var request = new GetPlayoutItemProcessByChannelNumber(
             channelNumber,
-            mode,
+            StreamingMode.TransportStream,
             DateTimeOffset.Now,
             false,
             true,

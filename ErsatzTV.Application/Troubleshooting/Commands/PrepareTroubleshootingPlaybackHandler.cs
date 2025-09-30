@@ -102,7 +102,7 @@ public class PrepareTroubleshootingPlaybackHandler(
             Name = "ETV",
             Number = ".troubleshooting",
             FFmpegProfile = ffmpegProfile,
-            StreamingMode = StreamingMode.HttpLiveStreamingSegmenter,
+            StreamingMode = request.StreamingMode,
             StreamSelectorMode = ChannelStreamSelectorMode.Troubleshooting,
             SubtitleMode = SUBTITLE_MODE
             //SongVideoMode = ChannelSongVideoMode.WithProgress

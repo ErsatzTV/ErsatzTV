@@ -1,8 +1,10 @@
-﻿namespace ErsatzTV.Application.Streaming;
+﻿using ErsatzTV.Core.Domain;
+
+namespace ErsatzTV.Application.Streaming;
 
 public record GetErrorProcess(
     string ChannelNumber,
-    string Mode,
+    StreamingMode Mode,
     bool HlsRealtime,
     long PtsOffset,
     Option<TimeSpan> MaybeDuration,

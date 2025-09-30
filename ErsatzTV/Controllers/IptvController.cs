@@ -205,6 +205,9 @@ public class IptvController : ControllerBase
                     case StreamingMode.HttpLiveStreamingSegmenter:
                         mode = "segmenter";
                         break;
+                    case StreamingMode.HttpLiveStreamingSegmenterFmp4:
+                        mode = "segmenter-fmp4";
+                        break;
                     case StreamingMode.HttpLiveStreamingSegmenterV2:
                         mode = "segmenter-v2";
                         break;
@@ -217,6 +220,7 @@ public class IptvController : ControllerBase
         switch (mode)
         {
             case "segmenter":
+            case "segmenter-fmp4":
             case "segmenter-v2":
                 _logger.LogDebug(
                     "Maybe starting ffmpeg session for channel {Channel}, mode {Mode}",

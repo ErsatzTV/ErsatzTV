@@ -54,6 +54,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - New page is at **Channels** > **Edit Channel Numbers**
 - Scripted schedules: add setting to configure timeout of scripted playout build
   - New setting is at **Settings** > **Playout** > **Scripted Schedule Timeout**
+- Add *experimental* streaming mode `HLS Segmenter (fmp4)`
+  - This mode is required for better compliance with HLS spec, and to support new output codecs
+  - This mode *will replace* `HLS Segmenter` when it has received more testing
+- Allow HEVC playback in channel preview
+  - This is restricted to compatible browsers
+  - Preview button will be red when preview is disabled due to browser incompatibility
 
 ### Fixed
 - Fix green output when libplacebo tonemapping is used with NVIDIA acceleration and 10-bit output in FFmpeg Profile

@@ -1,6 +1,7 @@
 ﻿using System.Globalization;
 using System.Text;
 using ErsatzTV.Core.Interfaces.FFmpeg;
+using ErsatzTV.FFmpeg.OutputFormat;
 using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Core.FFmpeg;
@@ -17,18 +18,21 @@ public class HlsPlaylistFilter : IHlsPlaylistFilter
     }
 
     public TrimPlaylistResult TrimPlaylist(
+        OutputFormatKind outputFormat,
         DateTimeOffset playlistStart,
         DateTimeOffset filterBefore,
+        List<long> inits,
         string[] lines,
         int maxSegments = 10,
         bool endWithDiscontinuity = false)
     {
         try
         {
-            List<PlaylistItem> items = new();
+            List<PlaylistItem> items = [];
 
             DateTimeOffset currentTime = playlistStart;
 
+            var targetDuration = 0;
             var discontinuitySequence = 0;
             var i = 0;
             while (!lines[i].StartsWith("#EXTINF:", StringComparison.OrdinalIgnoreCase))
@@ -40,6 +44,10 @@ public class HlsPlaylistFilter : IHlsPlaylistFilter
                 else if (lines[i].StartsWith("#EXT-X-DISCONTINUITY", StringComparison.OrdinalIgnoreCase))
                 {
                     items.Add(new PlaylistDiscontinuity());
+                }
+                else if (lines[i].StartsWith("#EXT-X-TARGETDURATION", StringComparison.OrdinalIgnoreCase))
+                {
+                    targetDuration = int.Parse(lines[i].Split(':')[1], CultureInfo.InvariantCulture);
                 }
 
                 i++;
@@ -61,13 +69,30 @@ public class HlsPlaylistFilter : IHlsPlaylistFilter
                     continue;
                 }
 
+                if (lines[i].StartsWith("#EXT-X-MAP:URI=", StringComparison.OrdinalIgnoreCase))
+                {
+                    i++;
+                    continue;
+                }
+
                 var durationDecimal = decimal.Parse(
                     lines[i].TrimEnd(',').Split(':')[1],
                     NumberStyles.Number,
                     CultureInfo.InvariantCulture);
                 var duration = TimeSpan.FromTicks((long)(durationDecimal * TimeSpan.TicksPerSecond));
 
-                items.Add(new PlaylistSegment(currentTime, lines[i], lines[i + 2]));
+                long segmentNameTimeSeconds = long.MaxValue;
+                if (outputFormat is OutputFormatKind.HlsMp4)
+                {
+                    if (!lines[i + 2].Contains('_') || !long.TryParse(
+                            lines[i + 2].Split('_')[1],
+                            out segmentNameTimeSeconds))
+                    {
+                        segmentNameTimeSeconds = long.MaxValue;
+                    }
+                }
+
+                items.Add(new PlaylistSegment(currentTime, segmentNameTimeSeconds, lines[i], lines[i + 2]));
 
                 currentTime += duration;
                 i += 3;
@@ -78,13 +103,17 @@ public class HlsPlaylistFilter : IHlsPlaylistFilter
                 items.Add(new PlaylistDiscontinuity());
             }
 
-            (string playlist, DateTimeOffset nextPlaylistStart, int startSequence, int segments) = GeneratePlaylist(
-                items,
-                filterBefore,
-                discontinuitySequence,
-                maxSegments);
+            (string playlist, DateTimeOffset nextPlaylistStart, long startSequence, long generatedAt, int segments) =
+                GeneratePlaylist(
+                    outputFormat,
+                    items,
+                    inits,
+                    filterBefore,
+                    targetDuration,
+                    discontinuitySequence,
+                    maxSegments);
 
-            return new TrimPlaylistResult(nextPlaylistStart, startSequence, playlist, segments);
+            return new TrimPlaylistResult(nextPlaylistStart, startSequence, generatedAt, playlist, segments);
         }
         catch (Exception ex)
         {
@@ -96,7 +125,7 @@ public class HlsPlaylistFilter : IHlsPlaylistFilter
                 _logger.LogError(ex, "Error filtering playlist. Bad playlist saved to {BadPlaylistFile}", file);
 
                 // TODO: better error result?
-                return new TrimPlaylistResult(playlistStart, 0, string.Empty, 0);
+                return new TrimPlaylistResult(playlistStart, 0, 0, string.Empty, 0);
             }
             catch
             {
@@ -108,14 +137,19 @@ public class HlsPlaylistFilter : IHlsPlaylistFilter
     }
 
     public TrimPlaylistResult TrimPlaylistWithDiscontinuity(
+        OutputFormatKind outputFormat,
         DateTimeOffset playlistStart,
         DateTimeOffset filterBefore,
+        List<long> inits,
         string[] lines) =>
-        TrimPlaylist(playlistStart, filterBefore, lines, int.MaxValue, true);
+        TrimPlaylist(outputFormat, playlistStart, filterBefore, inits, lines, int.MaxValue, true);
 
-    private static Tuple<string, DateTimeOffset, int, int> GeneratePlaylist(
+    private static Tuple<string, DateTimeOffset, long, long, int> GeneratePlaylist(
+        OutputFormatKind outputFormat,
         List<PlaylistItem> items,
+        List<long> inits,
         DateTimeOffset filterBefore,
+        int targetDuration,
         int discontinuitySequence,
         int maxSegments)
     {
@@ -142,10 +176,19 @@ public class HlsPlaylistFilter : IHlsPlaylistFilter
                 : allSegments.TakeLast(maxSegments).ToList();
         }
 
-        int startSequence = allSegments
-            .HeadOrNone()
-            .Map(s => s.StartSequence)
-            .IfNone(0);
+        long startSequence = 0;
+        long generatedAt = 0;
+        foreach (var startSegment in allSegments.HeadOrNone())
+        {
+            startSequence = startSegment.StartSequence;
+            generatedAt = startSegment.GeneratedAt;
+        }
+
+        long minGeneratedAt = 0;
+        foreach (var firstSegment in allSegments.HeadOrNone())
+        {
+            minGeneratedAt = firstSegment.GeneratedAt;
+        }
 
         // count all discontinuities that were filtered out
         if (allSegments.Count != 0)
@@ -157,11 +200,21 @@ public class HlsPlaylistFilter : IHlsPlaylistFilter
 
         var output = new StringBuilder();
         output.AppendLine("#EXTM3U");
-        output.AppendLine("#EXT-X-VERSION:6");
-        output.AppendLine("#EXT-X-TARGETDURATION:4");
+        output.AppendLine("#EXT-X-VERSION:7");
+        output.AppendLine(CultureInfo.InvariantCulture, $"#EXT-X-TARGETDURATION:{targetDuration}");
         output.AppendLine(CultureInfo.InvariantCulture, $"#EXT-X-MEDIA-SEQUENCE:{startSequence}");
         output.AppendLine(CultureInfo.InvariantCulture, $"#EXT-X-DISCONTINUITY-SEQUENCE:{discontinuitySequence}");
         output.AppendLine("#EXT-X-INDEPENDENT-SEGMENTS");
+
+        if (outputFormat is OutputFormatKind.HlsMp4)
+        {
+            Option<long> maybeStartInit = Optional(inits.Find(init => init > 0 && init <= minGeneratedAt));
+            foreach (long init in maybeStartInit)
+            {
+                output.AppendLine(CultureInfo.InvariantCulture, $"#EXT-X-MAP:URI=\"{init}_init.mp4\"");
+                inits.Remove(init);
+            }
+        }
 
         for (var i = 0; i < items.Count; i++)
         {
@@ -173,12 +226,26 @@ public class HlsPlaylistFilter : IHlsPlaylistFilter
                         if (items[i + 1] is PlaylistSegment nextSegment && allSegments.Head() != nextSegment)
                         {
                             output.AppendLine("#EXT-X-DISCONTINUITY");
+
+                            if (outputFormat is OutputFormatKind.HlsMp4)
+                            {
+                                Option<long> maybeInit = Optional(
+                                    inits.Find(init => init > 0 && init <= nextSegment.GeneratedAt));
+                                foreach (long init in maybeInit)
+                                {
+                                    output.AppendLine(
+                                        CultureInfo.InvariantCulture,
+                                        $"#EXT-X-MAP:URI=\"{init}_init.mp4\"");
+                                    inits.Remove(init);
+                                }
+                            }
                         }
                     }
                     else if (i == items.Count - 1 && allSegments.Count > 0) // discontinuity at the end
                     {
                         output.AppendLine("#EXT-X-DISCONTINUITY");
                     }
+
                     break;
                 case PlaylistSegment segment:
                     if (allSegments.Contains(segment))
@@ -202,19 +269,25 @@ public class HlsPlaylistFilter : IHlsPlaylistFilter
             .Map(s => s.StartTime)
             .IfNone(DateTimeOffset.MaxValue);
 
-        return Tuple(playlist, nextPlaylistStart, startSequence, allSegments.Count);
+        return Tuple(playlist, nextPlaylistStart, startSequence, generatedAt, allSegments.Count);
     }
 
     private abstract record PlaylistItem;
 
-    private record PlaylistSegment(DateTimeOffset StartTime, string ExtInf, string Line) : PlaylistItem
+    private record PlaylistSegment(DateTimeOffset StartTime, long GeneratedAt, string ExtInf, string Line)
+        : PlaylistItem
     {
-        public int StartSequence => int.Parse(
-            Line.Replace("live", string.Empty).Split('.')[0],
+        public long StartSequence => long.Parse(
+            Line.Contains('_') ? Line.Split('_')[2].Split('.')[0] : Line.Replace("live", string.Empty).Split('.')[0],
             CultureInfo.InvariantCulture);
     }
 
     private record PlaylistDiscontinuity : PlaylistItem;
 }
 
-public record TrimPlaylistResult(DateTimeOffset PlaylistStart, int Sequence, string Playlist, int SegmentCount);
+public record TrimPlaylistResult(
+    DateTimeOffset PlaylistStart,
+    long Sequence,
+    long GeneratedAt,
+    string Playlist,
+    int SegmentCount);

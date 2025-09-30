@@ -15,6 +15,7 @@ using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Streaming;
+using ErsatzTV.FFmpeg.OutputFormat;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Timer = System.Timers.Timer;
@@ -26,6 +27,7 @@ public class HlsSessionWorker : IHlsSessionWorker
     private static int _workAheadCount;
     private readonly IClient _client;
     private readonly IConfigElementRepository _configElementRepository;
+    private readonly OutputFormatKind _outputFormat;
     private readonly IGraphicsEngine _graphicsEngine;
     private readonly IHlsPlaylistFilter _hlsPlaylistFilter;
     private readonly ILocalFileSystem _localFileSystem;
@@ -48,6 +50,7 @@ public class HlsSessionWorker : IHlsSessionWorker
 
     public HlsSessionWorker(
         IServiceScopeFactory serviceScopeFactory,
+        OutputFormatKind outputFormat,
         IGraphicsEngine graphicsEngine,
         IClient client,
         IHlsPlaylistFilter hlsPlaylistFilter,
@@ -58,6 +61,7 @@ public class HlsSessionWorker : IHlsSessionWorker
     {
         _serviceScope = serviceScopeFactory.CreateScope();
         _mediator = _serviceScope.ServiceProvider.GetRequiredService<IMediator>();
+        _outputFormat = outputFormat;
         _graphicsEngine = graphicsEngine;
         _client = client;
         _hlsPlaylistFilter = hlsPlaylistFilter;
@@ -110,7 +114,12 @@ public class HlsSessionWorker : IHlsSessionWorker
                 Option<string[]> maybeLines = await ReadPlaylistLines(cancellationToken);
                 foreach (string[] input in maybeLines)
                 {
-                    TrimPlaylistResult trimResult = _hlsPlaylistFilter.TrimPlaylist(PlaylistStart, filterBefore, input);
+                    TrimPlaylistResult trimResult = _hlsPlaylistFilter.TrimPlaylist(
+                        _outputFormat,
+                        PlaylistStart,
+                        filterBefore,
+                        GetAllInits(),
+                        input);
                     if (DateTimeOffset.Now > _lastDelete.AddSeconds(30))
                     {
                         DeleteOldSegments(trimResult);
@@ -174,7 +183,10 @@ public class HlsSessionWorker : IHlsSessionWorker
 
             CancellationToken cancellationToken = _cancellationTokenSource.Token;
 
-            _logger.LogInformation("Starting HLS session for channel {Channel}", channelNumber);
+            _logger.LogInformation(
+                "Starting HLS session for channel {Channel} with output format {OutputFormat}",
+                channelNumber,
+                _outputFormat);
 
             if (_localFileSystem.ListFiles(Path.Combine(FileSystemLayout.TranscodeFolder, _channelNumber)).Any())
             {
@@ -436,7 +448,7 @@ public class HlsSessionWorker : IHlsSessionWorker
 
             var request = new GetPlayoutItemProcessByChannelNumber(
                 _channelNumber,
-                "segmenter",
+                _outputFormat is OutputFormatKind.HlsMp4 ? StreamingMode.HttpLiveStreamingSegmenterFmp4 : StreamingMode.HttpLiveStreamingSegmenter,
                 now,
                 startAtZero,
                 realtime,
@@ -523,7 +535,7 @@ public class HlsSessionWorker : IHlsSessionWorker
                         Either<BaseError, PlayoutItemProcessModel> maybeOfflineProcess = await _mediator.Send(
                             new GetErrorProcess(
                                 _channelNumber,
-                                "segmenter",
+                                _outputFormat is OutputFormatKind.HlsMp4 ? StreamingMode.HttpLiveStreamingSegmenterFmp4 : StreamingMode.HttpLiveStreamingSegmenter,
                                 realtime,
                                 ptsOffset,
                                 processModel.MaybeDuration,
@@ -620,8 +632,10 @@ public class HlsSessionWorker : IHlsSessionWorker
             {
                 // trim playlist and insert discontinuity before appending with new ffmpeg process
                 TrimPlaylistResult trimResult = _hlsPlaylistFilter.TrimPlaylistWithDiscontinuity(
+                    _outputFormat,
                     PlaylistStart,
                     DateTimeOffset.Now.AddMinutes(-1),
+                    GetAllInits(),
                     lines);
                 await WritePlaylist(trimResult.Playlist, cancellationToken);
 
@@ -639,20 +653,34 @@ public class HlsSessionWorker : IHlsSessionWorker
     private void DeleteOldSegments(TrimPlaylistResult trimResult)
     {
         // delete old segments
-        var allSegments = Directory.GetFiles(
-                Path.Combine(FileSystemLayout.TranscodeFolder, _channelNumber),
-                "live*.ts").Append(
-                Directory.GetFiles(
-                    Path.Combine(FileSystemLayout.TranscodeFolder, _channelNumber),
-                    "live*.mp4"))
+        var allSegments = Directory.GetFiles(Path.Combine(FileSystemLayout.TranscodeFolder, _channelNumber), "live*.ts")
+            .Append(Directory.GetFiles(Path.Combine(FileSystemLayout.TranscodeFolder, _channelNumber), "live*.mp4"))
+            .Append(Directory.GetFiles(Path.Combine(FileSystemLayout.TranscodeFolder, _channelNumber), "live*.m4s"))
             .Map(file =>
             {
                 string fileName = Path.GetFileName(file);
-                var sequenceNumber = int.Parse(
-                    fileName.Replace("live", string.Empty).Split('.')[0],
+                var sequenceNumber = long.Parse(
+                    fileName.Contains('_')
+                        ? fileName.Split('_')[2].Split('.')[0]
+                        : fileName.Replace("live", string.Empty).Split('.')[0],
                     CultureInfo.InvariantCulture);
-                return new Segment(file, sequenceNumber);
+                if (!fileName.Contains('_') || !long.TryParse(fileName.Split('_')[1], out long generatedAt))
+                {
+                    generatedAt = 0;
+                }
+                return new Segment(file, sequenceNumber, generatedAt);
             })
+            .ToList();
+
+        var allInits = Directory.GetFiles(Path.Combine(FileSystemLayout.TranscodeFolder, _channelNumber), "*init.mp4")
+            .Map(file =>
+            {
+                string fileName = Path.GetFileName(file);
+                return long.TryParse(fileName.Split('_')[0], out long generatedAt)
+                    ? new Segment(file, 0, generatedAt)
+                    : Option<Segment>.None;
+            })
+            .Somes()
             .ToList();
 
         var toDelete = allSegments.Filter(s => s.SequenceNumber < trimResult.Sequence).ToList();
@@ -663,6 +691,18 @@ public class HlsSessionWorker : IHlsSessionWorker
             //     toDelete.Map(s => s.SequenceNumber).Min(),
             //     toDelete.Map(s => s.SequenceNumber).Max(),
             //     trimResult.Sequence);
+        }
+
+        if (allInits.Count > 0 && allSegments.Count > 0)
+        {
+            long minKeep = allSegments.Except(toDelete).Map(s => s.GeneratedAt).Min();
+            Option<Segment> maybeMinKeepInit =
+                allInits.OrderByDescending(i => i.GeneratedAt).Find(i => i.GeneratedAt <= minKeep);
+            foreach (var minKeepInit in maybeMinKeepInit)
+            {
+                // _logger.LogDebug("Deleting HLS inits less than {GeneratedAt}", minKeepInit.GeneratedAt);
+                toDelete.AddRange(allInits.Where(i => i.GeneratedAt < minKeepInit.GeneratedAt));
+            }
         }
 
         foreach (Segment segment in toDelete)
@@ -679,6 +719,17 @@ public class HlsSessionWorker : IHlsSessionWorker
             }
         }
     }
+
+    private List<long> GetAllInits() =>
+        _outputFormat is OutputFormatKind.HlsMp4
+            ? Directory.GetFiles(Path.Combine(FileSystemLayout.TranscodeFolder, _channelNumber), "*init.mp4")
+                .Map(file =>
+                {
+                    string fileName = Path.GetFileName(file);
+                    return long.TryParse(fileName.Split('_')[0], out long generatedAt) ? generatedAt : long.MaxValue;
+                })
+                .ToList()
+            : [];
 
     private async Task<long> GetPtsOffset(string channelNumber, CancellationToken cancellationToken)
     {
@@ -742,5 +793,5 @@ public class HlsSessionWorker : IHlsSessionWorker
         _channelNumber,
         "live.m3u8");
 
-    private sealed record Segment(string File, int SequenceNumber);
+    private sealed record Segment(string File, long SequenceNumber, long GeneratedAt);
 }

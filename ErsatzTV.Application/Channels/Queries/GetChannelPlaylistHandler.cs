@@ -38,6 +38,10 @@ public class GetChannelPlaylistHandler : IRequestHandler<GetChannelPlaylist, Cha
                     channel.StreamingMode = StreamingMode.HttpLiveStreamingSegmenter;
                     result.Add(channel);
                     break;
+                case "segmenter-fmp4":
+                    channel.StreamingMode = StreamingMode.HttpLiveStreamingSegmenterFmp4;
+                    result.Add(channel);
+                    break;
                 case "segmenter-v2":
                     channel.StreamingMode = StreamingMode.HttpLiveStreamingSegmenterV2;
                     result.Add(channel);

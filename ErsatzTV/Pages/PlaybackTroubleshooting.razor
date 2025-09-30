@@ -57,6 +57,15 @@
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                 <div class="d-flex">
+                    <MudText>Streaming Mode</MudText>
+                </div>
+                <MudSelect @bind-Value="_streamingMode" For="@(() => _streamingMode)">
+                    <MudSelectItem Value="@(StreamingMode.HttpLiveStreamingSegmenter)">HLS Segmenter</MudSelectItem>
+                    <MudSelectItem Value="@(StreamingMode.HttpLiveStreamingSegmenterFmp4)">HLS Segmenter (fmp4)</MudSelectItem>
+                </MudSelect>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
                     <MudText>Subtitle</MudText>
                 </div>
                 <MudSelect @bind-Value="_subtitleId" For="@(() => _subtitleId)" Clearable="true">
@@ -144,6 +153,7 @@
     private readonly List<SubtitleViewModel> _subtitleStreams = [];
     private readonly List<GraphicsElementViewModel> _graphicsElements = [];
     private MediaItemInfo _info;
+    private StreamingMode _streamingMode = StreamingMode.HttpLiveStreamingSegmenter;
     private int _ffmpegProfileId;
     private IEnumerable<string> _watermarkNames = new System.Collections.Generic.HashSet<string>();
     private IEnumerable<string> _graphicsElementNames = new System.Collections.Generic.HashSet<string>();
@@ -213,7 +223,7 @@
     {
         var uri = new UriBuilder(NavigationManager.ToAbsoluteUri(NavigationManager.Uri));
         uri.Path = uri.Path.Replace("/system/troubleshooting/playback", "/api/troubleshoot/playback.m3u8");
-        uri.Query = $"?mediaItem={MediaItemId}&ffmpegProfile={_ffmpegProfileId}&seekSeconds={_seekSeconds}";
+        uri.Query = $"?mediaItem={MediaItemId}&ffmpegProfile={_ffmpegProfileId}&streamingMode={(int)_streamingMode}&seekSeconds={_seekSeconds}";
         foreach (string watermarkName in _watermarkNames)
         {
             foreach (WatermarkViewModel watermark in _watermarks.Where(wm => wm.Name == watermarkName))
@@ -271,7 +281,7 @@
 
     private async Task DownloadResults()
     {
-        var uri = $"api/troubleshoot/playback/archive?mediaItem={MediaItemId ?? 0}&ffmpegProfile={_ffmpegProfileId}&seekSeconds={_seekSeconds}";
+        var uri = $"api/troubleshoot/playback/archive?mediaItem={MediaItemId ?? 0}&ffmpegProfile={_ffmpegProfileId}&streamingMode={(int)_streamingMode}&seekSeconds={_seekSeconds}";
 
         foreach (string watermarkName in _watermarkNames)
         {

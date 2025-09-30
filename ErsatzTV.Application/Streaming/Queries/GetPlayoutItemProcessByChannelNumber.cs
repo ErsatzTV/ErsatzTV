@@ -1,8 +1,10 @@
-﻿namespace ErsatzTV.Application.Streaming;
+﻿using ErsatzTV.Core.Domain;
+
+namespace ErsatzTV.Application.Streaming;
 
 public record GetPlayoutItemProcessByChannelNumber(
     string ChannelNumber,
-    string Mode,
+    StreamingMode Mode,
     DateTimeOffset Now,
     bool StartAtZero,
     bool HlsRealtime,
