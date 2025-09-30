@@ -55,6 +55,13 @@
             $("h3").addClass("mud-typography mud-typography-h5");
         }
 
+        function mediaSourceSupports(codecString) {
+            if (window.MediaSource && MediaSource.isTypeSupported) {
+                return MediaSource.isTypeSupported('video/mp4; codecs="' + codecString + '"');
+            }
+            return false;
+        }
+
         function previewChannel(uri) {
           var video = document.getElementById('video');
           if (Hls.isSupported()) {

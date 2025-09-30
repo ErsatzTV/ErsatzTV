@@ -686,11 +686,11 @@ public class HlsSessionWorker : IHlsSessionWorker
         var toDelete = allSegments.Filter(s => s.SequenceNumber < trimResult.Sequence).ToList();
         if (toDelete.Count > 0)
         {
-            _logger.LogDebug(
-                "Deleting HLS segments {Min} to {Max} (less than {StartSequence})",
-                toDelete.Map(s => s.SequenceNumber).Min(),
-                toDelete.Map(s => s.SequenceNumber).Max(),
-                trimResult.Sequence);
+            // _logger.LogDebug(
+            //     "Deleting HLS segments {Min} to {Max} (less than {StartSequence})",
+            //     toDelete.Map(s => s.SequenceNumber).Min(),
+            //     toDelete.Map(s => s.SequenceNumber).Max(),
+            //     trimResult.Sequence);
         }
 
         if (allInits.Count > 0 && allSegments.Count > 0)
@@ -700,7 +700,7 @@ public class HlsSessionWorker : IHlsSessionWorker
                 allInits.OrderByDescending(i => i.GeneratedAt).Find(i => i.GeneratedAt <= minKeep);
             foreach (var minKeepInit in maybeMinKeepInit)
             {
-                _logger.LogDebug("Deleting HLS inits less than {GeneratedAt}", minKeepInit.GeneratedAt);
+                // _logger.LogDebug("Deleting HLS inits less than {GeneratedAt}", minKeepInit.GeneratedAt);
                 toDelete.AddRange(allInits.Where(i => i.GeneratedAt < minKeepInit.GeneratedAt));
             }
         }
