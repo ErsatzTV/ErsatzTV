@@ -209,6 +209,7 @@
         {
             string videoCodec = profile.VideoFormat switch
             {
+                FFmpegProfileVideoFormat.Av1 => "av01.0.01M.08",
                 FFmpegProfileVideoFormat.Hevc => "hvc1.1.6.L93.B0",
                 FFmpegProfileVideoFormat.H264 => "avc1.4D4028",
                 _ => string.Empty

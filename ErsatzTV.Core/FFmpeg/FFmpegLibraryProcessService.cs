@@ -1100,6 +1100,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
     private static string GetVideoFormat(FFmpegPlaybackSettings playbackSettings) =>
         playbackSettings.VideoFormat switch
         {
+            FFmpegProfileVideoFormat.Av1 => VideoFormat.Av1,
             FFmpegProfileVideoFormat.Hevc => VideoFormat.Hevc,
             FFmpegProfileVideoFormat.H264 => VideoFormat.H264,
             FFmpegProfileVideoFormat.Mpeg2Video => VideoFormat.Mpeg2Video,

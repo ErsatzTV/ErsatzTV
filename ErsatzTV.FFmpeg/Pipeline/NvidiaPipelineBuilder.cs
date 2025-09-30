@@ -74,6 +74,11 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
             encodeCapability = FFmpegCapability.Software;
         }
 
+        if (desiredState.VideoFormat is VideoFormat.Av1 && ffmpegState.OutputFormat is not OutputFormatKind.HlsMp4)
+        {
+            throw new NotSupportedException("AV1 output is only supported with HLS Segmenter (fmp4)");
+        }
+
         // mpeg2_cuvid seems to have issues when yadif_cuda is used, so just use software decoding
         if (context.ShouldDeinterlace && videoStream.Codec == VideoFormat.Mpeg2Video)
         {
@@ -310,6 +315,9 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
                         new EncoderHevcNvenc(_hardwareCapabilities, desiredState.VideoPreset, desiredState.BitDepth, desiredState.AllowBFrames),
                     (HardwareAccelerationMode.Nvenc, VideoFormat.H264) =>
                         new EncoderH264Nvenc(desiredState.VideoProfile, desiredState.VideoPreset),
+
+                    (HardwareAccelerationMode.Nvenc, VideoFormat.Av1) => new EncoderAv1Nvenc(),
+                    (HardwareAccelerationMode.None, VideoFormat.Av1) => throw new NotSupportedException("AV1 software encoding is not supported"),
 
                     // don't pass NVENC profile down to libx264
                     (_, _) => GetSoftwareEncoder(ffmpegState, currentState, desiredState with { VideoProfile = Option<string>.None })

@@ -18,7 +18,8 @@ public class FFmpegProfileEditViewModelValidator : AbstractValidator<FFmpegProfi
     private static readonly List<FFmpegProfileVideoFormat> NvencFormats =
     [
         FFmpegProfileVideoFormat.H264,
-        FFmpegProfileVideoFormat.Hevc
+        FFmpegProfileVideoFormat.Hevc,
+        FFmpegProfileVideoFormat.Av1
     ];
 
     private static readonly List<FFmpegProfileVideoFormat> VaapiFormats =
@@ -77,7 +78,7 @@ public class FFmpegProfileEditViewModelValidator : AbstractValidator<FFmpegProfi
             () =>
             {
                 RuleFor(x => x.VideoFormat).Must(c => NvencFormats.Contains(c))
-                    .WithMessage("NVENC supports formats (h264, hevc)");
+                    .WithMessage("NVENC supports formats (h264, hevc, av1)");
             });
 
         When(
