@@ -630,6 +630,8 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
             VideoFormat.H264 => new EncoderLibx264(desiredState.VideoProfile, desiredState.VideoPreset),
             VideoFormat.Mpeg2Video => new EncoderMpeg2Video(),
 
+            VideoFormat.Av1 => throw new NotSupportedException("AV1 software encoding is not supported"),
+
             VideoFormat.Copy => new EncoderCopyVideo(),
             VideoFormat.Undetermined => new EncoderImplicitVideo(),
 

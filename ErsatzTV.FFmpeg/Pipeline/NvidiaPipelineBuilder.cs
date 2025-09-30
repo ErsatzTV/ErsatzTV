@@ -321,8 +321,6 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
                         new EncoderH264Nvenc(desiredState.VideoProfile, desiredState.VideoPreset),
 
                     (HardwareAccelerationMode.Nvenc, VideoFormat.Av1) => new EncoderAv1Nvenc(),
-                    (HardwareAccelerationMode.None, VideoFormat.Av1) => throw new NotSupportedException(
-                        "AV1 software encoding is not supported"),
 
                     // don't pass NVENC profile down to libx264
                     (_, _) => GetSoftwareEncoder(

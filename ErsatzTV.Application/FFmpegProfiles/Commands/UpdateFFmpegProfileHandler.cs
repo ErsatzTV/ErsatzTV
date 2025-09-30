@@ -57,7 +57,8 @@ public class
             ? FFmpegProfileBitDepth.EightBit
             : update.BitDepth;
 
-        if (p.HardwareAcceleration is not HardwareAccelerationKind.Nvenc &&
+        if (p.HardwareAcceleration is not (HardwareAccelerationKind.Nvenc or HardwareAccelerationKind.Vaapi
+                or HardwareAccelerationKind.Qsv) &&
             p.VideoFormat is FFmpegProfileVideoFormat.Av1)
         {
             p.VideoFormat = FFmpegProfileVideoFormat.Hevc;
