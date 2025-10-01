@@ -5,6 +5,7 @@ using ErsatzTV.Core.Interfaces.FFmpeg;
 namespace ErsatzTV.Application.Troubleshooting;
 
 public record PrepareTroubleshootingPlayback(
+    Guid SessionId,
     StreamingMode StreamingMode,
     int MediaItemId,
     int FFmpegProfileId,

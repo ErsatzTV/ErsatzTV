@@ -11,6 +11,8 @@ using ErsatzTV.Core.Interfaces.Troubleshooting;
 using ErsatzTV.Core.Notifications;
 using ErsatzTV.FFmpeg.Runtime;
 using Microsoft.Extensions.Logging;
+using Serilog.Context;
+using Serilog.Events;
 
 namespace ErsatzTV.Application.Troubleshooting;
 
@@ -20,6 +22,8 @@ public class StartTroubleshootingPlaybackHandler(
     IEntityLocker entityLocker,
     IRuntimeInfo runtimeInfo,
     IGraphicsEngine graphicsEngine,
+    InMemoryLogService logService,
+    LoggingLevelSwitches loggingLevelSwitches,
     ILogger<StartTroubleshootingPlaybackHandler> logger)
     : IRequestHandler<StartTroubleshootingPlayback>
 {
@@ -32,8 +36,13 @@ public class StartTroubleshootingPlaybackHandler(
 
     public async Task Handle(StartTroubleshootingPlayback request, CancellationToken cancellationToken)
     {
+        var currentStreamingLevel = loggingLevelSwitches.StreamingLevelSwitch.MinimumLevel;
+        loggingLevelSwitches.StreamingLevelSwitch.MinimumLevel = LogEventLevel.Debug;
+
         try
         {
+            using var logContext = LogContext.PushProperty(InMemoryLogService.CorrelationIdKey, request.SessionId);
+
             // write media info without title
             string infoJson = JsonSerializer.Serialize(request.MediaItemInfo with { Title = null }, Options);
             await File.WriteAllTextAsync(
@@ -129,6 +138,20 @@ public class StartTroubleshootingPlaybackHandler(
                     .WithValidation(CommandResultValidation.None)
                     .ExecuteAsync(linkedCts.Token);
 
+                try
+                {
+                    IEnumerable<string> logs = logService.Sink.GetLogs(request.SessionId);
+                    await File.WriteAllLinesAsync(
+                        Path.Combine(FileSystemLayout.TranscodeTroubleshootingFolder, "logs.txt"),
+                        logs,
+                        linkedCts.Token);
+                    logService.Sink.ClearLogs(request.SessionId);
+                }
+                catch (Exception)
+                {
+                    // do nothing
+                }
+
                 await mediator.Publish(
                     new PlaybackTroubleshootingCompletedNotification(commandResult.ExitCode),
                     linkedCts.Token);
@@ -160,6 +183,7 @@ public class StartTroubleshootingPlaybackHandler(
         finally
         {
             entityLocker.UnlockTroubleshootingPlayback();
+            loggingLevelSwitches.StreamingLevelSwitch.MinimumLevel = currentStreamingLevel;
         }
     }
 }

@@ -35,11 +35,14 @@ public class Program
             .Build();
 
         LoggingLevelSwitches = new LoggingLevelSwitches();
+        InMemoryLogService = new InMemoryLogService();
     }
 
     private static IConfiguration Configuration { get; }
 
     private static LoggingLevelSwitches LoggingLevelSwitches { get; }
+
+    internal static InMemoryLogService InMemoryLogService { get; }
 
     public static async Task<int> Main(string[] args)
     {
@@ -94,6 +97,7 @@ public class Program
             .MinimumLevel.Override("Serilog.AspNetCore.RequestLoggingMiddleware", LoggingLevelSwitches.HttpLevelSwitch)
             .Destructure.UsingAttributes()
             .Enrich.FromLogContext()
+            .WriteTo.Sink(InMemoryLogService.Sink)
             .WriteTo.File(
                 FileSystemLayout.LogFilePath,
                 rollingInterval: RollingInterval.Day,

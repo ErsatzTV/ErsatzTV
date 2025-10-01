@@ -683,6 +683,7 @@ public class Startup
         services.AddSingleton<ITroubleshootingNotifier, TroubleshootingNotifier>();
         services.AddSingleton<CustomFontMapper>();
         services.AddSingleton<GraphicsEngineFonts>();
+        services.AddSingleton(Program.InMemoryLogService);
 
         if (SearchHelper.IsElasticSearchEnabled)
         {

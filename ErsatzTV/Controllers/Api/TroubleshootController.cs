@@ -10,6 +10,7 @@ using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Troubleshooting;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Serilog.Context;
 
 namespace ErsatzTV.Controllers.Api;
 
@@ -41,12 +42,16 @@ public class TroubleshootController(
         int seekSeconds,
         CancellationToken cancellationToken)
     {
+        var sessionId = Guid.NewGuid();
+        using var logContext = LogContext.PushProperty(InMemoryLogService.CorrelationIdKey, sessionId);
+
         try
         {
             Option<int> ss = seekSeconds > 0 ? seekSeconds : Option<int>.None;
 
             Either<BaseError, PlayoutItemResult> result = await mediator.Send(
                 new PrepareTroubleshootingPlayback(
+                    sessionId,
                     streamingMode,
                     mediaItem,
                     ffmpegProfile,
@@ -68,8 +73,6 @@ public class TroubleshootController(
                     await mediator.Send(new GetMediaItemInfo(mediaItem), cancellationToken);
                 foreach (MediaItemInfo mediaInfo in maybeMediaInfo.RightToSeq())
                 {
-                    var sessionId = Guid.NewGuid();
-
                     try
                     {
                         TroubleshootingInfo troubleshootingInfo = await mediator.Send(
