@@ -54,7 +54,7 @@ public class VaapiHardwareCapabilities : IHardwareCapabilities
                     VaapiEntrypoint: VaapiEntrypoint.Decode
                 }),
 
-            (VideoFormat.H264, "baseline constrained" or "578") =>
+            (VideoFormat.H264, "baseline constrained" or "constrained baseline" or "578") =>
                 _profileEntrypoints.Any(e => e is
                 {
                     VaapiProfile: VaapiProfile.H264ConstrainedBaseline,
