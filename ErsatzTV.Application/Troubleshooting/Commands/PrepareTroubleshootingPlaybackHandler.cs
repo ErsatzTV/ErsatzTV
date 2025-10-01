@@ -108,6 +108,12 @@ public class PrepareTroubleshootingPlaybackHandler(
             //SongVideoMode = ChannelSongVideoMode.WithProgress
         };
 
+        if (!string.IsNullOrEmpty(request.StreamSelector))
+        {
+            channel.StreamSelectorMode = ChannelStreamSelectorMode.Custom;
+            channel.StreamSelector = request.StreamSelector;
+        }
+
         List<WatermarkOptions> watermarks = [];
         if (request.WatermarkIds.Count > 0)
         {
@@ -211,7 +217,7 @@ public class PrepareTroubleshootingPlaybackHandler(
             new MediaItemAudioVersion(mediaItem, version),
             videoPath,
             mediaPath,
-            _ => GetSelectedSubtitle(mediaItem, request),
+            _ => GetSubtitles(mediaItem, request),
             string.Empty,
             string.Empty,
             string.Empty,
@@ -240,35 +246,33 @@ public class PrepareTroubleshootingPlaybackHandler(
         return playoutItemResult;
     }
 
-    private static async Task<List<Subtitle>> GetSelectedSubtitle(
-        MediaItem mediaItem,
-        PrepareTroubleshootingPlayback request)
+    private static async Task<List<Subtitle>> GetSubtitles(MediaItem mediaItem, PrepareTroubleshootingPlayback request)
     {
+        List<Subtitle> allSubtitles = mediaItem switch
+        {
+            Episode episode => await Optional(episode.EpisodeMetadata).Flatten().HeadOrNone()
+                .Map(mm => mm.Subtitles ?? [])
+                .IfNoneAsync([]),
+            Movie movie => await Optional(movie.MovieMetadata).Flatten().HeadOrNone()
+                .Map(mm => mm.Subtitles ?? [])
+                .IfNoneAsync([]),
+            OtherVideo otherVideo => await Optional(otherVideo.OtherVideoMetadata).Flatten().HeadOrNone()
+                .Map(mm => mm.Subtitles ?? [])
+                .IfNoneAsync([]),
+            _ => []
+        };
+
+        bool isMediaServer = mediaItem is PlexMovie or PlexEpisode or
+            JellyfinMovie or JellyfinEpisode or EmbyMovie or EmbyEpisode;
+
+        if (isMediaServer)
+        {
+            // closed captions are currently unsupported
+            allSubtitles.RemoveAll(s => s.Codec == "eia_608");
+        }
+
         if (request.SubtitleId is not null)
         {
-            List<Subtitle> allSubtitles = mediaItem switch
-            {
-                Episode episode => await Optional(episode.EpisodeMetadata).Flatten().HeadOrNone()
-                    .Map(mm => mm.Subtitles ?? [])
-                    .IfNoneAsync([]),
-                Movie movie => await Optional(movie.MovieMetadata).Flatten().HeadOrNone()
-                    .Map(mm => mm.Subtitles ?? [])
-                    .IfNoneAsync([]),
-                OtherVideo otherVideo => await Optional(otherVideo.OtherVideoMetadata).Flatten().HeadOrNone()
-                    .Map(mm => mm.Subtitles ?? [])
-                    .IfNoneAsync([]),
-                _ => []
-            };
-
-            bool isMediaServer = mediaItem is PlexMovie or PlexEpisode or
-                JellyfinMovie or JellyfinEpisode or EmbyMovie or EmbyEpisode;
-
-            if (isMediaServer)
-            {
-                // closed captions are currently unsupported
-                allSubtitles.RemoveAll(s => s.Codec == "eia_608");
-            }
-
             allSubtitles.RemoveAll(s => s.Id != request.SubtitleId.Value);
 
             foreach (Subtitle subtitle in allSubtitles)
@@ -279,7 +283,7 @@ public class PrepareTroubleshootingPlaybackHandler(
             }
         }
 
-        return [];
+        return allSubtitles;
     }
 
     private static async Task<Validation<BaseError, Tuple<MediaItem, string, string, FFmpegProfile>>> Validate(

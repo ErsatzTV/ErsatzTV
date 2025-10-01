@@ -22,14 +22,22 @@ public class ArchiveTroubleshootingResultsHandler(ILocalFileSystem localFileSyst
             {
                 hasReport = true;
                 zipArchive.CreateEntryFromFile(file, fileName);
+                continue;
             }
 
             if (Path.GetExtension(file).Equals(".json", StringComparison.OrdinalIgnoreCase))
             {
                 zipArchive.CreateEntryFromFile(file, fileName);
+                continue;
             }
 
             if (fileName.Contains("capabilities", StringComparison.OrdinalIgnoreCase))
+            {
+                zipArchive.CreateEntryFromFile(file, fileName);
+                continue;
+            }
+
+            if (fileName.Contains("stream-selector", StringComparison.OrdinalIgnoreCase))
             {
                 zipArchive.CreateEntryFromFile(file, fileName);
             }

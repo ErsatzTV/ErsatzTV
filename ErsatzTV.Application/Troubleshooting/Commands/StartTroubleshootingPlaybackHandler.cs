@@ -61,6 +61,18 @@ public class StartTroubleshootingPlaybackHandler(
                 troubleshootingInfoJson,
                 cancellationToken);
 
+            // write stream selector
+            if (!string.IsNullOrWhiteSpace(request.StreamSelector))
+            {
+                string fullPath = Path.Combine(FileSystemLayout.ChannelStreamSelectorsFolder, request.StreamSelector);
+                if (File.Exists(fullPath))
+                {
+                    File.Copy(
+                        fullPath,
+                        Path.Combine(FileSystemLayout.TranscodeTroubleshootingFolder, "stream-selector.yml"));
+                }
+            }
+
             HardwareAccelerationKind hwAccel = request.TroubleshootingInfo.FFmpegProfiles.Head().HardwareAcceleration;
             if (hwAccel is HardwareAccelerationKind.Qsv)
             {

@@ -62,6 +62,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Preview button will be red when preview is disabled due to browser incompatibility
 - Add AV1 encoding support with NVIDIA, VAAPI and QSV acceleration
   - This also requires `HLS Segmenter (fmp4)`
+- Add `Stream Selector` option to playback troubleshooting tool
+  - This can be helpful for validating stream selector behavior with specific content
+  - Manual subtitle selection will be disabled when using a stream selector
 
 ### Fixed
 - Fix green output when libplacebo tonemapping is used with NVIDIA acceleration and 10-bit output in FFmpeg Profile
