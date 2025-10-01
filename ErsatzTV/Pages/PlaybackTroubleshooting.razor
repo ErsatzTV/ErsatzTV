@@ -6,6 +6,7 @@
 @using ErsatzTV.Application.Troubleshooting
 @using ErsatzTV.Application.Troubleshooting.Queries
 @using ErsatzTV.Application.Watermarks
+@using ErsatzTV.Core.Interfaces.Metadata
 @using ErsatzTV.Core.Notifications
 @using MediatR.Courier
 @using Microsoft.AspNetCore.WebUtilities
@@ -16,6 +17,7 @@
 @inject IEntityLocker Locker
 @inject ICourier Courier;
 @inject ISnackbar Snackbar;
+@inject ILocalFileSystem LocalFileSystem;
 
 <MudForm Style="max-height: 100%">
     <MudPaper Square="true" Style="display: flex; height: 64px; min-height: 64px; width: 100%; z-index: 100; align-items: center">
@@ -48,6 +50,15 @@
             <MudDivider Class="mb-6"/>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                 <div class="d-flex">
+                    <MudText>Streaming Mode</MudText>
+                </div>
+                <MudSelect @bind-Value="_streamingMode" For="@(() => _streamingMode)">
+                    <MudSelectItem Value="@(StreamingMode.HttpLiveStreamingSegmenter)">HLS Segmenter</MudSelectItem>
+                    <MudSelectItem Value="@(StreamingMode.HttpLiveStreamingSegmenterFmp4)">HLS Segmenter (fmp4)</MudSelectItem>
+                </MudSelect>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
                     <MudText>FFmpeg Profile</MudText>
                 </div>
                 <MudSelect @bind-Value="_ffmpegProfileId" For="@(() => _ffmpegProfileId)">
@@ -66,15 +77,6 @@
                     {
                         <MudSelectItem T="string" Value="@selector">@selector</MudSelectItem>
                     }
-                </MudSelect>
-            </MudStack>
-            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                <div class="d-flex">
-                    <MudText>Streaming Mode</MudText>
-                </div>
-                <MudSelect @bind-Value="_streamingMode" For="@(() => _streamingMode)">
-                    <MudSelectItem Value="@(StreamingMode.HttpLiveStreamingSegmenter)">HLS Segmenter</MudSelectItem>
-                    <MudSelectItem Value="@(StreamingMode.HttpLiveStreamingSegmenterFmp4)">HLS Segmenter (fmp4)</MudSelectItem>
                 </MudSelect>
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
@@ -150,6 +152,11 @@
                 </media-controller>
                 <div class="d-none d-md-flex" style="width: 400px"></div>
             </div>
+            <MudText Typo="Typo.h5" Class="mt-10 mb-2">Logs</MudText>
+            <MudDivider Class="mb-6"/>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="gap-md-8 mb-5">
+                <MudTextField @bind-Value="_logs" ReadOnly="true" Lines="20" Variant="Variant.Outlined" />
+            </MudStack>
             <div class="mb-6">
                 <br/>
                 <br/>
@@ -176,6 +183,7 @@
     private int? _subtitleId;
     private int _seekSeconds;
     private bool _hasPlayed;
+    private string _logs;
 
     [SupplyParameterFromQuery(Name = "mediaItem")]
     public int? MediaItemId { get; set; }
@@ -240,6 +248,8 @@
 
     private async Task PreviewChannel()
     {
+        _logs = null;
+
         var baseUri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri).ToString();
         string apiUri = baseUri.Replace("/system/troubleshooting/playback", "/api/troubleshoot/playback.m3u8");
         var queryString = new Dictionary<string, string>
@@ -312,7 +322,6 @@
 
     private async Task DownloadResults()
     {
-        string apiUri = "api/troubleshoot/playback/archive";
         var queryString = new Dictionary<string, string>
         {
             ["mediaItem"] = (MediaItemId ?? 0).ToString(),
@@ -337,12 +346,14 @@
             }
         }
 
-        string uriWithQuery = QueryHelpers.AddQueryString(apiUri, queryString);
+        string uriWithQuery = QueryHelpers.AddQueryString("api/troubleshoot/playback/archive", queryString);
         await JsRuntime.InvokeVoidAsync("window.open", uriWithQuery);
     }
 
     private void HandleTroubleshootingCompleted(PlaybackTroubleshootingCompletedNotification result)
     {
+        _logs = null;
+
         if (result.ExitCode == 0)
         {
             Snackbar.Add("FFmpeg troubleshooting process exited successfully", Severity.Success);
@@ -350,6 +361,13 @@
         else
         {
             Snackbar.Add($"FFmpeg troubleshooting process exited with code {result.ExitCode}", Severity.Warning);
+        }
+
+        string logFileName = Path.Combine(FileSystemLayout.TranscodeTroubleshootingFolder, "logs.txt");
+        if (LocalFileSystem.FileExists(logFileName))
+        {
+            _logs = File.ReadAllText(logFileName);
+            InvokeAsync(StateHasChanged);
         }
     }
 

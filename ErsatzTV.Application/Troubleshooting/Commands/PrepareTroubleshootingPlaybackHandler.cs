@@ -18,6 +18,8 @@ using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Serilog.Context;
+using Serilog.Events;
 
 namespace ErsatzTV.Application.Troubleshooting;
 
@@ -32,6 +34,7 @@ public class PrepareTroubleshootingPlaybackHandler(
     IWatermarkSelector watermarkSelector,
     IEntityLocker entityLocker,
     IMediator mediator,
+    LoggingLevelSwitches loggingLevelSwitches,
     ILogger<PrepareTroubleshootingPlaybackHandler> logger)
     : IRequestHandler<PrepareTroubleshootingPlayback, Either<BaseError, PlayoutItemResult>>
 {
@@ -39,8 +42,12 @@ public class PrepareTroubleshootingPlaybackHandler(
         PrepareTroubleshootingPlayback request,
         CancellationToken cancellationToken)
     {
+        var currentStreamingLevel = loggingLevelSwitches.StreamingLevelSwitch.MinimumLevel;
+        loggingLevelSwitches.StreamingLevelSwitch.MinimumLevel = LogEventLevel.Debug;
+
         try
         {
+            using var logContext = LogContext.PushProperty(InMemoryLogService.CorrelationIdKey, request.SessionId);
             await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
             Validation<BaseError, Tuple<MediaItem, string, string, FFmpegProfile>> validation = await Validate(
                 dbContext,
@@ -63,6 +70,10 @@ public class PrepareTroubleshootingPlaybackHandler(
             await mediator.Publish(new PlaybackTroubleshootingCompletedNotification(-1), cancellationToken);
             logger.LogError(ex, "Error while preparing troubleshooting playback");
             return BaseError.New(ex.Message);
+        }
+        finally
+        {
+            loggingLevelSwitches.StreamingLevelSwitch.MinimumLevel = currentStreamingLevel;
         }
     }
 
