@@ -5,6 +5,7 @@ namespace ErsatzTV.Application.Troubleshooting;
 
 public record StartTroubleshootingPlayback(
     Guid SessionId,
+    string StreamSelector,
     PlayoutItemResult PlayoutItemResult,
     MediaItemInfo MediaItemInfo,
     TroubleshootingInfo TroubleshootingInfo) : IRequest, IFFmpegWorkerRequest;

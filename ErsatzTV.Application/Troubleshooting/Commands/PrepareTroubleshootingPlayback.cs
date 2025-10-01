@@ -8,6 +8,7 @@ public record PrepareTroubleshootingPlayback(
     StreamingMode StreamingMode,
     int MediaItemId,
     int FFmpegProfileId,
+    string StreamSelector,
     List<int> WatermarkIds,
     List<int> GraphicsElementIds,
     int? SubtitleId,

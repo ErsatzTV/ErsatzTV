@@ -34,6 +34,8 @@ public class TroubleshootController(
         [FromQuery]
         List<int> graphicsElement,
         [FromQuery]
+        string streamSelector,
+        [FromQuery]
         int? subtitleId,
         [FromQuery]
         int seekSeconds,
@@ -48,6 +50,7 @@ public class TroubleshootController(
                     streamingMode,
                     mediaItem,
                     ffmpegProfile,
+                    streamSelector,
                     watermark,
                     graphicsElement,
                     subtitleId,
@@ -82,6 +85,7 @@ public class TroubleshootController(
                         await channelWriter.WriteAsync(
                             new StartTroubleshootingPlayback(
                                 sessionId,
+                                streamSelector,
                                 playoutItemResult,
                                 mediaInfo,
                                 troubleshootingInfo),
@@ -141,7 +145,13 @@ public class TroubleshootController(
         Option<int> ss = seekSeconds > 0 ? seekSeconds : Option<int>.None;
 
         Option<string> maybeArchivePath = await mediator.Send(
-            new ArchiveTroubleshootingResults(mediaItem, ffmpegProfile, streamingMode, watermark, graphicsElement, ss),
+            new ArchiveTroubleshootingResults(
+                mediaItem,
+                ffmpegProfile,
+                streamingMode,
+                watermark,
+                graphicsElement,
+                ss),
             cancellationToken);
 
         foreach (string archivePath in maybeArchivePath)
