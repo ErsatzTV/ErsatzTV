@@ -26,7 +26,7 @@ public class ResetPlayoutTests : PlayoutBuilderTestBase
         DateTimeOffset start = HoursAfterMidnight(0);
         DateTimeOffset finish = start + TimeSpan.FromHours(6);
 
-        PlayoutBuildResult result = await builder.Build(
+        Either<BaseError, PlayoutBuildResult> buildResult = await builder.Build(
             playout,
             referenceData,
             PlayoutBuildResult.Empty,
@@ -35,7 +35,12 @@ public class ResetPlayoutTests : PlayoutBuilderTestBase
             finish,
             CancellationToken);
 
-        result.AddedItems.Count.ShouldBe(6);
+        buildResult.IsRight.ShouldBeTrue();
+        foreach (var result in buildResult.RightToSeq())
+        {
+            result.AddedItems.Count.ShouldBe(6);
+        }
+
         playout.Anchor.NextStartOffset.ShouldBe(finish);
 
         playout.ProgramScheduleAnchors.Count.ShouldBe(1);
@@ -46,7 +51,7 @@ public class ResetPlayoutTests : PlayoutBuilderTestBase
         DateTimeOffset start2 = HoursAfterMidnight(0);
         DateTimeOffset finish2 = start2 + TimeSpan.FromHours(6);
 
-        PlayoutBuildResult result2 = await builder.Build(
+        Either<BaseError, PlayoutBuildResult> buildResult2 = await builder.Build(
             playout,
             referenceData,
             PlayoutBuildResult.Empty,
@@ -55,7 +60,12 @@ public class ResetPlayoutTests : PlayoutBuilderTestBase
             finish2,
             CancellationToken);
 
-        result2.AddedItems.Count.ShouldBe(6);
+        buildResult2.IsRight.ShouldBeTrue();
+        foreach (var result in buildResult2.RightToSeq())
+        {
+            result.AddedItems.Count.ShouldBe(6);
+        }
+
         playout.Anchor.NextStartOffset.ShouldBe(finish);
 
         playout.ProgramScheduleAnchors.Count.ShouldBe(1);
