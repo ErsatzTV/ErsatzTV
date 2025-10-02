@@ -316,14 +316,6 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
             return BaseError.New(
                 $"Timeout building playout for channel {channelName}; this may be a bug!");
         }
-        catch (PlayoutBuildException ex)
-        {
-            newBuildStatus.Success = false;
-            newBuildStatus.Message = ex.Message;
-
-            return BaseError.New(
-                $"Unexpected error building playout for channel {channelName}: {ex.Message}");
-        }
         catch (Exception ex)
         {
             DebugBreak.Break();
