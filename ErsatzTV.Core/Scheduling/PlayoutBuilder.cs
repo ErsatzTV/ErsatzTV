@@ -63,15 +63,13 @@ public class PlayoutBuilder : IPlayoutBuilder
         }
     }
 
-    public async Task<PlayoutBuildResult> Build(
+    public async Task<Either<BaseError, PlayoutBuildResult>> Build(
         DateTimeOffset start,
         Playout playout,
         PlayoutReferenceData referenceData,
         PlayoutBuildMode mode,
         CancellationToken cancellationToken)
     {
-        PlayoutBuildResult result = PlayoutBuildResult.Empty;
-
         if (playout.ScheduleKind is not PlayoutScheduleKind.Classic)
         {
             _logger.LogWarning(
@@ -80,30 +78,39 @@ public class PlayoutBuilder : IPlayoutBuilder
                 referenceData.Channel.Number,
                 referenceData.Channel.Name);
 
-            return result;
+            return BaseError.New($"Cannot build playout type {playout.ScheduleKind} using classic playout builder.");
         }
 
-        foreach (PlayoutParameters parameters in await Validate(start, playout, referenceData, cancellationToken))
-        {
-            // for testing purposes
-            // if (mode == PlayoutBuildMode.Reset)
-            // {
-            //     return await Build(playout, mode, parameters with { Start = parameters.Start.AddDays(-2) });
-            // }
-
-            result = await Build(playout, referenceData, result, mode, parameters, cancellationToken);
-
-            result = result with
+        Either<BaseError, PlayoutParameters> validateResult = await Validate(start, referenceData, cancellationToken);
+        return await validateResult.MatchAsync(
+            async parameters =>
             {
-                RerunHistoryToRemove = _rerunHelper.GetHistoryToRemove(),
-                AddedRerunHistory = _rerunHelper.GetHistoryToAdd()
-            };
-        }
+                // for testing purposes
+                // if (mode == PlayoutBuildMode.Reset)
+                // {
+                //     return await Build(playout, mode, parameters with { Start = parameters.Start.AddDays(-2) });
+                // }
 
-        return result;
+                Either<BaseError, PlayoutBuildResult> buildResult = await Build(
+                    playout,
+                    referenceData,
+                    PlayoutBuildResult.Empty,
+                    mode,
+                    parameters,
+                    cancellationToken);
+
+                return buildResult.Match(
+                    result => result with
+                    {
+                        RerunHistoryToRemove = _rerunHelper.GetHistoryToRemove(),
+                        AddedRerunHistory = _rerunHelper.GetHistoryToAdd()
+                    },
+                    Either<BaseError, PlayoutBuildResult>.Left);
+            },
+            Either<BaseError, PlayoutBuildResult>.Left);
     }
 
-    private Task<PlayoutBuildResult> Build(
+    private Task<Either<BaseError, PlayoutBuildResult>> Build(
         Playout playout,
         PlayoutReferenceData referenceData,
         PlayoutBuildResult result,
@@ -117,7 +124,7 @@ public class PlayoutBuilder : IPlayoutBuilder
             _ => ContinuePlayout(playout, referenceData, result, parameters, cancellationToken)
         };
 
-    internal async Task<PlayoutBuildResult> Build(
+    internal async Task<Either<BaseError, PlayoutBuildResult>> Build(
         Playout playout,
         PlayoutReferenceData referenceData,
         PlayoutBuildResult result,
@@ -126,21 +133,19 @@ public class PlayoutBuilder : IPlayoutBuilder
         DateTimeOffset finish,
         CancellationToken cancellationToken)
     {
-        foreach (PlayoutParameters parameters in await Validate(start, playout, referenceData, cancellationToken))
-        {
-            result = await Build(
+        Either<BaseError, PlayoutParameters> validateResult = await Validate(start, referenceData, cancellationToken);
+        return await validateResult.MatchAsync(
+            async parameters => await Build(
                 playout,
                 referenceData,
                 result,
                 mode,
                 parameters with { Start = start, Finish = finish },
-                cancellationToken);
-        }
-
-        return result;
+                cancellationToken),
+            Either<BaseError, PlayoutBuildResult>.Left);
     }
 
-    private async Task<PlayoutBuildResult> RefreshPlayout(
+    private async Task<Either<BaseError, PlayoutBuildResult>> RefreshPlayout(
         Playout playout,
         PlayoutReferenceData referenceData,
         PlayoutBuildResult result,
@@ -266,7 +271,7 @@ public class PlayoutBuilder : IPlayoutBuilder
             cancellationToken);
     }
 
-    private async Task<PlayoutBuildResult> ResetPlayout(
+    private async Task<Either<BaseError, PlayoutBuildResult>> ResetPlayout(
         Playout playout,
         PlayoutReferenceData referenceData,
         PlayoutBuildResult result,
@@ -310,7 +315,7 @@ public class PlayoutBuilder : IPlayoutBuilder
         return result;
     }
 
-    private async Task<PlayoutBuildResult> ContinuePlayout(
+    private async Task<Either<BaseError, PlayoutBuildResult>> ContinuePlayout(
         Playout playout,
         PlayoutReferenceData referenceData,
         PlayoutBuildResult result,
@@ -340,9 +345,8 @@ public class PlayoutBuilder : IPlayoutBuilder
             cancellationToken);
     }
 
-    private async Task<Option<PlayoutParameters>> Validate(
+    private async Task<Either<BaseError, PlayoutParameters>> Validate(
         DateTimeOffset start,
-        Playout playout,
         PlayoutReferenceData referenceData,
         CancellationToken cancellationToken)
     {
@@ -351,7 +355,7 @@ public class PlayoutBuilder : IPlayoutBuilder
         if (collectionMediaItems.IsEmpty)
         {
             _logger.LogWarning("Playout {Playout} has no items", referenceData.Channel.Name);
-            return None;
+            return BaseError.New($"Playout {referenceData.Channel.Name} has no items");
         }
 
         Option<bool> skipMissingItems =
@@ -365,24 +369,26 @@ public class PlayoutBuilder : IPlayoutBuilder
         {
             Option<string> maybeName =
                 await _mediaCollectionRepository.GetNameFromKey(emptyCollection, cancellationToken);
-            if (maybeName.IsSome)
-            {
-                foreach (string name in maybeName)
+            return maybeName.Match(
+                name =>
                 {
                     _logger.LogError(
                         "Unable to rebuild playout; {CollectionType} {CollectionName} has no valid items!",
                         emptyCollection.CollectionType,
                         name);
-                }
-            }
-            else
-            {
-                _logger.LogError(
-                    "Unable to rebuild playout; collection {@CollectionKey} has no valid items!",
-                    emptyCollection);
-            }
 
-            return None;
+                    return BaseError.New(
+                        $"Unable to rebuild playout; {emptyCollection.CollectionType} {name} has no valid items!");
+                },
+                () =>
+                {
+                    _logger.LogError(
+                        "Unable to rebuild playout; collection {@CollectionKey} has no valid items!",
+                        emptyCollection);
+
+                    return BaseError.New(
+                        $"Unable to rebuild playout; collection {HistoryDetails.KeyForCollectionKey(emptyCollection)} has no valid items!");
+                });
         }
 
         Option<int> daysToBuild = await _configElementRepository.GetValue<int>(
@@ -397,7 +403,7 @@ public class PlayoutBuilder : IPlayoutBuilder
             collectionMediaItems);
     }
 
-    private async Task<PlayoutBuildResult> BuildPlayoutItems(
+    private async Task<Either<BaseError, PlayoutBuildResult>> BuildPlayoutItems(
         Playout playout,
         PlayoutReferenceData referenceData,
         PlayoutBuildResult result,
@@ -431,11 +437,11 @@ public class PlayoutBuilder : IPlayoutBuilder
         {
             if (cancellationToken.IsCancellationRequested)
             {
-                return result;
+                return BaseError.New("Playout build was canceled");
             }
 
             _logger.LogDebug("Building playout from {Start} to {Finish}", start, finish);
-            result = await BuildPlayoutItems(
+            Either<BaseError, PlayoutBuildResult> buildResult = await BuildPlayoutItems(
                 playout,
                 referenceData,
                 result,
@@ -446,6 +452,16 @@ public class PlayoutBuilder : IPlayoutBuilder
                 randomStartPoint,
                 cancellationToken);
 
+            foreach (BaseError error in buildResult.LeftToSeq())
+            {
+                return error;
+            }
+
+            foreach (PlayoutBuildResult r in buildResult.RightToSeq())
+            {
+                result = r;
+            }
+
             // only randomize once (at the start of the playout)
             randomStartPoint = false;
 
@@ -455,14 +471,14 @@ public class PlayoutBuilder : IPlayoutBuilder
 
         if (cancellationToken.IsCancellationRequested)
         {
-            return result;
+            return BaseError.New("Playout build was canceled");
         }
 
         if (start < playoutFinish)
         {
             // build one final time without continue anchors
             _logger.LogDebug("Building final playout from {Start} to {Finish}", start, playoutFinish);
-            result = await BuildPlayoutItems(
+            Either<BaseError, PlayoutBuildResult> buildResult = await BuildPlayoutItems(
                 playout,
                 referenceData,
                 result,
@@ -472,6 +488,16 @@ public class PlayoutBuilder : IPlayoutBuilder
                 false,
                 randomStartPoint,
                 cancellationToken);
+
+            foreach (BaseError error in buildResult.LeftToSeq())
+            {
+                return error;
+            }
+
+            foreach (PlayoutBuildResult r in buildResult.RightToSeq())
+            {
+                result = r;
+            }
         }
 
         if (TrimStart)
@@ -504,7 +530,7 @@ public class PlayoutBuilder : IPlayoutBuilder
         return result;
     }
 
-    private async Task<PlayoutBuildResult> BuildPlayoutItems(
+    private async Task<Either<BaseError, PlayoutBuildResult>> BuildPlayoutItems(
         Playout playout,
         PlayoutReferenceData referenceData,
         PlayoutBuildResult result,

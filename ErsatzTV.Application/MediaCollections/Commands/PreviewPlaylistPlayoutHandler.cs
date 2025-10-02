@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using ErsatzTV.Application.Scheduling;
+using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Scheduling;
 using ErsatzTV.Core.Interfaces.Repositories;
@@ -57,65 +58,70 @@ public class PreviewPlaylistPlayoutHandler(
         // TODO: make an explicit method to preview, this is ugly
         playoutBuilder.TrimStart = false;
         playoutBuilder.DebugPlaylist = playout.ProgramSchedule.Items[0].Playlist;
-        PlayoutBuildResult result = await playoutBuilder.Build(
+        Either<BaseError, PlayoutBuildResult> buildResult = await playoutBuilder.Build(
             DateTimeOffset.Now,
             playout,
             referenceData,
             PlayoutBuildMode.Reset,
             cancellationToken);
 
-        var maxItems = 0;
-        Dictionary<PlaylistItem, List<MediaItem>> map =
-            await mediaCollectionRepository.GetPlaylistItemMap(
-                playout.ProgramSchedule.Items[0].Playlist,
-                cancellationToken);
-        foreach (PlaylistItem item in playout.ProgramSchedule.Items[0].Playlist.Items)
-        {
-            if (item.PlayAll)
+        return await buildResult.MatchAsync(
+            async result =>
             {
-                maxItems += map[item].Count;
-            }
-            else
-            {
-                maxItems += 1;
-            }
-        }
+                var maxItems = 0;
+                Dictionary<PlaylistItem, List<MediaItem>> map =
+                    await mediaCollectionRepository.GetPlaylistItemMap(
+                        playout.ProgramSchedule.Items[0].Playlist,
+                        cancellationToken);
+                foreach (PlaylistItem item in playout.ProgramSchedule.Items[0].Playlist.Items)
+                {
+                    if (item.PlayAll)
+                    {
+                        maxItems += map[item].Count;
+                    }
+                    else
+                    {
+                        maxItems += 1;
+                    }
+                }
 
-        // limit preview to once through the playlist
-        var onceThrough = result.AddedItems.Take(maxItems).ToList();
+                // limit preview to once through the playlist
+                var onceThrough = result.AddedItems.Take(maxItems).ToList();
 
-        // load playout item details for title
-        foreach (PlayoutItem playoutItem in onceThrough)
-        {
-            Option<MediaItem> maybeMediaItem = await dbContext.MediaItems
-                .AsNoTracking()
-                .Include(mi => (mi as Movie).MovieMetadata)
-                .Include(mi => (mi as Movie).MediaVersions)
-                .Include(mi => (mi as MusicVideo).MusicVideoMetadata)
-                .Include(mi => (mi as MusicVideo).MediaVersions)
-                .Include(mi => (mi as MusicVideo).Artist)
-                .ThenInclude(mm => mm.ArtistMetadata)
-                .Include(mi => (mi as Episode).EpisodeMetadata)
-                .Include(mi => (mi as Episode).MediaVersions)
-                .Include(mi => (mi as Episode).Season)
-                .ThenInclude(s => s.SeasonMetadata)
-                .Include(mi => (mi as Episode).Season.Show)
-                .ThenInclude(s => s.ShowMetadata)
-                .Include(mi => (mi as OtherVideo).OtherVideoMetadata)
-                .Include(mi => (mi as OtherVideo).MediaVersions)
-                .Include(mi => (mi as Song).SongMetadata)
-                .Include(mi => (mi as Song).MediaVersions)
-                .Include(mi => (mi as Image).ImageMetadata)
-                .Include(mi => (mi as Image).MediaVersions)
-                .SelectOneAsync(mi => mi.Id, mi => mi.Id == playoutItem.MediaItemId, cancellationToken);
+                // load playout item details for title
+                foreach (PlayoutItem playoutItem in onceThrough)
+                {
+                    Option<MediaItem> maybeMediaItem = await dbContext.MediaItems
+                        .AsNoTracking()
+                        .Include(mi => (mi as Movie).MovieMetadata)
+                        .Include(mi => (mi as Movie).MediaVersions)
+                        .Include(mi => (mi as MusicVideo).MusicVideoMetadata)
+                        .Include(mi => (mi as MusicVideo).MediaVersions)
+                        .Include(mi => (mi as MusicVideo).Artist)
+                        .ThenInclude(mm => mm.ArtistMetadata)
+                        .Include(mi => (mi as Episode).EpisodeMetadata)
+                        .Include(mi => (mi as Episode).MediaVersions)
+                        .Include(mi => (mi as Episode).Season)
+                        .ThenInclude(s => s.SeasonMetadata)
+                        .Include(mi => (mi as Episode).Season.Show)
+                        .ThenInclude(s => s.ShowMetadata)
+                        .Include(mi => (mi as OtherVideo).OtherVideoMetadata)
+                        .Include(mi => (mi as OtherVideo).MediaVersions)
+                        .Include(mi => (mi as Song).SongMetadata)
+                        .Include(mi => (mi as Song).MediaVersions)
+                        .Include(mi => (mi as Image).ImageMetadata)
+                        .Include(mi => (mi as Image).MediaVersions)
+                        .SelectOneAsync(mi => mi.Id, mi => mi.Id == playoutItem.MediaItemId, cancellationToken);
 
-            foreach (MediaItem mediaItem in maybeMediaItem)
-            {
-                playoutItem.MediaItem = mediaItem;
-            }
-        }
+                    foreach (MediaItem mediaItem in maybeMediaItem)
+                    {
+                        playoutItem.MediaItem = mediaItem;
+                    }
+                }
 
-        return onceThrough.OrderBy(i => i.StartOffset).Map(Scheduling.Mapper.ProjectToViewModel).ToList();
+                return onceThrough.OrderBy(i => i.StartOffset).Map(Scheduling.Mapper.ProjectToViewModel).ToList();
+            },
+            _ => []);
     }
 
     private static ProgramScheduleItemFlood MapToScheduleItem(PreviewPlaylistPlayout request) =>

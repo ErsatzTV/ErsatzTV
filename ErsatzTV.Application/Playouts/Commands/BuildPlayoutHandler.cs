@@ -124,26 +124,31 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
                 playout.ScheduleKind);
             string channelNumber = referenceData.Channel.Number;
             channelName = referenceData.Channel.Name;
-            PlayoutBuildResult result = PlayoutBuildResult.Empty;
+            Either<BaseError, PlayoutBuildResult> buildResult = BaseError.New("Unsupported schedule kind");
 
             switch (playout.ScheduleKind)
             {
                 case PlayoutScheduleKind.Block:
-                    result = await _blockPlayoutBuilder.Build(
+                    buildResult = await _blockPlayoutBuilder.Build(
                         request.Start,
                         playout,
                         referenceData,
                         request.Mode,
                         cancellationToken);
-                    result = await _blockPlayoutFillerBuilder.Build(
-                        playout,
-                        referenceData,
-                        result,
-                        request.Mode,
-                        cancellationToken);
+
+                    foreach (var result in buildResult.RightToSeq())
+                    {
+                        buildResult = await _blockPlayoutFillerBuilder.Build(
+                            playout,
+                            referenceData,
+                            result,
+                            request.Mode,
+                            cancellationToken);
+                    }
+
                     break;
                 case PlayoutScheduleKind.Sequential:
-                    result = await _sequentialPlayoutBuilder.Build(
+                    buildResult = await _sequentialPlayoutBuilder.Build(
                         request.Start,
                         playout,
                         referenceData,
@@ -151,7 +156,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
                         cancellationToken);
                     break;
                 case PlayoutScheduleKind.Scripted:
-                    result = await _scriptedPlayoutBuilder.Build(
+                    buildResult = await _scriptedPlayoutBuilder.Build(
                         request.Start,
                         playout,
                         referenceData,
@@ -164,7 +169,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
                 case PlayoutScheduleKind.None:
                 case PlayoutScheduleKind.Classic:
                 default:
-                    result = await _playoutBuilder.Build(
+                    buildResult = await _playoutBuilder.Build(
                         request.Start,
                         playout,
                         referenceData,
@@ -173,123 +178,134 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
                     break;
             }
 
-            var changeCount = 0;
-
-            if (result.RerunHistoryToRemove.Count > 0)
-            {
-                changeCount += await dbContext.RerunHistory
-                    .Where(rh => result.RerunHistoryToRemove.Contains(rh.Id))
-                    .ExecuteDeleteAsync(cancellationToken);
-            }
-
-            if (result.AddedRerunHistory.Count > 0)
-            {
-                changeCount += 1;
-                await dbContext.BulkInsertAsync(result.AddedRerunHistory, cancellationToken: cancellationToken);
-            }
-
-            if (result.ClearItems)
-            {
-                changeCount += await dbContext.PlayoutItems
-                    .Where(pi => pi.PlayoutId == playout.Id)
-                    .ExecuteDeleteAsync(cancellationToken);
-            }
-
-            foreach (DateTimeOffset removeBefore in result.RemoveBefore)
-            {
-                changeCount += await dbContext.PlayoutItems
-                    .Where(pi => pi.PlayoutId == playout.Id)
-                    .Where(pi => pi.Finish < removeBefore.UtcDateTime - referenceData.MaxPlayoutOffset)
-                    .ExecuteDeleteAsync(cancellationToken);
-            }
-
-            foreach (DateTimeOffset removeAfter in result.RemoveAfter)
-            {
-                changeCount += await dbContext.PlayoutItems
-                    .Where(pi => pi.PlayoutId == playout.Id)
-                    .Where(pi => pi.Start >= removeAfter.UtcDateTime)
-                    .ExecuteDeleteAsync(cancellationToken);
-            }
-
-            if (result.ItemsToRemove.Count > 0)
-            {
-                changeCount += await dbContext.PlayoutItems
-                    .Where(pi => result.ItemsToRemove.Contains(pi.Id))
-                    .ExecuteDeleteAsync(cancellationToken);
-            }
-
-            if (result.AddedItems.Count > 0)
-            {
-                changeCount += 1;
-                bool anyWatermarks = result.AddedItems.Any(i =>
-                    i.PlayoutItemWatermarks is not null && i.PlayoutItemWatermarks.Count > 0);
-                bool anyGraphicsElements = result.AddedItems.Any(i =>
-                    i.PlayoutItemGraphicsElements is not null && i.PlayoutItemGraphicsElements.Count > 0);
-                if (anyWatermarks || anyGraphicsElements)
+            return await buildResult.MatchAsync<Either<BaseError, PlayoutBuildResult>>(
+                async result =>
                 {
-                    // need to use slow ef core to also insert watermarks and graphics elements properly
-                    await dbContext.AddRangeAsync(result.AddedItems, cancellationToken);
-                }
-                else
+                    var changeCount = 0;
+
+                    if (result.RerunHistoryToRemove.Count > 0)
+                    {
+                        changeCount += await dbContext.RerunHistory
+                            .Where(rh => result.RerunHistoryToRemove.Contains(rh.Id))
+                            .ExecuteDeleteAsync(cancellationToken);
+                    }
+
+                    if (result.AddedRerunHistory.Count > 0)
+                    {
+                        changeCount += 1;
+                        await dbContext.BulkInsertAsync(result.AddedRerunHistory, cancellationToken: cancellationToken);
+                    }
+
+                    if (result.ClearItems)
+                    {
+                        changeCount += await dbContext.PlayoutItems
+                            .Where(pi => pi.PlayoutId == playout.Id)
+                            .ExecuteDeleteAsync(cancellationToken);
+                    }
+
+                    foreach (DateTimeOffset removeBefore in result.RemoveBefore)
+                    {
+                        changeCount += await dbContext.PlayoutItems
+                            .Where(pi => pi.PlayoutId == playout.Id)
+                            .Where(pi => pi.Finish < removeBefore.UtcDateTime - referenceData.MaxPlayoutOffset)
+                            .ExecuteDeleteAsync(cancellationToken);
+                    }
+
+                    foreach (DateTimeOffset removeAfter in result.RemoveAfter)
+                    {
+                        changeCount += await dbContext.PlayoutItems
+                            .Where(pi => pi.PlayoutId == playout.Id)
+                            .Where(pi => pi.Start >= removeAfter.UtcDateTime)
+                            .ExecuteDeleteAsync(cancellationToken);
+                    }
+
+                    if (result.ItemsToRemove.Count > 0)
+                    {
+                        changeCount += await dbContext.PlayoutItems
+                            .Where(pi => result.ItemsToRemove.Contains(pi.Id))
+                            .ExecuteDeleteAsync(cancellationToken);
+                    }
+
+                    if (result.AddedItems.Count > 0)
+                    {
+                        changeCount += 1;
+                        bool anyWatermarks = result.AddedItems.Any(i =>
+                            i.PlayoutItemWatermarks is not null && i.PlayoutItemWatermarks.Count > 0);
+                        bool anyGraphicsElements = result.AddedItems.Any(i =>
+                            i.PlayoutItemGraphicsElements is not null && i.PlayoutItemGraphicsElements.Count > 0);
+                        if (anyWatermarks || anyGraphicsElements)
+                        {
+                            // need to use slow ef core to also insert watermarks and graphics elements properly
+                            await dbContext.AddRangeAsync(result.AddedItems, cancellationToken);
+                        }
+                        else
+                        {
+                            // no watermarks or graphics, bulk insert is ok
+                            await dbContext.BulkInsertAsync(result.AddedItems, cancellationToken: cancellationToken);
+                        }
+                    }
+
+                    if (result.HistoryToRemove.Count > 0)
+                    {
+                        changeCount += await dbContext.PlayoutHistory
+                            .Where(ph => result.HistoryToRemove.Contains(ph.Id))
+                            .ExecuteDeleteAsync(cancellationToken);
+                    }
+
+                    if (result.AddedHistory.Count > 0)
+                    {
+                        changeCount += 1;
+                        await dbContext.BulkInsertAsync(result.AddedHistory, cancellationToken: cancellationToken);
+                    }
+
+                    // let any active segmenter processes know that the playout has been modified
+                    // and therefore the segmenter may need to seek into the next item instead of
+                    // starting at the beginning (if already working ahead)
+                    changeCount += await dbContext.SaveChangesAsync(cancellationToken);
+                    bool hasChanges = changeCount > 0;
+
+                    if (request.Mode != PlayoutBuildMode.Continue && hasChanges)
+                    {
+                        _ffmpegSegmenterService.PlayoutUpdated(referenceData.Channel.Number);
+                    }
+
+                    await _workerChannel.WriteAsync(
+                        new CheckForOverlappingPlayoutItems(request.PlayoutId),
+                        cancellationToken);
+
+                    await _workerChannel.WriteAsync(new InsertPlayoutGaps(request.PlayoutId), cancellationToken);
+
+                    string fileName = Path.Combine(FileSystemLayout.ChannelGuideCacheFolder, $"{channelNumber}.xml");
+                    if (hasChanges || !File.Exists(fileName) ||
+                        playout.ScheduleKind is PlayoutScheduleKind.ExternalJson)
+                    {
+                        await _workerChannel.WriteAsync(new RefreshChannelData(channelNumber), cancellationToken);
+
+                        // refresh guide data for all mirror channels, too
+                        List<string> maybeMirrors = await dbContext.Channels
+                            .AsNoTracking()
+                            .Filter(c => c.MirrorSourceChannelId == referenceData.Channel.Id)
+                            .Map(c => c.Number)
+                            .ToListAsync(cancellationToken);
+                        foreach (string mirror in maybeMirrors)
+                        {
+                            await _workerChannel.WriteAsync(new RefreshChannelData(mirror), cancellationToken);
+                        }
+                    }
+
+                    await _workerChannel.WriteAsync(new ExtractEmbeddedSubtitles(playout.Id), cancellationToken);
+
+                    newBuildStatus.Success = true;
+
+                    return result;
+                },
+                error =>
                 {
-                    // no watermarks or graphics, bulk insert is ok
-                    await dbContext.BulkInsertAsync(result.AddedItems, cancellationToken: cancellationToken);
-                }
-            }
+                    newBuildStatus.Success = false;
+                    newBuildStatus.Message = error.Value;
 
-            if (result.HistoryToRemove.Count > 0)
-            {
-                changeCount += await dbContext.PlayoutHistory
-                    .Where(ph => result.HistoryToRemove.Contains(ph.Id))
-                    .ExecuteDeleteAsync(cancellationToken);
-            }
-
-            if (result.AddedHistory.Count > 0)
-            {
-                changeCount += 1;
-                await dbContext.BulkInsertAsync(result.AddedHistory, cancellationToken: cancellationToken);
-            }
-
-            // let any active segmenter processes know that the playout has been modified
-            // and therefore the segmenter may need to seek into the next item instead of
-            // starting at the beginning (if already working ahead)
-            changeCount += await dbContext.SaveChangesAsync(cancellationToken);
-            bool hasChanges = changeCount > 0;
-
-            if (request.Mode != PlayoutBuildMode.Continue && hasChanges)
-            {
-                _ffmpegSegmenterService.PlayoutUpdated(referenceData.Channel.Number);
-            }
-
-            await _workerChannel.WriteAsync(
-                new CheckForOverlappingPlayoutItems(request.PlayoutId),
-                cancellationToken);
-
-            await _workerChannel.WriteAsync(new InsertPlayoutGaps(request.PlayoutId), cancellationToken);
-
-            string fileName = Path.Combine(FileSystemLayout.ChannelGuideCacheFolder, $"{channelNumber}.xml");
-            if (hasChanges || !File.Exists(fileName) ||
-                playout.ScheduleKind is PlayoutScheduleKind.ExternalJson)
-            {
-                await _workerChannel.WriteAsync(new RefreshChannelData(channelNumber), cancellationToken);
-
-                // refresh guide data for all mirror channels, too
-                List<string> maybeMirrors = await dbContext.Channels
-                    .AsNoTracking()
-                    .Filter(c => c.MirrorSourceChannelId == referenceData.Channel.Id)
-                    .Map(c => c.Number)
-                    .ToListAsync(cancellationToken);
-                foreach (string mirror in maybeMirrors)
-                {
-                    await _workerChannel.WriteAsync(new RefreshChannelData(mirror), cancellationToken);
-                }
-            }
-
-            await _workerChannel.WriteAsync(new ExtractEmbeddedSubtitles(playout.Id), cancellationToken);
-
-            newBuildStatus.Success = true;
-
-            return result;
+                    return error;
+                });
         }
         catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
         {

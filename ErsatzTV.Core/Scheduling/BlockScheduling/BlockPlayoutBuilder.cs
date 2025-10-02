@@ -27,7 +27,7 @@ public class BlockPlayoutBuilder(
 
     protected virtual ILogger Logger => logger;
 
-    public virtual async Task<PlayoutBuildResult> Build(
+    public virtual async Task<Either<BaseError, PlayoutBuildResult>> Build(
         DateTimeOffset start,
         Playout playout,
         PlayoutReferenceData referenceData,
@@ -56,6 +56,11 @@ public class BlockPlayoutBuilder(
         // get blocks to schedule
         List<EffectiveBlock> blocksToSchedule =
             EffectiveBlock.GetEffectiveBlocks(referenceData.PlayoutTemplates, start, daysToBuild);
+
+        if (blocksToSchedule.Count == 0)
+        {
+            return result;
+        }
 
         // always start at the beginning of the block
         start = blocksToSchedule.Min(b => b.Start);

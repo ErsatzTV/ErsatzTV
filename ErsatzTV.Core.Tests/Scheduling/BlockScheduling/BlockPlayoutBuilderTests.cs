@@ -150,18 +150,22 @@ public class BlockPlayoutBuilderTests
                 [],
                 TimeSpan.Zero);
 
-            PlayoutBuildResult result = await builder.Build(
+            Either<BaseError, PlayoutBuildResult> buildResult = await builder.Build(
                 now,
                 playout,
                 referenceData,
                 PlayoutBuildMode.Reset,
                 cancellationToken);
 
-            // this test only cares about "today"
-            result.AddedItems.RemoveAll(i => i.StartOffset.Date > now.Date);
+            buildResult.IsRight.ShouldBeTrue();
+            foreach (var result in buildResult.RightToSeq())
+            {
+                // this test only cares about "today"
+                result.AddedItems.RemoveAll(i => i.StartOffset.Date > now.Date);
 
-            result.AddedItems.Count.ShouldBe(1);
-            result.AddedItems[0].StartOffset.TimeOfDay.ShouldBe(TimeSpan.FromHours(9));
+                result.AddedItems.Count.ShouldBe(1);
+                result.AddedItems[0].StartOffset.TimeOfDay.ShouldBe(TimeSpan.FromHours(9));
+            }
         }
 
         [Test]
@@ -293,18 +297,22 @@ public class BlockPlayoutBuilderTests
                 [],
                 TimeSpan.Zero);
 
-            PlayoutBuildResult result = await builder.Build(
+            Either<BaseError, PlayoutBuildResult> buildResult = await builder.Build(
                 now,
                 playout,
                 referenceData,
                 PlayoutBuildMode.Reset,
                 cancellationToken);
 
-            // this test only cares about "today"
-            result.AddedItems.RemoveAll(i => i.StartOffset.Date > now.Date);
+            buildResult.IsRight.ShouldBeTrue();
+            foreach (var result in buildResult.RightToSeq())
+            {
+                // this test only cares about "today"
+                result.AddedItems.RemoveAll(i => i.StartOffset.Date > now.Date);
 
-            result.AddedItems.Count.ShouldBe(1);
-            result.AddedItems[0].StartOffset.TimeOfDay.ShouldBe(TimeSpan.FromHours(9));
+                result.AddedItems.Count.ShouldBe(1);
+                result.AddedItems[0].StartOffset.TimeOfDay.ShouldBe(TimeSpan.FromHours(9));
+            }
         }
 
         [Test]
@@ -459,18 +467,22 @@ public class BlockPlayoutBuilderTests
                 [],
                 TimeSpan.Zero);
 
-            PlayoutBuildResult result = await builder.Build(
+            Either<BaseError, PlayoutBuildResult> buildResult = await builder.Build(
                 now,
                 playout,
                 referenceData,
                 PlayoutBuildMode.Reset,
                 cancellationToken);
 
-            // this test only cares about "today"
-            result.AddedItems.RemoveAll(i => i.StartOffset.Date > now.Date);
+            buildResult.IsRight.ShouldBeTrue();
+            foreach (var result in buildResult.RightToSeq())
+            {
+                // this test only cares about "today"
+                result.AddedItems.RemoveAll(i => i.StartOffset.Date > now.Date);
 
-            result.AddedItems.Count.ShouldBe(1);
-            result.AddedItems[0].StartOffset.TimeOfDay.ShouldBe(TimeSpan.FromHours(9));
+                result.AddedItems.Count.ShouldBe(1);
+                result.AddedItems[0].StartOffset.TimeOfDay.ShouldBe(TimeSpan.FromHours(9));
+            }
         }
     }
 

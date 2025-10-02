@@ -18,7 +18,7 @@ public class ScriptedPlayoutBuilder(
     ILogger<ScriptedPlayoutBuilder> logger)
     : IScriptedPlayoutBuilder
 {
-    public async Task<PlayoutBuildResult> Build(
+    public async Task<Either<BaseError, PlayoutBuildResult>> Build(
         DateTimeOffset start,
         Playout playout,
         PlayoutReferenceData referenceData,
@@ -43,7 +43,7 @@ public class ScriptedPlayoutBuilder(
                 logger.LogError(
                     "Cannot build scripted playout; schedule file {File} does not exist",
                     scriptFile);
-                return result;
+                return BaseError.New($"Cannot build scripted playout; schedule file {scriptFile} does not exist");
             }
 
             var arguments = new List<string>
@@ -102,6 +102,8 @@ public class ScriptedPlayoutBuilder(
                     "Scripted playout process exited with code {Code}: {Error}",
                     commandResult.ExitCode,
                     commandResult.StandardError);
+                return BaseError.New(
+                    $"Scripted playout process exited with code {commandResult.ExitCode}: {commandResult.StandardError}");
             }
 
             playout.Anchor = schedulingEngine.GetAnchor();
@@ -111,12 +113,12 @@ public class ScriptedPlayoutBuilder(
         catch (OperationCanceledException)
         {
             logger.LogWarning("Scripted playout build timed out after {TimeoutSeconds} seconds", timeoutSeconds);
-            throw new TimeoutException($"Scripted playout build timed out after {timeoutSeconds} seconds");
+            return BaseError.New($"Scripted playout build timed out after {timeoutSeconds} seconds");
         }
         catch (Exception ex)
         {
             logger.LogWarning(ex, "Unexpected exception building scripted playout");
-            throw;
+            return BaseError.New($"Unexpected exception building scripted playout: {ex}");
         }
         finally
         {
