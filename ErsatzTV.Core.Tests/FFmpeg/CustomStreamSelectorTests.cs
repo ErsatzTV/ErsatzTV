@@ -1,9 +1,11 @@
+using Destructurama;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Tests.Fakes;
-using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Logging;
 using NUnit.Framework;
+using Serilog;
 using Shouldly;
 
 namespace ErsatzTV.Core.Tests.FFmpeg;
@@ -14,6 +16,21 @@ public class CustomStreamSelectorTests
     [TestFixture]
     public class SelectStreams
     {
+        private readonly ILogger<CustomStreamSelector> _logger;
+
+        public SelectStreams()
+        {
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Debug()
+                .WriteTo.Console()
+                .Destructure.UsingAttributes()
+                .CreateLogger();
+
+            ILoggerFactory loggerFactory = new LoggerFactory().AddSerilog(Log.Logger);
+
+            _logger = loggerFactory.CreateLogger<CustomStreamSelector>();
+        }
+
         [SetUp]
         public void SetUp()
         {
@@ -27,11 +44,34 @@ public class CustomStreamSelectorTests
 
             _subtitles =
             [
-                new Subtitle { Id = 1, Language = "eng", Title = "Words", SubtitleKind = SubtitleKind.Embedded },
-                new Subtitle { Id = 2, Language = "en", Title = "Signs" },
-                new Subtitle { Id = 3, Language = "en", Title = "Songs" },
-                new Subtitle { Id = 4, Language = "en", Forced = true, SubtitleKind = SubtitleKind.Sidecar },
-                new Subtitle { Id = 5, Language = "jp" }
+                new Subtitle
+                {
+                    Id = 1,
+                    Language = "eng",
+                    Title = "Words",
+                    SubtitleKind = SubtitleKind.Embedded,
+                    IsExtracted = false,
+                    Codec = "srt"
+                },
+                new Subtitle
+                {
+                    Id = 2,
+                    Language = "eng",
+                    Title = "Words",
+                    SubtitleKind = SubtitleKind.Embedded,
+                    IsExtracted = true,
+                    Codec = "srt"
+                },
+                new Subtitle
+                {
+                    Id = 3, Language = "en", Title = "Signs", SubtitleKind = SubtitleKind.Embedded, IsExtracted = true
+                },
+                new Subtitle
+                {
+                    Id = 4, Language = "en", Title = "Songs", SubtitleKind = SubtitleKind.Embedded, IsExtracted = true
+                },
+                new Subtitle { Id = 5, Language = "en", Forced = true, SubtitleKind = SubtitleKind.Sidecar },
+                new Subtitle { Id = 6, Language = "jp", SubtitleKind = SubtitleKind.Embedded, IsExtracted = true }
             ];
         }
 
@@ -46,7 +86,7 @@ public class CustomStreamSelectorTests
         [Test]
         public async Task Should_Select_eng_Audio_Exact_Match()
         {
-            const string yaml =
+            const string YAML =
                 """
                 ---
                 items:
@@ -55,8 +95,8 @@ public class CustomStreamSelectorTests
                 """;
 
             var streamSelector = new CustomStreamSelector(
-                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = yaml }]),
-                new NullLogger<CustomStreamSelector>());
+                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
+                _logger);
 
             StreamSelectorResult result = await streamSelector.SelectStreams(
                 _channel,
@@ -76,7 +116,7 @@ public class CustomStreamSelectorTests
         [Test]
         public async Task Should_Select_und_Audio_Missing_Language()
         {
-            const string yaml =
+            const string YAML =
                 """
                 ---
                 items:
@@ -84,8 +124,8 @@ public class CustomStreamSelectorTests
                 """;
 
             var streamSelector = new CustomStreamSelector(
-                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = yaml }]),
-                new NullLogger<CustomStreamSelector>());
+                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
+                _logger);
 
             StreamSelectorResult result = await streamSelector.SelectStreams(
                 _channel,
@@ -105,7 +145,7 @@ public class CustomStreamSelectorTests
         [Test]
         public async Task Should_Select_eng_Audio_Exact_Match_Multiple_Audio_Languages()
         {
-            const string yaml =
+            const string YAML =
                 """
                 ---
                 items:
@@ -113,8 +153,8 @@ public class CustomStreamSelectorTests
                 """;
 
             var streamSelector = new CustomStreamSelector(
-                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = yaml }]),
-                new NullLogger<CustomStreamSelector>());
+                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
+                _logger);
 
             StreamSelectorResult result = await streamSelector.SelectStreams(
                 _channel,
@@ -134,7 +174,7 @@ public class CustomStreamSelectorTests
         [Test]
         public async Task Should_Select_eng_Audio_Exact_Match_Multiple_Items()
         {
-            const string yaml =
+            const string YAML =
                 """
                 ---
                 items:
@@ -148,8 +188,8 @@ public class CustomStreamSelectorTests
                 """;
 
             var streamSelector = new CustomStreamSelector(
-                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = yaml }]),
-                new NullLogger<CustomStreamSelector>());
+                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
+                _logger);
 
             StreamSelectorResult result = await streamSelector.SelectStreams(
                 _channel,
@@ -169,7 +209,7 @@ public class CustomStreamSelectorTests
         [Test]
         public async Task Should_Select_eng_Audio_Pattern_Match()
         {
-            const string yaml =
+            const string YAML =
                 """
                 ---
                 items:
@@ -178,8 +218,8 @@ public class CustomStreamSelectorTests
                 """;
 
             var streamSelector = new CustomStreamSelector(
-                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = yaml }]),
-                new NullLogger<CustomStreamSelector>());
+                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
+                _logger);
 
             StreamSelectorResult result = await streamSelector.SelectStreams(
                 _channel,
@@ -199,7 +239,7 @@ public class CustomStreamSelectorTests
         [Test]
         public async Task Should_Select_en_Audio_Pattern_Match()
         {
-            const string yaml =
+            const string YAML =
                 """
                 ---
                 items:
@@ -209,8 +249,8 @@ public class CustomStreamSelectorTests
             _audioVersion = GetTestAudioVersion("en");
 
             var streamSelector = new CustomStreamSelector(
-                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = yaml }]),
-                new NullLogger<CustomStreamSelector>());
+                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
+                _logger);
 
             StreamSelectorResult result = await streamSelector.SelectStreams(
                 _channel,
@@ -230,7 +270,7 @@ public class CustomStreamSelectorTests
         [Test]
         public async Task disable_subtitles_Should_Select_No_Subtitles()
         {
-            const string yaml =
+            const string YAML =
                 """
                 ---
                 items:
@@ -240,8 +280,8 @@ public class CustomStreamSelectorTests
                 """;
 
             var streamSelector = new CustomStreamSelector(
-                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = yaml }]),
-                new NullLogger<CustomStreamSelector>());
+                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
+                _logger);
 
             StreamSelectorResult result = await streamSelector.SelectStreams(
                 _channel,
@@ -253,9 +293,9 @@ public class CustomStreamSelectorTests
         }
 
         [Test]
-        public async Task Should_Select_eng_Subtitle_Exact_Match()
+        public async Task Should_Select_eng_Subtitle_Exact_Match_Extracted()
         {
-            const string yaml =
+            const string YAML =
                 """
                 ---
                 items:
@@ -266,8 +306,8 @@ public class CustomStreamSelectorTests
                 """;
 
             var streamSelector = new CustomStreamSelector(
-                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = yaml }]),
-                new NullLogger<CustomStreamSelector>());
+                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
+                _logger);
 
             StreamSelectorResult result = await streamSelector.SelectStreams(
                 _channel,
@@ -279,7 +319,7 @@ public class CustomStreamSelectorTests
 
             foreach (Subtitle subtitle in result.Subtitle)
             {
-                subtitle.Id.ShouldBe(1);
+                subtitle.Id.ShouldBe(2);
                 subtitle.Language.ShouldBe("eng");
             }
         }
@@ -287,7 +327,7 @@ public class CustomStreamSelectorTests
         [Test]
         public async Task Should_Select_eng_Subtitle_Pattern_Match()
         {
-            const string yaml =
+            const string YAML =
                 """
                 ---
                 items:
@@ -298,8 +338,8 @@ public class CustomStreamSelectorTests
                 """;
 
             var streamSelector = new CustomStreamSelector(
-                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = yaml }]),
-                new NullLogger<CustomStreamSelector>());
+                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
+                _logger);
 
             StreamSelectorResult result = await streamSelector.SelectStreams(
                 _channel,
@@ -311,7 +351,7 @@ public class CustomStreamSelectorTests
 
             foreach (Subtitle subtitle in result.Subtitle)
             {
-                subtitle.Id.ShouldBe(1);
+                subtitle.Id.ShouldBe(2);
                 subtitle.Language.ShouldBe("eng");
             }
         }
@@ -319,7 +359,7 @@ public class CustomStreamSelectorTests
         [Test]
         public async Task Should_Select_en_Subtitle_Pattern_Match()
         {
-            const string yaml =
+            const string YAML =
                 """
                 ---
                 items:
@@ -332,12 +372,15 @@ public class CustomStreamSelectorTests
 
             _subtitles =
             [
-                new Subtitle { Id = 1, Language = "en", Title = "Words" }
+                new Subtitle
+                {
+                    Id = 1, Language = "en", Title = "Words", SubtitleKind = SubtitleKind.Embedded, IsExtracted = true
+                }
             ];
 
             var streamSelector = new CustomStreamSelector(
-                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = yaml }]),
-                new NullLogger<CustomStreamSelector>());
+                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
+                _logger);
 
             StreamSelectorResult result = await streamSelector.SelectStreams(
                 _channel,
@@ -357,7 +400,7 @@ public class CustomStreamSelectorTests
         [Test]
         public async Task Should_Select_No_Subtitle_Exact_Match_Multiple_Items()
         {
-            const string yaml =
+            const string YAML =
                 """
                 ---
                 items:
@@ -371,8 +414,8 @@ public class CustomStreamSelectorTests
                 """;
 
             var streamSelector = new CustomStreamSelector(
-                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = yaml }]),
-                new NullLogger<CustomStreamSelector>());
+                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
+                _logger);
 
             StreamSelectorResult result = await streamSelector.SelectStreams(
                 _channel,
@@ -394,7 +437,7 @@ public class CustomStreamSelectorTests
         [Test]
         public async Task Should_Select_Foreign_Audio_And_English_Subtitle_Multiple_Items()
         {
-            const string yaml =
+            const string YAML =
                 """
                 ---
                 items:
@@ -408,8 +451,8 @@ public class CustomStreamSelectorTests
                 """;
 
             var streamSelector = new CustomStreamSelector(
-                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = yaml }]),
-                new NullLogger<CustomStreamSelector>());
+                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
+                _logger);
 
             StreamSelectorResult result = await streamSelector.SelectStreams(
                 _channel,
@@ -429,7 +472,7 @@ public class CustomStreamSelectorTests
 
             foreach (Subtitle subtitle in result.Subtitle)
             {
-                subtitle.Id.ShouldBe(1);
+                subtitle.Id.ShouldBe(2);
                 subtitle.Language.ShouldBe("eng");
             }
         }
@@ -437,7 +480,7 @@ public class CustomStreamSelectorTests
         [Test]
         public async Task Should_Select_English_Audio_No_Subtitles_Time_Of_Day_Content_Condition_Fail()
         {
-            const string yaml =
+            const string YAML =
                 """
                 ---
                 items:
@@ -450,8 +493,8 @@ public class CustomStreamSelectorTests
                 """;
 
             var streamSelector = new CustomStreamSelector(
-                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = yaml }]),
-                new NullLogger<CustomStreamSelector>());
+                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
+                _logger);
 
             StreamSelectorResult result = await streamSelector.SelectStreams(
                 _channel,
@@ -473,7 +516,7 @@ public class CustomStreamSelectorTests
         [Test]
         public async Task Should_Select_Foreign_Audio_And_English_Subtitle_Time_Of_Day_Content_Condition_Match()
         {
-            const string yaml =
+            const string YAML =
                 """
                 ---
                 items:
@@ -486,8 +529,8 @@ public class CustomStreamSelectorTests
                 """;
 
             var streamSelector = new CustomStreamSelector(
-                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = yaml }]),
-                new NullLogger<CustomStreamSelector>());
+                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
+                _logger);
 
             StreamSelectorResult result = await streamSelector.SelectStreams(
                 _channel,
@@ -507,7 +550,7 @@ public class CustomStreamSelectorTests
 
             foreach (Subtitle subtitle in result.Subtitle)
             {
-                subtitle.Id.ShouldBe(1);
+                subtitle.Id.ShouldBe(2);
                 subtitle.Language.ShouldBe("eng");
             }
         }
@@ -515,7 +558,7 @@ public class CustomStreamSelectorTests
         [Test]
         public async Task Should_Ignore_Blocked_Audio_Title()
         {
-            const string yaml =
+            const string YAML =
                 """
                 ---
                 items:
@@ -526,8 +569,8 @@ public class CustomStreamSelectorTests
                 """;
 
             var streamSelector = new CustomStreamSelector(
-                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = yaml }]),
-                new NullLogger<CustomStreamSelector>());
+                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
+                _logger);
 
             StreamSelectorResult result = await streamSelector.SelectStreams(
                 _channel,
@@ -547,7 +590,7 @@ public class CustomStreamSelectorTests
         [Test]
         public async Task Should_Select_Allowed_Audio_Title()
         {
-            const string yaml =
+            const string YAML =
                 """
                 ---
                 items:
@@ -558,8 +601,8 @@ public class CustomStreamSelectorTests
                 """;
 
             var streamSelector = new CustomStreamSelector(
-                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = yaml }]),
-                new NullLogger<CustomStreamSelector>());
+                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
+                _logger);
 
             StreamSelectorResult result = await streamSelector.SelectStreams(
                 _channel,
@@ -579,7 +622,7 @@ public class CustomStreamSelectorTests
         [Test]
         public async Task Should_Ignore_Blocked_Subtitle_Title()
         {
-            const string yaml =
+            const string YAML =
                 """
                 ---
                 items:
@@ -592,8 +635,8 @@ public class CustomStreamSelectorTests
                 """;
 
             var streamSelector = new CustomStreamSelector(
-                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = yaml }]),
-                new NullLogger<CustomStreamSelector>());
+                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
+                _logger);
 
             StreamSelectorResult result = await streamSelector.SelectStreams(
                 _channel,
@@ -605,7 +648,7 @@ public class CustomStreamSelectorTests
 
             foreach (Subtitle subtitle in result.Subtitle)
             {
-                subtitle.Id.ShouldBe(3);
+                subtitle.Id.ShouldBe(4);
                 subtitle.Language.ShouldBe("en");
             }
         }
@@ -613,7 +656,7 @@ public class CustomStreamSelectorTests
         [Test]
         public async Task Should_Select_Allowed_Subtitle_Title()
         {
-            const string yaml =
+            const string YAML =
                 """
                 ---
                 items:
@@ -626,8 +669,8 @@ public class CustomStreamSelectorTests
                 """;
 
             var streamSelector = new CustomStreamSelector(
-                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = yaml }]),
-                new NullLogger<CustomStreamSelector>());
+                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
+                _logger);
 
             StreamSelectorResult result = await streamSelector.SelectStreams(
                 _channel,
@@ -639,7 +682,7 @@ public class CustomStreamSelectorTests
 
             foreach (Subtitle subtitle in result.Subtitle)
             {
-                subtitle.Id.ShouldBe(3);
+                subtitle.Id.ShouldBe(4);
                 subtitle.Language.ShouldBe("en");
             }
         }
@@ -647,7 +690,7 @@ public class CustomStreamSelectorTests
         [Test]
         public async Task Should_Select_Condition_Forced_Subtitle()
         {
-            const string yaml =
+            const string YAML =
                 """
                 ---
                 items:
@@ -657,8 +700,8 @@ public class CustomStreamSelectorTests
                 """;
 
             var streamSelector = new CustomStreamSelector(
-                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = yaml }]),
-                new NullLogger<CustomStreamSelector>());
+                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
+                _logger);
 
             StreamSelectorResult result = await streamSelector.SelectStreams(
                 _channel,
@@ -670,7 +713,7 @@ public class CustomStreamSelectorTests
 
             foreach (Subtitle subtitle in result.Subtitle)
             {
-                subtitle.Id.ShouldBe(4);
+                subtitle.Id.ShouldBe(5);
                 subtitle.Language.ShouldBe("en");
             }
         }
@@ -678,7 +721,7 @@ public class CustomStreamSelectorTests
         [Test]
         public async Task Should_Select_Condition_External_Subtitle()
         {
-            const string yaml =
+            const string YAML =
                 """
                 ---
                 items:
@@ -688,8 +731,8 @@ public class CustomStreamSelectorTests
                 """;
 
             var streamSelector = new CustomStreamSelector(
-                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = yaml }]),
-                new NullLogger<CustomStreamSelector>());
+                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
+                _logger);
 
             StreamSelectorResult result = await streamSelector.SelectStreams(
                 _channel,
@@ -701,7 +744,7 @@ public class CustomStreamSelectorTests
 
             foreach (Subtitle subtitle in result.Subtitle)
             {
-                subtitle.Id.ShouldBe(4);
+                subtitle.Id.ShouldBe(5);
                 subtitle.Language.ShouldBe("en");
             }
         }
@@ -709,7 +752,7 @@ public class CustomStreamSelectorTests
         [Test]
         public async Task Should_Select_Condition_Audio_Title()
         {
-            const string yaml =
+            const string YAML =
                 """
                 ---
                 items:
@@ -719,8 +762,8 @@ public class CustomStreamSelectorTests
                 """;
 
             var streamSelector = new CustomStreamSelector(
-                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = yaml }]),
-                new NullLogger<CustomStreamSelector>());
+                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
+                _logger);
 
             StreamSelectorResult result = await streamSelector.SelectStreams(
                 _channel,
@@ -740,7 +783,7 @@ public class CustomStreamSelectorTests
         [Test]
         public async Task Should_Select_Condition_Audio_Channels()
         {
-            const string yaml =
+            const string YAML =
                 """
                 ---
                 items:
@@ -750,8 +793,8 @@ public class CustomStreamSelectorTests
                 """;
 
             var streamSelector = new CustomStreamSelector(
-                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = yaml }]),
-                new NullLogger<CustomStreamSelector>());
+                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
+                _logger);
 
             StreamSelectorResult result = await streamSelector.SelectStreams(
                 _channel,
@@ -771,7 +814,7 @@ public class CustomStreamSelectorTests
         [Test]
         public async Task Should_Select_Prioritized_Audio_Language()
         {
-            const string yaml =
+            const string YAML =
                 """
                 ---
                 items:
@@ -780,8 +823,8 @@ public class CustomStreamSelectorTests
                 """;
 
             var streamSelector = new CustomStreamSelector(
-                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = yaml }]),
-                new NullLogger<CustomStreamSelector>());
+                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
+                _logger);
 
             StreamSelectorResult result = await streamSelector.SelectStreams(
                 _channel,
@@ -801,7 +844,7 @@ public class CustomStreamSelectorTests
         [Test]
         public async Task Should_Select_Prioritized_Subtitle_Language()
         {
-            const string yaml =
+            const string YAML =
                 """
                 ---
                 items:
@@ -811,8 +854,8 @@ public class CustomStreamSelectorTests
                 """;
 
             var streamSelector = new CustomStreamSelector(
-                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = yaml }]),
-                new NullLogger<CustomStreamSelector>());
+                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
+                _logger);
 
             StreamSelectorResult result = await streamSelector.SelectStreams(
                 _channel,
@@ -824,7 +867,7 @@ public class CustomStreamSelectorTests
 
             foreach (Subtitle subtitle in result.Subtitle)
             {
-                subtitle.Id.ShouldBe(5);
+                subtitle.Id.ShouldBe(6);
                 subtitle.Language.ShouldBe("jp");
             }
         }
@@ -832,7 +875,7 @@ public class CustomStreamSelectorTests
         [Test]
         public async Task Should_Select_No_Streams_When_Languages_Do_Not_Match()
         {
-            const string yaml =
+            const string YAML =
                 """
                 ---
                 items:
@@ -843,8 +886,8 @@ public class CustomStreamSelectorTests
                 """;
 
             var streamSelector = new CustomStreamSelector(
-                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = yaml }]),
-                new NullLogger<CustomStreamSelector>());
+                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
+                _logger);
 
             StreamSelectorResult result = await streamSelector.SelectStreams(
                 _channel,
