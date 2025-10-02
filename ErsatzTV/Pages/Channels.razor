@@ -83,7 +83,7 @@
                                     </MudIconButton>
                                 </MudTooltip>
                             }
-                            else if (CanPreviewChannel(context) && !_ffmpegProfilesThatCanPreview[context.FFmpegProfileId])
+                            else if (CanPreviewChannel(context) && _ffmpegProfilesThatCanPreview.ContainsKey(context.FFmpegProfileId) && !_ffmpegProfilesThatCanPreview[context.FFmpegProfileId])
                             {
                                 <MudTooltip Text="Channel preview requires FFmpeg Profile compatible with this browser">
                                     <div style="height: 48px; width: 48px; align-items: center; display: flex; justify-content: center">
