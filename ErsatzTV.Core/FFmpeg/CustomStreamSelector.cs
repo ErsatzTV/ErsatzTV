@@ -205,7 +205,16 @@ public class CustomStreamSelector(ILocalFileSystem localFileSystem, ILogger<Cust
                             }
                         }
 
-                        if (!matches)
+                        if (subtitle.SubtitleKind is SubtitleKind.Embedded && !subtitle.IsImage &&
+                            !subtitle.IsExtracted)
+                        {
+                            candidateSubtitles.Remove(subtitle);
+
+                            logger.LogDebug(
+                                "Subtitle {@Subtitle} is embedded text subtitle and NOT extracted; ignoring",
+                                new { Language = safeLanguage, Title = safeTitle });
+                        }
+                        else if (!matches)
                         {
                             candidateSubtitles.Remove(subtitle);
 

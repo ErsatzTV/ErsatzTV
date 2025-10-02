@@ -100,6 +100,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - Note that looping is relative to the start of the content, so this works best with permanent watermarks
 - Fix some more hls.js warnings by adding codec information to multi-variant playlists
 - Fix hardware decode of h264 constrained baseline content using VAAPI accel
+- Custom stream selector: ignore embedded text subtitles that have not been extracted
 
 ### Changed
 - Filler presets: use separate text fields for `hours`, `minutes` and `seconds` duration
