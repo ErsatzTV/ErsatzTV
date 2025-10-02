@@ -5,7 +5,7 @@ namespace ErsatzTV.Core.Interfaces.Scheduling;
 
 public interface IBlockPlayoutBuilder
 {
-    Task<PlayoutBuildResult> Build(
+    Task<Either<BaseError, PlayoutBuildResult>> Build(
         DateTimeOffset start,
         Playout playout,
         PlayoutReferenceData referenceData,

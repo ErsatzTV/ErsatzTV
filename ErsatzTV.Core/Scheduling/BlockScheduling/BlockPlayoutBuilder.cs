@@ -27,7 +27,7 @@ public class BlockPlayoutBuilder(
 
     protected virtual ILogger Logger => logger;
 
-    public virtual async Task<PlayoutBuildResult> Build(
+    public virtual async Task<Either<BaseError, PlayoutBuildResult>> Build(
         DateTimeOffset start,
         Playout playout,
         PlayoutReferenceData referenceData,
