@@ -1821,6 +1821,25 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.ToTable("Playout", (string)null);
                 });
 
+            modelBuilder.Entity("ErsatzTV.Core.Domain.PlayoutBuildStatus", b =>
+                {
+                    b.Property<int>("PlayoutId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTimeOffset>("LastBuild")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Message")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("Success")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("PlayoutId");
+
+                    b.ToTable("PlayoutBuildStatus", (string)null);
+                });
+
             modelBuilder.Entity("ErsatzTV.Core.Domain.PlayoutGap", b =>
                 {
                     b.Property<int>("Id")
@@ -4839,6 +4858,17 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Navigation("ProgramSchedule");
                 });
 
+            modelBuilder.Entity("ErsatzTV.Core.Domain.PlayoutBuildStatus", b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.Playout", "Playout")
+                        .WithOne("BuildStatus")
+                        .HasForeignKey("ErsatzTV.Core.Domain.PlayoutBuildStatus", "PlayoutId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Playout");
+                });
+
             modelBuilder.Entity("ErsatzTV.Core.Domain.PlayoutGap", b =>
                 {
                     b.HasOne("ErsatzTV.Core.Domain.Playout", "Playout")
@@ -6359,6 +6389,8 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.Playout", b =>
                 {
+                    b.Navigation("BuildStatus");
+
                     b.Navigation("FillGroupIndices");
 
                     b.Navigation("Gaps");

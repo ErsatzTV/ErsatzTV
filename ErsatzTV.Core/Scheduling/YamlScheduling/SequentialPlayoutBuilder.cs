@@ -41,7 +41,7 @@ public class SequentialPlayoutBuilder(
         if (!localFileSystem.FileExists(playout.ScheduleFile))
         {
             logger.LogWarning("Sequential schedule file {File} does not exist; aborting.", playout.ScheduleFile);
-            return result;
+            throw new PlayoutBuildException($"Sequential schedule file {playout.ScheduleFile} does not exist");
         }
 
         Option<YamlPlayoutDefinition> maybePlayoutDefinition =
@@ -49,7 +49,7 @@ public class SequentialPlayoutBuilder(
         if (maybePlayoutDefinition.IsNone)
         {
             logger.LogWarning("Sequential schedule file {File} is invalid; aborting.", playout.ScheduleFile);
-            return result;
+            throw new PlayoutBuildException($"Sequential schedule file {playout.ScheduleFile} is invalid");
         }
 
         // using ValueUnsafe to avoid nesting
@@ -96,12 +96,13 @@ public class SequentialPlayoutBuilder(
                 if (maybeImportedDefinition.IsNone)
                 {
                     logger.LogWarning("YAML playout import {File} is invalid; aborting.", import);
-                    return result;
+                    throw new PlayoutBuildException($"YAML playout import {import} is invalid");
                 }
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, "Unexpected exception loading YAML playout import");
+                throw new PlayoutBuildException("Unexpected exception loading YAML playout import", ex);
             }
         }
 
@@ -235,7 +236,7 @@ public class SequentialPlayoutBuilder(
         if (DetectCycle(context.Definition))
         {
             logger.LogError("YAML sequence contains a cycle; unable to build playout");
-            return result;
+            throw new PlayoutBuildException("YAML sequence contains a cycle; unable to build playout");
         }
 
         var flattenCount = 0;

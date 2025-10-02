@@ -48,7 +48,8 @@ public class
             playout.Channel.PlayoutMode,
             playout.ProgramSchedule?.Name ?? string.Empty,
             playout.ScheduleFile,
-            playout.DailyRebuildTime);
+            playout.DailyRebuildTime,
+            playout.BuildStatus);
     }
 
     private async Task<Validation<BaseError, Playout>> Validate(

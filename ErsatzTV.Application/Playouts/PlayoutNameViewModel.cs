@@ -10,7 +10,8 @@ public record PlayoutNameViewModel(
     ChannelPlayoutMode PlayoutMode,
     string ScheduleName,
     string ScheduleFile,
-    TimeSpan? DbDailyRebuildTime)
+    TimeSpan? DbDailyRebuildTime,
+    PlayoutBuildStatus BuildStatus)
 {
     public Option<TimeSpan> DailyRebuildTime => Optional(DbDailyRebuildTime);
 

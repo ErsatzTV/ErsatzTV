@@ -224,31 +224,38 @@
             {
                 <MudText Typo="Typo.h5" Class="mt-10 mb-2">Playout Detail</MudText>
                 <MudDivider Class="mb-6"/>
-                <MudTable Hover="true"
-                          Dense="true"
-                          @bind-RowsPerPage="@_detailRowsPerPage"
-                          ServerData="@(new Func<TableState, CancellationToken, Task<TableData<PlayoutItemViewModel>>>(DetailServerReload))"
-                          @ref="_detailTable"
-                          RowClassFunc="PlayoutItemViewRowClassFunc">
-                    <ToolBarContent>
-                        <MudSwitch T="bool" Class="ml-6" @bind-Value="@ShowFiller" Color="Color.Secondary" Label="Show Filler"/>
-                    </ToolBarContent>
-                    <HeaderContent>
-                        <MudTh>Start</MudTh>
-                        <MudTh>Finish</MudTh>
-                        <MudTh>Media Item</MudTh>
-                        <MudTh>Duration</MudTh>
-                    </HeaderContent>
-                    <RowTemplate>
-                        <MudTd DataLabel="Start">@context.Start.ToString("G", _dtf)</MudTd>
-                        <MudTd DataLabel="Finish">@context.Finish.ToString("G", _dtf)</MudTd>
-                        <MudTd DataLabel="Media Item">@context.Title</MudTd>
-                        <MudTd DataLabel="Duration">@context.Duration</MudTd>
-                    </RowTemplate>
-                    <PagerContent>
-                        <MudTablePager/>
-                    </PagerContent>
-                </MudTable>
+                @if (!string.IsNullOrWhiteSpace(_buildMessage))
+                {
+                    <MudAlert Severity="Severity.Warning">@_buildMessage</MudAlert>
+                }
+                else
+                {
+                    <MudTable Hover="true"
+                              Dense="true"
+                              @bind-RowsPerPage="@_detailRowsPerPage"
+                              ServerData="@(new Func<TableState, CancellationToken, Task<TableData<PlayoutItemViewModel>>>(DetailServerReload))"
+                              @ref="_detailTable"
+                              RowClassFunc="PlayoutItemViewRowClassFunc">
+                        <ToolBarContent>
+                            <MudSwitch T="bool" Class="ml-6" @bind-Value="@ShowFiller" Color="Color.Secondary" Label="Show Filler"/>
+                        </ToolBarContent>
+                        <HeaderContent>
+                            <MudTh>Start</MudTh>
+                            <MudTh>Finish</MudTh>
+                            <MudTh>Media Item</MudTh>
+                            <MudTh>Duration</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="Start">@context.Start.ToString("G", _dtf)</MudTd>
+                            <MudTd DataLabel="Finish">@context.Finish.ToString("G", _dtf)</MudTd>
+                            <MudTd DataLabel="Media Item">@context.Title</MudTd>
+                            <MudTd DataLabel="Duration">@context.Duration</MudTd>
+                        </RowTemplate>
+                        <PagerContent>
+                            <MudTablePager/>
+                        </PagerContent>
+                    </MudTable>
+                }
             }
         </MudContainer>
     </div>
@@ -259,6 +266,7 @@
 
     private readonly DateTimeFormatInfo _dtf = CultureInfo.CurrentUICulture.DateTimeFormat;
 
+    private readonly List<PlayoutNameViewModel> _currentPage = [];
     private MudTable<PlayoutNameViewModel> _table;
     private MudTable<PlayoutItemViewModel> _detailTable;
     private int _rowsPerPage = 10;
@@ -266,6 +274,7 @@
     private string _searchString;
     private int? _selectedPlayoutId;
     private bool _showFiller;
+    private string _buildMessage;
 
     private bool ShowFiller
     {
@@ -298,9 +307,19 @@
         // only refresh detail table on unlock operations (after playout has been modified)
         if (!notification.IsLocked)
         {
-            if (notification.PlayoutId == _selectedPlayoutId && _detailTable is not null)
+            int? previouslySelected = _selectedPlayoutId;
+
+            await InvokeAsync(() => _table.ReloadServerData());
+            _buildMessage = string.Empty;
+            _selectedPlayoutId = null;
+
+            if (notification.PlayoutId == previouslySelected)
             {
-                await InvokeAsync(() => _detailTable.ReloadServerData());
+                Option<PlayoutNameViewModel> maybeItem = _currentPage.Find(i => i.PlayoutId == previouslySelected);
+                foreach (var item in maybeItem)
+                {
+                    await InvokeAsync(() => PlayoutSelected(item));
+                }
             }
         }
 
@@ -335,6 +354,10 @@
         _selectedPlayoutId = playout.ScheduleKind is PlayoutScheduleKind.Classic or PlayoutScheduleKind.Block or PlayoutScheduleKind.Sequential or PlayoutScheduleKind.Scripted
             ? playout.PlayoutId
             : null;
+
+        _buildMessage = !playout.BuildStatus.Success && !string.IsNullOrWhiteSpace(playout.BuildStatus.Message)
+            ? playout.BuildStatus.Message
+            : string.Empty;
 
         if (_detailTable != null)
         {
@@ -416,6 +439,8 @@
         await Mediator.Send(new SaveConfigElementByKey(ConfigElementKey.PlayoutsPageSize, state.PageSize.ToString()), cancellationToken);
 
         PagedPlayoutsViewModel data = await Mediator.Send(new GetPagedPlayouts(_searchString, state.Page, state.PageSize), cancellationToken);
+        _currentPage.Clear();
+        _currentPage.AddRange(data.Page);
         return new TableData<PlayoutNameViewModel> { TotalItems = data.TotalCount, Items = data.Page };
     }
 
@@ -453,5 +478,24 @@
             () => "unscheduled");
     }
 
-    private string SelectedRowClassFunc(PlayoutNameViewModel element, int rowNumber) => _selectedPlayoutId != null && _selectedPlayoutId == element.PlayoutId ? "selected" : string.Empty;
+    private string SelectedRowClassFunc(PlayoutNameViewModel element, int rowNumber)
+    {
+        if (_selectedPlayoutId != null && _selectedPlayoutId == element.PlayoutId)
+        {
+            if (element.BuildStatus is { Success: false })
+            {
+                return "playout-build-failure-selected";
+            }
+
+            return "selected";
+        }
+
+        if (element.BuildStatus is { Success: false })
+        {
+            return "playout-build-failure";
+        }
+
+        return string.Empty;
+    }
+
 }

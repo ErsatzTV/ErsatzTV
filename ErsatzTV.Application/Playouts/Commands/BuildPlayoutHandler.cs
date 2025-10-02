@@ -28,7 +28,6 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
     private readonly IFFmpegSegmenterService _ffmpegSegmenterService;
     private readonly IPlayoutBuilder _playoutBuilder;
     private readonly IPlayoutTimeShifter _playoutTimeShifter;
-    private readonly IRerunHelper _rerunHelper;
     private readonly ChannelWriter<IBackgroundServiceRequest> _workerChannel;
     private readonly ISequentialPlayoutBuilder _sequentialPlayoutBuilder;
     private readonly IScriptedPlayoutBuilder _scriptedPlayoutBuilder;
@@ -45,7 +44,6 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
         IFFmpegSegmenterService ffmpegSegmenterService,
         IEntityLocker entityLocker,
         IPlayoutTimeShifter playoutTimeShifter,
-        IRerunHelper rerunHelper,
         ChannelWriter<IBackgroundServiceRequest> workerChannel)
     {
         _client = client;
@@ -59,7 +57,6 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
         _ffmpegSegmenterService = ffmpegSegmenterService;
         _entityLocker = entityLocker;
         _playoutTimeShifter = playoutTimeShifter;
-        _rerunHelper = rerunHelper;
         _workerChannel = workerChannel;
     }
 
@@ -109,6 +106,16 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
     {
         var channelName = "[unknown]";
 
+        await dbContext.PlayoutBuildStatus
+            .Where(pbs => pbs.PlayoutId == playout.Id)
+            .ExecuteDeleteAsync(cancellationToken);
+
+        var newBuildStatus = new PlayoutBuildStatus
+        {
+            PlayoutId = playout.Id,
+            LastBuild = DateTimeOffset.Now
+        };
+
         try
         {
             PlayoutReferenceData referenceData = await GetReferenceData(
@@ -157,7 +164,12 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
                 case PlayoutScheduleKind.None:
                 case PlayoutScheduleKind.Classic:
                 default:
-                    result = await _playoutBuilder.Build(request.Start, playout, referenceData, request.Mode, cancellationToken);
+                    result = await _playoutBuilder.Build(
+                        request.Start,
+                        playout,
+                        referenceData,
+                        request.Mode,
+                        cancellationToken);
                     break;
             }
 
@@ -275,10 +287,15 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
 
             await _workerChannel.WriteAsync(new ExtractEmbeddedSubtitles(playout.Id), cancellationToken);
 
+            newBuildStatus.Success = true;
+
             return result;
         }
         catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
         {
+            newBuildStatus.Success = false;
+            newBuildStatus.Message = $"Timeout building playout for channel {channelName}";
+
             _client.Notify(ex);
             return BaseError.New(
                 $"Timeout building playout for channel {channelName}; this may be a bug!");
@@ -287,9 +304,24 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
         {
             DebugBreak.Break();
 
+            newBuildStatus.Success = false;
+            newBuildStatus.Message = $"Unexpected error building playout for channel {channelName}: {ex}";
+
             _client.Notify(ex);
             return BaseError.New(
                 $"Unexpected error building playout for channel {channelName}: {ex.Message}");
+        }
+        finally
+        {
+            try
+            {
+                await dbContext.PlayoutBuildStatus.AddAsync(newBuildStatus, cancellationToken);
+                await dbContext.SaveChangesAsync(cancellationToken);
+            }
+            catch (Exception)
+            {
+                // do nothing
+            }
         }
     }
 

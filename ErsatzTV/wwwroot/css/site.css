@@ -193,6 +193,14 @@ div.ersatztv-light {
     background-color: var(--selected-row-color) !important;
 }
 
+.playout-build-failure {
+    background-color: #573a00 !important;
+}
+
+.playout-build-failure-selected {
+    background-color: var(--mud-palette-warning-darken) !important;
+}
+
 .wrap-pre {
     white-space: pre-wrap;
     word-wrap: break-word;

@@ -68,6 +68,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Add basic log viewer to playback troubleshooting tool
   - Streaming log level will be forced to `Debug` during troubleshooting
   - Streaming log level will be restored to its previous value after troubleshooting completes
+- Add playout build status to UI
+  - Playouts that fail to build will be highlighted yellow in the playouts table
+  - Clicking on the failed playout will display the warning or error that caused the playout build to fail
 
 ### Fixed
 - Fix green output when libplacebo tonemapping is used with NVIDIA acceleration and 10-bit output in FFmpeg Profile
