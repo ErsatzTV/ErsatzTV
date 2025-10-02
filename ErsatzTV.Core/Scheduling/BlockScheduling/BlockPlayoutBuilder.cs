@@ -57,6 +57,11 @@ public class BlockPlayoutBuilder(
         List<EffectiveBlock> blocksToSchedule =
             EffectiveBlock.GetEffectiveBlocks(referenceData.PlayoutTemplates, start, daysToBuild);
 
+        if (blocksToSchedule.Count == 0)
+        {
+            return result;
+        }
+
         // always start at the beginning of the block
         start = blocksToSchedule.Min(b => b.Start);
 
