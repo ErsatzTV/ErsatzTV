@@ -294,7 +294,13 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
 
                     return result;
                 },
-                Either<BaseError, PlayoutBuildResult>.Left);
+                error =>
+                {
+                    newBuildStatus.Success = false;
+                    newBuildStatus.Message = error.Value;
+
+                    return error;
+                });
         }
         catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
         {
