@@ -45,7 +45,8 @@ public class UpdatePlayoutHandler : IRequestHandler<UpdatePlayout, Either<BaseEr
             playout.Channel.PlayoutMode,
             playout.ProgramSchedule?.Name ?? string.Empty,
             playout.ScheduleFile,
-            playout.DailyRebuildTime);
+            playout.DailyRebuildTime,
+            playout.BuildStatus);
     }
 
     private static Task<Validation<BaseError, Playout>> Validate(

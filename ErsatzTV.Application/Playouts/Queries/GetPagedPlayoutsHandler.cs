@@ -19,6 +19,7 @@ public class GetPagedPlayoutsHandler(IDbContextFactory<TvContext> dbContextFacto
             .AsNoTracking()
             .Include(p => p.Channel)
             .Include(p => p.ProgramSchedule)
+            .Include(p => p.BuildStatus)
             .Filter(p => p.Channel != null);
 
         if (!string.IsNullOrWhiteSpace(request.Query))

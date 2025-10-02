@@ -25,6 +25,7 @@ public class GetPlayoutByIdHandler(IDbContextFactory<TvContext> dbContextFactory
                 p.Channel.PlayoutMode,
                 p.ProgramScheduleId == null ? string.Empty : p.ProgramSchedule.Name,
                 p.ScheduleFile,
-                p.DailyRebuildTime));
+                p.DailyRebuildTime,
+                p.BuildStatus));
     }
 }
