@@ -24,4 +24,5 @@ public class Playout
     public int? DecoId { get; set; }
     public Deco Deco { get; set; }
     public DateTimeOffset? OnDemandCheckpoint { get; set; }
+    public PlayoutBuildStatus BuildStatus { get; set; }
 }
