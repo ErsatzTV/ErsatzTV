@@ -431,6 +431,37 @@ public class FFmpegPlaybackSettingsCalculatorTests
         }
 
         [Test]
+        public void Should_ScaleBeyondMinSize_ForCrop_ForTransportStream_UnknownSAR()
+        {
+            FFmpegProfile ffmpegProfile = TestProfile() with
+            {
+                Resolution = new Resolution { Width = 640, Height = 411 },
+                ScalingBehavior = ScalingBehavior.Crop
+            };
+
+            var version = new MediaVersion
+                { Width = 626, Height = 476, SampleAspectRatio = "0:0", DisplayAspectRatio = "4:3" };
+
+            FFmpegPlaybackSettings actual = FFmpegPlaybackSettingsCalculator.CalculateSettings(
+                StreamingMode.TransportStream,
+                ffmpegProfile,
+                version,
+                new MediaStream(),
+                DateTimeOffset.Now,
+                DateTimeOffset.Now,
+                TimeSpan.Zero,
+                TimeSpan.Zero,
+                false,
+                StreamInputKind.Vod,
+                None);
+
+            IDisplaySize scaledSize = actual.ScaledSize.IfNone(new MediaVersion { Width = 0, Height = 0 });
+            scaledSize.Width.ShouldBe(640);
+            scaledSize.Height.ShouldBe(480);
+            actual.PadToDesiredResolution.ShouldBeFalse();
+        }
+
+        [Test]
         public void Should_ScaleDownToMinSize_ForCrop_ForTransportStream()
         {
             FFmpegProfile ffmpegProfile = TestProfile() with
