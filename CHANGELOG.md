@@ -102,6 +102,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix hardware decode of h264 constrained baseline content using VAAPI accel
 - Custom stream selector: ignore embedded text subtitles that have not been extracted
 - Fix cropping Jellyfin and Emby content that is smaller than the crop resolution
+- Sync movies with non-file media sources (e.g. http/nfs) from Emby movie libraries by @jasonarends
 
 ### Changed
 - Filler presets: use separate text fields for `hours`, `minutes` and `seconds` duration
