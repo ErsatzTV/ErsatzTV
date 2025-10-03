@@ -379,7 +379,7 @@ public class EmbyApiClient : IEmbyApiClient
     {
         try
         {
-            if (item.MediaSources.Any(ms => ms.Protocol != "File"))
+            if (item.MediaSources is null || item.MediaSources.Count == 0)
             {
                 return None;
             }
