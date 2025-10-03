@@ -92,9 +92,18 @@ public static class FFmpegPlaybackSettingsCalculator
             case StreamingMode.TransportStream:
                 result.HardwareAcceleration = ffmpegProfile.HardwareAcceleration;
 
-                if (NeedToScale(ffmpegProfile, videoVersion) && videoVersion.SampleAspectRatio != "0:0")
+                string sampleAspectRatio = videoVersion.SampleAspectRatio;
+                if (sampleAspectRatio == "0:0")
                 {
-                    DisplaySize scaledSize = CalculateScaledSize(ffmpegProfile, videoVersion);
+                    sampleAspectRatio = AspectRatio.CalculateSAR(
+                        videoVersion.Width,
+                        videoVersion.Height,
+                        videoVersion.DisplayAspectRatio);
+                }
+
+                if (NeedToScale(ffmpegProfile, videoVersion, sampleAspectRatio))
+                {
+                    DisplaySize scaledSize = CalculateScaledSize(ffmpegProfile, videoVersion, sampleAspectRatio);
                     if (!scaledSize.IsSameSizeAs(videoVersion))
                     {
                         int fixedHeight = scaledSize.Height + scaledSize.Height % 2;
@@ -229,11 +238,11 @@ public static class FFmpegPlaybackSettingsCalculator
             FrameRate = 24
         };
 
-    private static bool NeedToScale(FFmpegProfile ffmpegProfile, MediaVersion version) =>
-        IsIncorrectSize(ffmpegProfile.Resolution, version) ||
-        IsTooLarge(ffmpegProfile.Resolution, version) ||
-        IsOddSize(version) ||
-        TooSmallToCrop(ffmpegProfile, version);
+    private static bool NeedToScale(FFmpegProfile ffmpegProfile, MediaVersion version, string sampleAspectRatio) =>
+        (IsIncorrectSize(ffmpegProfile.Resolution, version) ||
+         IsTooLarge(ffmpegProfile.Resolution, version) ||
+         IsOddSize(version) ||
+         TooSmallToCrop(ffmpegProfile, version)) && sampleAspectRatio != "0:0";
 
     private static bool IsIncorrectSize(Resolution desiredResolution, MediaVersion version) =>
         IsAnamorphic(version) ||
@@ -257,14 +266,17 @@ public static class FFmpegPlaybackSettingsCalculator
         return version.Height < ffmpegProfile.Resolution.Height || version.Width < ffmpegProfile.Resolution.Width;
     }
 
-    private static DisplaySize CalculateScaledSize(FFmpegProfile ffmpegProfile, MediaVersion version)
+    private static DisplaySize CalculateScaledSize(
+        FFmpegProfile ffmpegProfile,
+        MediaVersion version,
+        string sampleAspectRatio)
     {
-        DisplaySize sarSize = SARSize(version);
-        int p = version.Width * sarSize.Width;
-        int q = version.Height * sarSize.Height;
+        (double sarWidth, double sarHeight) = SARSize(sampleAspectRatio);
+        var p = (int)Math.Round(version.Width * sarWidth);
+        var q = (int)Math.Round(version.Height * sarHeight);
         int g = Gcd(q, p);
-        p = p / g;
-        q = q / g;
+        p /= g;
+        q /= g;
         Resolution targetSize = ffmpegProfile.Resolution;
         int hw1 = targetSize.Width;
         int hh1 = hw1 * q / p;
@@ -323,11 +335,10 @@ public static class FFmpegPlaybackSettingsCalculator
         return version.DisplayAspectRatio != $"{version.Width}:{version.Height}";
     }
 
-    private static DisplaySize SARSize(MediaVersion version)
+    private static (double, double) SARSize(string sampleAspectRatio)
     {
-        string[] split = version.SampleAspectRatio.Split(":");
-        return new DisplaySize(
-            int.Parse(split[0], CultureInfo.InvariantCulture),
-            int.Parse(split[1], CultureInfo.InvariantCulture));
+        string[] split = sampleAspectRatio.Split(":");
+        return (double.Parse(split[0], CultureInfo.InvariantCulture),
+            double.Parse(split[1], CultureInfo.InvariantCulture));
     }
 }
