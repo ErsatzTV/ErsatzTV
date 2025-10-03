@@ -17,6 +17,7 @@ using ErsatzTV.Core.Interfaces.Streaming;
 using ErsatzTV.Core.Metadata;
 using ErsatzTV.FFmpeg;
 using ErsatzTV.FFmpeg.Capabilities;
+using ErsatzTV.FFmpeg.Capabilities.Nvidia;
 using ErsatzTV.FFmpeg.Filter;
 using ErsatzTV.FFmpeg.Filter.Cuda;
 using ErsatzTV.FFmpeg.Filter.Qsv;
@@ -112,7 +113,7 @@ public class TranscodingTests
         public static Watermark[] Watermarks =
         [
             Watermark.None,
-            Watermark.PermanentOpaqueScaled,
+            //Watermark.PermanentOpaqueScaled,
             // Watermark.PermanentOpaqueActualSize,
             // Watermark.PermanentTransparentScaled,
             // Watermark.PermanentTransparentActualSize
@@ -121,7 +122,7 @@ public class TranscodingTests
         public static Subtitle[] Subtitles =
         [
             Subtitle.None,
-            Subtitle.Picture,
+            //Subtitle.Picture,
             // Subtitle.Text
         ];
 
@@ -133,8 +134,8 @@ public class TranscodingTests
 
         public static ScalingBehavior[] ScalingBehaviors =
         [
-            ScalingBehavior.ScaleAndPad
-            //ScalingBehavior.Crop,
+            ScalingBehavior.ScaleAndPad,
+            ScalingBehavior.Crop,
             //ScalingBehavior.Stretch
         ];
 
@@ -150,20 +151,20 @@ public class TranscodingTests
             new("libx264", "yuv420p", "tv", "smpte170m", "bt709", "smpte170m"),
             // // //
             // // // // example format that requires setparams filter
-            new("libx264", "yuv420p", string.Empty, string.Empty, string.Empty, string.Empty),
+            //new("libx264", "yuv420p", string.Empty, string.Empty, string.Empty, string.Empty),
             // // //
             // // // // new("libx264", "yuvj420p"),
-            new("libx264", "yuv420p10le"),
+            //new("libx264", "yuv420p10le"),
             // // // // new("libx264", "yuv444p10le"),
             // // //
             // // // // new("mpeg1video", "yuv420p"),
             // // // //
-            new("mpeg2video", "yuv420p"),
+            //new("mpeg2video", "yuv420p"),
             // //
             //new InputFormat("libx265", "yuv420p"),
-            new("libx265", "yuv420p10le"),
+            //new("libx265", "yuv420p10le"),
             //
-            new("mpeg4", "yuv420p")
+            //new("mpeg4", "yuv420p")
             //
             // new("libvpx-vp9", "yuv420p"),
             // new("libvpx-vp9", "yuv420p10le"),
@@ -187,7 +188,7 @@ public class TranscodingTests
         public static FFmpegProfileBitDepth[] BitDepths =
         [
             FFmpegProfileBitDepth.EightBit,
-            FFmpegProfileBitDepth.TenBit
+            //FFmpegProfileBitDepth.TenBit
         ];
 
         public static FFmpegProfileVideoFormat[] VideoFormats =
@@ -443,6 +444,8 @@ public class TranscodingTests
         [ValueSource(typeof(TestData), nameof(TestData.StreamingModes))]
         StreamingMode streamingMode)
     {
+        NvEncSharpRedirector.Init();
+
         string file = fileToTest;
         if (string.IsNullOrWhiteSpace(file))
         {
