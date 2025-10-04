@@ -79,7 +79,7 @@
             </div>
             <MudSelect @bind-Value="_model.VideoProfile"
                        For="@(() => _model.VideoProfile)"
-                       Disabled="@(_model.VideoFormat != FFmpegProfileVideoFormat.H264 || _model.HardwareAcceleration != HardwareAccelerationKind.Nvenc && _model.HardwareAcceleration != HardwareAccelerationKind.Qsv && _model.HardwareAcceleration != HardwareAccelerationKind.VideoToolbox && _model.HardwareAcceleration != HardwareAccelerationKind.Rkmpp && _model.HardwareAcceleration != HardwareAccelerationKind.None)"
+                       Disabled="@(_model.VideoFormat != FFmpegProfileVideoFormat.H264 || !HardwareAccelSupportsH264Profile(_model.HardwareAcceleration))"
                        Clearable="true">
                 <MudSelectItem Value="@VideoProfile.Main">main</MudSelectItem>
                 <MudSelectItem Value="@VideoProfile.High">high</MudSelectItem>
@@ -388,6 +388,17 @@
             // do nothing
         }
     }
+
+    private bool HardwareAccelSupportsH264Profile(HardwareAccelerationKind accel) =>
+        accel switch
+        {
+            HardwareAccelerationKind.None => true,
+            HardwareAccelerationKind.Nvenc => true,
+            HardwareAccelerationKind.Qsv => true,
+            HardwareAccelerationKind.Vaapi => true,
+            HardwareAccelerationKind.VideoToolbox => true,
+            _ => false,
+        };
 
     private Task PersistData()
     {
