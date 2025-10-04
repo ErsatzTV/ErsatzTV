@@ -2,6 +2,7 @@
 @using ErsatzTV.Application.FFmpegProfiles
 @implements IDisposable
 @inject IDialogService Dialog
+@inject ISnackbar Snackbar
 @inject IMediator Mediator
 @inject NavigationManager NavigationManager
 
@@ -111,8 +112,16 @@
         DialogResult result = await dialog.Result;
         if (result is { Canceled: false })
         {
-            await Mediator.Send(new DeleteFFmpegProfile(ffmpegProfile.Id), _cts.Token);
-            await LoadFFmpegProfilesAsync(_cts.Token);
+            Either<BaseError, Unit> deleteResult = await Mediator.Send(new DeleteFFmpegProfile(ffmpegProfile.Id), _cts.Token);
+            foreach (BaseError error in deleteResult.LeftToSeq())
+            {
+                Snackbar.Add(error.Value, Severity.Error);
+            }
+
+            if (deleteResult.IsRight)
+            {
+                await LoadFFmpegProfilesAsync(_cts.Token);
+            }
         }
     }
 
@@ -123,7 +132,7 @@
 
         IDialogReference dialog = await Dialog.ShowAsync<CopyFFmpegProfileDialog>("Copy FFmpeg Profile", parameters, options);
         DialogResult dialogResult = await dialog.Result;
-        if (!dialogResult.Canceled && dialogResult.Data is FFmpegProfileViewModel data)
+        if (dialogResult is { Canceled: false, Data: FFmpegProfileViewModel data })
         {
             NavigationManager.NavigateTo($"ffmpeg/{data.Id}");
         }
