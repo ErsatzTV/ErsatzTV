@@ -7,23 +7,17 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Application.FFmpegProfiles;
 
-public class DeleteFFmpegProfileHandler : IRequestHandler<DeleteFFmpegProfile, Either<BaseError, Unit>>
+public class DeleteFFmpegProfileHandler(IDbContextFactory<TvContext> dbContextFactory, ISearchTargets searchTargets)
+    : IRequestHandler<DeleteFFmpegProfile, Either<BaseError, Unit>>
 {
-    private readonly IDbContextFactory<TvContext> _dbContextFactory;
-    private readonly ISearchTargets _searchTargets;
-
-    public DeleteFFmpegProfileHandler(IDbContextFactory<TvContext> dbContextFactory, ISearchTargets searchTargets)
-    {
-        _dbContextFactory = dbContextFactory;
-        _searchTargets = searchTargets;
-    }
-
     public async Task<Either<BaseError, Unit>> Handle(
         DeleteFFmpegProfile request,
         CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        Validation<BaseError, FFmpegProfile> validation = await FFmpegProfileMustExist(dbContext, request, cancellationToken);
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        Validation<BaseError, FFmpegProfile> validation =
+            await FFmpegProfileMustNotBeUsed(dbContext, request, cancellationToken)
+                .BindT(_ => FFmpegProfileMustExist(dbContext, request, cancellationToken));
         return await validation.Apply(p => DoDeletion(dbContext, p));
     }
 
@@ -31,7 +25,7 @@ public class DeleteFFmpegProfileHandler : IRequestHandler<DeleteFFmpegProfile, E
     {
         dbContext.FFmpegProfiles.Remove(ffmpegProfile);
         await dbContext.SaveChangesAsync();
-        _searchTargets.SearchTargetsChanged();
+        searchTargets.SearchTargetsChanged();
         return Unit.Default;
     }
 
@@ -42,4 +36,22 @@ public class DeleteFFmpegProfileHandler : IRequestHandler<DeleteFFmpegProfile, E
         dbContext.FFmpegProfiles
             .SelectOneAsync(p => p.Id, p => p.Id == request.FFmpegProfileId, cancellationToken)
             .Map(o => o.ToValidation<BaseError>($"FFmpegProfile {request.FFmpegProfileId} does not exist"));
+
+    private static async Task<Validation<BaseError, Unit>> FFmpegProfileMustNotBeUsed(
+        TvContext dbContext,
+        DeleteFFmpegProfile request,
+        CancellationToken cancellationToken)
+    {
+        int count = await dbContext.Channels
+            .AsNoTracking()
+            .Where(c => c.FFmpegProfileId == request.FFmpegProfileId)
+            .CountAsync(cancellationToken);
+
+        if (count > 0)
+        {
+            return BaseError.New($"Cannot delete FFmpegProfile {request.FFmpegProfileId} that is used by {count} {(count > 1 ? "channels" : "channel")}");
+        }
+
+        return Unit.Default;
+    }
 }
