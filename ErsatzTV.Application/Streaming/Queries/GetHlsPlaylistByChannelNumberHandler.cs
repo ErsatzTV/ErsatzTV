@@ -37,9 +37,18 @@ public class GetHlsPlaylistByChannelNumberHandler :
         Parameters parameters,
         DateTimeOffset now)
     {
-        string mode = string.IsNullOrWhiteSpace(request.Mode)
-            ? string.Empty
-            : $"&mode={request.Mode}";
+        string mode = request.Mode switch
+        {
+            "segmenter" or "segmenter-fmp4" or "segmenter-v2" or "ts-legacy" or "ts" => $"&mode={request.Mode}",
+            // "hls-direct" => string.Empty,
+            _ => string.Empty
+        };
+
+        string endpoint = request.Mode switch
+        {
+            "hls-direct" => "iptv/hls-direct",
+            _ => "ffmpeg/stream"
+        };
 
         long index = GetIndexForChannel(parameters.Channel, parameters.PlayoutItem);
         double timeRemaining = Math.Abs((parameters.PlayoutItem.FinishOffset - now).TotalSeconds);
@@ -49,7 +58,7 @@ public class GetHlsPlaylistByChannelNumberHandler :
 #EXT-X-MEDIA-SEQUENCE:{index}
 #EXT-X-DISCONTINUITY
 #EXTINF:{timeRemaining:F2},
-{request.Scheme}://{request.Host}/ffmpeg/stream/{request.ChannelNumber}?index={index}{mode}
+{request.Scheme}://{request.Host}/{endpoint}/{request.ChannelNumber}?index={index}{mode}
 ".AsTask();
     }
 

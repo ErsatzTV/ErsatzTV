@@ -1,6 +1,4 @@
 ﻿using System.Diagnostics;
-using System.IO.Pipelines;
-using System.Text;
 using CliWrap;
 using ErsatzTV.Application.Emby;
 using ErsatzTV.Application.Jellyfin;
@@ -23,10 +21,9 @@ namespace ErsatzTV.Controllers;
 
 [ApiController]
 [ApiExplorerSettings(IgnoreApi = true)]
-public class InternalController : ControllerBase
+public class InternalController : StreamingControllerBase
 {
     private readonly IFFmpegSegmenterService _ffmpegSegmenterService;
-    private readonly IGraphicsEngine _graphicsEngine;
     private readonly ILogger<InternalController> _logger;
     private readonly IMediator _mediator;
 
@@ -35,9 +32,9 @@ public class InternalController : ControllerBase
         IGraphicsEngine graphicsEngine,
         IMediator mediator,
         ILogger<InternalController> logger)
+        : base(graphicsEngine, logger)
     {
         _ffmpegSegmenterService = ffmpegSegmenterService;
-        _graphicsEngine = graphicsEngine;
         _mediator = mediator;
         _logger = logger;
     }
@@ -59,7 +56,7 @@ public class InternalController : ControllerBase
             case "segmenter-v2":
                 return await GetSegmenterV2Stream(channelNumber);
             default:
-                return await GetTsLegacyStream(channelNumber, mode);
+                return await GetTsLegacyStream(channelNumber);
         }
     }
 
@@ -271,14 +268,14 @@ public class InternalController : ControllerBase
             worker is HlsSessionWorkerV2 v2)
         {
             Either<BaseError, PlayoutItemProcessModel> result = await v2.GetNextPlayoutItemProcess();
-            return GetProcessResponse(result, channelNumber, "segmenter-v2");
+            return GetProcessResponse(result, channelNumber, StreamingMode.HttpLiveStreamingSegmenterV2);
         }
 
         _logger.LogWarning("Unable to locate session worker for channel {Channel}", channelNumber);
         return new NotFoundResult();
     }
 
-    private async Task<IActionResult> GetTsLegacyStream(string channelNumber, string mode)
+    private async Task<IActionResult> GetTsLegacyStream(string channelNumber)
     {
         var request = new GetPlayoutItemProcessByChannelNumber(
             channelNumber,
@@ -292,83 +289,6 @@ public class InternalController : ControllerBase
 
         Either<BaseError, PlayoutItemProcessModel> result = await _mediator.Send(request);
 
-        return GetProcessResponse(result, channelNumber, mode);
-    }
-
-    private IActionResult GetProcessResponse(
-        Either<BaseError, PlayoutItemProcessModel> result,
-        string channelNumber,
-        string mode)
-    {
-        foreach (BaseError error in result.LeftToSeq())
-        {
-            _logger.LogError(
-                "Failed to create stream for channel {ChannelNumber}: {Error}",
-                channelNumber,
-                error.Value);
-
-            return BadRequest(error.Value);
-        }
-
-        foreach (PlayoutItemProcessModel processModel in result.RightToSeq())
-        {
-            // for process counter
-            var ffmpegProcess = new FFmpegProcess();
-
-            Command process = processModel.Process;
-
-            _logger.LogDebug("ffmpeg arguments {FFmpegArguments}", process.Arguments);
-
-            var cts = new CancellationTokenSource();
-            HttpContext.Response.OnCompleted(async () =>
-            {
-                ffmpegProcess.Dispose();
-                await cts.CancelAsync();
-                cts.Dispose();
-            });
-
-            using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(
-                cts.Token,
-                HttpContext.RequestAborted);
-
-            var pipe = new Pipe();
-            var stdErrBuffer = new StringBuilder();
-
-            Command processWithPipe = process;
-            foreach (GraphicsEngineContext graphicsEngineContext in processModel.GraphicsEngineContext)
-            {
-                var gePipe = new Pipe();
-                processWithPipe = process.WithStandardInputPipe(PipeSource.FromStream(gePipe.Reader.AsStream()));
-
-                // fire and forget graphics engine task
-                _ = _graphicsEngine.Run(
-                    graphicsEngineContext,
-                    gePipe.Writer,
-                    linkedCts.Token);
-            }
-
-            CommandTask<CommandResult> task = processWithPipe
-                .WithStandardOutputPipe(PipeTarget.ToStream(pipe.Writer.AsStream()))
-                .WithStandardErrorPipe(PipeTarget.ToStringBuilder(stdErrBuffer))
-                .WithValidation(CommandResultValidation.None)
-                .ExecuteAsync(linkedCts.Token);
-
-            // ensure pipe writer is completed when ffmpeg exits
-            _ = task.Task.ContinueWith(
-                (_, state) => ((PipeWriter)state!).Complete(),
-                pipe.Writer,
-                TaskScheduler.Default);
-
-            string contentType = mode switch
-            {
-                "segmenter-v2" => "video/x-matroska",
-                _ => "video/mp2t"
-            };
-
-            return new FileStreamResult(pipe.Reader.AsStream(), contentType);
-        }
-
-        // this will never happen
-        return new NotFoundResult();
+        return GetProcessResponse(result, channelNumber, StreamingMode.TransportStream);
     }
 }
