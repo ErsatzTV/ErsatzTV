@@ -10,6 +10,7 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.FFmpeg;
+using ErsatzTV.Core.Interfaces.Streaming;
 using ErsatzTV.Core.Iptv;
 using ErsatzTV.Extensions;
 using ErsatzTV.Filters;
@@ -21,7 +22,7 @@ namespace ErsatzTV.Controllers;
 [ApiController]
 [ApiExplorerSettings(IgnoreApi = true)]
 [ServiceFilter(typeof(ConditionalIptvAuthorizeFilter))]
-public class IptvController : ControllerBase
+public class IptvController : StreamingControllerBase
 {
     private readonly IFFmpegSegmenterService _ffmpegSegmenterService;
     private readonly ILogger<IptvController> _logger;
@@ -29,8 +30,10 @@ public class IptvController : ControllerBase
 
     public IptvController(
         IMediator mediator,
+        IGraphicsEngine graphicsEngine,
         ILogger<IptvController> logger,
         IFFmpegSegmenterService ffmpegSegmenterService)
+        : base(graphicsEngine, logger)
     {
         _mediator = mediator;
         _logger = logger;
@@ -284,6 +287,10 @@ public class IptvController : ControllerBase
             Right: r => new PhysicalFileResult(r.FileName, r.MimeType));
     }
 
+    [HttpGet("iptv/hls-direct/{channelNumber}")]
+    public async Task<IActionResult> GetStream(string channelNumber) =>
+        await GetHlsDirectStream(channelNumber);
+
     private async Task<string> GetMultiVariantPlaylist(string channelNumber, string mode)
     {
         string file = mode switch
@@ -357,6 +364,23 @@ public class IptvController : ControllerBase
 #EXT-X-VERSION:3
 #EXT-X-STREAM-INF:BANDWIDTH={bitrate}{resolution}
 {variantPlaylist}";
+    }
+
+    private async Task<IActionResult> GetHlsDirectStream(string channelNumber)
+    {
+        var request = new GetPlayoutItemProcessByChannelNumber(
+            channelNumber,
+            StreamingMode.HttpLiveStreamingDirect,
+            DateTimeOffset.Now,
+            false,
+            true,
+            DateTimeOffset.Now,
+            0,
+            Option<int>.None);
+
+        Either<BaseError, PlayoutItemProcessModel> result = await _mediator.Send(request);
+
+        return GetProcessResponse(result, channelNumber, StreamingMode.HttpLiveStreamingDirect);
     }
 
     private string AccessTokenQuery() => string.IsNullOrWhiteSpace(Request.Query["access_token"])
