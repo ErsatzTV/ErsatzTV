@@ -48,48 +48,82 @@
                     Add Block
                 </MudButton>
             </MudStack>
-            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                <div class="d-flex"></div>
-                <MudTreeView T="BlockTreeItemViewModel" Items="@_treeItems" Hover="true" Style="width: 100%">
-                    <ItemTemplate Context="item">
-                        <MudTreeViewItem T="BlockTreeItemViewModel" Items="@item.Value!.TreeItems" Icon="@item.Value.Icon" Value="@item.Value">
-                            <BodyContent>
-                                <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%">
-                                    <MudGrid Justify="Justify.FlexStart">
-                                        <MudItem xs="5">
-                                            <MudText>@item.Value.Text</MudText>
-                                        </MudItem>
-                                        @if (!string.IsNullOrWhiteSpace(item.Value.EndText))
-                                        {
-                                            <MudItem xs="6">
-                                                <MudText>@item.Value.EndText</MudText>
-                                            </MudItem>
-                                        }
-                                    </MudGrid>
-                                    <div style="justify-self: end;">
-                                        @foreach (int blockId in Optional(item.Value.BlockId))
-                                        {
-                                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Medium" Color="Color.Inherit" Href="@($"blocks/{blockId}")"/>
-                                        }
-                                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Medium" Color="Color.Inherit" OnClick="@(_ => DeleteItem(item.Value))"/>
-                                    </div>
-                                </div>
-                            </BodyContent>
-                        </MudTreeViewItem>
-                    </ItemTemplate>
-                </MudTreeView>
-            </MudStack>
+            <MudTable Hover="true"
+                      Dense="true"
+                      Class="mt-8"
+                      Items="@_blocks"
+                      GroupBy="@_groupDefinition"
+                      GroupHeaderStyle="background-color:var(--mud-palette-appbarbackground)"
+                      RowStyle="background-color:var(--mud-palette-background-gray)"
+                      Filter="new Func<BlockViewModel,bool>(FilterBlocks)">
+                <ColGroup>
+                    <MudHidden Breakpoint="Breakpoint.Xs">
+                        <col style="width: 60px;"/>
+                        <col/>
+                        <col style="width: 120px;"/>
+                    </MudHidden>
+                </ColGroup>
+                <ToolBarContent>
+                    <MudTextField T="string"
+                                  ValueChanged="@(s => OnSearch(s))"
+                                  Placeholder="Search for blocks"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.FilterList"
+                                  Clearable="true">
+                    </MudTextField>
+                </ToolBarContent>
+                <GroupHeaderTemplate>
+                    <MudTd Class="mud-table-cell-custom-group">
+                        @($"{context.Key}")
+                    </MudTd>
+                    <MudTd>
+                        <div style="align-items: center; display: flex;">
+                            <div style="width: 48px;"></div>
+                            <MudTooltip Text="Delete Block Group">
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                               OnClick="@(_ => DeleteBlockGroup(context.Items?.FirstOrDefault()))">
+                                </MudIconButton>
+                            </MudTooltip>
+                        </div>
+                    </MudTd>
+                </GroupHeaderTemplate>
+                <RowTemplate>
+                    <MudTd>@context.Name</MudTd>
+                    <MudTd>
+                        <div class="d-flex">
+                            @if (context.Id >= 0)
+                            {
+                                <MudTooltip Text="Edit Block">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                                   Href="@($"blocks/{context.Id}")">
+                                    </MudIconButton>
+                                </MudTooltip>
+                                <MudTooltip Text="Delete Block">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                   OnClick="@(_ => DeleteBlock(context))">
+                                    </MudIconButton>
+                                </MudTooltip>
+                            }
+                            else
+                            {
+                                <div style="height: 48px; width: 48px"></div>
+                            }
+                        </div>
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
         </MudContainer>
     </div>
 </MudForm>
 
 @code {
     private CancellationTokenSource _cts;
-    private readonly List<TreeItemData<BlockTreeItemViewModel>> _treeItems = [];
+    private readonly List<BlockViewModel> _blocks = [];
     private List<BlockGroupViewModel> _blockGroups = [];
     private BlockGroupViewModel _selectedBlockGroup;
     private string _blockGroupName;
     private string _blockName;
+    private string _searchString;
 
     public void Dispose()
     {
@@ -108,18 +142,22 @@
         {
             _blockGroups = await Mediator.Send(new GetAllBlockGroups(), token);
 
-            _treeItems.Clear();
-            BlockTreeViewModel tree = await Mediator.Send(new GetBlockTree(), token);
-            foreach (BlockTreeBlockGroupViewModel group in tree.Groups)
-            {
-                _treeItems.Add(new TreeItemData<BlockTreeItemViewModel> { Value = new BlockTreeItemViewModel(group) });
-            }
+            _blocks.Clear();
+            _blocks.AddRange(await Mediator.Send(new GetAllBlocks(), token));
         }
         catch (OperationCanceledException)
         {
             // do nothing
         }
     }
+
+    private readonly TableGroupDefinition<BlockViewModel> _groupDefinition = new()
+    {
+        GroupName = "Group",
+        Indentation = false,
+        Expandable = true,
+        Selector = (e) => e.GroupName
+    };
 
     private async Task AddBlockGroup()
     {
@@ -135,11 +173,13 @@
 
             foreach (BlockGroupViewModel blockGroup in result.RightToSeq())
             {
-                _treeItems.Add(new TreeItemData<BlockTreeItemViewModel> { Value = new BlockTreeItemViewModel(blockGroup) });
-                _treeItems.Sort((x, y) => string.Compare(x.Value?.Text, y.Value?.Text, StringComparison.CurrentCulture));
                 _blockGroupName = null;
-
                 _blockGroups = await Mediator.Send(new GetAllBlockGroups(), _cts.Token);
+                _selectedBlockGroup = _blockGroups.Find(bg => bg.Id == blockGroup.Id);
+
+                _blocks.Clear();
+                _blocks.AddRange(await Mediator.Send(new GetAllBlocks(), _cts.Token));
+
                 await InvokeAsync(StateHasChanged);
             }
         }
@@ -157,13 +197,10 @@
                 Logger.LogError("Unexpected error adding block: {Error}", error.Value);
             }
 
-            foreach (BlockViewModel block in result.RightToSeq())
+            if (result.IsRight)
             {
-                foreach (BlockTreeItemViewModel item in _treeItems.Map(i => i.Value).Where(item => item.BlockGroupId == _selectedBlockGroup.Id))
-                {
-                    item.TreeItems.Add(new TreeItemData<BlockTreeItemViewModel> { Value = new BlockTreeItemViewModel(block) });
-                    item.TreeItems.Sort((x, y) => string.Compare(x.Value?.Text, y.Value?.Text, StringComparison.CurrentCulture));
-                }
+                _blocks.Clear();
+                _blocks.AddRange(await Mediator.Send(new GetAllBlocks(), _cts.Token));
 
                 _blockName = null;
                 await InvokeAsync(StateHasChanged);
@@ -171,47 +208,70 @@
         }
     }
 
-    private async Task DeleteItem(BlockTreeItemViewModel treeItem)
+    private void OnSearch(string query)
     {
-        foreach (int blockGroupId in Optional(treeItem.BlockGroupId))
+        _searchString = query;
+    }
+
+    private bool FilterBlocks(BlockViewModel block) => FilterBlocks(block, _searchString);
+
+    private bool FilterBlocks(BlockViewModel block, string searchString)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
         {
-            var parameters = new DialogParameters { { "EntityType", "block group" }, { "EntityName", treeItem.Text } };
-            var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
-
-            IDialogReference dialog = await Dialog.ShowAsync<DeleteDialog>("Delete Block Group", parameters, options);
-            DialogResult result = await dialog.Result;
-            if (result is not null && !result.Canceled)
-            {
-                await Mediator.Send(new DeleteBlockGroup(blockGroupId), _cts.Token);
-                _treeItems.RemoveAll(i => i.Value?.BlockGroupId == blockGroupId);
-                if (_selectedBlockGroup?.Id == blockGroupId)
-                {
-                    _selectedBlockGroup = null;
-                }
-
-                _blockGroups = await Mediator.Send(new GetAllBlockGroups(), _cts.Token);
-                await InvokeAsync(StateHasChanged);
-            }
+            return true;
         }
 
-        foreach (int blockId in Optional(treeItem.BlockId))
+        if (block.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
         {
-            var parameters = new DialogParameters { { "EntityType", "block" }, { "EntityName", treeItem.Text } };
-            var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+            return true;
+        }
 
-            IDialogReference dialog = await Dialog.ShowAsync<DeleteDialog>("Delete Block", parameters, options);
-            DialogResult result = await dialog.Result;
-            if (result is not null && !result.Canceled)
+        return false;
+    }
+
+    private async Task DeleteBlockGroup(BlockViewModel block)
+    {
+        if (block is null)
+        {
+            return;
+        }
+
+        var parameters = new DialogParameters { { "EntityType", "block group" }, { "EntityName", block.GroupName } };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        IDialogReference dialog = await Dialog.ShowAsync<DeleteDialog>("Delete Block Group", parameters, options);
+        DialogResult result = await dialog.Result;
+        if (result is not null && !result.Canceled)
+        {
+            await Mediator.Send(new DeleteBlockGroup(block.GroupId), _cts.Token);
+            if (_selectedBlockGroup?.Id == block.GroupId)
             {
-                await Mediator.Send(new DeleteBlock(blockId), _cts.Token);
-                foreach (BlockTreeItemViewModel parent in _treeItems.Map(i => i.Value))
-                {
-                    parent.TreeItems.RemoveAll(i => i.Value == treeItem);
-                }
-
-                await InvokeAsync(StateHasChanged);
+                _selectedBlockGroup = null;
             }
+
+            _blockGroups = await Mediator.Send(new GetAllBlockGroups(), _cts.Token);
+            _blocks.Clear();
+            _blocks.AddRange(await Mediator.Send(new GetAllBlocks(), _cts.Token));
+
+            await InvokeAsync(StateHasChanged);
         }
     }
 
+    private async Task DeleteBlock(BlockViewModel block)
+    {
+        var parameters = new DialogParameters { { "EntityType", "block" }, { "EntityName", block.Name } };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        IDialogReference dialog = await Dialog.ShowAsync<DeleteDialog>("Delete Block", parameters, options);
+        DialogResult result = await dialog.Result;
+        if (result is not null && !result.Canceled)
+        {
+            await Mediator.Send(new DeleteBlock(block.Id), _cts.Token);
+            _blocks.Clear();
+            _blocks.AddRange(await Mediator.Send(new GetAllBlocks(), _cts.Token));
+
+            await InvokeAsync(StateHasChanged);
+        }
+    }
 }
