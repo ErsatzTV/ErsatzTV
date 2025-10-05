@@ -252,19 +252,19 @@
 
         var baseUri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri).ToString();
         string apiUri = baseUri.Replace("/system/troubleshooting/playback", "/api/troubleshoot/playback.m3u8");
-        var queryString = new Dictionary<string, string>
+        var queryString = new List<KeyValuePair<string, string>>
         {
-            ["mediaItem"] = (MediaItemId ?? 0).ToString(),
-            ["ffmpegProfile"] = _ffmpegProfileId.ToString(),
-            ["streamingMode"] = ((int)_streamingMode).ToString(),
-            ["seekSeconds"] = _seekSeconds.ToString()
+            new ("mediaItem", (MediaItemId ?? 0).ToString()),
+            new ("ffmpegProfile", _ffmpegProfileId.ToString()),
+            new ("streamingMode", ((int)_streamingMode).ToString()),
+            new ("seekSeconds", _seekSeconds.ToString())
         };
 
         foreach (string watermarkName in _watermarkNames)
         {
             foreach (WatermarkViewModel watermark in _watermarks.Where(wm => wm.Name == watermarkName))
             {
-                queryString.Add("watermark", watermark.Id.ToString());
+                queryString.Add(new KeyValuePair<string, string>("watermark", watermark.Id.ToString()));
             }
         }
 
@@ -272,17 +272,17 @@
         {
             foreach (GraphicsElementViewModel graphicsElement in _graphicsElements.Where(ge => ge.Name == graphicsElementName))
             {
-                queryString.Add("graphicsElement", graphicsElement.Id.ToString());
+                queryString.Add(new KeyValuePair<string, string>("graphicsElement", graphicsElement.Id.ToString()));
             }
         }
 
         if (!string.IsNullOrWhiteSpace(_streamSelector))
         {
-            queryString.Add("streamSelector", _streamSelector);
+            queryString.Add(new KeyValuePair<string, string>("streamSelector", _streamSelector));
         }
         else if (_subtitleId is not null)
         {
-            queryString.Add("subtitleId", _subtitleId.Value.ToString());
+            queryString.Add(new KeyValuePair<string, string>("subtitleId", _subtitleId.Value.ToString()));
         }
 
         string uriWithQuery = QueryHelpers.AddQueryString(apiUri, queryString);
@@ -322,19 +322,19 @@
 
     private async Task DownloadResults()
     {
-        var queryString = new Dictionary<string, string>
+        var queryString = new List<KeyValuePair<string, string>>
         {
-            ["mediaItem"] = (MediaItemId ?? 0).ToString(),
-            ["ffmpegProfile"] = _ffmpegProfileId.ToString(),
-            ["streamingMode"] = ((int)_streamingMode).ToString(),
-            ["seekSeconds"] = _seekSeconds.ToString()
+            new ("mediaItem", (MediaItemId ?? 0).ToString()),
+            new ("ffmpegProfile", _ffmpegProfileId.ToString()),
+            new ("streamingMode", ((int)_streamingMode).ToString()),
+            new ("seekSeconds", _seekSeconds.ToString())
         };
 
         foreach (string watermarkName in _watermarkNames)
         {
             foreach (WatermarkViewModel watermark in _watermarks.Where(wm => wm.Name == watermarkName))
             {
-                queryString.Add("watermark", watermark.Id.ToString());
+                queryString.Add(new KeyValuePair<string, string>("watermark", watermark.Id.ToString()));
             }
         }
 
@@ -342,7 +342,7 @@
         {
             foreach (GraphicsElementViewModel graphicsElement in _graphicsElements.Where(ge => ge.Name == graphicsElementName))
             {
-                queryString.Add("graphicsElement", graphicsElement.Id.ToString());
+                queryString.Add(new KeyValuePair<string, string>("graphicsElement", graphicsElement.Id.ToString()));
             }
         }
 
