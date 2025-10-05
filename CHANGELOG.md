@@ -4,11 +4,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Added
+- Add search field to filter blocks table
+
 ### Fixed
 - Do not allow deleting ffmpeg profiles that are used by channels
 - Allow ffmpeg profiles using VAAPI accel to set h264 video profile
 - Fix HLS Direct playback, and make it accessible on separate streaming port
 - Fix playback troubleshooting when using multiple watermarks or multiple graphics elements
+
+### Changed
+- Use table instead of tree view on blocks page
 
 ## [25.7.0] - 2025-09-14
 ### Added
