@@ -16,8 +16,18 @@ public class InMemorySink : ILogEventSink
         {
             ConcurrentQueue<string> logQueue = _logs.GetOrAdd(correlationId, _ => new ConcurrentQueue<string>());
 
-            string message = logEvent.RenderMessage(CultureInfo.CurrentCulture);
-            logQueue.Enqueue($"[{logEvent.Timestamp:HH:mm:ss} {logEvent.Level}] {message}");
+            using (var writer = new StringWriter())
+            {
+                writer.Write($"[{logEvent.Timestamp:HH:mm:ss} {logEvent.Level}] ");
+                logEvent.RenderMessage(writer, CultureInfo.CurrentCulture);
+                if (logEvent.Exception != null)
+                {
+                    writer.WriteLine();
+                    writer.Write(logEvent.Exception);
+                }
+
+                logQueue.Enqueue(writer.ToString());
+            }
 
             while (logQueue.Count > 100)
             {

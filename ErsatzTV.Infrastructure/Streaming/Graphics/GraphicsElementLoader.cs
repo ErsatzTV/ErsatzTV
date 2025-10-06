@@ -221,7 +221,7 @@ public partial class GraphicsElementLoader(
         }
         catch (Exception ex)
         {
-            logger.LogWarning(ex, "Failed to load process graphics element YAML definition as template");
+            logger.LogWarning(ex, "Failed to render graphics element YAML definition as scriban template");
             return Option<string>.None;
         }
     }
