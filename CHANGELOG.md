@@ -16,7 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 - Use table instead of tree view on blocks page
-- Graphics engine: show scriban template rendering errors in playback troubleshooting log
+- Show full error/exception details in playback troubleshooting logs
 
 ## [25.7.0] - 2025-09-14
 ### Added
