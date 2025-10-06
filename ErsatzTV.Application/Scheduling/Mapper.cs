@@ -28,15 +28,6 @@ internal static class Mapper
                 tg.Name,
                 tg.Templates.OrderBy(t => t.Name).Map(t => new TreeItemViewModel(t.Id, t.Name)).ToList())).ToList());
 
-    internal static BlockTreeViewModel ProjectToViewModel(List<BlockGroup> blockGroups) =>
-        new(
-            blockGroups.OrderBy(bg => bg.Name).Map(bg => new BlockTreeBlockGroupViewModel(
-                    bg.Id,
-                    bg.Name,
-                    bg.Blocks.OrderBy(b => b.Name).Map(b => new BlockTreeBlockViewModel(b.Id, b.Name, b.Minutes))
-                        .ToList()))
-                .ToList());
-
     internal static BlockGroupViewModel ProjectToViewModel(BlockGroup blockGroup) =>
         new(blockGroup.Id, blockGroup.Name);
 

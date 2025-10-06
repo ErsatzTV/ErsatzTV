@@ -1,5 +1,6 @@
 ﻿using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
@@ -7,7 +8,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Application.FFmpegProfiles;
 
-public class DeleteFFmpegProfileHandler(IDbContextFactory<TvContext> dbContextFactory, ISearchTargets searchTargets)
+public class DeleteFFmpegProfileHandler(
+    IDbContextFactory<TvContext> dbContextFactory,
+    IConfigElementRepository configElementRepository,
+    ISearchTargets searchTargets)
     : IRequestHandler<DeleteFFmpegProfile, Either<BaseError, Unit>>
 {
     public async Task<Either<BaseError, Unit>> Handle(
@@ -15,9 +19,7 @@ public class DeleteFFmpegProfileHandler(IDbContextFactory<TvContext> dbContextFa
         CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
-        Validation<BaseError, FFmpegProfile> validation =
-            await FFmpegProfileMustNotBeUsed(dbContext, request, cancellationToken)
-                .BindT(_ => FFmpegProfileMustExist(dbContext, request, cancellationToken));
+        Validation<BaseError, FFmpegProfile> validation = await Validate(dbContext, request, cancellationToken);
         return await validation.Apply(p => DoDeletion(dbContext, p));
     }
 
@@ -28,6 +30,15 @@ public class DeleteFFmpegProfileHandler(IDbContextFactory<TvContext> dbContextFa
         searchTargets.SearchTargetsChanged();
         return Unit.Default;
     }
+
+    private async Task<Validation<BaseError, FFmpegProfile>> Validate(
+        TvContext dbContext,
+        DeleteFFmpegProfile request,
+        CancellationToken cancellationToken) =>
+        (await FFmpegProfileMustNotBeUsed(dbContext, request, cancellationToken),
+            await FFmpegProfileMustNotBeDefault(request, cancellationToken),
+            await FFmpegProfileMustExist(dbContext, request, cancellationToken))
+        .Apply((_, _, ffmpegProfile) => ffmpegProfile);
 
     private static Task<Validation<BaseError, FFmpegProfile>> FFmpegProfileMustExist(
         TvContext dbContext,
@@ -49,7 +60,23 @@ public class DeleteFFmpegProfileHandler(IDbContextFactory<TvContext> dbContextFa
 
         if (count > 0)
         {
-            return BaseError.New($"Cannot delete FFmpegProfile {request.FFmpegProfileId} that is used by {count} {(count > 1 ? "channels" : "channel")}");
+            return BaseError.New(
+                $"Cannot delete FFmpeg Profile that is used by {count} {(count > 1 ? "channels" : "channel")}");
+        }
+
+        return Unit.Default;
+    }
+
+    private async Task<Validation<BaseError, Unit>> FFmpegProfileMustNotBeDefault(
+        DeleteFFmpegProfile request,
+        CancellationToken cancellationToken)
+    {
+        Option<int> defaultFFmpegProfileId =
+            await configElementRepository.GetValue<int>(ConfigElementKey.FFmpegDefaultProfileId, cancellationToken);
+
+        if (defaultFFmpegProfileId.Any(id => id == request.FFmpegProfileId))
+        {
+            return BaseError.New("Cannot delete default FFmpeg Profile");
         }
 
         return Unit.Default;
