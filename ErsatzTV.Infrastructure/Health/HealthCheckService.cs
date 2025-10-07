@@ -28,6 +28,7 @@ public class HealthCheckService : IHealthCheckService
         IVaapiDriverHealthCheck vaapiDriverHealthCheck,
         IErrorReportsHealthCheck errorReportsHealthCheck,
         IUnifiedDockerHealthCheck unifiedDockerHealthCheck,
+        IDowngradeHealthCheck downgradeHealthCheck,
         IMemoryCache memoryCache,
         IMediator mediator,
         ILogger<HealthCheckService> logger)
@@ -37,6 +38,7 @@ public class HealthCheckService : IHealthCheckService
         _logger = logger;
         _checks =
         [
+            downgradeHealthCheck,
             macOsConfigFolderHealthCheck,
             unifiedDockerHealthCheck,
             ffmpegVersionHealthCheck,

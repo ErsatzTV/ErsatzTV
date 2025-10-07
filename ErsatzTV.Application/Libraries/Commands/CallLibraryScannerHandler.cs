@@ -21,7 +21,7 @@ namespace ErsatzTV.Application.Libraries;
 
 public abstract class CallLibraryScannerHandler<TRequest>
 {
-    private readonly int _batchSize = 100;
+    private const int BatchSize = 100;
     private readonly ChannelWriter<ISearchIndexBackgroundServiceRequest> _channel;
     private readonly IConfigElementRepository _configElementRepository;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
@@ -55,8 +55,7 @@ public abstract class CallLibraryScannerHandler<TRequest>
             using var forcefulCts = new CancellationTokenSource();
 
             await using CancellationTokenRegistration link =
-                cancellationToken.Register(() => forcefulCts.CancelAfter(TimeSpan.FromSeconds(10))
-                );
+                cancellationToken.Register(() => forcefulCts.CancelAfter(TimeSpan.FromSeconds(10)));
 
             CommandResult process = await Cli.Wrap(scanner)
                 .WithArguments(arguments)
@@ -72,12 +71,14 @@ public abstract class CallLibraryScannerHandler<TRequest>
 
             if (_toReindex.Count > 0)
             {
+                // ReSharper disable once PossiblyMistakenUseOfCancellationToken
                 await _channel.WriteAsync(new ReindexMediaItems(_toReindex.ToArray()), cancellationToken);
                 _toReindex.Clear();
             }
 
             if (_toRemove.Count > 0)
             {
+                // ReSharper disable once PossiblyMistakenUseOfCancellationToken
                 await _channel.WriteAsync(new RemoveMediaItems(_toReindex.ToArray()), cancellationToken);
                 _toRemove.Clear();
             }
@@ -139,14 +140,14 @@ public abstract class CallLibraryScannerHandler<TRequest>
                     }
 
                     _toReindex.AddRange(progressUpdate.ItemsToReindex);
-                    if (_toReindex.Count >= _batchSize)
+                    if (_toReindex.Count >= BatchSize)
                     {
                         await _channel.WriteAsync(new ReindexMediaItems(_toReindex.ToArray()));
                         _toReindex.Clear();
                     }
 
                     _toRemove.AddRange(progressUpdate.ItemsToRemove);
-                    if (_toRemove.Count >= _batchSize)
+                    if (_toRemove.Count >= BatchSize)
                     {
                         await _channel.WriteAsync(new RemoveMediaItems(_toReindex.ToArray()));
                         _toRemove.Clear();
@@ -177,41 +178,48 @@ public abstract class CallLibraryScannerHandler<TRequest>
 
     protected async Task<Validation<BaseError, string>> Validate(TRequest request, CancellationToken cancellationToken)
     {
-        int libraryRefreshInterval = await _configElementRepository
-            .GetValue<int>(ConfigElementKey.LibraryRefreshInterval, cancellationToken)
-            .IfNoneAsync(0);
-
-        libraryRefreshInterval = Math.Clamp(libraryRefreshInterval, 0, 999_999);
-
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-
-        DateTimeOffset lastScan = await GetLastScan(dbContext, request, cancellationToken);
-        if (!ScanIsRequired(lastScan, libraryRefreshInterval, request))
+        try
         {
-            return new ScanIsNotRequired();
-        }
+            int libraryRefreshInterval = await _configElementRepository
+                .GetValue<int>(ConfigElementKey.LibraryRefreshInterval, cancellationToken)
+                .IfNoneAsync(0);
 
-        string executable = _runtimeInfo.IsOSPlatform(OSPlatform.Windows)
-            ? "ErsatzTV.Scanner.exe"
-            : "ErsatzTV.Scanner";
+            libraryRefreshInterval = Math.Clamp(libraryRefreshInterval, 0, 999_999);
 
-        string processFileName = Environment.ProcessPath ?? string.Empty;
-        string processExecutable = Path.GetFileNameWithoutExtension(processFileName);
-        string folderName = Path.GetDirectoryName(processFileName);
-        if ("dotnet".Equals(processExecutable, StringComparison.OrdinalIgnoreCase))
-        {
-            folderName = AppContext.BaseDirectory;
-        }
+            await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
-        if (!string.IsNullOrWhiteSpace(folderName))
-        {
-            string localFileName = Path.Combine(folderName, executable);
-            if (File.Exists(localFileName))
+            DateTimeOffset lastScan = await GetLastScan(dbContext, request, cancellationToken);
+            if (!ScanIsRequired(lastScan, libraryRefreshInterval, request))
             {
-                return localFileName;
+                return new ScanIsNotRequired();
             }
-        }
 
-        return BaseError.New("Unable to locate ErsatzTV.Scanner executable");
+            string executable = _runtimeInfo.IsOSPlatform(OSPlatform.Windows)
+                ? "ErsatzTV.Scanner.exe"
+                : "ErsatzTV.Scanner";
+
+            string processFileName = Environment.ProcessPath ?? string.Empty;
+            string processExecutable = Path.GetFileNameWithoutExtension(processFileName);
+            string folderName = Path.GetDirectoryName(processFileName);
+            if ("dotnet".Equals(processExecutable, StringComparison.OrdinalIgnoreCase))
+            {
+                folderName = AppContext.BaseDirectory;
+            }
+
+            if (!string.IsNullOrWhiteSpace(folderName))
+            {
+                string localFileName = Path.Combine(folderName, executable);
+                if (File.Exists(localFileName))
+                {
+                    return localFileName;
+                }
+            }
+
+            return BaseError.New("Unable to locate ErsatzTV.Scanner executable");
+        }
+        catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
+        {
+            return BaseError.New("Scan was canceled");
+        }
     }
 }

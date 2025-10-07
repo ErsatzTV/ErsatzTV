@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Runtime.InteropServices;
 using Destructurama;
 using ErsatzTV.Core;
+using ErsatzTV.Services.Validators;
 using Serilog;
 using Serilog.Events;
 using Serilog.Sinks.SystemConsole.Themes;
@@ -126,7 +127,17 @@ public class Program
         try
         {
             Environment.SetEnvironmentVariable("DOTNET_HOSTBUILDER__RELOADCONFIGONCHANGE", "false");
-            await CreateHostBuilder(args).Build().RunAsync();
+
+            IHost host = CreateHostBuilder(args).Build();
+
+            // run environment validation and exit on failure
+            var validator = host.Services.GetRequiredService<IEnvironmentValidator>();
+            if (!await validator.Validate())
+            {
+                return 1;
+            }
+
+            await host.RunAsync();
             return 0;
         }
         catch (Exception ex)
