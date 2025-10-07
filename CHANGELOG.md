@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 ### Added
 - Add search field to filter blocks table
+- Show full error/exception details in playback troubleshooting logs
 
 ### Fixed
 - Do not allow deleting ffmpeg profiles that are used by channels
@@ -16,7 +17,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 - Use table instead of tree view on blocks page
-- Show full error/exception details in playback troubleshooting logs
 
 ## [25.7.0] - 2025-09-14
 ### Added
