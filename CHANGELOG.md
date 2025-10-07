@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 - Add search field to filter blocks table
 - Show full error/exception details in playback troubleshooting logs
+- Add basic free space validation on startup
+  - ETV will now fail to start with less than 128 MB free space in config or transcode folders
 
 ### Fixed
 - Do not allow deleting ffmpeg profiles that are used by channels

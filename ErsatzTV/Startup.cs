@@ -74,6 +74,7 @@ using ErsatzTV.Infrastructure.Trakt;
 using ErsatzTV.Serialization;
 using ErsatzTV.Services;
 using ErsatzTV.Services.RunOnce;
+using ErsatzTV.Services.Validators;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Ganss.Xss;
@@ -673,6 +674,8 @@ public class Startup
 
     private static void CustomServices(IServiceCollection services)
     {
+        services.AddSingleton<IEnvironmentValidator, EnvironmentValidator>();
+
         services.AddSingleton<IPlexSecretStore, PlexSecretStore>();
         services.AddSingleton<IPlexTvApiClient, PlexTvApiClient>(); // TODO: does this need to be singleton?
         services.AddSingleton<ITraktApiClient, TraktApiClient>();

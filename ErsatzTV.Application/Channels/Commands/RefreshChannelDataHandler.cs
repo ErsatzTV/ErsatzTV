@@ -46,247 +46,261 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
 
     public async Task Handle(RefreshChannelData request, CancellationToken cancellationToken)
     {
-        _logger.LogDebug("Refreshing channel data (XMLTV) for channel {Channel}", request.ChannelNumber);
-
-        _localFileSystem.EnsureFolderExists(FileSystemLayout.ChannelGuideCacheFolder);
-
-        string targetFile = Path.Combine(FileSystemLayout.ChannelGuideCacheFolder, $"{request.ChannelNumber}.xml");
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-
-        int hiddenCount = await dbContext.Channels
-            .Where(c => c.Number == request.ChannelNumber && c.ShowInEpg == false)
-            .CountAsync(cancellationToken);
-        if (hiddenCount > 0)
+        try
         {
-            File.Delete(targetFile);
-            return;
-        }
+            _logger.LogDebug("Refreshing channel data (XMLTV) for channel {Channel}", request.ChannelNumber);
 
-        string movieTemplateFileName = GetMovieTemplateFileName();
-        string episodeTemplateFileName = GetEpisodeTemplateFileName();
-        string musicVideoTemplateFileName = GetMusicVideoTemplateFileName();
-        string songTemplateFileName = GetSongTemplateFileName();
-        string otherVideoTemplateFileName = GetOtherVideoTemplateFileName();
-        if (movieTemplateFileName is null || episodeTemplateFileName is null || musicVideoTemplateFileName is null ||
-            songTemplateFileName is null || otherVideoTemplateFileName is null)
-        {
-            return;
-        }
+            _localFileSystem.EnsureFolderExists(FileSystemLayout.ChannelGuideCacheFolder);
 
-        var minifier = new XmlMinifier(
-            new XmlMinificationSettings
+            string targetFile = Path.Combine(FileSystemLayout.ChannelGuideCacheFolder, $"{request.ChannelNumber}.xml");
+            await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+
+            int hiddenCount = await dbContext.Channels
+                .Where(c => c.Number == request.ChannelNumber && c.ShowInEpg == false)
+                .CountAsync(cancellationToken);
+            if (hiddenCount > 0)
             {
-                MinifyWhitespace = true,
-                RemoveXmlComments = true,
-                CollapseTagsWithoutContent = true
-            });
-
-        var templateContext = new XmlTemplateContext();
-
-        string movieText = await File.ReadAllTextAsync(movieTemplateFileName, cancellationToken);
-        var movieTemplate = Template.Parse(movieText, movieTemplateFileName);
-
-        string episodeText = await File.ReadAllTextAsync(episodeTemplateFileName, cancellationToken);
-        var episodeTemplate = Template.Parse(episodeText, episodeTemplateFileName);
-
-        string musicVideoText = await File.ReadAllTextAsync(musicVideoTemplateFileName, cancellationToken);
-        var musicVideoTemplate = Template.Parse(musicVideoText, musicVideoTemplateFileName);
-
-        string songText = await File.ReadAllTextAsync(songTemplateFileName, cancellationToken);
-        var songTemplate = Template.Parse(songText, songTemplateFileName);
-
-        string otherVideoText = await File.ReadAllTextAsync(otherVideoTemplateFileName, cancellationToken);
-        var otherVideoTemplate = Template.Parse(otherVideoText, otherVideoTemplateFileName);
-
-        TimeSpan playoutOffset = TimeSpan.Zero;
-        string mirrorChannelNumber = null;
-        Option<Channel> maybeChannel = await dbContext.Channels
-            .AsNoTracking()
-            .Include(c => c.MirrorSourceChannel)
-            .Filter(c => c.PlayoutSource == ChannelPlayoutSource.Mirror && c.MirrorSourceChannelId != null)
-            .SelectOneAsync(c => c.Number == request.ChannelNumber, c => c.Number == request.ChannelNumber, cancellationToken);
-        foreach (Channel channel in maybeChannel)
-        {
-            mirrorChannelNumber = channel.MirrorSourceChannel.Number;
-            playoutOffset = channel.PlayoutOffset ?? TimeSpan.Zero;
-        }
-
-        List<Playout> playouts = await dbContext.Playouts
-            .AsNoTracking()
-            .Filter(pi => pi.Channel.Number == (mirrorChannelNumber ?? request.ChannelNumber))
-            .Include(p => p.Items)
-            .ThenInclude(i => i.MediaItem)
-            .ThenInclude(i => (i as Episode).EpisodeMetadata)
-            .ThenInclude(em => em.Guids)
-            .Include(p => p.Items)
-            .ThenInclude(i => i.MediaItem)
-            .ThenInclude(i => (i as Episode).Season)
-            .ThenInclude(s => s.Show)
-            .ThenInclude(s => s.ShowMetadata)
-            .ThenInclude(sm => sm.Artwork)
-            .Include(p => p.Items)
-            .ThenInclude(i => i.MediaItem)
-            .ThenInclude(i => (i as Episode).Season)
-            .ThenInclude(s => s.Show)
-            .ThenInclude(s => s.ShowMetadata)
-            .ThenInclude(sm => sm.Genres)
-            .Include(p => p.Items)
-            .ThenInclude(i => i.MediaItem)
-            .ThenInclude(i => (i as Episode).Season)
-            .ThenInclude(s => s.Show)
-            .ThenInclude(s => s.ShowMetadata)
-            .ThenInclude(sm => sm.Guids)
-            .Include(p => p.Items)
-            .ThenInclude(i => i.MediaItem)
-            .ThenInclude(i => (i as Movie).MovieMetadata)
-            .ThenInclude(mm => mm.Artwork)
-            .Include(p => p.Items)
-            .ThenInclude(i => i.MediaItem)
-            .ThenInclude(i => (i as Movie).MovieMetadata)
-            .ThenInclude(mm => mm.Genres)
-            .Include(p => p.Items)
-            .ThenInclude(i => i.MediaItem)
-            .ThenInclude(i => (i as Movie).MovieMetadata)
-            .ThenInclude(mm => mm.Guids)
-            .Include(p => p.Items)
-            .ThenInclude(i => i.MediaItem)
-            .ThenInclude(i => (i as MusicVideo).MusicVideoMetadata)
-            .ThenInclude(mm => mm.Artwork)
-            .Include(p => p.Items)
-            .ThenInclude(i => i.MediaItem)
-            .ThenInclude(i => (i as MusicVideo).MusicVideoMetadata)
-            .ThenInclude(mvm => mvm.Genres)
-            .Include(p => p.Items)
-            .ThenInclude(i => i.MediaItem)
-            .ThenInclude(i => (i as MusicVideo).MusicVideoMetadata)
-            .ThenInclude(mvm => mvm.Studios)
-            .Include(p => p.Items)
-            .ThenInclude(i => i.MediaItem)
-            .ThenInclude(i => (i as MusicVideo).MusicVideoMetadata)
-            .ThenInclude(mvm => mvm.Directors)
-            .Include(p => p.Items)
-            .ThenInclude(i => i.MediaItem)
-            .ThenInclude(i => (i as MusicVideo).MusicVideoMetadata)
-            .ThenInclude(mvm => mvm.Artists)
-            .Include(p => p.Items)
-            .ThenInclude(i => i.MediaItem)
-            .ThenInclude(i => (i as MusicVideo).Artist)
-            .ThenInclude(a => a.ArtistMetadata)
-            .ThenInclude(am => am.Genres)
-            .Include(p => p.Items)
-            .ThenInclude(i => i.MediaItem)
-            .ThenInclude(i => (i as OtherVideo).OtherVideoMetadata)
-            .ThenInclude(vm => vm.Artwork)
-            .Include(p => p.Items)
-            .ThenInclude(i => i.MediaItem)
-            .ThenInclude(i => (i as Song).SongMetadata)
-            .ThenInclude(vm => vm.Artwork)
-            .Include(p => p.Items)
-            .ThenInclude(i => i.MediaItem)
-            .ThenInclude(i => (i as Song).SongMetadata)
-            .ThenInclude(sm => sm.Genres)
-            .Include(p => p.Items)
-            .ThenInclude(i => i.MediaItem)
-            .ThenInclude(i => (i as Song).SongMetadata)
-            .ThenInclude(sm => sm.Studios)
-            .ToListAsync(cancellationToken);
-
-        await using RecyclableMemoryStream ms = _recyclableMemoryStreamManager.GetStream();
-        await using var xml = XmlWriter.Create(
-            ms,
-            new XmlWriterSettings { Async = true, ConformanceLevel = ConformanceLevel.Fragment });
-
-        int daysToBuild = await _configElementRepository
-            .GetValue<int>(ConfigElementKey.XmltvDaysToBuild, cancellationToken)
-            .IfNoneAsync(2);
-
-        DateTimeOffset finish = DateTimeOffset.UtcNow.AddDays(daysToBuild);
-
-        foreach (Playout playout in playouts)
-        {
-            switch (playout.ScheduleKind)
-            {
-                case PlayoutScheduleKind.Classic:
-                case PlayoutScheduleKind.Sequential:
-                case PlayoutScheduleKind.Scripted:
-                    var floodSorted = playouts
-                        .Collect(p => p.Items)
-                        .OrderBy(pi => pi.Start)
-                        .Filter(pi => pi.StartOffset <= finish)
-                        .ToList();
-                    foreach (var item in floodSorted)
-                    {
-                        item.Start += playoutOffset;
-                        item.Finish += playoutOffset;
-                    }
-                    await WritePlayoutXml(
-                        request,
-                        floodSorted,
-                        templateContext,
-                        movieTemplate,
-                        episodeTemplate,
-                        musicVideoTemplate,
-                        songTemplate,
-                        otherVideoTemplate,
-                        minifier,
-                        xml,
-                        cancellationToken);
-                    break;
-                case PlayoutScheduleKind.Block:
-                    var blockSorted = playouts
-                        .Collect(p => p.Items)
-                        .OrderBy(pi => pi.Start)
-                        .Filter(pi => pi.StartOffset <= finish)
-                        .ToList();
-                    foreach (var item in blockSorted)
-                    {
-                        item.Start += playoutOffset;
-                        item.Finish += playoutOffset;
-                    }
-                    await WriteBlockPlayoutXml(
-                        request,
-                        blockSorted,
-                        templateContext,
-                        movieTemplate,
-                        episodeTemplate,
-                        musicVideoTemplate,
-                        songTemplate,
-                        otherVideoTemplate,
-                        minifier,
-                        xml,
-                        cancellationToken);
-                    break;
-                case PlayoutScheduleKind.ExternalJson:
-                    var externalJsonSorted = (await CollectExternalJsonItems(playout.ScheduleFile))
-                        .Filter(pi => pi.StartOffset <= finish)
-                        .ToList();
-                    foreach (var item in externalJsonSorted)
-                    {
-                        item.Start += playoutOffset;
-                        item.Finish += playoutOffset;
-                    }
-                    await WritePlayoutXml(
-                        request,
-                        externalJsonSorted,
-                        templateContext,
-                        movieTemplate,
-                        episodeTemplate,
-                        musicVideoTemplate,
-                        songTemplate,
-                        otherVideoTemplate,
-                        minifier,
-                        xml,
-                        cancellationToken);
-                    break;
+                File.Delete(targetFile);
+                return;
             }
+
+            string movieTemplateFileName = GetMovieTemplateFileName();
+            string episodeTemplateFileName = GetEpisodeTemplateFileName();
+            string musicVideoTemplateFileName = GetMusicVideoTemplateFileName();
+            string songTemplateFileName = GetSongTemplateFileName();
+            string otherVideoTemplateFileName = GetOtherVideoTemplateFileName();
+            if (movieTemplateFileName is null || episodeTemplateFileName is null ||
+                musicVideoTemplateFileName is null ||
+                songTemplateFileName is null || otherVideoTemplateFileName is null)
+            {
+                return;
+            }
+
+            var minifier = new XmlMinifier(
+                new XmlMinificationSettings
+                {
+                    MinifyWhitespace = true,
+                    RemoveXmlComments = true,
+                    CollapseTagsWithoutContent = true
+                });
+
+            var templateContext = new XmlTemplateContext();
+
+            string movieText = await File.ReadAllTextAsync(movieTemplateFileName, cancellationToken);
+            var movieTemplate = Template.Parse(movieText, movieTemplateFileName);
+
+            string episodeText = await File.ReadAllTextAsync(episodeTemplateFileName, cancellationToken);
+            var episodeTemplate = Template.Parse(episodeText, episodeTemplateFileName);
+
+            string musicVideoText = await File.ReadAllTextAsync(musicVideoTemplateFileName, cancellationToken);
+            var musicVideoTemplate = Template.Parse(musicVideoText, musicVideoTemplateFileName);
+
+            string songText = await File.ReadAllTextAsync(songTemplateFileName, cancellationToken);
+            var songTemplate = Template.Parse(songText, songTemplateFileName);
+
+            string otherVideoText = await File.ReadAllTextAsync(otherVideoTemplateFileName, cancellationToken);
+            var otherVideoTemplate = Template.Parse(otherVideoText, otherVideoTemplateFileName);
+
+            TimeSpan playoutOffset = TimeSpan.Zero;
+            string mirrorChannelNumber = null;
+            Option<Channel> maybeChannel = await dbContext.Channels
+                .AsNoTracking()
+                .Include(c => c.MirrorSourceChannel)
+                .Filter(c => c.PlayoutSource == ChannelPlayoutSource.Mirror && c.MirrorSourceChannelId != null)
+                .SelectOneAsync(
+                    c => c.Number == request.ChannelNumber,
+                    c => c.Number == request.ChannelNumber,
+                    cancellationToken);
+            foreach (Channel channel in maybeChannel)
+            {
+                mirrorChannelNumber = channel.MirrorSourceChannel.Number;
+                playoutOffset = channel.PlayoutOffset ?? TimeSpan.Zero;
+            }
+
+            List<Playout> playouts = await dbContext.Playouts
+                .AsNoTracking()
+                .Filter(pi => pi.Channel.Number == (mirrorChannelNumber ?? request.ChannelNumber))
+                .Include(p => p.Items)
+                .ThenInclude(i => i.MediaItem)
+                .ThenInclude(i => (i as Episode).EpisodeMetadata)
+                .ThenInclude(em => em.Guids)
+                .Include(p => p.Items)
+                .ThenInclude(i => i.MediaItem)
+                .ThenInclude(i => (i as Episode).Season)
+                .ThenInclude(s => s.Show)
+                .ThenInclude(s => s.ShowMetadata)
+                .ThenInclude(sm => sm.Artwork)
+                .Include(p => p.Items)
+                .ThenInclude(i => i.MediaItem)
+                .ThenInclude(i => (i as Episode).Season)
+                .ThenInclude(s => s.Show)
+                .ThenInclude(s => s.ShowMetadata)
+                .ThenInclude(sm => sm.Genres)
+                .Include(p => p.Items)
+                .ThenInclude(i => i.MediaItem)
+                .ThenInclude(i => (i as Episode).Season)
+                .ThenInclude(s => s.Show)
+                .ThenInclude(s => s.ShowMetadata)
+                .ThenInclude(sm => sm.Guids)
+                .Include(p => p.Items)
+                .ThenInclude(i => i.MediaItem)
+                .ThenInclude(i => (i as Movie).MovieMetadata)
+                .ThenInclude(mm => mm.Artwork)
+                .Include(p => p.Items)
+                .ThenInclude(i => i.MediaItem)
+                .ThenInclude(i => (i as Movie).MovieMetadata)
+                .ThenInclude(mm => mm.Genres)
+                .Include(p => p.Items)
+                .ThenInclude(i => i.MediaItem)
+                .ThenInclude(i => (i as Movie).MovieMetadata)
+                .ThenInclude(mm => mm.Guids)
+                .Include(p => p.Items)
+                .ThenInclude(i => i.MediaItem)
+                .ThenInclude(i => (i as MusicVideo).MusicVideoMetadata)
+                .ThenInclude(mm => mm.Artwork)
+                .Include(p => p.Items)
+                .ThenInclude(i => i.MediaItem)
+                .ThenInclude(i => (i as MusicVideo).MusicVideoMetadata)
+                .ThenInclude(mvm => mvm.Genres)
+                .Include(p => p.Items)
+                .ThenInclude(i => i.MediaItem)
+                .ThenInclude(i => (i as MusicVideo).MusicVideoMetadata)
+                .ThenInclude(mvm => mvm.Studios)
+                .Include(p => p.Items)
+                .ThenInclude(i => i.MediaItem)
+                .ThenInclude(i => (i as MusicVideo).MusicVideoMetadata)
+                .ThenInclude(mvm => mvm.Directors)
+                .Include(p => p.Items)
+                .ThenInclude(i => i.MediaItem)
+                .ThenInclude(i => (i as MusicVideo).MusicVideoMetadata)
+                .ThenInclude(mvm => mvm.Artists)
+                .Include(p => p.Items)
+                .ThenInclude(i => i.MediaItem)
+                .ThenInclude(i => (i as MusicVideo).Artist)
+                .ThenInclude(a => a.ArtistMetadata)
+                .ThenInclude(am => am.Genres)
+                .Include(p => p.Items)
+                .ThenInclude(i => i.MediaItem)
+                .ThenInclude(i => (i as OtherVideo).OtherVideoMetadata)
+                .ThenInclude(vm => vm.Artwork)
+                .Include(p => p.Items)
+                .ThenInclude(i => i.MediaItem)
+                .ThenInclude(i => (i as Song).SongMetadata)
+                .ThenInclude(vm => vm.Artwork)
+                .Include(p => p.Items)
+                .ThenInclude(i => i.MediaItem)
+                .ThenInclude(i => (i as Song).SongMetadata)
+                .ThenInclude(sm => sm.Genres)
+                .Include(p => p.Items)
+                .ThenInclude(i => i.MediaItem)
+                .ThenInclude(i => (i as Song).SongMetadata)
+                .ThenInclude(sm => sm.Studios)
+                .ToListAsync(cancellationToken);
+
+            await using RecyclableMemoryStream ms = _recyclableMemoryStreamManager.GetStream();
+            await using var xml = XmlWriter.Create(
+                ms,
+                new XmlWriterSettings { Async = true, ConformanceLevel = ConformanceLevel.Fragment });
+
+            int daysToBuild = await _configElementRepository
+                .GetValue<int>(ConfigElementKey.XmltvDaysToBuild, cancellationToken)
+                .IfNoneAsync(2);
+
+            DateTimeOffset finish = DateTimeOffset.UtcNow.AddDays(daysToBuild);
+
+            foreach (Playout playout in playouts)
+            {
+                switch (playout.ScheduleKind)
+                {
+                    case PlayoutScheduleKind.Classic:
+                    case PlayoutScheduleKind.Sequential:
+                    case PlayoutScheduleKind.Scripted:
+                        var floodSorted = playouts
+                            .Collect(p => p.Items)
+                            .OrderBy(pi => pi.Start)
+                            .Filter(pi => pi.StartOffset <= finish)
+                            .ToList();
+                        foreach (var item in floodSorted)
+                        {
+                            item.Start += playoutOffset;
+                            item.Finish += playoutOffset;
+                        }
+
+                        await WritePlayoutXml(
+                            request,
+                            floodSorted,
+                            templateContext,
+                            movieTemplate,
+                            episodeTemplate,
+                            musicVideoTemplate,
+                            songTemplate,
+                            otherVideoTemplate,
+                            minifier,
+                            xml,
+                            cancellationToken);
+                        break;
+                    case PlayoutScheduleKind.Block:
+                        var blockSorted = playouts
+                            .Collect(p => p.Items)
+                            .OrderBy(pi => pi.Start)
+                            .Filter(pi => pi.StartOffset <= finish)
+                            .ToList();
+                        foreach (var item in blockSorted)
+                        {
+                            item.Start += playoutOffset;
+                            item.Finish += playoutOffset;
+                        }
+
+                        await WriteBlockPlayoutXml(
+                            request,
+                            blockSorted,
+                            templateContext,
+                            movieTemplate,
+                            episodeTemplate,
+                            musicVideoTemplate,
+                            songTemplate,
+                            otherVideoTemplate,
+                            minifier,
+                            xml,
+                            cancellationToken);
+                        break;
+                    case PlayoutScheduleKind.ExternalJson:
+                        var externalJsonSorted = (await CollectExternalJsonItems(playout.ScheduleFile))
+                            .Filter(pi => pi.StartOffset <= finish)
+                            .ToList();
+                        foreach (var item in externalJsonSorted)
+                        {
+                            item.Start += playoutOffset;
+                            item.Finish += playoutOffset;
+                        }
+
+                        await WritePlayoutXml(
+                            request,
+                            externalJsonSorted,
+                            templateContext,
+                            movieTemplate,
+                            episodeTemplate,
+                            musicVideoTemplate,
+                            songTemplate,
+                            otherVideoTemplate,
+                            minifier,
+                            xml,
+                            cancellationToken);
+                        break;
+                }
+            }
+
+            await xml.FlushAsync();
+
+            string tempFile = Path.GetTempFileName();
+            await File.WriteAllBytesAsync(tempFile, ms.ToArray(), cancellationToken);
+
+            File.Move(tempFile, targetFile, true);
         }
-
-        await xml.FlushAsync();
-
-        string tempFile = Path.GetTempFileName();
-        await File.WriteAllBytesAsync(tempFile, ms.ToArray(), cancellationToken);
-
-        File.Move(tempFile, targetFile, true);
+        catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
+        {
+            // do nothing
+        }
     }
 
     private async Task WritePlayoutXml(
