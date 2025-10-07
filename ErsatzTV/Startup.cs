@@ -18,6 +18,7 @@ using ErsatzTV.Core.Graphics;
 using ErsatzTV.Core.Health;
 using ErsatzTV.Core.Health.Checks;
 using ErsatzTV.Core.Images;
+using ErsatzTV.Core.Interfaces.Database;
 using ErsatzTV.Core.Interfaces.Emby;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.GitHub;
@@ -53,6 +54,7 @@ using ErsatzTV.Formatters;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Data.Repositories;
 using ErsatzTV.Infrastructure.Data.Repositories.Caching;
+using ErsatzTV.Infrastructure.Database;
 using ErsatzTV.Infrastructure.Emby;
 using ErsatzTV.Infrastructure.FFmpeg;
 using ErsatzTV.Infrastructure.GitHub;
@@ -676,6 +678,7 @@ public class Startup
     {
         services.AddSingleton<IEnvironmentValidator, EnvironmentValidator>();
 
+        services.AddSingleton<IDatabaseMigrations, DatabaseMigrations>();
         services.AddSingleton<IPlexSecretStore, PlexSecretStore>();
         services.AddSingleton<IPlexTvApiClient, PlexTvApiClient>(); // TODO: does this need to be singleton?
         services.AddSingleton<ITraktApiClient, TraktApiClient>();
@@ -728,6 +731,7 @@ public class Startup
         services.AddScoped<IVaapiDriverHealthCheck, VaapiDriverHealthCheck>();
         services.AddScoped<IErrorReportsHealthCheck, ErrorReportsHealthCheck>();
         services.AddScoped<IUnifiedDockerHealthCheck, UnifiedDockerHealthCheck>();
+        services.AddScoped<IDowngradeHealthCheck, DowngradeHealthCheck>();
         services.AddScoped<IHealthCheckService, HealthCheckService>();
 
         services.AddScoped<IChannelRepository, ChannelRepository>();

@@ -88,9 +88,18 @@
                                 {
                                     foreach (HealthCheckLink link in context.Link)
                                     {
-                                        <MudLink Href="@link.Link">
-                                            @context.Message
-                                        </MudLink>
+                                        if (link.Link.StartsWith("http"))
+                                        {
+                                            <MudLink Href="@link.Link" Target="_blank">
+                                                @context.Message
+                                            </MudLink>
+                                        }
+                                        else
+                                        {
+                                            <MudLink Href="@link.Link">
+                                                @context.Message
+                                            </MudLink>
+                                        }
                                     }
                                 }
                                 else
