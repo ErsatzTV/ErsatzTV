@@ -120,7 +120,8 @@ internal static class CudaHelper
                     var decoderCaps = LibCuVideo.GetDecoderCaps(ref caps);
                     if (decoderCaps != CuResult.Success)
                     {
-                        Console.WriteLine("Failed to check decode capability: " + result);
+                        Console.WriteLine(
+                            $"Failed to check decode capability for device {description.Handle} ({name}): {decoderCaps}");
                         continue;
                     }
 
