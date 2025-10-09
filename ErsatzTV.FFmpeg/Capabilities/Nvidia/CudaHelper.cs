@@ -185,9 +185,9 @@ internal static class CudaHelper
 
                 result.Add(new CudaDevice(device.Handle, name, new Version(major, minor), encoders, decoders));
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // do nothing
+                Console.WriteLine($"Error processing CUDA device {description.Handle}: {ex}");
             }
         }
 
