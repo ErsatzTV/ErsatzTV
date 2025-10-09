@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [25.7.1] - 2025-10-09
 ### Added
 - Add search field to filter blocks table
 - Show full error/exception details in playback troubleshooting logs
@@ -21,7 +23,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 - Use table instead of tree view on blocks page
 
-## [25.7.0] - 2025-09-14
+## [25.7.0] - 2025-10-03
 ### Added
 - Add new collection type `Rerun Collection`
   - This collection type will show up as *two* collection types in classic schedules
@@ -2822,7 +2824,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/ErsatzTV/ErsatzTV/compare/v25.7.0...HEAD
+[Unreleased]: https://github.com/ErsatzTV/ErsatzTV/compare/v25.7.1...HEAD
+[25.7.1]: https://github.com/ErsatzTV/ErsatzTV/compare/v25.7.0...v25.7.1
 [25.7.0]: https://github.com/ErsatzTV/ErsatzTV/compare/v25.6.0...v25.7.0
 [25.6.0]: https://github.com/ErsatzTV/ErsatzTV/compare/v25.5.0...v25.6.0
 [25.5.0]: https://github.com/ErsatzTV/ErsatzTV/compare/v25.4.0...v25.5.0
