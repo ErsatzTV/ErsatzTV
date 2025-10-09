@@ -104,6 +104,7 @@ internal static class CudaHelper
                 int minor = device.GetAttribute(CuDeviceAttribute.ComputeCapabilityMinor);
 
                 using var context = device.CreateContext();
+                context.Push();
 
                 var encoders = new List<CudaCodec>();
                 var decoders = new List<CudaDecoder>();
