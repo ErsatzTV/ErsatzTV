@@ -122,20 +122,27 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
             return string.Empty;
         }
 
-        Option<List<CudaDevice>> maybeDevices = CudaHelper.GetDevices();
-        foreach (List<CudaDevice> devices in maybeDevices.Where(list => list.Count > 0))
+        try
         {
-            var sb = new StringBuilder();
-            foreach (CudaDevice device in devices)
+            Option<List<CudaDevice>> maybeDevices = CudaHelper.GetDevices();
+            foreach (List<CudaDevice> devices in maybeDevices.Where(list => list.Count > 0))
             {
-                sb.AppendLine(
-                    CultureInfo.InvariantCulture,
-                    $"GPU #{device.Handle} < {device.Model} > has Compute SM {device.Version.Major}.{device.Version.Minor}");
+                var sb = new StringBuilder();
+                foreach (CudaDevice device in devices)
+                {
+                    sb.AppendLine(
+                        CultureInfo.InvariantCulture,
+                        $"GPU #{device.Handle} < {device.Model} > has Compute SM {device.Version.Major}.{device.Version.Minor}");
 
-                sb.AppendLine(CudaHelper.GetDeviceDetails(device));
+                    sb.AppendLine(CudaHelper.GetDeviceDetails(device));
+                }
+
+                return sb.ToString();
             }
-
-            return sb.ToString();
+        }
+        catch (FileNotFoundException)
+        {
+            // do nothing
         }
 
         // if we don't have a list of cuda devices, fall back to ffmpeg check
@@ -522,17 +529,24 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
             return new NvidiaHardwareCapabilities(cudaDevice, ffmpegCapabilities, _logger);
         }
 
-        Option<List<CudaDevice>> maybeDevices = CudaHelper.GetDevices();
-        foreach (CudaDevice firstDevice in maybeDevices.Map(list => list.HeadOrNone()))
+        try
         {
-            _logger.LogDebug(
-                "Detected NVIDIA GPU model {Model} architecture SM {Major}.{Minor}",
-                firstDevice.Model,
-                firstDevice.Version.Major,
-                firstDevice.Version.Minor);
+            Option<List<CudaDevice>> maybeDevices = CudaHelper.GetDevices();
+            foreach (CudaDevice firstDevice in maybeDevices.Map(list => list.HeadOrNone()))
+            {
+                _logger.LogDebug(
+                    "Detected NVIDIA GPU model {Model} architecture SM {Major}.{Minor}",
+                    firstDevice.Model,
+                    firstDevice.Version.Major,
+                    firstDevice.Version.Minor);
 
-            _memoryCache.Set(CudaDeviceKey, firstDevice);
-            return new NvidiaHardwareCapabilities(firstDevice, ffmpegCapabilities, _logger);
+                _memoryCache.Set(CudaDeviceKey, firstDevice);
+                return new NvidiaHardwareCapabilities(firstDevice, ffmpegCapabilities, _logger);
+            }
+        }
+        catch (FileNotFoundException)
+        {
+            // do nothing
         }
 
         _logger.LogWarning(
