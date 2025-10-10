@@ -23,6 +23,7 @@ public class TemplateDataRepository(ILocalFileSystem localFileSystem, IDbContext
             Movie => await GetMovieTemplateData(mediaItem.Id, cancellationToken),
             Episode => await GetEpisodeTemplateData(mediaItem.Id, cancellationToken),
             MusicVideo => await GetMusicVideoTemplateData(mediaItem.Id, cancellationToken),
+            OtherVideo => await GetOtherVideoTemplateData(mediaItem.Id, cancellationToken),
             _ => Option<Dictionary<string, object>>.None
         };
 
@@ -120,13 +121,16 @@ public class TemplateDataRepository(ILocalFileSystem localFileSystem, IDbContext
         return Option<Dictionary<string, object>>.None;
     }
 
-    private async Task<Option<Dictionary<string, object>>> GetMovieTemplateData(int movieId, CancellationToken cancellationToken)
+    private async Task<Option<Dictionary<string, object>>> GetMovieTemplateData(
+        int movieId,
+        CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         Option<Movie> maybeMovie = await dbContext.Movies
             .AsNoTracking()
             .Include(m => m.MediaVersions)
+            .ThenInclude(mv => mv.MediaFiles)
             .Include(m => m.MovieMetadata)
             .ThenInclude(mm => mm.Studios)
             .Include(m => m.MovieMetadata)
@@ -139,7 +143,7 @@ public class TemplateDataRepository(ILocalFileSystem localFileSystem, IDbContext
         {
             foreach (MovieMetadata metadata in movie.MovieMetadata.HeadOrNone())
             {
-                return new Dictionary<string, object>
+                var result = new Dictionary<string, object>
                 {
                     [MediaItemTemplateDataKey.Title] = metadata.Title,
                     [MediaItemTemplateDataKey.Plot] = metadata.Plot,
@@ -151,19 +155,32 @@ public class TemplateDataRepository(ILocalFileSystem localFileSystem, IDbContext
                     [MediaItemTemplateDataKey.Duration] = movie.GetHeadVersion().Duration,
                     [MediaItemTemplateDataKey.ContentRating] = metadata.ContentRating
                 };
+
+                foreach (var version in movie.MediaVersions.HeadOrNone())
+                {
+                    foreach (var file in version.MediaFiles.HeadOrNone())
+                    {
+                        result.Add(MediaItemTemplateDataKey.Path, file.Path);
+                    }
+                }
+
+                return result;
             }
         }
 
         return Option<Dictionary<string, object>>.None;
     }
 
-    private async Task<Option<Dictionary<string, object>>> GetEpisodeTemplateData(int episodeId, CancellationToken cancellationToken)
+    private async Task<Option<Dictionary<string, object>>> GetEpisodeTemplateData(
+        int episodeId,
+        CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         Option<Episode> maybeEpisode = await dbContext.Episodes
             .AsNoTracking()
             .Include(e => e.MediaVersions)
+            .ThenInclude(mv => mv.MediaFiles)
             .Include(e => e.Season)
             .ThenInclude(s => s.Show)
             .ThenInclude(s => s.ShowMetadata)
@@ -206,19 +223,30 @@ public class TemplateDataRepository(ILocalFileSystem localFileSystem, IDbContext
                 result.Add(MediaItemTemplateDataKey.Duration, episode.GetHeadVersion().Duration);
             }
 
+            foreach (var version in episode.MediaVersions.HeadOrNone())
+            {
+                foreach (var file in version.MediaFiles.HeadOrNone())
+                {
+                    result.Add(MediaItemTemplateDataKey.Path, file.Path);
+                }
+            }
+
             return result;
         }
 
         return Option<Dictionary<string, object>>.None;
     }
 
-    private async Task<Option<Dictionary<string, object>>> GetMusicVideoTemplateData(int musicVideoId, CancellationToken cancellationToken)
+    private async Task<Option<Dictionary<string, object>>> GetMusicVideoTemplateData(
+        int musicVideoId,
+        CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         Option<MusicVideo> maybeMusicVideo = await dbContext.MusicVideos
             .AsNoTracking()
             .Include(mv => mv.MediaVersions)
+            .ThenInclude(mv => mv.MediaFiles)
             .Include(mv => mv.Artist)
             .ThenInclude(a => a.ArtistMetadata)
             .Include(mv => mv.MusicVideoMetadata)
@@ -241,7 +269,7 @@ public class TemplateDataRepository(ILocalFileSystem localFileSystem, IDbContext
                     artist = artistMetadata.Title;
                 }
 
-                return new Dictionary<string, object>
+                var result = new Dictionary<string, object>
                 {
                     [MediaItemTemplateDataKey.Title] = metadata.Title,
                     [MediaItemTemplateDataKey.Track] = metadata.Track,
@@ -256,6 +284,66 @@ public class TemplateDataRepository(ILocalFileSystem localFileSystem, IDbContext
                     [MediaItemTemplateDataKey.Genres] = (metadata.Genres ?? []).Map(g => g.Name).OrderBy(identity),
                     [MediaItemTemplateDataKey.Duration] = musicVideo.GetHeadVersion().Duration
                 };
+
+                foreach (var version in musicVideo.MediaVersions.HeadOrNone())
+                {
+                    foreach (var file in version.MediaFiles.HeadOrNone())
+                    {
+                        result.Add(MediaItemTemplateDataKey.Path, file.Path);
+                    }
+                }
+
+                return result;
+            }
+        }
+
+        return Option<Dictionary<string, object>>.None;
+    }
+
+    private async Task<Option<Dictionary<string, object>>> GetOtherVideoTemplateData(
+        int otherVideoId,
+        CancellationToken cancellationToken)
+    {
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+
+        Option<OtherVideo> maybeOtherVideo = await dbContext.OtherVideos
+            .AsNoTracking()
+            .Include(mv => mv.MediaVersions)
+            .ThenInclude(mv => mv.MediaFiles)
+            .Include(mv => mv.OtherVideoMetadata)
+            .Include(mv => mv.OtherVideoMetadata)
+            .ThenInclude(mvm => mvm.Studios)
+            .Include(mv => mv.OtherVideoMetadata)
+            .ThenInclude(mvm => mvm.Directors)
+            .Include(mv => mv.OtherVideoMetadata)
+            .ThenInclude(mvm => mvm.Genres)
+            .SelectOneAsync(mv => mv.Id, mv => mv.Id == otherVideoId, cancellationToken);
+
+        foreach (OtherVideo otherVideo in maybeOtherVideo)
+        {
+            foreach (OtherVideoMetadata metadata in otherVideo.OtherVideoMetadata.HeadOrNone())
+            {
+                var result = new Dictionary<string, object>
+                {
+                    [MediaItemTemplateDataKey.Title] = metadata.Title,
+                    [MediaItemTemplateDataKey.Plot] = metadata.Plot,
+                    [MediaItemTemplateDataKey.ReleaseDate] = metadata.ReleaseDate,
+                    [MediaItemTemplateDataKey.Studios] = (metadata.Studios ?? []).Map(s => s.Name).OrderBy(identity),
+                    [MediaItemTemplateDataKey.Directors] =
+                        (metadata.Directors ?? []).Map(d => d.Name).OrderBy(identity),
+                    [MediaItemTemplateDataKey.Genres] = (metadata.Genres ?? []).Map(g => g.Name).OrderBy(identity),
+                    [MediaItemTemplateDataKey.Duration] = otherVideo.GetHeadVersion().Duration
+                };
+
+                foreach (var version in otherVideo.MediaVersions.HeadOrNone())
+                {
+                    foreach (var file in version.MediaFiles.HeadOrNone())
+                    {
+                        result.Add(MediaItemTemplateDataKey.Path, file.Path);
+                    }
+                }
+
+                return result;
             }
         }
 

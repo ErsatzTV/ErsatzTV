@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Added
+- Graphics engine:
+  - Add template data (like `MediaItem_Title`) for other video files
+  - Add `MediaItem_Path` for movies, episodes, music videos and other videos
+  - Add `get_directory_name` and `get_filename_without_extension` functions for path processing
+
 ### Fixed
 - Fix NVIDIA startup errors on arm64
 

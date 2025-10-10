@@ -214,6 +214,8 @@ public partial class GraphicsElementLoader(
             scriptObject.Import(variables, renamer: member => member.Name);
             scriptObject.Import("convert_timezone", templateFunctions.ConvertTimeZone);
             scriptObject.Import("format_datetime", templateFunctions.FormatDateTime);
+            scriptObject.Import("get_directory_name", (string path) => Path.GetDirectoryName(path));
+            scriptObject.Import("get_filename_without_extension", (string path) => Path.GetFileNameWithoutExtension(path));
 
             var context = new TemplateContext { MemberRenamer = member => member.Name };
             context.PushGlobal(scriptObject);
