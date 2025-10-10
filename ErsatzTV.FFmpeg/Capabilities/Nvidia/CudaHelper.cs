@@ -8,6 +8,8 @@ namespace ErsatzTV.FFmpeg.Capabilities.Nvidia;
 
 internal static class CudaHelper
 {
+    public static bool IsLoaded { get; set; }
+
     private static bool _success;
     private static bool _initialized;
     private static readonly Lock Lock = new();
@@ -82,7 +84,7 @@ internal static class CudaHelper
     {
         var result = new List<CudaDevice>();
 
-        if (!EnsureInit())
+        if (!IsLoaded || !EnsureInit())
         {
             return Option<List<CudaDevice>>.None;
         }
