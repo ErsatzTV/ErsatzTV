@@ -8,6 +8,7 @@ public static class MediaItemTemplateDataKey
     public static readonly string StreamSeek = "MediaItem_StreamSeek";
 
     // common
+    public static readonly string Path = "MediaItem_Path";
     public static readonly string Title = "MediaItem_Title";
     public static readonly string Plot = "MediaItem_Plot";
     public static readonly string ReleaseDate = "MediaItem_ReleaseDate";

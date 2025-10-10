@@ -130,6 +130,7 @@ public class TemplateDataRepository(ILocalFileSystem localFileSystem, IDbContext
         Option<Movie> maybeMovie = await dbContext.Movies
             .AsNoTracking()
             .Include(m => m.MediaVersions)
+            .ThenInclude(mv => mv.MediaFiles)
             .Include(m => m.MovieMetadata)
             .ThenInclude(mm => mm.Studios)
             .Include(m => m.MovieMetadata)
@@ -142,7 +143,7 @@ public class TemplateDataRepository(ILocalFileSystem localFileSystem, IDbContext
         {
             foreach (MovieMetadata metadata in movie.MovieMetadata.HeadOrNone())
             {
-                return new Dictionary<string, object>
+                var result = new Dictionary<string, object>
                 {
                     [MediaItemTemplateDataKey.Title] = metadata.Title,
                     [MediaItemTemplateDataKey.Plot] = metadata.Plot,
@@ -154,6 +155,16 @@ public class TemplateDataRepository(ILocalFileSystem localFileSystem, IDbContext
                     [MediaItemTemplateDataKey.Duration] = movie.GetHeadVersion().Duration,
                     [MediaItemTemplateDataKey.ContentRating] = metadata.ContentRating
                 };
+
+                foreach (var version in movie.MediaVersions.HeadOrNone())
+                {
+                    foreach (var file in version.MediaFiles.HeadOrNone())
+                    {
+                        result.Add(MediaItemTemplateDataKey.Path, file.Path);
+                    }
+                }
+
+                return result;
             }
         }
 
@@ -169,6 +180,7 @@ public class TemplateDataRepository(ILocalFileSystem localFileSystem, IDbContext
         Option<Episode> maybeEpisode = await dbContext.Episodes
             .AsNoTracking()
             .Include(e => e.MediaVersions)
+            .ThenInclude(mv => mv.MediaFiles)
             .Include(e => e.Season)
             .ThenInclude(s => s.Show)
             .ThenInclude(s => s.ShowMetadata)
@@ -211,6 +223,14 @@ public class TemplateDataRepository(ILocalFileSystem localFileSystem, IDbContext
                 result.Add(MediaItemTemplateDataKey.Duration, episode.GetHeadVersion().Duration);
             }
 
+            foreach (var version in episode.MediaVersions.HeadOrNone())
+            {
+                foreach (var file in version.MediaFiles.HeadOrNone())
+                {
+                    result.Add(MediaItemTemplateDataKey.Path, file.Path);
+                }
+            }
+
             return result;
         }
 
@@ -226,6 +246,7 @@ public class TemplateDataRepository(ILocalFileSystem localFileSystem, IDbContext
         Option<MusicVideo> maybeMusicVideo = await dbContext.MusicVideos
             .AsNoTracking()
             .Include(mv => mv.MediaVersions)
+            .ThenInclude(mv => mv.MediaFiles)
             .Include(mv => mv.Artist)
             .ThenInclude(a => a.ArtistMetadata)
             .Include(mv => mv.MusicVideoMetadata)
@@ -248,7 +269,7 @@ public class TemplateDataRepository(ILocalFileSystem localFileSystem, IDbContext
                     artist = artistMetadata.Title;
                 }
 
-                return new Dictionary<string, object>
+                var result = new Dictionary<string, object>
                 {
                     [MediaItemTemplateDataKey.Title] = metadata.Title,
                     [MediaItemTemplateDataKey.Track] = metadata.Track,
@@ -263,6 +284,16 @@ public class TemplateDataRepository(ILocalFileSystem localFileSystem, IDbContext
                     [MediaItemTemplateDataKey.Genres] = (metadata.Genres ?? []).Map(g => g.Name).OrderBy(identity),
                     [MediaItemTemplateDataKey.Duration] = musicVideo.GetHeadVersion().Duration
                 };
+
+                foreach (var version in musicVideo.MediaVersions.HeadOrNone())
+                {
+                    foreach (var file in version.MediaFiles.HeadOrNone())
+                    {
+                        result.Add(MediaItemTemplateDataKey.Path, file.Path);
+                    }
+                }
+
+                return result;
             }
         }
 
@@ -278,6 +309,7 @@ public class TemplateDataRepository(ILocalFileSystem localFileSystem, IDbContext
         Option<OtherVideo> maybeOtherVideo = await dbContext.OtherVideos
             .AsNoTracking()
             .Include(mv => mv.MediaVersions)
+            .ThenInclude(mv => mv.MediaFiles)
             .Include(mv => mv.OtherVideoMetadata)
             .Include(mv => mv.OtherVideoMetadata)
             .ThenInclude(mvm => mvm.Studios)
@@ -291,7 +323,7 @@ public class TemplateDataRepository(ILocalFileSystem localFileSystem, IDbContext
         {
             foreach (OtherVideoMetadata metadata in otherVideo.OtherVideoMetadata.HeadOrNone())
             {
-                return new Dictionary<string, object>
+                var result = new Dictionary<string, object>
                 {
                     [MediaItemTemplateDataKey.Title] = metadata.Title,
                     [MediaItemTemplateDataKey.Plot] = metadata.Plot,
@@ -302,6 +334,16 @@ public class TemplateDataRepository(ILocalFileSystem localFileSystem, IDbContext
                     [MediaItemTemplateDataKey.Genres] = (metadata.Genres ?? []).Map(g => g.Name).OrderBy(identity),
                     [MediaItemTemplateDataKey.Duration] = otherVideo.GetHeadVersion().Duration
                 };
+
+                foreach (var version in otherVideo.MediaVersions.HeadOrNone())
+                {
+                    foreach (var file in version.MediaFiles.HeadOrNone())
+                    {
+                        result.Add(MediaItemTemplateDataKey.Path, file.Path);
+                    }
+                }
+
+                return result;
             }
         }
 
