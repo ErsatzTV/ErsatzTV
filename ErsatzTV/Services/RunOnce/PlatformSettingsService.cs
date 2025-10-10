@@ -21,7 +21,7 @@ public class PlatformSettingsService(IServiceScopeFactory serviceScopeFactory) :
             {
                 NvEncSharpRedirector.Init();
             }
-            catch (DllNotFoundException)
+            catch (FileNotFoundException)
             {
                 // do nothing
             }
