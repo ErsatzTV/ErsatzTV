@@ -7,14 +7,7 @@ public static class NvEncSharpRedirector
 {
     static NvEncSharpRedirector()
     {
-        try
-        {
-            NativeLibrary.SetDllImportResolver(typeof(Lennox.NvEncSharp.LibCuda).Assembly, Resolver);
-        }
-        catch (DllNotFoundException)
-        {
-            // do nothing
-        }
+        NativeLibrary.SetDllImportResolver(typeof(Lennox.NvEncSharp.LibCuda).Assembly, Resolver);
     }
 
     private static IntPtr Resolver(string libraryName, Assembly assembly, DllImportSearchPath? searchPath)

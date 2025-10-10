@@ -17,7 +17,14 @@ public class PlatformSettingsService(IServiceScopeFactory serviceScopeFactory) :
         IRuntimeInfo runtimeInfo = scope.ServiceProvider.GetRequiredService<IRuntimeInfo>();
         if (runtimeInfo != null && runtimeInfo.IsOSPlatform(OSPlatform.Linux))
         {
-            NvEncSharpRedirector.Init();
+            try
+            {
+                NvEncSharpRedirector.Init();
+            }
+            catch (DllNotFoundException)
+            {
+                // do nothing
+            }
 
             if (Directory.Exists("/dev/dri"))
             {
