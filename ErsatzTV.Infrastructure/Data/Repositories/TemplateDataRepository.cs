@@ -23,6 +23,7 @@ public class TemplateDataRepository(ILocalFileSystem localFileSystem, IDbContext
             Movie => await GetMovieTemplateData(mediaItem.Id, cancellationToken),
             Episode => await GetEpisodeTemplateData(mediaItem.Id, cancellationToken),
             MusicVideo => await GetMusicVideoTemplateData(mediaItem.Id, cancellationToken),
+            OtherVideo => await GetOtherVideoTemplateData(mediaItem.Id, cancellationToken),
             _ => Option<Dictionary<string, object>>.None
         };
 
@@ -120,7 +121,9 @@ public class TemplateDataRepository(ILocalFileSystem localFileSystem, IDbContext
         return Option<Dictionary<string, object>>.None;
     }
 
-    private async Task<Option<Dictionary<string, object>>> GetMovieTemplateData(int movieId, CancellationToken cancellationToken)
+    private async Task<Option<Dictionary<string, object>>> GetMovieTemplateData(
+        int movieId,
+        CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
@@ -157,7 +160,9 @@ public class TemplateDataRepository(ILocalFileSystem localFileSystem, IDbContext
         return Option<Dictionary<string, object>>.None;
     }
 
-    private async Task<Option<Dictionary<string, object>>> GetEpisodeTemplateData(int episodeId, CancellationToken cancellationToken)
+    private async Task<Option<Dictionary<string, object>>> GetEpisodeTemplateData(
+        int episodeId,
+        CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
@@ -212,7 +217,9 @@ public class TemplateDataRepository(ILocalFileSystem localFileSystem, IDbContext
         return Option<Dictionary<string, object>>.None;
     }
 
-    private async Task<Option<Dictionary<string, object>>> GetMusicVideoTemplateData(int musicVideoId, CancellationToken cancellationToken)
+    private async Task<Option<Dictionary<string, object>>> GetMusicVideoTemplateData(
+        int musicVideoId,
+        CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
@@ -255,6 +262,45 @@ public class TemplateDataRepository(ILocalFileSystem localFileSystem, IDbContext
                         (metadata.Directors ?? []).Map(d => d.Name).OrderBy(identity),
                     [MediaItemTemplateDataKey.Genres] = (metadata.Genres ?? []).Map(g => g.Name).OrderBy(identity),
                     [MediaItemTemplateDataKey.Duration] = musicVideo.GetHeadVersion().Duration
+                };
+            }
+        }
+
+        return Option<Dictionary<string, object>>.None;
+    }
+
+    private async Task<Option<Dictionary<string, object>>> GetOtherVideoTemplateData(
+        int otherVideoId,
+        CancellationToken cancellationToken)
+    {
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+
+        Option<OtherVideo> maybeOtherVideo = await dbContext.OtherVideos
+            .AsNoTracking()
+            .Include(mv => mv.MediaVersions)
+            .Include(mv => mv.OtherVideoMetadata)
+            .Include(mv => mv.OtherVideoMetadata)
+            .ThenInclude(mvm => mvm.Studios)
+            .Include(mv => mv.OtherVideoMetadata)
+            .ThenInclude(mvm => mvm.Directors)
+            .Include(mv => mv.OtherVideoMetadata)
+            .ThenInclude(mvm => mvm.Genres)
+            .SelectOneAsync(mv => mv.Id, mv => mv.Id == otherVideoId, cancellationToken);
+
+        foreach (OtherVideo otherVideo in maybeOtherVideo)
+        {
+            foreach (OtherVideoMetadata metadata in otherVideo.OtherVideoMetadata.HeadOrNone())
+            {
+                return new Dictionary<string, object>
+                {
+                    [MediaItemTemplateDataKey.Title] = metadata.Title,
+                    [MediaItemTemplateDataKey.Plot] = metadata.Plot,
+                    [MediaItemTemplateDataKey.ReleaseDate] = metadata.ReleaseDate,
+                    [MediaItemTemplateDataKey.Studios] = (metadata.Studios ?? []).Map(s => s.Name).OrderBy(identity),
+                    [MediaItemTemplateDataKey.Directors] =
+                        (metadata.Directors ?? []).Map(d => d.Name).OrderBy(identity),
+                    [MediaItemTemplateDataKey.Genres] = (metadata.Genres ?? []).Map(g => g.Name).OrderBy(identity),
+                    [MediaItemTemplateDataKey.Duration] = otherVideo.GetHeadVersion().Duration
                 };
             }
         }

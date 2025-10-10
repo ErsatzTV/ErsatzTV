@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Added
+- Graphics engine: add template data (like `MediaItem_Title`) for other video files
+
 ### Fixed
 - Fix NVIDIA startup errors on arm64
 
