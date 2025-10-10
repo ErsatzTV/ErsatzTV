@@ -7,6 +7,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - Fix NVIDIA startup errors on arm64
 
+### Changed
+- Do not use graphics engine for single, permanent watermark
+
 ## [25.7.1] - 2025-10-09
 ### Added
 - Add search field to filter blocks table

@@ -281,6 +281,7 @@ public class TranscodingTests
                 LoggerFactory.CreateLogger<PipelineBuilderFactory>()),
             Substitute.For<IConfigElementRepository>(),
             graphicsElementLoader,
+            MemoryCache,
             LoggerFactory.CreateLogger<FFmpegLibraryProcessService>());
 
         var songVideoGenerator = new SongVideoGenerator(tempFilePool, mockImageCache, service);
@@ -977,6 +978,7 @@ public class TranscodingTests
                 LoggerFactory.CreateLogger<PipelineBuilderFactory>()),
             Substitute.For<IConfigElementRepository>(),
             graphicsElementLoader,
+            MemoryCache,
             LoggerFactory.CreateLogger<FFmpegLibraryProcessService>());
 
         return service;

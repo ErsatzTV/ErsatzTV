@@ -1,5 +1,7 @@
 ﻿using System.Collections.Immutable;
+using System.Text;
 using CliWrap;
+using CliWrap.Buffered;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Interfaces.FFmpeg;
@@ -12,6 +14,7 @@ using ErsatzTV.FFmpeg.OutputFormat;
 using ErsatzTV.FFmpeg.Pipeline;
 using ErsatzTV.FFmpeg.Preset;
 using ErsatzTV.FFmpeg.State;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using MediaStream = ErsatzTV.Core.Domain.MediaStream;
 
@@ -21,6 +24,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
 {
     private readonly IConfigElementRepository _configElementRepository;
     private readonly IGraphicsElementLoader _graphicsElementLoader;
+    private readonly IMemoryCache _memoryCache;
     private readonly ICustomStreamSelector _customStreamSelector;
     private readonly FFmpegProcessService _ffmpegProcessService;
     private readonly IFFmpegStreamSelector _ffmpegStreamSelector;
@@ -36,6 +40,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         IPipelineBuilderFactory pipelineBuilderFactory,
         IConfigElementRepository configElementRepository,
         IGraphicsElementLoader graphicsElementLoader,
+        IMemoryCache memoryCache,
         ILogger<FFmpegLibraryProcessService> logger)
     {
         _ffmpegProcessService = ffmpegProcessService;
@@ -45,6 +50,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         _pipelineBuilderFactory = pipelineBuilderFactory;
         _configElementRepository = configElementRepository;
         _graphicsElementLoader = graphicsElementLoader;
+        _memoryCache = memoryCache;
         _logger = logger;
     }
 
@@ -334,8 +340,44 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         Option<GraphicsEngineContext> graphicsEngineContext = Option<GraphicsEngineContext>.None;
         List<GraphicsElementContext> graphicsElementContexts = [];
 
-        // use graphics engine for all watermarks
-        graphicsElementContexts.AddRange(watermarks.Map(wm => new WatermarkElementContext(wm)));
+        // use ffmpeg for single permanent watermark, graphics engine for all others
+        if (graphicsElements.Count == 0 && watermarks.Count == 1 && watermarks.All(wm => wm.Watermark.Mode is ChannelWatermarkMode.Permanent))
+        {
+            foreach (var wm in watermarks)
+            {
+                List<VideoStream> videoStreams =
+                [
+                    new(
+                        await wm.ImageStreamIndex.IfNoneAsync(0),
+                        "unknown",
+                        string.Empty,
+                        new PixelFormatUnknown(),
+                        ColorParams.Default,
+                        new FrameSize(1, 1),
+                        string.Empty,
+                        string.Empty,
+                        Option<string>.None,
+                        !await IsWatermarkAnimated(ffprobePath, wm.ImagePath),
+                        ScanKind.Progressive)
+                ];
+
+                var state = new WatermarkState(
+                    None,
+                    wm.Watermark.Location,
+                    wm.Watermark.Size,
+                    wm.Watermark.WidthPercent,
+                    wm.Watermark.HorizontalMarginPercent,
+                    wm.Watermark.VerticalMarginPercent,
+                    wm.Watermark.Opacity,
+                    wm.Watermark.PlaceWithinSourceContent);
+
+                watermarkInputFile = new WatermarkInputFile(wm.ImagePath, videoStreams, state);
+            }
+        }
+        else
+        {
+            graphicsElementContexts.AddRange(watermarks.Map(wm => new WatermarkElementContext(wm)));
+        }
 
         HardwareAccelerationMode hwAccel = GetHardwareAccelerationMode(playbackSettings, fillerKind);
 
@@ -1155,4 +1197,54 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             HardwareAccelerationKind.Rkmpp => HardwareAccelerationMode.Rkmpp,
             _ => HardwareAccelerationMode.None
         };
+
+    private async Task<bool> IsWatermarkAnimated(string ffprobePath, string path)
+    {
+        try
+        {
+            var cacheKey = $"image.animated.{Path.GetFileName(path)}";
+            if (_memoryCache.TryGetValue(cacheKey, out bool animated))
+            {
+                return animated;
+            }
+
+            BufferedCommandResult result = await Cli.Wrap(ffprobePath)
+                .WithArguments(
+                [
+                    "-loglevel", "error",
+                    "-select_streams", "v:0",
+                    "-count_frames",
+                    "-show_entries", "stream=nb_read_frames",
+                    "-print_format", "csv",
+                    path
+                ])
+                .WithValidation(CommandResultValidation.None)
+                .ExecuteBufferedAsync(Encoding.UTF8);
+
+            if (result.ExitCode == 0)
+            {
+                string output = result.StandardOutput;
+                output = output.Replace("stream,", string.Empty);
+                if (int.TryParse(output, out int frameCount))
+                {
+                    bool isAnimated = frameCount > 1;
+                    _memoryCache.Set(cacheKey, isAnimated, TimeSpan.FromDays(1));
+                    return isAnimated;
+                }
+            }
+            else
+            {
+                _logger.LogWarning(
+                    "Error checking frame count for file {File} exit code {ExitCode}",
+                    path,
+                    result.ExitCode);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error checking frame count for file {File}", path);
+        }
+
+        return false;
+    }
 }
