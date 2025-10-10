@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Fixed
+- Fix NVIDIA startup errors on arm64
 
 ## [25.7.1] - 2025-10-09
 ### Added
@@ -22,6 +24,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 - Use table instead of tree view on blocks page
+- Use different release packaging system to workaround false positive from Windows Defender
 
 ## [25.7.0] - 2025-10-03
 ### Added
