@@ -58,7 +58,11 @@ public class PlexNetworkScanner(
             var keepIds = new System.Collections.Generic.HashSet<int>();
             await foreach ((PlexShow item, int _) in items)
             {
-                PlexShowAddTagResult result = await plexTelevisionRepository.AddTag(library, item, tag, cancellationToken);
+                PlexShowAddTagResult result = await plexTelevisionRepository.AddTag(
+                    library,
+                    item,
+                    tag,
+                    cancellationToken);
 
                 foreach (int existing in result.Existing)
                 {
@@ -74,7 +78,8 @@ public class PlexNetworkScanner(
                 cancellationToken.ThrowIfCancellationRequested();
             }
 
-            List<int> removedIds = await plexTelevisionRepository.RemoveAllTags(library, tag, keepIds, cancellationToken);
+            List<int> removedIds =
+                await plexTelevisionRepository.RemoveAllTags(library, tag, keepIds, cancellationToken);
             var changedIds = removedIds.Concat(addedIds).Distinct().ToList();
 
             if (changedIds.Count > 0)
@@ -90,6 +95,10 @@ public class PlexNetworkScanner(
             await mediator.Publish(
                 new ScannerProgressUpdate(0, null, null, changedIds.ToArray(), []),
                 CancellationToken.None);
+        }
+        catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
+        {
+            // do nothing
         }
         catch (Exception ex)
         {
