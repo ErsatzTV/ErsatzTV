@@ -1,0 +1,93 @@
+@page "/system/troubleshooting/block-playout/history"
+@using System.Globalization
+@using ErsatzTV.Application.Configuration
+@using ErsatzTV.Application.Playouts
+@implements IDisposable
+@inject IMediator Mediator
+@inject NavigationManager NavigationManager
+
+<MudForm Style="max-height: 100%">
+    <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+            <MudText Typo="Typo.h5" Class="mb-2">Block Playout History</MudText>
+            <MudDivider Class="mb-6"/>
+            <MudTable Hover="true"
+                      Dense="true"
+                      Class="mt-8"
+                      @bind-RowsPerPage="@_rowsPerPage"
+                      ServerData="@(new Func<TableState, CancellationToken, Task<TableData<PlayoutHistoryViewModel>>>(ServerReload))">
+                <ColGroup>
+                    <MudHidden Breakpoint="Breakpoint.Xs">
+                        <col/>
+                        <col/>
+                        <col/>
+                    </MudHidden>
+                </ColGroup>
+                <HeaderContent>
+                    <MudTh>Start</MudTh>
+                    <MudTh>Finish</MudTh>
+                    <MudTh>Key</MudTh>
+                    <MudTh>Details</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>@context.When.ToString("G", _dtf)</MudTd>
+                    <MudTd>@context.Finish.ToString("G", _dtf)</MudTd>
+                    <MudTd>@context.Key</MudTd>
+                    <MudTd>@context.Details</MudTd>
+                </RowTemplate>
+                <PagerContent>
+                    <MudTablePager/>
+                </PagerContent>
+            </MudTable>
+        </MudContainer>
+    </div>
+</MudForm>
+
+@code {
+    [SupplyParameterFromQuery(Name = "playoutId")]
+    public int? PlayoutId { get; set; }
+
+    [SupplyParameterFromQuery(Name = "blockId")]
+    public int? BlockId { get; set; }
+
+    private CancellationTokenSource _cts;
+    private readonly DateTimeFormatInfo _dtf = CultureInfo.CurrentUICulture.DateTimeFormat;
+    private int _rowsPerPage = 10;
+
+    public void Dispose()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (PlayoutId is null || BlockId is null)
+        {
+            NavigationManager.NavigateTo("system/troubleshooting");
+        }
+
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
+
+        try
+        {
+            _rowsPerPage = await Mediator.Send(new GetConfigElementByKey(ConfigElementKey.TroubleshootingBlockPlayoutHistoryPageSize), token)
+                .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
+        }
+    }
+
+    private async Task<TableData<PlayoutHistoryViewModel>> ServerReload(TableState state, CancellationToken cancellationToken)
+    {
+        await Mediator.Send(new SaveConfigElementByKey(ConfigElementKey.TroubleshootingBlockPlayoutHistoryPageSize, state.PageSize.ToString()), cancellationToken);
+
+        PagedPlayoutHistoryViewModel data = await Mediator.Send(new GetBlockPlayoutHistory(PlayoutId!.Value, BlockId!.Value, state.Page, state.PageSize), cancellationToken);
+        return new TableData<PlayoutHistoryViewModel> { TotalItems = data.TotalCount, Items = data.Page };
+    }
+}

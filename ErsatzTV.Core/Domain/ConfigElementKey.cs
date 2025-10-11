@@ -47,6 +47,9 @@ public class ConfigElementKey
     public static ConfigElementKey PlayoutDaysToBuild => new("playout.days_to_build");
     public static ConfigElementKey PlayoutSkipMissingItems => new("playout.skip_missing_items");
 
+    public static ConfigElementKey TroubleshootingBlockPlayoutHistoryPageSize =>
+        new("pages.troubleshooting.block_playout_history.page_size");
+
     public static ConfigElementKey PlayoutScriptedScheduleTimeoutSeconds =>
         new("playout.scripted_schedule_timeout_seconds");
 

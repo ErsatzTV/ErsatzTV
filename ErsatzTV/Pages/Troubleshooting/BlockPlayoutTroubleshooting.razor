@@ -63,7 +63,8 @@
                         <div class="d-flex">
                             @if (context.Id >= 0)
                             {
-                                <MudIconButton Icon="@Icons.Material.Filled.Search">
+                                <MudIconButton Icon="@Icons.Material.Filled.Search"
+                                               Href="@($"system/troubleshooting/block-playout/history?playoutId={_selectedPlayout?.PlayoutId}&blockId={context.Id}")">
                                 </MudIconButton>
                                 <div style="width: 48px;"></div>
                             }
