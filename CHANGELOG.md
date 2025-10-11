@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - Fix NVIDIA startup errors on arm64
 - Fix remote stream durations in playouts created using block, sequential or scripted schedules
+- Do not accept UI requests until database is ready
 
 ### Changed
 - Do not use graphics engine for single, permanent watermark
