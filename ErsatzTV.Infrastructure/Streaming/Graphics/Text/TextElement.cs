@@ -134,7 +134,17 @@ public partial class TextElement(
 
     private RichTextKit.TextBlock BuildTextBlock(string textToRender)
     {
-        var textBlock = new RichTextKit.TextBlock { FontMapper = graphicsEngineFonts.Mapper };
+        var textBlock = new RichTextKit.TextBlock
+        {
+            FontMapper = graphicsEngineFonts.Mapper,
+            Alignment = textElement.Align switch
+            {
+                TextAlignment.Center => RichTextKit.TextAlignment.Center,
+                TextAlignment.Right => RichTextKit.TextAlignment.Right,
+                TextAlignment.Left => RichTextKit.TextAlignment.Left,
+                _ => RichTextKit.TextAlignment.Auto
+            }
+        };
 
         (Dictionary<string, RichTextKit.Style> styles, RichTextKit.Style baseStyle) = BuildTextStyles();
 
@@ -192,6 +202,7 @@ public partial class TextElement(
             finalStyle.FontSize = s.FontSize ?? finalStyle.FontSize;
             finalStyle.FontWeight = s.FontWeight ?? finalStyle.FontWeight;
             finalStyle.LetterSpacing = s.LetterSpacing ?? finalStyle.LetterSpacing;
+            finalStyle.LineHeight = s.LineHeight ?? finalStyle.LineHeight;
 
             if (s.TextColor != null && SKColor.TryParse(s.TextColor, out SKColor parsedColor))
             {
@@ -225,6 +236,11 @@ public partial class TextElement(
             foreach (float letterSpacing in Optional(def.LetterSpacing))
             {
                 style.LetterSpacing = letterSpacing;
+            }
+
+            foreach (float lineHeight in Optional(def.LineHeight))
+            {
+                style.LineHeight = lineHeight;
             }
 
             return style;

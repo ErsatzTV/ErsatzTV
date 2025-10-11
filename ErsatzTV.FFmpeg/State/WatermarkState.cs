@@ -31,7 +31,8 @@ public enum WatermarkLocation
     TopMiddle = 4,
     RightMiddle = 5,
     BottomMiddle = 6,
-    LeftMiddle = 7
+    LeftMiddle = 7,
+    MiddleCenter = 8
 }
 
 public enum WatermarkSize
