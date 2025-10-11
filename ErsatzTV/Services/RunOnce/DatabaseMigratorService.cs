@@ -1,4 +1,5 @@
-﻿using Dapper;
+﻿using System.Reflection;
+using Dapper;
 using ErsatzTV.Core;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.Data.Sqlite;
@@ -26,10 +27,23 @@ public class DatabaseMigratorService : BackgroundService
     {
         await Task.Yield();
 
-        _logger.LogInformation("Applying database migrations");
-
         using IServiceScope scope = _serviceScopeFactory.CreateScope();
         await using TvContext dbContext = scope.ServiceProvider.GetRequiredService<TvContext>();
+
+        // extract empty database to speed up initial startup
+        if (TvContext.IsSqlite && !File.Exists(FileSystemLayout.DatabasePath))
+        {
+            _logger.LogInformation("Extracting empty database to {DatabasePath}", FileSystemLayout.DatabasePath);
+            await using Stream resource = typeof(ResourceExtractorService).GetTypeInfo().Assembly
+                .GetManifestResourceStream("ErsatzTV.Resources.empty.sqlite3");
+            if (resource != null)
+            {
+                await using FileStream fs = File.Create(FileSystemLayout.DatabasePath);
+                await resource.CopyToAsync(fs, stoppingToken);
+            }
+        }
+
+        _logger.LogInformation("Applying database migrations");
 
         if (TvContext.IsSqlite)
         {

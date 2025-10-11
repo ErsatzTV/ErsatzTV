@@ -101,6 +101,7 @@
         <EmbeddedResource Include="Resources\Templates\_song.sbntxt" />
         <EmbeddedResource Include="Resources\sequential-schedule-import.schema.json" />
         <EmbeddedResource Include="Resources\sequential-schedule.schema.json" />
+        <EmbeddedResource Include="Resources\empty.sqlite3" />
     </ItemGroup>
 
     <ItemGroup>
