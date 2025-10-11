@@ -2,6 +2,8 @@
 @using System.Globalization
 @using ErsatzTV.Application.Configuration
 @using ErsatzTV.Application.Playouts
+@using ErsatzTV.Application.Troubleshooting
+@using ErsatzTV.Application.Troubleshooting.Queries
 @implements IDisposable
 @inject IMediator Mediator
 @inject NavigationManager NavigationManager
@@ -14,10 +16,13 @@
             <MudTable Hover="true"
                       Dense="true"
                       Class="mt-8"
+                      SelectedItemChanged="@(async (PlayoutHistoryViewModel x) => await PlayoutHistorySelected(x))"
                       @bind-RowsPerPage="@_rowsPerPage"
-                      ServerData="@(new Func<TableState, CancellationToken, Task<TableData<PlayoutHistoryViewModel>>>(ServerReload))">
+                      ServerData="@(new Func<TableState, CancellationToken, Task<TableData<PlayoutHistoryViewModel>>>(ServerReload))"
+                      RowClassFunc="@SelectedRowClassFunc">
                 <ColGroup>
                     <MudHidden Breakpoint="Breakpoint.Xs">
+                        <col/>
                         <col/>
                         <col/>
                         <col/>
@@ -39,6 +44,41 @@
                     <MudTablePager/>
                 </PagerContent>
             </MudTable>
+            <MudText Typo="Typo.h5" Class="mt-10 mb-2">History Details</MudText>
+            <MudDivider Class="mb-6"/>
+            @if (_decodedHistory != null)
+            {
+                <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                    <div class="d-flex">
+                        <MudText>Playback Order</MudText>
+                    </div>
+                    <MudTextField Value="@_decodedHistory.PlaybackOrder.ToString()" ReadOnly="true" />
+                </MudStack>
+                <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                    <div class="d-flex">
+                        <MudText>Collection Type</MudText>
+                    </div>
+                    <MudTextField Value="@_decodedHistory.CollectionType.ToString()" ReadOnly="true" />
+                </MudStack>
+                <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                    <div class="d-flex">
+                        <MudText>Collection Name</MudText>
+                    </div>
+                    <MudTextField Value="@_decodedHistory.Name" ReadOnly="true" />
+                </MudStack>
+                <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                    <div class="d-flex">
+                        <MudText>Media Item Type</MudText>
+                    </div>
+                    <MudTextField Value="@_decodedHistory.MediaItemType" ReadOnly="true" />
+                </MudStack>
+                <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                    <div class="d-flex">
+                        <MudText>Media Item Title</MudText>
+                    </div>
+                    <MudTextField Value="@_decodedHistory.MediaItemTitle" ReadOnly="true" />
+                </MudStack>
+            }
         </MudContainer>
     </div>
 </MudForm>
@@ -53,6 +93,8 @@
     private CancellationTokenSource _cts;
     private readonly DateTimeFormatInfo _dtf = CultureInfo.CurrentUICulture.DateTimeFormat;
     private int _rowsPerPage = 10;
+    private int? _selectedPlayoutHistoryId;
+    private PlayoutHistoryDetailsViewModel _decodedHistory;
 
     public void Dispose()
     {
@@ -85,9 +127,33 @@
 
     private async Task<TableData<PlayoutHistoryViewModel>> ServerReload(TableState state, CancellationToken cancellationToken)
     {
+        _selectedPlayoutHistoryId = null;
+        _decodedHistory = null;
+        await InvokeAsync(StateHasChanged);
+
         await Mediator.Send(new SaveConfigElementByKey(ConfigElementKey.TroubleshootingBlockPlayoutHistoryPageSize, state.PageSize.ToString()), cancellationToken);
 
         PagedPlayoutHistoryViewModel data = await Mediator.Send(new GetBlockPlayoutHistory(PlayoutId!.Value, BlockId!.Value, state.Page, state.PageSize), cancellationToken);
         return new TableData<PlayoutHistoryViewModel> { TotalItems = data.TotalCount, Items = data.Page };
+    }
+
+    private async Task PlayoutHistorySelected(PlayoutHistoryViewModel playoutHistory)
+    {
+        _selectedPlayoutHistoryId = playoutHistory.Id;
+
+        await Task.Delay(100);
+
+        _decodedHistory = await Mediator.Send(new DecodePlayoutHistory(playoutHistory), _cts?.Token ?? CancellationToken.None);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private string SelectedRowClassFunc(PlayoutHistoryViewModel element, int rowNumber)
+    {
+        if (_selectedPlayoutHistoryId != null && _selectedPlayoutHistoryId == element.Id)
+        {
+            return "selected";
+        }
+
+        return string.Empty;
     }
 }
