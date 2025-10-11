@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Add `MediaItem_Path` for movies, episodes, music videos and other videos
   - Add `get_directory_name` and `get_filename_without_extension` functions for path processing
 - Add `Block Playout Troubleshooting` tool to help investigate block playout history
+- Add sequential schedule file and scripted schedule file names to playouts table
 
 ### Fixed
 - Fix NVIDIA startup errors on arm64
