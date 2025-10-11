@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Add `get_directory_name` and `get_filename_without_extension` functions for path processing
 - Add `Block Playout Troubleshooting` tool to help investigate block playout history
 - Add sequential schedule file and scripted schedule file names to playouts table
+- Add empty (but already up-to-date) sqlite3 database to greatly speed up initial startup for fresh installs
 
 ### Fixed
 - Fix NVIDIA startup errors on arm64
