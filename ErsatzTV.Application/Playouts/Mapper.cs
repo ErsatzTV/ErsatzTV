@@ -1,4 +1,5 @@
 ﻿using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Domain.Scheduling;
 
 namespace ErsatzTV.Application.Playouts;
 
@@ -33,6 +34,14 @@ internal static class Mapper
             programScheduleAlternate.DaysOfWeek,
             programScheduleAlternate.DaysOfMonth,
             programScheduleAlternate.MonthsOfYear);
+
+    internal static PlayoutHistoryViewModel ProjectToViewModel(PlayoutHistory playoutHistory) =>
+        new(
+            playoutHistory.Id,
+            new DateTimeOffset(playoutHistory.When, TimeSpan.Zero).ToLocalTime(),
+            new DateTimeOffset(playoutHistory.Finish, TimeSpan.Zero).ToLocalTime(),
+            playoutHistory.Key,
+            playoutHistory.Details);
 
     internal static string GetDisplayTitle(MediaItem mediaItem, Option<string> maybeChapterTitle)
     {

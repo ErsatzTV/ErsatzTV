@@ -87,7 +87,7 @@ public class ScannerService : BackgroundService
 
                     await requestTask;
                 }
-                catch (Exception ex)
+                catch (Exception ex) when (ex is not (TaskCanceledException or OperationCanceledException))
                 {
                     _logger.LogWarning(ex, "Failed to process scanner background service request");
 
