@@ -1,5 +1,6 @@
 ﻿using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
+using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using LanguageExt.UnsafeValueAccess;
 using Microsoft.Extensions.Logging;
@@ -86,7 +87,7 @@ public class PlayoutModeSchedulerMultiple : PlayoutModeSchedulerBase<ProgramSche
             // find when we should start this item, based on the current time
             DateTimeOffset itemStartTime = GetStartTimeAfter(nextState, scheduleItem, Option<ILogger>.Some(Logger));
 
-            TimeSpan itemDuration = DurationForMediaItem(mediaItem);
+            TimeSpan itemDuration = mediaItem.GetDurationForPlayout();
             List<MediaChapter> itemChapters = ChaptersForMediaItem(mediaItem);
 
             var playoutItem = new PlayoutItem

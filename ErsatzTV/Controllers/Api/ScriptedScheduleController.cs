@@ -1,6 +1,7 @@
 using ErsatzTV.Core.Api.ScriptedPlayout;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
+using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using ErsatzTV.Core.Scheduling.Engine;
 using Microsoft.AspNetCore.Mvc;
@@ -426,7 +427,7 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
             return new PeekItemDuration
             {
                 Content = content,
-                Milliseconds = (long)engine.DurationForMediaItem(mediaItem).TotalMilliseconds
+                Milliseconds = (long)mediaItem.GetDurationForPlayout().TotalMilliseconds
             };
         }
 

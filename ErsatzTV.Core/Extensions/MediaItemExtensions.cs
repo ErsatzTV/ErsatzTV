@@ -24,6 +24,25 @@ public static class MediaItemExtensions
         return maybeDuration.Any(duration => duration == TimeSpan.Zero) ? Option<TimeSpan>.None : maybeDuration;
     }
 
+    public static TimeSpan GetDurationForPlayout(this MediaItem mediaItem)
+    {
+        if (mediaItem is Image image)
+        {
+            return TimeSpan.FromSeconds(image.ImageMetadata.Head().DurationSeconds ?? Image.DefaultSeconds);
+        }
+
+        MediaVersion version = mediaItem.GetHeadVersion();
+
+        if (mediaItem is RemoteStream remoteStream)
+        {
+            return version.Duration == TimeSpan.Zero && remoteStream.Duration.HasValue
+                ? remoteStream.Duration.Value
+                : version.Duration;
+        }
+
+        return version.Duration;
+    }
+
     public static MediaVersion GetHeadVersion(this MediaItem mediaItem) =>
         mediaItem switch
         {

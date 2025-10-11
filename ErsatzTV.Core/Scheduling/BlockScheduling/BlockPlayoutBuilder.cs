@@ -192,7 +192,7 @@ public class BlockPlayoutBuilder(
                             mediaItem.Id,
                             PlayoutBuilder.DisplayTitle(mediaItem));
 
-                        TimeSpan itemDuration = DurationForMediaItem(mediaItem);
+                        TimeSpan itemDuration = mediaItem.GetDurationForPlayout();
 
                         // item will never fit in block
                         var blockDuration = TimeSpan.FromMinutes(effectiveBlock.Block.Minutes);
@@ -438,16 +438,5 @@ public class BlockPlayoutBuilder(
         }
 
         return result;
-    }
-
-    private static TimeSpan DurationForMediaItem(MediaItem mediaItem)
-    {
-        if (mediaItem is Image image)
-        {
-            return TimeSpan.FromSeconds(image.ImageMetadata.Head().DurationSeconds ?? Image.DefaultSeconds);
-        }
-
-        MediaVersion version = mediaItem.GetHeadVersion();
-        return version.Duration;
     }
 }

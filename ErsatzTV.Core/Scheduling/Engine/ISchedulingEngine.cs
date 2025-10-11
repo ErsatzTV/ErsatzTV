@@ -143,6 +143,4 @@ public interface ISchedulingEngine
     PlayoutAnchor GetAnchor();
 
     ISchedulingEngineState GetState();
-
-    TimeSpan DurationForMediaItem(MediaItem mediaItem);
 }

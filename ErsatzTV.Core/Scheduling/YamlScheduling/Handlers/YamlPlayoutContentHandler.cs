@@ -137,17 +137,6 @@ public abstract class YamlPlayoutContentHandler(EnumeratorCache enumeratorCache)
         return result;
     }
 
-    protected static TimeSpan DurationForMediaItem(MediaItem mediaItem)
-    {
-        if (mediaItem is Image image)
-        {
-            return TimeSpan.FromSeconds(image.ImageMetadata.Head().DurationSeconds ?? Image.DefaultSeconds);
-        }
-
-        MediaVersion version = mediaItem.GetHeadVersion();
-        return version.Duration;
-    }
-
     protected static FillerKind GetFillerKind(YamlPlayoutInstruction instruction, YamlPlayoutContext context)
     {
         if (!string.IsNullOrWhiteSpace(instruction.FillerKind) &&
