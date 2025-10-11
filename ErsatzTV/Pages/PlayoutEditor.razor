@@ -49,7 +49,7 @@
                         <div class="d-flex">
                             <MudText>Sequential Schedule</MudText>
                         </div>
-                        <MudTextField @bind-Value="_model.ScheduleFile" For="@(() => _model.ScheduleFile)"/>
+                        <MudTextField @bind-Value="_model.ScheduleFile" For="@(() => _model.ScheduleFile)" HelperText="The full path to the sequential schedule (YAML) file" />
                     </MudStack>
                     break;
                 case PlayoutKind.Scripted:
