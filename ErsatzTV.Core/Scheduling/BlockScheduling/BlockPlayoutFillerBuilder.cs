@@ -203,7 +203,7 @@ public class BlockPlayoutFillerBuilder(
                         {
                             foreach (MediaItem mediaItem in enumerator.Current)
                             {
-                                TimeSpan itemDuration = DurationForMediaItem(mediaItem);
+                                TimeSpan itemDuration = mediaItem.GetDurationForPlayout();
 
                                 var filler = new PlayoutItem
                                 {
@@ -348,7 +348,7 @@ public class BlockPlayoutFillerBuilder(
                 {
                     foreach (MediaItem mediaItem in enumerator.Current)
                     {
-                        TimeSpan itemDuration = DurationForMediaItem(mediaItem);
+                        TimeSpan itemDuration = mediaItem.GetDurationForPlayout();
 
                         // add filler from deco to unscheduled period
                         var filler = new PlayoutItem
@@ -526,17 +526,6 @@ public class BlockPlayoutFillerBuilder(
             default:
                 return false;
         }
-    }
-
-    private static TimeSpan DurationForMediaItem(MediaItem mediaItem)
-    {
-        if (mediaItem is Image image)
-        {
-            return TimeSpan.FromSeconds(image.ImageMetadata.Head().DurationSeconds ?? Image.DefaultSeconds);
-        }
-
-        MediaVersion version = mediaItem.GetHeadVersion();
-        return version.Duration;
     }
 
     private record ItemAndHistory(PlayoutItem PlayoutItem, PlayoutHistory History);

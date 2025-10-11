@@ -1,6 +1,7 @@
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Domain.Scheduling;
+using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using ErsatzTV.Core.Scheduling.YamlScheduling.Models;
 using Microsoft.Extensions.Logging;
@@ -110,7 +111,7 @@ public class YamlPlayoutDurationHandler(EnumeratorCache enumeratorCache) : YamlP
 
             foreach (MediaItem mediaItem in enumerator.Current)
             {
-                TimeSpan itemDuration = DurationForMediaItem(mediaItem);
+                TimeSpan itemDuration = mediaItem.GetDurationForPlayout();
 
                 var playoutItem = new PlayoutItem
                 {

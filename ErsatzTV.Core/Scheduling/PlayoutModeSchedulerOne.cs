@@ -1,5 +1,6 @@
 ﻿using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
+using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using Microsoft.Extensions.Logging;
 
@@ -34,7 +35,7 @@ public class PlayoutModeSchedulerOne : PlayoutModeSchedulerBase<ProgramScheduleI
                 break;
             }
 
-            TimeSpan itemDuration = DurationForMediaItem(mediaItem);
+            TimeSpan itemDuration = mediaItem.GetDurationForPlayout();
             List<MediaChapter> itemChapters = ChaptersForMediaItem(mediaItem);
 
             var playoutItem = new PlayoutItem

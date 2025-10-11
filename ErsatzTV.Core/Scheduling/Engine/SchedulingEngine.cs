@@ -725,7 +725,7 @@ public class SchedulingEngine(
 
             foreach (MediaItem mediaItem in enumeratorDetails.Enumerator.Current)
             {
-                TimeSpan itemDuration = DurationForMediaItem(mediaItem);
+                TimeSpan itemDuration = mediaItem.GetDurationForPlayout();
 
                 var playoutItem = new PlayoutItem
                 {
@@ -906,7 +906,7 @@ public class SchedulingEngine(
 
             foreach (MediaItem mediaItem in enumeratorDetails.Enumerator.Current)
             {
-                TimeSpan itemDuration = DurationForMediaItem(mediaItem);
+                TimeSpan itemDuration = mediaItem.GetDurationForPlayout();
 
                 // create a playout item
                 var playoutItem = new PlayoutItem
@@ -1366,17 +1366,6 @@ public class SchedulingEngine(
                     playbackOrder);
             }
         }
-    }
-
-    public TimeSpan DurationForMediaItem(MediaItem mediaItem)
-    {
-        if (mediaItem is Image image)
-        {
-            return TimeSpan.FromSeconds(image.ImageMetadata.Head().DurationSeconds ?? Image.DefaultSeconds);
-        }
-
-        MediaVersion version = mediaItem.GetHeadVersion();
-        return version.Duration;
     }
 
     private List<PlayoutHistory> GetHistoryForItem(

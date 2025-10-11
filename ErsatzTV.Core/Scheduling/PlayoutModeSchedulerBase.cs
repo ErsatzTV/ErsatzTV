@@ -144,7 +144,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
             {
                 MediaItem mediaItem = enumerator.Current.ValueUnsafe();
 
-                TimeSpan itemDuration = DurationForMediaItem(mediaItem);
+                TimeSpan itemDuration = mediaItem.GetDurationForPlayout();
                 TimeSpan inPoint = InPointForMediaItem(mediaItem);
 
                 if (nextState.CurrentTime + itemDuration > nextItemStart)
@@ -228,25 +228,6 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
         }
 
         return Tuple(nextState, newItems);
-    }
-
-    protected static TimeSpan DurationForMediaItem(MediaItem mediaItem)
-    {
-        if (mediaItem is Image image)
-        {
-            return TimeSpan.FromSeconds(image.ImageMetadata.Head().DurationSeconds ?? Image.DefaultSeconds);
-        }
-
-        MediaVersion version = mediaItem.GetHeadVersion();
-
-        if (mediaItem is RemoteStream remoteStream)
-        {
-            return version.Duration == TimeSpan.Zero && remoteStream.Duration.HasValue
-                ? remoteStream.Duration.Value
-                : version.Duration;
-        }
-
-        return version.Duration;
     }
 
     private static TimeSpan InPointForMediaItem(MediaItem mediaItem) =>
@@ -784,7 +765,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
         {
             foreach (MediaItem mediaItem in enumerator.Current)
             {
-                TimeSpan itemDuration = DurationForMediaItem(mediaItem);
+                TimeSpan itemDuration = mediaItem.GetDurationForPlayout();
                 TimeSpan inPoint = InPointForMediaItem(mediaItem);
 
                 var playoutItem = new PlayoutItem
@@ -828,7 +809,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
         {
             foreach (MediaItem mediaItem in enumerator.Current)
             {
-                TimeSpan itemDuration = DurationForMediaItem(mediaItem);
+                TimeSpan itemDuration = mediaItem.GetDurationForPlayout();
                 TimeSpan inPoint = InPointForMediaItem(mediaItem);
 
                 if (remainingToFill - itemDuration >= TimeSpan.Zero)
