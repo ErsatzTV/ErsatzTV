@@ -5,6 +5,7 @@
 @inject ISnackbar Snackbar
 @inject IMediator Mediator
 @inject IDialogService Dialog
+@inject NavigationManager NavigationManager
 
 <MudForm Style="max-height: 100%">
     <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
@@ -60,7 +61,7 @@
                     <MudHidden Breakpoint="Breakpoint.Xs">
                         <col style="width: 60px;"/>
                         <col/>
-                        <col style="width: 120px;"/>
+                        <col style="width: 180px;"/>
                     </MudHidden>
                 </ColGroup>
                 <ToolBarContent>
@@ -79,6 +80,7 @@
                     <MudTd>
                         <div style="align-items: center; display: flex;">
                             <div style="width: 48px;"></div>
+                            <div style="width: 48px;"></div>
                             <MudTooltip Text="Delete Block Group">
                                 <MudIconButton Icon="@Icons.Material.Filled.Delete"
                                                OnClick="@(_ => DeleteBlockGroup(context.Items?.FirstOrDefault()))">
@@ -96,6 +98,11 @@
                                 <MudTooltip Text="Edit Block">
                                     <MudIconButton Icon="@Icons.Material.Filled.Edit"
                                                    Href="@($"blocks/{context.Id}")">
+                                    </MudIconButton>
+                                </MudTooltip>
+                                <MudTooltip Text="Copy Block">
+                                    <MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+                                                   OnClick="@(_ => CopyBlock(context))">
                                     </MudIconButton>
                                 </MudTooltip>
                                 <MudTooltip Text="Delete Block">
@@ -255,6 +262,19 @@
             _blocks.AddRange(await Mediator.Send(new GetAllBlocks(), _cts.Token));
 
             await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task CopyBlock(BlockViewModel block)
+    {
+        var parameters = new DialogParameters { { "BlockId", block.Id } };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        IDialogReference dialog = await Dialog.ShowAsync<CopyBlockDialog>("Copy Block", parameters, options);
+        DialogResult dialogResult = await dialog.Result;
+        if (dialogResult is { Canceled: false, Data: BlockViewModel data })
+        {
+            NavigationManager.NavigateTo($"blocks/{data.Id}");
         }
     }
 

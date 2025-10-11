@@ -1,0 +1,100 @@
+﻿@using ErsatzTV.Application.Scheduling
+@implements IDisposable
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@inject ILogger<CopyScheduleDialog> Logger
+
+<MudDialog>
+    <DialogContent>
+        <EditForm Model="@_dummyModel" OnSubmit="@(_ => Submit())">
+            <div class="d-flex mb-6">
+                <MudText>Select a group for the new block</MudText>
+            </div>
+            <MudSelect @bind-Value="_selectedBlockGroup" Class="mb-6 mx-4" Label="New Block Group">
+                @foreach (BlockGroupViewModel blockGroup in _blockGroups)
+                {
+                    <MudSelectItem Value="@blockGroup">@blockGroup.Name</MudSelectItem>
+                }
+            </MudSelect>
+            <div class="d-flex mb-6">
+                <MudText>Enter a name for the new block</MudText>
+            </div>
+            <MudTextField T="string" Label="New Block Name"
+                          @bind-Text="@_newName"
+                          Class="mb-6 mx-4">
+            </MudTextField>
+        </EditForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@Cancel" ButtonType="ButtonType.Reset">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="@Submit">
+            Copy Block
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private CancellationTokenSource _cts;
+
+    [CascadingParameter]
+    IMudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public int BlockId { get; set; }
+
+    private record DummyModel;
+
+    private readonly DummyModel _dummyModel = new();
+
+    private List<BlockGroupViewModel> _blockGroups = [];
+    private BlockGroupViewModel _selectedBlockGroup;
+
+    private string _newName;
+
+    public void Dispose()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
+
+        try
+        {
+            _blockGroups = await Mediator.Send(new GetAllBlockGroups(), token);
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
+        }
+    }
+
+    private bool CanSubmit() => _selectedBlockGroup != null && !string.IsNullOrWhiteSpace(_newName);
+
+    private async Task Submit()
+    {
+        if (!CanSubmit())
+        {
+            return;
+        }
+
+        Either<BaseError, BlockViewModel> maybeResult =
+            await Mediator.Send(new CopyBlock(BlockId, _selectedBlockGroup.Id, _newName), _cts.Token);
+
+        maybeResult.Match(
+            schedule => { MudDialog.Close(DialogResult.Ok(schedule)); },
+            error =>
+            {
+                Snackbar.Add(error.Value, Severity.Error);
+                Logger.LogError("Error copying block: {Error}", error.Value);
+                MudDialog.Close(DialogResult.Cancel());
+            });
+    }
+
+    private void Cancel(MouseEventArgs e) => MudDialog.Cancel();
+}
