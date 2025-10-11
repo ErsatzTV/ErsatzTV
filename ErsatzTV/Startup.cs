@@ -73,7 +73,6 @@ using ErsatzTV.Infrastructure.Sqlite.Data;
 using ErsatzTV.Infrastructure.Streaming;
 using ErsatzTV.Infrastructure.Streaming.Graphics;
 using ErsatzTV.Infrastructure.Trakt;
-using ErsatzTV.Middleware;
 using ErsatzTV.Serialization;
 using ErsatzTV.Services;
 using ErsatzTV.Services.RunOnce;
@@ -603,7 +602,6 @@ public class Startup
             });
 
         app.UseResponseCompression();
-        app.UseMiddleware<DatabaseSetupMiddleware>();
 
         app.Use(async (context, next) =>
         {
