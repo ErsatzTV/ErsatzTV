@@ -41,6 +41,9 @@ public abstract class GraphicsElement : IGraphicsElement
                 (frameWidth - imageWidth) / 2,
                 frameHeight - imageHeight - verticalMargin),
             WatermarkLocation.LeftMiddle => new SKPointI(horizontalMargin, (frameHeight - imageHeight) / 2),
+            WatermarkLocation.MiddleCenter => new SKPointI(
+                (frameWidth - imageWidth) / 2 + horizontalMargin,
+                (frameHeight - imageHeight) / 2 + verticalMargin),
             _ => new SKPointI(
                 frameWidth - imageWidth - horizontalMargin,
                 frameHeight - imageHeight - verticalMargin)

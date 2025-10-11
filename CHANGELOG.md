@@ -9,6 +9,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Add template data (like `MediaItem_Title`) for other video files
   - Add `MediaItem_Path` for movies, episodes, music videos and other videos
   - Add `get_directory_name` and `get_filename_without_extension` functions for path processing
+  - Add `text_align` property to text graphics elements (values: `left`, `right` and `center`)
+  - Add `MiddleCenter` value to `location` property on all graphics elements
+    - Positive and negative margins can be used to offset from center as desired
+  - Add `line_height` property to text element style definition
+    - This is a multiplier that defaults to 1.0 when unspecified
 - Add `Block Playout Troubleshooting` tool to help investigate block playout history
 - Add sequential schedule file and scripted schedule file names to playouts table
 - Add empty (but already up-to-date) sqlite3 database to greatly speed up initial startup for fresh installs

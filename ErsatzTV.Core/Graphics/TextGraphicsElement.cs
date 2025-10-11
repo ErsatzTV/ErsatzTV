@@ -25,6 +25,9 @@ public class TextGraphicsElement
     [YamlMember(Alias = "text_fit", ApplyNamingConventions = false)]
     public TextFit Fit { get; set; } = TextFit.None;
 
+    [YamlMember(Alias = "text_align", ApplyNamingConventions = false)]
+    public TextAlignment Align { get; set; } = TextAlignment.Left;
+
     [YamlMember(Alias = "z_index", ApplyNamingConventions = false)]
     public int? ZIndex { get; set; }
 
@@ -49,6 +52,13 @@ public enum TextFit
     Scale
 }
 
+public enum TextAlignment
+{
+    Left,
+    Center,
+    Right
+}
+
 public class StyleDefinition
 {
     public string Name { get; set; }
@@ -70,4 +80,7 @@ public class StyleDefinition
 
     [YamlMember(Alias = "letter_spacing", ApplyNamingConventions = false)]
     public float? LetterSpacing { get; set; }
+
+    [YamlMember(Alias = "line_height", ApplyNamingConventions = false)]
+    public float? LineHeight { get; set; }
 }
