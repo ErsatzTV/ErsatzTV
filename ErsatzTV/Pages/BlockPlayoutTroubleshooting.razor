@@ -1,0 +1,161 @@
+@page "/system/troubleshooting/block-playout"
+@using ErsatzTV.Application.Playouts
+@using ErsatzTV.Application.Scheduling
+@implements IDisposable
+@inject IMediator Mediator
+
+<MudForm Style="max-height: 100%">
+    <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+            <MudText Typo="Typo.h5" Class="mb-2">Block Playout Troubleshooting</MudText>
+            <MudDivider Class="mb-6"/>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Block Playout</MudText>
+                </div>
+                <MudSelect T="PlayoutNameViewModel" SelectedValuesChanged="OnSelectedPlayoutChanged">
+                    @foreach (PlayoutNameViewModel playout in _playouts)
+                    {
+                        <MudSelectItem Value="@playout">@playout.ChannelNumber - @playout.ChannelName</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudStack>
+            <MudText Typo="Typo.h5" Class="mt-10 mb-2">Blocks</MudText>
+            <MudDivider Class="mb-6"/>
+            <MudTable Hover="true"
+                      Dense="true"
+                      Class="mt-8"
+                      Items="@_blocks"
+                      GroupBy="@_groupDefinition"
+                      GroupHeaderStyle="background-color:var(--mud-palette-appbarbackground)"
+                      RowStyle="background-color:var(--mud-palette-background-gray)"
+                      Filter="new Func<BlockViewModel,bool>(FilterBlocks)">
+                <ColGroup>
+                    <MudHidden Breakpoint="Breakpoint.Xs">
+                        <col style="width: 60px;"/>
+                        <col/>
+                        <col style="width: 120px;"/>
+                    </MudHidden>
+                </ColGroup>
+                <ToolBarContent>
+                    <MudTextField T="string"
+                                  ValueChanged="@(s => OnSearch(s))"
+                                  Placeholder="Search for blocks"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.FilterList"
+                                  Clearable="true">
+                    </MudTextField>
+                </ToolBarContent>
+                <GroupHeaderTemplate>
+                    <MudTd Class="mud-table-cell-custom-group">
+                        @($"{context.Key}")
+                    </MudTd>
+                    <MudTd>
+                        <div style="align-items: center; display: flex;">
+                            <div style="width: 48px;"></div>
+                            <div style="width: 48px;"></div>
+                        </div>
+                    </MudTd>
+                </GroupHeaderTemplate>
+                <RowTemplate>
+                    <MudTd>@context.Name</MudTd>
+                    <MudTd>
+                        <div class="d-flex">
+                            @if (context.Id >= 0)
+                            {
+                                <MudIconButton Icon="@Icons.Material.Filled.Search">
+                                </MudIconButton>
+                                <div style="width: 48px;"></div>
+                            }
+                            else
+                            {
+                                <div style="height: 48px; width: 48px"></div>
+                            }
+                        </div>
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        </MudContainer>
+    </div>
+</MudForm>
+
+@code {
+    private CancellationTokenSource _cts;
+    private readonly List<PlayoutNameViewModel> _playouts = [];
+    private PlayoutNameViewModel _selectedPlayout;
+    private readonly List<BlockViewModel> _blocks = [];
+    private string _searchString;
+
+    public void Dispose()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
+
+        try
+        {
+            _playouts.Clear();
+            _playouts.AddRange(await Mediator.Send(new GetAllBlockPlayouts(), token));
+
+            _blocks.Clear();
+            if (_selectedPlayout is not null)
+            {
+                _blocks.AddRange(await Mediator.Send(new GetAllBlocksForPlayout(_selectedPlayout.PlayoutId), token));
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
+        }
+    }
+
+    private readonly TableGroupDefinition<BlockViewModel> _groupDefinition = new()
+    {
+        GroupName = "Group",
+        Indentation = false,
+        Expandable = true,
+        Selector = (e) => e.GroupName
+    };
+
+    private void OnSearch(string query)
+    {
+        _searchString = query;
+    }
+
+    private bool FilterBlocks(BlockViewModel block) => FilterBlocks(block, _searchString);
+
+    private bool FilterBlocks(BlockViewModel block, string searchString)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+        {
+            return true;
+        }
+
+        if (block.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    private async Task OnSelectedPlayoutChanged(IEnumerable<PlayoutNameViewModel> selectedPlayouts)
+    {
+        _selectedPlayout = null;
+        _blocks.Clear();
+
+        foreach (var playout in selectedPlayouts.HeadOrNone())
+        {
+            _selectedPlayout = playout;
+            _blocks.AddRange(await Mediator.Send(new GetAllBlocksForPlayout(playout.PlayoutId), _cts?.Token ?? CancellationToken.None));
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+}
