@@ -86,7 +86,18 @@
                 </HeaderContent>
                 <RowTemplate>
                     <MudTd>@context.ChannelNumber - @context.ChannelName</MudTd>
-                    <MudTd Class="d-none d-md-table-cell">@context.ScheduleName</MudTd>
+                    <MudTd Class="d-none d-md-table-cell">
+                        @if (!string.IsNullOrWhiteSpace(context.ScheduleName))
+                        {
+                            @context.ScheduleName
+                        }
+                        else if (!string.IsNullOrWhiteSpace(context.ScheduleFile))
+                        {
+                            <MudTooltip Text="@context.ScheduleFile">
+                                @Path.GetFileName(context.ScheduleFile)
+                            </MudTooltip>
+                        }
+                    </MudTd>
                     <MudTd Class="d-none d-md-table-cell">
                         @switch (context.ScheduleKind)
                         {
