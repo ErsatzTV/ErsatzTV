@@ -7,15 +7,19 @@ namespace ErsatzTV.Controllers.Api;
 [EndpointGroupName("general")]
 public class VersionController
 {
-    private static readonly string Version;
+    private static readonly CombinedVersion Version;
 
     static VersionController() =>
-        Version = Assembly.GetEntryAssembly()?
-            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
-            .InformationalVersion ?? "unknown";
+        Version = new CombinedVersion(
+            1,
+            Assembly.GetEntryAssembly()?
+                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
+                .InformationalVersion ?? "unknown");
 
-    [HttpGet("/api/version")]
+    [HttpGet("/api/version", Name="GetVersion")]
     [Tags("Version")]
     [EndpointSummary("Get version")]
-    public string GetVersion() => Version;
+    public CombinedVersion GetVersion() => Version;
+
+    public record CombinedVersion(int ApiVersion, string AppVersion);
 }

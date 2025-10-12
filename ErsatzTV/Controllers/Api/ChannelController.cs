@@ -14,7 +14,7 @@ namespace ErsatzTV.Controllers.Api;
 public class ChannelController(ChannelWriter<IBackgroundServiceRequest> workerChannel, IMediator mediator)
 {
     [HttpGet("/api/channels")]
-    [V2ApiActionFilter]
+    [EndpointGroupName("general")]
     public async Task<List<ChannelResponseModel>> GetAll() => await mediator.Send(new GetAllChannelsForApi());
 
     [HttpPost("/api/channels/{channelNumber}/playout/reset")]

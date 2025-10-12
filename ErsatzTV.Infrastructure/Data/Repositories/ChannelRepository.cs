@@ -4,16 +4,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Infrastructure.Data.Repositories;
 
-public class ChannelRepository : IChannelRepository
+public class ChannelRepository(IDbContextFactory<TvContext> dbContextFactory) : IChannelRepository
 {
-    private readonly IDbContextFactory<TvContext> _dbContextFactory;
-
-    public ChannelRepository(IDbContextFactory<TvContext> dbContextFactory) =>
-        _dbContextFactory = dbContextFactory;
-
     public async Task<Option<Channel>> GetChannel(int id)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
         return await dbContext.Channels
             .AsNoTracking()
             .Include(c => c.Artwork)
@@ -25,7 +20,7 @@ public class ChannelRepository : IChannelRepository
 
     public async Task<Option<Channel>> GetByNumber(string number)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
         return await dbContext.Channels
             .AsNoTracking()
             .Include(c => c.FFmpegProfile)
@@ -39,7 +34,7 @@ public class ChannelRepository : IChannelRepository
 
     public async Task<List<Channel>> GetAll(CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await dbContext.Channels
             .AsNoTracking()
             .Include(c => c.FFmpegProfile)
@@ -52,7 +47,7 @@ public class ChannelRepository : IChannelRepository
 
     public async Task<Option<ChannelWatermark>> GetWatermarkByName(string name)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
 
         List<ChannelWatermark> maybeWatermarks = await dbContext.ChannelWatermarks
             .AsNoTracking()

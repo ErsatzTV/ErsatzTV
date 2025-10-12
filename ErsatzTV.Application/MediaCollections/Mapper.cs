@@ -1,4 +1,5 @@
 ﻿using ErsatzTV.Application.Tree;
+using ErsatzTV.Core.Api.SmartCollections;
 using ErsatzTV.Core.Domain;
 
 namespace ErsatzTV.Application.MediaCollections;
@@ -21,6 +22,9 @@ internal static class Mapper
             Optional(multiCollection.MultiCollectionSmartItems).Flatten().Map(ProjectToViewModel).ToList());
 
     internal static SmartCollectionViewModel ProjectToViewModel(SmartCollection collection) =>
+        new(collection.Id, collection.Name, collection.Query);
+
+    internal static SmartCollectionResponseModel ProjectToResponseModel(SmartCollection collection) =>
         new(collection.Id, collection.Name, collection.Query);
 
     internal static RerunCollectionViewModel ProjectToViewModel(RerunCollection collection) =>
