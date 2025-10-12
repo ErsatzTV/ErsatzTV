@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Application.MediaCollections;
 
-public class UpdateSmartCollectionHandler : IRequestHandler<UpdateSmartCollection, Either<BaseError, Unit>>
+public class UpdateSmartCollectionHandler : IRequestHandler<UpdateSmartCollection, Either<BaseError, UpdateSmartCollectionResult>>
 {
     private readonly ChannelWriter<IBackgroundServiceRequest> _channel;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
@@ -34,7 +34,7 @@ public class UpdateSmartCollectionHandler : IRequestHandler<UpdateSmartCollectio
         _smartCollectionCache = smartCollectionCache;
     }
 
-    public async Task<Either<BaseError, Unit>> Handle(
+    public async Task<Either<BaseError, UpdateSmartCollectionResult>> Handle(
         UpdateSmartCollection request,
         CancellationToken cancellationToken)
     {
@@ -43,7 +43,7 @@ public class UpdateSmartCollectionHandler : IRequestHandler<UpdateSmartCollectio
         return await validation.Apply(c => ApplyUpdateRequest(dbContext, c, request, cancellationToken));
     }
 
-    private async Task<Unit> ApplyUpdateRequest(
+    private async Task<UpdateSmartCollectionResult> ApplyUpdateRequest(
         TvContext dbContext,
         SmartCollection c,
         UpdateSmartCollection request,
@@ -65,7 +65,7 @@ public class UpdateSmartCollectionHandler : IRequestHandler<UpdateSmartCollectio
             }
         }
 
-        return Unit.Default;
+        return new UpdateSmartCollectionResult(c.Id);
     }
 
     private static Task<Validation<BaseError, SmartCollection>> Validate(

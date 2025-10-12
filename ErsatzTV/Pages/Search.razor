@@ -953,7 +953,7 @@
                     collectionResult.Item1.Name,
                     _query);
 
-                Either<BaseError, Unit> updateResult = await Mediator.Send(request, CancellationToken);
+                Either<BaseError, UpdateSmartCollectionResult> updateResult = await Mediator.Send(request, CancellationToken);
                 updateResult.Match(
                     Left: error =>
                     {
