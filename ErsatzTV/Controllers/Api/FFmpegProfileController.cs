@@ -39,6 +39,6 @@ public class FFmpegProfileController(IMediator mediator) : ControllerBase
     public async Task<IActionResult> DeleteProfileAsync(int id, CancellationToken cancellationToken)
     {
         Either<BaseError, Unit> result = await mediator.Send(new DeleteFFmpegProfile(id), cancellationToken);
-        return result.Match<IActionResult>(_ => Ok(), error => Problem(error.ToString()));
+        return result.Match<IActionResult>(_ => Ok(), error => Conflict(error.ToString()));
     }
 }

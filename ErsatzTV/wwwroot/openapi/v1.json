@@ -336,20 +336,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "type": "integer",
-                  "format": "int32"
+                  "$ref": "#/components/schemas/ResolutionViewModel"
                 }
               },
               "application/json": {
                 "schema": {
-                  "type": "integer",
-                  "format": "int32"
+                  "$ref": "#/components/schemas/ResolutionViewModel"
                 }
               },
               "text/json": {
                 "schema": {
-                  "type": "integer",
-                  "format": "int32"
+                  "$ref": "#/components/schemas/ResolutionViewModel"
                 }
               }
             }
@@ -991,6 +988,37 @@
           "Off",
           "LoudNorm"
         ]
+      },
+      "ResolutionViewModel": {
+        "required": [
+          "id",
+          "name",
+          "width",
+          "height",
+          "isCustom"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "width": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "height": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "isCustom": {
+            "type": "boolean"
+          }
+        }
       },
       "ScalingBehavior": {
         "enum": [

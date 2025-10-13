@@ -2,8 +2,6 @@
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.Search;
-using ErsatzTV.FFmpeg;
-using ErsatzTV.FFmpeg.Format;
 using ErsatzTV.FFmpeg.Preset;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
@@ -11,23 +9,14 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Application.FFmpegProfiles;
 
-public class
-    UpdateFFmpegProfileHandler : IRequestHandler<UpdateFFmpegProfile, Either<BaseError, UpdateFFmpegProfileResult>>
+public class UpdateFFmpegProfileHandler(IDbContextFactory<TvContext> dbContextFactory, ISearchTargets searchTargets)
+    : IRequestHandler<UpdateFFmpegProfile, Either<BaseError, UpdateFFmpegProfileResult>>
 {
-    private readonly IDbContextFactory<TvContext> _dbContextFactory;
-    private readonly ISearchTargets _searchTargets;
-
-    public UpdateFFmpegProfileHandler(IDbContextFactory<TvContext> dbContextFactory, ISearchTargets searchTargets)
-    {
-        _dbContextFactory = dbContextFactory;
-        _searchTargets = searchTargets;
-    }
-
     public async Task<Either<BaseError, UpdateFFmpegProfileResult>> Handle(
         UpdateFFmpegProfile request,
         CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, FFmpegProfile> validation = await Validate(dbContext, request, cancellationToken);
         return await validation.Apply(p => ApplyUpdateRequest(dbContext, p, request, cancellationToken));
     }
@@ -89,7 +78,7 @@ public class
 
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        _searchTargets.SearchTargetsChanged();
+        searchTargets.SearchTargetsChanged();
 
         return new UpdateFFmpegProfileResult(p.Id);
     }
@@ -98,7 +87,8 @@ public class
         TvContext dbContext,
         UpdateFFmpegProfile request,
         CancellationToken cancellationToken) =>
-        (await FFmpegProfileMustExist(dbContext, request, cancellationToken), ValidateName(request),
+        (await FFmpegProfileMustExist(dbContext, request, cancellationToken),
+            await ValidateName(dbContext, request),
             ValidateThreadCount(request),
             await ResolutionMustExist(dbContext, request, cancellationToken))
         .Apply((ffmpegProfileToUpdate, _, _, _) => ffmpegProfileToUpdate);
@@ -111,9 +101,25 @@ public class
             .SelectOneAsync(p => p.Id, p => p.Id == updateFFmpegProfile.FFmpegProfileId, cancellationToken)
             .Map(o => o.ToValidation<BaseError>("FFmpegProfile does not exist."));
 
-    private static Validation<BaseError, string> ValidateName(UpdateFFmpegProfile updateFFmpegProfile) =>
-        updateFFmpegProfile.NotEmpty(x => x.Name)
-            .Bind(_ => updateFFmpegProfile.NotLongerThan(50)(x => x.Name));
+    private static async Task<Validation<BaseError, string>> ValidateName(
+        TvContext dbContext,
+        UpdateFFmpegProfile updateFFmpegProfile)
+    {
+        if (updateFFmpegProfile.Name.Length > 50)
+        {
+            return BaseError.New($"FFmpeg profile name \"{updateFFmpegProfile.Name}\" is invalid");
+        }
+
+        Option<FFmpegProfile> maybeExisting = await dbContext.FFmpegProfiles
+            .AsNoTracking()
+            .FirstOrDefaultAsync(ff =>
+                ff.Id != updateFFmpegProfile.FFmpegProfileId && ff.Name == updateFFmpegProfile.Name)
+            .Map(Optional);
+
+        return maybeExisting.IsSome
+            ? BaseError.New($"An ffmpeg profile named \"{updateFFmpegProfile.Name}\" already exists in the database")
+            : Success<BaseError, string>(updateFFmpegProfile.Name);
+    }
 
     private static Validation<BaseError, int> ValidateThreadCount(UpdateFFmpegProfile updateFFmpegProfile) =>
         updateFFmpegProfile.AtLeast(0)(p => p.ThreadCount);
