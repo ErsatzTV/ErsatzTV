@@ -19,7 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Add empty (but already up-to-date) sqlite3 database to greatly speed up initial startup for fresh installs
 - Add button to copy/clone block from blocks table
 - Add playback speed to playback troubleshooting output
-  - Speed is realative to realtime (1.0x is realtime)
+  - Speed is relative to realtime (1.0x is realtime)
   - Speeds < 0.9x will be colored red, between 0.9x and 1.1x colored yellow, and > 1.1x colored green
 
 ### Fixed

@@ -206,6 +206,6 @@ public partial class StartTroubleshootingPlaybackHandler(
         }
     }
 
-    [GeneratedRegex(@"speed=([\d\.]+)x", RegexOptions.IgnoreCase)]
+    [GeneratedRegex(@"speed=\s*([\d\.]+)x", RegexOptions.IgnoreCase)]
     private static partial Regex FFmpegSpeed();
 }
