@@ -27,6 +27,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix remote stream durations in playouts created using block, sequential or scripted schedules
 - Fix playback troubleshooting selecting a subtitle even with no subtitle stream selected in the UI
 - Fix intermittent watermark opacity
+- Improve reliability of live remote streams; they should transcode closer to realtime in most cases
 
 ### Changed
 - Do not use graphics engine for single, permanent watermark
