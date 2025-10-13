@@ -393,9 +393,7 @@ public class HlsSessionWorker : IHlsSessionWorker
         return result;
     }
 
-    private async Task<bool> Transcode(
-        bool realtime,
-        CancellationToken cancellationToken)
+    private async Task<bool> Transcode(bool realtime, CancellationToken cancellationToken)
     {
         try
         {
