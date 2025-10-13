@@ -563,7 +563,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
             : SetDecoder(videoInputFile, videoStream, ffmpegState, context);
 
         //SetStillImageInfiniteLoop(videoInputFile, videoStream, ffmpegState);
-        SetRealtimeInput(videoInputFile, desiredState);
+        SetRealtimeInput(videoInputFile, ffmpegState, desiredState);
         SetInfiniteLoop(videoInputFile, videoStream, ffmpegState, desiredState);
         SetFrameRateOutput(desiredState, pipelineSteps);
         SetVideoTrackTimescaleOutput(desiredState, pipelineSteps);
@@ -760,29 +760,26 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         }
     }
 
-    private void SetRealtimeInput(VideoInputFile videoInputFile, FrameState desiredState)
+    private void SetRealtimeInput(VideoInputFile videoInputFile, FFmpegState ffmpegState, FrameState desiredState)
     {
-        if (videoInputFile.StreamInputKind is StreamInputKind.Live)
+        if (videoInputFile.StreamInputKind is StreamInputKind.Live || !desiredState.Realtime)
         {
             return;
         }
 
-        int initialBurst;
-        if (!desiredState.Realtime)
-        {
-            initialBurst = 45;
-        }
-        else
-        {
-            AudioFilter filter = _audioInputFile
-                .Map(a => a.DesiredState.NormalizeLoudnessFilter)
-                .IfNone(AudioFilter.None);
+        AudioFilter filter = _audioInputFile
+            .Map(a => a.DesiredState.NormalizeLoudnessFilter)
+            .IfNone(AudioFilter.None);
 
-            initialBurst = filter switch
-            {
-                AudioFilter.LoudNorm => 5,
-                _ => 0
-            };
+        int initialBurst = filter switch
+        {
+            AudioFilter.LoudNorm => 5,
+            _ => 0
+        };
+
+        if (ffmpegState.Finish.Any(finish => finish.TotalSeconds < initialBurst))
+        {
+            return;
         }
 
         _audioInputFile.Iter(a => a.AddOption(new ReadrateInputOption(_ffmpegCapabilities, initialBurst, _logger)));

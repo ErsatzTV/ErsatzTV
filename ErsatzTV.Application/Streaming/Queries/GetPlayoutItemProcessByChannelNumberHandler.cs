@@ -281,6 +281,22 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
             DateTimeOffset effectiveNow = request.StartAtZero ? start : now;
             TimeSpan duration = finish - effectiveNow;
 
+            bool isComplete = true;
+
+            // if we are working ahead, limit to 45s
+            if (!request.HlsRealtime)
+            {
+                TimeSpan limit = TimeSpan.FromSeconds(45);
+
+                if (duration > limit)
+                {
+                    finish = effectiveNow + limit;
+                    outPoint = inPoint + limit;
+                    duration = limit;
+                    isComplete = false;
+                }
+            }
+
             if (_isDebugNoSync)
             {
                 Command doesNotExistProcess = await _ffmpegProcessService.ForError(
@@ -427,7 +443,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 playoutItemResult.GraphicsEngineContext,
                 duration,
                 finish,
-                true);
+                isComplete);
 
             return Right<BaseError, PlayoutItemProcessModel>(result);
         }
