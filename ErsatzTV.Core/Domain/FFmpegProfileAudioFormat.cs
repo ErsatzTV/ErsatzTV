@@ -1,5 +1,8 @@
-﻿namespace ErsatzTV.Core.Domain;
+﻿using System.Text.Json.Serialization;
 
+namespace ErsatzTV.Core.Domain;
+
+[JsonConverter(typeof(JsonStringEnumConverter<FFmpegProfileAudioFormat>))]
 public enum FFmpegProfileAudioFormat
 {
     None = 0,

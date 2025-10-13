@@ -1,5 +1,8 @@
+using System.Text.Json.Serialization;
+
 namespace ErsatzTV.Core.Domain;
 
+[JsonConverter(typeof(JsonStringEnumConverter<FFmpegProfileTonemapAlgorithm>))]
 public enum FFmpegProfileTonemapAlgorithm
 {
     Linear = 0,

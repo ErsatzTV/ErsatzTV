@@ -2,4 +2,4 @@
 
 namespace ErsatzTV.Application.FFmpegProfiles;
 
-public record GetAllFFmpegProfilesForApi : IRequest<List<FFmpegProfileResponseModel>>;
+public record GetAllFFmpegProfilesForApi : IRequest<List<FFmpegFullProfileResponseModel>>;
