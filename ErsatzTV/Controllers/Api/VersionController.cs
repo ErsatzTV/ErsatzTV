@@ -11,7 +11,7 @@ public class VersionController
 
     static VersionController() =>
         Version = new CombinedVersion(
-            1,
+            2,
             Assembly.GetEntryAssembly()?
                 .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
                 .InformationalVersion ?? "unknown");

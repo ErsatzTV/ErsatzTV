@@ -1,5 +1,8 @@
-﻿namespace ErsatzTV.Core.Domain;
+﻿using System.Text.Json.Serialization;
 
+namespace ErsatzTV.Core.Domain;
+
+[JsonConverter(typeof(JsonStringEnumConverter<HardwareAccelerationKind>))]
 public enum HardwareAccelerationKind
 {
     None = 0,

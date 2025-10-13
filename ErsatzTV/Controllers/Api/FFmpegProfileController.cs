@@ -2,34 +2,43 @@
 using ErsatzTV.Application.FFmpegProfiles;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Api.FFmpegProfiles;
-using ErsatzTV.Filters;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ErsatzTV.Controllers.Api;
 
 [ApiController]
-[V2ApiActionFilter]
-public class FFmpegProfileController(IMediator mediator)
+[EndpointGroupName("general")]
+public class FFmpegProfileController(IMediator mediator) : ControllerBase
 {
-    [HttpGet("/api/ffmpeg/profiles")]
-    public async Task<List<FFmpegProfileResponseModel>> GetAll() =>
-        await mediator.Send(new GetAllFFmpegProfilesForApi());
+    [HttpGet("/api/ffmpeg/profiles", Name="GetFFmpegProfiles")]
+    public async Task<List<FFmpegFullProfileResponseModel>> GetAll(CancellationToken cancellationToken) =>
+        await mediator.Send(new GetAllFFmpegProfilesForApi(), cancellationToken);
 
-    [HttpPost("/api/ffmpeg/profiles/new")]
-    public async Task<Either<BaseError, CreateFFmpegProfileResult>> AddOne(
+    [HttpPost("/api/ffmpeg/profiles/new", Name="CreateFFmpegProfile")]
+    public async Task<IActionResult> AddOne(
         [Required] [FromBody]
-        CreateFFmpegProfile request) => await mediator.Send(request);
+        CreateFFmpegProfile request,
+        CancellationToken cancellationToken)
+    {
+        Either<BaseError, CreateFFmpegProfileResult> result =  await mediator.Send(request, cancellationToken);
+        return result.Match<IActionResult>(Ok, error => Problem(error.ToString()));
+    }
 
-    [HttpPut("/api/ffmpeg/profiles/update")]
-    public async Task<Either<BaseError, UpdateFFmpegProfileResult>> UpdateOne(
+    [HttpPut("/api/ffmpeg/profiles/update", Name="UpdateFFmpegProfile")]
+    public async Task<IActionResult> UpdateOne(
         [Required] [FromBody]
-        UpdateFFmpegProfile request) => await mediator.Send(request);
+        UpdateFFmpegProfile request,
+        CancellationToken cancellationToken)
+    {
+        Either<BaseError, UpdateFFmpegProfileResult> result = await mediator.Send(request, cancellationToken);
+        return result.Match<IActionResult>(Ok, error => Problem(error.ToString()));
+    }
 
-    [HttpGet("/api/ffmpeg/profiles/{id:int}")]
-    public async Task<Option<FFmpegFullProfileResponseModel>> GetOne(int id) =>
-        await mediator.Send(new GetFFmpegFullProfileByIdForApi(id));
-
-    [HttpDelete("/api/ffmpeg/delete/{id:int}")]
-    public async Task DeleteProfileAsync(int id) => await mediator.Send(new DeleteFFmpegProfile(id));
+    [HttpDelete("/api/ffmpeg/delete/{id:int}", Name="DeleteFFmpegProfile")]
+    public async Task<IActionResult> DeleteProfileAsync(int id, CancellationToken cancellationToken)
+    {
+        Either<BaseError, Unit> result = await mediator.Send(new DeleteFFmpegProfile(id), cancellationToken);
+        return result.Match<IActionResult>(_ => Ok(), error => Problem(error.ToString()));
+    }
 }
