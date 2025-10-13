@@ -762,6 +762,11 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
 
     private void SetRealtimeInput(VideoInputFile videoInputFile, FrameState desiredState)
     {
+        if (videoInputFile.StreamInputKind is StreamInputKind.Live)
+        {
+            return;
+        }
+
         int initialBurst;
         if (!desiredState.Realtime)
         {

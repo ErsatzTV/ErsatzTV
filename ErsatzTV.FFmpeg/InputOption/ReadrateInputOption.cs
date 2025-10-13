@@ -41,11 +41,10 @@ public class ReadrateInputOption : IInputOption
             }
 
             result.AddRange(
-                new[]
-                {
-                    "-readrate_initial_burst",
+            [
+                "-readrate_initial_burst",
                     _initialBurstSeconds.ToString(CultureInfo.InvariantCulture)
-                });
+            ]);
         }
 
         return result.ToArray();
