@@ -152,7 +152,16 @@
                 </media-controller>
                 <div class="d-none d-md-flex" style="width: 400px"></div>
             </div>
-            <MudText Typo="Typo.h5" Class="mt-10 mb-2">Logs</MudText>
+            @if (_lastSpeed is not null)
+            {
+                <MudText Typo="Typo.h5" Class="mt-10 mb-2">
+                    Logs <span class="@GetSpeedClass(_lastSpeed.Value)">(Speed: @(_lastSpeed.Value)x)</span>
+                </MudText>
+            }
+            else
+            {
+                <MudText Typo="Typo.h5" Class="mt-10 mb-2">Logs</MudText>
+            }
             <MudDivider Class="mb-6"/>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="gap-md-8 mb-5">
                 <MudTextField @bind-Value="_logs" ReadOnly="true" Lines="20" Variant="Variant.Outlined" />
@@ -183,6 +192,7 @@
     private int? _subtitleId;
     private int _seekSeconds;
     private bool _hasPlayed;
+    private double? _lastSpeed;
     private string _logs;
 
     [SupplyParameterFromQuery(Name = "mediaItem")]
@@ -249,15 +259,16 @@
     private async Task PreviewChannel()
     {
         _logs = null;
+        _lastSpeed = null;
 
         var baseUri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri).ToString();
         string apiUri = baseUri.Replace("/system/troubleshooting/playback", "/api/troubleshoot/playback.m3u8");
         var queryString = new List<KeyValuePair<string, string>>
         {
-            new ("mediaItem", (MediaItemId ?? 0).ToString()),
-            new ("ffmpegProfile", _ffmpegProfileId.ToString()),
-            new ("streamingMode", ((int)_streamingMode).ToString()),
-            new ("seekSeconds", _seekSeconds.ToString())
+            new("mediaItem", (MediaItemId ?? 0).ToString()),
+            new("ffmpegProfile", _ffmpegProfileId.ToString()),
+            new("streamingMode", ((int)_streamingMode).ToString()),
+            new("seekSeconds", _seekSeconds.ToString())
         };
 
         foreach (string watermarkName in _watermarkNames)
@@ -324,10 +335,10 @@
     {
         var queryString = new List<KeyValuePair<string, string>>
         {
-            new ("mediaItem", (MediaItemId ?? 0).ToString()),
-            new ("ffmpegProfile", _ffmpegProfileId.ToString()),
-            new ("streamingMode", ((int)_streamingMode).ToString()),
-            new ("seekSeconds", _seekSeconds.ToString())
+            new("mediaItem", (MediaItemId ?? 0).ToString()),
+            new("ffmpegProfile", _ffmpegProfileId.ToString()),
+            new("streamingMode", ((int)_streamingMode).ToString()),
+            new("seekSeconds", _seekSeconds.ToString())
         };
 
         foreach (string watermarkName in _watermarkNames)
@@ -353,6 +364,12 @@
     private void HandleTroubleshootingCompleted(PlaybackTroubleshootingCompletedNotification result)
     {
         _logs = null;
+        _lastSpeed = null;
+
+        foreach (double speed in result.MaybeSpeed)
+        {
+            _lastSpeed = speed;
+        }
 
         if (result.ExitCode == 0)
         {
@@ -369,6 +386,29 @@
             _logs = File.ReadAllText(logFileName);
             InvokeAsync(StateHasChanged);
         }
+        else
+        {
+            foreach (var exception in result.MaybeException)
+            {
+                _logs = exception.Message + Environment.NewLine + Environment.NewLine + exception;
+                InvokeAsync(StateHasChanged);
+            }
+        }
+    }
+
+    private static string GetSpeedClass(double speed)
+    {
+        if (speed < 0.9)
+        {
+            return "mud-error-text";
+        }
+
+        if (speed > 1.1)
+        {
+            return "mud-primary-text";
+        }
+
+        return "mud-warning-text";
     }
 
 }
