@@ -2,6 +2,7 @@ using System.IO.Pipelines;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 using CliWrap;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
@@ -16,7 +17,7 @@ using Serilog.Events;
 
 namespace ErsatzTV.Application.Troubleshooting;
 
-public class StartTroubleshootingPlaybackHandler(
+public partial class StartTroubleshootingPlaybackHandler(
     ITroubleshootingNotifier notifier,
     IMediator mediator,
     IEntityLocker entityLocker,
@@ -152,8 +153,26 @@ public class StartTroubleshootingPlaybackHandler(
                     // do nothing
                 }
 
+                Option<double> maybeSpeed =  Option<double>.None;
+                Option<string> maybeFile = Directory.GetFiles(FileSystemLayout.TranscodeTroubleshootingFolder, "ffmpeg*.log").HeadOrNone();
+                foreach (string file in maybeFile)
+                {
+                    await foreach (string line in File.ReadLinesAsync(file, linkedCts.Token))
+                    {
+                        Match match = FFmpegSpeed().Match(line);
+                        if (match.Success && double.TryParse(match.Groups[1].Value, out double speed))
+                        {
+                            maybeSpeed = speed;
+                            break;
+                        }
+                    }
+                }
+
                 await mediator.Publish(
-                    new PlaybackTroubleshootingCompletedNotification(commandResult.ExitCode),
+                    new PlaybackTroubleshootingCompletedNotification(
+                        commandResult.ExitCode,
+                        Option<Exception>.None,
+                        maybeSpeed),
                     linkedCts.Token);
 
                 logger.LogDebug("Troubleshooting playback completed with exit code {ExitCode}", commandResult.ExitCode);
@@ -186,4 +205,7 @@ public class StartTroubleshootingPlaybackHandler(
             loggingLevelSwitches.StreamingLevelSwitch.MinimumLevel = currentStreamingLevel;
         }
     }
+
+    [GeneratedRegex(@"speed=([\d\.]+)x", RegexOptions.IgnoreCase)]
+    private static partial Regex FFmpegSpeed();
 }

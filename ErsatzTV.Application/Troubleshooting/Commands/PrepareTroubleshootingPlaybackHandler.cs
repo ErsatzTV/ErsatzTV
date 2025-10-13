@@ -67,7 +67,7 @@ public class PrepareTroubleshootingPlaybackHandler(
         catch (Exception ex)
         {
             entityLocker.UnlockTroubleshootingPlayback();
-            await mediator.Publish(new PlaybackTroubleshootingCompletedNotification(-1), cancellationToken);
+            await mediator.Publish(new PlaybackTroubleshootingCompletedNotification(-1, ex, Option<double>.None), cancellationToken);
             logger.LogError(ex, "Error while preparing troubleshooting playback");
             return BaseError.New(ex.Message);
         }
@@ -292,6 +292,10 @@ public class PrepareTroubleshootingPlaybackHandler(
                 subtitle.Forced = true;
                 return [subtitle];
             }
+        }
+        else if (string.IsNullOrWhiteSpace(request.StreamSelector))
+        {
+            allSubtitles.Clear();
         }
 
         return allSubtitles;

@@ -5,8 +5,8 @@ if [[ $# -eq 0 ]] ; then
     exit 1
 fi
 
-cd "$(git rev-parse --show-cdup)" || exit
+cd "$(git rev-parse --show-toplevel)" || exit
 cd ErsatzTV && dotnet user-secrets set "Provider" "$1"
 
-cd "$(git rev-parse --show-cdup)" || exit
+cd "$(git rev-parse --show-toplevel)" || exit
 cd ErsatzTV.Scanner && dotnet user-secrets set "Provider" "$1"
