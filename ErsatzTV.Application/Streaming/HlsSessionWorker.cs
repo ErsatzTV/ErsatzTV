@@ -515,7 +515,10 @@ public class HlsSessionWorker : IHlsSessionWorker
                     if (commandResult.ExitCode == 0)
                     {
                         _logger.LogDebug("HLS process has completed for channel {Channel}", _channelNumber);
-                        _logger.LogDebug("Transcoded until: {Until}", processModel.Until);
+                        _logger.LogDebug(
+                            "Transcoded until: {Until} - buffer {Buffer}",
+                            processModel.Until,
+                            DateTimeOffset.Now - processModel.Until);
                         _transcodedUntil = processModel.Until;
                         _state = NextState(_state, processModel);
                         _hasWrittenSegments = true;
