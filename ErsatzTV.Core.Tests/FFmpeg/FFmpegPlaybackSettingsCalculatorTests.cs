@@ -29,7 +29,6 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 DateTimeOffset.Now,
                 DateTimeOffset.Now,
                 TimeSpan.Zero,
-                TimeSpan.Zero,
                 false,
                 StreamInputKind.Vod,
                 None);
@@ -49,7 +48,6 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 new MediaStream(),
                 DateTimeOffset.Now,
                 DateTimeOffset.Now,
-                TimeSpan.Zero,
                 TimeSpan.Zero,
                 false,
                 StreamInputKind.Vod,
@@ -75,7 +73,6 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 DateTimeOffset.Now,
                 DateTimeOffset.Now,
                 TimeSpan.Zero,
-                TimeSpan.Zero,
                 false,
                 StreamInputKind.Vod,
                 None);
@@ -95,7 +92,6 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 new MediaStream(),
                 DateTimeOffset.Now,
                 DateTimeOffset.Now,
-                TimeSpan.Zero,
                 TimeSpan.Zero,
                 false,
                 StreamInputKind.Vod,
@@ -117,7 +113,6 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 DateTimeOffset.Now,
                 DateTimeOffset.Now,
                 TimeSpan.Zero,
-                TimeSpan.Zero,
                 false,
                 StreamInputKind.Vod,
                 None);
@@ -137,7 +132,6 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 new MediaStream(),
                 DateTimeOffset.Now,
                 DateTimeOffset.Now,
-                TimeSpan.Zero,
                 TimeSpan.Zero,
                 false,
                 StreamInputKind.Vod,
@@ -161,7 +155,6 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 DateTimeOffset.Now,
                 DateTimeOffset.Now,
                 TimeSpan.Zero,
-                TimeSpan.Zero,
                 false,
                 StreamInputKind.Vod,
                 None);
@@ -184,7 +177,6 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 DateTimeOffset.Now,
                 DateTimeOffset.Now,
                 TimeSpan.Zero,
-                TimeSpan.Zero,
                 false,
                 StreamInputKind.Vod,
                 None);
@@ -204,7 +196,6 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 new MediaStream(),
                 DateTimeOffset.Now,
                 DateTimeOffset.Now,
-                TimeSpan.Zero,
                 TimeSpan.Zero,
                 false,
                 StreamInputKind.Vod,
@@ -228,7 +219,6 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 now,
                 now.AddMinutes(5),
                 TimeSpan.Zero,
-                TimeSpan.Zero,
                 false,
                 StreamInputKind.Vod,
                 None);
@@ -251,7 +241,6 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 new MediaStream(),
                 now,
                 now.AddMinutes(5),
-                TimeSpan.Zero,
                 TimeSpan.Zero,
                 false,
                 StreamInputKind.Vod,
@@ -280,7 +269,6 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 DateTimeOffset.Now,
                 DateTimeOffset.Now,
                 TimeSpan.Zero,
-                TimeSpan.Zero,
                 false,
                 StreamInputKind.Vod,
                 None);
@@ -307,7 +295,6 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 DateTimeOffset.Now,
                 DateTimeOffset.Now,
                 TimeSpan.Zero,
-                TimeSpan.Zero,
                 false,
                 StreamInputKind.Vod,
                 None);
@@ -333,7 +320,6 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 new MediaStream(),
                 DateTimeOffset.Now,
                 DateTimeOffset.Now,
-                TimeSpan.Zero,
                 TimeSpan.Zero,
                 false,
                 StreamInputKind.Vod,
@@ -362,7 +348,6 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 DateTimeOffset.Now,
                 DateTimeOffset.Now,
                 TimeSpan.Zero,
-                TimeSpan.Zero,
                 false,
                 StreamInputKind.Vod,
                 None);
@@ -388,7 +373,6 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 new MediaStream(),
                 DateTimeOffset.Now,
                 DateTimeOffset.Now,
-                TimeSpan.Zero,
                 TimeSpan.Zero,
                 false,
                 StreamInputKind.Vod,
@@ -418,7 +402,6 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 new MediaStream(),
                 DateTimeOffset.Now,
                 DateTimeOffset.Now,
-                TimeSpan.Zero,
                 TimeSpan.Zero,
                 false,
                 StreamInputKind.Vod,
@@ -450,7 +433,6 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 DateTimeOffset.Now,
                 DateTimeOffset.Now,
                 TimeSpan.Zero,
-                TimeSpan.Zero,
                 false,
                 StreamInputKind.Vod,
                 None);
@@ -479,7 +461,6 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 new MediaStream(),
                 DateTimeOffset.Now,
                 DateTimeOffset.Now,
-                TimeSpan.Zero,
                 TimeSpan.Zero,
                 false,
                 StreamInputKind.Vod,
@@ -510,7 +491,6 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 DateTimeOffset.Now,
                 DateTimeOffset.Now,
                 TimeSpan.Zero,
-                TimeSpan.Zero,
                 false,
                 StreamInputKind.Vod,
                 None);
@@ -539,7 +519,6 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 new MediaStream(),
                 DateTimeOffset.Now,
                 DateTimeOffset.Now,
-                TimeSpan.Zero,
                 TimeSpan.Zero,
                 false,
                 StreamInputKind.Vod,
@@ -572,7 +551,6 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 DateTimeOffset.Now,
                 DateTimeOffset.Now,
                 TimeSpan.Zero,
-                TimeSpan.Zero,
                 false,
                 StreamInputKind.Vod,
                 None);
@@ -602,7 +580,6 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 new MediaStream { Codec = "mpeg2video" },
                 DateTimeOffset.Now,
                 DateTimeOffset.Now,
-                TimeSpan.Zero,
                 TimeSpan.Zero,
                 false,
                 StreamInputKind.Vod,
@@ -634,7 +611,6 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 DateTimeOffset.Now,
                 DateTimeOffset.Now,
                 TimeSpan.Zero,
-                TimeSpan.Zero,
                 false,
                 StreamInputKind.Vod,
                 None);
@@ -663,7 +639,6 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 new MediaStream(),
                 DateTimeOffset.Now,
                 DateTimeOffset.Now,
-                TimeSpan.Zero,
                 TimeSpan.Zero,
                 false,
                 StreamInputKind.Vod,
@@ -695,7 +670,6 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 DateTimeOffset.Now,
                 DateTimeOffset.Now,
                 TimeSpan.Zero,
-                TimeSpan.Zero,
                 false,
                 StreamInputKind.Vod,
                 None);
@@ -724,7 +698,6 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 new MediaStream(),
                 DateTimeOffset.Now,
                 DateTimeOffset.Now,
-                TimeSpan.Zero,
                 TimeSpan.Zero,
                 false,
                 StreamInputKind.Vod,
@@ -756,7 +729,6 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 DateTimeOffset.Now,
                 DateTimeOffset.Now,
                 TimeSpan.Zero,
-                TimeSpan.Zero,
                 false,
                 StreamInputKind.Vod,
                 None);
@@ -782,7 +754,6 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 DateTimeOffset.Now,
                 DateTimeOffset.Now,
                 TimeSpan.Zero,
-                TimeSpan.Zero,
                 false,
                 StreamInputKind.Vod,
                 None);
@@ -806,7 +777,6 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 DateTimeOffset.Now,
                 DateTimeOffset.Now,
                 TimeSpan.Zero,
-                TimeSpan.Zero,
                 false,
                 StreamInputKind.Vod,
                 None);
@@ -829,7 +799,6 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 new MediaStream(),
                 DateTimeOffset.Now,
                 DateTimeOffset.Now,
-                TimeSpan.Zero,
                 TimeSpan.Zero,
                 false,
                 StreamInputKind.Vod,
@@ -855,7 +824,6 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 DateTimeOffset.Now,
                 DateTimeOffset.Now,
                 TimeSpan.Zero,
-                TimeSpan.Zero,
                 false,
                 StreamInputKind.Vod,
                 None);
@@ -879,7 +847,6 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 new MediaStream(),
                 DateTimeOffset.Now,
                 DateTimeOffset.Now,
-                TimeSpan.Zero,
                 TimeSpan.Zero,
                 false,
                 StreamInputKind.Vod,
@@ -905,7 +872,6 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 DateTimeOffset.Now,
                 DateTimeOffset.Now,
                 TimeSpan.Zero,
-                TimeSpan.Zero,
                 false,
                 StreamInputKind.Vod,
                 None);
@@ -930,7 +896,6 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 DateTimeOffset.Now,
                 DateTimeOffset.Now,
                 TimeSpan.Zero,
-                TimeSpan.Zero,
                 false,
                 StreamInputKind.Vod,
                 None);
@@ -953,7 +918,6 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 new MediaStream(),
                 DateTimeOffset.Now,
                 DateTimeOffset.Now,
-                TimeSpan.Zero,
                 TimeSpan.Zero,
                 false,
                 StreamInputKind.Vod,
@@ -978,7 +942,6 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 DateTimeOffset.Now,
                 DateTimeOffset.Now,
                 TimeSpan.Zero,
-                TimeSpan.Zero,
                 false,
                 StreamInputKind.Vod,
                 None);
@@ -987,7 +950,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
         }
 
         [Test]
-        public void Should_SetAudioDuration_With_CorrectFormat_ForTransportStream()
+        public void Should_SetPadAudio_ForTransportStream()
         {
             FFmpegProfile ffmpegProfile = TestProfile() with
             {
@@ -1008,12 +971,11 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 DateTimeOffset.Now,
                 DateTimeOffset.Now,
                 TimeSpan.Zero,
-                TimeSpan.FromMinutes(2),
                 false,
                 StreamInputKind.Vod,
                 None);
 
-            actual.AudioDuration.IfNone(TimeSpan.MinValue).ShouldBe(TimeSpan.FromMinutes(2));
+            actual.PadAudio.ShouldBe(true);
         }
 
         [Test]
@@ -1031,7 +993,6 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 new MediaStream(),
                 DateTimeOffset.Now,
                 DateTimeOffset.Now,
-                TimeSpan.Zero,
                 TimeSpan.Zero,
                 false,
                 StreamInputKind.Vod,
@@ -1057,7 +1018,6 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 new MediaStream(),
                 DateTimeOffset.Now,
                 DateTimeOffset.Now,
-                TimeSpan.Zero,
                 TimeSpan.Zero,
                 false,
                 StreamInputKind.Vod,

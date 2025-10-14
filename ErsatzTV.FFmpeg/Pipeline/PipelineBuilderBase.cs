@@ -467,7 +467,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
             audioInputFile.FilterSteps.Add(new AudioResampleFilter());
         }
 
-        foreach (TimeSpan _ in audioInputFile.DesiredState.AudioDuration)
+        if (audioInputFile.DesiredState.PadAudio)
         {
             audioInputFile.FilterSteps.Add(new AudioPadFilter());
         }

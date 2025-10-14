@@ -6,7 +6,7 @@ public record AudioState(
     Option<int> AudioBitrate,
     Option<int> AudioBufferSize,
     Option<int> AudioSampleRate,
-    Option<TimeSpan> AudioDuration,
+    bool PadAudio,
     AudioFilter NormalizeLoudnessFilter)
 {
     public static readonly AudioState Copy = new(
@@ -15,7 +15,7 @@ public record AudioState(
         Option<int>.None,
         Option<int>.None,
         Option<int>.None,
-        Option<TimeSpan>.None,
+        false,
         AudioFilter.None
     );
 }

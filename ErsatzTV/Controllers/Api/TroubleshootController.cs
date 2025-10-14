@@ -7,6 +7,7 @@ using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Metadata;
+using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Troubleshooting;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -18,6 +19,7 @@ namespace ErsatzTV.Controllers.Api;
 public class TroubleshootController(
     ChannelWriter<IFFmpegWorkerRequest> channelWriter,
     ILocalFileSystem localFileSystem,
+    IConfigElementRepository configElementRepository,
     ITroubleshootingNotifier notifier,
     IMediator mediator) : ControllerBase
 {
@@ -94,17 +96,38 @@ public class TroubleshootController(
                                 troubleshootingInfo),
                             cancellationToken);
 
-                        string playlistFile = Path.Combine(
-                            FileSystemLayout.TranscodeFolder,
-                            ".troubleshooting",
-                            "live.m3u8");
-
+                        string playlistFile = Path.Combine(FileSystemLayout.TranscodeTroubleshootingFolder, "live.m3u8");
                         while (!localFileSystem.FileExists(playlistFile))
                         {
-                            await Task.Delay(TimeSpan.FromMilliseconds(250), cancellationToken);
+                            await Task.Delay(TimeSpan.FromMilliseconds(100), cancellationToken);
                             if (cancellationToken.IsCancellationRequested || notifier.IsFailed(sessionId))
                             {
                                 break;
+                            }
+                        }
+
+                        int initialSegmentCount = await configElementRepository
+                            .GetValue<int>(ConfigElementKey.FFmpegInitialSegmentCount, cancellationToken)
+                            .Map(maybeCount => maybeCount.Match(c => c, () => 1));
+
+                        initialSegmentCount = Math.Max(initialSegmentCount, 2);
+
+                        bool hasSegments = false;
+                        while (!hasSegments)
+                        {
+                            await Task.Delay(TimeSpan.FromMilliseconds(100), cancellationToken);
+
+                            string[] segmentFiles = streamingMode switch
+                            {
+                                StreamingMode.HttpLiveStreamingSegmenterFmp4 => Directory.GetFiles(
+                                    FileSystemLayout.TranscodeTroubleshootingFolder,
+                                    "*.m4s"),
+                                _ => Directory.GetFiles(FileSystemLayout.TranscodeTroubleshootingFolder, "*.ts")
+                            };
+
+                            if (segmentFiles.Length >= initialSegmentCount)
+                            {
+                                hasSegments = true;
                             }
                         }
 

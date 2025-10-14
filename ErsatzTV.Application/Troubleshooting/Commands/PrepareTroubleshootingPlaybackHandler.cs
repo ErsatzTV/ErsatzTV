@@ -246,7 +246,6 @@ public class PrepareTroubleshootingPlaybackHandler(
             mediaItem is RemoteStream { IsLive: true } ? StreamInputKind.Live : StreamInputKind.Vod,
             FillerKind.None,
             inPoint,
-            outPoint,
             channelStartTime: DateTimeOffset.Now,
             0,
             None,

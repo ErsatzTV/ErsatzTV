@@ -430,7 +430,6 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                     : StreamInputKind.Vod,
                 playoutItemWithPath.PlayoutItem.FillerKind,
                 inPoint,
-                outPoint,
                 request.ChannelStartTime,
                 request.PtsOffset,
                 request.TargetFramerate,
