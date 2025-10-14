@@ -32,6 +32,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Improve reliability of live remote streams; they should transcode closer to realtime in most cases
 - Dramatically improve stream startup time
 - VAAPI: fix scaling image-based subtitles (e.g. dvdsub)
+- Fix HLS Segmenter (fmp4) on Windows
 
 ### Changed
 - Do not use graphics engine for single, permanent watermark

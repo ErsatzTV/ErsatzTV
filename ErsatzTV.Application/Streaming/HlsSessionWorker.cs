@@ -47,6 +47,7 @@ public class HlsSessionWorker : IHlsSessionWorker
     private HlsSessionState _state;
     private Timer _timer;
     private DateTimeOffset _transcodedUntil;
+    private string _workingDirectory;
 
     public HlsSessionWorker(
         IServiceScopeFactory serviceScopeFactory,
@@ -171,6 +172,7 @@ public class HlsSessionWorker : IHlsSessionWorker
         try
         {
             _channelNumber = channelNumber;
+            _workingDirectory = Path.Combine(FileSystemLayout.TranscodeFolder, _channelNumber);
 
             foreach (TimeSpan timeout in idleTimeout)
             {
@@ -188,7 +190,7 @@ public class HlsSessionWorker : IHlsSessionWorker
                 channelNumber,
                 _outputFormat);
 
-            if (_localFileSystem.ListFiles(Path.Combine(FileSystemLayout.TranscodeFolder, _channelNumber)).Any())
+            if (_localFileSystem.ListFiles(_workingDirectory).Any())
             {
                 _logger.LogError("Transcode folder is NOT empty!");
             }
@@ -261,7 +263,7 @@ public class HlsSessionWorker : IHlsSessionWorker
 
             try
             {
-                _localFileSystem.EmptyFolder(Path.Combine(FileSystemLayout.TranscodeFolder, _channelNumber));
+                _localFileSystem.EmptyFolder(_workingDirectory);
             }
             catch
             {
@@ -297,7 +299,7 @@ public class HlsSessionWorker : IHlsSessionWorker
             DateTimeOffset start = DateTimeOffset.Now;
             DateTimeOffset finish = start.AddSeconds(8);
 
-            string playlistFileName = Path.Combine(FileSystemLayout.TranscodeFolder, _channelNumber, "live.m3u8");
+            string playlistFileName = Path.Combine(_workingDirectory, "live.m3u8");
 
             _logger.LogDebug("Waiting for playlist to exist");
             while (!_localFileSystem.FileExists(playlistFileName))
@@ -438,7 +440,10 @@ public class HlsSessionWorker : IHlsSessionWorker
                 }
             }
 
-            long ptsOffset = await GetPtsOffset(_channelNumber, cancellationToken);
+            // fmp4 doesn't require pts offsets because each new item gets a discontinuity AND a new init segment
+            long ptsOffset = _outputFormat is OutputFormatKind.HlsMp4
+                ? 0
+                : await GetPtsOffset(_channelNumber, cancellationToken);
             // _logger.LogInformation("PTS offset: {PtsOffset}", ptsOffset);
 
             _logger.LogDebug("HLS session state: {State}", _state);
@@ -502,6 +507,7 @@ public class HlsSessionWorker : IHlsSessionWorker
                     }
 
                     CommandResult commandResult = await processWithPipe
+                        .WithWorkingDirectory(_workingDirectory)
                         .WithStandardErrorPipe(PipeTarget.ToStringBuilder(stdErrBuffer))
                         .WithValidation(CommandResultValidation.None)
                         .ExecuteAsync(linkedCts.Token);
@@ -653,9 +659,9 @@ public class HlsSessionWorker : IHlsSessionWorker
     private void DeleteOldSegments(TrimPlaylistResult trimResult)
     {
         // delete old segments
-        var allSegments = Directory.GetFiles(Path.Combine(FileSystemLayout.TranscodeFolder, _channelNumber), "live*.ts")
-            .Append(Directory.GetFiles(Path.Combine(FileSystemLayout.TranscodeFolder, _channelNumber), "live*.mp4"))
-            .Append(Directory.GetFiles(Path.Combine(FileSystemLayout.TranscodeFolder, _channelNumber), "live*.m4s"))
+        var allSegments = Directory.GetFiles(_workingDirectory, "live*.ts")
+            .Append(Directory.GetFiles(_workingDirectory, "live*.mp4"))
+            .Append(Directory.GetFiles(_workingDirectory, "live*.m4s"))
             .Map(file =>
             {
                 string fileName = Path.GetFileName(file);
@@ -672,7 +678,7 @@ public class HlsSessionWorker : IHlsSessionWorker
             })
             .ToList();
 
-        var allInits = Directory.GetFiles(Path.Combine(FileSystemLayout.TranscodeFolder, _channelNumber), "*init.mp4")
+        var allInits = Directory.GetFiles(_workingDirectory, "*init.mp4")
             .Map(file =>
             {
                 string fileName = Path.GetFileName(file);
@@ -722,7 +728,7 @@ public class HlsSessionWorker : IHlsSessionWorker
 
     private List<long> GetAllInits() =>
         _outputFormat is OutputFormatKind.HlsMp4
-            ? Directory.GetFiles(Path.Combine(FileSystemLayout.TranscodeFolder, _channelNumber), "*init.mp4")
+            ? Directory.GetFiles(_workingDirectory, "*init.mp4")
                 .Map(file =>
                 {
                     string fileName = Path.GetFileName(file);
@@ -788,10 +794,7 @@ public class HlsSessionWorker : IHlsSessionWorker
         await File.WriteAllTextAsync(fileName, playlist, cancellationToken);
     }
 
-    private string PlaylistFileName() => Path.Combine(
-        FileSystemLayout.TranscodeFolder,
-        _channelNumber,
-        "live.m3u8");
+    private string PlaylistFileName() => Path.Combine(_workingDirectory, "live.m3u8");
 
     private sealed record Segment(string File, long SequenceNumber, long GeneratedAt);
 }

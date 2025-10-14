@@ -135,6 +135,7 @@ public partial class StartTroubleshootingPlaybackHandler(
                 }
 
                 CommandResult commandResult = await processWithPipe
+                    .WithWorkingDirectory(FileSystemLayout.TranscodeTroubleshootingFolder)
                     .WithStandardErrorPipe(PipeTarget.Null)
                     .WithValidation(CommandResultValidation.None)
                     .ExecuteAsync(linkedCts.Token);
