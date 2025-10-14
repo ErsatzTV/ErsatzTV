@@ -23,7 +23,7 @@ public class FFmpegPlaybackSettings
     public Option<int> AudioBufferSize { get; set; }
     public Option<int> AudioChannels { get; set; }
     public Option<int> AudioSampleRate { get; set; }
-    public Option<TimeSpan> AudioDuration { get; set; }
+    public bool PadAudio { get; set; }
     public FFmpegProfileAudioFormat AudioFormat { get; set; }
     public bool Deinterlace { get; set; }
     public Option<int> VideoTrackTimeScale { get; set; }

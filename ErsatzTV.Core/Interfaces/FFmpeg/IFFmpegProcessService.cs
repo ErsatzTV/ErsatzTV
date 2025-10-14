@@ -36,7 +36,6 @@ public interface IFFmpegProcessService
         StreamInputKind streamInputKind,
         FillerKind fillerKind,
         TimeSpan inPoint,
-        TimeSpan outPoint,
         DateTimeOffset channelStartTime,
         long ptsOffset,
         Option<int> targetFramerate,

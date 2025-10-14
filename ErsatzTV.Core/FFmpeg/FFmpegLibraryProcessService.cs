@@ -81,7 +81,6 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         StreamInputKind streamInputKind,
         FillerKind fillerKind,
         TimeSpan inPoint,
-        TimeSpan outPoint,
         DateTimeOffset channelStartTime,
         long ptsOffset,
         Option<int> targetFramerate,
@@ -102,7 +101,6 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             start,
             now,
             inPoint,
-            outPoint,
             hlsRealtime,
             streamInputKind,
             targetFramerate);
@@ -184,7 +182,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             playbackSettings.AudioBitrate,
             playbackSettings.AudioBufferSize,
             playbackSettings.AudioSampleRate,
-            videoPath == audioPath ? playbackSettings.AudioDuration : Option<TimeSpan>.None,
+            videoPath == audioPath,
             playbackSettings.NormalizeLoudnessMode switch
             {
                 NormalizeLoudnessMode.LoudNorm => AudioFilter.LoudNorm,
@@ -239,7 +237,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         // when no audio streams are available, use null audio source
         if (!audioVersion.MediaVersion.Streams.Any(s => s.MediaStreamKind is MediaStreamKind.Audio))
         {
-            audioInputFile = new NullAudioInputFile(audioState with { AudioDuration = playbackSettings.AudioDuration });
+            audioInputFile = new NullAudioInputFile(audioState with { PadAudio = playbackSettings.PadAudio });
         }
 
         OutputFormatKind outputFormat = OutputFormatKind.MpegTs;
@@ -599,7 +597,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             playbackSettings.AudioBitrate,
             playbackSettings.AudioBufferSize,
             playbackSettings.AudioSampleRate,
-            Option<TimeSpan>.None,
+            false,
             AudioFilter.None);
 
         string videoFormat = GetVideoFormat(playbackSettings);
@@ -789,7 +787,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             channel.FFmpegProfile,
             Option<int>.None);
 
-        playbackSettings.AudioDuration = Option<TimeSpan>.None;
+        playbackSettings.PadAudio = false;
 
         string audioFormat = playbackSettings.AudioFormat switch
         {
@@ -805,7 +803,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             playbackSettings.AudioBitrate,
             playbackSettings.AudioBufferSize,
             playbackSettings.AudioSampleRate,
-            Option<TimeSpan>.None,
+            false,
             playbackSettings.NormalizeLoudnessMode switch
             {
                 // TODO: NormalizeLoudnessMode.LoudNorm => AudioFilter.LoudNorm,

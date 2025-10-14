@@ -50,7 +50,6 @@ public static class FFmpegPlaybackSettingsCalculator
         DateTimeOffset start,
         DateTimeOffset now,
         TimeSpan inPoint,
-        TimeSpan outPoint,
         bool hlsRealtime,
         StreamInputKind streamInputKind,
         Option<int> targetFramerate)
@@ -168,7 +167,7 @@ public static class FFmpegPlaybackSettingsCalculator
                 result.AudioBufferSize = ffmpegProfile.AudioBufferSize;
                 result.AudioChannels = ffmpegProfile.AudioChannels;
                 result.AudioSampleRate = ffmpegProfile.AudioSampleRate;
-                result.AudioDuration = outPoint - inPoint;
+                result.PadAudio = true;
                 result.NormalizeLoudnessMode = ffmpegProfile.NormalizeLoudnessMode;
 
                 result.Deinterlace = ffmpegProfile.DeinterlaceVideo == true &&
