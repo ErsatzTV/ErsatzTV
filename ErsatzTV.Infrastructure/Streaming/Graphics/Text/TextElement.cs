@@ -223,6 +223,21 @@ public partial class TextElement(
                 TextColor = SKColor.TryParse(def.TextColor, out SKColor color) ? color : SKColors.White
             };
 
+            if (SKColor.TryParse(def.HaloColor, out SKColor parsedHaloColor))
+            {
+                style.HaloColor = parsedHaloColor;
+            }
+
+            foreach (float haloWidth in Optional(def.HaloWidth))
+            {
+                style.HaloWidth = haloWidth;
+            }
+
+            foreach (float haloBlur in Optional(def.HaloBlur))
+            {
+                style.HaloBlur = haloBlur;
+            }
+
             foreach (float fontSize in Optional(def.FontSize))
             {
                 style.FontSize = fontSize;
