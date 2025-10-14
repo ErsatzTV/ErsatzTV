@@ -1,54 +1,19 @@
 ﻿using System.Globalization;
-using ErsatzTV.FFmpeg.Capabilities;
 using ErsatzTV.FFmpeg.Environment;
-using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.FFmpeg.InputOption;
 
-public class ReadrateInputOption : IInputOption
+public class ReadrateInputOption(double readRate) : IInputOption
 {
-    private readonly IFFmpegCapabilities _ffmpegCapabilities;
-    private readonly int _initialBurstSeconds;
-    private readonly ILogger _logger;
-
-    public ReadrateInputOption(
-        IFFmpegCapabilities ffmpegCapabilities,
-        int initialBurstSeconds,
-        ILogger logger)
-    {
-        _ffmpegCapabilities = ffmpegCapabilities;
-        _initialBurstSeconds = initialBurstSeconds;
-        _logger = logger;
-    }
-
     public EnvironmentVariable[] EnvironmentVariables => [];
 
     public string[] GlobalOptions => [];
 
-    public string[] InputOptions(InputFile inputFile)
-    {
-        var result = new List<string> { "-readrate", "1.0" };
-
-        if (_initialBurstSeconds > 0)
-        {
-            if (!_ffmpegCapabilities.HasOption(FFmpegKnownOption.ReadrateInitialBurst))
-            {
-                _logger.LogWarning(
-                    "FFmpeg is missing {Option} option; unable to transcode faster than realtime",
-                    FFmpegKnownOption.ReadrateInitialBurst.Name);
-
-                return result.ToArray();
-            }
-
-            result.AddRange(
-            [
-                "-readrate_initial_burst",
-                    _initialBurstSeconds.ToString(CultureInfo.InvariantCulture)
-            ]);
-        }
-
-        return result.ToArray();
-    }
+    public string[] InputOptions(InputFile inputFile) =>
+    [
+        "-readrate",
+        readRate.ToString("0.0####", CultureInfo.InvariantCulture)
+    ];
 
     public string[] FilterOptions => [];
     public string[] OutputOptions => [];

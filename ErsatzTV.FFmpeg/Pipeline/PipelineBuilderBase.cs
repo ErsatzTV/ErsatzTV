@@ -116,7 +116,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         };
 
         concatInputFile.AddOption(new ConcatInputFormat());
-        concatInputFile.AddOption(new ReadrateInputOption(_ffmpegCapabilities, 0, _logger));
+        concatInputFile.AddOption(new ReadrateInputOption(1.0));
         concatInputFile.AddOption(new InfiniteLoopInputOption(HardwareAccelerationMode.None));
 
         foreach (int threadCount in ffmpegState.ThreadCount)
@@ -162,7 +162,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
             new EncoderCopyAll()
         };
 
-        concatInputFile.AddOption(new ReadrateInputOption(_ffmpegCapabilities, 0, _logger));
+        concatInputFile.AddOption(new ReadrateInputOption(1.0));
 
         SetMetadataServiceProvider(ffmpegState, pipelineSteps);
         SetMetadataServiceName(ffmpegState, pipelineSteps);
@@ -564,7 +564,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
             : SetDecoder(videoInputFile, videoStream, ffmpegState, context);
 
         //SetStillImageInfiniteLoop(videoInputFile, videoStream, ffmpegState);
-        SetRealtimeInput(videoInputFile, ffmpegState, desiredState);
+        SetRealtimeInput(videoInputFile, desiredState);
         SetInfiniteLoop(videoInputFile, videoStream, ffmpegState, desiredState);
         SetFrameRateOutput(desiredState, pipelineSteps);
         SetVideoTrackTimescaleOutput(desiredState, pipelineSteps);
@@ -761,30 +761,16 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         }
     }
 
-    private void SetRealtimeInput(VideoInputFile videoInputFile, FFmpegState ffmpegState, FrameState desiredState)
+    private void SetRealtimeInput(VideoInputFile videoInputFile, FrameState desiredState)
     {
         if (videoInputFile.StreamInputKind is StreamInputKind.Live || !desiredState.Realtime)
         {
             return;
         }
 
-        AudioFilter filter = _audioInputFile
-            .Map(a => a.DesiredState.NormalizeLoudnessFilter)
-            .IfNone(AudioFilter.None);
-
-        int initialBurst = filter switch
-        {
-            AudioFilter.LoudNorm => 5,
-            _ => 0
-        };
-
-        if (ffmpegState.Finish.Any(finish => finish.TotalSeconds < initialBurst))
-        {
-            return;
-        }
-
-        _audioInputFile.Iter(a => a.AddOption(new ReadrateInputOption(_ffmpegCapabilities, initialBurst, _logger)));
-        videoInputFile.AddOption(new ReadrateInputOption(_ffmpegCapabilities, initialBurst, _logger));
+        double readRate = desiredState.VideoFormat == VideoFormat.Copy ? 1.0 : 1.05;
+        _audioInputFile.Iter(a => a.AddOption(new ReadrateInputOption(readRate)));
+        videoInputFile.AddOption(new ReadrateInputOption(readRate));
     }
 
     protected static void SetStillImageLoop(
