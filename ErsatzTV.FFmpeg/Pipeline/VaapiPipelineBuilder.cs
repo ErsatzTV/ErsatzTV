@@ -516,15 +516,15 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
                 }
                 else
                 {
-                    var subtitleHardwareUpload = new HardwareUploadVaapiFilter(false);
-                    subtitle.FilterSteps.Add(subtitleHardwareUpload);
-
                     // only scale if scaling or padding was used for main video stream
                     if (videoInputFile.FilterSteps.Any(s => s is ScaleFilter or ScaleVaapiFilter or PadFilter))
                     {
-                        var scaleFilter = new SubtitleScaleVaapiFilter(desiredState.PaddedSize);
+                        var scaleFilter = new ScaleSubtitleImageFilter(desiredState.PaddedSize);
                         subtitle.FilterSteps.Add(scaleFilter);
                     }
+
+                    var subtitleHardwareUpload = new HardwareUploadVaapiFilter(false);
+                    subtitle.FilterSteps.Add(subtitleHardwareUpload);
 
                     var subtitlesFilter = new OverlaySubtitleVaapiFilter();
                     subtitleOverlayFilterSteps.Add(subtitlesFilter);
