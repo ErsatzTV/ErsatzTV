@@ -14,6 +14,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - Positive and negative margins can be used to offset from center as desired
   - Add `line_height` property to text element style definition
     - This is a multiplier that defaults to 1.0 when unspecified
+  - Add `halo_color`, `halo_width` and `halo_blur` properties to text element style definition
+    - These can be used to "outline" text with the configured color (e.g. `#000000`), width (e.g. `10`) and amount of blur (e.g. `2`)
 - Add `Block Playout Troubleshooting` tool to help investigate block playout history
 - Add sequential schedule file and scripted schedule file names to playouts table
 - Add empty (but already up-to-date) sqlite3 database to greatly speed up initial startup for fresh installs

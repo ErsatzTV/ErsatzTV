@@ -83,4 +83,13 @@ public class StyleDefinition
 
     [YamlMember(Alias = "line_height", ApplyNamingConventions = false)]
     public float? LineHeight { get; set; }
+
+    [YamlMember(Alias = "halo_color", ApplyNamingConventions = false)]
+    public string HaloColor { get; set; }
+
+    [YamlMember(Alias = "halo_width", ApplyNamingConventions = false)]
+    public float? HaloWidth { get; set; }
+
+    [YamlMember(Alias = "halo_blur", ApplyNamingConventions = false)]
+    public float? HaloBlur { get; set; }
 }
