@@ -379,6 +379,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
                                 videoStream.FrameRate,
                                 ffmpegState.OutputFormat,
                                 segmentTemplate,
+                                ffmpegState.HlsInitTemplate,
                                 playlistPath,
                                 ffmpegState.PtsOffset == 0,
                                 oneSecondGop,

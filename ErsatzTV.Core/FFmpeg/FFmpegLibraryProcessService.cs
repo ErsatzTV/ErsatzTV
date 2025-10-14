@@ -393,11 +393,22 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             ? Path.Combine(FileSystemLayout.TranscodeFolder, channel.Number, "live.m3u8")
             : Option<string>.None;
 
+        long nowSeconds = now.ToUnixTimeSeconds();
+
         Option<string> hlsSegmentTemplate = outputFormat switch
         {
             OutputFormatKind.Hls => Path.Combine(FileSystemLayout.TranscodeFolder, channel.Number, "live%06d.ts"),
-            OutputFormatKind.HlsMp4 => Path.Combine(FileSystemLayout.TranscodeFolder, channel.Number, "live_%s_%%06d.m4s"),
+            OutputFormatKind.HlsMp4 => Path.Combine(
+                FileSystemLayout.TranscodeFolder,
+                channel.Number,
+                $"live_{nowSeconds}_%06d.m4s"),
             _ => Option<string>.None
+        };
+
+        Option<string> hlsInitTemplate = outputFormat switch
+        {
+            OutputFormatKind.HlsMp4 => $"{nowSeconds}_init.mp4",
+            _ =>  Option<string>.None
         };
 
         FrameSize scaledSize = ffmpegVideoStream.SquarePixelFrameSize(
@@ -502,6 +513,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             outputFormat,
             hlsPlaylistPath,
             hlsSegmentTemplate,
+            hlsInitTemplate,
             ptsOffset,
             playbackSettings.ThreadCount,
             qsvExtraHardwareFrames,
@@ -628,11 +640,22 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             ? Path.Combine(FileSystemLayout.TranscodeFolder, channel.Number, "live.m3u8")
             : Option<string>.None;
 
+        long nowSeconds = DateTimeOffset.Now.ToUnixTimeSeconds();
+
         Option<string> hlsSegmentTemplate = outputFormat switch
         {
             OutputFormatKind.Hls => Path.Combine(FileSystemLayout.TranscodeFolder, channel.Number, "live%06d.ts"),
-            OutputFormatKind.HlsMp4 => Path.Combine(FileSystemLayout.TranscodeFolder, channel.Number, "live_%s_%%06d.m4s"),
+            OutputFormatKind.HlsMp4 => Path.Combine(
+                FileSystemLayout.TranscodeFolder,
+                channel.Number,
+                $"live_{nowSeconds}_%06d.m4s"),
             _ => Option<string>.None
+        };
+
+        Option<string> hlsInitTemplate = outputFormat switch
+        {
+            OutputFormatKind.HlsMp4 => $"{nowSeconds}_init.mp4",
+            _ =>  Option<string>.None
         };
 
         string videoPath = Path.Combine(FileSystemLayout.ResourcesCacheFolder, "background.png");
@@ -675,6 +698,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             outputFormat,
             hlsPlaylistPath,
             hlsSegmentTemplate,
+            hlsInitTemplate,
             ptsOffset,
             Option<int>.None,
             qsvExtraHardwareFrames,
@@ -879,6 +903,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             OutputFormatKind.Hls,
             hlsPlaylistPath,
             hlsSegmentTemplate,
+            Option<string>.None,
             0,
             playbackSettings.ThreadCount,
             Optional(channel.FFmpegProfile.QsvExtraHardwareFrames),

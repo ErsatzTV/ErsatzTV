@@ -438,7 +438,10 @@ public class HlsSessionWorker : IHlsSessionWorker
                 }
             }
 
-            long ptsOffset = await GetPtsOffset(_channelNumber, cancellationToken);
+            // fmp4 doesn't require pts offsets because each new item gets a discontinuity AND a new init segment
+            long ptsOffset = _outputFormat is OutputFormatKind.HlsMp4
+                ? 0
+                : await GetPtsOffset(_channelNumber, cancellationToken);
             // _logger.LogInformation("PTS offset: {PtsOffset}", ptsOffset);
 
             _logger.LogDebug("HLS session state: {State}", _state);
