@@ -366,14 +366,14 @@ public class HlsSessionWorker : IHlsSessionWorker
             // playout updates should have the channel start over, transcode method will throttle if needed
             HlsSessionState.PlayoutUpdated => HlsSessionState.SeekAndWorkAhead,
 
-            // after seeking and NOT completing the item, seek again, transcode method will throttle if needed
-            HlsSessionState.SeekAndWorkAhead when !isComplete => HlsSessionState.SeekAndWorkAhead,
+            // after seeking and NOT completing the item, seek again, transcode method will accelerate if needed
+            HlsSessionState.SeekAndWorkAhead when !isComplete => HlsSessionState.SeekAndRealtime,
 
             // after seeking and completing the item, start at zero
             HlsSessionState.SeekAndWorkAhead => HlsSessionState.ZeroAndWorkAhead,
 
-            // after starting and zero and NOT completing the item, seek, transcode method will throttle if needed
-            HlsSessionState.ZeroAndWorkAhead when !isComplete => HlsSessionState.SeekAndWorkAhead,
+            // after starting and zero and NOT completing the item, seek, transcode method will accelerate if needed
+            HlsSessionState.ZeroAndWorkAhead when !isComplete => HlsSessionState.SeekAndRealtime,
 
             // after starting at zero and completing the item, start at zero again, transcode method will throttle if needed
             HlsSessionState.ZeroAndWorkAhead => HlsSessionState.ZeroAndWorkAhead,
@@ -397,6 +397,8 @@ public class HlsSessionWorker : IHlsSessionWorker
     {
         try
         {
+            bool wasSeekAndWorkAhead = _state is HlsSessionState.SeekAndWorkAhead;
+
             if (!realtime)
             {
                 Interlocked.Increment(ref _workAheadCount);
@@ -441,7 +443,7 @@ public class HlsSessionWorker : IHlsSessionWorker
 
             _logger.LogDebug("HLS session state: {State}", _state);
 
-            DateTimeOffset now = _state is HlsSessionState.SeekAndWorkAhead ? DateTimeOffset.Now : _transcodedUntil;
+            DateTimeOffset now = wasSeekAndWorkAhead ? DateTimeOffset.Now : _transcodedUntil;
             bool startAtZero = _state is HlsSessionState.ZeroAndWorkAhead or HlsSessionState.ZeroAndRealtime;
 
             var request = new GetPlayoutItemProcessByChannelNumber(
