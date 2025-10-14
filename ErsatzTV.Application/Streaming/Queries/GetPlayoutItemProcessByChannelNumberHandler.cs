@@ -283,10 +283,10 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
 
             bool isComplete = true;
 
-            // if we are working ahead, limit to 45s
+            // if we are working ahead, limit to 44s (multiple of segment size)
             if (!request.HlsRealtime)
             {
-                TimeSpan limit = TimeSpan.FromSeconds(45);
+                TimeSpan limit = TimeSpan.FromSeconds(44);
 
                 if (duration > limit)
                 {
