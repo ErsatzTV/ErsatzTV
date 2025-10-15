@@ -24,16 +24,16 @@
         <PackageReference Include="Humanizer.Core" Version="2.14.1" />
         <PackageReference Include="LanguageExt.Core" Version="4.4.9" />
         <PackageReference Include="MediatR" Version="[12.5.0]" />
-        <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.9" />
-        <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.9" />
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.9" />
+        <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.10" />
+        <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.10" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.10" />
         <PackageReference Include="Serilog" Version="4.3.0" />
         <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
         <PackageReference Include="Serilog.Extensions.Hosting" Version="9.0.0" />
         <PackageReference Include="Serilog.Formatting.Compact" Version="3.0.0" />
         <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
         <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
-        <PackageReference Include="System.CommandLine" Version="2.0.0-rc.1.25451.107" />
+        <PackageReference Include="System.CommandLine" Version="2.0.0-rc.2.25502.107" />
     </ItemGroup>
 
     <ItemGroup>
