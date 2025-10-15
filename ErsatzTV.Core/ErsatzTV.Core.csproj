@@ -16,10 +16,10 @@
         <PackageReference Include="LanguageExt.Core" Version="4.4.9" />
         <PackageReference Include="LanguageExt.Transformers" Version="4.4.8" />
         <PackageReference Include="MediatR" Version="[12.5.0]" />
-        <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="9.0.9" />
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.9" />
-        <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.9" />
-        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.9" />
+        <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="9.0.10" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.10" />
+        <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.10" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.10" />
         <PackageReference Include="Microsoft.IO.RecyclableMemoryStream" Version="3.0.1" />
         <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.14.15">
             <PrivateAssets>all</PrivateAssets>
@@ -31,7 +31,7 @@
         <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
         <PackageReference Include="SkiaSharp" Version="3.119.1" />
         <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.119.1" />
-        <PackageReference Include="System.CommandLine" Version="2.0.0-rc.1.25451.107" />
+        <PackageReference Include="System.CommandLine" Version="2.0.0-rc.2.25502.107" />
         <PackageReference Include="TimeSpanParserUtil" Version="1.2.0" />
         <PackageReference Include="YamlDotNet" Version="16.3.0" />
     </ItemGroup>

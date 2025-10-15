@@ -14,8 +14,8 @@
         <PackageReference Include="Hardware.Info" Version="101.1.0" />
         <PackageReference Include="LanguageExt.Core" Version="4.4.9" />
         <PackageReference Include="Lennox.NvEncSharp" Version="2.0.0" />
-        <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="9.0.9" />
-        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.9" />
+        <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="9.0.10" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.10" />
     </ItemGroup>
 
 
