@@ -5,31 +5,22 @@ using ErsatzTV.Core.Trakt;
 using ErsatzTV.Infrastructure.Trakt.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
-using Refit;
 
 namespace ErsatzTV.Infrastructure.Trakt;
 
-public class TraktApiClient : ITraktApiClient
+public class TraktApiClient(
+    ITraktApi traktApi,
+    IOptions<TraktConfiguration> traktConfiguration,
+    ILogger<TraktApiClient> logger)
+    : ITraktApiClient
 {
-    private readonly ILogger<TraktApiClient> _logger;
-    private readonly IOptions<TraktConfiguration> _traktConfiguration;
-
-    public TraktApiClient(
-        IOptions<TraktConfiguration> traktConfiguration,
-        ILogger<TraktApiClient> logger)
-    {
-        _traktConfiguration = traktConfiguration;
-        _logger = logger;
-    }
-
     public async Task<Either<BaseError, TraktList>> GetUserList(string user, string list)
     {
         try
         {
             TraktListResponse response = string.Equals(user, "official", StringComparison.OrdinalIgnoreCase)
-                ? await JsonService().GetOfficialList(_traktConfiguration.Value.ClientId, list)
-                : await JsonService().GetUserList(_traktConfiguration.Value.ClientId, user, list);
+                ? await traktApi.GetOfficialList(traktConfiguration.Value.ClientId, list)
+                : await traktApi.GetUserList(traktConfiguration.Value.ClientId, user, list);
 
             return new TraktList
             {
@@ -47,7 +38,7 @@ public class TraktApiClient : ITraktApiClient
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting trakt list");
+            logger.LogError(ex, "Error getting trakt list");
             return BaseError.New(ex.Message);
         }
     }
@@ -59,8 +50,8 @@ public class TraktApiClient : ITraktApiClient
             var result = new List<TraktListItemWithGuids>();
 
             List<TraktListItemResponse> apiItems = string.Equals(user, "official", StringComparison.OrdinalIgnoreCase)
-                ? await JsonService().GetOfficialListItems(_traktConfiguration.Value.ClientId, list)
-                : await JsonService().GetUserListItems(_traktConfiguration.Value.ClientId, user, list);
+                ? await traktApi.GetOfficialListItems(traktConfiguration.Value.ClientId, list)
+                : await traktApi.GetUserListItems(traktConfiguration.Value.ClientId, user, list);
 
             foreach (TraktListItemResponse apiItem in apiItems)
             {
@@ -119,22 +110,10 @@ public class TraktApiClient : ITraktApiClient
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting trakt list items");
+            logger.LogError(ex, "Error getting trakt list items");
             return BaseError.New(ex.Message);
         }
     }
-
-    private static ITraktApi JsonService() =>
-        RestService.For<ITraktApi>(
-            "https://api.trakt.tv",
-            new RefitSettings
-            {
-                ContentSerializer = new NewtonsoftJsonContentSerializer(
-                    new JsonSerializerSettings
-                    {
-                        ContractResolver = new SnakeCasePropertyNamesContractResolver()
-                    })
-            });
 
     private static List<string> GuidsFromIds(TraktListItemIds ids)
     {
