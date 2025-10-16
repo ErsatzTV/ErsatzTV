@@ -34,6 +34,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - VAAPI: fix scaling image-based subtitles (e.g. dvdsub)
 - Fix HLS Segmenter (fmp4) on Windows
 - Playback troubleshooting: wait for at least 2 initial segments (up to configured initial segment count) to reduce stalls
+- Fix Trakt List sync
 
 ### Changed
 - Do not use graphics engine for single, permanent watermark

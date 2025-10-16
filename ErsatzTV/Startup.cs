@@ -352,10 +352,10 @@ public class Startup
 
         Console.OutputEncoding = Encoding.UTF8;
 
-        Log.Logger.Information(
-            "ErsatzTV version {Version}",
-            Assembly.GetEntryAssembly()?.GetCustomAttribute<AssemblyInformationalVersionAttribute>()
-                ?.InformationalVersion ?? "unknown");
+        string etvVersion = Assembly.GetEntryAssembly()?.GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+            ?.InformationalVersion ?? "unknown";
+
+        Log.Logger.Information("ErsatzTV version {Version}", etvVersion);
 
         Log.Logger.Warning(
             "Give feedback at {GitHub} or {Discord}",
@@ -488,8 +488,20 @@ public class Startup
         services.AddRefitClient<IPlexTvApi>()
             .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://plex.tv/api/v2"));
 
-        services.AddRefitClient<ITraktApi>()
-            .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://api.trakt.tv"));
+        services.AddRefitClient<ITraktApi>(
+                new RefitSettings
+                {
+                    ContentSerializer = new NewtonsoftJsonContentSerializer(
+                        new JsonSerializerSettings
+                        {
+                            ContractResolver = new SnakeCasePropertyNamesContractResolver()
+                        })
+                })
+            .ConfigureHttpClient(c =>
+            {
+                c.BaseAddress = new Uri("https://api.trakt.tv");
+                c.DefaultRequestHeaders.Add("User-Agent", $"ErsatzTV/{etvVersion}");
+            });
 
         services.Configure<TraktConfiguration>(Configuration.GetSection("Trakt"));
 
