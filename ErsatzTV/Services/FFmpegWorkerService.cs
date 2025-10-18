@@ -46,7 +46,7 @@ public class FFmpegWorkerService : BackgroundService
                         case TouchFFmpegSession touchFFmpegSession:
                             foreach (DirectoryInfo parent in Optional(Directory.GetParent(touchFFmpegSession.Path)))
                             {
-                                _ffmpegSegmenterService.TouchChannel(parent.Name);
+                                _ffmpegSegmenterService.TouchChannel(parent.Name, Path.GetFileName(touchFFmpegSession.Path));
                             }
 
                             break;

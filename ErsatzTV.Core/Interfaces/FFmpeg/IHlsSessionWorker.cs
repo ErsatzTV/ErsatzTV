@@ -5,7 +5,7 @@ namespace ErsatzTV.Core.Interfaces.FFmpeg;
 public interface IHlsSessionWorker : IDisposable
 {
     Task Cancel(CancellationToken cancellationToken);
-    void Touch();
+    void Touch(Option<string> fileName);
     Task<Option<TrimPlaylistResult>> TrimPlaylist(DateTimeOffset filterBefore, CancellationToken cancellationToken);
     void PlayoutUpdated();
     HlsSessionModel GetModel();

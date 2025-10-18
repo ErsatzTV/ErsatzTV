@@ -72,11 +72,11 @@ public class FFmpegSegmenterService(ILogger<FFmpegSegmenterService> logger) : IF
         return false;
     }
 
-    public void TouchChannel(string channelNumber)
+    public void TouchChannel(string channelNumber, string fileName)
     {
         if (_sessionWorkers.TryGetValue(channelNumber, out IHlsSessionWorker worker))
         {
-            worker?.Touch();
+            worker?.Touch(fileName);
         }
     }
 
