@@ -170,6 +170,11 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         pipelineSteps.Add(new OutputFormatMpegTs(false));
         pipelineSteps.Add(new PipeProtocol());
 
+        // if (ffmpegState.SaveReport)
+        // {
+        //     pipelineSteps.Add(new FFReportVariable(_reportsFolder, concatInputFile));
+        // }
+
         return new FFmpegPipeline(pipelineSteps, false);
     }
 

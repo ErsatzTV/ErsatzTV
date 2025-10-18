@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO.Pipelines;
@@ -48,6 +49,7 @@ public class HlsSessionWorker : IHlsSessionWorker
     private Timer _timer;
     private DateTimeOffset _transcodedUntil;
     private string _workingDirectory;
+    private ConcurrentDictionary<string, DateTimeOffset> _initTouches = new();
 
     public HlsSessionWorker(
         IServiceScopeFactory serviceScopeFactory,
@@ -89,13 +91,19 @@ public class HlsSessionWorker : IHlsSessionWorker
         }
     }
 
-    public void Touch()
+    public void Touch(Option<string> fileName)
     {
         lock (_sync)
         {
             // _logger.LogDebug("Keep alive - session worker for channel {ChannelNumber}", _channelNumber);
 
             _lastAccess = DateTimeOffset.Now;
+
+            foreach (string init in fileName.Where(f => f.Contains("init.mp4")))
+            {
+                //_logger.LogDebug("Keep alive init {Init} for channel {ChannelNumber}", init, _channelNumber);
+                _initTouches.AddOrUpdate(init, DateTimeOffset.Now, (_, _) => DateTimeOffset.Now);
+            }
 
             _timer?.Stop();
             _timer?.Start();
@@ -195,7 +203,7 @@ public class HlsSessionWorker : IHlsSessionWorker
                 _logger.LogError("Transcode folder is NOT empty!");
             }
 
-            Touch();
+            Touch(Option<string>.None);
             _transcodedUntil = DateTimeOffset.Now;
             PlaylistStart = _transcodedUntil;
             _channelStart = _transcodedUntil;
@@ -661,6 +669,8 @@ public class HlsSessionWorker : IHlsSessionWorker
 
     private void DeleteOldSegments(TrimPlaylistResult trimResult)
     {
+        var generatedAtHash = new System.Collections.Generic.HashSet<long>();
+
         // delete old segments
         var allSegments = Directory.GetFiles(_workingDirectory, "live*.ts")
             .Append(Directory.GetFiles(_workingDirectory, "live*.mp4"))
@@ -677,6 +687,7 @@ public class HlsSessionWorker : IHlsSessionWorker
                 {
                     generatedAt = 0;
                 }
+                generatedAtHash.Add(generatedAt);
                 return new Segment(file, sequenceNumber, generatedAt);
             })
             .ToList();
@@ -685,7 +696,8 @@ public class HlsSessionWorker : IHlsSessionWorker
             .Map(file =>
             {
                 string fileName = Path.GetFileName(file);
-                return long.TryParse(fileName.Split('_')[0], out long generatedAt)
+                // only consider deleting inits that have no segments left on disk
+                return long.TryParse(fileName.Split('_')[0], out long generatedAt) && !generatedAtHash.Contains(generatedAt)
                     ? new Segment(file, 0, generatedAt)
                     : Option<Segment>.None;
             })
@@ -702,15 +714,20 @@ public class HlsSessionWorker : IHlsSessionWorker
             //     trimResult.Sequence);
         }
 
-        if (allInits.Count > 0 && allSegments.Count > 0)
+        DateTimeOffset toKeep = DateTimeOffset.Now.AddMinutes(-10);
+        foreach (var init in allInits)
         {
-            long minKeep = allSegments.Except(toDelete).Map(s => s.GeneratedAt).Min();
-            Option<Segment> maybeMinKeepInit =
-                allInits.OrderByDescending(i => i.GeneratedAt).Find(i => i.GeneratedAt <= minKeep);
-            foreach (var minKeepInit in maybeMinKeepInit)
+            string fileName = Path.GetFileName(init.File) ?? string.Empty;
+
+            if (!_initTouches.TryGetValue(fileName, out DateTimeOffset touchedAt))
             {
-                // _logger.LogDebug("Deleting HLS inits less than {GeneratedAt}", minKeepInit.GeneratedAt);
-                toDelete.AddRange(allInits.Where(i => i.GeneratedAt < minKeepInit.GeneratedAt));
+                continue;
+            }
+
+            if (touchedAt < toKeep)
+            {
+                toDelete.Add(init);
+                _initTouches.TryRemove(fileName, out _);
             }
         }
 

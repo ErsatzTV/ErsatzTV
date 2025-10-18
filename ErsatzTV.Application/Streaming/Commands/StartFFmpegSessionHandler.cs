@@ -145,7 +145,7 @@ public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Eit
                 request.ChannelNumber,
                 out IHlsSessionWorker worker))
         {
-            worker?.Touch();
+            worker?.Touch(Option<string>.None);
         }
 
         return result.AsTask();
