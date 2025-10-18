@@ -217,6 +217,8 @@ public class IptvController : StreamingControllerBase
         switch (mode)
         {
             case "segmenter":
+            case "segmenter-v2":
+            case "segmenter-fmp4":
                 _logger.LogDebug(
                     "Maybe starting ffmpeg session for channel {Channel}, mode {Mode}",
                     channelNumber,
