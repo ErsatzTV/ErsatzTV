@@ -42,7 +42,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
             FFmpegProfile ffmpegProfile = TestProfile();
 
             FFmpegPlaybackSettings actual = FFmpegPlaybackSettingsCalculator.CalculateSettings(
-                StreamingMode.HttpLiveStreamingSegmenterFmp4,
+                StreamingMode.HttpLiveStreamingSegmenter,
                 ffmpegProfile,
                 TestVersion,
                 new MediaStream(),
@@ -106,7 +106,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
             FFmpegProfile ffmpegProfile = TestProfile() with { ThreadCount = 7 };
 
             FFmpegPlaybackSettings actual = FFmpegPlaybackSettingsCalculator.CalculateSettings(
-                StreamingMode.HttpLiveStreamingSegmenterFmp4,
+                StreamingMode.HttpLiveStreamingSegmenter,
                 ffmpegProfile,
                 TestVersion,
                 new MediaStream(),

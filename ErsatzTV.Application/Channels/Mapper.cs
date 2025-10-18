@@ -81,8 +81,6 @@ internal static class Mapper
             StreamingMode.TransportStreamHybrid => "MPEG-TS",
             StreamingMode.HttpLiveStreamingDirect => "HLS Direct",
             StreamingMode.HttpLiveStreamingSegmenter => "HLS Segmenter",
-            StreamingMode.HttpLiveStreamingSegmenterFmp4 => "HLS Segmenter (fmp4)",
-            StreamingMode.HttpLiveStreamingSegmenterV2 => "HLS Segmenter V2",
             _ => throw new ArgumentOutOfRangeException(nameof(channel))
         };
 }

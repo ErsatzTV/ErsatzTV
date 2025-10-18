@@ -36,11 +36,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Playback troubleshooting: wait for at least 2 initial segments (up to configured initial segment count) to reduce stalls
 - Fix Trakt List sync
 - Fix QSV audio sync
+- Fix QSV capability detection on Linux using non-drm displays (e.g. wayland)
 
 ### Changed
 - Do not use graphics engine for single, permanent watermark
 - Rename `YAML Validation` tool to `Sequential Schedule Validation`
 - Greatly reduce debug log spam during playout builds by logging summaries of certain warnings at the end
+- Remove *experimental* `HLS Segmenter V2` streaming mode; it is not possible to maintain quality output using this mode
+- Remove original `HLS Segmenter` streaming mode and rename `HLS Segmenter (fmp4)` to `HLS Segmenter`
 
 ## [25.7.1] - 2025-10-09
 ### Added

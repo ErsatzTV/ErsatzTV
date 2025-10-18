@@ -246,8 +246,6 @@
         uri.Path = uri.Path.Replace("/channels", $"/iptv/channel/{channel.Number}.m3u8");
         uri.Query = channel.StreamingMode switch
         {
-            StreamingMode.HttpLiveStreamingSegmenterV2 => "?mode=segmenter-v2",
-            StreamingMode.HttpLiveStreamingSegmenterFmp4 => "?mode=segmenter-fmp4",
             _ => "?mode=segmenter"
         };
 
@@ -329,8 +327,6 @@
     {
         StreamingMode.HttpLiveStreamingDirect => "HLS Direct",
         StreamingMode.HttpLiveStreamingSegmenter => "HLS Segmenter",
-        StreamingMode.HttpLiveStreamingSegmenterFmp4 => "HLS Segmenter (fmp4)",
-        StreamingMode.HttpLiveStreamingSegmenterV2 => "HLS Segmenter V2",
         StreamingMode.TransportStreamHybrid => "MPEG-TS",
         _ => "MPEG-TS (Legacy)"
     };

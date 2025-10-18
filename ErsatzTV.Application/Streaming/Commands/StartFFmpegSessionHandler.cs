@@ -31,7 +31,6 @@ public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Eit
     private readonly IMediator _mediator;
     private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly ILogger<HlsSessionWorker> _sessionWorkerLogger;
-    private readonly ILogger<HlsSessionWorkerV2> _sessionWorkerV2Logger;
     private readonly ChannelWriter<IBackgroundServiceRequest> _workerChannel;
 
     public StartFFmpegSessionHandler(
@@ -42,7 +41,6 @@ public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Eit
         ILocalFileSystem localFileSystem,
         ILogger<StartFFmpegSessionHandler> logger,
         ILogger<HlsSessionWorker> sessionWorkerLogger,
-        ILogger<HlsSessionWorkerV2> sessionWorkerV2Logger,
         IFFmpegSegmenterService ffmpegSegmenterService,
         IConfigElementRepository configElementRepository,
         IGraphicsEngine graphicsEngine,
@@ -56,7 +54,6 @@ public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Eit
         _localFileSystem = localFileSystem;
         _logger = logger;
         _sessionWorkerLogger = sessionWorkerLogger;
-        _sessionWorkerV2Logger = sessionWorkerV2Logger;
         _ffmpegSegmenterService = ffmpegSegmenterService;
         _configElementRepository = configElementRepository;
         _graphicsEngine = graphicsEngine;
@@ -92,7 +89,7 @@ public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Eit
 
         await _mediator.Send(new RefreshGraphicsElements(), cancellationToken);
 
-        IHlsSessionWorker worker = GetSessionWorker(request, targetFramerate);
+        HlsSessionWorker worker = GetSessionWorker(request, targetFramerate);
 
         _ffmpegSegmenterService.AddOrUpdateWorker(request.ChannelNumber, worker);
 
@@ -118,29 +115,12 @@ public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Eit
         return Unit.Default;
     }
 
-    private IHlsSessionWorker GetSessionWorker(StartFFmpegSession request, Option<int> targetFramerate) =>
+    private HlsSessionWorker GetSessionWorker(StartFFmpegSession request, Option<int> targetFramerate) =>
         request.Mode switch
         {
-            "segmenter-v2" => new HlsSessionWorkerV2(
-                _serviceScopeFactory,
-                _localFileSystem,
-                _sessionWorkerV2Logger,
-                targetFramerate,
-                request.Scheme,
-                request.Host),
-            "segmenter-fmp4" => new HlsSessionWorker(
-                _serviceScopeFactory,
-                OutputFormatKind.HlsMp4,
-                _graphicsEngine,
-                _client,
-                _hlsPlaylistFilter,
-                _configElementRepository,
-                _localFileSystem,
-                _sessionWorkerLogger,
-                targetFramerate),
             _ => new HlsSessionWorker(
                 _serviceScopeFactory,
-                OutputFormatKind.Hls,
+                OutputFormatKind.HlsMp4,
                 _graphicsEngine,
                 _client,
                 _hlsPlaylistFilter,
