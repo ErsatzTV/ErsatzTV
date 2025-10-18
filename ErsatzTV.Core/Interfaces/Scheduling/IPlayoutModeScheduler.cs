@@ -5,7 +5,7 @@ namespace ErsatzTV.Core.Interfaces.Scheduling;
 
 public interface IPlayoutModeScheduler<in T> where T : ProgramScheduleItem
 {
-    Tuple<PlayoutBuilderState, List<PlayoutItem>> Schedule(
+    PlayoutSchedulerResult Schedule(
         PlayoutBuilderState playoutBuilderState,
         Dictionary<CollectionKey, IMediaCollectionEnumerator> collectionEnumerators,
         T scheduleItem,

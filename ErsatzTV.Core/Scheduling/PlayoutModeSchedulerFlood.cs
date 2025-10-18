@@ -7,14 +7,9 @@ using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Core.Scheduling;
 
-public class PlayoutModeSchedulerFlood : PlayoutModeSchedulerBase<ProgramScheduleItemFlood>
+public class PlayoutModeSchedulerFlood(ILogger logger) : PlayoutModeSchedulerBase<ProgramScheduleItemFlood>(logger)
 {
-    public PlayoutModeSchedulerFlood(ILogger logger)
-        : base(logger)
-    {
-    }
-
-    public override Tuple<PlayoutBuilderState, List<PlayoutItem>> Schedule(
+    public override PlayoutSchedulerResult Schedule(
         PlayoutBuilderState playoutBuilderState,
         Dictionary<CollectionKey, IMediaCollectionEnumerator> collectionEnumerators,
         ProgramScheduleItemFlood scheduleItem,
@@ -22,6 +17,7 @@ public class PlayoutModeSchedulerFlood : PlayoutModeSchedulerBase<ProgramSchedul
         DateTimeOffset hardStop,
         CancellationToken cancellationToken)
     {
+        var warnings = new PlayoutBuildWarnings();
         var playoutItems = new List<PlayoutItem>();
 
         PlayoutBuilderState nextState = playoutBuilderState;
@@ -120,7 +116,7 @@ public class PlayoutModeSchedulerFlood : PlayoutModeSchedulerBase<ProgramSchedul
                 scheduleItem,
                 playoutItem,
                 itemChapters,
-                false,
+                warnings,
                 cancellationToken);
 
             DateTimeOffset itemEndTimeWithFiller = maybePlayoutItems.Max(pi => pi.FinishOffset);
@@ -189,6 +185,7 @@ public class PlayoutModeSchedulerFlood : PlayoutModeSchedulerBase<ProgramSchedul
                 scheduleItem,
                 playoutItems,
                 peekItemStart,
+                warnings,
                 cancellationToken);
         }
 
@@ -205,6 +202,6 @@ public class PlayoutModeSchedulerFlood : PlayoutModeSchedulerBase<ProgramSchedul
 
         nextState = nextState with { NextGuideGroup = nextState.IncrementGuideGroup };
 
-        return Tuple(nextState, playoutItems);
+        return new PlayoutSchedulerResult(nextState, playoutItems, warnings);
     }
 }

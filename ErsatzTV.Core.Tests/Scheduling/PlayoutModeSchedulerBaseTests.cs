@@ -59,7 +59,7 @@ public class PlayoutModeSchedulerBaseTests : SchedulerTestBase
                     scheduleItem,
                     new PlayoutItem(),
                     new List<MediaChapter>(),
-                    true,
+                    new PlayoutBuildWarnings(),
                     _cancellationToken);
 
             playoutItems.Count.ShouldBe(1);
@@ -112,7 +112,7 @@ public class PlayoutModeSchedulerBaseTests : SchedulerTestBase
                     scheduleItem,
                     new PlayoutItem(),
                     new List<MediaChapter> { new() },
-                    true,
+                    new PlayoutBuildWarnings(),
                     _cancellationToken);
 
             playoutItems.Count.ShouldBe(1);
@@ -179,7 +179,7 @@ public class PlayoutModeSchedulerBaseTests : SchedulerTestBase
                         new() { StartTime = TimeSpan.Zero, EndTime = TimeSpan.FromMinutes(6) },
                         new() { StartTime = TimeSpan.FromMinutes(6), EndTime = TimeSpan.FromMinutes(60) }
                     },
-                    true,
+                    new PlayoutBuildWarnings(),
                     _cancellationToken);
 
             playoutItems.Count.ShouldBe(3);
@@ -271,7 +271,7 @@ public class PlayoutModeSchedulerBaseTests : SchedulerTestBase
                         new() { StartTime = TimeSpan.Zero, EndTime = TimeSpan.FromMinutes(6) },
                         new() { StartTime = TimeSpan.FromMinutes(6), EndTime = TimeSpan.FromMinutes(45) }
                     },
-                    true,
+                    new PlayoutBuildWarnings(),
                     _cancellationToken);
 
             playoutItems.Count.ShouldBe(5);
@@ -379,7 +379,7 @@ public class PlayoutModeSchedulerBaseTests : SchedulerTestBase
                         new MediaChapter { StartTime = TimeSpan.FromMinutes(6), EndTime = TimeSpan.FromMinutes(30) },
                         new MediaChapter { StartTime = TimeSpan.FromMinutes(30), EndTime = TimeSpan.FromMinutes(45) }
                     ],
-                    true,
+                    new PlayoutBuildWarnings(),
                     _cancellationToken);
 
             playoutItems.Count.ShouldBe(5);
@@ -488,7 +488,7 @@ public class PlayoutModeSchedulerBaseTests : SchedulerTestBase
                         new MediaChapter { StartTime = TimeSpan.FromMinutes(20), EndTime = TimeSpan.FromMinutes(30) },
                         new MediaChapter { StartTime = TimeSpan.FromMinutes(30), EndTime = TimeSpan.FromMinutes(45) }
                     ],
-                    true,
+                    new PlayoutBuildWarnings(),
                     _cancellationToken);
 
             playoutItems.Count.ShouldBe(6);
@@ -598,7 +598,7 @@ public class PlayoutModeSchedulerBaseTests : SchedulerTestBase
                         new() { StartTime = TimeSpan.Zero, EndTime = TimeSpan.FromMinutes(6) },
                         new() { StartTime = TimeSpan.FromMinutes(6), EndTime = TimeSpan.FromMinutes(45) }
                     },
-                    true,
+                    new PlayoutBuildWarnings(),
                     _cancellationToken);
 
             playoutItems.Count.ShouldBe(5);
@@ -706,7 +706,7 @@ public class PlayoutModeSchedulerBaseTests : SchedulerTestBase
                         new MediaChapter { StartTime = TimeSpan.FromMinutes(6), EndTime = TimeSpan.FromMinutes(30) },
                         new MediaChapter { StartTime = TimeSpan.FromMinutes(30), EndTime = TimeSpan.FromMinutes(45) }
                     ],
-                    true,
+                    new PlayoutBuildWarnings(),
                     _cancellationToken);
 
             playoutItems.Count.ShouldBe(5);
@@ -770,15 +770,13 @@ public class PlayoutModeSchedulerBaseTests : SchedulerTestBase
         new()
         {
             Id = id,
-            MovieMetadata = new List<MovieMetadata> { new() { ReleaseDate = aired } },
-            MediaVersions = new List<MediaVersion>
-            {
-                new() { Duration = duration }
-            }
+            MovieMetadata = [new MovieMetadata { ReleaseDate = aired }],
+            MediaVersions = [new MediaVersion { Duration = duration }]
         };
 
 
-    private class TestScheduler : PlayoutModeSchedulerBase<ProgramScheduleItem>
+    private class TestScheduler()
+        : PlayoutModeSchedulerBase<ProgramScheduleItem>(LoggerFactory.CreateLogger<TestScheduler>())
     {
         private static readonly ILoggerFactory LoggerFactory;
 
@@ -792,11 +790,7 @@ public class PlayoutModeSchedulerBaseTests : SchedulerTestBase
             LoggerFactory = new LoggerFactory().AddSerilog(Log.Logger);
         }
 
-        public TestScheduler() : base(LoggerFactory.CreateLogger<TestScheduler>())
-        {
-        }
-
-        public override Tuple<PlayoutBuilderState, List<PlayoutItem>> Schedule(
+        public override PlayoutSchedulerResult Schedule(
             PlayoutBuilderState playoutBuilderState,
             Dictionary<CollectionKey, IMediaCollectionEnumerator> collectionEnumerators,
             ProgramScheduleItem scheduleItem,

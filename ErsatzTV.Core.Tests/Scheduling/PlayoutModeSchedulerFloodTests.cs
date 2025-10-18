@@ -51,7 +51,7 @@ public class PlayoutModeSchedulerFloodTests : SchedulerTestBase
         PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
 
         var scheduler = new PlayoutModeSchedulerFlood(Substitute.For<ILogger>());
-        (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems) = scheduler.Schedule(
+        (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems, PlayoutBuildWarnings _) = scheduler.Schedule(
             startState,
             CollectionEnumerators(scheduleItem, enumerator),
             scheduleItem,
@@ -126,7 +126,7 @@ public class PlayoutModeSchedulerFloodTests : SchedulerTestBase
         PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
 
         var scheduler = new PlayoutModeSchedulerFlood(Substitute.For<ILogger>());
-        (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems) = scheduler.Schedule(
+        (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems, PlayoutBuildWarnings _) = scheduler.Schedule(
             startState,
             CollectionEnumerators(scheduleItem, enumerator),
             scheduleItem,
@@ -223,7 +223,7 @@ public class PlayoutModeSchedulerFloodTests : SchedulerTestBase
         PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
 
         var scheduler = new PlayoutModeSchedulerFlood(Substitute.For<ILogger>());
-        (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems) = scheduler.Schedule(
+        (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems, PlayoutBuildWarnings _) = scheduler.Schedule(
             startState,
             CollectionEnumerators(scheduleItem, enumerator),
             scheduleItem,
@@ -308,7 +308,7 @@ public class PlayoutModeSchedulerFloodTests : SchedulerTestBase
         PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
 
         var scheduler = new PlayoutModeSchedulerFlood(Substitute.For<ILogger>());
-        (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems) = scheduler.Schedule(
+        (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems, PlayoutBuildWarnings _) = scheduler.Schedule(
             startState,
             CollectionEnumerators(scheduleItem, enumerator1, scheduleItem.PostRollFiller, enumerator2),
             scheduleItem,
@@ -396,7 +396,7 @@ public class PlayoutModeSchedulerFloodTests : SchedulerTestBase
         PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
 
         var scheduler = new PlayoutModeSchedulerFlood(Substitute.For<ILogger>());
-        (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems) = scheduler.Schedule(
+        (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems, PlayoutBuildWarnings _) = scheduler.Schedule(
             startState,
             CollectionEnumerators(scheduleItem, enumerator),
             scheduleItem,
@@ -478,7 +478,7 @@ public class PlayoutModeSchedulerFloodTests : SchedulerTestBase
         PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
 
         var scheduler = new PlayoutModeSchedulerFlood(Substitute.For<ILogger>());
-        (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems) = scheduler.Schedule(
+        (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems, PlayoutBuildWarnings _) = scheduler.Schedule(
             startState,
             CollectionEnumerators(scheduleItem, enumerator1, scheduleItem.TailFiller, enumerator2),
             scheduleItem,
@@ -576,7 +576,7 @@ public class PlayoutModeSchedulerFloodTests : SchedulerTestBase
         PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
 
         var scheduler = new PlayoutModeSchedulerFlood(Substitute.For<ILogger>());
-        (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems) = scheduler.Schedule(
+        (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems, PlayoutBuildWarnings _) = scheduler.Schedule(
             startState,
             CollectionEnumerators(scheduleItem, enumerator1, scheduleItem.FallbackFiller, enumerator2),
             scheduleItem,
@@ -664,7 +664,7 @@ public class PlayoutModeSchedulerFloodTests : SchedulerTestBase
         PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
 
         var scheduler = new PlayoutModeSchedulerFlood(Substitute.For<ILogger>());
-        (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems) = scheduler.Schedule(
+        (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems, PlayoutBuildWarnings _) = scheduler.Schedule(
             startState,
             CollectionEnumerators(scheduleItem, enumerator1, scheduleItem.TailFiller, enumerator2),
             scheduleItem,
@@ -772,7 +772,7 @@ public class PlayoutModeSchedulerFloodTests : SchedulerTestBase
         PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
 
         var scheduler = new PlayoutModeSchedulerFlood(Substitute.For<ILogger>());
-        (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems) = scheduler.Schedule(
+        (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems, PlayoutBuildWarnings _) = scheduler.Schedule(
             startState,
             CollectionEnumerators(
                 scheduleItem,
@@ -886,7 +886,7 @@ public class PlayoutModeSchedulerFloodTests : SchedulerTestBase
         // hard stop at 2, an hour before the "next schedule item" at 3
         DateTimeOffset hardStop = StartState(scheduleItemsEnumerator).CurrentTime.AddHours(2);
 
-        (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems) = scheduler.Schedule(
+        (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems, PlayoutBuildWarnings _) = scheduler.Schedule(
             startState,
             CollectionEnumerators(
                 scheduleItem,
@@ -992,7 +992,7 @@ public class PlayoutModeSchedulerFloodTests : SchedulerTestBase
         // hard stop at 2, an hour before the "next schedule item" at 3
         DateTimeOffset hardStop = StartState(scheduleItemsEnumerator).CurrentTime.AddHours(2);
 
-        (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems) = scheduler.Schedule(
+        (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems, PlayoutBuildWarnings _) = scheduler.Schedule(
             startState,
             CollectionEnumerators(
                 scheduleItem,
@@ -1104,7 +1104,7 @@ public class PlayoutModeSchedulerFloodTests : SchedulerTestBase
         PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
 
         var scheduler = new PlayoutModeSchedulerFlood(Substitute.For<ILogger>());
-        (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems) = scheduler.Schedule(
+        (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems, PlayoutBuildWarnings _) = scheduler.Schedule(
             startState,
             CollectionEnumerators(
                 scheduleItem,
@@ -1184,7 +1184,7 @@ public class PlayoutModeSchedulerFloodTests : SchedulerTestBase
         PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
 
         var scheduler = new PlayoutModeSchedulerFlood(Substitute.For<ILogger>());
-        (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems) = scheduler.Schedule(
+        (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems, PlayoutBuildWarnings _) = scheduler.Schedule(
             startState,
             CollectionEnumerators(scheduleItem, enumerator),
             scheduleItem,

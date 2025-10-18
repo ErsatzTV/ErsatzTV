@@ -6,13 +6,9 @@ using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Core.Scheduling;
 
-public class PlayoutModeSchedulerOne : PlayoutModeSchedulerBase<ProgramScheduleItemOne>
+public class PlayoutModeSchedulerOne(ILogger logger) : PlayoutModeSchedulerBase<ProgramScheduleItemOne>(logger)
 {
-    public PlayoutModeSchedulerOne(ILogger logger) : base(logger)
-    {
-    }
-
-    public override Tuple<PlayoutBuilderState, List<PlayoutItem>> Schedule(
+    public override PlayoutSchedulerResult Schedule(
         PlayoutBuilderState playoutBuilderState,
         Dictionary<CollectionKey, IMediaCollectionEnumerator> collectionEnumerators,
         ProgramScheduleItemOne scheduleItem,
@@ -20,6 +16,8 @@ public class PlayoutModeSchedulerOne : PlayoutModeSchedulerBase<ProgramScheduleI
         DateTimeOffset hardStop,
         CancellationToken cancellationToken)
     {
+        var warnings = new PlayoutBuildWarnings();
+
         IMediaCollectionEnumerator contentEnumerator =
             collectionEnumerators[CollectionKey.ForScheduleItem(scheduleItem)];
         foreach (MediaItem mediaItem in contentEnumerator.Current)
@@ -88,7 +86,7 @@ public class PlayoutModeSchedulerOne : PlayoutModeSchedulerBase<ProgramScheduleI
                 scheduleItem,
                 playoutItem,
                 itemChapters,
-                true,
+                warnings,
                 cancellationToken);
 
             PlayoutBuilderState nextState = playoutBuilderState with
@@ -116,6 +114,7 @@ public class PlayoutModeSchedulerOne : PlayoutModeSchedulerBase<ProgramScheduleI
                     scheduleItem,
                     playoutItems,
                     nextItemStart,
+                    warnings,
                     cancellationToken);
             }
 
@@ -132,9 +131,9 @@ public class PlayoutModeSchedulerOne : PlayoutModeSchedulerBase<ProgramScheduleI
 
             nextState = nextState with { NextGuideGroup = nextState.IncrementGuideGroup };
 
-            return Tuple(nextState, playoutItems);
+            return new PlayoutSchedulerResult(nextState, playoutItems, warnings);
         }
 
-        return Tuple(playoutBuilderState, new List<PlayoutItem>());
+        return new PlayoutSchedulerResult(playoutBuilderState, [], warnings);
     }
 }

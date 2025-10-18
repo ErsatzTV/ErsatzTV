@@ -7,13 +7,10 @@ using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Core.Scheduling;
 
-public class PlayoutModeSchedulerDuration : PlayoutModeSchedulerBase<ProgramScheduleItemDuration>
+public class PlayoutModeSchedulerDuration(ILogger logger)
+    : PlayoutModeSchedulerBase<ProgramScheduleItemDuration>(logger)
 {
-    public PlayoutModeSchedulerDuration(ILogger logger) : base(logger)
-    {
-    }
-
-    public override Tuple<PlayoutBuilderState, List<PlayoutItem>> Schedule(
+    public override PlayoutSchedulerResult Schedule(
         PlayoutBuilderState playoutBuilderState,
         Dictionary<CollectionKey, IMediaCollectionEnumerator> collectionEnumerators,
         ProgramScheduleItemDuration scheduleItem,
@@ -21,6 +18,8 @@ public class PlayoutModeSchedulerDuration : PlayoutModeSchedulerBase<ProgramSche
         DateTimeOffset hardStop,
         CancellationToken cancellationToken)
     {
+        var warnings = new PlayoutBuildWarnings();
+
         // Logger.LogDebug(
         //     "DurationSchedule: {ItemId} {CurrentTime} {DurationFinish} {InDurationFiller} {HardStop}",
         //     scheduleItem.Id,
@@ -205,7 +204,7 @@ public class PlayoutModeSchedulerDuration : PlayoutModeSchedulerBase<ProgramSche
                     scheduleItem,
                     playoutItem,
                     itemChapters,
-                    false,
+                    warnings,
                     cancellationToken);
 
                 // foreach (PlayoutItem pi in maybePlayoutItems.OrderBy(pi => pi.StartOffset))
@@ -294,6 +293,7 @@ public class PlayoutModeSchedulerDuration : PlayoutModeSchedulerBase<ProgramSche
                             scheduleItem,
                             playoutItems,
                             nextItemStart,
+                            warnings,
                             cancellationToken);
                     }
 
@@ -348,6 +348,6 @@ public class PlayoutModeSchedulerDuration : PlayoutModeSchedulerBase<ProgramSche
 
         nextState = nextState with { NextGuideGroup = nextState.IncrementGuideGroup };
 
-        return Tuple(nextState, playoutItems);
+        return new PlayoutSchedulerResult(nextState, playoutItems, warnings);
     }
 }

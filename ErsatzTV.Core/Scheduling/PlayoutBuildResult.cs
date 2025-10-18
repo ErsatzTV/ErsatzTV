@@ -27,4 +27,6 @@ public record PlayoutBuildResult(
             [],
             [],
             Option<DateTimeOffset>.None);
+
+    public PlayoutBuildWarnings Warnings { get; } = new();
 }
