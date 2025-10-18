@@ -818,7 +818,7 @@ public class PlayoutBuilder : IPlayoutBuilder
 
             ProgramScheduleItem nextScheduleItem = playoutBuilderState.ScheduleItemsEnumerator.Peek(1);
 
-            Tuple<PlayoutBuilderState, List<PlayoutItem>> schedulerResult = scheduleItem switch
+            PlayoutSchedulerResult schedulerResult = scheduleItem switch
             {
                 ProgramScheduleItemMultiple multiple => schedulerMultiple.Schedule(
                     playoutBuilderState,
@@ -851,7 +851,10 @@ public class PlayoutBuilder : IPlayoutBuilder
                 _ => throw new NotSupportedException(nameof(scheduleItem))
             };
 
-            (PlayoutBuilderState nextState, List<PlayoutItem> playoutItems) = schedulerResult;
+            (PlayoutBuilderState nextState, List<PlayoutItem> playoutItems, PlayoutBuildWarnings warnings) =
+                schedulerResult;
+
+            result.Warnings.Merge(warnings);
 
             // if we completed a multiple/duration block, move to the next fill group
             if (scheduleItem.FillWithGroupMode is not FillWithGroupMode.None)

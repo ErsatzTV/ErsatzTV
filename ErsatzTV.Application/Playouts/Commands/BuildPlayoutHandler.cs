@@ -13,6 +13,7 @@ using ErsatzTV.Core.Scheduling;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Channel = ErsatzTV.Core.Domain.Channel;
 
 namespace ErsatzTV.Application.Playouts;
@@ -29,6 +30,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
     private readonly IPlayoutBuilder _playoutBuilder;
     private readonly IPlayoutTimeShifter _playoutTimeShifter;
     private readonly ChannelWriter<IBackgroundServiceRequest> _workerChannel;
+    private readonly ILogger<BuildPlayoutHandler> _logger;
     private readonly ISequentialPlayoutBuilder _sequentialPlayoutBuilder;
     private readonly IScriptedPlayoutBuilder _scriptedPlayoutBuilder;
 
@@ -44,7 +46,8 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
         IFFmpegSegmenterService ffmpegSegmenterService,
         IEntityLocker entityLocker,
         IPlayoutTimeShifter playoutTimeShifter,
-        ChannelWriter<IBackgroundServiceRequest> workerChannel)
+        ChannelWriter<IBackgroundServiceRequest> workerChannel,
+        ILogger<BuildPlayoutHandler> logger)
     {
         _client = client;
         _dbContextFactory = dbContextFactory;
@@ -58,6 +61,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
         _entityLocker = entityLocker;
         _playoutTimeShifter = playoutTimeShifter;
         _workerChannel = workerChannel;
+        _logger = logger;
     }
 
     public async Task<Either<BaseError, Unit>> Handle(BuildPlayout request, CancellationToken cancellationToken)
@@ -87,6 +91,30 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
                 foreach (DateTimeOffset timeShiftTo in playoutBuildResult.TimeShiftTo)
                 {
                     await _playoutTimeShifter.TimeShift(request.PlayoutId, timeShiftTo, false, cancellationToken);
+                }
+
+                if (playoutBuildResult.Warnings.TailFillerTooLong > 0)
+                {
+                    _logger.LogDebug(
+                        "Playout {PlayoutId} skipped {Count} tail filler items that were too long to fit",
+                        request.PlayoutId,
+                        playoutBuildResult.Warnings.TailFillerTooLong);
+                }
+
+                if (playoutBuildResult.Warnings.MidRollContentWithoutChapters > 0)
+                {
+                    _logger.LogDebug(
+                        "Playout {PlayoutId} converted mid-roll to post-roll for {Count} items that have no chapter markers",
+                        request.PlayoutId,
+                        playoutBuildResult.Warnings.MidRollContentWithoutChapters);
+                }
+
+                if (playoutBuildResult.Warnings.DurationFillerSkipped > 0)
+                {
+                    _logger.LogDebug(
+                        "Playout {PlayoutId} skipped {Count} filler items to try to fit in a small remaining duration",
+                        request.PlayoutId,
+                        playoutBuildResult.Warnings.DurationFillerSkipped);
                 }
             }
 

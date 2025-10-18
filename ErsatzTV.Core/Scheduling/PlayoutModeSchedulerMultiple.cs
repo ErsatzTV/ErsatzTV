@@ -7,15 +7,10 @@ using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Core.Scheduling;
 
-public class PlayoutModeSchedulerMultiple : PlayoutModeSchedulerBase<ProgramScheduleItemMultiple>
+public class PlayoutModeSchedulerMultiple(Map<CollectionKey, int> collectionItemCount, ILogger logger)
+    : PlayoutModeSchedulerBase<ProgramScheduleItemMultiple>(logger)
 {
-    private readonly Map<CollectionKey, int> _collectionItemCount;
-
-    public PlayoutModeSchedulerMultiple(Map<CollectionKey, int> collectionItemCount, ILogger logger)
-        : base(logger) =>
-        _collectionItemCount = collectionItemCount;
-
-    public override Tuple<PlayoutBuilderState, List<PlayoutItem>> Schedule(
+    public override PlayoutSchedulerResult Schedule(
         PlayoutBuilderState playoutBuilderState,
         Dictionary<CollectionKey, IMediaCollectionEnumerator> collectionEnumerators,
         ProgramScheduleItemMultiple scheduleItem,
@@ -23,13 +18,14 @@ public class PlayoutModeSchedulerMultiple : PlayoutModeSchedulerBase<ProgramSche
         DateTimeOffset hardStop,
         CancellationToken cancellationToken)
     {
+        var warnings = new PlayoutBuildWarnings();
         var playoutItems = new List<PlayoutItem>();
 
         DateTimeOffset firstStart = GetStartTimeAfter(playoutBuilderState, scheduleItem, Option<ILogger>.Some(Logger));
         if (firstStart >= hardStop)
         {
             playoutBuilderState = playoutBuilderState with { CurrentTime = hardStop };
-            return Tuple(playoutBuilderState, playoutItems);
+            return new PlayoutSchedulerResult(playoutBuilderState, playoutItems, warnings);
         }
 
         PlayoutBuilderState nextState = playoutBuilderState with
@@ -48,7 +44,7 @@ public class PlayoutModeSchedulerMultiple : PlayoutModeSchedulerBase<ProgramSche
                 case MultipleMode.CollectionSize:
                     nextState = nextState with
                     {
-                        MultipleRemaining = _collectionItemCount[CollectionKey.ForScheduleItem(scheduleItem)]
+                        MultipleRemaining = collectionItemCount[CollectionKey.ForScheduleItem(scheduleItem)]
                     };
                     break;
                 case MultipleMode.PlaylistItemSize:
@@ -143,7 +139,7 @@ public class PlayoutModeSchedulerMultiple : PlayoutModeSchedulerBase<ProgramSche
                     scheduleItem,
                     playoutItem,
                     itemChapters,
-                    true,
+                    warnings,
                     cancellationToken));
 
             nextState = nextState with
@@ -189,6 +185,7 @@ public class PlayoutModeSchedulerMultiple : PlayoutModeSchedulerBase<ProgramSche
                 scheduleItem,
                 playoutItems,
                 nextItemStart,
+                warnings,
                 cancellationToken);
         }
 
@@ -205,6 +202,6 @@ public class PlayoutModeSchedulerMultiple : PlayoutModeSchedulerBase<ProgramSche
 
         nextState = nextState with { NextGuideGroup = nextState.IncrementGuideGroup };
 
-        return Tuple(nextState, playoutItems);
+        return new PlayoutSchedulerResult(nextState, playoutItems, warnings);
     }
 }
