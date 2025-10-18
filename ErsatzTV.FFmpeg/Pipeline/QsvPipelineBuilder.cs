@@ -91,12 +91,6 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
             decodeCapability = FFmpegCapability.Software;
         }
 
-        // QSV cannot always decode properly when seeking, so use software
-        if (decodeCapability == FFmpegCapability.Hardware && ffmpegState.Start.Filter(s => s > TimeSpan.Zero).IsSome)
-        {
-            decodeCapability = FFmpegCapability.Software;
-        }
-
         // give a bogus value so no cuda devices are visible to ffmpeg
         pipelineSteps.Add(new CudaVisibleDevicesVariable("999"));
 
@@ -174,6 +168,12 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
         foreach (IDecoder decoder in maybeDecoder)
         {
             currentState = decoder.NextState(currentState);
+        }
+
+        if (ffmpegState.DecoderHardwareAccelerationMode is HardwareAccelerationMode.Qsv &&
+            ffmpegState.Start.Filter(s => s > TimeSpan.Zero).IsSome)
+        {
+            videoInputFile.FilterSteps.Add(new QsvResetPtsFilter());
         }
 
         // easier to use nv12 for overlay

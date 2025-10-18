@@ -35,6 +35,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix HLS Segmenter (fmp4) on Windows
 - Playback troubleshooting: wait for at least 2 initial segments (up to configured initial segment count) to reduce stalls
 - Fix Trakt List sync
+- Fix QSV audio sync
 
 ### Changed
 - Do not use graphics engine for single, permanent watermark
