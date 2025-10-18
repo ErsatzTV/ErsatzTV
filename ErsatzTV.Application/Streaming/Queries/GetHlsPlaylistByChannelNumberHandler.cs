@@ -39,7 +39,7 @@ public class GetHlsPlaylistByChannelNumberHandler :
     {
         string mode = request.Mode switch
         {
-            "segmenter" or "segmenter-fmp4" or "segmenter-v2" or "ts-legacy" or "ts" => $"&mode={request.Mode}",
+            "segmenter" or "ts-legacy" or "ts" => $"&mode={request.Mode}",
             // "hls-direct" => string.Empty,
             _ => string.Empty
         };

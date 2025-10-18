@@ -10,7 +10,6 @@ using ErsatzTV.Application.Subtitles.Queries;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.FFmpeg;
-using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Streaming;
 using ErsatzTV.Extensions;
 using Flurl;
@@ -23,18 +22,15 @@ namespace ErsatzTV.Controllers;
 [ApiExplorerSettings(IgnoreApi = true)]
 public class InternalController : StreamingControllerBase
 {
-    private readonly IFFmpegSegmenterService _ffmpegSegmenterService;
     private readonly ILogger<InternalController> _logger;
     private readonly IMediator _mediator;
 
     public InternalController(
-        IFFmpegSegmenterService ffmpegSegmenterService,
         IGraphicsEngine graphicsEngine,
         IMediator mediator,
         ILogger<InternalController> logger)
         : base(graphicsEngine, logger)
     {
-        _ffmpegSegmenterService = ffmpegSegmenterService;
         _mediator = mediator;
         _logger = logger;
     }
@@ -46,19 +42,7 @@ public class InternalController : StreamingControllerBase
             .ToActionResult();
 
     [HttpGet("ffmpeg/stream/{channelNumber}")]
-    public async Task<IActionResult> GetStream(
-        string channelNumber,
-        [FromQuery]
-        string mode = "mixed")
-    {
-        switch (mode)
-        {
-            case "segmenter-v2":
-                return await GetSegmenterV2Stream(channelNumber);
-            default:
-                return await GetTsLegacyStream(channelNumber);
-        }
-    }
+    public Task<IActionResult> GetStream(string channelNumber) => GetTsLegacyStream(channelNumber);
 
     [HttpGet("ffmpeg/remote-stream/{remoteStreamId}")]
     public async Task<IActionResult> GetRemoteStream(int remoteStreamId, CancellationToken cancellationToken)
@@ -259,19 +243,6 @@ public class InternalController : StreamingControllerBase
             return new PhysicalFileResult(pathAndCodec.Path, mimeType);
         }
 
-        return new NotFoundResult();
-    }
-
-    private async Task<IActionResult> GetSegmenterV2Stream(string channelNumber)
-    {
-        if (_ffmpegSegmenterService.TryGetWorker(channelNumber, out IHlsSessionWorker worker) &&
-            worker is HlsSessionWorkerV2 v2)
-        {
-            Either<BaseError, PlayoutItemProcessModel> result = await v2.GetNextPlayoutItemProcess();
-            return GetProcessResponse(result, channelNumber, StreamingMode.HttpLiveStreamingSegmenterV2);
-        }
-
-        _logger.LogWarning("Unable to locate session worker for channel {Channel}", channelNumber);
         return new NotFoundResult();
     }
 

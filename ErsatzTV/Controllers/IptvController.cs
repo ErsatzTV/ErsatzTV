@@ -208,12 +208,6 @@ public class IptvController : StreamingControllerBase
                     case StreamingMode.HttpLiveStreamingSegmenter:
                         mode = "segmenter";
                         break;
-                    case StreamingMode.HttpLiveStreamingSegmenterFmp4:
-                        mode = "segmenter-fmp4";
-                        break;
-                    case StreamingMode.HttpLiveStreamingSegmenterV2:
-                        mode = "segmenter-v2";
-                        break;
                     default:
                         return Redirect($"~/iptv/channel/{channelNumber}.ts{AccessTokenQuery()}");
                 }
@@ -223,15 +217,15 @@ public class IptvController : StreamingControllerBase
         switch (mode)
         {
             case "segmenter":
-            case "segmenter-fmp4":
             case "segmenter-v2":
+            case "segmenter-fmp4":
                 _logger.LogDebug(
                     "Maybe starting ffmpeg session for channel {Channel}, mode {Mode}",
                     channelNumber,
                     mode);
                 var request = new StartFFmpegSession(channelNumber, mode, Request.Scheme, Request.Host.ToString());
                 Either<BaseError, Unit> result = await _mediator.Send(request);
-                string multiVariantPlaylist = await GetMultiVariantPlaylist(channelNumber, mode);
+                string multiVariantPlaylist = await GetMultiVariantPlaylist(channelNumber);
                 return result.Match<IActionResult>(
                     _ =>
                     {
@@ -291,37 +285,10 @@ public class IptvController : StreamingControllerBase
     public async Task<IActionResult> GetStream(string channelNumber) =>
         await GetHlsDirectStream(channelNumber);
 
-    private async Task<string> GetMultiVariantPlaylist(string channelNumber, string mode)
+    private async Task<string> GetMultiVariantPlaylist(string channelNumber)
     {
-        string file = mode switch
-        {
-            // this serves the unmodified playlist from disk
-            "segmenter-v2" => "live.m3u8",
-
-            _ => "hls.m3u8"
-        };
-
         var variantPlaylist =
-            $"{Request.Scheme}://{Request.Host}/iptv/session/{channelNumber}/{file}{AccessTokenQuery()}";
-
-        try
-        {
-            if (mode == "segmenter-v2")
-            {
-                string fileName = Path.Combine(FileSystemLayout.TranscodeFolder, channelNumber, "playlist.m3u8");
-                if (System.IO.File.Exists(fileName))
-                {
-                    string text = await System.IO.File.ReadAllTextAsync(fileName, Encoding.UTF8);
-                    return text.Replace("live.m3u8", variantPlaylist);
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(
-                ex,
-                "Failed to return ffmpeg multi-variant playlist; falling back to generated playlist");
-        }
+            $"{Request.Scheme}://{Request.Host}/iptv/session/{channelNumber}/hls.m3u8{AccessTokenQuery()}";
 
         Option<ChannelStreamingSpecsViewModel> maybeStreamingSpecs =
             await _mediator.Send(new GetChannelStreamingSpecs(channelNumber));

@@ -1109,8 +1109,7 @@ public class TranscodingTests
                 // NUT doesn't set this properly
                 if (profileAcceleration != HardwareAccelerationKind.Amf &&
                     profileVideoFormat != FFmpegProfileVideoFormat.Mpeg2Video &&
-                    (profileAcceleration != HardwareAccelerationKind.Vaapi || vaapiDriver != VaapiDriver.RadeonSI) &&
-                    streamingMode != StreamingMode.HttpLiveStreamingSegmenterV2)
+                    (profileAcceleration != HardwareAccelerationKind.Vaapi || vaapiDriver != VaapiDriver.RadeonSI))
                 {
                     colorParams.IsBt709.ShouldBeTrue($"{colorParams}");
                 }

@@ -4,15 +4,11 @@ using ErsatzTV.Core.Iptv;
 
 namespace ErsatzTV.Application.Channels;
 
-public class GetChannelPlaylistHandler : IRequestHandler<GetChannelPlaylist, ChannelPlaylist>
+public class GetChannelPlaylistHandler(IChannelRepository channelRepository)
+    : IRequestHandler<GetChannelPlaylist, ChannelPlaylist>
 {
-    private readonly IChannelRepository _channelRepository;
-
-    public GetChannelPlaylistHandler(IChannelRepository channelRepository) =>
-        _channelRepository = channelRepository;
-
     public Task<ChannelPlaylist> Handle(GetChannelPlaylist request, CancellationToken cancellationToken) =>
-        _channelRepository.GetAll(cancellationToken)
+        channelRepository.GetAll(cancellationToken)
             .Map(channels => EnsureMode(channels, request.Mode))
             .Map(channels => new ChannelPlaylist(
                 request.Scheme,
@@ -36,14 +32,6 @@ public class GetChannelPlaylistHandler : IRequestHandler<GetChannelPlaylist, Cha
             {
                 case "segmenter":
                     channel.StreamingMode = StreamingMode.HttpLiveStreamingSegmenter;
-                    result.Add(channel);
-                    break;
-                case "segmenter-fmp4":
-                    channel.StreamingMode = StreamingMode.HttpLiveStreamingSegmenterFmp4;
-                    result.Add(channel);
-                    break;
-                case "segmenter-v2":
-                    channel.StreamingMode = StreamingMode.HttpLiveStreamingSegmenterV2;
                     result.Add(channel);
                     break;
                 case "hls-direct":

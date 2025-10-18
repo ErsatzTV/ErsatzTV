@@ -453,7 +453,7 @@ public class HlsSessionWorker : IHlsSessionWorker
 
             var request = new GetPlayoutItemProcessByChannelNumber(
                 _channelNumber,
-                _outputFormat is OutputFormatKind.HlsMp4 ? StreamingMode.HttpLiveStreamingSegmenterFmp4 : StreamingMode.HttpLiveStreamingSegmenter,
+                StreamingMode.HttpLiveStreamingSegmenter,
                 now,
                 startAtZero,
                 realtime,
@@ -544,7 +544,7 @@ public class HlsSessionWorker : IHlsSessionWorker
                         Either<BaseError, PlayoutItemProcessModel> maybeOfflineProcess = await _mediator.Send(
                             new GetErrorProcess(
                                 _channelNumber,
-                                _outputFormat is OutputFormatKind.HlsMp4 ? StreamingMode.HttpLiveStreamingSegmenterFmp4 : StreamingMode.HttpLiveStreamingSegmenter,
+                                StreamingMode.HttpLiveStreamingSegmenter,
                                 realtime,
                                 ptsOffset,
                                 processModel.MaybeDuration,

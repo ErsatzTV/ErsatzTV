@@ -50,15 +50,6 @@
             <MudDivider Class="mb-6"/>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                 <div class="d-flex">
-                    <MudText>Streaming Mode</MudText>
-                </div>
-                <MudSelect @bind-Value="_streamingMode" For="@(() => _streamingMode)">
-                    <MudSelectItem Value="@(StreamingMode.HttpLiveStreamingSegmenter)">HLS Segmenter</MudSelectItem>
-                    <MudSelectItem Value="@(StreamingMode.HttpLiveStreamingSegmenterFmp4)">HLS Segmenter (fmp4)</MudSelectItem>
-                </MudSelect>
-            </MudStack>
-            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                <div class="d-flex">
                     <MudText>FFmpeg Profile</MudText>
                 </div>
                 <MudSelect @bind-Value="_ffmpegProfileId" For="@(() => _ffmpegProfileId)">
@@ -183,7 +174,7 @@
     private readonly List<SubtitleViewModel> _subtitleStreams = [];
     private readonly List<GraphicsElementViewModel> _graphicsElements = [];
     private MediaItemInfo _info;
-    private StreamingMode _streamingMode = StreamingMode.HttpLiveStreamingSegmenter;
+    private readonly StreamingMode _streamingMode = StreamingMode.HttpLiveStreamingSegmenter;
     private int _ffmpegProfileId;
     private string _streamSelector;
     private IEnumerable<string> _watermarkNames = new System.Collections.Generic.HashSet<string>();

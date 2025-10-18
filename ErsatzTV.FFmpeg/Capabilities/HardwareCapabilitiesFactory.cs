@@ -486,27 +486,38 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
 
             if (_runtimeInfo.IsOSPlatform(OSPlatform.Linux))
             {
-                Option<string> vaapiOutput = await GetVaapiOutput("drm", Option<string>.None, device);
-                if (vaapiOutput.IsNone)
+                if (!_memoryCache.TryGetValue("ffmpeg.vaapi_displays", out List<string>? vaapiDisplays))
                 {
-                    _logger.LogWarning("Unable to determine QSV capabilities; please install vainfo");
-                    return new DefaultHardwareCapabilities();
+                    vaapiDisplays = ["drm"];
                 }
 
-                foreach (string o in vaapiOutput)
-                {
-                    profileEntrypoints = VaapiCapabilityParser.ParseFull(o);
-                }
+                vaapiDisplays ??= [];
+                vaapiDisplays = vaapiDisplays.OrderBy(s => s).ToList();
 
-                if (profileEntrypoints is not null && profileEntrypoints.Count != 0)
+                foreach (string vaapiDisplay in vaapiDisplays)
                 {
-                    _logger.LogDebug(
-                        "Detected {Count} VAAPI profile entrypoints using QSV device {Device}",
-                        profileEntrypoints.Count,
-                        device);
+                    Option<string> vaapiOutput = await GetVaapiOutput(vaapiDisplay, Option<string>.None, device);
+                    if (vaapiOutput.IsNone)
+                    {
+                        _logger.LogWarning("Unable to determine QSV capabilities; please install vainfo");
+                        return new DefaultHardwareCapabilities();
+                    }
 
-                    _memoryCache.Set(cacheKey, profileEntrypoints);
-                    return new VaapiHardwareCapabilities(profileEntrypoints, _logger);
+                    foreach (string o in vaapiOutput)
+                    {
+                        profileEntrypoints = VaapiCapabilityParser.ParseFull(o);
+                    }
+
+                    if (profileEntrypoints is not null && profileEntrypoints.Count != 0)
+                    {
+                        _logger.LogDebug(
+                            "Detected {Count} VAAPI profile entrypoints using QSV device {Device}",
+                            profileEntrypoints.Count,
+                            device);
+
+                        _memoryCache.Set(cacheKey, profileEntrypoints);
+                        return new VaapiHardwareCapabilities(profileEntrypoints, _logger);
+                    }
                 }
             }
 

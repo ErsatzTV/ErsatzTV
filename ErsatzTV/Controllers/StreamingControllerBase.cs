@@ -77,13 +77,7 @@ public abstract class StreamingControllerBase(IGraphicsEngine graphicsEngine, IL
                 pipe.Writer,
                 TaskScheduler.Default);
 
-            string contentType = mode switch
-            {
-                StreamingMode.HttpLiveStreamingSegmenterV2 => "video/x-matroska",
-                _ => "video/mp2t"
-            };
-
-            return new FileStreamResult(pipe.Reader.AsStream(), contentType);
+            return new FileStreamResult(pipe.Reader.AsStream(), "video/mp2t");
         }
 
         // this will never happen
