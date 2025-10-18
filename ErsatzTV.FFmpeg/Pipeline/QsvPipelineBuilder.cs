@@ -170,8 +170,7 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
             currentState = decoder.NextState(currentState);
         }
 
-        if (ffmpegState.DecoderHardwareAccelerationMode is HardwareAccelerationMode.Qsv &&
-            ffmpegState.Start.Filter(s => s > TimeSpan.Zero).IsSome)
+        if (ffmpegState.Start.Filter(s => s > TimeSpan.Zero).IsSome)
         {
             videoInputFile.FilterSteps.Add(new QsvResetPtsFilter());
         }
