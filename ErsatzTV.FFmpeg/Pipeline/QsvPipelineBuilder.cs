@@ -170,10 +170,7 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
             currentState = decoder.NextState(currentState);
         }
 
-        if (ffmpegState.Start.Filter(s => s > TimeSpan.Zero).IsSome)
-        {
-            videoInputFile.FilterSteps.Add(new QsvResetPtsFilter());
-        }
+        videoInputFile.FilterSteps.Add(new QsvResetPtsFilter());
 
         // easier to use nv12 for overlay
         if (context.HasSubtitleOverlay || context.HasWatermark || context.HasGraphicsEngine)
