@@ -18,6 +18,8 @@ Available values:
   - show_genres
   - episode_has_artwork
   - episode_artwork_url
+  - episode_has_thumbnail
+  - episode_thumbnail_url
   - season_number
   - episode_number
   - show_has_content_rating
@@ -46,6 +48,10 @@ The resulting XML will be minified by ErsatzTV - so feel free to keep things nic
       {{ end }}
       {{ if episode_has_artwork }}
         <icon src="{{ episode_artwork_url }}" />
+        <image type="poster" size="3">{{ episode_artwork_url }}"</image>
+      {{ end }}
+      {{ if episode_has_thumbnail }}
+        <image type="still" orient="L" size="3">{{ episode_thumbnail_url }}</image>
       {{ end }}
   {{ end }}
   <episode-num system="onscreen">S{{ season_number | math.format '00' }}E{{ episode_number | math.format '00' }}</episode-num>
