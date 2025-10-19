@@ -38,6 +38,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix QSV audio sync
 - Fix QSV capability detection on Linux using non-drm displays (e.g. wayland)
 - Fix playlist filtering bug that made HLS Segmenter more likely to fail when streaming for multiple hours
+- Fix NVIDIA overlaying text subtitles and permanent watermark on 10-bit content
 
 ### Changed
 - Do not use graphics engine for single, permanent watermark
