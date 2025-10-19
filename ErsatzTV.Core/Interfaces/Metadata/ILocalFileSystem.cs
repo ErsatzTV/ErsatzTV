@@ -16,4 +16,5 @@ public interface ILocalFileSystem
     Unit EmptyFolder(string folder);
     Task<string> ReadAllText(string path);
     Task<string[]> ReadAllLines(string path);
+    Task<byte[]> GetHash(string path);
 }

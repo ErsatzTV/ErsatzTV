@@ -1,5 +1,4 @@
-﻿using System.Collections.Concurrent;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO.Pipelines;
@@ -27,6 +26,7 @@ public class HlsSessionWorker : IHlsSessionWorker
 {
     private static int _workAheadCount;
     private readonly IClient _client;
+    private readonly IHlsInitSegmentCache _hlsInitSegmentCache;
     private readonly IConfigElementRepository _configElementRepository;
     private readonly OutputFormatKind _outputFormat;
     private readonly IGraphicsEngine _graphicsEngine;
@@ -49,7 +49,6 @@ public class HlsSessionWorker : IHlsSessionWorker
     private Timer _timer;
     private DateTimeOffset _transcodedUntil;
     private string _workingDirectory;
-    private ConcurrentDictionary<string, DateTimeOffset> _initTouches = new();
 
     public HlsSessionWorker(
         IServiceScopeFactory serviceScopeFactory,
@@ -57,6 +56,7 @@ public class HlsSessionWorker : IHlsSessionWorker
         IGraphicsEngine graphicsEngine,
         IClient client,
         IHlsPlaylistFilter hlsPlaylistFilter,
+        IHlsInitSegmentCache hlsInitSegmentCache,
         IConfigElementRepository configElementRepository,
         ILocalFileSystem localFileSystem,
         ILogger<HlsSessionWorker> logger,
@@ -67,6 +67,7 @@ public class HlsSessionWorker : IHlsSessionWorker
         _outputFormat = outputFormat;
         _graphicsEngine = graphicsEngine;
         _client = client;
+        _hlsInitSegmentCache = hlsInitSegmentCache;
         _hlsPlaylistFilter = hlsPlaylistFilter;
         _configElementRepository = configElementRepository;
         _localFileSystem = localFileSystem;
@@ -99,12 +100,6 @@ public class HlsSessionWorker : IHlsSessionWorker
 
             _lastAccess = DateTimeOffset.Now;
 
-            foreach (string init in fileName.Where(f => f.Contains("init.mp4")))
-            {
-                //_logger.LogDebug("Keep alive init {Init} for channel {ChannelNumber}", init, _channelNumber);
-                _initTouches.AddOrUpdate(init, DateTimeOffset.Now, (_, _) => DateTimeOffset.Now);
-            }
-
             _timer?.Stop();
             _timer?.Start();
         }
@@ -123,12 +118,15 @@ public class HlsSessionWorker : IHlsSessionWorker
                 Option<string[]> maybeLines = await ReadPlaylistLines(cancellationToken);
                 foreach (string[] input in maybeLines)
                 {
+                    await RefreshInits();
+
                     TrimPlaylistResult trimResult = _hlsPlaylistFilter.TrimPlaylist(
                         _outputFormat,
                         PlaylistStart,
                         filterBefore,
-                        GetAllInits(),
-                        input);
+                        _hlsInitSegmentCache,
+                        input,
+                        maybeMaxSegments: 10);
                     if (DateTimeOffset.Now > _lastDelete.AddSeconds(30))
                     {
                         DeleteOldSegments(trimResult);
@@ -271,7 +269,7 @@ public class HlsSessionWorker : IHlsSessionWorker
 
             try
             {
-                _localFileSystem.EmptyFolder(_workingDirectory);
+                //_localFileSystem.EmptyFolder(_workingDirectory);
             }
             catch
             {
@@ -647,12 +645,14 @@ public class HlsSessionWorker : IHlsSessionWorker
             Option<string[]> maybeLines = await ReadPlaylistLines(cancellationToken);
             foreach (string[] lines in maybeLines)
             {
+                await RefreshInits();
+
                 // trim playlist and insert discontinuity before appending with new ffmpeg process
                 TrimPlaylistResult trimResult = _hlsPlaylistFilter.TrimPlaylistWithDiscontinuity(
                     _outputFormat,
                     PlaylistStart,
                     DateTimeOffset.Now.AddMinutes(-1),
-                    GetAllInits(),
+                    _hlsInitSegmentCache,
                     lines);
                 await WritePlaylist(trimResult.Playlist, cancellationToken);
 
@@ -693,14 +693,9 @@ public class HlsSessionWorker : IHlsSessionWorker
             .ToList();
 
         var allInits = Directory.GetFiles(_workingDirectory, "*init.mp4")
-            .Map(file =>
-            {
-                string fileName = Path.GetFileName(file);
-                // only consider deleting inits that have no segments left on disk
-                return long.TryParse(fileName.Split('_')[0], out long generatedAt) && !generatedAtHash.Contains(generatedAt)
-                    ? new Segment(file, 0, generatedAt)
-                    : Option<Segment>.None;
-            })
+            .Map(file => long.TryParse(Path.GetFileName(file).Split('_')[0], out long generatedAt) && !generatedAtHash.Contains(generatedAt)
+                ? new Segment(file, 0, generatedAt)
+                : Option<Segment>.None)
             .Somes()
             .ToList();
 
@@ -714,21 +709,22 @@ public class HlsSessionWorker : IHlsSessionWorker
             //     trimResult.Sequence);
         }
 
-        DateTimeOffset toKeep = DateTimeOffset.Now.AddMinutes(-10);
         foreach (var init in allInits)
         {
-            string fileName = Path.GetFileName(init.File) ?? string.Empty;
-
-            if (!_initTouches.TryGetValue(fileName, out DateTimeOffset touchedAt))
+            // only consider deleting inits that have no segments left on disk, no segments in ffmpeg playlist
+            if (generatedAtHash.Contains(init.GeneratedAt) || init.GeneratedAt >= trimResult.GeneratedAt)
             {
                 continue;
             }
 
-            if (touchedAt < toKeep)
+            string fileName = Path.GetFileName(init.File);
+            if (_hlsInitSegmentCache.IsEarliestByHash(fileName))
             {
-                toDelete.Add(init);
-                _initTouches.TryRemove(fileName, out _);
+                continue;
             }
+
+            toDelete.Add(init);
+            _hlsInitSegmentCache.DeleteSegment(fileName);
         }
 
         foreach (Segment segment in toDelete)
@@ -746,16 +742,27 @@ public class HlsSessionWorker : IHlsSessionWorker
         }
     }
 
-    private List<long> GetAllInits() =>
-        _outputFormat is OutputFormatKind.HlsMp4
-            ? Directory.GetFiles(_workingDirectory, "*init.mp4")
-                .Map(file =>
-                {
-                    string fileName = Path.GetFileName(file);
-                    return long.TryParse(fileName.Split('_')[0], out long generatedAt) ? generatedAt : long.MaxValue;
-                })
-                .ToList()
-            : [];
+    private async Task RefreshInits()
+    {
+        if (_outputFormat is not OutputFormatKind.HlsMp4)
+        {
+            return;
+        }
+
+        var allSegments = Directory.GetFiles(_workingDirectory, "live*.m4s")
+            .Map(Path.GetFileName)
+            .Map(s => s.Split("_")[1])
+            .ToHashSet();
+
+        foreach (string file in Directory.GetFiles(_workingDirectory, "*init.mp4"))
+        {
+            string key = Path.GetFileName(file).Split("_")[0];
+            if (allSegments.Contains(key))
+            {
+                await _hlsInitSegmentCache.AddSegment(file);
+            }
+        }
+    }
 
     private async Task<long> GetPtsOffset(string channelNumber, CancellationToken cancellationToken)
     {

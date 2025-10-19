@@ -37,6 +37,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix Trakt List sync
 - Fix QSV audio sync
 - Fix QSV capability detection on Linux using non-drm displays (e.g. wayland)
+- Fix playlist filtering bug that made HLS Segmenter more likely to fail when streaming for multiple hours
 
 ### Changed
 - Do not use graphics engine for single, permanent watermark

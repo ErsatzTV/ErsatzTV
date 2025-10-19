@@ -1,5 +1,4 @@
-﻿using ErsatzTV.Core.Domain;
-using ErsatzTV.FFmpeg.OutputFormat;
+﻿using ErsatzTV.FFmpeg.OutputFormat;
 
 namespace ErsatzTV.Core.FFmpeg;
 
@@ -9,15 +8,15 @@ public interface IHlsPlaylistFilter
         OutputFormatKind outputFormat,
         DateTimeOffset playlistStart,
         DateTimeOffset filterBefore,
-        List<long> inits,
+        IHlsInitSegmentCache hlsInitSegmentCache,
         string[] lines,
-        int maxSegments = 10,
+        Option<int> maybeMaxSegments,
         bool endWithDiscontinuity = false);
 
     TrimPlaylistResult TrimPlaylistWithDiscontinuity(
         OutputFormatKind outputFormat,
         DateTimeOffset playlistStart,
         DateTimeOffset filterBefore,
-        List<long> inits,
+        IHlsInitSegmentCache hlsInitSegmentCache,
         string[] lines);
 }
