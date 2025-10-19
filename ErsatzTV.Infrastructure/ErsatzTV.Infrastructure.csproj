@@ -14,7 +14,7 @@
         <PackageReference Include="CliWrap" Version="3.9.0" />
         <PackageReference Include="Dapper" Version="2.1.66" />
         <PackageReference Include="EFCore.BulkExtensions" Version="9.0.2" />
-        <PackageReference Include="Elastic.Clients.Elasticsearch" Version="9.1.10" />
+        <PackageReference Include="Elastic.Clients.Elasticsearch" Version="9.1.11" />
         <PackageReference Include="Jint" Version="4.4.1" />
         <PackageReference Include="Lucene.Net" Version="4.8.0-beta00017" />
         <PackageReference Include="Lucene.Net.Analysis.Common" Version="4.8.0-beta00017" />
@@ -38,7 +38,7 @@
         <PackageReference Include="SixLabors.ImageSharp" Version="3.1.11" />
         <PackageReference Include="SkiaSharp" Version="3.119.1" />
         <PackageReference Include="TagLibSharp" Version="2.3.0" />
-        <PackageReference Include="TimeZoneConverter" Version="7.0.0" />
+        <PackageReference Include="TimeZoneConverter" Version="7.1.0" />
     </ItemGroup>
 
     <ItemGroup>
