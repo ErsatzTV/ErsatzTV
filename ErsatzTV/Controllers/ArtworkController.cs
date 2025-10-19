@@ -147,6 +147,8 @@ public class ArtworkController : ControllerBase
         GetPlexArtwork(plexMediaSourceId, $"/{path}", cancellationToken);
 
     [HttpGet("/artwork/thumbnails/plex/{plexMediaSourceId}/{*path}")]
+    [HttpHead("/iptv/artwork/thumbnails/plex/{plexMediaSourceId}/{*path}")]
+    [HttpGet("/iptv/artwork/thumbnails/plex/{plexMediaSourceId}/{*path}")]
     public Task<IActionResult> GetPlexThumbnail(
         int plexMediaSourceId,
         string path,

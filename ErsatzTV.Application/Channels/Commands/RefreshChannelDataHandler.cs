@@ -126,6 +126,10 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
                 .ThenInclude(em => em.Guids)
                 .Include(p => p.Items)
                 .ThenInclude(i => i.MediaItem)
+                .ThenInclude(i => (i as Episode).EpisodeMetadata)
+                .ThenInclude(em => em.Artwork)
+                .Include(p => p.Items)
+                .ThenInclude(i => i.MediaItem)
                 .ThenInclude(i => (i as Episode).Season)
                 .ThenInclude(s => s.Show)
                 .ThenInclude(s => s.ShowMetadata)
@@ -667,6 +671,7 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
                 showMetadata.Guids ??= [];
 
                 string artworkPath = GetPrioritizedArtworkPath(showMetadata);
+                string thumbnailPath = GetPrioritizedArtworkPath(metadata);
 
                 var data = new
                 {
@@ -687,6 +692,8 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
                     ShowGenres = showMetadata.Genres.Map(g => g.Name).OrderBy(n => n),
                     EpisodeHasArtwork = !string.IsNullOrWhiteSpace(artworkPath),
                     EpisodeArtworkUrl = artworkPath,
+                    EpisodeHasThumbnail = !string.IsNullOrWhiteSpace(thumbnailPath),
+                    EpisodeThumbnailUrl = thumbnailPath,
                     SeasonNumber = templateEpisode.Season?.SeasonNumber ?? 0,
                     metadata.EpisodeNumber,
                     ShowHasContentRating = !string.IsNullOrWhiteSpace(showMetadata.ContentRating),
