@@ -14,7 +14,6 @@ using ErsatzTV.Core;
 using ErsatzTV.Core.Emby;
 using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.FFmpeg;
-using ErsatzTV.Core.Graphics;
 using ErsatzTV.Core.Health;
 using ErsatzTV.Core.Health.Checks;
 using ErsatzTV.Core.Images;
@@ -813,6 +812,7 @@ public class Startup
         services.AddScoped<IDecoSelector, DecoSelector>();
         services.AddScoped<IWatermarkSelector, WatermarkSelector>();
         services.AddScoped<IGraphicsElementSelector, GraphicsElementSelector>();
+        services.AddScoped<IHlsInitSegmentCache, HlsInitSegmentCache>();
 
         services.AddScoped<IFFmpegProcessService, FFmpegLibraryProcessService>();
         services.AddScoped<IPipelineBuilderFactory, PipelineBuilderFactory>();

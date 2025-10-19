@@ -1,4 +1,6 @@
-﻿using Bugsnag;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Security.Cryptography;
+using Bugsnag;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
 using Microsoft.Extensions.Logging;
@@ -158,4 +160,12 @@ public class LocalFileSystem(IClient client, ILogger<LocalFileSystem> logger) : 
 
     public Task<string> ReadAllText(string path) => File.ReadAllTextAsync(path);
     public Task<string[]> ReadAllLines(string path) => File.ReadAllLinesAsync(path);
+
+    [SuppressMessage("Security", "CA5351:Do Not Use Broken Cryptographic Algorithms")]
+    public async Task<byte[]> GetHash(string path)
+    {
+        using var md5 = MD5.Create();
+        await using var stream = File.OpenRead(path);
+        return await md5.ComputeHashAsync(stream);
+    }
 }

@@ -45,8 +45,9 @@ live001139.ts").Split(Environment.NewLine);
             OutputFormatKind.Hls,
             start,
             start.AddSeconds(-30),
-            [],
-            input);
+            Substitute.For<IHlsInitSegmentCache>(),
+            input,
+            maybeMaxSegments: 10);
 
         result.PlaylistStart.ShouldBe(start);
         result.Sequence.ShouldBe(1137);
@@ -95,7 +96,7 @@ live001139.ts").Split(Environment.NewLine);
             OutputFormatKind.Hls,
             start,
             start.AddSeconds(-30),
-            [],
+            Substitute.For<IHlsInitSegmentCache>(),
             input,
             2);
 
@@ -143,7 +144,7 @@ live001139.ts").Split(Environment.NewLine);
             OutputFormatKind.Hls,
             start,
             start.AddSeconds(-30),
-            [],
+            Substitute.For<IHlsInitSegmentCache>(),
             input,
             int.MaxValue,
             true);
@@ -196,7 +197,7 @@ live001139.ts").Split(Environment.NewLine);
             OutputFormatKind.Hls,
             start,
             start.AddSeconds(6),
-            [],
+            Substitute.For<IHlsInitSegmentCache>(),
             input,
             1);
 
@@ -242,8 +243,9 @@ live001139.ts").Split(Environment.NewLine);
             OutputFormatKind.Hls,
             start,
             start.AddSeconds(6),
-            [],
-            input);
+            Substitute.For<IHlsInitSegmentCache>(),
+            input,
+            maybeMaxSegments: 10);
 
         result.PlaylistStart.ShouldBe(start);
         result.Sequence.ShouldBe(1137);
@@ -535,8 +537,9 @@ live000082.ts").Split(Environment.NewLine);
             OutputFormatKind.Hls,
             start,
             start.AddSeconds(220),
-            [],
-            input);
+            Substitute.For<IHlsInitSegmentCache>(),
+            input,
+            maybeMaxSegments: 10);
 
         // result.PlaylistStart.ShouldBe(start);
         result.Sequence.ShouldBe(56);
@@ -611,7 +614,7 @@ live000048.ts
             OutputFormatKind.Hls,
             start,
             filterBefore,
-            [],
+            Substitute.For<IHlsInitSegmentCache>(),
             input,
             2);
 

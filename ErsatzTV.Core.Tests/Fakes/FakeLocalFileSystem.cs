@@ -70,6 +70,8 @@ public class FakeLocalFileSystem : ILocalFileSystem
         .IfNoneAsync(string.Empty)
         .Map(s => s.Split(Environment.NewLine));
 
+    public Task<byte[]> GetHash(string path) => throw new NotSupportedException();
+
     public Task<byte[]> ReadAllBytes(string path) => TestBytes.AsTask();
 
     private static List<DirectoryInfo> Split(DirectoryInfo path)

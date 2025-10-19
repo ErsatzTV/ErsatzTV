@@ -6,24 +6,15 @@ using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Core.FFmpeg;
 
-public class HlsPlaylistFilter : IHlsPlaylistFilter
+public class HlsPlaylistFilter(ITempFilePool tempFilePool, ILogger<HlsPlaylistFilter> logger) : IHlsPlaylistFilter
 {
-    private readonly ILogger<HlsPlaylistFilter> _logger;
-    private readonly ITempFilePool _tempFilePool;
-
-    public HlsPlaylistFilter(ITempFilePool tempFilePool, ILogger<HlsPlaylistFilter> logger)
-    {
-        _tempFilePool = tempFilePool;
-        _logger = logger;
-    }
-
     public TrimPlaylistResult TrimPlaylist(
         OutputFormatKind outputFormat,
         DateTimeOffset playlistStart,
         DateTimeOffset filterBefore,
-        List<long> inits,
+        IHlsInitSegmentCache hlsInitSegmentCache,
         string[] lines,
-        int maxSegments = 10,
+        Option<int> maybeMaxSegments,
         bool endWithDiscontinuity = false)
     {
         try
@@ -107,11 +98,11 @@ public class HlsPlaylistFilter : IHlsPlaylistFilter
                 GeneratePlaylist(
                     outputFormat,
                     items,
-                    inits,
+                    hlsInitSegmentCache,
                     filterBefore,
                     targetDuration,
                     discontinuitySequence,
-                    maxSegments);
+                    maybeMaxSegments);
 
             return new TrimPlaylistResult(nextPlaylistStart, startSequence, generatedAt, playlist, segments);
         }
@@ -119,10 +110,10 @@ public class HlsPlaylistFilter : IHlsPlaylistFilter
         {
             try
             {
-                string file = _tempFilePool.GetNextTempFile(TempFileCategory.BadPlaylist);
+                string file = tempFilePool.GetNextTempFile(TempFileCategory.BadPlaylist);
                 File.WriteAllLines(file, lines);
 
-                _logger.LogError(ex, "Error filtering playlist. Bad playlist saved to {BadPlaylistFile}", file);
+                logger.LogError(ex, "Error filtering playlist. Bad playlist saved to {BadPlaylistFile}", file);
 
                 // TODO: better error result?
                 return new TrimPlaylistResult(playlistStart, 0, 0, string.Empty, 0);
@@ -140,18 +131,18 @@ public class HlsPlaylistFilter : IHlsPlaylistFilter
         OutputFormatKind outputFormat,
         DateTimeOffset playlistStart,
         DateTimeOffset filterBefore,
-        List<long> inits,
+        IHlsInitSegmentCache hlsInitSegmentCache,
         string[] lines) =>
-        TrimPlaylist(outputFormat, playlistStart, filterBefore, inits, lines, int.MaxValue, true);
+        TrimPlaylist(outputFormat, playlistStart, filterBefore, hlsInitSegmentCache, lines, Option<int>.None, true);
 
     private static Tuple<string, DateTimeOffset, long, long, int> GeneratePlaylist(
         OutputFormatKind outputFormat,
         List<PlaylistItem> items,
-        List<long> inits,
+        IHlsInitSegmentCache hlsInitSegmentCache,
         DateTimeOffset filterBefore,
         int targetDuration,
         int discontinuitySequence,
-        int maxSegments)
+        Option<int> maybeMaxSegments)
     {
         if (items.Count != 0 && items[0] is PlaylistDiscontinuity)
         {
@@ -164,16 +155,26 @@ public class HlsPlaylistFilter : IHlsPlaylistFilter
         }
 
         var allSegments = items.OfType<PlaylistSegment>().ToList();
-        // only filter if we have more than requested
-        if (allSegments.Count > maxSegments)
-        {
-            var afterFilter = allSegments.Filter(s => s.StartTime >= filterBefore).ToList();
 
-            // if there are enough new segments after filtering, use those
-            // otherwise return the last maxSegments
-            allSegments = afterFilter.Count >= maxSegments
-                ? afterFilter.Take(maxSegments).ToList()
-                : allSegments.TakeLast(maxSegments).ToList();
+        // still need to filter old content
+        if (maybeMaxSegments.IsNone)
+        {
+            allSegments.RemoveAll(s => s.StartTime < filterBefore);
+        }
+
+        foreach (int maxSegments in maybeMaxSegments)
+        {
+            // only filter if we have more than requested
+            if (allSegments.Count > maxSegments)
+            {
+                var afterFilter = allSegments.Filter(s => s.StartTime >= filterBefore).ToList();
+
+                // if there are enough new segments after filtering, use those
+                // otherwise return the last maxSegments
+                allSegments = afterFilter.Count >= maxSegments
+                    ? afterFilter.Take(maxSegments).ToList()
+                    : allSegments.TakeLast(maxSegments).ToList();
+            }
         }
 
         long startSequence = 0;
@@ -182,12 +183,6 @@ public class HlsPlaylistFilter : IHlsPlaylistFilter
         {
             startSequence = startSegment.StartSequence;
             generatedAt = startSegment.GeneratedAt;
-        }
-
-        long minGeneratedAt = 0;
-        foreach (var firstSegment in allSegments.HeadOrNone())
-        {
-            minGeneratedAt = firstSegment.GeneratedAt;
         }
 
         // count all discontinuities that were filtered out
@@ -208,12 +203,9 @@ public class HlsPlaylistFilter : IHlsPlaylistFilter
 
         if (outputFormat is OutputFormatKind.HlsMp4)
         {
-            Option<long> maybeStartInit = Optional(inits.Find(init => init > 0 && init <= minGeneratedAt));
-            foreach (long init in maybeStartInit)
-            {
-                output.AppendLine(CultureInfo.InvariantCulture, $"#EXT-X-MAP:URI=\"{init}_init.mp4\"");
-                inits.Remove(init);
-            }
+            output.AppendLine(
+                CultureInfo.InvariantCulture,
+                $"#EXT-X-MAP:URI=\"{hlsInitSegmentCache.EarliestSegmentByHash(generatedAt)}\"");
         }
 
         for (var i = 0; i < items.Count; i++)
@@ -229,15 +221,9 @@ public class HlsPlaylistFilter : IHlsPlaylistFilter
 
                             if (outputFormat is OutputFormatKind.HlsMp4)
                             {
-                                Option<long> maybeInit = Optional(
-                                    inits.Find(init => init > 0 && init <= nextSegment.GeneratedAt));
-                                foreach (long init in maybeInit)
-                                {
-                                    output.AppendLine(
-                                        CultureInfo.InvariantCulture,
-                                        $"#EXT-X-MAP:URI=\"{init}_init.mp4\"");
-                                    inits.Remove(init);
-                                }
+                                output.AppendLine(
+                                    CultureInfo.InvariantCulture,
+                                    $"#EXT-X-MAP:URI=\"{hlsInitSegmentCache.EarliestSegmentByHash(nextSegment.GeneratedAt)}\"");
                             }
                         }
                     }
@@ -269,7 +255,12 @@ public class HlsPlaylistFilter : IHlsPlaylistFilter
             .Map(s => s.StartTime)
             .IfNone(DateTimeOffset.MaxValue);
 
-        return Tuple(playlist, nextPlaylistStart, startSequence, generatedAt, allSegments.Count);
+        return Tuple(
+            playlist,
+            nextPlaylistStart,
+            startSequence,
+            items.OfType<PlaylistSegment>().Min(s => s.GeneratedAt),
+            allSegments.Count);
     }
 
     private abstract record PlaylistItem;
