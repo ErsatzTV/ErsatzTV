@@ -281,8 +281,8 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
             fontsFolder,
             subtitleOverlayFilterSteps);
 
-        // need to use software overlay with 10 bit primary content and graphics engine
-        if (currentState.FrameDataLocation is FrameDataLocation.Hardware && context.HasGraphicsEngine &&
+        // need to use software overlay with 10 bit primary content and graphics engine (or watermark)
+        if (currentState.FrameDataLocation is FrameDataLocation.Hardware && (context.HasGraphicsEngine || context.HasWatermark) &&
             currentState.BitDepth == 10)
         {
             var hardwareDownload = new CudaHardwareDownloadFilter(currentState.PixelFormat, None);
