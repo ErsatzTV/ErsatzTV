@@ -550,6 +550,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
     public async Task<Command> ForError(
         string ffmpegPath,
         Channel channel,
+        DateTimeOffset now,
         Option<TimeSpan> duration,
         string errorMessage,
         bool hlsRealtime,
@@ -626,7 +627,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             ? Path.Combine(FileSystemLayout.TranscodeFolder, channel.Number, "live.m3u8")
             : Option<string>.None;
 
-        long nowSeconds = DateTimeOffset.Now.ToUnixTimeSeconds();
+        long nowSeconds = now.ToUnixTimeSeconds();
 
         Option<string> hlsSegmentTemplate = outputFormat switch
         {

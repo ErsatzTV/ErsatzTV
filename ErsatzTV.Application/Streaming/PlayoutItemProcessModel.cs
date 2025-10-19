@@ -8,4 +8,5 @@ public record PlayoutItemProcessModel(
     Option<GraphicsEngineContext> GraphicsEngineContext,
     Option<TimeSpan> MaybeDuration,
     DateTimeOffset Until,
-    bool IsComplete);
+    bool IsComplete,
+    Option<long> SegmentKey);

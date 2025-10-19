@@ -1,10 +1,11 @@
-﻿using ErsatzTV.FFmpeg.OutputFormat;
+using ErsatzTV.FFmpeg.OutputFormat;
 
 namespace ErsatzTV.Core.FFmpeg;
 
 public interface IHlsPlaylistFilter
 {
     TrimPlaylistResult TrimPlaylist(
+        Dictionary<long, int> discontinuityMap,
         OutputFormatKind outputFormat,
         DateTimeOffset playlistStart,
         DateTimeOffset filterBefore,
@@ -14,6 +15,7 @@ public interface IHlsPlaylistFilter
         bool endWithDiscontinuity = false);
 
     TrimPlaylistResult TrimPlaylistWithDiscontinuity(
+        Dictionary<long, int> discontinuityMap,
         OutputFormatKind outputFormat,
         DateTimeOffset playlistStart,
         DateTimeOffset filterBefore,

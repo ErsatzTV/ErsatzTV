@@ -46,6 +46,7 @@ public interface IFFmpegProcessService
     Task<Command> ForError(
         string ffmpegPath,
         Channel channel,
+        DateTimeOffset now,
         Option<TimeSpan> duration,
         string errorMessage,
         bool hlsRealtime,

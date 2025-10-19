@@ -11,7 +11,6 @@ using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Streaming;
-using ErsatzTV.FFmpeg.OutputFormat;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -123,7 +122,6 @@ public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Eit
         {
             _ => new HlsSessionWorker(
                 _serviceScopeFactory,
-                OutputFormatKind.HlsMp4,
                 _graphicsEngine,
                 _client,
                 _hlsPlaylistFilter,

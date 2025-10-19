@@ -302,6 +302,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 Command doesNotExistProcess = await _ffmpegProcessService.ForError(
                     ffmpegPath,
                     channel,
+                    now,
                     duration,
                     $"DEBUG_NO_SYNC:\n{Mapper.GetDisplayTitle(playoutItemWithPath.PlayoutItem.MediaItem, Option<string>.None)}\nFrom: {start} To: {finish}",
                     request.HlsRealtime,
@@ -316,7 +317,8 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                     Option<GraphicsEngineContext>.None,
                     duration,
                     finish,
-                    true);
+                    true,
+                    now.ToUnixTimeSeconds());
             }
 
             MediaVersion version = playoutItemWithPath.PlayoutItem.MediaItem.GetHeadVersion();
@@ -442,7 +444,8 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 playoutItemResult.GraphicsEngineContext,
                 duration,
                 finish,
-                isComplete);
+                isComplete,
+                effectiveNow.ToUnixTimeSeconds());
 
             return Right<BaseError, PlayoutItemProcessModel>(result);
         }
@@ -473,6 +476,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                     Command offlineProcess = await _ffmpegProcessService.ForError(
                         ffmpegPath,
                         channel,
+                        now,
                         maybeDuration,
                         "Channel is Offline",
                         request.HlsRealtime,
@@ -487,11 +491,13 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                         Option<GraphicsEngineContext>.None,
                         maybeDuration,
                         finish,
-                        true);
+                        true,
+                        now.ToUnixTimeSeconds());
                 case PlayoutItemDoesNotExistOnDisk:
                     Command doesNotExistProcess = await _ffmpegProcessService.ForError(
                         ffmpegPath,
                         channel,
+                        now,
                         maybeDuration,
                         error.Value,
                         request.HlsRealtime,
@@ -506,11 +512,13 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                         Option<GraphicsEngineContext>.None,
                         maybeDuration,
                         finish,
-                        true);
+                        true,
+                        now.ToUnixTimeSeconds());
                 default:
                     Command errorProcess = await _ffmpegProcessService.ForError(
                         ffmpegPath,
                         channel,
+                        now,
                         maybeDuration,
                         "Channel is Offline",
                         request.HlsRealtime,
@@ -525,7 +533,8 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                         Option<GraphicsEngineContext>.None,
                         maybeDuration,
                         finish,
-                        true);
+                        true,
+                        now.ToUnixTimeSeconds());
             }
         }
 

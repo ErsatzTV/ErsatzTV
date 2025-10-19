@@ -27,8 +27,8 @@ public class HlsSessionWorker : IHlsSessionWorker
     private static int _workAheadCount;
     private readonly IClient _client;
     private readonly IHlsInitSegmentCache _hlsInitSegmentCache;
+    private readonly Dictionary<long, int> _discontinuityMap = [];
     private readonly IConfigElementRepository _configElementRepository;
-    private readonly OutputFormatKind _outputFormat;
     private readonly IGraphicsEngine _graphicsEngine;
     private readonly IHlsPlaylistFilter _hlsPlaylistFilter;
     private readonly ILocalFileSystem _localFileSystem;
@@ -40,8 +40,8 @@ public class HlsSessionWorker : IHlsSessionWorker
     private CancellationTokenSource _cancellationTokenSource;
     private string _channelNumber;
     private DateTimeOffset _channelStart;
+    private int _discontinuitySequence;
     private bool _disposedValue;
-    private bool _hasWrittenSegments;
     private DateTimeOffset _lastAccess;
     private DateTimeOffset _lastDelete = DateTimeOffset.MinValue;
     private IServiceScope _serviceScope;
@@ -52,7 +52,6 @@ public class HlsSessionWorker : IHlsSessionWorker
 
     public HlsSessionWorker(
         IServiceScopeFactory serviceScopeFactory,
-        OutputFormatKind outputFormat,
         IGraphicsEngine graphicsEngine,
         IClient client,
         IHlsPlaylistFilter hlsPlaylistFilter,
@@ -64,7 +63,6 @@ public class HlsSessionWorker : IHlsSessionWorker
     {
         _serviceScope = serviceScopeFactory.CreateScope();
         _mediator = _serviceScope.ServiceProvider.GetRequiredService<IMediator>();
-        _outputFormat = outputFormat;
         _graphicsEngine = graphicsEngine;
         _client = client;
         _hlsInitSegmentCache = hlsInitSegmentCache;
@@ -121,7 +119,8 @@ public class HlsSessionWorker : IHlsSessionWorker
                     await RefreshInits();
 
                     TrimPlaylistResult trimResult = _hlsPlaylistFilter.TrimPlaylist(
-                        _outputFormat,
+                        _discontinuityMap,
+                        OutputFormatKind.HlsMp4,
                         PlaylistStart,
                         filterBefore,
                         _hlsInitSegmentCache,
@@ -191,10 +190,7 @@ public class HlsSessionWorker : IHlsSessionWorker
 
             CancellationToken cancellationToken = _cancellationTokenSource.Token;
 
-            _logger.LogInformation(
-                "Starting HLS session for channel {Channel} with output format {OutputFormat}",
-                channelNumber,
-                _outputFormat);
+            _logger.LogInformation("Starting HLS session for channel {Channel}", channelNumber);
 
             if (_localFileSystem.ListFiles(_workingDirectory).Any())
             {
@@ -269,7 +265,7 @@ public class HlsSessionWorker : IHlsSessionWorker
 
             try
             {
-                //_localFileSystem.EmptyFolder(_workingDirectory);
+                _localFileSystem.EmptyFolder(_workingDirectory);
             }
             catch
             {
@@ -447,10 +443,7 @@ public class HlsSessionWorker : IHlsSessionWorker
             }
 
             // fmp4 doesn't require pts offsets because each new item gets a discontinuity AND a new init segment
-            long ptsOffset = _outputFormat is OutputFormatKind.HlsMp4
-                ? 0
-                : await GetPtsOffset(_channelNumber, cancellationToken);
-            // _logger.LogInformation("PTS offset: {PtsOffset}", ptsOffset);
+            const long PTS_OFFSET = 0;
 
             _logger.LogDebug("HLS session state: {State}", _state);
 
@@ -464,7 +457,7 @@ public class HlsSessionWorker : IHlsSessionWorker
                 startAtZero,
                 realtime,
                 _channelStart,
-                ptsOffset,
+                PTS_OFFSET,
                 _targetFramerate);
 
             // _logger.LogInformation("Request {@Request}", request);
@@ -486,6 +479,14 @@ public class HlsSessionWorker : IHlsSessionWorker
             foreach (PlayoutItemProcessModel processModel in result.RightAsEnumerable())
             {
                 await TrimAndDelete(cancellationToken);
+
+                // increment discontinuity sequence and store with segment key (generated at)
+                foreach (long segmentKey in processModel.SegmentKey)
+                {
+                    _discontinuitySequence++;
+                    _discontinuityMap.TryAdd(segmentKey, _discontinuitySequence);
+                    //_logger.LogDebug("DISCONTINUITY MAP {Map}", _discontinuityMap);
+                }
 
                 Option<Pipe> maybePipe = Option<Pipe>.None;
                 var stdErrBuffer = new StringBuilder();
@@ -527,7 +528,6 @@ public class HlsSessionWorker : IHlsSessionWorker
                             processModel.Until.Subtract(DateTimeOffset.Now).TotalSeconds);
                         _transcodedUntil = processModel.Until;
                         _state = NextState(_state, processModel);
-                        _hasWrittenSegments = true;
                         return true;
                     }
                     else
@@ -552,7 +552,7 @@ public class HlsSessionWorker : IHlsSessionWorker
                                 _channelNumber,
                                 StreamingMode.HttpLiveStreamingSegmenter,
                                 realtime,
-                                ptsOffset,
+                                PTS_OFFSET,
                                 processModel.MaybeDuration,
                                 processModel.Until,
                                 errorMessage),
@@ -576,8 +576,6 @@ public class HlsSessionWorker : IHlsSessionWorker
                             {
                                 _transcodedUntil = processModel.Until;
                                 _state = NextState(_state, null);
-
-                                _hasWrittenSegments = true;
 
                                 return true;
                             }
@@ -649,7 +647,8 @@ public class HlsSessionWorker : IHlsSessionWorker
 
                 // trim playlist and insert discontinuity before appending with new ffmpeg process
                 TrimPlaylistResult trimResult = _hlsPlaylistFilter.TrimPlaylistWithDiscontinuity(
-                    _outputFormat,
+                    _discontinuityMap,
+                    OutputFormatKind.HlsMp4,
                     PlaylistStart,
                     DateTimeOffset.Now.AddMinutes(-1),
                     _hlsInitSegmentCache,
@@ -725,6 +724,7 @@ public class HlsSessionWorker : IHlsSessionWorker
 
             toDelete.Add(init);
             _hlsInitSegmentCache.DeleteSegment(fileName);
+            _discontinuityMap.Remove(init.GeneratedAt);
         }
 
         foreach (Segment segment in toDelete)
@@ -744,11 +744,6 @@ public class HlsSessionWorker : IHlsSessionWorker
 
     private async Task RefreshInits()
     {
-        if (_outputFormat is not OutputFormatKind.HlsMp4)
-        {
-            return;
-        }
-
         var allSegments = Directory.GetFiles(_workingDirectory, "live*.m4s")
             .Map(Path.GetFileName)
             .Map(s => s.Split("_")[1])
@@ -761,41 +756,6 @@ public class HlsSessionWorker : IHlsSessionWorker
             {
                 await _hlsInitSegmentCache.AddSegment(file);
             }
-        }
-    }
-
-    private async Task<long> GetPtsOffset(string channelNumber, CancellationToken cancellationToken)
-    {
-        await _slim.WaitAsync(cancellationToken);
-        try
-        {
-            long result = 0;
-
-            // if we haven't yet written any segments, start at zero
-            if (!_hasWrittenSegments)
-            {
-                return result;
-            }
-
-            Either<BaseError, PtsTime> queryResult = await _mediator.Send(
-                new GetLastPtsTime(channelNumber),
-                cancellationToken);
-
-            foreach (BaseError error in queryResult.LeftToSeq())
-            {
-                _logger.LogWarning("Unable to determine last pts offset - {Error}", error.ToString());
-            }
-
-            foreach (PtsTime pts in queryResult.RightToSeq())
-            {
-                result = pts.Value;
-            }
-
-            return result;
-        }
-        finally
-        {
-            _slim.Release();
         }
     }
 
