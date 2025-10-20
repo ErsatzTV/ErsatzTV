@@ -8,9 +8,9 @@ using Microsoft.EntityFrameworkCore;
 namespace ErsatzTV.Application.Scheduling;
 
 public class ReplaceBlockItemsHandler(IDbContextFactory<TvContext> dbContextFactory)
-    : IRequestHandler<ReplaceBlockItems, Either<BaseError, List<BlockItemViewModel>>>
+    : IRequestHandler<ReplaceBlockItems, Either<BaseError, Unit>>
 {
-    public async Task<Either<BaseError, List<BlockItemViewModel>>> Handle(
+    public async Task<Either<BaseError, Unit>> Handle(
         ReplaceBlockItems request,
         CancellationToken cancellationToken)
     {
@@ -19,7 +19,7 @@ public class ReplaceBlockItemsHandler(IDbContextFactory<TvContext> dbContextFact
         return await validation.Apply(ps => Persist(dbContext, request, ps, cancellationToken));
     }
 
-    private static async Task<List<BlockItemViewModel>> Persist(
+    private static async Task<Unit> Persist(
         TvContext dbContext,
         ReplaceBlockItems request,
         Block block,
@@ -41,7 +41,7 @@ public class ReplaceBlockItemsHandler(IDbContextFactory<TvContext> dbContextFact
         //     await _channel.WriteAsync(new BuildPlayout(playout.Id, PlayoutBuildMode.Refresh));
         // }
 
-        return block.Items.Map(Mapper.ProjectToViewModel).ToList();
+        return Unit.Default;
     }
 
     private static BlockItem BuildItem(Block block, int index, ReplaceBlockItem item)

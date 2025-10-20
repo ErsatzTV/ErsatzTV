@@ -30,6 +30,7 @@ public class CreateDecoHandler(IDbContextFactory<TvContext> dbContextFactory)
         {
             DecoGroupId = request.DecoGroupId,
             Name = name,
+            BreakContent = [],
             DecoWatermarks = [],
             DecoGraphicsElements = []
         });

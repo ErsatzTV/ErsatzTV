@@ -10,4 +10,4 @@ public record ReplaceBlockItems(
     int Minutes,
     BlockStopScheduling StopScheduling,
     List<ReplaceBlockItem> Items)
-    : IRequest<Either<BaseError, List<BlockItemViewModel>>>;
+    : IRequest<Either<BaseError, Unit>>;
