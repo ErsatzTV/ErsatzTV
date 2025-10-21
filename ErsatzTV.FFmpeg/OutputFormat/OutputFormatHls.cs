@@ -95,12 +95,24 @@ public class OutputFormatHls : IPipelineStep
             }
             else
             {
-                result.AddRange(
-                [
-                    "-hls_flags", $"{pdt}append_list+discont_start{independentSegments}",
-                    "-mpegts_flags", "+initial_discontinuity",
-                    _playlistPath
-                ]);
+                switch (_outputFormat)
+                {
+                    case  OutputFormatKind.HlsMp4:
+                        result.AddRange(
+                        [
+                            "-hls_flags", $"{pdt}append_list+discont_start{independentSegments}",
+                            _playlistPath
+                        ]);
+                        break;
+                    default:
+                        result.AddRange(
+                        [
+                            "-hls_flags", $"{pdt}append_list+discont_start{independentSegments}",
+                            "-mpegts_flags", "+initial_discontinuity",
+                            _playlistPath
+                        ]);
+                        break;
+                }
             }
 
             return result.ToArray();

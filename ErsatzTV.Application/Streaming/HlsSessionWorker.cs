@@ -42,6 +42,7 @@ public class HlsSessionWorker : IHlsSessionWorker
     private DateTimeOffset _channelStart;
     private int _discontinuitySequence;
     private bool _disposedValue;
+    private bool _hasWrittenSegments;
     private DateTimeOffset _lastAccess;
     private DateTimeOffset _lastDelete = DateTimeOffset.MinValue;
     private IServiceScope _serviceScope;
@@ -442,8 +443,7 @@ public class HlsSessionWorker : IHlsSessionWorker
                 }
             }
 
-            // fmp4 doesn't require pts offsets because each new item gets a discontinuity AND a new init segment
-            const long PTS_OFFSET = 0;
+            TimeSpan ptsOffset = await GetPtsOffset(_channelNumber, cancellationToken);
 
             _logger.LogDebug("HLS session state: {State}", _state);
 
@@ -457,7 +457,7 @@ public class HlsSessionWorker : IHlsSessionWorker
                 startAtZero,
                 realtime,
                 _channelStart,
-                PTS_OFFSET,
+                ptsOffset,
                 _targetFramerate);
 
             // _logger.LogInformation("Request {@Request}", request);
@@ -528,6 +528,7 @@ public class HlsSessionWorker : IHlsSessionWorker
                             processModel.Until.Subtract(DateTimeOffset.Now).TotalSeconds);
                         _transcodedUntil = processModel.Until;
                         _state = NextState(_state, processModel);
+                        _hasWrittenSegments = true;
                         return true;
                     }
                     else
@@ -552,7 +553,7 @@ public class HlsSessionWorker : IHlsSessionWorker
                                 _channelNumber,
                                 StreamingMode.HttpLiveStreamingSegmenter,
                                 realtime,
-                                PTS_OFFSET,
+                                ptsOffset,
                                 processModel.MaybeDuration,
                                 processModel.Until,
                                 errorMessage),
@@ -576,6 +577,8 @@ public class HlsSessionWorker : IHlsSessionWorker
                             {
                                 _transcodedUntil = processModel.Until;
                                 _state = NextState(_state, null);
+
+                                _hasWrittenSegments = true;
 
                                 return true;
                             }
@@ -756,6 +759,44 @@ public class HlsSessionWorker : IHlsSessionWorker
             {
                 await _hlsInitSegmentCache.AddSegment(file);
             }
+        }
+    }
+
+    private async Task<TimeSpan> GetPtsOffset(string channelNumber, CancellationToken cancellationToken)
+    {
+        await _slim.WaitAsync(cancellationToken);
+        try
+        {
+            TimeSpan result = TimeSpan.Zero;
+
+            // if we haven't yet written any segments, start at zero
+            if (!_hasWrittenSegments)
+            {
+                return result;
+            }
+
+            await RefreshInits();
+
+            Either<BaseError, PtsTime> queryResult = await _mediator.Send(
+                new GetLastPtsTime(_hlsInitSegmentCache, channelNumber),
+                cancellationToken);
+
+            foreach (BaseError error in queryResult.LeftToSeq())
+            {
+                _logger.LogWarning("Unable to determine last pts offset - {Error}", error.ToString());
+            }
+
+            foreach (PtsTime pts in queryResult.RightToSeq())
+            {
+                _logger.LogWarning("Last pts offset is {Pts}", pts.Value);
+                result = pts.Value;
+            }
+
+            return result;
+        }
+        finally
+        {
+            _slim.Release();
         }
     }
 

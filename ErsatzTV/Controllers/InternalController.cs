@@ -255,7 +255,7 @@ public class InternalController : StreamingControllerBase
             false,
             true,
             DateTimeOffset.Now,
-            0,
+            TimeSpan.Zero,
             Option<int>.None);
 
         Either<BaseError, PlayoutItemProcessModel> result = await _mediator.Send(request);

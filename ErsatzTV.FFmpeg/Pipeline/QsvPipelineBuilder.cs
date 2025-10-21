@@ -170,7 +170,7 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
             currentState = decoder.NextState(currentState);
         }
 
-        videoInputFile.FilterSteps.Add(new QsvResetPtsFilter());
+        videoInputFile.FilterSteps.Add(new ResetPtsFilter());
 
         // easier to use nv12 for overlay
         if (context.HasSubtitleOverlay || context.HasWatermark || context.HasGraphicsEngine)

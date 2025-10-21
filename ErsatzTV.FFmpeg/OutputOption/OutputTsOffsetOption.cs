@@ -2,12 +2,12 @@
 
 namespace ErsatzTV.FFmpeg.OutputOption;
 
-public class OutputTsOffsetOption(long ptsOffset, int videoTrackTimeScale) : OutputOption
+public class OutputTsOffsetOption(TimeSpan ptsOffset) : OutputOption
 {
     public override string[] OutputOptions =>
     [
         "-output_ts_offset",
-        $"{(ptsOffset / (double)videoTrackTimeScale).ToString(NumberFormatInfo.InvariantInfo)}"
+        $"{ptsOffset.TotalSeconds.ToString(NumberFormatInfo.InvariantInfo)}s"
     ];
 
     // public override FrameState NextState(FrameState currentState) => currentState with { PtsOffset = _ptsOffset };

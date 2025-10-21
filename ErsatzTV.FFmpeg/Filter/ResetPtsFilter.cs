@@ -1,6 +1,6 @@
-namespace ErsatzTV.FFmpeg.Filter.Qsv;
+namespace ErsatzTV.FFmpeg.Filter;
 
-public class QsvResetPtsFilter : BaseFilter
+public class ResetPtsFilter : BaseFilter
 {
     public override string Filter => "setpts=PTS-STARTPTS";
 

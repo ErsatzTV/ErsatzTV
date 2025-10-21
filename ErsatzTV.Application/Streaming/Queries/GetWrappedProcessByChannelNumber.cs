@@ -15,7 +15,7 @@ public record GetWrappedProcessByChannelNumber : FFmpegProcessRequest
         false,
         true,
         DateTimeOffset.Now, // unused
-        0)
+        TimeSpan.Zero)
     {
         Scheme = scheme;
         Host = host;

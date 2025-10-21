@@ -247,7 +247,7 @@ public class PrepareTroubleshootingPlaybackHandler(
             FillerKind.None,
             inPoint,
             channelStartTime: DateTimeOffset.Now,
-            0,
+            TimeSpan.Zero,
             None,
             FileSystemLayout.TranscodeTroubleshootingFolder,
             _ => { },

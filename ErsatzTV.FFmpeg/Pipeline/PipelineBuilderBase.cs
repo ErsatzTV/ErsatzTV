@@ -255,6 +255,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         SetTimeLimit(ffmpegState, pipelineSteps);
 
         (FilterChain filterChain, ffmpegState) = BuildVideoPipeline(
+            isFmp4Hls,
             videoInputFile,
             videoStream,
             ffmpegState,
@@ -386,7 +387,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
                                 segmentTemplate,
                                 ffmpegState.HlsInitTemplate,
                                 playlistPath,
-                                ffmpegState.PtsOffset == 0,
+                                ffmpegState.PtsOffset == TimeSpan.Zero,
                                 oneSecondGop,
                                 ffmpegState.IsTroubleshooting));
                     }
@@ -539,6 +540,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         ICollection<IPipelineStep> pipelineSteps);
 
     private FilterChainAndState BuildVideoPipeline(
+        bool isFmp4Hls,
         VideoInputFile videoInputFile,
         VideoStream videoStream,
         FFmpegState ffmpegState,
@@ -593,7 +595,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
             _fontsFolder,
             pipelineSteps);
 
-        SetOutputTsOffset(ffmpegState, desiredState, pipelineSteps);
+        SetOutputTsOffset(isFmp4Hls, ffmpegState, desiredState, pipelineSteps);
 
         return new FilterChainAndState(filterChain, ffmpegState);
     }
@@ -674,6 +676,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
     }
 
     private static void SetOutputTsOffset(
+        bool isFmp4Hls,
         FFmpegState ffmpegState,
         FrameState desiredState,
         List<IPipelineStep> pipelineSteps)
@@ -683,12 +686,9 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
             return;
         }
 
-        if (ffmpegState.PtsOffset > 0)
+        if (ffmpegState.PtsOffset > TimeSpan.Zero && !isFmp4Hls)
         {
-            foreach (int videoTrackTimeScale in desiredState.VideoTrackTimeScale)
-            {
-                pipelineSteps.Add(new OutputTsOffsetOption(ffmpegState.PtsOffset, videoTrackTimeScale));
-            }
+            pipelineSteps.Add(new OutputTsOffsetOption(ffmpegState.PtsOffset));
         }
     }
 
