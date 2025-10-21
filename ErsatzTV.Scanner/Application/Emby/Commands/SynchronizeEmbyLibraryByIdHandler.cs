@@ -3,7 +3,7 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Emby;
 using ErsatzTV.Core.Interfaces.Emby;
 using ErsatzTV.Core.Interfaces.Repositories;
-using ErsatzTV.Core.MediaSources;
+using ErsatzTV.Scanner.Core.Interfaces;
 using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Scanner.Application.Emby;
@@ -17,12 +17,11 @@ public class SynchronizeEmbyLibraryByIdHandler : IRequestHandler<SynchronizeEmby
     private readonly IEmbyTelevisionLibraryScanner _embyTelevisionLibraryScanner;
     private readonly ILibraryRepository _libraryRepository;
     private readonly ILogger<SynchronizeEmbyLibraryByIdHandler> _logger;
+    private readonly IScannerProxy _scannerProxy;
     private readonly IMediaSourceRepository _mediaSourceRepository;
 
-    private readonly IMediator _mediator;
-
     public SynchronizeEmbyLibraryByIdHandler(
-        IMediator mediator,
+        IScannerProxy scannerProxy,
         IMediaSourceRepository mediaSourceRepository,
         IEmbySecretStore embySecretStore,
         IEmbyMovieLibraryScanner embyMovieLibraryScanner,
@@ -31,7 +30,7 @@ public class SynchronizeEmbyLibraryByIdHandler : IRequestHandler<SynchronizeEmby
         IConfigElementRepository configElementRepository,
         ILogger<SynchronizeEmbyLibraryByIdHandler> logger)
     {
-        _mediator = mediator;
+        _scannerProxy = scannerProxy;
         _mediaSourceRepository = mediaSourceRepository;
         _embySecretStore = embySecretStore;
         _embyMovieLibraryScanner = embyMovieLibraryScanner;
@@ -54,6 +53,8 @@ public class SynchronizeEmbyLibraryByIdHandler : IRequestHandler<SynchronizeEmby
         RequestParameters parameters,
         CancellationToken cancellationToken)
     {
+        _scannerProxy.SetBaseUrl(parameters.BaseUrl);
+
         var lastScan = new DateTimeOffset(parameters.Library.LastScan ?? SystemTime.MinValueUtc, TimeSpan.Zero);
         DateTimeOffset nextScan = lastScan + TimeSpan.FromHours(parameters.LibraryRefreshInterval);
         if (parameters.ForceScan || parameters.LibraryRefreshInterval > 0 && nextScan < DateTimeOffset.Now)
@@ -93,16 +94,6 @@ public class SynchronizeEmbyLibraryByIdHandler : IRequestHandler<SynchronizeEmby
 
         _logger.LogDebug("Skipping unforced scan of emby media library {Name}", parameters.Library.Name);
 
-        // send an empty progress update for the library name
-        await _mediator.Publish(
-            new ScannerProgressUpdate(
-                parameters.Library.Id,
-                parameters.Library.Name,
-                0,
-                Array.Empty<int>(),
-                Array.Empty<int>()),
-            cancellationToken);
-
         return parameters.Library.Name;
     }
 
@@ -117,7 +108,8 @@ public class SynchronizeEmbyLibraryByIdHandler : IRequestHandler<SynchronizeEmby
                 embyLibrary,
                 request.ForceScan,
                 libraryRefreshInterval,
-                request.DeepScan
+                request.DeepScan,
+                request.BaseUrl
             ));
 
     private Task<Validation<BaseError, ConnectionParameters>> ValidateConnection(
@@ -166,7 +158,8 @@ public class SynchronizeEmbyLibraryByIdHandler : IRequestHandler<SynchronizeEmby
         EmbyLibrary Library,
         bool ForceScan,
         int LibraryRefreshInterval,
-        bool DeepScan);
+        bool DeepScan,
+        string BaseUrl);
 
     private record ConnectionParameters(EmbyConnection ActiveConnection)
     {

@@ -1,8 +1,9 @@
 ﻿using System.Globalization;
-using System.Threading.Channels;
 using ErsatzTV.Application.Libraries;
 using ErsatzTV.Core;
+using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Errors;
+using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.FFmpeg.Runtime;
 using ErsatzTV.Infrastructure.Data;
@@ -15,14 +16,16 @@ public class CallJellyfinLibraryScannerHandler : CallLibraryScannerHandler<ISync
     IRequestHandler<ForceSynchronizeJellyfinLibraryById, Either<BaseError, string>>,
     IRequestHandler<SynchronizeJellyfinLibraryByIdIfNeeded, Either<BaseError, string>>
 {
+    private readonly IScannerProxyService _scannerProxyService;
+
     public CallJellyfinLibraryScannerHandler(
         IDbContextFactory<TvContext> dbContextFactory,
         IConfigElementRepository configElementRepository,
-        ChannelWriter<ISearchIndexBackgroundServiceRequest> channel,
-        IMediator mediator,
+        IScannerProxyService scannerProxyService,
         IRuntimeInfo runtimeInfo)
-        : base(dbContextFactory, configElementRepository, channel, mediator, runtimeInfo)
+        : base(dbContextFactory, configElementRepository, runtimeInfo)
     {
+        _scannerProxyService = scannerProxyService;
     }
 
     Task<Either<BaseError, string>> IRequestHandler<ForceSynchronizeJellyfinLibraryById, Either<BaseError, string>>.
@@ -39,9 +42,9 @@ public class CallJellyfinLibraryScannerHandler : CallLibraryScannerHandler<ISync
         ISynchronizeJellyfinLibraryById request,
         CancellationToken cancellationToken)
     {
-        Validation<BaseError, string> validation = await Validate(request, cancellationToken);
+        Validation<BaseError, ScanParameters> validation = await Validate(request, cancellationToken);
         return await validation.Match(
-            scanner => PerformScan(scanner, request, cancellationToken),
+            parameters => PerformScan(parameters, request, cancellationToken),
             error =>
             {
                 foreach (ScanIsNotRequired scanIsNotRequired in error.OfType<ScanIsNotRequired>())
@@ -54,38 +57,58 @@ public class CallJellyfinLibraryScannerHandler : CallLibraryScannerHandler<ISync
     }
 
     private async Task<Either<BaseError, string>> PerformScan(
-        string scanner,
+        ScanParameters parameters,
         ISynchronizeJellyfinLibraryById request,
         CancellationToken cancellationToken)
     {
-        var arguments = new List<string>
+        Option<Guid> maybeScanId = _scannerProxyService.StartScan(request.JellyfinLibraryId);
+        foreach (var scanId in maybeScanId)
         {
-            "scan-jellyfin", request.JellyfinLibraryId.ToString(CultureInfo.InvariantCulture)
-        };
+            try
+            {
+                var arguments = new List<string>
+                {
+                    "scan-jellyfin",
+                    request.JellyfinLibraryId.ToString(CultureInfo.InvariantCulture),
+                    GetBaseUrl(scanId)
+                };
 
-        if (request.ForceScan)
-        {
-            arguments.Add("--force");
+                if (request.ForceScan)
+                {
+                    arguments.Add("--force");
+                }
+
+                if (request.DeepScan)
+                {
+                    arguments.Add("--deep");
+                }
+
+                return await base.PerformScan(parameters, arguments, cancellationToken);
+            }
+            finally
+            {
+                _scannerProxyService.EndScan(scanId);
+            }
         }
 
-        if (request.DeepScan)
-        {
-            arguments.Add("--deep");
-        }
-
-        return await base.PerformScan(scanner, arguments, cancellationToken);
+        return BaseError.New($"Library {request.JellyfinLibraryId} is already scanning");
     }
 
-    protected override async Task<DateTimeOffset> GetLastScan(
+    protected override async Task<Tuple<string, DateTimeOffset>> GetLastScan(
         TvContext dbContext,
         ISynchronizeJellyfinLibraryById request,
         CancellationToken cancellationToken)
     {
-        DateTime minDateTime = await dbContext.JellyfinLibraries
-            .SelectOneAsync(l => l.Id, l => l.Id == request.JellyfinLibraryId, cancellationToken)
-            .Match(l => l.LastScan ?? SystemTime.MinValueUtc, () => SystemTime.MaxValueUtc);
+        Option<JellyfinLibrary> maybeLibrary = await dbContext.JellyfinLibraries
+            .SelectOneAsync(l => l.Id, l => l.Id == request.JellyfinLibraryId, cancellationToken);
 
-        return new DateTimeOffset(minDateTime, TimeSpan.Zero);
+        DateTime minDateTime = maybeLibrary.Match(
+            l => l.LastScan ?? SystemTime.MinValueUtc,
+            () => SystemTime.MaxValueUtc);
+
+        string libraryName = maybeLibrary.Match(l => l.Name, string.Empty);
+
+        return new Tuple<string, DateTimeOffset>(libraryName, new DateTimeOffset(minDateTime, TimeSpan.Zero));
     }
 
     protected override bool ScanIsRequired(

@@ -8,8 +8,8 @@ using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
-using ErsatzTV.Core.MediaSources;
 using ErsatzTV.Core.Metadata;
+using ErsatzTV.Scanner.Core.Interfaces;
 using ErsatzTV.Scanner.Core.Interfaces.FFmpeg;
 using ErsatzTV.Scanner.Core.Interfaces.Metadata;
 using Microsoft.Extensions.Logging;
@@ -20,20 +20,20 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
 {
     private readonly IClient _client;
     private readonly ILibraryRepository _libraryRepository;
+    private readonly IScannerProxy _scannerProxy;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalMetadataProvider _localMetadataProvider;
     private readonly ILogger<SongFolderScanner> _logger;
     private readonly IMediaItemRepository _mediaItemRepository;
-    private readonly IMediator _mediator;
     private readonly ISongRepository _songRepository;
 
     public SongFolderScanner(
+        IScannerProxy scannerProxy,
         ILocalFileSystem localFileSystem,
         ILocalStatisticsProvider localStatisticsProvider,
         ILocalMetadataProvider localMetadataProvider,
         IMetadataRepository metadataRepository,
         IImageCache imageCache,
-        IMediator mediator,
         ISongRepository songRepository,
         ILibraryRepository libraryRepository,
         IMediaItemRepository mediaItemRepository,
@@ -51,9 +51,9 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
         client,
         logger)
     {
+        _scannerProxy = scannerProxy;
         _localFileSystem = localFileSystem;
         _localMetadataProvider = localMetadataProvider;
-        _mediator = mediator;
         _songRepository = songRepository;
         _libraryRepository = libraryRepository;
         _mediaItemRepository = mediaItemRepository;
@@ -107,14 +107,10 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
                 }
 
                 decimal percentCompletion = (decimal)foldersCompleted / (foldersCompleted + folderQueue.Count);
-                await _mediator.Publish(
-                    new ScannerProgressUpdate(
-                        libraryPath.LibraryId,
-                        null,
-                        progressMin + percentCompletion * progressSpread,
-                        Array.Empty<int>(),
-                        Array.Empty<int>()),
-                    cancellationToken);
+                if (!await _scannerProxy.UpdateProgress(progressMin + percentCompletion * progressSpread, cancellationToken))
+                {
+                    return new ScanCanceled();
+                }
 
                 string songFolder = folderQueue.Dequeue();
                 Option<int> maybeParentFolder =
@@ -187,14 +183,11 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
                     {
                         if (result.IsAdded || result.IsUpdated)
                         {
-                            await _mediator.Publish(
-                                new ScannerProgressUpdate(
-                                    libraryPath.LibraryId,
-                                    null,
-                                    null,
-                                    new[] { result.Item.Id },
-                                    Array.Empty<int>()),
-                                cancellationToken);
+                            if (!await _scannerProxy.ReindexMediaItems([result.Item.Id], cancellationToken))
+                            {
+                                _logger.LogWarning("Failed to reindex media items from scanner process");
+                                hasErrors = true;
+                            }
                         }
                     }
                 }
@@ -212,27 +205,19 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
                 {
                     _logger.LogInformation("Flagging missing song at {Path}", path);
                     List<int> songIds = await FlagFileNotFound(libraryPath, path);
-                    await _mediator.Publish(
-                        new ScannerProgressUpdate(
-                            libraryPath.LibraryId,
-                            null,
-                            null,
-                            songIds.ToArray(),
-                            Array.Empty<int>()),
-                        cancellationToken);
+                    if (!await _scannerProxy.ReindexMediaItems(songIds.ToArray(), cancellationToken))
+                    {
+                        _logger.LogWarning("Failed to reindex media items from scanner process");
+                    }
                 }
                 else if (Path.GetFileName(path).StartsWith("._", StringComparison.OrdinalIgnoreCase))
                 {
                     _logger.LogInformation("Removing dot underscore file at {Path}", path);
                     List<int> songIds = await _songRepository.DeleteByPath(libraryPath, path);
-                    await _mediator.Publish(
-                        new ScannerProgressUpdate(
-                            libraryPath.LibraryId,
-                            null,
-                            null,
-                            Array.Empty<int>(),
-                            songIds.ToArray()),
-                        cancellationToken);
+                    if (!await _scannerProxy.RemoveMediaItems(songIds.ToArray(), cancellationToken))
+                    {
+                        _logger.LogWarning("Failed to remove media items from scanner process");
+                    }
                 }
             }
 

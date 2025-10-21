@@ -557,6 +557,9 @@ public class Startup
 
                 if (httpContext.Request.Path.ToUriComponent().StartsWith(
                         "/api",
+                        StringComparison.OrdinalIgnoreCase) &&
+                    !httpContext.Request.Path.ToUriComponent().StartsWith(
+                        "/api/scan",
                         StringComparison.OrdinalIgnoreCase))
                 {
                     return LogEventLevel.Debug;
@@ -716,6 +719,7 @@ public class Startup
 
             services.AddSingleton<ISearchIndex, LuceneSearchIndex>();
         }
+        services.AddSingleton<IScannerProxyService, ScannerProxyService>();
         services.AddSingleton<IScriptedPlayoutBuilderService, ScriptedPlayoutBuilderService>();
         services.AddSingleton<IFFmpegSegmenterService, FFmpegSegmenterService>();
         services.AddSingleton<ITempFilePool, TempFilePool>();

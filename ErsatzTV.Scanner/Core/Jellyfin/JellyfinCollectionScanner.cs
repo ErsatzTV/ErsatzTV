@@ -3,6 +3,7 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Jellyfin;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.MediaSources;
+using ErsatzTV.Scanner.Core.Interfaces;
 using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Scanner.Core.Jellyfin;
@@ -10,17 +11,17 @@ namespace ErsatzTV.Scanner.Core.Jellyfin;
 public class JellyfinCollectionScanner : IJellyfinCollectionScanner
 {
     private readonly IJellyfinApiClient _jellyfinApiClient;
+    private readonly IScannerProxy _scannerProxy;
     private readonly IJellyfinCollectionRepository _jellyfinCollectionRepository;
     private readonly ILogger<JellyfinCollectionScanner> _logger;
-    private readonly IMediator _mediator;
 
     public JellyfinCollectionScanner(
-        IMediator mediator,
+        IScannerProxy scannerProxy,
         IJellyfinCollectionRepository jellyfinCollectionRepository,
         IJellyfinApiClient jellyfinApiClient,
         ILogger<JellyfinCollectionScanner> logger)
     {
-        _mediator = mediator;
+        _scannerProxy = scannerProxy;
         _jellyfinCollectionRepository = jellyfinCollectionRepository;
         _jellyfinApiClient = jellyfinApiClient;
         _logger = logger;
@@ -111,10 +112,10 @@ public class JellyfinCollectionScanner : IJellyfinCollectionScanner
             _logger.LogDebug("Jellyfin collection {Name} contains {Count} items", collection.Name, addedIds.Count);
 
             int[] changedIds = removedIds.Concat(addedIds).Distinct().ToArray();
-
-            await _mediator.Publish(
-                new ScannerProgressUpdate(0, null, null, changedIds.ToArray(), Array.Empty<int>()),
-                CancellationToken.None);
+            if (!await _scannerProxy.ReindexMediaItems(changedIds, CancellationToken.None))
+            {
+                _logger.LogWarning("Failed to reindex media items from scanner process");
+            }
         }
         catch (Exception ex)
         {

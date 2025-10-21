@@ -6,6 +6,7 @@ using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Metadata;
 using ErsatzTV.Core.Plex;
+using ErsatzTV.Scanner.Core.Interfaces;
 using ErsatzTV.Scanner.Core.Interfaces.Metadata;
 using ErsatzTV.Scanner.Core.Metadata;
 using Microsoft.Extensions.Logging;
@@ -25,10 +26,10 @@ public class PlexOtherVideoLibraryScanner :
     private readonly IPlexServerApiClient _plexServerApiClient;
 
     public PlexOtherVideoLibraryScanner(
+        IScannerProxy scannerProxy,
         IPlexServerApiClient plexServerApiClient,
         IOtherVideoRepository otherVideoRepository,
         IMetadataRepository metadataRepository,
-        IMediator mediator,
         IMediaSourceRepository mediaSourceRepository,
         IPlexOtherVideoRepository plexOtherVideoRepository,
         IPlexPathReplacementService plexPathReplacementService,
@@ -36,10 +37,10 @@ public class PlexOtherVideoLibraryScanner :
         ILocalChaptersProvider localChaptersProvider,
         ILogger<PlexOtherVideoLibraryScanner> logger)
         : base(
+            scannerProxy,
             localFileSystem,
             localChaptersProvider,
             metadataRepository,
-            mediator,
             logger)
     {
         _plexServerApiClient = plexServerApiClient;

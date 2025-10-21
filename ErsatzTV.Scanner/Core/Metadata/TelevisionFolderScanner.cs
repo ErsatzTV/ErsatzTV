@@ -8,8 +8,8 @@ using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
-using ErsatzTV.Core.MediaSources;
 using ErsatzTV.Core.Metadata;
+using ErsatzTV.Scanner.Core.Interfaces;
 using ErsatzTV.Scanner.Core.Interfaces.FFmpeg;
 using ErsatzTV.Scanner.Core.Interfaces.Metadata;
 using Microsoft.Extensions.Logging;
@@ -22,16 +22,17 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
     private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
     private readonly ILibraryRepository _libraryRepository;
     private readonly ILocalChaptersProvider _localChaptersProvider;
+    private readonly IScannerProxy _scannerProxy;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalMetadataProvider _localMetadataProvider;
     private readonly ILocalSubtitlesProvider _localSubtitlesProvider;
     private readonly ILogger<TelevisionFolderScanner> _logger;
     private readonly IMediaItemRepository _mediaItemRepository;
-    private readonly IMediator _mediator;
     private readonly IMetadataRepository _metadataRepository;
     private readonly ITelevisionRepository _televisionRepository;
 
     public TelevisionFolderScanner(
+        IScannerProxy scannerProxy,
         ILocalFileSystem localFileSystem,
         ITelevisionRepository televisionRepository,
         ILocalStatisticsProvider localStatisticsProvider,
@@ -42,7 +43,6 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
         IImageCache imageCache,
         ILibraryRepository libraryRepository,
         IMediaItemRepository mediaItemRepository,
-        IMediator mediator,
         IFFmpegPngService ffmpegPngService,
         ITempFilePool tempFilePool,
         IClient client,
@@ -58,6 +58,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
         client,
         logger)
     {
+        _scannerProxy = scannerProxy;
         _localFileSystem = localFileSystem;
         _televisionRepository = televisionRepository;
         _localMetadataProvider = localMetadataProvider;
@@ -66,7 +67,6 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
         _metadataRepository = metadataRepository;
         _libraryRepository = libraryRepository;
         _mediaItemRepository = mediaItemRepository;
-        _mediator = mediator;
         _client = client;
         _fallbackMetadataProvider = fallbackMetadataProvider;
         _logger = logger;
@@ -107,14 +107,10 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
                 }
 
                 decimal percentCompletion = (decimal)allShowFolders.IndexOf(showFolder) / allShowFolders.Count;
-                await _mediator.Publish(
-                    new ScannerProgressUpdate(
-                        libraryPath.LibraryId,
-                        null,
-                        progressMin + percentCompletion * progressSpread,
-                        Array.Empty<int>(),
-                        Array.Empty<int>()),
-                    cancellationToken);
+                if (!await _scannerProxy.UpdateProgress(progressMin + percentCompletion * progressSpread, cancellationToken))
+                {
+                    return new ScanCanceled();
+                }
 
                 Option<int> maybeParentFolder =
                     await _libraryRepository.GetParentFolderId(libraryPath, showFolder, cancellationToken);
@@ -149,14 +145,10 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
                     // add show to search index right away
                     if (result.IsAdded || result.IsUpdated)
                     {
-                        await _mediator.Publish(
-                            new ScannerProgressUpdate(
-                                libraryPath.LibraryId,
-                                null,
-                                null,
-                                new[] { result.Item.Id },
-                                Array.Empty<int>()),
-                            cancellationToken);
+                        if (!await _scannerProxy.ReindexMediaItems([result.Item.Id], cancellationToken))
+                        {
+                            _logger.LogWarning("Failed to reindex media items from scanner process");
+                        }
                     }
 
                     Either<BaseError, Unit> scanResult = await ScanSeasons(
@@ -182,14 +174,10 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
                     _logger.LogInformation("Flagging missing episode at {Path}", path);
 
                     List<int> episodeIds = await FlagFileNotFound(libraryPath, path);
-                    await _mediator.Publish(
-                        new ScannerProgressUpdate(
-                            libraryPath.LibraryId,
-                            null,
-                            null,
-                            episodeIds.ToArray(),
-                            Array.Empty<int>()),
-                        cancellationToken);
+                    if (!await _scannerProxy.ReindexMediaItems(episodeIds.ToArray(), cancellationToken))
+                    {
+                        _logger.LogWarning("Failed to reindex media items from scanner process");
+                    }
                 }
                 else if (Path.GetFileName(path).StartsWith("._", StringComparison.OrdinalIgnoreCase))
                 {
@@ -202,14 +190,10 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
 
             await _televisionRepository.DeleteEmptySeasons(libraryPath);
             List<int> ids = await _televisionRepository.DeleteEmptyShows(libraryPath);
-            await _mediator.Publish(
-                new ScannerProgressUpdate(
-                    libraryPath.LibraryId,
-                    null,
-                    null,
-                    Array.Empty<int>(),
-                    ids.ToArray()),
-                cancellationToken);
+            if (!await _scannerProxy.RemoveMediaItems(ids.ToArray(), cancellationToken))
+            {
+                _logger.LogWarning("Failed to remove media items from scanner process");
+            }
 
             return Unit.Default;
         }
@@ -310,14 +294,10 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
 
                     season.Show = show;
 
-                    await _mediator.Publish(
-                        new ScannerProgressUpdate(
-                            libraryPath.LibraryId,
-                            null,
-                            null,
-                            new[] { season.Id },
-                            Array.Empty<int>()),
-                        cancellationToken);
+                    if (!await _scannerProxy.ReindexMediaItems([season.Id], cancellationToken))
+                    {
+                        _logger.LogWarning("Failed to reindex media items from scanner process");
+                    }
                 }
             }
         }
@@ -365,14 +345,10 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
 
             foreach (Episode episode in maybeEpisode.RightToSeq())
             {
-                await _mediator.Publish(
-                    new ScannerProgressUpdate(
-                        libraryPath.LibraryId,
-                        null,
-                        null,
-                        new[] { episode.Id },
-                        Array.Empty<int>()),
-                    cancellationToken);
+                if (!await _scannerProxy.ReindexMediaItems([episode.Id], cancellationToken))
+                {
+                    _logger.LogWarning("Failed to reindex media items from scanner process");
+                }
             }
         }
 
@@ -620,9 +596,9 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
     {
         string[] segments = artworkKind switch
         {
-            ArtworkKind.Poster => new[] { "poster", "folder" },
-            ArtworkKind.FanArt => new[] { "fanart" },
-            ArtworkKind.Thumbnail => new[] { "thumb" },
+            ArtworkKind.Poster => ["poster", "folder"],
+            ArtworkKind.FanArt => ["fanart"],
+            ArtworkKind.Thumbnail => ["thumb"],
             _ => throw new ArgumentOutOfRangeException(nameof(artworkKind))
         };
 

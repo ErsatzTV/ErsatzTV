@@ -4,6 +4,7 @@ using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.MediaSources;
 using ErsatzTV.Core.Plex;
+using ErsatzTV.Scanner.Core.Interfaces;
 using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Scanner.Core.Plex;
@@ -12,7 +13,7 @@ public class PlexNetworkScanner(
     IPlexServerApiClient plexServerApiClient,
     IPlexTelevisionRepository plexTelevisionRepository,
     ITelevisionRepository televisionRepository,
-    IMediator mediator,
+    IScannerProxy scannerProxy,
     ILogger<PlexNetworkScanner> logger) : IPlexNetworkScanner
 {
     public async Task<Either<BaseError, Unit>> ScanNetworks(
@@ -92,9 +93,10 @@ public class PlexNetworkScanner(
                 changedIds.AddRange(await televisionRepository.GetEpisodeIdsForShow(showId));
             }
 
-            await mediator.Publish(
-                new ScannerProgressUpdate(0, null, null, changedIds.ToArray(), []),
-                CancellationToken.None);
+            if (!await scannerProxy.ReindexMediaItems(changedIds.ToArray(), CancellationToken.None))
+            {
+                logger.LogWarning("Failed to reindex media items from scanner process");
+            }
         }
         catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
         {

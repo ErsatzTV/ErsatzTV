@@ -3,6 +3,7 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Emby;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.MediaSources;
+using ErsatzTV.Scanner.Core.Interfaces;
 using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Scanner.Core.Emby;
@@ -10,17 +11,17 @@ namespace ErsatzTV.Scanner.Core.Emby;
 public class EmbyCollectionScanner : IEmbyCollectionScanner
 {
     private readonly IEmbyApiClient _embyApiClient;
+    private readonly IScannerProxy _scannerProxy;
     private readonly IEmbyCollectionRepository _embyCollectionRepository;
     private readonly ILogger<EmbyCollectionScanner> _logger;
-    private readonly IMediator _mediator;
 
     public EmbyCollectionScanner(
-        IMediator mediator,
+        IScannerProxy scannerProxy,
         IEmbyCollectionRepository embyCollectionRepository,
         IEmbyApiClient embyApiClient,
         ILogger<EmbyCollectionScanner> logger)
     {
-        _mediator = mediator;
+        _scannerProxy = scannerProxy;
         _embyCollectionRepository = embyCollectionRepository;
         _embyApiClient = embyApiClient;
         _logger = logger;
@@ -107,10 +108,10 @@ public class EmbyCollectionScanner : IEmbyCollectionScanner
             _logger.LogDebug("Emby collection {Name} contains {Count} items", collection.Name, addedIds.Count);
 
             int[] changedIds = removedIds.Concat(addedIds).Distinct().ToArray();
-
-            await _mediator.Publish(
-                new ScannerProgressUpdate(0, null, null, changedIds.ToArray(), Array.Empty<int>()),
-                CancellationToken.None);
+            if (!await _scannerProxy.ReindexMediaItems(changedIds, CancellationToken.None))
+            {
+                _logger.LogWarning("Failed to reindex media items from scanner process");
+            }
         }
         catch (Exception ex)
         {

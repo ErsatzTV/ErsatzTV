@@ -3,6 +3,7 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Plex;
+using ErsatzTV.Scanner.Core.Interfaces;
 using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Scanner.Application.Plex;
@@ -13,15 +14,18 @@ public class SynchronizePlexShowByIdHandler : IRequestHandler<SynchronizePlexSho
     private readonly IMediaSourceRepository _mediaSourceRepository;
     private readonly IPlexSecretStore _plexSecretStore;
     private readonly IPlexTelevisionLibraryScanner _plexTelevisionLibraryScanner;
+    private readonly IScannerProxy _scannerProxy;
     private readonly IPlexTelevisionRepository _plexTelevisionRepository;
 
     public SynchronizePlexShowByIdHandler(
+        IScannerProxy scannerProxy,
         IPlexTelevisionRepository plexTelevisionRepository,
         IMediaSourceRepository mediaSourceRepository,
         IPlexSecretStore plexSecretStore,
         IPlexTelevisionLibraryScanner plexTelevisionLibraryScanner,
         ILogger<SynchronizePlexShowByIdHandler> logger)
     {
+        _scannerProxy = scannerProxy;
         _plexTelevisionRepository = plexTelevisionRepository;
         _mediaSourceRepository = mediaSourceRepository;
         _plexSecretStore = plexSecretStore;
@@ -47,6 +51,8 @@ public class SynchronizePlexShowByIdHandler : IRequestHandler<SynchronizePlexSho
         {
             return BaseError.New($"Library {parameters.Library.Name} is not a TV show library");
         }
+
+        _scannerProxy.SetBaseUrl(parameters.BaseUrl);
 
         _logger.LogInformation(
             "Starting targeted scan for show '{ShowTitle}' in Plex library {LibraryName}",
@@ -81,7 +87,8 @@ public class SynchronizePlexShowByIdHandler : IRequestHandler<SynchronizePlexSho
                 plexLibrary,
                 titleKey.Key,
                 titleKey.Title,
-                request.DeepScan
+                request.DeepScan,
+                request.BaseUrl
             ));
 
     private Task<Validation<BaseError, ConnectionParameters>> ValidateConnection(
@@ -131,7 +138,8 @@ public class SynchronizePlexShowByIdHandler : IRequestHandler<SynchronizePlexSho
         PlexLibrary Library,
         string ShowKey,
         string ShowTitle,
-        bool DeepScan);
+        bool DeepScan,
+        string BaseUrl);
 
     private record ConnectionParameters(PlexMediaSource PlexMediaSource, PlexConnection ActiveConnection)
     {

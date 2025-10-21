@@ -1,12 +1,13 @@
 ﻿using System.Globalization;
-using System.Threading.Channels;
 using ErsatzTV.Application.Libraries;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Errors;
+using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.FFmpeg.Runtime;
 using ErsatzTV.Infrastructure.Data;
+using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Application.MediaSources;
@@ -15,14 +16,16 @@ public class CallLocalLibraryScannerHandler : CallLibraryScannerHandler<IScanLoc
     IRequestHandler<ForceScanLocalLibrary, Either<BaseError, string>>,
     IRequestHandler<ScanLocalLibraryIfNeeded, Either<BaseError, string>>
 {
+    private readonly IScannerProxyService _scannerProxyService;
+
     public CallLocalLibraryScannerHandler(
         IDbContextFactory<TvContext> dbContextFactory,
         IConfigElementRepository configElementRepository,
-        ChannelWriter<ISearchIndexBackgroundServiceRequest> channel,
-        IMediator mediator,
+        IScannerProxyService scannerProxyService,
         IRuntimeInfo runtimeInfo)
-        : base(dbContextFactory, configElementRepository, channel, mediator, runtimeInfo)
+        : base(dbContextFactory, configElementRepository, runtimeInfo)
     {
+        _scannerProxyService = scannerProxyService;
     }
 
     Task<Either<BaseError, string>> IRequestHandler<ForceScanLocalLibrary, Either<BaseError, string>>.Handle(
@@ -35,9 +38,9 @@ public class CallLocalLibraryScannerHandler : CallLibraryScannerHandler<IScanLoc
 
     private async Task<Either<BaseError, string>> Handle(IScanLocalLibrary request, CancellationToken cancellationToken)
     {
-        Validation<BaseError, string> validation = await Validate(request, cancellationToken);
+        Validation<BaseError, ScanParameters> validation = await Validate(request, cancellationToken);
         return await validation.Match(
-            scanner => PerformScan(scanner, request, cancellationToken),
+            parameters => PerformScan(parameters, request, cancellationToken),
             error =>
             {
                 foreach (ScanIsNotRequired scanIsNotRequired in error.OfType<ScanIsNotRequired>())
@@ -50,24 +53,39 @@ public class CallLocalLibraryScannerHandler : CallLibraryScannerHandler<IScanLoc
     }
 
     private async Task<Either<BaseError, string>> PerformScan(
-        string scanner,
+        ScanParameters parameters,
         IScanLocalLibrary request,
         CancellationToken cancellationToken)
     {
-        var arguments = new List<string>
+        Option<Guid> maybeScanId = _scannerProxyService.StartScan(request.LibraryId);
+        foreach (var scanId in maybeScanId)
         {
-            "scan-local", request.LibraryId.ToString(CultureInfo.InvariantCulture)
-        };
+            try
+            {
+                var arguments = new List<string>
+                {
+                    "scan-local",
+                    request.LibraryId.ToString(CultureInfo.InvariantCulture),
+                    GetBaseUrl(scanId)
+                };
 
-        if (request.ForceScan)
-        {
-            arguments.Add("--force");
+                if (request.ForceScan)
+                {
+                    arguments.Add("--force");
+                }
+
+                return await base.PerformScan(parameters, arguments, cancellationToken);
+            }
+            finally
+            {
+                _scannerProxyService.EndScan(scanId);
+            }
         }
 
-        return await base.PerformScan(scanner, arguments, cancellationToken);
+        return BaseError.New($"Library {request.LibraryId} is already scanning");
     }
 
-    protected override async Task<DateTimeOffset> GetLastScan(
+    protected override async Task<Tuple<string, DateTimeOffset>> GetLastScan(
         TvContext dbContext,
         IScanLocalLibrary request,
         CancellationToken cancellationToken)
@@ -80,7 +98,11 @@ public class CallLocalLibraryScannerHandler : CallLibraryScannerHandler<IScanLoc
             ? libraryPaths.Min(lp => lp.LastScan ?? SystemTime.MinValueUtc)
             : SystemTime.MaxValueUtc;
 
-        return new DateTimeOffset(minDateTime, TimeSpan.Zero);
+        string libraryName = await dbContext.Libraries
+            .SelectOneAsync(l => l.Id, l => l.Id == request.LibraryId, cancellationToken)
+            .Match(l => l.Name, () => string.Empty);
+
+        return new Tuple<string, DateTimeOffset>(libraryName, new DateTimeOffset(minDateTime, TimeSpan.Zero));
     }
 
     protected override bool ScanIsRequired(

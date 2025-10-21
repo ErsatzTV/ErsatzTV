@@ -8,9 +8,9 @@ using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
-using ErsatzTV.Core.MediaSources;
 using ErsatzTV.Core.Metadata;
 using ErsatzTV.Core.Streaming;
+using ErsatzTV.Scanner.Core.Interfaces;
 using ErsatzTV.Scanner.Core.Interfaces.FFmpeg;
 using ErsatzTV.Scanner.Core.Interfaces.Metadata;
 using Microsoft.Extensions.Logging;
@@ -23,20 +23,20 @@ public class RemoteStreamFolderScanner : LocalFolderScanner, IRemoteStreamFolder
 {
     private readonly IClient _client;
     private readonly ILibraryRepository _libraryRepository;
+    private readonly IScannerProxy _scannerProxy;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalMetadataProvider _localMetadataProvider;
     private readonly ILogger<RemoteStreamFolderScanner> _logger;
     private readonly IMediaItemRepository _mediaItemRepository;
-    private readonly IMediator _mediator;
     private readonly IRemoteStreamRepository _remoteStreamRepository;
 
     public RemoteStreamFolderScanner(
+        IScannerProxy scannerProxy,
         ILocalFileSystem localFileSystem,
         ILocalStatisticsProvider localStatisticsProvider,
         ILocalMetadataProvider localMetadataProvider,
         IMetadataRepository metadataRepository,
         IImageCache imageCache,
-        IMediator mediator,
         IRemoteStreamRepository remoteStreamRepository,
         ILibraryRepository libraryRepository,
         IMediaItemRepository mediaItemRepository,
@@ -54,9 +54,9 @@ public class RemoteStreamFolderScanner : LocalFolderScanner, IRemoteStreamFolder
         client,
         logger)
     {
+        _scannerProxy = scannerProxy;
         _localFileSystem = localFileSystem;
         _localMetadataProvider = localMetadataProvider;
-        _mediator = mediator;
         _remoteStreamRepository = remoteStreamRepository;
         _libraryRepository = libraryRepository;
         _mediaItemRepository = mediaItemRepository;
@@ -116,14 +116,12 @@ public class RemoteStreamFolderScanner : LocalFolderScanner, IRemoteStreamFolder
                 }
 
                 decimal percentCompletion = (decimal)foldersCompleted / (foldersCompleted + folderQueue.Count);
-                await _mediator.Publish(
-                    new ScannerProgressUpdate(
-                        libraryPath.LibraryId,
-                        null,
+                if (!await _scannerProxy.UpdateProgress(
                         progressMin + percentCompletion * progressSpread,
-                        [],
-                        []),
-                    cancellationToken);
+                        cancellationToken))
+                {
+                    return new ScanCanceled();
+                }
 
                 string remoteStreamFolder = folderQueue.Dequeue();
                 Option<int> maybeParentFolder =
@@ -197,14 +195,11 @@ public class RemoteStreamFolderScanner : LocalFolderScanner, IRemoteStreamFolder
                     {
                         if (result.IsAdded || result.IsUpdated)
                         {
-                            await _mediator.Publish(
-                                new ScannerProgressUpdate(
-                                    libraryPath.LibraryId,
-                                    null,
-                                    null,
-                                    [result.Item.Id],
-                                    []),
-                                cancellationToken);
+                            if (!await _scannerProxy.ReindexMediaItems([result.Item.Id], cancellationToken))
+                            {
+                                _logger.LogWarning("Failed to reindex media items from scanner process");
+                                hasErrors = true;
+                            }
                         }
                     }
                 }
@@ -222,27 +217,19 @@ public class RemoteStreamFolderScanner : LocalFolderScanner, IRemoteStreamFolder
                 {
                     _logger.LogInformation("Flagging missing remote stream at {Path}", path);
                     List<int> remoteStreamIds = await FlagFileNotFound(libraryPath, path);
-                    await _mediator.Publish(
-                        new ScannerProgressUpdate(
-                            libraryPath.LibraryId,
-                            null,
-                            null,
-                            remoteStreamIds.ToArray(),
-                            []),
-                        cancellationToken);
+                    if (!await _scannerProxy.ReindexMediaItems(remoteStreamIds.ToArray(), cancellationToken))
+                    {
+                        _logger.LogWarning("Failed to reindex media items from scanner process");
+                    }
                 }
                 else if (Path.GetFileName(path).StartsWith("._", StringComparison.OrdinalIgnoreCase))
                 {
                     _logger.LogInformation("Removing dot underscore file at {Path}", path);
                     List<int> remoteStreamIds = await _remoteStreamRepository.DeleteByPath(libraryPath, path, cancellationToken);
-                    await _mediator.Publish(
-                        new ScannerProgressUpdate(
-                            libraryPath.LibraryId,
-                            null,
-                            null,
-                            [],
-                            remoteStreamIds.ToArray()),
-                        cancellationToken);
+                    if (!await _scannerProxy.RemoveMediaItems(remoteStreamIds.ToArray(), cancellationToken))
+                    {
+                        _logger.LogWarning("Failed to remove media items from scanner process");
+                    }
                 }
             }
 

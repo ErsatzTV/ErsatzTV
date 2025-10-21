@@ -35,7 +35,7 @@
         <PackageReference Include="Heron.MudCalendar" Version="3.2.0" />
         <PackageReference Include="HtmlSanitizer" Version="9.0.886" />
         <PackageReference Include="LanguageExt.Core" Version="4.4.9" />
-        <PackageReference Include="Markdig" Version="0.42.0" />
+        <PackageReference Include="Markdig" Version="0.43.0" />
         <PackageReference Include="MediatR.Courier.DependencyInjection" Version="5.0.0" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.10" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="9.0.10" />

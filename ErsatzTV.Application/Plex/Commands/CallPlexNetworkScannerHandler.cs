@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Threading.Channels;
 using ErsatzTV.Application.Libraries;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
@@ -18,16 +17,14 @@ public class CallPlexNetworkScannerHandler : CallLibraryScannerHandler<Synchroni
     public CallPlexNetworkScannerHandler(
         IDbContextFactory<TvContext> dbContextFactory,
         IConfigElementRepository configElementRepository,
-        ChannelWriter<ISearchIndexBackgroundServiceRequest> channel,
-        IMediator mediator,
-        IRuntimeInfo runtimeInfo) : base(dbContextFactory, configElementRepository, channel, mediator, runtimeInfo)
+        IRuntimeInfo runtimeInfo) : base(dbContextFactory, configElementRepository, runtimeInfo)
     {
     }
 
     public async Task<Either<BaseError, Unit>>
         Handle(SynchronizePlexNetworks request, CancellationToken cancellationToken)
     {
-        Validation<BaseError, string> validation = await Validate(request, cancellationToken);
+        Validation<BaseError, ScanParameters> validation = await Validate(request, cancellationToken);
         return await validation.Match(
             scanner => PerformScan(scanner, request, cancellationToken),
             error =>
@@ -41,7 +38,7 @@ public class CallPlexNetworkScannerHandler : CallLibraryScannerHandler<Synchroni
             });
     }
 
-    protected override async Task<DateTimeOffset> GetLastScan(
+    protected override async Task<Tuple<string, DateTimeOffset>> GetLastScan(
         TvContext dbContext,
         SynchronizePlexNetworks request,
         CancellationToken cancellationToken)
@@ -51,7 +48,7 @@ public class CallPlexNetworkScannerHandler : CallLibraryScannerHandler<Synchroni
             .SelectOneAsync(l => l.Id, l => l.Id == request.PlexLibraryId, cancellationToken)
             .Match(l => l.LastNetworksScan ?? SystemTime.MinValueUtc, () => SystemTime.MaxValueUtc);
 
-        return new DateTimeOffset(minDateTime, TimeSpan.Zero);
+        return new Tuple<string, DateTimeOffset>(string.Empty, new DateTimeOffset(minDateTime, TimeSpan.Zero));
     }
 
     protected override bool ScanIsRequired(
@@ -69,7 +66,7 @@ public class CallPlexNetworkScannerHandler : CallLibraryScannerHandler<Synchroni
     }
 
     private async Task<Either<BaseError, Unit>> PerformScan(
-        string scanner,
+        ScanParameters parameters,
         SynchronizePlexNetworks request,
         CancellationToken cancellationToken)
     {
@@ -83,6 +80,6 @@ public class CallPlexNetworkScannerHandler : CallLibraryScannerHandler<Synchroni
             arguments.Add("--force");
         }
 
-        return await base.PerformScan(scanner, arguments, cancellationToken).MapT(_ => Unit.Default);
+        return await base.PerformScan(parameters, arguments, cancellationToken).MapT(_ => Unit.Default);
     }
 }

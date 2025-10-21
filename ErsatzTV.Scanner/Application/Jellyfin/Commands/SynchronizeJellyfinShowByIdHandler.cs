@@ -3,6 +3,7 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Jellyfin;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Jellyfin;
+using ErsatzTV.Scanner.Core.Interfaces;
 using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Scanner.Application.Jellyfin;
@@ -14,15 +15,18 @@ public class
     private readonly IJellyfinTelevisionLibraryScanner _jellyfinTelevisionLibraryScanner;
     private readonly IJellyfinTelevisionRepository _jellyfinTelevisionRepository;
     private readonly ILogger<SynchronizeJellyfinShowByIdHandler> _logger;
+    private readonly IScannerProxy _scannerProxy;
     private readonly IMediaSourceRepository _mediaSourceRepository;
 
     public SynchronizeJellyfinShowByIdHandler(
+        IScannerProxy scannerProxy,
         IMediaSourceRepository mediaSourceRepository,
         IJellyfinTelevisionRepository jellyfinTelevisionRepository,
         IJellyfinSecretStore jellyfinSecretStore,
         IJellyfinTelevisionLibraryScanner jellyfinTelevisionLibraryScanner,
         ILogger<SynchronizeJellyfinShowByIdHandler> logger)
     {
+        _scannerProxy = scannerProxy;
         _mediaSourceRepository = mediaSourceRepository;
         _jellyfinTelevisionRepository = jellyfinTelevisionRepository;
         _jellyfinSecretStore = jellyfinSecretStore;
@@ -48,6 +52,8 @@ public class
         {
             return BaseError.New($"Library {parameters.Library.Name} is not a TV show library");
         }
+
+        _scannerProxy.SetBaseUrl(parameters.BaseUrl);
 
         _logger.LogInformation(
             "Starting targeted scan for show '{ShowTitle}' in Jellyfin library {LibraryName}",
@@ -82,7 +88,8 @@ public class
                 jellyfinLibrary,
                 showTitleItemId.ItemId,
                 showTitleItemId.Title,
-                request.DeepScan
+                request.DeepScan,
+                request.BaseUrl
             ));
 
     private Task<Validation<BaseError, ConnectionParameters>> ValidateConnection(
@@ -132,7 +139,8 @@ public class
         JellyfinLibrary Library,
         string ItemId,
         string ShowTitle,
-        bool DeepScan);
+        bool DeepScan,
+        string BaseUrl);
 
     private record ConnectionParameters(JellyfinConnection ActiveConnection)
     {

@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Threading.Channels;
 using ErsatzTV.Application.Libraries;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Errors;
@@ -17,18 +16,16 @@ public class CallEmbyCollectionScannerHandler : CallLibraryScannerHandler<Synchr
     public CallEmbyCollectionScannerHandler(
         IDbContextFactory<TvContext> dbContextFactory,
         IConfigElementRepository configElementRepository,
-        ChannelWriter<ISearchIndexBackgroundServiceRequest> channel,
-        IMediator mediator,
-        IRuntimeInfo runtimeInfo) : base(dbContextFactory, configElementRepository, channel, mediator, runtimeInfo)
+        IRuntimeInfo runtimeInfo) : base(dbContextFactory, configElementRepository, runtimeInfo)
     {
     }
 
     public async Task<Either<BaseError, Unit>>
         Handle(SynchronizeEmbyCollections request, CancellationToken cancellationToken)
     {
-        Validation<BaseError, string> validation = await Validate(request, cancellationToken);
+        Validation<BaseError, ScanParameters> validation = await Validate(request, cancellationToken);
         return await validation.Match(
-            scanner => PerformScan(scanner, request, cancellationToken),
+            parameters => PerformScan(parameters, request, cancellationToken),
             error =>
             {
                 foreach (ScanIsNotRequired scanIsNotRequired in error.OfType<ScanIsNotRequired>())
@@ -40,7 +37,7 @@ public class CallEmbyCollectionScannerHandler : CallLibraryScannerHandler<Synchr
             });
     }
 
-    protected override async Task<DateTimeOffset> GetLastScan(
+    protected override async Task<Tuple<string, DateTimeOffset>> GetLastScan(
         TvContext dbContext,
         SynchronizeEmbyCollections request,
         CancellationToken cancellationToken)
@@ -49,7 +46,7 @@ public class CallEmbyCollectionScannerHandler : CallLibraryScannerHandler<Synchr
             .SelectOneAsync(l => l.Id, l => l.Id == request.EmbyMediaSourceId, cancellationToken)
             .Match(l => l.LastCollectionsScan ?? SystemTime.MinValueUtc, () => SystemTime.MaxValueUtc);
 
-        return new DateTimeOffset(minDateTime, TimeSpan.Zero);
+        return new Tuple<string, DateTimeOffset>(string.Empty, new DateTimeOffset(minDateTime, TimeSpan.Zero));
     }
 
     protected override bool ScanIsRequired(
@@ -67,7 +64,7 @@ public class CallEmbyCollectionScannerHandler : CallLibraryScannerHandler<Synchr
     }
 
     private async Task<Either<BaseError, Unit>> PerformScan(
-        string scanner,
+        ScanParameters parameters,
         SynchronizeEmbyCollections request,
         CancellationToken cancellationToken)
     {
@@ -81,6 +78,6 @@ public class CallEmbyCollectionScannerHandler : CallLibraryScannerHandler<Synchr
             arguments.Add("--force");
         }
 
-        return await base.PerformScan(scanner, arguments, cancellationToken).MapT(_ => Unit.Default);
+        return await base.PerformScan(parameters, arguments, cancellationToken).MapT(_ => Unit.Default);
     }
 }

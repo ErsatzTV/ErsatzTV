@@ -5,8 +5,8 @@ using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
-using ErsatzTV.Core.MediaSources;
 using ErsatzTV.Core.Metadata;
+using ErsatzTV.Scanner.Core.Interfaces;
 using ErsatzTV.Scanner.Core.Interfaces.Metadata;
 using Microsoft.Extensions.Logging;
 
@@ -22,22 +22,22 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
     where TEtag : MediaServerItemEtag
 {
     private readonly ILocalChaptersProvider _localChaptersProvider;
+    private readonly IScannerProxy _scannerProxy;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILogger _logger;
-    private readonly IMediator _mediator;
     private readonly IMetadataRepository _metadataRepository;
 
     protected MediaServerTelevisionLibraryScanner(
+        IScannerProxy scannerProxy,
         ILocalFileSystem localFileSystem,
         ILocalChaptersProvider localChaptersProvider,
         IMetadataRepository metadataRepository,
-        IMediator mediator,
         ILogger logger)
     {
+        _scannerProxy = scannerProxy;
         _localFileSystem = localFileSystem;
         _localChaptersProvider = localChaptersProvider;
         _metadataRepository = metadataRepository;
-        _mediator = mediator;
         _logger = logger;
     }
 
@@ -103,14 +103,10 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
             incomingItemIds.Add(MediaServerItemId(incoming));
 
             decimal percentCompletion = Math.Clamp((decimal)incomingItemIds.Count / totalShowCount, 0, 1);
-            await _mediator.Publish(
-                new ScannerProgressUpdate(
-                    library.Id,
-                    library.Name,
-                    percentCompletion,
-                    Array.Empty<int>(),
-                    Array.Empty<int>()),
-                cancellationToken);
+            if (!await _scannerProxy.UpdateProgress(percentCompletion, cancellationToken))
+            {
+                return new ScanCanceled();
+            }
 
             Either<BaseError, MediaItemScanResult<TShow>> maybeShow = await televisionRepository
                 .GetOrAdd(library, incoming, cancellationToken)
@@ -157,14 +153,10 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
 
                 if (result.IsAdded || result.IsUpdated)
                 {
-                    await _mediator.Publish(
-                        new ScannerProgressUpdate(
-                            library.Id,
-                            null,
-                            null,
-                            new[] { result.Item.Id },
-                            Array.Empty<int>()),
-                        cancellationToken);
+                    if (!await _scannerProxy.ReindexMediaItems([result.Item.Id], cancellationToken))
+                    {
+                        _logger.LogWarning("Failed to reindex media items from scanner process");
+                    }
                 }
             }
         }
@@ -174,19 +166,11 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
             // trash shows that are no longer present on the media server
             var fileNotFoundItemIds = existingShows.Map(s => s.MediaServerItemId).Except(incomingItemIds).ToList();
             List<int> ids = await televisionRepository.FlagFileNotFoundShows(library, fileNotFoundItemIds, cancellationToken);
-            await _mediator.Publish(
-                new ScannerProgressUpdate(library.Id, null, null, ids.ToArray(), Array.Empty<int>()),
-                cancellationToken);
+            if (!await _scannerProxy.ReindexMediaItems(ids.ToArray(), cancellationToken))
+            {
+                _logger.LogWarning("Failed to reindex media items from scanner process");
+            }
         }
-
-        await _mediator.Publish(
-            new ScannerProgressUpdate(
-                library.Id,
-                library.Name,
-                0,
-                Array.Empty<int>(),
-                Array.Empty<int>()),
-            cancellationToken);
 
         return Unit.Default;
     }
@@ -358,14 +342,10 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
 
                 if (result.IsAdded || result.IsUpdated || showIsUpdated)
                 {
-                    await _mediator.Publish(
-                        new ScannerProgressUpdate(
-                            library.Id,
-                            null,
-                            null,
-                            new[] { result.Item.Id },
-                            Array.Empty<int>()),
-                        cancellationToken);
+                    if (!await _scannerProxy.ReindexMediaItems([result.Item.Id], cancellationToken))
+                    {
+                        _logger.LogWarning("Failed to reindex media items from scanner process");
+                    }
                 }
             }
         }
@@ -373,9 +353,10 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
         // trash seasons that are no longer present on the media server
         var fileNotFoundItemIds = existingSeasons.Map(s => s.MediaServerItemId).Except(incomingItemIds).ToList();
         List<int> ids = await televisionRepository.FlagFileNotFoundSeasons(library, fileNotFoundItemIds, cancellationToken);
-        await _mediator.Publish(
-            new ScannerProgressUpdate(library.Id, null, null, ids.ToArray(), Array.Empty<int>()),
-            cancellationToken);
+        if (!await _scannerProxy.ReindexMediaItems(ids.ToArray(), cancellationToken))
+        {
+            _logger.LogWarning("Failed to reindex media items from scanner process");
+        }
 
         return Unit.Default;
     }
@@ -515,14 +496,11 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
 
                 if (result.IsAdded || result.IsUpdated || showIsUpdated)
                 {
-                    await _mediator.Publish(
-                        new ScannerProgressUpdate(
-                            library.Id,
-                            null,
-                            null,
-                            new[] { result.Item.Id },
-                            Array.Empty<int>()),
-                        cancellationToken);
+                    if (!await _scannerProxy.ReindexMediaItems([result.Item.Id], cancellationToken))
+                    {
+                        _logger.LogWarning("Failed to reindex media items from scanner process");
+                    }
+
                 }
             }
         }
@@ -530,9 +508,10 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
         // trash episodes that are no longer present on the media server
         var fileNotFoundItemIds = existingEpisodes.Map(m => m.MediaServerItemId).Except(incomingItemIds).ToList();
         List<int> ids = await televisionRepository.FlagFileNotFoundEpisodes(library, fileNotFoundItemIds, cancellationToken);
-        await _mediator.Publish(
-            new ScannerProgressUpdate(library.Id, null, null, ids.ToArray(), Array.Empty<int>()),
-            cancellationToken);
+        if (!await _scannerProxy.ReindexMediaItems(ids.ToArray(), cancellationToken))
+        {
+            _logger.LogWarning("Failed to reindex media items from scanner process");
+        }
 
         return Unit.Default;
     }
@@ -579,9 +558,10 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
                     {
                         foreach (int id in await televisionRepository.FlagRemoteOnly(library, incoming, cancellationToken))
                         {
-                            await _mediator.Publish(
-                                new ScannerProgressUpdate(library.Id, null, null, [id], []),
-                                CancellationToken.None);
+                            if (!await _scannerProxy.ReindexMediaItems([id], cancellationToken))
+                            {
+                                _logger.LogWarning("Failed to reindex media items from scanner process");
+                            }
                         }
                     }
                 }
@@ -591,9 +571,10 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
                     {
                         foreach (int id in await televisionRepository.FlagUnavailable(library, incoming, cancellationToken))
                         {
-                            await _mediator.Publish(
-                                new ScannerProgressUpdate(library.Id, null, null, [id], []),
-                                CancellationToken.None);
+                            if (!await _scannerProxy.ReindexMediaItems([id], cancellationToken))
+                            {
+                                _logger.LogWarning("Failed to reindex media items from scanner process");
+                            }
                         }
                     }
                 }

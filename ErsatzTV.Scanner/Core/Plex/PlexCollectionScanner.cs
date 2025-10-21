@@ -4,6 +4,7 @@ using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.MediaSources;
 using ErsatzTV.Core.Plex;
+using ErsatzTV.Scanner.Core.Interfaces;
 using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Scanner.Core.Plex;
@@ -11,17 +12,17 @@ namespace ErsatzTV.Scanner.Core.Plex;
 public class PlexCollectionScanner : IPlexCollectionScanner
 {
     private readonly ILogger<PlexCollectionScanner> _logger;
-    private readonly IMediator _mediator;
+    private readonly IScannerProxy _scannerProxy;
     private readonly IPlexCollectionRepository _plexCollectionRepository;
     private readonly IPlexServerApiClient _plexServerApiClient;
 
     public PlexCollectionScanner(
-        IMediator mediator,
+        IScannerProxy scannerProxy,
         IPlexCollectionRepository plexCollectionRepository,
         IPlexServerApiClient plexServerApiClient,
         ILogger<PlexCollectionScanner> logger)
     {
-        _mediator = mediator;
+        _scannerProxy = scannerProxy;
         _plexCollectionRepository = plexCollectionRepository;
         _plexServerApiClient = plexServerApiClient;
         _logger = logger;
@@ -112,10 +113,10 @@ public class PlexCollectionScanner : IPlexCollectionScanner
             _logger.LogDebug("Plex collection {Name} contains {Count} items", collection.Name, addedIds.Count);
 
             int[] changedIds = removedIds.Concat(addedIds).Distinct().ToArray();
-
-            await _mediator.Publish(
-                new ScannerProgressUpdate(0, null, null, changedIds.ToArray(), Array.Empty<int>()),
-                CancellationToken.None);
+            if (!await _scannerProxy.ReindexMediaItems(changedIds, CancellationToken.None))
+            {
+                _logger.LogWarning("Failed to reindex media items from scanner process");
+            }
         }
         catch (Exception ex)
         {

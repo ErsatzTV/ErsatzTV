@@ -3,6 +3,7 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Emby;
 using ErsatzTV.Core.Interfaces.Emby;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Scanner.Core.Interfaces;
 using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Scanner.Application.Emby;
@@ -13,15 +14,18 @@ public class SynchronizeEmbyShowByIdHandler : IRequestHandler<SynchronizeEmbySho
     private readonly IEmbyTelevisionLibraryScanner _embyTelevisionLibraryScanner;
     private readonly IEmbyTelevisionRepository _embyTelevisionRepository;
     private readonly ILogger<SynchronizeEmbyShowByIdHandler> _logger;
+    private readonly IScannerProxy _scannerProxy;
     private readonly IMediaSourceRepository _mediaSourceRepository;
 
     public SynchronizeEmbyShowByIdHandler(
+        IScannerProxy scannerProxy,
         IMediaSourceRepository mediaSourceRepository,
         IEmbyTelevisionRepository embyTelevisionRepository,
         IEmbySecretStore embySecretStore,
         IEmbyTelevisionLibraryScanner embyTelevisionLibraryScanner,
         ILogger<SynchronizeEmbyShowByIdHandler> logger)
     {
+        _scannerProxy = scannerProxy;
         _mediaSourceRepository = mediaSourceRepository;
         _embyTelevisionRepository = embyTelevisionRepository;
         _embySecretStore = embySecretStore;
@@ -47,6 +51,8 @@ public class SynchronizeEmbyShowByIdHandler : IRequestHandler<SynchronizeEmbySho
         {
             return BaseError.New($"Library {parameters.Library.Name} is not a TV show library");
         }
+
+        _scannerProxy.SetBaseUrl(parameters.BaseUrl);
 
         _logger.LogInformation(
             "Starting targeted scan for show '{ShowTitle}' in Emby library {LibraryName}",
@@ -81,7 +87,8 @@ public class SynchronizeEmbyShowByIdHandler : IRequestHandler<SynchronizeEmbySho
                 embyLibrary,
                 showTitleItemId.ItemId,
                 showTitleItemId.Title,
-                request.DeepScan
+                request.DeepScan,
+                request.BaseUrl
             ));
 
     private Task<Validation<BaseError, ConnectionParameters>> ValidateConnection(
@@ -132,7 +139,8 @@ public class SynchronizeEmbyShowByIdHandler : IRequestHandler<SynchronizeEmbySho
         EmbyLibrary Library,
         string ItemId,
         string ShowTitle,
-        bool DeepScan);
+        bool DeepScan,
+        string BaseUrl);
 
     private record ConnectionParameters(EmbyConnection ActiveConnection)
     {

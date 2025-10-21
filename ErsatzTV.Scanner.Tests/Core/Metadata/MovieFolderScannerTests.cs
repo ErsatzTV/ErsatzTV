@@ -7,14 +7,15 @@ using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Metadata;
+using ErsatzTV.Scanner.Core.Interfaces;
 using ErsatzTV.Scanner.Core.Interfaces.FFmpeg;
 using ErsatzTV.Scanner.Core.Interfaces.Metadata;
 using ErsatzTV.Scanner.Core.Metadata;
 using ErsatzTV.Scanner.Tests.Core.Fakes;
-using MediatR;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NUnit.Framework;
+using Serilog;
 using Shouldly;
 
 namespace ErsatzTV.Scanner.Tests.Core.Metadata;
@@ -37,6 +38,20 @@ public class MovieFolderScannerTests
     private static readonly string FFprobePath = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
         ? @"C:\bin\ffprobe.exe"
         : "/bin/ffprobe";
+
+    private static readonly ILogger<MovieFolderScanner> Logger;
+
+    static MovieFolderScannerTests()
+    {
+        Log.Logger = new LoggerConfiguration()
+            .MinimumLevel.Debug()
+            .WriteTo.Console()
+            .CreateLogger();
+
+        ILoggerFactory loggerFactory = new LoggerFactory().AddSerilog(Log.Logger);
+
+        Logger = loggerFactory.CreateLogger<MovieFolderScanner>();
+    }
 
     [TestFixture]
     public class ScanFolder
@@ -75,6 +90,11 @@ public class MovieFolderScannerTests
             _libraryRepository = Substitute.For<ILibraryRepository>();
             _libraryRepository.GetOrAddFolder(Arg.Any<LibraryPath>(), Arg.Any<Option<int>>(), Arg.Any<string>())
                 .Returns(new LibraryFolder());
+
+            _scannerProxy = Substitute.For<IScannerProxy>();
+            _scannerProxy.UpdateProgress(Arg.Any<decimal>(), Arg.Any<CancellationToken>()).Returns(true);
+            _scannerProxy.ReindexMediaItems(Arg.Any<int[]>(), Arg.Any<CancellationToken>()).Returns(true);
+            _scannerProxy.RemoveMediaItems(Arg.Any<int[]>(), Arg.Any<CancellationToken>()).Returns(true);
         }
 
         private IMovieRepository _movieRepository;
@@ -83,6 +103,7 @@ public class MovieFolderScannerTests
         private ILocalMetadataProvider _localMetadataProvider;
         private IImageCache _imageCache;
         private ILibraryRepository _libraryRepository;
+        private IScannerProxy _scannerProxy;
 
         [Test]
         public async Task NewMovie_Statistics_And_FallbackMetadata(
@@ -699,7 +720,8 @@ public class MovieFolderScannerTests
 
         private MovieFolderScanner GetService(params FakeFileEntry[] files) =>
             new(
-                new FakeLocalFileSystem(new List<FakeFileEntry>(files)),
+                _scannerProxy,
+                new FakeLocalFileSystem([..files]),
                 _movieRepository,
                 _localStatisticsProvider,
                 Substitute.For<ILocalSubtitlesProvider>(),
@@ -709,16 +731,15 @@ public class MovieFolderScannerTests
                 _imageCache,
                 _libraryRepository,
                 _mediaItemRepository,
-                Substitute.For<IMediator>(),
                 Substitute.For<IFFmpegPngService>(),
                 Substitute.For<ITempFilePool>(),
                 Substitute.For<IClient>(),
-                Substitute.For<ILogger<MovieFolderScanner>>()
-            );
+                Logger);
 
         private MovieFolderScanner GetService(params FakeFolderEntry[] folders) =>
             new(
-                new FakeLocalFileSystem(new List<FakeFileEntry>(), new List<FakeFolderEntry>(folders)),
+                _scannerProxy,
+                new FakeLocalFileSystem([], [..folders]),
                 _movieRepository,
                 _localStatisticsProvider,
                 Substitute.For<ILocalSubtitlesProvider>(),
@@ -728,11 +749,9 @@ public class MovieFolderScannerTests
                 _imageCache,
                 _libraryRepository,
                 _mediaItemRepository,
-                Substitute.For<IMediator>(),
                 Substitute.For<IFFmpegPngService>(),
                 Substitute.For<ITempFilePool>(),
                 Substitute.For<IClient>(),
-                Substitute.For<ILogger<MovieFolderScanner>>()
-            );
+                Logger);
     }
 }

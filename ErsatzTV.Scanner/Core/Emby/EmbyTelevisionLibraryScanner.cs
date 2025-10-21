@@ -7,6 +7,7 @@ using ErsatzTV.Core.Interfaces.Emby;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Metadata;
+using ErsatzTV.Scanner.Core.Interfaces;
 using ErsatzTV.Scanner.Core.Interfaces.Metadata;
 using ErsatzTV.Scanner.Core.Metadata;
 using Microsoft.Extensions.Logging;
@@ -24,6 +25,7 @@ public class EmbyTelevisionLibraryScanner : MediaServerTelevisionLibraryScanner<
     private readonly IEmbyTelevisionRepository _televisionRepository;
 
     public EmbyTelevisionLibraryScanner(
+        IScannerProxy scannerProxy,
         IEmbyApiClient embyApiClient,
         IMediaSourceRepository mediaSourceRepository,
         IEmbyTelevisionRepository televisionRepository,
@@ -31,13 +33,12 @@ public class EmbyTelevisionLibraryScanner : MediaServerTelevisionLibraryScanner<
         ILocalFileSystem localFileSystem,
         ILocalChaptersProvider localChaptersProvider,
         IMetadataRepository metadataRepository,
-        IMediator mediator,
         ILogger<EmbyTelevisionLibraryScanner> logger)
         : base(
+            scannerProxy,
             localFileSystem,
             localChaptersProvider,
             metadataRepository,
-            mediator,
             logger)
     {
         _embyApiClient = embyApiClient;

@@ -1,8 +1,8 @@
 using System.Globalization;
-using System.Threading.Channels;
 using ErsatzTV.Application.Libraries;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Errors;
+using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.FFmpeg.Runtime;
 using ErsatzTV.Infrastructure.Data;
@@ -13,14 +13,16 @@ namespace ErsatzTV.Application.Jellyfin;
 public class CallJellyfinShowScannerHandler : CallLibraryScannerHandler<SynchronizeJellyfinShowById>,
     IRequestHandler<SynchronizeJellyfinShowById, Either<BaseError, string>>
 {
+    private readonly IScannerProxyService _scannerProxyService;
+
     public CallJellyfinShowScannerHandler(
         IDbContextFactory<TvContext> dbContextFactory,
         IConfigElementRepository configElementRepository,
-        ChannelWriter<ISearchIndexBackgroundServiceRequest> channel,
-        IMediator mediator,
+        IScannerProxyService scannerProxyService,
         IRuntimeInfo runtimeInfo)
-        : base(dbContextFactory, configElementRepository, channel, mediator, runtimeInfo)
+        : base(dbContextFactory, configElementRepository, runtimeInfo)
     {
+        _scannerProxyService = scannerProxyService;
     }
 
     Task<Either<BaseError, string>> IRequestHandler<SynchronizeJellyfinShowById, Either<BaseError, string>>.Handle(
@@ -31,9 +33,9 @@ public class CallJellyfinShowScannerHandler : CallLibraryScannerHandler<Synchron
         SynchronizeJellyfinShowById request,
         CancellationToken cancellationToken)
     {
-        Validation<BaseError, string> validation = await Validate(request, cancellationToken);
+        Validation<BaseError, ScanParameters> validation = await Validate(request, cancellationToken);
         return await validation.Match(
-            scanner => PerformScan(scanner, request, cancellationToken),
+            parameters => PerformScan(parameters, request, cancellationToken),
             error =>
             {
                 foreach (ScanIsNotRequired scanIsNotRequired in error.OfType<ScanIsNotRequired>())
@@ -46,30 +48,44 @@ public class CallJellyfinShowScannerHandler : CallLibraryScannerHandler<Synchron
     }
 
     private async Task<Either<BaseError, string>> PerformScan(
-        string scanner,
+        ScanParameters parameters,
         SynchronizeJellyfinShowById request,
         CancellationToken cancellationToken)
     {
-        var arguments = new List<string>
+        Option<Guid> maybeScanId = _scannerProxyService.StartScan(request.JellyfinLibraryId);
+        foreach (var scanId in maybeScanId)
         {
-            "scan-jellyfin-show",
-            request.JellyfinLibraryId.ToString(CultureInfo.InvariantCulture),
-            request.ShowId.ToString(CultureInfo.InvariantCulture)
-        };
+            try
+            {
+                var arguments = new List<string>
+                {
+                    "scan-jellyfin-show",
+                    request.JellyfinLibraryId.ToString(CultureInfo.InvariantCulture),
+                    request.ShowId.ToString(CultureInfo.InvariantCulture),
+                    GetBaseUrl(scanId)
+                };
 
-        if (request.DeepScan)
-        {
-            arguments.Add("--deep");
+                if (request.DeepScan)
+                {
+                    arguments.Add("--deep");
+                }
+
+                return await base.PerformScan(parameters, arguments, cancellationToken);
+            }
+            finally
+            {
+                _scannerProxyService.EndScan(scanId);
+            }
         }
 
-        return await base.PerformScan(scanner, arguments, cancellationToken);
+        return BaseError.New($"Library {request.JellyfinLibraryId} is already scanning");
     }
 
-    protected override Task<DateTimeOffset> GetLastScan(
+    protected override Task<Tuple<string, DateTimeOffset>> GetLastScan(
         TvContext dbContext,
         SynchronizeJellyfinShowById request,
         CancellationToken cancellationToken) =>
-        Task.FromResult(DateTimeOffset.MinValue);
+        Task.FromResult(new Tuple<string, DateTimeOffset>(string.Empty, DateTimeOffset.MinValue));
 
     protected override bool ScanIsRequired(
         DateTimeOffset lastScan,
