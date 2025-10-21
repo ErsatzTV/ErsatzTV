@@ -557,6 +557,9 @@ public class Startup
 
                 if (httpContext.Request.Path.ToUriComponent().StartsWith(
                         "/api",
+                        StringComparison.OrdinalIgnoreCase) &&
+                    !httpContext.Request.Path.ToUriComponent().StartsWith(
+                        "/api/scan",
                         StringComparison.OrdinalIgnoreCase))
                 {
                     return LogEventLevel.Debug;

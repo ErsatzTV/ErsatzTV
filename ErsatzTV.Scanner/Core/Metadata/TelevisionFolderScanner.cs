@@ -8,7 +8,6 @@ using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
-using ErsatzTV.Core.MediaSources;
 using ErsatzTV.Core.Metadata;
 using ErsatzTV.Scanner.Core.Interfaces;
 using ErsatzTV.Scanner.Core.Interfaces.FFmpeg;
@@ -29,7 +28,6 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
     private readonly ILocalSubtitlesProvider _localSubtitlesProvider;
     private readonly ILogger<TelevisionFolderScanner> _logger;
     private readonly IMediaItemRepository _mediaItemRepository;
-    private readonly IMediator _mediator;
     private readonly IMetadataRepository _metadataRepository;
     private readonly ITelevisionRepository _televisionRepository;
 
@@ -45,7 +43,6 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
         IImageCache imageCache,
         ILibraryRepository libraryRepository,
         IMediaItemRepository mediaItemRepository,
-        IMediator mediator,
         IFFmpegPngService ffmpegPngService,
         ITempFilePool tempFilePool,
         IClient client,
@@ -70,7 +67,6 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
         _metadataRepository = metadataRepository;
         _libraryRepository = libraryRepository;
         _mediaItemRepository = mediaItemRepository;
-        _mediator = mediator;
         _client = client;
         _fallbackMetadataProvider = fallbackMetadataProvider;
         _logger = logger;
@@ -149,12 +145,10 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
                     // add show to search index right away
                     if (result.IsAdded || result.IsUpdated)
                     {
-                        await _mediator.Publish(
-                            new ScannerProgressUpdate(
-                                libraryPath.LibraryId,
-                                [result.Item.Id],
-                                []),
-                            cancellationToken);
+                        if (!await _scannerProxy.ReindexMediaItems([result.Item.Id], cancellationToken))
+                        {
+                            _logger.LogWarning("Failed to reindex media items from scanner process");
+                        }
                     }
 
                     Either<BaseError, Unit> scanResult = await ScanSeasons(
@@ -180,12 +174,10 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
                     _logger.LogInformation("Flagging missing episode at {Path}", path);
 
                     List<int> episodeIds = await FlagFileNotFound(libraryPath, path);
-                    await _mediator.Publish(
-                        new ScannerProgressUpdate(
-                            libraryPath.LibraryId,
-                            episodeIds.ToArray(),
-                            []),
-                        cancellationToken);
+                    if (!await _scannerProxy.ReindexMediaItems(episodeIds.ToArray(), cancellationToken))
+                    {
+                        _logger.LogWarning("Failed to reindex media items from scanner process");
+                    }
                 }
                 else if (Path.GetFileName(path).StartsWith("._", StringComparison.OrdinalIgnoreCase))
                 {
@@ -198,12 +190,10 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
 
             await _televisionRepository.DeleteEmptySeasons(libraryPath);
             List<int> ids = await _televisionRepository.DeleteEmptyShows(libraryPath);
-            await _mediator.Publish(
-                new ScannerProgressUpdate(
-                    libraryPath.LibraryId,
-                    [],
-                    ids.ToArray()),
-                cancellationToken);
+            if (!await _scannerProxy.RemoveMediaItems(ids.ToArray(), cancellationToken))
+            {
+                _logger.LogWarning("Failed to remove media items from scanner process");
+            }
 
             return Unit.Default;
         }
@@ -304,12 +294,10 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
 
                     season.Show = show;
 
-                    await _mediator.Publish(
-                        new ScannerProgressUpdate(
-                            libraryPath.LibraryId,
-                            [season.Id],
-                            []),
-                        cancellationToken);
+                    if (!await _scannerProxy.ReindexMediaItems([season.Id], cancellationToken))
+                    {
+                        _logger.LogWarning("Failed to reindex media items from scanner process");
+                    }
                 }
             }
         }
@@ -357,12 +345,10 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
 
             foreach (Episode episode in maybeEpisode.RightToSeq())
             {
-                await _mediator.Publish(
-                    new ScannerProgressUpdate(
-                        libraryPath.LibraryId,
-                        [episode.Id],
-                        []),
-                    cancellationToken);
+                if (!await _scannerProxy.ReindexMediaItems([episode.Id], cancellationToken))
+                {
+                    _logger.LogWarning("Failed to reindex media items from scanner process");
+                }
             }
         }
 

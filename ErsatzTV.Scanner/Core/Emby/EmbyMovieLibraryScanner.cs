@@ -26,7 +26,6 @@ public class EmbyMovieLibraryScanner :
     public EmbyMovieLibraryScanner(
         IScannerProxy scannerProxy,
         IEmbyApiClient embyApiClient,
-        IMediator mediator,
         IMediaSourceRepository mediaSourceRepository,
         IEmbyMovieRepository embyMovieRepository,
         IEmbyPathReplacementService pathReplacementService,
@@ -39,7 +38,6 @@ public class EmbyMovieLibraryScanner :
             localFileSystem,
             localChaptersProvider,
             metadataRepository,
-            mediator,
             logger)
     {
         _embyApiClient = embyApiClient;

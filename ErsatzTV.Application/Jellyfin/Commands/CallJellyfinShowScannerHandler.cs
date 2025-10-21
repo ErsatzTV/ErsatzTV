@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Threading.Channels;
 using ErsatzTV.Application.Libraries;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Errors;
@@ -20,9 +19,8 @@ public class CallJellyfinShowScannerHandler : CallLibraryScannerHandler<Synchron
         IDbContextFactory<TvContext> dbContextFactory,
         IConfigElementRepository configElementRepository,
         IScannerProxyService scannerProxyService,
-        ChannelWriter<ISearchIndexBackgroundServiceRequest> channel,
         IRuntimeInfo runtimeInfo)
-        : base(dbContextFactory, configElementRepository, channel, runtimeInfo)
+        : base(dbContextFactory, configElementRepository, runtimeInfo)
     {
         _scannerProxyService = scannerProxyService;
     }

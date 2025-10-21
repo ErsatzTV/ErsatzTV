@@ -34,7 +34,6 @@ public partial class PlexTelevisionLibraryScanner :
         IPlexServerApiClient plexServerApiClient,
         ITelevisionRepository televisionRepository,
         IMetadataRepository metadataRepository,
-        IMediator mediator,
         IMediaSourceRepository mediaSourceRepository,
         IPlexPathReplacementService plexPathReplacementService,
         IPlexTelevisionRepository plexTelevisionRepository,
@@ -46,7 +45,6 @@ public partial class PlexTelevisionLibraryScanner :
             localFileSystem,
             localChaptersProvider,
             metadataRepository,
-            mediator,
             logger)
     {
         _plexServerApiClient = plexServerApiClient;

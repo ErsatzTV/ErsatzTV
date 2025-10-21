@@ -44,6 +44,8 @@ public class ScannerProxyService(IMediator mediator) : IScannerProxyService
         }
     }
 
+    public bool IsActive(Guid scanId) => _scans.ContainsKey(scanId);
+
     public Option<decimal> GetProgress(int libraryId) => _activeLibraries.TryGetValue(libraryId, out decimal progress)
         ? progress
         : Option<decimal>.None;

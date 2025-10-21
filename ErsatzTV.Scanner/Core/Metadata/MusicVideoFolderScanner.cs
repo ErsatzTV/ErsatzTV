@@ -8,7 +8,6 @@ using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
-using ErsatzTV.Core.MediaSources;
 using ErsatzTV.Core.Metadata;
 using ErsatzTV.Scanner.Core.Interfaces;
 using ErsatzTV.Scanner.Core.Interfaces.FFmpeg;
@@ -29,7 +28,6 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
     private readonly ILocalSubtitlesProvider _localSubtitlesProvider;
     private readonly ILogger<MusicVideoFolderScanner> _logger;
     private readonly IMediaItemRepository _mediaItemRepository;
-    private readonly IMediator _mediator;
     private readonly IMusicVideoRepository _musicVideoRepository;
 
     public MusicVideoFolderScanner(
@@ -45,7 +43,6 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
         IMusicVideoRepository musicVideoRepository,
         ILibraryRepository libraryRepository,
         IMediaItemRepository mediaItemRepository,
-        IMediator mediator,
         IFFmpegPngService ffmpegPngService,
         ITempFilePool tempFilePool,
         IClient client,
@@ -69,7 +66,6 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
         _musicVideoRepository = musicVideoRepository;
         _libraryRepository = libraryRepository;
         _mediaItemRepository = mediaItemRepository;
-        _mediator = mediator;
         _client = client;
         _logger = logger;
     }
@@ -143,12 +139,10 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
                 {
                     if (result.IsAdded || result.IsUpdated)
                     {
-                        await _mediator.Publish(
-                            new ScannerProgressUpdate(
-                                libraryPath.LibraryId,
-                                [result.Item.Id],
-                                []),
-                            cancellationToken);
+                        if (!await _scannerProxy.ReindexMediaItems([result.Item.Id], cancellationToken))
+                        {
+                            _logger.LogWarning("Failed to reindex media items from scanner process");
+                        }
                     }
 
                     Either<BaseError, Unit> scanResult = await ScanMusicVideos(
@@ -171,12 +165,10 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
             {
                 _logger.LogInformation("Removing improperly named music video at {Path}", path);
                 List<int> musicVideoIds = await _musicVideoRepository.DeleteByPath(libraryPath, path);
-                await _mediator.Publish(
-                    new ScannerProgressUpdate(
-                        libraryPath.LibraryId,
-                        [],
-                        musicVideoIds.ToArray()),
-                    cancellationToken);
+                if (!await _scannerProxy.RemoveMediaItems(musicVideoIds.ToArray(), cancellationToken))
+                {
+                    _logger.LogWarning("Failed to remove media items from scanner process");
+                }
             }
 
             foreach (string path in await _musicVideoRepository.FindMusicVideoPaths(libraryPath))
@@ -185,35 +177,29 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
                 {
                     _logger.LogInformation("Flagging missing music video at {Path}", path);
                     List<int> musicVideoIds = await FlagFileNotFound(libraryPath, path);
-                    await _mediator.Publish(
-                        new ScannerProgressUpdate(
-                            libraryPath.LibraryId,
-                            musicVideoIds.ToArray(),
-                            []),
-                        cancellationToken);
+                    if (!await _scannerProxy.ReindexMediaItems(musicVideoIds.ToArray(), cancellationToken))
+                    {
+                        _logger.LogWarning("Failed to reindex media items from scanner process");
+                    }
                 }
                 else if (Path.GetFileName(path).StartsWith("._", StringComparison.OrdinalIgnoreCase))
                 {
                     _logger.LogInformation("Removing dot underscore file at {Path}", path);
                     List<int> musicVideoIds = await _musicVideoRepository.DeleteByPath(libraryPath, path);
-                    await _mediator.Publish(
-                        new ScannerProgressUpdate(
-                            libraryPath.LibraryId,
-                            [],
-                            musicVideoIds.ToArray()),
-                        cancellationToken);
+                    if (!await _scannerProxy.RemoveMediaItems(musicVideoIds.ToArray(), cancellationToken))
+                    {
+                        _logger.LogWarning("Failed to remove media items from scanner process");
+                    }
                 }
             }
 
             await _libraryRepository.CleanEtagsForLibraryPath(libraryPath);
 
             List<int> artistIds = await _artistRepository.DeleteEmptyArtists(libraryPath);
-            await _mediator.Publish(
-                new ScannerProgressUpdate(
-                    libraryPath.LibraryId,
-                    [],
-                    artistIds.ToArray()),
-                cancellationToken);
+            if (!await _scannerProxy.RemoveMediaItems(artistIds.ToArray(), cancellationToken))
+            {
+                _logger.LogWarning("Failed to remove media items from scanner process");
+            }
 
             return Unit.Default;
         }
@@ -391,12 +377,10 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
                 {
                     if (result.IsAdded || result.IsUpdated)
                     {
-                        await _mediator.Publish(
-                            new ScannerProgressUpdate(
-                                libraryPath.LibraryId,
-                                [result.Item.Id],
-                                []),
-                            cancellationToken);
+                        if (!await _scannerProxy.ReindexMediaItems([result.Item.Id], cancellationToken))
+                        {
+                            _logger.LogWarning("Failed to reindex media items from scanner process");
+                        }
                     }
                 }
             }

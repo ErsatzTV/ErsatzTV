@@ -1,16 +1,12 @@
 using System.Runtime.InteropServices;
-using System.Threading.Channels;
 using CliWrap;
-using ErsatzTV.Application.Search;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Interfaces.Repositories;
-using ErsatzTV.Core.MediaSources;
 using ErsatzTV.FFmpeg.Runtime;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json;
 using Serilog;
 using Serilog.Core;
 using Serilog.Events;
@@ -18,28 +14,11 @@ using Serilog.Formatting.Compact.Reader;
 
 namespace ErsatzTV.Application.Libraries;
 
-public abstract class CallLibraryScannerHandler<TRequest>
+public abstract class CallLibraryScannerHandler<TRequest>(
+    IDbContextFactory<TvContext> dbContextFactory,
+    IConfigElementRepository configElementRepository,
+    IRuntimeInfo runtimeInfo)
 {
-    private const int BatchSize = 100;
-    private readonly ChannelWriter<ISearchIndexBackgroundServiceRequest> _channel;
-    private readonly IConfigElementRepository _configElementRepository;
-    private readonly IDbContextFactory<TvContext> _dbContextFactory;
-    private readonly IRuntimeInfo _runtimeInfo;
-    private readonly List<int> _toReindex = [];
-    private readonly List<int> _toRemove = [];
-
-    protected CallLibraryScannerHandler(
-        IDbContextFactory<TvContext> dbContextFactory,
-        IConfigElementRepository configElementRepository,
-        ChannelWriter<ISearchIndexBackgroundServiceRequest> channel,
-        IRuntimeInfo runtimeInfo)
-    {
-        _dbContextFactory = dbContextFactory;
-        _configElementRepository = configElementRepository;
-        _channel = channel;
-        _runtimeInfo = runtimeInfo;
-    }
-
     protected static string GetBaseUrl(Guid scanId) => $"http://localhost:{Settings.UiPort}/api/scan/{scanId}";
 
     protected async Task<Either<BaseError, string>> PerformScan(
@@ -58,26 +37,12 @@ public abstract class CallLibraryScannerHandler<TRequest>
                 .WithArguments(arguments)
                 .WithValidation(CommandResultValidation.None)
                 .WithStandardErrorPipe(PipeTarget.ToDelegate(ProcessLogOutput))
-                .WithStandardOutputPipe(PipeTarget.ToDelegate(ProcessProgressOutput))
+                .WithStandardOutputPipe(PipeTarget.Null)
                 .ExecuteAsync(forcefulCts.Token, cancellationToken);
 
             if (process.ExitCode != 0)
             {
                 return BaseError.New($"ErsatzTV.Scanner exited with code {process.ExitCode}");
-            }
-
-            if (_toReindex.Count > 0)
-            {
-                // ReSharper disable once PossiblyMistakenUseOfCancellationToken
-                await _channel.WriteAsync(new ReindexMediaItems(_toReindex.ToArray()), cancellationToken);
-                _toReindex.Clear();
-            }
-
-            if (_toRemove.Count > 0)
-            {
-                // ReSharper disable once PossiblyMistakenUseOfCancellationToken
-                await _channel.WriteAsync(new RemoveMediaItems(_toReindex.ToArray()), cancellationToken);
-                _toRemove.Clear();
             }
         }
         catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
@@ -122,37 +87,6 @@ public abstract class CallLibraryScannerHandler<TRequest>
         }
     }
 
-    private async Task ProcessProgressOutput(string s)
-    {
-        if (!string.IsNullOrWhiteSpace(s))
-        {
-            try
-            {
-                ScannerProgressUpdate progressUpdate = JsonConvert.DeserializeObject<ScannerProgressUpdate>(s);
-                if (progressUpdate != null)
-                {
-                    _toReindex.AddRange(progressUpdate.ItemsToReindex);
-                    if (_toReindex.Count >= BatchSize)
-                    {
-                        await _channel.WriteAsync(new ReindexMediaItems(_toReindex.ToArray()));
-                        _toReindex.Clear();
-                    }
-
-                    _toRemove.AddRange(progressUpdate.ItemsToRemove);
-                    if (_toRemove.Count >= BatchSize)
-                    {
-                        await _channel.WriteAsync(new RemoveMediaItems(_toReindex.ToArray()));
-                        _toRemove.Clear();
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Logger.Warning(ex, "Unable to process scanner progress update");
-            }
-        }
-    }
-
     protected abstract Task<Tuple<string, DateTimeOffset>> GetLastScan(
         TvContext dbContext,
         TRequest request,
@@ -164,13 +98,13 @@ public abstract class CallLibraryScannerHandler<TRequest>
     {
         try
         {
-            int libraryRefreshInterval = await _configElementRepository
+            int libraryRefreshInterval = await configElementRepository
                 .GetValue<int>(ConfigElementKey.LibraryRefreshInterval, cancellationToken)
                 .IfNoneAsync(0);
 
             libraryRefreshInterval = Math.Clamp(libraryRefreshInterval, 0, 999_999);
 
-            await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+            await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
             (string libraryName, DateTimeOffset lastScan) = await GetLastScan(dbContext, request, cancellationToken);
             if (!ScanIsRequired(lastScan, libraryRefreshInterval, request))
@@ -178,7 +112,7 @@ public abstract class CallLibraryScannerHandler<TRequest>
                 return new ScanIsNotRequired();
             }
 
-            string executable = _runtimeInfo.IsOSPlatform(OSPlatform.Windows)
+            string executable = runtimeInfo.IsOSPlatform(OSPlatform.Windows)
                 ? "ErsatzTV.Scanner.exe"
                 : "ErsatzTV.Scanner";
 

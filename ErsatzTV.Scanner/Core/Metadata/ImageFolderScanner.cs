@@ -8,7 +8,6 @@ using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
-using ErsatzTV.Core.MediaSources;
 using ErsatzTV.Core.Metadata;
 using ErsatzTV.Scanner.Core.Interfaces;
 using ErsatzTV.Scanner.Core.Interfaces.FFmpeg;
@@ -27,7 +26,6 @@ public class ImageFolderScanner : LocalFolderScanner, IImageFolderScanner
     private readonly ILocalMetadataProvider _localMetadataProvider;
     private readonly ILogger<ImageFolderScanner> _logger;
     private readonly IMediaItemRepository _mediaItemRepository;
-    private readonly IMediator _mediator;
 
     public ImageFolderScanner(
         IScannerProxy scannerProxy,
@@ -36,7 +34,6 @@ public class ImageFolderScanner : LocalFolderScanner, IImageFolderScanner
         ILocalMetadataProvider localMetadataProvider,
         IMetadataRepository metadataRepository,
         IImageCache imageCache,
-        IMediator mediator,
         IImageRepository imageRepository,
         ILibraryRepository libraryRepository,
         IMediaItemRepository mediaItemRepository,
@@ -57,7 +54,6 @@ public class ImageFolderScanner : LocalFolderScanner, IImageFolderScanner
         _scannerProxy = scannerProxy;
         _localFileSystem = localFileSystem;
         _localMetadataProvider = localMetadataProvider;
-        _mediator = mediator;
         _imageRepository = imageRepository;
         _libraryRepository = libraryRepository;
         _mediaItemRepository = mediaItemRepository;
@@ -213,12 +209,10 @@ public class ImageFolderScanner : LocalFolderScanner, IImageFolderScanner
                     {
                         if (result.IsAdded || result.IsUpdated)
                         {
-                            await _mediator.Publish(
-                                new ScannerProgressUpdate(
-                                    libraryPath.LibraryId,
-                                    [result.Item.Id],
-                                    []),
-                                cancellationToken);
+                            if (!await _scannerProxy.ReindexMediaItems([result.Item.Id], cancellationToken))
+                            {
+                                _logger.LogWarning("Failed to reindex media items from scanner process");
+                            }
                         }
                     }
                 }
@@ -236,23 +230,19 @@ public class ImageFolderScanner : LocalFolderScanner, IImageFolderScanner
                 {
                     _logger.LogInformation("Flagging missing image at {Path}", path);
                     List<int> imageIds = await FlagFileNotFound(libraryPath, path);
-                    await _mediator.Publish(
-                        new ScannerProgressUpdate(
-                            libraryPath.LibraryId,
-                            imageIds.ToArray(),
-                            []),
-                        cancellationToken);
+                    if (!await _scannerProxy.ReindexMediaItems(imageIds.ToArray(), cancellationToken))
+                    {
+                        _logger.LogWarning("Failed to reindex media items from scanner process");
+                    }
                 }
                 else if (Path.GetFileName(path).StartsWith("._", StringComparison.OrdinalIgnoreCase))
                 {
                     _logger.LogInformation("Removing dot underscore file at {Path}", path);
                     List<int> imageIds = await _imageRepository.DeleteByPath(libraryPath, path);
-                    await _mediator.Publish(
-                        new ScannerProgressUpdate(
-                            libraryPath.LibraryId,
-                            [],
-                            imageIds.ToArray()),
-                        cancellationToken);
+                    if (!await _scannerProxy.RemoveMediaItems(imageIds.ToArray(), cancellationToken))
+                    {
+                        _logger.LogWarning("Failed to remove media items from scanner process");
+                    }
                 }
             }
 

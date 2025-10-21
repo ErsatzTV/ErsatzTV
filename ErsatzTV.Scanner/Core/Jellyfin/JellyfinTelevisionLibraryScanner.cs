@@ -34,14 +34,12 @@ public class JellyfinTelevisionLibraryScanner : MediaServerTelevisionLibraryScan
         ILocalFileSystem localFileSystem,
         ILocalChaptersProvider localChaptersProvider,
         IMetadataRepository metadataRepository,
-        IMediator mediator,
         ILogger<JellyfinTelevisionLibraryScanner> logger)
         : base(
             scannerProxy,
             localFileSystem,
             localChaptersProvider,
             metadataRepository,
-            mediator,
             logger)
     {
         _jellyfinApiClient = jellyfinApiClient;

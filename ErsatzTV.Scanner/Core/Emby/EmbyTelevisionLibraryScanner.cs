@@ -33,14 +33,12 @@ public class EmbyTelevisionLibraryScanner : MediaServerTelevisionLibraryScanner<
         ILocalFileSystem localFileSystem,
         ILocalChaptersProvider localChaptersProvider,
         IMetadataRepository metadataRepository,
-        IMediator mediator,
         ILogger<EmbyTelevisionLibraryScanner> logger)
         : base(
             scannerProxy,
             localFileSystem,
             localChaptersProvider,
             metadataRepository,
-            mediator,
             logger)
     {
         _embyApiClient = embyApiClient;

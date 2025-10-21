@@ -6,7 +6,6 @@ using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
-using ErsatzTV.Core.MediaSources;
 using ErsatzTV.Core.Metadata;
 using ErsatzTV.Scanner.Core.Interfaces;
 using ErsatzTV.Scanner.Core.Interfaces.Metadata;
@@ -24,7 +23,6 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
     private readonly IScannerProxy _scannerProxy;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILogger _logger;
-    private readonly IMediator _mediator;
     private readonly IMetadataRepository _metadataRepository;
 
     protected MediaServerMovieLibraryScanner(
@@ -32,14 +30,12 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
         ILocalFileSystem localFileSystem,
         ILocalChaptersProvider localChaptersProvider,
         IMetadataRepository metadataRepository,
-        IMediator mediator,
         ILogger logger)
     {
         _scannerProxy = scannerProxy;
         _localFileSystem = localFileSystem;
         _localChaptersProvider = localChaptersProvider;
         _metadataRepository = metadataRepository;
-        _mediator = mediator;
         _logger = logger;
     }
 
@@ -198,12 +194,10 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
 
                 if (result.IsAdded || result.IsUpdated)
                 {
-                    await _mediator.Publish(
-                        new ScannerProgressUpdate(
-                            library.Id,
-                            [result.Item.Id],
-                            []),
-                        cancellationToken);
+                    if (!await _scannerProxy.ReindexMediaItems([result.Item.Id], cancellationToken))
+                    {
+                        _logger.LogWarning("Failed to reindex media items from scanner process");
+                    }
                 }
             }
         }
@@ -211,9 +205,10 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
         // trash movies that are no longer present on the media server
         var fileNotFoundItemIds = existingMovies.Keys.Except(incomingItemIds).ToList();
         List<int> ids = await movieRepository.FlagFileNotFound(library, fileNotFoundItemIds);
-        await _mediator.Publish(
-            new ScannerProgressUpdate(library.Id, ids.ToArray(), []),
-            cancellationToken);
+        if (!await _scannerProxy.ReindexMediaItems(ids.ToArray(), cancellationToken))
+        {
+            _logger.LogWarning("Failed to reindex media items from scanner process");
+        }
 
         return Unit.Default;
     }
@@ -292,9 +287,10 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
                     {
                         foreach (int id in await movieRepository.FlagRemoteOnly(library, incoming))
                         {
-                            await _mediator.Publish(
-                                new ScannerProgressUpdate(library.Id, [id], []),
-                                CancellationToken.None);
+                            if (!await _scannerProxy.ReindexMediaItems([id], CancellationToken.None))
+                            {
+                                _logger.LogWarning("Failed to reindex media items from scanner process");
+                            }
                         }
                     }
                 }
@@ -304,9 +300,10 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
                     {
                         foreach (int id in await movieRepository.FlagUnavailable(library, incoming))
                         {
-                            await _mediator.Publish(
-                                new ScannerProgressUpdate(library.Id, [id], []),
-                                CancellationToken.None);
+                            if (!await _scannerProxy.ReindexMediaItems([id], CancellationToken.None))
+                            {
+                                _logger.LogWarning("Failed to reindex media items from scanner process");
+                            }
                         }
                     }
                 }

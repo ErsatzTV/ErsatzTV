@@ -8,7 +8,6 @@ using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
-using ErsatzTV.Core.MediaSources;
 using ErsatzTV.Core.Metadata;
 using ErsatzTV.Scanner.Core.Interfaces;
 using ErsatzTV.Scanner.Core.Interfaces.FFmpeg;
@@ -26,7 +25,6 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
     private readonly ILocalMetadataProvider _localMetadataProvider;
     private readonly ILogger<SongFolderScanner> _logger;
     private readonly IMediaItemRepository _mediaItemRepository;
-    private readonly IMediator _mediator;
     private readonly ISongRepository _songRepository;
 
     public SongFolderScanner(
@@ -36,7 +34,6 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
         ILocalMetadataProvider localMetadataProvider,
         IMetadataRepository metadataRepository,
         IImageCache imageCache,
-        IMediator mediator,
         ISongRepository songRepository,
         ILibraryRepository libraryRepository,
         IMediaItemRepository mediaItemRepository,
@@ -57,7 +54,6 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
         _scannerProxy = scannerProxy;
         _localFileSystem = localFileSystem;
         _localMetadataProvider = localMetadataProvider;
-        _mediator = mediator;
         _songRepository = songRepository;
         _libraryRepository = libraryRepository;
         _mediaItemRepository = mediaItemRepository;
@@ -187,12 +183,11 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
                     {
                         if (result.IsAdded || result.IsUpdated)
                         {
-                            await _mediator.Publish(
-                                new ScannerProgressUpdate(
-                                    libraryPath.LibraryId,
-                                    [result.Item.Id],
-                                    []),
-                                cancellationToken);
+                            if (!await _scannerProxy.ReindexMediaItems([result.Item.Id], cancellationToken))
+                            {
+                                _logger.LogWarning("Failed to reindex media items from scanner process");
+                                hasErrors = true;
+                            }
                         }
                     }
                 }
@@ -210,23 +205,19 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
                 {
                     _logger.LogInformation("Flagging missing song at {Path}", path);
                     List<int> songIds = await FlagFileNotFound(libraryPath, path);
-                    await _mediator.Publish(
-                        new ScannerProgressUpdate(
-                            libraryPath.LibraryId,
-                            songIds.ToArray(),
-                            []),
-                        cancellationToken);
+                    if (!await _scannerProxy.ReindexMediaItems(songIds.ToArray(), cancellationToken))
+                    {
+                        _logger.LogWarning("Failed to reindex media items from scanner process");
+                    }
                 }
                 else if (Path.GetFileName(path).StartsWith("._", StringComparison.OrdinalIgnoreCase))
                 {
                     _logger.LogInformation("Removing dot underscore file at {Path}", path);
                     List<int> songIds = await _songRepository.DeleteByPath(libraryPath, path);
-                    await _mediator.Publish(
-                        new ScannerProgressUpdate(
-                            libraryPath.LibraryId,
-                            [],
-                            songIds.ToArray()),
-                        cancellationToken);
+                    if (!await _scannerProxy.RemoveMediaItems(songIds.ToArray(), cancellationToken))
+                    {
+                        _logger.LogWarning("Failed to remove media items from scanner process");
+                    }
                 }
             }
 

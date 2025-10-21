@@ -30,7 +30,6 @@ public class PlexMovieLibraryScanner :
         IPlexServerApiClient plexServerApiClient,
         IMovieRepository movieRepository,
         IMetadataRepository metadataRepository,
-        IMediator mediator,
         IMediaSourceRepository mediaSourceRepository,
         IPlexMovieRepository plexMovieRepository,
         IPlexPathReplacementService plexPathReplacementService,
@@ -42,7 +41,6 @@ public class PlexMovieLibraryScanner :
             localFileSystem,
             localChaptersProvider,
             metadataRepository,
-            mediator,
             logger)
     {
         _plexServerApiClient = plexServerApiClient;

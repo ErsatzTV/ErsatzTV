@@ -1,5 +1,4 @@
 ﻿using System.Globalization;
-using System.Threading.Channels;
 using ErsatzTV.Application.Libraries;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
@@ -23,9 +22,8 @@ public class CallLocalLibraryScannerHandler : CallLibraryScannerHandler<IScanLoc
         IDbContextFactory<TvContext> dbContextFactory,
         IConfigElementRepository configElementRepository,
         IScannerProxyService scannerProxyService,
-        ChannelWriter<ISearchIndexBackgroundServiceRequest> channel,
         IRuntimeInfo runtimeInfo)
-        : base(dbContextFactory, configElementRepository, channel, runtimeInfo)
+        : base(dbContextFactory, configElementRepository, runtimeInfo)
     {
         _scannerProxyService = scannerProxyService;
     }
