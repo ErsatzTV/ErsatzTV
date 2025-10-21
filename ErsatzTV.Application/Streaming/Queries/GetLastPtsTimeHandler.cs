@@ -63,12 +63,23 @@ public class GetLastPtsTimeHandler(
             segment.FullName
         };
 
-        string lastLine = string.Empty;
+        PtsTime maxTime = PtsTime.Zero;
         Action<string> replaceLine = s =>
         {
             if (!string.IsNullOrWhiteSpace(s))
             {
-                lastLine = s.Trim();
+                try
+                {
+                    var newPts = PtsTime.From(s.Trim());
+                    if (newPts.Value > maxTime.Value)
+                    {
+                        maxTime = newPts;
+                    }
+                }
+                catch
+                {
+                    // do nothing
+                }
             }
         };
 
@@ -85,19 +96,7 @@ public class GetLastPtsTimeHandler(
             return Option<PtsTime>.None;
         }
 
-        try
-        {
-            logger.LogDebug("ffprobe last line: {Line}", lastLine);
-            return PtsTime.From(lastLine);
-        }
-        catch (Exception ex)
-        {
-            //client.Notify(ex);
-            Console.WriteLine(ex);
-            await SaveTroubleshootingData(parameters.ChannelNumber, lastLine);
-        }
-
-        return Option<PtsTime>.None;
+        return maxTime;
     }
 
     private Option<FileInfo> GetLastSegment(RequestParameters parameters)

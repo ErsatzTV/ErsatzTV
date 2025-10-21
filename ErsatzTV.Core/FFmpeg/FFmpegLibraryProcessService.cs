@@ -244,7 +244,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         switch (channel.StreamingMode)
         {
             case StreamingMode.HttpLiveStreamingSegmenter:
-                outputFormat = OutputFormatKind.HlsMp4;
+                outputFormat = OutputFormatKind.Hls;
                 break;
             case StreamingMode.HttpLiveStreamingDirect:
             {
@@ -619,7 +619,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         switch (channel.StreamingMode)
         {
             case StreamingMode.HttpLiveStreamingSegmenter:
-                outputFormat = OutputFormatKind.HlsMp4;
+                outputFormat = OutputFormatKind.Hls;
                 break;
         }
 
@@ -631,6 +631,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
 
         Option<string> hlsSegmentTemplate = outputFormat switch
         {
+            OutputFormatKind.Hls => Path.Combine(FileSystemLayout.TranscodeFolder, channel.Number, "live%06d.ts"),
             OutputFormatKind.HlsMp4 => Path.Combine(
                 FileSystemLayout.TranscodeFolder,
                 channel.Number,

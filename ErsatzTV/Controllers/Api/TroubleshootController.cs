@@ -119,9 +119,9 @@ public class TroubleshootController(
 
                             string[] segmentFiles = streamingMode switch
                             {
-                                StreamingMode.HttpLiveStreamingSegmenter => Directory.GetFiles(
-                                    FileSystemLayout.TranscodeTroubleshootingFolder,
-                                    "*.m4s"),
+                                // StreamingMode.HttpLiveStreamingSegmenter => Directory.GetFiles(
+                                //     FileSystemLayout.TranscodeTroubleshootingFolder,
+                                //     "*.m4s"),
                                 _ => Directory.GetFiles(FileSystemLayout.TranscodeTroubleshootingFolder, "*.ts")
                             };
 

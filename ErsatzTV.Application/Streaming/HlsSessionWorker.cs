@@ -26,6 +26,7 @@ public class HlsSessionWorker : IHlsSessionWorker
 {
     private static int _workAheadCount;
     private readonly IClient _client;
+    private readonly OutputFormatKind _outputFormatKind;
     private readonly IHlsInitSegmentCache _hlsInitSegmentCache;
     private readonly Dictionary<long, int> _discontinuityMap = [];
     private readonly IConfigElementRepository _configElementRepository;
@@ -55,6 +56,7 @@ public class HlsSessionWorker : IHlsSessionWorker
         IServiceScopeFactory serviceScopeFactory,
         IGraphicsEngine graphicsEngine,
         IClient client,
+        OutputFormatKind outputFormatKind,
         IHlsPlaylistFilter hlsPlaylistFilter,
         IHlsInitSegmentCache hlsInitSegmentCache,
         IConfigElementRepository configElementRepository,
@@ -66,6 +68,7 @@ public class HlsSessionWorker : IHlsSessionWorker
         _mediator = _serviceScope.ServiceProvider.GetRequiredService<IMediator>();
         _graphicsEngine = graphicsEngine;
         _client = client;
+        _outputFormatKind = outputFormatKind;
         _hlsInitSegmentCache = hlsInitSegmentCache;
         _hlsPlaylistFilter = hlsPlaylistFilter;
         _configElementRepository = configElementRepository;
@@ -121,7 +124,7 @@ public class HlsSessionWorker : IHlsSessionWorker
 
                     TrimPlaylistResult trimResult = _hlsPlaylistFilter.TrimPlaylist(
                         _discontinuityMap,
-                        OutputFormatKind.HlsMp4,
+                        _outputFormatKind,
                         PlaylistStart,
                         filterBefore,
                         _hlsInitSegmentCache,
@@ -651,7 +654,7 @@ public class HlsSessionWorker : IHlsSessionWorker
                 // trim playlist and insert discontinuity before appending with new ffmpeg process
                 TrimPlaylistResult trimResult = _hlsPlaylistFilter.TrimPlaylistWithDiscontinuity(
                     _discontinuityMap,
-                    OutputFormatKind.HlsMp4,
+                    _outputFormatKind,
                     PlaylistStart,
                     DateTimeOffset.Now.AddMinutes(-1),
                     _hlsInitSegmentCache,
