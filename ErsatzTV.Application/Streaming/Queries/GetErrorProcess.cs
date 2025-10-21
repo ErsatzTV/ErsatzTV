@@ -6,7 +6,7 @@ public record GetErrorProcess(
     string ChannelNumber,
     StreamingMode Mode,
     bool HlsRealtime,
-    long PtsOffset,
+    TimeSpan PtsOffset,
     Option<TimeSpan> MaybeDuration,
     DateTimeOffset Until,
     string ErrorMessage) : FFmpegProcessRequest(

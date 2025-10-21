@@ -10,4 +10,4 @@ public record FFmpegProcessRequest(
     bool StartAtZero,
     bool HlsRealtime,
     DateTimeOffset ChannelStartTime,
-    long PtsOffset) : IRequest<Either<BaseError, PlayoutItemProcessModel>>;
+    TimeSpan PtsOffset) : IRequest<Either<BaseError, PlayoutItemProcessModel>>;
