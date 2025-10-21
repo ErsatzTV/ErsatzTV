@@ -114,7 +114,7 @@ public class PlexCollectionScanner : IPlexCollectionScanner
             int[] changedIds = removedIds.Concat(addedIds).Distinct().ToArray();
 
             await _mediator.Publish(
-                new ScannerProgressUpdate(0, null, null, changedIds.ToArray(), Array.Empty<int>()),
+                new ScannerProgressUpdate(0, changedIds.ToArray(), []),
                 CancellationToken.None);
         }
         catch (Exception ex)

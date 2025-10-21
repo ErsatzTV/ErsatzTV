@@ -8,6 +8,7 @@ using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Metadata;
 using ErsatzTV.Core.Plex;
+using ErsatzTV.Scanner.Core.Interfaces;
 using ErsatzTV.Scanner.Core.Interfaces.Metadata;
 using ErsatzTV.Scanner.Core.Metadata;
 using Microsoft.Extensions.Logging;
@@ -29,6 +30,7 @@ public partial class PlexTelevisionLibraryScanner :
     private readonly ITelevisionRepository _televisionRepository;
 
     public PlexTelevisionLibraryScanner(
+        IScannerProxy scannerProxy,
         IPlexServerApiClient plexServerApiClient,
         ITelevisionRepository televisionRepository,
         IMetadataRepository metadataRepository,
@@ -40,6 +42,7 @@ public partial class PlexTelevisionLibraryScanner :
         ILocalChaptersProvider localChaptersProvider,
         ILogger<PlexTelevisionLibraryScanner> logger)
         : base(
+            scannerProxy,
             localFileSystem,
             localChaptersProvider,
             metadataRepository,

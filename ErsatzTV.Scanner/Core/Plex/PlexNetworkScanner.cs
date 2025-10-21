@@ -93,7 +93,7 @@ public class PlexNetworkScanner(
             }
 
             await mediator.Publish(
-                new ScannerProgressUpdate(0, null, null, changedIds.ToArray(), []),
+                new ScannerProgressUpdate(0, changedIds.ToArray(), []),
                 CancellationToken.None);
         }
         catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)

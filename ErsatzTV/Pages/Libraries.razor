@@ -4,14 +4,16 @@
 @using ErsatzTV.Application.Libraries
 @using ErsatzTV.Application.MediaSources
 @using ErsatzTV.Application.Plex
+@using ErsatzTV.Core.Interfaces.Metadata
 @using ErsatzTV.Core.Metadata
 @using MediatR.Courier
 @using PlexLibraryViewModel = ErsatzTV.Application.Libraries.PlexLibraryViewModel
 @implements IDisposable
 @inject IMediator Mediator
 @inject IEntityLocker Locker
-@inject ChannelWriter<IScannerBackgroundServiceRequest> ScannerWorkerChannel;
+@inject ChannelWriter<IScannerBackgroundServiceRequest> ScannerWorkerChannel
 @inject ICourier Courier
+@inject IScannerProxyService ScannerProxyService
 
 <MudForm Style="max-height: 100%">
     <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
@@ -67,7 +69,7 @@
                     </MudTd>
                     <MudTd>
                         <div style="align-items: center; display: flex;">
-                            @if (Locker.IsLibraryLocked(context.Id))
+                            @if (IsLibraryLocked(context.Id))
                             {
                                 <div style="width: 48px">
                                     @if (_progressByLibrary[context.Id] > 0)
@@ -190,7 +192,12 @@
             token.ThrowIfCancellationRequested();
 
             _externalCollections = await Mediator.Send(new GetExternalCollections(), token);
-            _progressByLibrary = _libraries.ToDictionary(vm => vm.Id, _ => 0);
+
+            foreach (var library in _libraries)
+            {
+                decimal progress = ScannerProxyService.GetProgress(library.Id).IfNone(0);
+                _progressByLibrary[library.Id] = (int)(progress * 100);
+            }
         }
         catch (OperationCanceledException)
         {
@@ -302,4 +309,16 @@
         _cts?.Cancel();
         _cts?.Dispose();
     }
+
+    private bool IsLibraryLocked(int libraryId)
+    {
+        if (Locker.IsLibraryLocked(libraryId))
+        {
+            return true;
+        }
+
+        _progressByLibrary[libraryId] = 0;
+        return false;
+    }
+
 }

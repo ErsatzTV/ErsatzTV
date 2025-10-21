@@ -7,6 +7,7 @@ using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Jellyfin;
 using ErsatzTV.Core.Metadata;
+using ErsatzTV.Scanner.Core.Interfaces;
 using ErsatzTV.Scanner.Core.Interfaces.Metadata;
 using ErsatzTV.Scanner.Core.Metadata;
 using Microsoft.Extensions.Logging;
@@ -25,6 +26,7 @@ public class JellyfinTelevisionLibraryScanner : MediaServerTelevisionLibraryScan
     private readonly IJellyfinTelevisionRepository _televisionRepository;
 
     public JellyfinTelevisionLibraryScanner(
+        IScannerProxy scannerProxy,
         IJellyfinApiClient jellyfinApiClient,
         IMediaSourceRepository mediaSourceRepository,
         IJellyfinTelevisionRepository televisionRepository,
@@ -35,6 +37,7 @@ public class JellyfinTelevisionLibraryScanner : MediaServerTelevisionLibraryScan
         IMediator mediator,
         ILogger<JellyfinTelevisionLibraryScanner> logger)
         : base(
+            scannerProxy,
             localFileSystem,
             localChaptersProvider,
             metadataRepository,

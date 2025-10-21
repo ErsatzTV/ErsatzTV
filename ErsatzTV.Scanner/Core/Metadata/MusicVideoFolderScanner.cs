@@ -10,6 +10,7 @@ using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.MediaSources;
 using ErsatzTV.Core.Metadata;
+using ErsatzTV.Scanner.Core.Interfaces;
 using ErsatzTV.Scanner.Core.Interfaces.FFmpeg;
 using ErsatzTV.Scanner.Core.Interfaces.Metadata;
 using Microsoft.Extensions.Logging;
@@ -22,6 +23,7 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
     private readonly IClient _client;
     private readonly ILibraryRepository _libraryRepository;
     private readonly ILocalChaptersProvider _localChaptersProvider;
+    private readonly IScannerProxy _scannerProxy;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalMetadataProvider _localMetadataProvider;
     private readonly ILocalSubtitlesProvider _localSubtitlesProvider;
@@ -31,6 +33,7 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
     private readonly IMusicVideoRepository _musicVideoRepository;
 
     public MusicVideoFolderScanner(
+        IScannerProxy scannerProxy,
         ILocalFileSystem localFileSystem,
         ILocalStatisticsProvider localStatisticsProvider,
         ILocalMetadataProvider localMetadataProvider,
@@ -57,6 +60,7 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
         client,
         logger)
     {
+        _scannerProxy = scannerProxy;
         _localFileSystem = localFileSystem;
         _localMetadataProvider = localMetadataProvider;
         _localSubtitlesProvider = localSubtitlesProvider;
@@ -106,14 +110,12 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
                 }
 
                 decimal percentCompletion = (decimal)allArtistFolders.IndexOf(artistFolder) / allArtistFolders.Count;
-                await _mediator.Publish(
-                    new ScannerProgressUpdate(
-                        libraryPath.LibraryId,
-                        null,
+                if (!await _scannerProxy.UpdateProgress(
                         progressMin + percentCompletion * progressSpread,
-                        Array.Empty<int>(),
-                        Array.Empty<int>()),
-                    cancellationToken);
+                        cancellationToken))
+                {
+                    return new ScanCanceled();
+                }
 
                 Either<BaseError, MediaItemScanResult<Artist>> maybeArtist =
                     await FindOrCreateArtist(libraryPath.Id, artistFolder)
@@ -144,10 +146,8 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
                         await _mediator.Publish(
                             new ScannerProgressUpdate(
                                 libraryPath.LibraryId,
-                                null,
-                                null,
-                                new[] { result.Item.Id },
-                                Array.Empty<int>()),
+                                [result.Item.Id],
+                                []),
                             cancellationToken);
                     }
 
@@ -174,9 +174,7 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
                 await _mediator.Publish(
                     new ScannerProgressUpdate(
                         libraryPath.LibraryId,
-                        null,
-                        null,
-                        Array.Empty<int>(),
+                        [],
                         musicVideoIds.ToArray()),
                     cancellationToken);
             }
@@ -190,10 +188,8 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
                     await _mediator.Publish(
                         new ScannerProgressUpdate(
                             libraryPath.LibraryId,
-                            null,
-                            null,
                             musicVideoIds.ToArray(),
-                            Array.Empty<int>()),
+                            []),
                         cancellationToken);
                 }
                 else if (Path.GetFileName(path).StartsWith("._", StringComparison.OrdinalIgnoreCase))
@@ -203,9 +199,7 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
                     await _mediator.Publish(
                         new ScannerProgressUpdate(
                             libraryPath.LibraryId,
-                            null,
-                            null,
-                            Array.Empty<int>(),
+                            [],
                             musicVideoIds.ToArray()),
                         cancellationToken);
                 }
@@ -217,9 +211,7 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
             await _mediator.Publish(
                 new ScannerProgressUpdate(
                     libraryPath.LibraryId,
-                    null,
-                    null,
-                    Array.Empty<int>(),
+                    [],
                     artistIds.ToArray()),
                 cancellationToken);
 
@@ -402,10 +394,8 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
                         await _mediator.Publish(
                             new ScannerProgressUpdate(
                                 libraryPath.LibraryId,
-                                null,
-                                null,
-                                new[] { result.Item.Id },
-                                Array.Empty<int>()),
+                                [result.Item.Id],
+                                []),
                             cancellationToken);
                     }
                 }

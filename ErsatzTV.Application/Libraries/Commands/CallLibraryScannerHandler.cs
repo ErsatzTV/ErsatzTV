@@ -7,7 +7,6 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.MediaSources;
-using ErsatzTV.Core.Metadata;
 using ErsatzTV.FFmpeg.Runtime;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -25,28 +24,26 @@ public abstract class CallLibraryScannerHandler<TRequest>
     private readonly ChannelWriter<ISearchIndexBackgroundServiceRequest> _channel;
     private readonly IConfigElementRepository _configElementRepository;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
-    private readonly IMediator _mediator;
     private readonly IRuntimeInfo _runtimeInfo;
     private readonly List<int> _toReindex = [];
     private readonly List<int> _toRemove = [];
-    private string _libraryName;
 
     protected CallLibraryScannerHandler(
         IDbContextFactory<TvContext> dbContextFactory,
         IConfigElementRepository configElementRepository,
         ChannelWriter<ISearchIndexBackgroundServiceRequest> channel,
-        IMediator mediator,
         IRuntimeInfo runtimeInfo)
     {
         _dbContextFactory = dbContextFactory;
         _configElementRepository = configElementRepository;
         _channel = channel;
-        _mediator = mediator;
         _runtimeInfo = runtimeInfo;
     }
 
+    protected static string GetBaseUrl(Guid scanId) => $"http://localhost:{Settings.UiPort}/api/scan/{scanId}";
+
     protected async Task<Either<BaseError, string>> PerformScan(
-        string scanner,
+        ScanParameters parameters,
         List<string> arguments,
         CancellationToken cancellationToken)
     {
@@ -57,7 +54,7 @@ public abstract class CallLibraryScannerHandler<TRequest>
             await using CancellationTokenRegistration link =
                 cancellationToken.Register(() => forcefulCts.CancelAfter(TimeSpan.FromSeconds(10)));
 
-            CommandResult process = await Cli.Wrap(scanner)
+            CommandResult process = await Cli.Wrap(parameters.Scanner)
                 .WithArguments(arguments)
                 .WithValidation(CommandResultValidation.None)
                 .WithStandardErrorPipe(PipeTarget.ToDelegate(ProcessLogOutput))
@@ -88,7 +85,7 @@ public abstract class CallLibraryScannerHandler<TRequest>
             // do nothing
         }
 
-        return _libraryName ?? string.Empty;
+        return parameters.LibraryName;
     }
 
     private static void ProcessLogOutput(string s)
@@ -134,11 +131,6 @@ public abstract class CallLibraryScannerHandler<TRequest>
                 ScannerProgressUpdate progressUpdate = JsonConvert.DeserializeObject<ScannerProgressUpdate>(s);
                 if (progressUpdate != null)
                 {
-                    if (!string.IsNullOrWhiteSpace(progressUpdate.LibraryName))
-                    {
-                        _libraryName = progressUpdate.LibraryName;
-                    }
-
                     _toReindex.AddRange(progressUpdate.ItemsToReindex);
                     if (_toReindex.Count >= BatchSize)
                     {
@@ -152,15 +144,6 @@ public abstract class CallLibraryScannerHandler<TRequest>
                         await _channel.WriteAsync(new RemoveMediaItems(_toReindex.ToArray()));
                         _toRemove.Clear();
                     }
-
-                    if (progressUpdate.PercentComplete is not null)
-                    {
-                        var progress = new LibraryScanProgress(
-                            progressUpdate.LibraryId,
-                            progressUpdate.PercentComplete.Value);
-
-                        await _mediator.Publish(progress);
-                    }
                 }
             }
             catch (Exception ex)
@@ -170,13 +153,14 @@ public abstract class CallLibraryScannerHandler<TRequest>
         }
     }
 
-    protected abstract Task<DateTimeOffset> GetLastScan(
+    protected abstract Task<Tuple<string, DateTimeOffset>> GetLastScan(
         TvContext dbContext,
         TRequest request,
         CancellationToken cancellationToken);
+
     protected abstract bool ScanIsRequired(DateTimeOffset lastScan, int libraryRefreshInterval, TRequest request);
 
-    protected async Task<Validation<BaseError, string>> Validate(TRequest request, CancellationToken cancellationToken)
+    protected async Task<Validation<BaseError, ScanParameters>> Validate(TRequest request, CancellationToken cancellationToken)
     {
         try
         {
@@ -188,7 +172,7 @@ public abstract class CallLibraryScannerHandler<TRequest>
 
             await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
-            DateTimeOffset lastScan = await GetLastScan(dbContext, request, cancellationToken);
+            (string libraryName, DateTimeOffset lastScan) = await GetLastScan(dbContext, request, cancellationToken);
             if (!ScanIsRequired(lastScan, libraryRefreshInterval, request))
             {
                 return new ScanIsNotRequired();
@@ -211,7 +195,7 @@ public abstract class CallLibraryScannerHandler<TRequest>
                 string localFileName = Path.Combine(folderName, executable);
                 if (File.Exists(localFileName))
                 {
-                    return localFileName;
+                    return new ScanParameters(libraryName, localFileName);
                 }
             }
 
@@ -222,4 +206,6 @@ public abstract class CallLibraryScannerHandler<TRequest>
             return BaseError.New("Scan was canceled");
         }
     }
+
+    protected sealed record ScanParameters(string LibraryName, string Scanner);
 }

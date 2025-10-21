@@ -6,6 +6,7 @@ using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Jellyfin;
 using ErsatzTV.Core.Metadata;
+using ErsatzTV.Scanner.Core.Interfaces;
 using ErsatzTV.Scanner.Core.Interfaces.Metadata;
 using ErsatzTV.Scanner.Core.Metadata;
 using Microsoft.Extensions.Logging;
@@ -23,6 +24,7 @@ public class JellyfinMovieLibraryScanner :
     private readonly IJellyfinPathReplacementService _pathReplacementService;
 
     public JellyfinMovieLibraryScanner(
+        IScannerProxy scannerProxy,
         IJellyfinApiClient jellyfinApiClient,
         IMediator mediator,
         IJellyfinMovieRepository jellyfinMovieRepository,
@@ -33,6 +35,7 @@ public class JellyfinMovieLibraryScanner :
         IMetadataRepository metadataRepository,
         ILogger<JellyfinMovieLibraryScanner> logger)
         : base(
+            scannerProxy,
             localFileSystem,
             localChaptersProvider,
             metadataRepository,

@@ -10,6 +10,7 @@ using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.MediaSources;
 using ErsatzTV.Core.Metadata;
+using ErsatzTV.Scanner.Core.Interfaces;
 using ErsatzTV.Scanner.Core.Interfaces.FFmpeg;
 using ErsatzTV.Scanner.Core.Interfaces.Metadata;
 using Microsoft.Extensions.Logging;
@@ -21,6 +22,7 @@ public class ImageFolderScanner : LocalFolderScanner, IImageFolderScanner
     private readonly IClient _client;
     private readonly IImageRepository _imageRepository;
     private readonly ILibraryRepository _libraryRepository;
+    private readonly IScannerProxy _scannerProxy;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalMetadataProvider _localMetadataProvider;
     private readonly ILogger<ImageFolderScanner> _logger;
@@ -28,6 +30,7 @@ public class ImageFolderScanner : LocalFolderScanner, IImageFolderScanner
     private readonly IMediator _mediator;
 
     public ImageFolderScanner(
+        IScannerProxy scannerProxy,
         ILocalFileSystem localFileSystem,
         ILocalStatisticsProvider localStatisticsProvider,
         ILocalMetadataProvider localMetadataProvider,
@@ -51,6 +54,7 @@ public class ImageFolderScanner : LocalFolderScanner, IImageFolderScanner
         client,
         logger)
     {
+        _scannerProxy = scannerProxy;
         _localFileSystem = localFileSystem;
         _localMetadataProvider = localMetadataProvider;
         _mediator = mediator;
@@ -109,14 +113,12 @@ public class ImageFolderScanner : LocalFolderScanner, IImageFolderScanner
                 }
 
                 decimal percentCompletion = (decimal)foldersCompleted / (foldersCompleted + folderQueue.Count);
-                await _mediator.Publish(
-                    new ScannerProgressUpdate(
-                        libraryPath.LibraryId,
-                        null,
+                if (!await _scannerProxy.UpdateProgress(
                         progressMin + percentCompletion * progressSpread,
-                        [],
-                        []),
-                    cancellationToken);
+                        cancellationToken))
+                {
+                    return new ScanCanceled();
+                }
 
                 string imageFolder = folderQueue.Dequeue();
                 Option<int> maybeParentFolder = await _libraryRepository.GetParentFolderId(
@@ -214,8 +216,6 @@ public class ImageFolderScanner : LocalFolderScanner, IImageFolderScanner
                             await _mediator.Publish(
                                 new ScannerProgressUpdate(
                                     libraryPath.LibraryId,
-                                    null,
-                                    null,
                                     [result.Item.Id],
                                     []),
                                 cancellationToken);
@@ -239,10 +239,8 @@ public class ImageFolderScanner : LocalFolderScanner, IImageFolderScanner
                     await _mediator.Publish(
                         new ScannerProgressUpdate(
                             libraryPath.LibraryId,
-                            null,
-                            null,
                             imageIds.ToArray(),
-                            Array.Empty<int>()),
+                            []),
                         cancellationToken);
                 }
                 else if (Path.GetFileName(path).StartsWith("._", StringComparison.OrdinalIgnoreCase))
@@ -252,9 +250,7 @@ public class ImageFolderScanner : LocalFolderScanner, IImageFolderScanner
                     await _mediator.Publish(
                         new ScannerProgressUpdate(
                             libraryPath.LibraryId,
-                            null,
-                            null,
-                            Array.Empty<int>(),
+                            [],
                             imageIds.ToArray()),
                         cancellationToken);
                 }

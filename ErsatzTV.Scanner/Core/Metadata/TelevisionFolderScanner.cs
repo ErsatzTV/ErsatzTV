@@ -10,6 +10,7 @@ using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.MediaSources;
 using ErsatzTV.Core.Metadata;
+using ErsatzTV.Scanner.Core.Interfaces;
 using ErsatzTV.Scanner.Core.Interfaces.FFmpeg;
 using ErsatzTV.Scanner.Core.Interfaces.Metadata;
 using Microsoft.Extensions.Logging;
@@ -22,6 +23,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
     private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
     private readonly ILibraryRepository _libraryRepository;
     private readonly ILocalChaptersProvider _localChaptersProvider;
+    private readonly IScannerProxy _scannerProxy;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalMetadataProvider _localMetadataProvider;
     private readonly ILocalSubtitlesProvider _localSubtitlesProvider;
@@ -32,6 +34,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
     private readonly ITelevisionRepository _televisionRepository;
 
     public TelevisionFolderScanner(
+        IScannerProxy scannerProxy,
         ILocalFileSystem localFileSystem,
         ITelevisionRepository televisionRepository,
         ILocalStatisticsProvider localStatisticsProvider,
@@ -58,6 +61,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
         client,
         logger)
     {
+        _scannerProxy = scannerProxy;
         _localFileSystem = localFileSystem;
         _televisionRepository = televisionRepository;
         _localMetadataProvider = localMetadataProvider;
@@ -107,14 +111,10 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
                 }
 
                 decimal percentCompletion = (decimal)allShowFolders.IndexOf(showFolder) / allShowFolders.Count;
-                await _mediator.Publish(
-                    new ScannerProgressUpdate(
-                        libraryPath.LibraryId,
-                        null,
-                        progressMin + percentCompletion * progressSpread,
-                        Array.Empty<int>(),
-                        Array.Empty<int>()),
-                    cancellationToken);
+                if (!await _scannerProxy.UpdateProgress(progressMin + percentCompletion * progressSpread, cancellationToken))
+                {
+                    return new ScanCanceled();
+                }
 
                 Option<int> maybeParentFolder =
                     await _libraryRepository.GetParentFolderId(libraryPath, showFolder, cancellationToken);
@@ -152,10 +152,8 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
                         await _mediator.Publish(
                             new ScannerProgressUpdate(
                                 libraryPath.LibraryId,
-                                null,
-                                null,
-                                new[] { result.Item.Id },
-                                Array.Empty<int>()),
+                                [result.Item.Id],
+                                []),
                             cancellationToken);
                     }
 
@@ -185,10 +183,8 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
                     await _mediator.Publish(
                         new ScannerProgressUpdate(
                             libraryPath.LibraryId,
-                            null,
-                            null,
                             episodeIds.ToArray(),
-                            Array.Empty<int>()),
+                            []),
                         cancellationToken);
                 }
                 else if (Path.GetFileName(path).StartsWith("._", StringComparison.OrdinalIgnoreCase))
@@ -205,9 +201,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
             await _mediator.Publish(
                 new ScannerProgressUpdate(
                     libraryPath.LibraryId,
-                    null,
-                    null,
-                    Array.Empty<int>(),
+                    [],
                     ids.ToArray()),
                 cancellationToken);
 
@@ -313,10 +307,8 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
                     await _mediator.Publish(
                         new ScannerProgressUpdate(
                             libraryPath.LibraryId,
-                            null,
-                            null,
-                            new[] { season.Id },
-                            Array.Empty<int>()),
+                            [season.Id],
+                            []),
                         cancellationToken);
                 }
             }
@@ -368,10 +360,8 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
                 await _mediator.Publish(
                     new ScannerProgressUpdate(
                         libraryPath.LibraryId,
-                        null,
-                        null,
-                        new[] { episode.Id },
-                        Array.Empty<int>()),
+                        [episode.Id],
+                        []),
                     cancellationToken);
             }
         }
@@ -620,9 +610,9 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
     {
         string[] segments = artworkKind switch
         {
-            ArtworkKind.Poster => new[] { "poster", "folder" },
-            ArtworkKind.FanArt => new[] { "fanart" },
-            ArtworkKind.Thumbnail => new[] { "thumb" },
+            ArtworkKind.Poster => ["poster", "folder"],
+            ArtworkKind.FanArt => ["fanart"],
+            ArtworkKind.Thumbnail => ["thumb"],
             _ => throw new ArgumentOutOfRangeException(nameof(artworkKind))
         };
 

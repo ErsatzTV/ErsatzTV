@@ -7,6 +7,7 @@ using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Metadata;
+using ErsatzTV.Scanner.Core.Interfaces;
 using ErsatzTV.Scanner.Core.Interfaces.FFmpeg;
 using ErsatzTV.Scanner.Core.Interfaces.Metadata;
 using ErsatzTV.Scanner.Core.Metadata;
@@ -699,7 +700,8 @@ public class MovieFolderScannerTests
 
         private MovieFolderScanner GetService(params FakeFileEntry[] files) =>
             new(
-                new FakeLocalFileSystem(new List<FakeFileEntry>(files)),
+                Substitute.For<IScannerProxy>(),
+                new FakeLocalFileSystem([..files]),
                 _movieRepository,
                 _localStatisticsProvider,
                 Substitute.For<ILocalSubtitlesProvider>(),
@@ -718,7 +720,8 @@ public class MovieFolderScannerTests
 
         private MovieFolderScanner GetService(params FakeFolderEntry[] folders) =>
             new(
-                new FakeLocalFileSystem(new List<FakeFileEntry>(), new List<FakeFolderEntry>(folders)),
+                Substitute.For<IScannerProxy>(),
+                new FakeLocalFileSystem([], [..folders]),
                 _movieRepository,
                 _localStatisticsProvider,
                 Substitute.For<ILocalSubtitlesProvider>(),

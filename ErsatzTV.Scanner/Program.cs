@@ -29,8 +29,10 @@ using ErsatzTV.Infrastructure.Plex;
 using ErsatzTV.Infrastructure.Runtime;
 using ErsatzTV.Infrastructure.Search;
 using ErsatzTV.Infrastructure.Sqlite.Data;
+using ErsatzTV.Scanner.Core;
 using ErsatzTV.Scanner.Core.Emby;
 using ErsatzTV.Scanner.Core.FFmpeg;
+using ErsatzTV.Scanner.Core.Interfaces;
 using ErsatzTV.Scanner.Core.Interfaces.FFmpeg;
 using ErsatzTV.Scanner.Core.Interfaces.Metadata;
 using ErsatzTV.Scanner.Core.Interfaces.Metadata.Nfo;
@@ -166,6 +168,8 @@ public class Program
                     TvContext.CaseInsensitiveCollation = "utf8mb4_general_ci";
                 }
 
+                services.AddHttpClient();
+
                 services.AddScoped<IConfigElementRepository, ConfigElementRepository>();
                 services.AddScoped<IMetadataRepository, MetadataRepository>();
                 services.AddScoped<IMediaSourceRepository, MediaSourceRepository>();
@@ -245,6 +249,7 @@ public class Program
                 services.AddSingleton<RecyclableMemoryStreamManager>();
                 // TODO: real bugsnag?
                 services.AddSingleton<IClient>(_ => new BugsnagNoopClient());
+                services.AddSingleton<IScannerProxy, ScannerProxy>();
 
                 services.AddMediatR(config => config.RegisterServicesFromAssemblyContaining<Worker>());
                 services.AddMemoryCache();

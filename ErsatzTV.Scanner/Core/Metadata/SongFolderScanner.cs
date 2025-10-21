@@ -10,6 +10,7 @@ using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.MediaSources;
 using ErsatzTV.Core.Metadata;
+using ErsatzTV.Scanner.Core.Interfaces;
 using ErsatzTV.Scanner.Core.Interfaces.FFmpeg;
 using ErsatzTV.Scanner.Core.Interfaces.Metadata;
 using Microsoft.Extensions.Logging;
@@ -20,6 +21,7 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
 {
     private readonly IClient _client;
     private readonly ILibraryRepository _libraryRepository;
+    private readonly IScannerProxy _scannerProxy;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalMetadataProvider _localMetadataProvider;
     private readonly ILogger<SongFolderScanner> _logger;
@@ -28,6 +30,7 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
     private readonly ISongRepository _songRepository;
 
     public SongFolderScanner(
+        IScannerProxy scannerProxy,
         ILocalFileSystem localFileSystem,
         ILocalStatisticsProvider localStatisticsProvider,
         ILocalMetadataProvider localMetadataProvider,
@@ -51,6 +54,7 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
         client,
         logger)
     {
+        _scannerProxy = scannerProxy;
         _localFileSystem = localFileSystem;
         _localMetadataProvider = localMetadataProvider;
         _mediator = mediator;
@@ -107,14 +111,10 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
                 }
 
                 decimal percentCompletion = (decimal)foldersCompleted / (foldersCompleted + folderQueue.Count);
-                await _mediator.Publish(
-                    new ScannerProgressUpdate(
-                        libraryPath.LibraryId,
-                        null,
-                        progressMin + percentCompletion * progressSpread,
-                        Array.Empty<int>(),
-                        Array.Empty<int>()),
-                    cancellationToken);
+                if (!await _scannerProxy.UpdateProgress(progressMin + percentCompletion * progressSpread, cancellationToken))
+                {
+                    return new ScanCanceled();
+                }
 
                 string songFolder = folderQueue.Dequeue();
                 Option<int> maybeParentFolder =
@@ -190,10 +190,8 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
                             await _mediator.Publish(
                                 new ScannerProgressUpdate(
                                     libraryPath.LibraryId,
-                                    null,
-                                    null,
-                                    new[] { result.Item.Id },
-                                    Array.Empty<int>()),
+                                    [result.Item.Id],
+                                    []),
                                 cancellationToken);
                         }
                     }
@@ -215,10 +213,8 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
                     await _mediator.Publish(
                         new ScannerProgressUpdate(
                             libraryPath.LibraryId,
-                            null,
-                            null,
                             songIds.ToArray(),
-                            Array.Empty<int>()),
+                            []),
                         cancellationToken);
                 }
                 else if (Path.GetFileName(path).StartsWith("._", StringComparison.OrdinalIgnoreCase))
@@ -228,9 +224,7 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
                     await _mediator.Publish(
                         new ScannerProgressUpdate(
                             libraryPath.LibraryId,
-                            null,
-                            null,
-                            Array.Empty<int>(),
+                            [],
                             songIds.ToArray()),
                         cancellationToken);
                 }

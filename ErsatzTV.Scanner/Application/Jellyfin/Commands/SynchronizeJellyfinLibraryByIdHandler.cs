@@ -3,7 +3,7 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Jellyfin;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Jellyfin;
-using ErsatzTV.Core.MediaSources;
+using ErsatzTV.Scanner.Core.Interfaces;
 using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Scanner.Application.Jellyfin;
@@ -20,10 +20,10 @@ public class
     private readonly ILibraryRepository _libraryRepository;
     private readonly ILogger<SynchronizeJellyfinLibraryByIdHandler> _logger;
     private readonly IMediaSourceRepository _mediaSourceRepository;
-    private readonly IMediator _mediator;
+    private readonly IScannerProxy _scannerProxy;
 
     public SynchronizeJellyfinLibraryByIdHandler(
-        IMediator mediator,
+        IScannerProxy scannerProxy,
         IMediaSourceRepository mediaSourceRepository,
         IJellyfinSecretStore jellyfinSecretStore,
         IJellyfinMovieLibraryScanner jellyfinMovieLibraryScanner,
@@ -32,7 +32,7 @@ public class
         IConfigElementRepository configElementRepository,
         ILogger<SynchronizeJellyfinLibraryByIdHandler> logger)
     {
-        _mediator = mediator;
+        _scannerProxy = scannerProxy;
         _mediaSourceRepository = mediaSourceRepository;
         _jellyfinSecretStore = jellyfinSecretStore;
         _jellyfinMovieLibraryScanner = jellyfinMovieLibraryScanner;
@@ -55,6 +55,8 @@ public class
         RequestParameters parameters,
         CancellationToken cancellationToken)
     {
+        _scannerProxy.SetBaseUrl(parameters.BaseUrl);
+
         var lastScan = new DateTimeOffset(parameters.Library.LastScan ?? SystemTime.MinValueUtc, TimeSpan.Zero);
         DateTimeOffset nextScan = lastScan + TimeSpan.FromHours(parameters.LibraryRefreshInterval);
         if (parameters.ForceScan || parameters.LibraryRefreshInterval > 0 && nextScan < DateTimeOffset.Now)
@@ -94,16 +96,6 @@ public class
 
         _logger.LogDebug("Skipping unforced scan of jellyfin media library {Name}", parameters.Library.Name);
 
-        // send an empty progress update for the library name
-        await _mediator.Publish(
-            new ScannerProgressUpdate(
-                parameters.Library.Id,
-                parameters.Library.Name,
-                0,
-                Array.Empty<int>(),
-                Array.Empty<int>()),
-            cancellationToken);
-
         return parameters.Library.Name;
     }
 
@@ -118,7 +110,8 @@ public class
                 jellyfinLibrary,
                 request.ForceScan,
                 libraryRefreshInterval,
-                request.DeepScan
+                request.DeepScan,
+                request.BaseUrl
             ));
 
     private Task<Validation<BaseError, ConnectionParameters>> ValidateConnection(
@@ -166,7 +159,8 @@ public class
         JellyfinLibrary Library,
         bool ForceScan,
         int LibraryRefreshInterval,
-        bool DeepScan);
+        bool DeepScan,
+        string BaseUrl);
 
     private record ConnectionParameters(JellyfinConnection ActiveConnection)
     {

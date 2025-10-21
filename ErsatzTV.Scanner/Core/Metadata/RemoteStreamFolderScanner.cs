@@ -11,6 +11,7 @@ using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.MediaSources;
 using ErsatzTV.Core.Metadata;
 using ErsatzTV.Core.Streaming;
+using ErsatzTV.Scanner.Core.Interfaces;
 using ErsatzTV.Scanner.Core.Interfaces.FFmpeg;
 using ErsatzTV.Scanner.Core.Interfaces.Metadata;
 using Microsoft.Extensions.Logging;
@@ -23,6 +24,7 @@ public class RemoteStreamFolderScanner : LocalFolderScanner, IRemoteStreamFolder
 {
     private readonly IClient _client;
     private readonly ILibraryRepository _libraryRepository;
+    private readonly IScannerProxy _scannerProxy;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalMetadataProvider _localMetadataProvider;
     private readonly ILogger<RemoteStreamFolderScanner> _logger;
@@ -31,6 +33,7 @@ public class RemoteStreamFolderScanner : LocalFolderScanner, IRemoteStreamFolder
     private readonly IRemoteStreamRepository _remoteStreamRepository;
 
     public RemoteStreamFolderScanner(
+        IScannerProxy scannerProxy,
         ILocalFileSystem localFileSystem,
         ILocalStatisticsProvider localStatisticsProvider,
         ILocalMetadataProvider localMetadataProvider,
@@ -54,6 +57,7 @@ public class RemoteStreamFolderScanner : LocalFolderScanner, IRemoteStreamFolder
         client,
         logger)
     {
+        _scannerProxy = scannerProxy;
         _localFileSystem = localFileSystem;
         _localMetadataProvider = localMetadataProvider;
         _mediator = mediator;
@@ -116,14 +120,12 @@ public class RemoteStreamFolderScanner : LocalFolderScanner, IRemoteStreamFolder
                 }
 
                 decimal percentCompletion = (decimal)foldersCompleted / (foldersCompleted + folderQueue.Count);
-                await _mediator.Publish(
-                    new ScannerProgressUpdate(
-                        libraryPath.LibraryId,
-                        null,
+                if (!await _scannerProxy.UpdateProgress(
                         progressMin + percentCompletion * progressSpread,
-                        [],
-                        []),
-                    cancellationToken);
+                        cancellationToken))
+                {
+                    return new ScanCanceled();
+                }
 
                 string remoteStreamFolder = folderQueue.Dequeue();
                 Option<int> maybeParentFolder =
@@ -200,8 +202,6 @@ public class RemoteStreamFolderScanner : LocalFolderScanner, IRemoteStreamFolder
                             await _mediator.Publish(
                                 new ScannerProgressUpdate(
                                     libraryPath.LibraryId,
-                                    null,
-                                    null,
                                     [result.Item.Id],
                                     []),
                                 cancellationToken);
@@ -225,8 +225,6 @@ public class RemoteStreamFolderScanner : LocalFolderScanner, IRemoteStreamFolder
                     await _mediator.Publish(
                         new ScannerProgressUpdate(
                             libraryPath.LibraryId,
-                            null,
-                            null,
                             remoteStreamIds.ToArray(),
                             []),
                         cancellationToken);
@@ -238,8 +236,6 @@ public class RemoteStreamFolderScanner : LocalFolderScanner, IRemoteStreamFolder
                     await _mediator.Publish(
                         new ScannerProgressUpdate(
                             libraryPath.LibraryId,
-                            null,
-                            null,
                             [],
                             remoteStreamIds.ToArray()),
                         cancellationToken);

@@ -2,7 +2,7 @@
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
-using ErsatzTV.Core.MediaSources;
+using ErsatzTV.Scanner.Core.Interfaces;
 using ErsatzTV.Scanner.Core.Interfaces.Metadata;
 using Humanizer;
 using Microsoft.Extensions.Logging;
@@ -13,9 +13,9 @@ public class ScanLocalLibraryHandler : IRequestHandler<ScanLocalLibrary, Either<
 {
     private readonly IConfigElementRepository _configElementRepository;
     private readonly IImageFolderScanner _imageFolderScanner;
+    private readonly IScannerProxy _scannerProxy;
     private readonly ILibraryRepository _libraryRepository;
     private readonly ILogger<ScanLocalLibraryHandler> _logger;
-    private readonly IMediator _mediator;
     private readonly IMovieFolderScanner _movieFolderScanner;
     private readonly IMusicVideoFolderScanner _musicVideoFolderScanner;
     private readonly IOtherVideoFolderScanner _otherVideoFolderScanner;
@@ -24,6 +24,7 @@ public class ScanLocalLibraryHandler : IRequestHandler<ScanLocalLibrary, Either<
     private readonly ITelevisionFolderScanner _televisionFolderScanner;
 
     public ScanLocalLibraryHandler(
+        IScannerProxy scannerProxy,
         ILibraryRepository libraryRepository,
         IConfigElementRepository configElementRepository,
         IMovieFolderScanner movieFolderScanner,
@@ -33,9 +34,9 @@ public class ScanLocalLibraryHandler : IRequestHandler<ScanLocalLibrary, Either<
         ISongFolderScanner songFolderScanner,
         IImageFolderScanner imageFolderScanner,
         IRemoteStreamFolderScanner remoteStreamFolderScanner,
-        IMediator mediator,
         ILogger<ScanLocalLibraryHandler> logger)
     {
+        _scannerProxy = scannerProxy;
         _libraryRepository = libraryRepository;
         _configElementRepository = configElementRepository;
         _movieFolderScanner = movieFolderScanner;
@@ -45,7 +46,6 @@ public class ScanLocalLibraryHandler : IRequestHandler<ScanLocalLibrary, Either<
         _songFolderScanner = songFolderScanner;
         _imageFolderScanner = imageFolderScanner;
         _remoteStreamFolderScanner = remoteStreamFolderScanner;
-        _mediator = mediator;
         _logger = logger;
     }
 
@@ -57,10 +57,12 @@ public class ScanLocalLibraryHandler : IRequestHandler<ScanLocalLibrary, Either<
     private async Task<Unit> PerformScan(RequestParameters parameters, CancellationToken cancellationToken)
     {
         (LocalLibrary localLibrary, string ffprobePath, string ffmpegPath, bool forceScan,
-            int libraryRefreshInterval) = parameters;
+            int libraryRefreshInterval, string baseUrl) = parameters;
 
         var sw = new Stopwatch();
         sw.Start();
+
+        _scannerProxy.SetBaseUrl(baseUrl);
 
         var scanned = false;
 
@@ -145,14 +147,7 @@ public class ScanLocalLibraryHandler : IRequestHandler<ScanLocalLibrary, Either<
                 }
             }
 
-            await _mediator.Publish(
-                new ScannerProgressUpdate(
-                    libraryPath.LibraryId,
-                    localLibrary.Name,
-                    progressMax,
-                    Array.Empty<int>(),
-                    Array.Empty<int>()),
-                cancellationToken);
+            await _scannerProxy.UpdateProgress(progressMax, cancellationToken);
         }
 
         sw.Stop();
@@ -170,10 +165,6 @@ public class ScanLocalLibraryHandler : IRequestHandler<ScanLocalLibrary, Either<
                 "Skipping unforced scan of local media library {Name}",
                 localLibrary.Name);
         }
-
-        await _mediator.Publish(
-            new ScannerProgressUpdate(localLibrary.Id, localLibrary.Name, 0, [], []),
-            cancellationToken);
 
         return Unit.Default;
     }
@@ -193,7 +184,8 @@ public class ScanLocalLibraryHandler : IRequestHandler<ScanLocalLibrary, Either<
                 ffprobePath,
                 ffmpegPath,
                 request.ForceScan,
-                libraryRefreshInterval));
+                libraryRefreshInterval,
+                request.BaseUrl));
     }
 
     private Task<Validation<BaseError, LocalLibrary>> LocalLibraryMustExist(ScanLocalLibrary request) =>
@@ -223,5 +215,6 @@ public class ScanLocalLibraryHandler : IRequestHandler<ScanLocalLibrary, Either<
         string FFprobePath,
         string FFmpegPath,
         bool ForceScan,
-        int LibraryRefreshInterval);
+        int LibraryRefreshInterval,
+        string BaseUrl);
 }
