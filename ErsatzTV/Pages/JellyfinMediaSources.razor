@@ -13,7 +13,8 @@
     GetAllMediaSourcesCommand="@(new GetAllJellyfinMediaSources())"
     DisconnectCommand="@(new DisconnectJellyfin())"
     RefreshLibrariesCommand="@RefreshLibraries"
-    SecretStore="@JellyfinSecretStore"/>
+    SecretStore="@JellyfinSecretStore"
+    CanEdit="true"/>
 
 @code {
     private async Task RefreshLibraries(int mediaSourceId, CancellationToken cancellationToken) =>

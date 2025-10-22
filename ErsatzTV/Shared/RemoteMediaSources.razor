@@ -28,14 +28,26 @@
             </MudButton>
         }
 
-        @if (_mediaSources.Any() && !_isAuthorized)
+        @if (_mediaSources.Any())
         {
-            <MudButton Variant="Variant.Filled"
-                       Color="Color.Secondary"
-                       Href="@($"media/sources/{Name.ToLowerInvariant()}/edit")"
-                       Class="ml-4">
-                Fix @Name Connection
-            </MudButton>
+            @if (CanEdit)
+            {
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Secondary"
+                           Href="@($"media/sources/{Name.ToLowerInvariant()}/edit")"
+                           Class="ml-4">
+                    Edit @Name Connection
+                </MudButton>
+            }
+            else if (!_isAuthorized)
+            {
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Secondary"
+                           Href="@($"media/sources/{Name.ToLowerInvariant()}/edit")"
+                           Class="ml-4">
+                    Fix @Name Connection
+                </MudButton>
+            }
         }
     </MudPaper>
     <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
@@ -101,6 +113,9 @@
 
     [Parameter]
     public IRemoteMediaSourceSecretStore<TSecrets> SecretStore { get; set; }
+
+    [Parameter]
+    public bool CanEdit { get; set; }
 
     private List<TViewModel> _mediaSources = [];
 

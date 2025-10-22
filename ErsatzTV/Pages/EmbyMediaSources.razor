@@ -13,7 +13,8 @@
     GetAllMediaSourcesCommand="@(new GetAllEmbyMediaSources())"
     DisconnectCommand="@(new DisconnectEmby())"
     RefreshLibrariesCommand="@RefreshLibraries"
-    SecretStore="@EmbySecretStore"/>
+    SecretStore="@EmbySecretStore"
+    CanEdit="true"/>
 
 @code {
     private async Task RefreshLibraries(int mediaSourceId, CancellationToken cancellationToken) =>

@@ -26,6 +26,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Add episode thumbnail artwork URL to XMLTV template
   - By default, poster will be added as image with type "poster" and thumbnail will be added as image with type "still"
   - Poster will continue to be added as icon by default
+- Add buttons to edit Jellyfin and Emby connection information in **Media Sources** > **Jellyfin** and **Media Sources** > **Emby**
 
 ### Fixed
 - Fix NVIDIA startup errors on arm64
