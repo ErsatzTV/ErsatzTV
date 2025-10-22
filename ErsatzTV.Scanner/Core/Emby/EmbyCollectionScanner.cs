@@ -2,7 +2,6 @@
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Emby;
 using ErsatzTV.Core.Interfaces.Repositories;
-using ErsatzTV.Core.MediaSources;
 using ErsatzTV.Scanner.Core.Interfaces;
 using Microsoft.Extensions.Logging;
 
@@ -62,10 +61,11 @@ public class EmbyCollectionScanner : IEmbyCollectionScanner
                     await _embyCollectionRepository.AddCollection(collection);
                 }
 
-                await SyncCollectionItems(address, apiKey, collection);
-
-                // save collection etag
-                await _embyCollectionRepository.SetEtag(collection);
+                if (await SyncCollectionItems(address, apiKey, collection))
+                {
+                    // save collection etag
+                    await _embyCollectionRepository.SetEtag(collection);
+                }
             }
 
             // remove missing collections (and remove any lingering tags from those collections)
@@ -83,7 +83,7 @@ public class EmbyCollectionScanner : IEmbyCollectionScanner
         return Unit.Default;
     }
 
-    private async Task SyncCollectionItems(
+    private async Task<bool> SyncCollectionItems(
         string address,
         string apiKey,
         EmbyCollection collection)
@@ -111,11 +111,15 @@ public class EmbyCollectionScanner : IEmbyCollectionScanner
             if (!await _scannerProxy.ReindexMediaItems(changedIds, CancellationToken.None))
             {
                 _logger.LogWarning("Failed to reindex media items from scanner process");
+                return false;
             }
+
+            return true;
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Failed to synchronize Emby collection {Name}", collection.Name);
+            return false;
         }
     }
 }

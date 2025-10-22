@@ -2,4 +2,5 @@
 
 namespace ErsatzTV.Scanner.Application.Plex;
 
-public record SynchronizePlexNetworks(int PlexLibraryId, bool ForceScan) : IRequest<Either<BaseError, Unit>>;
+public record SynchronizePlexNetworks(string BaseUrl, int PlexLibraryId, bool ForceScan)
+    : IRequest<Either<BaseError, Unit>>;
