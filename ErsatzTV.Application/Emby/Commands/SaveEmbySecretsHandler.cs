@@ -3,6 +3,7 @@ using ErsatzTV.Core;
 using ErsatzTV.Core.Emby;
 using ErsatzTV.Core.Interfaces.Emby;
 using ErsatzTV.Core.Interfaces.Repositories;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace ErsatzTV.Application.Emby;
 
@@ -12,16 +13,19 @@ public class SaveEmbySecretsHandler : IRequestHandler<SaveEmbySecrets, Either<Ba
     private readonly IEmbyApiClient _embyApiClient;
     private readonly IEmbySecretStore _embySecretStore;
     private readonly IMediaSourceRepository _mediaSourceRepository;
+    private readonly IMemoryCache _memoryCache;
 
     public SaveEmbySecretsHandler(
         IEmbySecretStore embySecretStore,
         IEmbyApiClient embyApiClient,
         IMediaSourceRepository mediaSourceRepository,
+        IMemoryCache memoryCache,
         ChannelWriter<IEmbyBackgroundServiceRequest> channel)
     {
         _embySecretStore = embySecretStore;
         _embyApiClient = embyApiClient;
         _mediaSourceRepository = mediaSourceRepository;
+        _memoryCache = memoryCache;
         _channel = channel;
     }
 
@@ -47,6 +51,7 @@ public class SaveEmbySecretsHandler : IRequestHandler<SaveEmbySecrets, Either<Ba
             parameters.Secrets.Address,
             parameters.ServerInformation.ServerName,
             parameters.ServerInformation.OperatingSystem);
+        _memoryCache.Remove(new GetEmbyConnectionParameters());
         await _channel.WriteAsync(new SynchronizeEmbyMediaSources());
 
         return Unit.Default;

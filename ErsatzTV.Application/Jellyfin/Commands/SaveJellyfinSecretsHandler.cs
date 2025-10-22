@@ -3,6 +3,7 @@ using ErsatzTV.Core;
 using ErsatzTV.Core.Interfaces.Jellyfin;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Jellyfin;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace ErsatzTV.Application.Jellyfin;
 
@@ -12,16 +13,19 @@ public class SaveJellyfinSecretsHandler : IRequestHandler<SaveJellyfinSecrets, E
     private readonly IJellyfinApiClient _jellyfinApiClient;
     private readonly IJellyfinSecretStore _jellyfinSecretStore;
     private readonly IMediaSourceRepository _mediaSourceRepository;
+    private readonly IMemoryCache _memoryCache;
 
     public SaveJellyfinSecretsHandler(
         IJellyfinSecretStore jellyfinSecretStore,
         IJellyfinApiClient jellyfinApiClient,
         IMediaSourceRepository mediaSourceRepository,
+        IMemoryCache memoryCache,
         ChannelWriter<IJellyfinBackgroundServiceRequest> channel)
     {
         _jellyfinSecretStore = jellyfinSecretStore;
         _jellyfinApiClient = jellyfinApiClient;
         _mediaSourceRepository = mediaSourceRepository;
+        _memoryCache = memoryCache;
         _channel = channel;
     }
 
@@ -47,6 +51,7 @@ public class SaveJellyfinSecretsHandler : IRequestHandler<SaveJellyfinSecrets, E
             parameters.Secrets.Address,
             parameters.ServerInformation.ServerName,
             parameters.ServerInformation.OperatingSystem);
+        _memoryCache.Remove(new GetJellyfinConnectionParameters());
         await _channel.WriteAsync(new SynchronizeJellyfinMediaSources());
 
         return Unit.Default;
