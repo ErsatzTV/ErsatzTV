@@ -1,3 +1,4 @@
+using System.Globalization;
 using ErsatzTV.FFmpeg.Capabilities;
 using ErsatzTV.FFmpeg.Decoder;
 using ErsatzTV.FFmpeg.Decoder.Qsv;
@@ -170,8 +171,6 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
             currentState = decoder.NextState(currentState);
         }
 
-        videoInputFile.FilterSteps.Add(new ResetPtsFilter());
-
         // easier to use nv12 for overlay
         if (context.HasSubtitleOverlay || context.HasWatermark || context.HasGraphicsEngine)
         {
@@ -194,13 +193,25 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
         currentState = SetCrop(videoInputFile, desiredState, currentState);
         SetStillImageLoop(videoInputFile, videoStream, ffmpegState, desiredState, pipelineSteps);
 
-        // need to download for any sort of overlay
-        if (currentState.FrameDataLocation == FrameDataLocation.Hardware &&
-            (context.HasSubtitleOverlay || context.HasWatermark || context.HasGraphicsEngine))
+        // need to download for any sort of overlay (and always for setpts)
+        if (currentState.FrameDataLocation == FrameDataLocation.Hardware) //&&
+            //(context.HasSubtitleOverlay || context.HasWatermark || context.HasGraphicsEngine))
         {
             var hardwareDownload = new HardwareDownloadFilter(currentState);
             currentState = hardwareDownload.NextState(currentState);
             videoInputFile.FilterSteps.Add(hardwareDownload);
+        }
+
+        // use normalized fps, or source fps
+        string fps = desiredState.FrameRate.Match(
+            r => r.ToString(NumberFormatInfo.InvariantInfo),
+            () => videoStream.FrameRate.IfNone("24"));
+        videoInputFile.FilterSteps.Add(new ResetPtsFilter(fps));
+
+        // since fps will set frame rate, remove the output option
+        foreach (var frameRate in pipelineSteps.OfType<FrameRateOutputOption>().HeadOrNone())
+        {
+            pipelineSteps.Remove(frameRate);
         }
 
         currentState = SetSubtitle(

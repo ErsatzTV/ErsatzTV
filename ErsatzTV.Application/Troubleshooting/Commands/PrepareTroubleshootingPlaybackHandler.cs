@@ -248,7 +248,7 @@ public class PrepareTroubleshootingPlaybackHandler(
             inPoint,
             channelStartTime: DateTimeOffset.Now,
             TimeSpan.Zero,
-            None,
+            Option<int>.None,
             FileSystemLayout.TranscodeTroubleshootingFolder,
             _ => { },
             cancellationToken);
