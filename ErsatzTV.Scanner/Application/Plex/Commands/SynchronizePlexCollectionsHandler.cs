@@ -3,12 +3,14 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Plex;
+using ErsatzTV.Scanner.Core.Interfaces;
 
 namespace ErsatzTV.Scanner.Application.Plex;
 
 public class SynchronizePlexCollectionsHandler : IRequestHandler<SynchronizePlexCollections, Either<BaseError, Unit>>
 {
     private readonly IConfigElementRepository _configElementRepository;
+    private readonly IScannerProxy _scannerProxy;
     private readonly IMediaSourceRepository _mediaSourceRepository;
     private readonly IPlexSecretStore _plexSecretStore;
     private readonly IPlexCollectionScanner _scanner;
@@ -17,12 +19,14 @@ public class SynchronizePlexCollectionsHandler : IRequestHandler<SynchronizePlex
         IMediaSourceRepository mediaSourceRepository,
         IPlexSecretStore plexSecretStore,
         IPlexCollectionScanner scanner,
-        IConfigElementRepository configElementRepository)
+        IConfigElementRepository configElementRepository,
+        IScannerProxy scannerProxy)
     {
         _mediaSourceRepository = mediaSourceRepository;
         _plexSecretStore = plexSecretStore;
         _scanner = scanner;
         _configElementRepository = configElementRepository;
+        _scannerProxy = scannerProxy;
     }
 
     public async Task<Either<BaseError, Unit>> Handle(
@@ -48,7 +52,8 @@ public class SynchronizePlexCollectionsHandler : IRequestHandler<SynchronizePlex
                 connectionParameters,
                 connectionParameters.PlexMediaSource,
                 request.ForceScan,
-                libraryRefreshInterval));
+                libraryRefreshInterval,
+                request.BaseUrl));
     }
 
     private Task<Validation<BaseError, int>> ValidateLibraryRefreshInterval(CancellationToken cancellationToken) =>
@@ -83,6 +88,8 @@ public class SynchronizePlexCollectionsHandler : IRequestHandler<SynchronizePlex
         RequestParameters parameters,
         CancellationToken cancellationToken)
     {
+        _scannerProxy.SetBaseUrl(parameters.BaseUrl);
+
         var lastScan = new DateTimeOffset(
             parameters.MediaSource.LastCollectionsScan ?? SystemTime.MinValueUtc,
             TimeSpan.Zero);
@@ -110,7 +117,8 @@ public class SynchronizePlexCollectionsHandler : IRequestHandler<SynchronizePlex
         ConnectionParameters ConnectionParameters,
         PlexMediaSource MediaSource,
         bool ForceScan,
-        int LibraryRefreshInterval);
+        int LibraryRefreshInterval,
+        string BaseUrl);
 
     private record ConnectionParameters(PlexMediaSource PlexMediaSource, PlexConnection ActiveConnection)
     {

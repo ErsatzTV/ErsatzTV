@@ -2,7 +2,6 @@ using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
-using ErsatzTV.Core.MediaSources;
 using ErsatzTV.Core.Plex;
 using ErsatzTV.Scanner.Core.Interfaces;
 using Microsoft.Extensions.Logging;
@@ -64,10 +63,11 @@ public class PlexCollectionScanner : IPlexCollectionScanner
                     await _plexCollectionRepository.AddCollection(collection);
                 }
 
-                await SyncCollectionItems(connection, token, collection, cancellationToken);
-
-                // save collection etag
-                await _plexCollectionRepository.SetEtag(collection);
+                if (await SyncCollectionItems(connection, token, collection, cancellationToken))
+                {
+                    // save collection etag
+                    await _plexCollectionRepository.SetEtag(collection);
+                }
             }
 
             // remove missing collections (and remove any lingering tags from those collections)
@@ -85,7 +85,7 @@ public class PlexCollectionScanner : IPlexCollectionScanner
         return Unit.Default;
     }
 
-    private async Task SyncCollectionItems(
+    private async Task<bool> SyncCollectionItems(
         PlexConnection connection,
         PlexServerAuthToken token,
         PlexCollection collection,
@@ -116,11 +116,15 @@ public class PlexCollectionScanner : IPlexCollectionScanner
             if (!await _scannerProxy.ReindexMediaItems(changedIds, CancellationToken.None))
             {
                 _logger.LogWarning("Failed to reindex media items from scanner process");
+                return false;
             }
+
+            return true;
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Failed to synchronize Plex collection {Name}", collection.Name);
+            return false;
         }
     }
 }

@@ -2,7 +2,9 @@ using System.Globalization;
 using ErsatzTV.Application.Libraries;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Errors;
+using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Metadata;
 using ErsatzTV.FFmpeg.Runtime;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
@@ -13,11 +15,15 @@ namespace ErsatzTV.Application.Emby;
 public class CallEmbyCollectionScannerHandler : CallLibraryScannerHandler<SynchronizeEmbyCollections>,
     IRequestHandler<SynchronizeEmbyCollections, Either<BaseError, Unit>>
 {
+    private readonly IScannerProxyService _scannerProxyService;
+
     public CallEmbyCollectionScannerHandler(
         IDbContextFactory<TvContext> dbContextFactory,
         IConfigElementRepository configElementRepository,
+        IScannerProxyService scannerProxyService,
         IRuntimeInfo runtimeInfo) : base(dbContextFactory, configElementRepository, runtimeInfo)
     {
+        _scannerProxyService = scannerProxyService;
     }
 
     public async Task<Either<BaseError, Unit>>
@@ -68,16 +74,31 @@ public class CallEmbyCollectionScannerHandler : CallLibraryScannerHandler<Synchr
         SynchronizeEmbyCollections request,
         CancellationToken cancellationToken)
     {
-        var arguments = new List<string>
+        Option<Guid> maybeScanId = _scannerProxyService.StartScan(FakeLibraryId.EmbyCollections);
+        foreach (var scanId in maybeScanId)
         {
-            "scan-emby-collections", request.EmbyMediaSourceId.ToString(CultureInfo.InvariantCulture)
-        };
+            try
+            {
+                var arguments = new List<string>
+                {
+                    "scan-emby-collections",
+                    request.EmbyMediaSourceId.ToString(CultureInfo.InvariantCulture),
+                    GetBaseUrl(scanId)
+                };
 
-        if (request.ForceScan)
-        {
-            arguments.Add("--force");
+                if (request.ForceScan)
+                {
+                    arguments.Add("--force");
+                }
+
+                return await base.PerformScan(parameters, arguments, cancellationToken).MapT(_ => Unit.Default);
+            }
+            finally
+            {
+                _scannerProxyService.EndScan(scanId);
+            }
         }
 
-        return await base.PerformScan(parameters, arguments, cancellationToken).MapT(_ => Unit.Default);
+        return BaseError.New("Emby collections are already scanning");
     }
 }

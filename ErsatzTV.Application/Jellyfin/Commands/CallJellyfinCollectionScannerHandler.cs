@@ -2,7 +2,9 @@ using System.Globalization;
 using ErsatzTV.Application.Libraries;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Errors;
+using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Metadata;
 using ErsatzTV.FFmpeg.Runtime;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
@@ -13,11 +15,15 @@ namespace ErsatzTV.Application.Jellyfin;
 public class CallJellyfinCollectionScannerHandler : CallLibraryScannerHandler<SynchronizeJellyfinCollections>,
     IRequestHandler<SynchronizeJellyfinCollections, Either<BaseError, Unit>>
 {
+    private readonly IScannerProxyService _scannerProxyService;
+
     public CallJellyfinCollectionScannerHandler(
         IDbContextFactory<TvContext> dbContextFactory,
         IConfigElementRepository configElementRepository,
+        IScannerProxyService scannerProxyService,
         IRuntimeInfo runtimeInfo) : base(dbContextFactory, configElementRepository, runtimeInfo)
     {
+        _scannerProxyService = scannerProxyService;
     }
 
     public async Task<Either<BaseError, Unit>>
@@ -68,16 +74,31 @@ public class CallJellyfinCollectionScannerHandler : CallLibraryScannerHandler<Sy
         SynchronizeJellyfinCollections request,
         CancellationToken cancellationToken)
     {
-        var arguments = new List<string>
+        Option<Guid> maybeScanId = _scannerProxyService.StartScan(FakeLibraryId.JellyfinCollections);
+        foreach (var scanId in maybeScanId)
         {
-            "scan-jellyfin-collections", request.JellyfinMediaSourceId.ToString(CultureInfo.InvariantCulture)
-        };
+            try
+            {
+                var arguments = new List<string>
+                {
+                    "scan-jellyfin-collections",
+                    request.JellyfinMediaSourceId.ToString(CultureInfo.InvariantCulture),
+                    GetBaseUrl(scanId),
+                };
 
-        if (request.ForceScan)
-        {
-            arguments.Add("--force");
+                if (request.ForceScan)
+                {
+                    arguments.Add("--force");
+                }
+
+                return await base.PerformScan(parameters, arguments, cancellationToken).MapT(_ => Unit.Default);
+            }
+            finally
+            {
+                _scannerProxyService.EndScan(scanId);
+            }
         }
 
-        return await base.PerformScan(parameters, arguments, cancellationToken).MapT(_ => Unit.Default);
+        return BaseError.New("Jellyfin collections are already scanning");
     }
 }

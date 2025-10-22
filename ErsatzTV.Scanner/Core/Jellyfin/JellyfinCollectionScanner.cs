@@ -2,7 +2,6 @@
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Jellyfin;
 using ErsatzTV.Core.Interfaces.Repositories;
-using ErsatzTV.Core.MediaSources;
 using ErsatzTV.Scanner.Core.Interfaces;
 using Microsoft.Extensions.Logging;
 
@@ -63,10 +62,11 @@ public class JellyfinCollectionScanner : IJellyfinCollectionScanner
                     await _jellyfinCollectionRepository.AddCollection(collection);
                 }
 
-                await SyncCollectionItems(address, apiKey, mediaSourceId, collection);
-
-                // save collection etag
-                await _jellyfinCollectionRepository.SetEtag(collection);
+                if (await SyncCollectionItems(address, apiKey, mediaSourceId, collection))
+                {
+                    // save collection etag
+                    await _jellyfinCollectionRepository.SetEtag(collection);
+                }
             }
 
             // remove missing collections (and remove any lingering tags from those collections)
@@ -85,7 +85,7 @@ public class JellyfinCollectionScanner : IJellyfinCollectionScanner
         return Unit.Default;
     }
 
-    private async Task SyncCollectionItems(
+    private async Task<bool> SyncCollectionItems(
         string address,
         string apiKey,
         int mediaSourceId,
@@ -115,11 +115,15 @@ public class JellyfinCollectionScanner : IJellyfinCollectionScanner
             if (!await _scannerProxy.ReindexMediaItems(changedIds, CancellationToken.None))
             {
                 _logger.LogWarning("Failed to reindex media items from scanner process");
+                return false;
             }
+
+            return true;
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Failed to synchronize Jellyfin collection {Name}", collection.Name);
+            return false;
         }
     }
 }

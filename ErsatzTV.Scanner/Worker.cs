@@ -83,10 +83,12 @@ public class Worker : BackgroundService
 
         var scanPlexCollectionsCommand = new Command("scan-plex-collections", "Scan Plex collections");
         scanPlexCollectionsCommand.Arguments.Add(mediaSourceIdArgument);
+        scanPlexCollectionsCommand.Arguments.Add(baseUrlArgument);
         scanPlexCollectionsCommand.Options.Add(forceOption);
 
         var scanPlexNetworksCommand = new Command("scan-plex-networks", "Scan Plex networks");
         scanPlexNetworksCommand.Arguments.Add(libraryIdArgument);
+        scanPlexNetworksCommand.Arguments.Add(baseUrlArgument);
         scanPlexNetworksCommand.Options.Add(forceOption);
 
         var scanEmbyCommand = new Command("scan-emby", "Scan an Emby library");
@@ -97,6 +99,7 @@ public class Worker : BackgroundService
 
         var scanEmbyCollectionsCommand = new Command("scan-emby-collections", "Scan Emby collections");
         scanEmbyCollectionsCommand.Arguments.Add(mediaSourceIdArgument);
+        scanEmbyCollectionsCommand.Arguments.Add(baseUrlArgument);
         scanEmbyCollectionsCommand.Options.Add(forceOption);
 
         var scanJellyfinCommand = new Command("scan-jellyfin", "Scan a Jellyfin library");
@@ -107,6 +110,7 @@ public class Worker : BackgroundService
 
         var scanJellyfinCollectionsCommand = new Command("scan-jellyfin-collections", "Scan Jellyfin collections");
         scanJellyfinCollectionsCommand.Arguments.Add(mediaSourceIdArgument);
+        scanJellyfinCollectionsCommand.Arguments.Add(baseUrlArgument);
         scanJellyfinCollectionsCommand.Options.Add(forceOption);
 
         // Show-specific scanning commands
@@ -188,11 +192,16 @@ public class Worker : BackgroundService
                 SetProcessPriority(force);
 
                 int mediaSourceId = parseResult.GetValue(mediaSourceIdArgument);
+                string? baseUrl = parseResult.GetValue(baseUrlArgument);
+                if (baseUrl is null)
+                {
+                    return;
+                }
 
                 using IServiceScope scope = _serviceScopeFactory.CreateScope();
                 IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
-                var scan = new SynchronizePlexCollections(mediaSourceId, force);
+                var scan = new SynchronizePlexCollections(baseUrl, mediaSourceId, force);
                 await mediator.Send(scan, token);
             }
         });
@@ -205,11 +214,16 @@ public class Worker : BackgroundService
                 SetProcessPriority(force);
 
                 int libraryId = parseResult.GetValue(libraryIdArgument);
+                string? baseUrl = parseResult.GetValue(baseUrlArgument);
+                if (baseUrl is null)
+                {
+                    return;
+                }
 
                 using IServiceScope scope = _serviceScopeFactory.CreateScope();
                 IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
-                var scan = new SynchronizePlexNetworks(libraryId, force);
+                var scan = new SynchronizePlexNetworks(baseUrl, libraryId, force);
                 await mediator.Send(scan, token);
             }
         });
@@ -245,11 +259,16 @@ public class Worker : BackgroundService
                 SetProcessPriority(force);
 
                 int mediaSourceId = parseResult.GetValue(mediaSourceIdArgument);
+                string? baseUrl = parseResult.GetValue(baseUrlArgument);
+                if (baseUrl is null)
+                {
+                    return;
+                }
 
                 using IServiceScope scope = _serviceScopeFactory.CreateScope();
                 IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
-                var scan = new SynchronizeEmbyCollections(mediaSourceId, force);
+                var scan = new SynchronizeEmbyCollections(baseUrl, mediaSourceId, force);
                 await mediator.Send(scan, token);
             }
         });
@@ -285,11 +304,16 @@ public class Worker : BackgroundService
                 SetProcessPriority(force);
 
                 int mediaSourceId = parseResult.GetValue(mediaSourceIdArgument);
+                string? baseUrl = parseResult.GetValue(baseUrlArgument);
+                if (baseUrl is null)
+                {
+                    return;
+                }
 
                 using IServiceScope scope = _serviceScopeFactory.CreateScope();
                 IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
-                var scan = new SynchronizeJellyfinCollections(mediaSourceId, force);
+                var scan = new SynchronizeJellyfinCollections(baseUrl, mediaSourceId, force);
                 await mediator.Send(scan, token);
             }
         });

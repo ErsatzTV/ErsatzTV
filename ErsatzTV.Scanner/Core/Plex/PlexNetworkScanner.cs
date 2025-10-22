@@ -2,7 +2,6 @@ using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
-using ErsatzTV.Core.MediaSources;
 using ErsatzTV.Core.Plex;
 using ErsatzTV.Scanner.Core.Interfaces;
 using Microsoft.Extensions.Logging;

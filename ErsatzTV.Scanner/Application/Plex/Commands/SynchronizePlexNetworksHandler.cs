@@ -3,6 +3,7 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Plex;
+using ErsatzTV.Scanner.Core.Interfaces;
 
 namespace ErsatzTV.Scanner.Application.Plex;
 
@@ -12,6 +13,7 @@ public class SynchronizePlexNetworksHandler : IRequestHandler<SynchronizePlexNet
     private readonly IMediaSourceRepository _mediaSourceRepository;
     private readonly IPlexSecretStore _plexSecretStore;
     private readonly IPlexTelevisionRepository _plexTelevisionRepository;
+    private readonly IScannerProxy _scannerProxy;
     private readonly IPlexNetworkScanner _scanner;
 
     public SynchronizePlexNetworksHandler(
@@ -19,13 +21,15 @@ public class SynchronizePlexNetworksHandler : IRequestHandler<SynchronizePlexNet
         IPlexSecretStore plexSecretStore,
         IPlexNetworkScanner scanner,
         IConfigElementRepository configElementRepository,
-        IPlexTelevisionRepository plexTelevisionRepository)
+        IPlexTelevisionRepository plexTelevisionRepository,
+        IScannerProxy scannerProxy)
     {
         _mediaSourceRepository = mediaSourceRepository;
         _plexSecretStore = plexSecretStore;
         _scanner = scanner;
         _configElementRepository = configElementRepository;
         _plexTelevisionRepository = plexTelevisionRepository;
+        _scannerProxy = scannerProxy;
     }
 
     public async Task<Either<BaseError, Unit>> Handle(
@@ -52,7 +56,8 @@ public class SynchronizePlexNetworksHandler : IRequestHandler<SynchronizePlexNet
                 connectionParameters,
                 plexLibrary,
                 request.ForceScan,
-                libraryRefreshInterval));
+                libraryRefreshInterval,
+                request.BaseUrl));
     }
 
     private Task<Validation<BaseError, PlexLibrary>> PlexLibraryMustExist(
@@ -92,6 +97,8 @@ public class SynchronizePlexNetworksHandler : IRequestHandler<SynchronizePlexNet
         RequestParameters parameters,
         CancellationToken cancellationToken)
     {
+        _scannerProxy.SetBaseUrl(parameters.BaseUrl);
+
         var lastScan = new DateTimeOffset(
             parameters.Library.LastNetworksScan ?? SystemTime.MinValueUtc,
             TimeSpan.Zero);
@@ -120,7 +127,8 @@ public class SynchronizePlexNetworksHandler : IRequestHandler<SynchronizePlexNet
         ConnectionParameters ConnectionParameters,
         PlexLibrary Library,
         bool ForceScan,
-        int LibraryRefreshInterval);
+        int LibraryRefreshInterval,
+        string BaseUrl);
 
     private record ConnectionParameters(PlexMediaSource PlexMediaSource, PlexConnection ActiveConnection)
     {
