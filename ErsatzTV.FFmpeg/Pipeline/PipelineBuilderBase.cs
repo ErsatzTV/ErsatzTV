@@ -162,6 +162,12 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
             new EncoderCopyAll()
         };
 
+        // ffmpeg below 8 doesn't detect this without an explicit decoder
+        foreach (string _ in concatInputFile.AudioFormat.Where(af => af == AudioFormat.AacLatm))
+        {
+            concatInputFile.AddOption(new DecoderAacLatm());
+        }
+
         concatInputFile.AddOption(new ReadrateInputOption(1.0));
 
         SetMetadataServiceProvider(ffmpegState, pipelineSteps);
@@ -384,6 +390,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
                                 desiredState,
                                 videoStream.FrameRate,
                                 ffmpegState.OutputFormat,
+                                ffmpegState.HlsSegmentOptions,
                                 segmentTemplate,
                                 ffmpegState.HlsInitTemplate,
                                 playlistPath,

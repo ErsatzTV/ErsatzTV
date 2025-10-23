@@ -307,7 +307,7 @@ public class IptvController : StreamingControllerBase
             string audioCodec = streamingSpecs.AudioFormat switch
             {
                 FFmpegProfileAudioFormat.Ac3 => "ac-3",
-                FFmpegProfileAudioFormat.Aac => "mp4a.40.2",
+                FFmpegProfileAudioFormat.Aac or FFmpegProfileAudioFormat.AacLatm => "mp4a.40.2",
                 _ => string.Empty
             };
 
