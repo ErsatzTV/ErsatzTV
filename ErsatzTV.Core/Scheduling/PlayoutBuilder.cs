@@ -361,6 +361,12 @@ public class PlayoutBuilder : IPlayoutBuilder
         PlayoutReferenceData referenceData,
         CancellationToken cancellationToken)
     {
+        if (referenceData.ProgramSchedule.Items.Count == 0)
+        {
+            _logger.LogWarning("Playout {Playout}'s schedule has no schedule items", referenceData.Channel.Name);
+            return BaseError.New($"Playout {referenceData.Channel.Name}'s schedule has no schedule items");
+        }
+
         Map<CollectionKey, List<MediaItem>> collectionMediaItems =
             await GetCollectionMediaItems(referenceData, cancellationToken);
         if (collectionMediaItems.IsEmpty)

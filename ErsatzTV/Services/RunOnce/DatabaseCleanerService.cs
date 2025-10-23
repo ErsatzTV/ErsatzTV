@@ -32,6 +32,7 @@ public class DatabaseCleanerService(
         await DeleteInvalidMediaItems(dbContext);
         await GenerateFallbackMetadata(scope, dbContext, stoppingToken);
         await ResetExternalSubtitleState(dbContext, stoppingToken);
+        await RemoveOrphanedPlaylists(dbContext, stoppingToken);
 
         systemStartup.DatabaseIsCleaned();
 
@@ -89,5 +90,27 @@ public class DatabaseCleanerService(
         await dbContext.Database.ExecuteSqlRawAsync(
             "UPDATE `Subtitle` SET `IsExtracted`=0 WHERE `Path` IS NULL",
             cancellationToken);
+    }
+
+    private static async Task RemoveOrphanedPlaylists(TvContext dbContext, CancellationToken cancellationToken)
+    {
+        // remove orphaned playlists
+        await dbContext.Playlists
+            .Where(p => p.IsSystem && !dbContext.TraktLists.Any(t => t.PlaylistId == p.Id))
+            .ExecuteDeleteAsync(cancellationToken);
+
+        // turn off "generate playlist" on trakt lists with no referenced playlist
+        await dbContext.TraktLists
+            .Where(t => t.Playlist == null && t.GeneratePlaylist)
+            .ExecuteUpdateAsync(
+                setters => setters.SetProperty(t => t.GeneratePlaylist, false),
+                cancellationToken);
+
+        // set playback order when unset
+        await dbContext.PlaylistItems
+            .Where(pi => pi.Playlist.IsSystem && pi.PlaybackOrder == PlaybackOrder.None)
+            .ExecuteUpdateAsync(
+                setters => setters.SetProperty(p => p.PlaybackOrder, PlaybackOrder.Chronological),
+                cancellationToken);
     }
 }

@@ -17,9 +17,9 @@ public class PreviewPlaylistPlayoutHandler(
     IDbContextFactory<TvContext> dbContextFactory,
     IMediaCollectionRepository mediaCollectionRepository,
     IPlayoutBuilder playoutBuilder)
-    : IRequestHandler<PreviewPlaylistPlayout, List<PlayoutItemPreviewViewModel>>
+    : IRequestHandler<PreviewPlaylistPlayout, Either<BaseError, List<PlayoutItemPreviewViewModel>>>
 {
-    public async Task<List<PlayoutItemPreviewViewModel>> Handle(
+    public async Task<Either<BaseError, List<PlayoutItemPreviewViewModel>>> Handle(
         PreviewPlaylistPlayout request,
         CancellationToken cancellationToken)
     {
@@ -65,7 +65,7 @@ public class PreviewPlaylistPlayoutHandler(
             PlayoutBuildMode.Reset,
             cancellationToken);
 
-        return await buildResult.MatchAsync(
+        return await buildResult.MatchAsync<Either<BaseError, List<PlayoutItemPreviewViewModel>>>(
             async result =>
             {
                 var maxItems = 0;
@@ -121,7 +121,7 @@ public class PreviewPlaylistPlayoutHandler(
 
                 return onceThrough.OrderBy(i => i.StartOffset).Map(Scheduling.Mapper.ProjectToViewModel).ToList();
             },
-            _ => []);
+            error => error);
     }
 
     private static ProgramScheduleItemFlood MapToScheduleItem(PreviewPlaylistPlayout request) =>

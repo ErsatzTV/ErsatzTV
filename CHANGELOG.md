@@ -46,6 +46,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix UI error adding deco
 - Fix UI error editing watermarks and graphics elements on blocks
 - Fix showing playout build failure details when resetting a playout
+- Fix scheduling auto-generated trakt list playlists that contain shows
 
 ### Changed
 - Do not use graphics engine for single, permanent watermark
