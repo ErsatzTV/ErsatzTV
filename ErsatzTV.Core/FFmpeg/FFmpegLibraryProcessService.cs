@@ -171,6 +171,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         string audioFormat = playbackSettings.AudioFormat switch
         {
             FFmpegProfileAudioFormat.Aac => AudioFormat.Aac,
+            FFmpegProfileAudioFormat.AacLatm => AudioFormat.AacLatm,
             FFmpegProfileAudioFormat.Ac3 => AudioFormat.Ac3,
             FFmpegProfileAudioFormat.Copy => AudioFormat.Copy,
             _ => throw new ArgumentOutOfRangeException($"unexpected audio format {playbackSettings.VideoFormat}")
@@ -403,6 +404,27 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             _ =>  Option<string>.None
         };
 
+        Option<string> hlsSegmentOptions = Option<string>.None;
+        if (outputFormat is OutputFormatKind.Hls)
+        {
+            string options = string.Empty;
+
+            if (ptsOffset == TimeSpan.Zero)
+            {
+                options += "+initial_discontinuity";
+            }
+
+            if (audioFormat == AudioFormat.AacLatm)
+            {
+                options += "+latm";
+            }
+
+            if (!string.IsNullOrWhiteSpace(options))
+            {
+                hlsSegmentOptions = $"mpegts_flags={options}";
+            }
+        }
+
         FrameSize scaledSize = ffmpegVideoStream.SquarePixelFrameSize(
             new FrameSize(channel.FFmpegProfile.Resolution.Width, channel.FFmpegProfile.Resolution.Height));
 
@@ -506,6 +528,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             hlsPlaylistPath,
             hlsSegmentTemplate,
             hlsInitTemplate,
+            hlsSegmentOptions,
             ptsOffset,
             playbackSettings.ThreadCount,
             qsvExtraHardwareFrames,
@@ -583,6 +606,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         string audioFormat = playbackSettings.AudioFormat switch
         {
             FFmpegProfileAudioFormat.Ac3 => AudioFormat.Ac3,
+            FFmpegProfileAudioFormat.AacLatm => AudioFormat.AacLatm,
             _ => AudioFormat.Aac
         };
 
@@ -645,6 +669,27 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             _ =>  Option<string>.None
         };
 
+        Option<string> hlsSegmentOptions = Option<string>.None;
+        if (outputFormat is OutputFormatKind.Hls)
+        {
+            string options = string.Empty;
+
+            if (ptsOffset == TimeSpan.Zero)
+            {
+                options += "+initial_discontinuity";
+            }
+
+            if (audioFormat == AudioFormat.AacLatm)
+            {
+                options += "+latm";
+            }
+
+            if (!string.IsNullOrWhiteSpace(options))
+            {
+                hlsSegmentOptions = $"mpegts_options={options}";
+            }
+        }
+
         string videoPath = Path.Combine(FileSystemLayout.ResourcesCacheFolder, "background.png");
 
         var videoVersion = BackgroundImageMediaVersion.ForPath(videoPath, desiredResolution);
@@ -686,6 +731,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             hlsPlaylistPath,
             hlsSegmentTemplate,
             hlsInitTemplate,
+            hlsSegmentOptions,
             ptsOffset,
             Option<int>.None,
             qsvExtraHardwareFrames,
@@ -777,6 +823,11 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         var concatInputFile = new ConcatInputFile(
             $"http://localhost:{Settings.StreamingPort}/iptv/channel/{channel.Number}.m3u8?mode=segmenter{accessTokenQuery}",
             resolution);
+
+        if (channel.FFmpegProfile.AudioFormat is FFmpegProfileAudioFormat.AacLatm)
+        {
+            concatInputFile.AudioFormat = AudioFormat.AacLatm;
+        }
 
         IPipelineBuilder pipelineBuilder = await _pipelineBuilderFactory.GetBuilder(
             HardwareAccelerationMode.None,

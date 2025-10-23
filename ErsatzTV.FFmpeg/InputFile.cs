@@ -28,6 +28,8 @@ public record ConcatInputFile(string Url, FrameSize Resolution) : InputFile(
             ScanKind.Unknown)
     })
 {
+    public Option<string> AudioFormat { get; set; }
+
     public void AddOption(IInputOption option)
     {
         if (option.AppliesTo(this))

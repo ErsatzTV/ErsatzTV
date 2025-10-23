@@ -11,6 +11,7 @@ public class OutputFormatHls : IPipelineStep
     private readonly bool _isTroubleshooting;
     private readonly Option<string> _mediaFrameRate;
     private readonly OutputFormatKind _outputFormat;
+    private readonly Option<string> _segmentOptions;
     private readonly bool _oneSecondGop;
     private readonly string _playlistPath;
     private readonly string _segmentTemplate;
@@ -20,6 +21,7 @@ public class OutputFormatHls : IPipelineStep
         FrameState desiredState,
         Option<string> mediaFrameRate,
         OutputFormatKind outputFormat,
+        Option<string> segmentOptions,
         string segmentTemplate,
         Option<string> initTemplate,
         string playlistPath,
@@ -30,6 +32,7 @@ public class OutputFormatHls : IPipelineStep
         _desiredState = desiredState;
         _mediaFrameRate = mediaFrameRate;
         _outputFormat = outputFormat;
+        _segmentOptions = segmentOptions;
         _segmentTemplate = segmentTemplate;
         _initTemplate = initTemplate;
         _playlistPath = playlistPath;
@@ -83,6 +86,11 @@ public class OutputFormatHls : IPipelineStep
                     break;
             }
 
+            foreach (string options in _segmentOptions)
+            {
+                result.AddRange("-hls_segment_options", options);
+            }
+
             string pdt = _isTroubleshooting ? string.Empty : "program_date_time+omit_endlist+";
 
             if (_isFirstTranscode)
@@ -108,7 +116,6 @@ public class OutputFormatHls : IPipelineStep
                         result.AddRange(
                         [
                             "-hls_flags", $"{pdt}append_list+discont_start{independentSegments}",
-                            "-mpegts_flags", "+initial_discontinuity",
                             _playlistPath
                         ]);
                         break;

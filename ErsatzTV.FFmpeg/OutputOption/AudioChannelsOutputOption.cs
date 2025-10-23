@@ -20,15 +20,17 @@ public class AudioChannelsOutputOption : OutputOption
     {
         get
         {
-            if (_sourceChannels != _desiredChannels || _audioFormat == Some(AudioFormat.Aac) && _desiredChannels > 2)
+            if (_sourceChannels != _desiredChannels ||
+                (_audioFormat == Some(AudioFormat.Aac) || _audioFormat == Some(AudioFormat.AacLatm)) &&
+                _desiredChannels > 2)
             {
-                return new[]
-                {
+                return
+                [
                     "-ac", _desiredChannels.ToString(CultureInfo.InvariantCulture)
-                };
+                ];
             }
 
-            return Array.Empty<string>();
+            return [];
         }
     }
 }

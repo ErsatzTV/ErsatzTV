@@ -242,6 +242,7 @@
             <MudSelect @bind-Value="_model.AudioFormat" For="@(() => _model.AudioFormat)">
                 <MudSelectItem Value="@FFmpegProfileAudioFormat.Aac">aac</MudSelectItem>
                 <MudSelectItem Value="@FFmpegProfileAudioFormat.Ac3">ac3</MudSelectItem>
+                <MudSelectItem Value="@FFmpegProfileAudioFormat.AacLatm">aac (latm)</MudSelectItem>
             </MudSelect>
         </MudStack>
         <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">

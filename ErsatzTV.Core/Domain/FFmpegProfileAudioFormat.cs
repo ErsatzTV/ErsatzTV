@@ -9,6 +9,7 @@ public enum FFmpegProfileAudioFormat
 
     Aac = 1,
     Ac3 = 2,
+    AacLatm = 3,
 
     Copy = 99
 }
