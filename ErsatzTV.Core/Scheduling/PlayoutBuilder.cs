@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
+using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
@@ -296,7 +297,7 @@ public class PlayoutBuilder : IPlayoutBuilder
             TrimStart = false;
         }
 
-        await BuildPlayoutItems(
+        Either<BaseError, PlayoutBuildResult> maybeResult = await BuildPlayoutItems(
             playout,
             referenceData,
             result,
@@ -305,6 +306,16 @@ public class PlayoutBuilder : IPlayoutBuilder
             parameters.CollectionMediaItems,
             true,
             cancellationToken);
+
+        foreach (BaseError error in maybeResult.LeftToSeq())
+        {
+            return error;
+        }
+
+        foreach (PlayoutBuildResult r in maybeResult.RightToSeq())
+        {
+            result = r;
+        }
 
         // time shift on demand channel if needed
         if (referenceData.Channel.PlayoutMode is ChannelPlayoutMode.OnDemand)
@@ -350,6 +361,12 @@ public class PlayoutBuilder : IPlayoutBuilder
         PlayoutReferenceData referenceData,
         CancellationToken cancellationToken)
     {
+        if (referenceData.ProgramSchedule.Items.Count == 0)
+        {
+            _logger.LogWarning("Playout {Playout}'s schedule has no schedule items", referenceData.Channel.Name);
+            return BaseError.New($"Playout {referenceData.Channel.Name}'s schedule has no schedule items");
+        }
+
         Map<CollectionKey, List<MediaItem>> collectionMediaItems =
             await GetCollectionMediaItems(referenceData, cancellationToken);
         if (collectionMediaItems.IsEmpty)
@@ -802,7 +819,7 @@ public class PlayoutBuilder : IPlayoutBuilder
                     "Failed to schedule beyond {Time}; aborting playout build - this can be caused by an impossible schedule, or by a bug",
                     playoutBuilderState.CurrentTime);
 
-                throw new InvalidOperationException("Scheduling loop encountered");
+                return new SchedulingLoopEncountered();
             }
 
             // _logger.LogDebug("Playout time is {CurrentTime}", playoutBuilderState.CurrentTime);

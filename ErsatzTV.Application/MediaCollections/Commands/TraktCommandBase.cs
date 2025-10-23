@@ -195,7 +195,8 @@ public abstract class TraktCommandBase
                                 Index = item.Rank,
                                 PlaylistId = list.Playlist.Id,
                                 Playlist = list.Playlist,
-                                IncludeInProgramGuide = true
+                                IncludeInProgramGuide = true,
+                                PlaybackOrder = PlaybackOrder.Chronological
                             };
 
                             await dbContext.PlaylistItems.AddAsync(playlistItem, cancellationToken);

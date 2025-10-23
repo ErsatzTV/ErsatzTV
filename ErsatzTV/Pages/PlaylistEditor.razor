@@ -312,6 +312,12 @@
         <MudTextField @bind-Value="@_selectedItem.Count" For="@(() => _selectedItem.Count)"/>
     </MudStack>
 }
+else if (!string.IsNullOrWhiteSpace(_previewMessage))
+{
+    <MudText Typo="Typo.h5" Class="mt-10 mb-2">Preview</MudText>
+    <MudDivider Class="mb-6"/>
+    <MudAlert Severity="Severity.Warning">@_previewMessage</MudAlert>
+}
 else if (_previewItems is not null)
 {
     <MudText Typo="Typo.h5" Class="mt-10 mb-2">Preview</MudText>
@@ -348,6 +354,7 @@ else if (_previewItems is not null)
 
     private PlaylistItemsEditViewModel _playlist = new() { Items = [] };
     private PlaylistItemEditViewModel _selectedItem;
+    private string _previewMessage;
     private List<PlayoutItemPreviewViewModel> _previewItems;
 
     public void Dispose()
@@ -577,7 +584,18 @@ else if (_previewItems is not null)
     private async Task PreviewPlayout()
     {
         _selectedItem = null;
-        _previewItems = await Mediator.Send(new PreviewPlaylistPlayout(GenerateReplaceRequest()), _cts.Token);
+        _previewMessage = null;
+
+        Either<BaseError, List<PlayoutItemPreviewViewModel>> result = await Mediator.Send(new PreviewPlaylistPlayout(GenerateReplaceRequest()), _cts.Token);
+        foreach (var error in result.LeftToSeq())
+        {
+            _previewMessage = error.ToString();
+        }
+
+        foreach (List<PlayoutItemPreviewViewModel> items in result.RightToSeq())
+        {
+            _previewItems = items;
+        }
     }
 
     private static void UpdateEPG(PlaylistItemEditViewModel context, bool includeInProgramGuide) => context.IncludeInProgramGuide = includeInProgramGuide;
