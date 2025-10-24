@@ -26,7 +26,7 @@ public class EmbyCollectionScanner : IEmbyCollectionScanner
         _logger = logger;
     }
 
-    public async Task<Either<BaseError, Unit>> ScanCollections(string address, string apiKey)
+    public async Task<Either<BaseError, Unit>> ScanCollections(string address, string apiKey, bool deepScan)
     {
         try
         {
@@ -46,13 +46,13 @@ public class EmbyCollectionScanner : IEmbyCollectionScanner
 
                 Option<EmbyCollection> maybeExisting = existingCollections.Find(c => c.ItemId == collection.ItemId);
 
-                // // skip if unchanged (etag)
-                // if (await maybeExisting.Map(e => e.Etag ?? string.Empty).IfNoneAsync(string.Empty) ==
-                //     collection.Etag)
-                // {
-                //     _logger.LogDebug("Emby collection {Name} is unchanged", collection.Name);
-                //     continue;
-                // }
+                // skip if unchanged (etag)
+                if (!deepScan && await maybeExisting.Map(e => e.Etag ?? string.Empty).IfNoneAsync(string.Empty) ==
+                    collection.Etag)
+                {
+                    _logger.LogDebug("Emby collection {Name} is unchanged", collection.Name);
+                    continue;
+                }
 
                 // add if new
                 if (maybeExisting.IsNone)
@@ -98,16 +98,74 @@ public class EmbyCollectionScanner : IEmbyCollectionScanner
 
             List<int> removedIds = await _embyCollectionRepository.RemoveAllTags(collection);
 
+            var movies = 0;
+            var shows = 0;
+            var seasons = 0;
+            var episodes = 0;
+            var otherTypes = new Dictionary<string, int>();
+
             // sync tags on items
             var addedIds = new List<int>();
             await foreach ((MediaItem item, int _) in items)
             {
-                addedIds.Add(await _embyCollectionRepository.AddTag(item, collection));
+                Option<int> maybeId = await _embyCollectionRepository.AddTag(item, collection);
+                foreach (int id in maybeId)
+                {
+                    addedIds.Add(id);
+
+                    switch (item)
+                    {
+                        case Movie:
+                            movies++;
+                            break;
+                        case Show:
+                            shows++;
+                            break;
+                        case Season:
+                            seasons++;
+                            break;
+                        case Episode:
+                            episodes++;
+                            break;
+                    }
+                }
+
+                if (item is UnknownEmbyMediaItem unk)
+                {
+                    if (!otherTypes.TryAdd(unk.ItemType, 1))
+                    {
+                        otherTypes[unk.ItemType]++;
+                    }
+                }
             }
 
-            _logger.LogDebug("Emby collection {Name} contains {Count} items", collection.Name, addedIds.Count);
+            if (addedIds.Count > 0)
+            {
+                _logger.LogDebug(
+                    "Emby collection {Name} contains {Count} items ({Movies} movies, {Shows} shows, {Seasons} seasons, {Episodes} episodes)",
+                    collection.Name,
+                    addedIds.Count,
+                    movies,
+                    shows,
+                    seasons,
+                    episodes);
+            }
+            else
+            {
+                _logger.LogDebug("Emby collection {Name} contains no items that are also in ErsatzTV", collection.Name);
+            }
+
+            if (otherTypes.Count > 0)
+            {
+                _logger.LogDebug("Emby returned unsupported collection items {Items}", otherTypes);
+            }
 
             int[] changedIds = removedIds.Concat(addedIds).Distinct().ToArray();
+            // if (changedIds.Length > 0)
+            // {
+            //     _logger.LogDebug("Reindexing ids {Ids}", changedIds.ToList());
+            // }
+
             if (!await _scannerProxy.ReindexMediaItems(changedIds, CancellationToken.None))
             {
                 _logger.LogWarning("Failed to reindex media items from scanner process");

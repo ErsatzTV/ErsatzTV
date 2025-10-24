@@ -2,5 +2,5 @@
 
 namespace ErsatzTV.Scanner.Application.Jellyfin;
 
-public record SynchronizeJellyfinCollections(string BaseUrl, int JellyfinMediaSourceId, bool ForceScan)
+public record SynchronizeJellyfinCollections(string BaseUrl, int JellyfinMediaSourceId, bool ForceScan, bool DeepScan)
     : IRequest<Either<BaseError, Unit>>;

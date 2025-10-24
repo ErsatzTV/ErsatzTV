@@ -26,7 +26,11 @@ public class JellyfinCollectionScanner : IJellyfinCollectionScanner
         _logger = logger;
     }
 
-    public async Task<Either<BaseError, Unit>> ScanCollections(string address, string apiKey, int mediaSourceId)
+    public async Task<Either<BaseError, Unit>> ScanCollections(
+        string address,
+        string apiKey,
+        int mediaSourceId,
+        bool deepScan)
     {
         try
         {
@@ -48,12 +52,13 @@ public class JellyfinCollectionScanner : IJellyfinCollectionScanner
 
                 Option<JellyfinCollection> maybeExisting = existingCollections.Find(c => c.ItemId == collection.ItemId);
 
-                // // skip if unchanged (etag)
-                // if (await maybeExisting.Map(e => e.Etag ?? string.Empty).IfNoneAsync(string.Empty) == collection.Etag)
-                // {
-                //     _logger.LogDebug("Jellyfin collection {Name} is unchanged", collection.Name);
-                //     continue;
-                // }
+                // skip if unchanged (etag)
+                if (!deepScan && await maybeExisting.Map(e => e.Etag ?? string.Empty).IfNoneAsync(string.Empty) ==
+                    collection.Etag)
+                {
+                    _logger.LogDebug("Jellyfin collection {Name} is unchanged", collection.Name);
+                    continue;
+                }
 
                 // add if new
                 if (maybeExisting.IsNone)

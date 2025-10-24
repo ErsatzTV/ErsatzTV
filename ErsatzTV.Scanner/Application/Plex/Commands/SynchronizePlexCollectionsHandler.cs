@@ -52,6 +52,7 @@ public class SynchronizePlexCollectionsHandler : IRequestHandler<SynchronizePlex
                 connectionParameters,
                 connectionParameters.PlexMediaSource,
                 request.ForceScan,
+                request.DeepScan,
                 libraryRefreshInterval,
                 request.BaseUrl));
     }
@@ -99,6 +100,7 @@ public class SynchronizePlexCollectionsHandler : IRequestHandler<SynchronizePlex
             Either<BaseError, Unit> result = await _scanner.ScanCollections(
                 parameters.ConnectionParameters.ActiveConnection,
                 parameters.ConnectionParameters.PlexServerAuthToken,
+                parameters.DeepScan,
                 cancellationToken);
 
             if (result.IsRight)
@@ -117,6 +119,7 @@ public class SynchronizePlexCollectionsHandler : IRequestHandler<SynchronizePlex
         ConnectionParameters ConnectionParameters,
         PlexMediaSource MediaSource,
         bool ForceScan,
+        bool DeepScan,
         int LibraryRefreshInterval,
         string BaseUrl);
 

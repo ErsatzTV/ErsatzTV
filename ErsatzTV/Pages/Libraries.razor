@@ -143,7 +143,19 @@
                                 }
                                 else
                                 {
-                                    <div style="width: 48px"></div>
+                                    if (context.LibraryKind is "Plex" or "Emby" or "Jellyfin")
+                                    {
+                                        <MudTooltip Text="Deep Scan Collections">
+                                            <MudIconButton Icon="@Icons.Material.Filled.FindReplace"
+                                                           Disabled="@AreCollectionsLocked(context.LibraryKind)"
+                                                           OnClick="@(_ => ScanExternalCollections(context, true))">
+                                            </MudIconButton>
+                                        </MudTooltip>
+                                    }
+                                    else
+                                    {
+                                        <div style="width: 48px"></div>
+                                    }
                                     <MudTooltip Text="Scan Collections">
                                         <MudIconButton Icon="@Icons.Material.Filled.Refresh"
                                                        Disabled="@AreCollectionsLocked(context.LibraryKind)"
@@ -235,7 +247,7 @@
         }
     }
 
-    private async Task ScanExternalCollections(LibraryViewModel library)
+    private async Task ScanExternalCollections(LibraryViewModel library, bool deepScan = false)
     {
         var token = _cts?.Token ?? CancellationToken.None;
         switch (library.LibraryKind.ToLowerInvariant())
@@ -243,21 +255,21 @@
             case "emby":
                 if (Locker.LockEmbyCollections())
                 {
-                    await ScannerWorkerChannel.WriteAsync(new SynchronizeEmbyCollections(library.MediaSourceId, true), token);
+                    await ScannerWorkerChannel.WriteAsync(new SynchronizeEmbyCollections(library.MediaSourceId, true, deepScan), token);
                 }
 
                 break;
             case "jellyfin":
                 if (Locker.LockJellyfinCollections())
                 {
-                    await ScannerWorkerChannel.WriteAsync(new SynchronizeJellyfinCollections(library.MediaSourceId, true), token);
+                    await ScannerWorkerChannel.WriteAsync(new SynchronizeJellyfinCollections(library.MediaSourceId, true, deepScan), token);
                 }
 
                 break;
             case "plex":
                 if (Locker.LockPlexCollections())
                 {
-                    await ScannerWorkerChannel.WriteAsync(new SynchronizePlexCollections(library.MediaSourceId, true), token);
+                    await ScannerWorkerChannel.WriteAsync(new SynchronizePlexCollections(library.MediaSourceId, true, deepScan), token);
                 }
 
                 break;

@@ -85,6 +85,7 @@ public class Worker : BackgroundService
         scanPlexCollectionsCommand.Arguments.Add(mediaSourceIdArgument);
         scanPlexCollectionsCommand.Arguments.Add(baseUrlArgument);
         scanPlexCollectionsCommand.Options.Add(forceOption);
+        scanPlexCollectionsCommand.Options.Add(deepOption);
 
         var scanPlexNetworksCommand = new Command("scan-plex-networks", "Scan Plex networks");
         scanPlexNetworksCommand.Arguments.Add(libraryIdArgument);
@@ -101,6 +102,7 @@ public class Worker : BackgroundService
         scanEmbyCollectionsCommand.Arguments.Add(mediaSourceIdArgument);
         scanEmbyCollectionsCommand.Arguments.Add(baseUrlArgument);
         scanEmbyCollectionsCommand.Options.Add(forceOption);
+        scanEmbyCollectionsCommand.Options.Add(deepOption);
 
         var scanJellyfinCommand = new Command("scan-jellyfin", "Scan a Jellyfin library");
         scanJellyfinCommand.Arguments.Add(libraryIdArgument);
@@ -112,6 +114,7 @@ public class Worker : BackgroundService
         scanJellyfinCollectionsCommand.Arguments.Add(mediaSourceIdArgument);
         scanJellyfinCollectionsCommand.Arguments.Add(baseUrlArgument);
         scanJellyfinCollectionsCommand.Options.Add(forceOption);
+        scanJellyfinCollectionsCommand.Options.Add(deepOption);
 
         // Show-specific scanning commands
         var showIdArgument = new Argument<int>("show-id")
@@ -188,6 +191,7 @@ public class Worker : BackgroundService
         {
             if (IsScanningEnabled())
             {
+                bool deep = parseResult.GetValue(deepOption);
                 bool force = parseResult.GetValue(forceOption);
                 SetProcessPriority(force);
 
@@ -201,7 +205,7 @@ public class Worker : BackgroundService
                 using IServiceScope scope = _serviceScopeFactory.CreateScope();
                 IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
-                var scan = new SynchronizePlexCollections(baseUrl, mediaSourceId, force);
+                var scan = new SynchronizePlexCollections(baseUrl, mediaSourceId, force, deep);
                 await mediator.Send(scan, token);
             }
         });
@@ -255,6 +259,7 @@ public class Worker : BackgroundService
         {
             if (IsScanningEnabled())
             {
+                bool deep = parseResult.GetValue(deepOption);
                 bool force = parseResult.GetValue(forceOption);
                 SetProcessPriority(force);
 
@@ -268,7 +273,7 @@ public class Worker : BackgroundService
                 using IServiceScope scope = _serviceScopeFactory.CreateScope();
                 IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
-                var scan = new SynchronizeEmbyCollections(baseUrl, mediaSourceId, force);
+                var scan = new SynchronizeEmbyCollections(baseUrl, mediaSourceId, force, deep);
                 await mediator.Send(scan, token);
             }
         });
@@ -300,6 +305,7 @@ public class Worker : BackgroundService
         {
             if (IsScanningEnabled())
             {
+                bool deep = parseResult.GetValue(deepOption);
                 bool force = parseResult.GetValue(forceOption);
                 SetProcessPriority(force);
 
@@ -313,7 +319,7 @@ public class Worker : BackgroundService
                 using IServiceScope scope = _serviceScopeFactory.CreateScope();
                 IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
-                var scan = new SynchronizeJellyfinCollections(baseUrl, mediaSourceId, force);
+                var scan = new SynchronizeJellyfinCollections(baseUrl, mediaSourceId, force, deep);
                 await mediator.Send(scan, token);
             }
         });
