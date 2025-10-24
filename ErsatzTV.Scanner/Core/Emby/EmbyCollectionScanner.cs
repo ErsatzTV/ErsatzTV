@@ -83,10 +83,7 @@ public class EmbyCollectionScanner : IEmbyCollectionScanner
         return Unit.Default;
     }
 
-    private async Task<bool> SyncCollectionItems(
-        string address,
-        string apiKey,
-        EmbyCollection collection)
+    private async Task<bool> SyncCollectionItems(string address, string apiKey, EmbyCollection collection)
     {
         try
         {
@@ -102,7 +99,6 @@ public class EmbyCollectionScanner : IEmbyCollectionScanner
             var shows = 0;
             var seasons = 0;
             var episodes = 0;
-            var otherTypes = new Dictionary<string, int>();
 
             // sync tags on items
             var addedIds = new List<int>();
@@ -129,14 +125,6 @@ public class EmbyCollectionScanner : IEmbyCollectionScanner
                             break;
                     }
                 }
-
-                if (item is UnknownEmbyMediaItem unk)
-                {
-                    if (!otherTypes.TryAdd(unk.ItemType, 1))
-                    {
-                        otherTypes[unk.ItemType]++;
-                    }
-                }
             }
 
             if (addedIds.Count > 0)
@@ -153,11 +141,6 @@ public class EmbyCollectionScanner : IEmbyCollectionScanner
             else
             {
                 _logger.LogDebug("Emby collection {Name} contains no items that are also in ErsatzTV", collection.Name);
-            }
-
-            if (otherTypes.Count > 0)
-            {
-                _logger.LogDebug("Emby returned unsupported collection items {Items}", otherTypes);
             }
 
             int[] changedIds = removedIds.Concat(addedIds).Distinct().ToArray();
