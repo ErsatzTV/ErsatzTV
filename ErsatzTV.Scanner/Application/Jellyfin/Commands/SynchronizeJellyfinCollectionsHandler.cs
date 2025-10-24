@@ -54,6 +54,7 @@ public class
                 connectionParameters,
                 connectionParameters.MediaSource,
                 request.ForceScan,
+                request.DeepScan,
                 libraryRefreshInterval,
                 request.BaseUrl));
     }
@@ -99,7 +100,8 @@ public class
             Either<BaseError, Unit> result = await _scanner.ScanCollections(
                 parameters.ConnectionParameters.ActiveConnection.Address,
                 parameters.ConnectionParameters.ApiKey,
-                parameters.MediaSource.Id);
+                parameters.MediaSource.Id,
+                parameters.DeepScan);
 
             if (result.IsRight)
             {
@@ -117,6 +119,7 @@ public class
         ConnectionParameters ConnectionParameters,
         JellyfinMediaSource MediaSource,
         bool ForceScan,
+        bool DeepScan,
         int LibraryRefreshInterval,
         string BaseUrl);
 

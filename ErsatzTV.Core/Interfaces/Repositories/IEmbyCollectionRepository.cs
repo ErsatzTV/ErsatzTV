@@ -8,6 +8,6 @@ public interface IEmbyCollectionRepository
     Task<bool> AddCollection(EmbyCollection collection);
     Task<bool> RemoveCollection(EmbyCollection collection);
     Task<List<int>> RemoveAllTags(EmbyCollection collection);
-    Task<int> AddTag(MediaItem item, EmbyCollection collection);
+    Task<Option<int>> AddTag(MediaItem item, EmbyCollection collection);
     Task<bool> SetEtag(EmbyCollection collection);
 }

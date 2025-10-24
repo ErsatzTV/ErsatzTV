@@ -91,6 +91,11 @@ public class CallJellyfinCollectionScannerHandler : CallLibraryScannerHandler<Sy
                     arguments.Add("--force");
                 }
 
+                if (request.DeepScan)
+                {
+                    arguments.Add("--deep");
+                }
+
                 return await base.PerformScan(parameters, arguments, cancellationToken).MapT(_ => Unit.Default);
             }
             finally

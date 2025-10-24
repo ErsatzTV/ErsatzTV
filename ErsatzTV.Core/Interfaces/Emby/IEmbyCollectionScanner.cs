@@ -2,7 +2,5 @@
 
 public interface IEmbyCollectionScanner
 {
-    Task<Either<BaseError, Unit>> ScanCollections(
-        string address,
-        string apiKey);
+    Task<Either<BaseError, Unit>> ScanCollections(string address, string apiKey, bool deepScan);
 }

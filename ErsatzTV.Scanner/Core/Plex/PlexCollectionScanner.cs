@@ -30,6 +30,7 @@ public class PlexCollectionScanner : IPlexCollectionScanner
     public async Task<Either<BaseError, Unit>> ScanCollections(
         PlexConnection connection,
         PlexServerAuthToken token,
+        bool deepScan,
         CancellationToken cancellationToken)
     {
         try
@@ -49,7 +50,7 @@ public class PlexCollectionScanner : IPlexCollectionScanner
                 Option<PlexCollection> maybeExisting = existingCollections.Find(c => c.Key == collection.Key);
 
                 // skip if unchanged (etag)
-                if (await maybeExisting.Map(e => e.Etag ?? string.Empty).IfNoneAsync(string.Empty) ==
+                if (!deepScan && await maybeExisting.Map(e => e.Etag ?? string.Empty).IfNoneAsync(string.Empty) ==
                     collection.Etag)
                 {
                     _logger.LogDebug("Plex collection {Name} is unchanged", collection.Name);

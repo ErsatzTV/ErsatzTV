@@ -268,7 +268,7 @@ public class SchedulerService : BackgroundService
         foreach (int mediaSourceId in mediaSourceIds)
         {
             await _scannerWorkerChannel.WriteAsync(
-                new SynchronizePlexCollections(mediaSourceId, false),
+                new SynchronizePlexCollections(mediaSourceId, false, false),
                 cancellationToken);
         }
     }
@@ -295,7 +295,7 @@ public class SchedulerService : BackgroundService
         foreach (int mediaSourceId in mediaSourceIds)
         {
             await _scannerWorkerChannel.WriteAsync(
-                new SynchronizeJellyfinCollections(mediaSourceId, false),
+                new SynchronizeJellyfinCollections(mediaSourceId, false, false),
                 cancellationToken);
         }
     }
@@ -322,7 +322,7 @@ public class SchedulerService : BackgroundService
         foreach (int mediaSourceId in mediaSourceIds)
         {
             await _scannerWorkerChannel.WriteAsync(
-                new SynchronizeEmbyCollections(mediaSourceId, false),
+                new SynchronizeEmbyCollections(mediaSourceId, false, false),
                 cancellationToken);
         }
     }

@@ -52,6 +52,7 @@ public class SynchronizeEmbyCollectionsHandler : IRequestHandler<SynchronizeEmby
                 connectionParameters,
                 connectionParameters.MediaSource,
                 request.ForceScan,
+                request.DeepScan,
                 libraryRefreshInterval,
                 request.BaseUrl));
     }
@@ -97,7 +98,8 @@ public class SynchronizeEmbyCollectionsHandler : IRequestHandler<SynchronizeEmby
         {
             Either<BaseError, Unit> result = await _scanner.ScanCollections(
                 parameters.ConnectionParameters.ActiveConnection.Address,
-                parameters.ConnectionParameters.ApiKey);
+                parameters.ConnectionParameters.ApiKey,
+                parameters.DeepScan);
 
             if (result.IsRight)
             {
@@ -115,6 +117,7 @@ public class SynchronizeEmbyCollectionsHandler : IRequestHandler<SynchronizeEmby
         ConnectionParameters ConnectionParameters,
         EmbyMediaSource MediaSource,
         bool ForceScan,
+        bool DeepScan,
         int LibraryRefreshInterval,
         string BaseUrl);
 

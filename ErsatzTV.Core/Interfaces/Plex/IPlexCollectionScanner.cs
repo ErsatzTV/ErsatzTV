@@ -8,5 +8,6 @@ public interface IPlexCollectionScanner
     Task<Either<BaseError, Unit>> ScanCollections(
         PlexConnection connection,
         PlexServerAuthToken token,
+        bool deepScan,
         CancellationToken cancellationToken);
 }
