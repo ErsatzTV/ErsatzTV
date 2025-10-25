@@ -156,25 +156,28 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
             candidateSubtitles = candidateSubtitles.Filter(s => s.SubtitleKind is not SubtitleKind.Embedded).ToList();
         }
 
-        foreach (Subtitle subtitle in candidateSubtitles
-                     .Filter(s => s.SubtitleKind is SubtitleKind.Embedded && !s.IsImage)
-                     .ToList())
+        if (channel.StreamingMode is not StreamingMode.HttpLiveStreamingDirect)
         {
-            if (!subtitle.IsExtracted)
+            foreach (Subtitle subtitle in candidateSubtitles
+                       .Filter(s => s.SubtitleKind is SubtitleKind.Embedded && !s.IsImage)
+                       .ToList())
             {
-                _logger.LogDebug(
-                    "Ignoring embedded subtitle with index {Index} that has not been extracted",
-                    subtitle.StreamIndex);
+                if (!subtitle.IsExtracted)
+                {
+                    _logger.LogDebug(
+                        "Ignoring embedded subtitle with index {Index} that has not been extracted",
+                        subtitle.StreamIndex);
 
-                candidateSubtitles.Remove(subtitle);
-            }
-            else if (string.IsNullOrWhiteSpace(subtitle.Path))
-            {
-                _logger.LogDebug(
-                    "BUG: ignoring embedded subtitle with index {Index} that is missing a path",
-                    subtitle.StreamIndex);
+                    candidateSubtitles.Remove(subtitle);
+                }
+                else if (string.IsNullOrWhiteSpace(subtitle.Path))
+                {
+                    _logger.LogDebug(
+                        "BUG: ignoring embedded subtitle with index {Index} that is missing a path",
+                        subtitle.StreamIndex);
 
-                candidateSubtitles.Remove(subtitle);
+                    candidateSubtitles.Remove(subtitle);
+                }
             }
         }
 
