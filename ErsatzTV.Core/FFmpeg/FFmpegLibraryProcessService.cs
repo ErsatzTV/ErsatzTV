@@ -183,7 +183,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             playbackSettings.AudioBitrate,
             playbackSettings.AudioBufferSize,
             playbackSettings.AudioSampleRate,
-            videoPath == audioPath,
+            audioFormat != AudioFormat.Copy && videoPath == audioPath,
             playbackSettings.NormalizeLoudnessMode switch
             {
                 NormalizeLoudnessMode.LoudNorm => AudioFilter.LoudNorm,
@@ -269,7 +269,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
 
         Option<SubtitleInputFile> subtitleInputFile = maybeSubtitle.Map<Option<SubtitleInputFile>>(subtitle =>
         {
-            if (!subtitle.IsImage && subtitle.SubtitleKind == SubtitleKind.Embedded &&
+            if (channel.StreamingMode != StreamingMode.HttpLiveStreamingDirect && !subtitle.IsImage &&
+                subtitle.SubtitleKind == SubtitleKind.Embedded &&
                 (!subtitle.IsExtracted || string.IsNullOrWhiteSpace(subtitle.Path)))
             {
                 _logger.LogWarning("Subtitles are not yet available for this item");

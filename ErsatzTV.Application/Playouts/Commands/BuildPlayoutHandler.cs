@@ -116,6 +116,14 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
                         request.PlayoutId,
                         playoutBuildResult.Warnings.DurationFillerSkipped);
                 }
+
+                if (playoutBuildResult.Warnings.BlockItemSkippedEmptyCollection > 0)
+                {
+                    _logger.LogDebug(
+                        "Playout {PlayoutId} skipped {Count} block items due to empty collections",
+                        request.PlayoutId,
+                        playoutBuildResult.Warnings.BlockItemSkippedEmptyCollection);
+                }
             }
 
             return result.Map(_ => Unit.Default);

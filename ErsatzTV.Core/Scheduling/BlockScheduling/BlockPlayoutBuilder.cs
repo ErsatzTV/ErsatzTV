@@ -180,10 +180,16 @@ public class BlockPlayoutBuilder(
                     historyKey,
                     collectionMediaItems);
 
+                if (enumerator.Count == 0)
+                {
+                    result.Warnings.BlockItemSkippedEmptyCollection++;
+                    continue;
+                }
+
                 var pastTime = false;
                 var done = false;
 
-                while (!done && !pastTime)
+                while (!done && !pastTime && !cancellationToken.IsCancellationRequested)
                 {
                     foreach (MediaItem mediaItem in enumerator.Current)
                     {

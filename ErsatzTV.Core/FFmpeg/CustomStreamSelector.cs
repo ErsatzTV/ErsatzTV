@@ -205,7 +205,8 @@ public class CustomStreamSelector(ILocalFileSystem localFileSystem, ILogger<Cust
                             }
                         }
 
-                        if (subtitle.SubtitleKind is SubtitleKind.Embedded && !subtitle.IsImage &&
+                        if (channel.StreamingMode != StreamingMode.HttpLiveStreamingDirect &&
+                            subtitle.SubtitleKind is SubtitleKind.Embedded && !subtitle.IsImage &&
                             !subtitle.IsExtracted)
                         {
                             candidateSubtitles.Remove(subtitle);
