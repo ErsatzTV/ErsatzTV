@@ -183,7 +183,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             playbackSettings.AudioBitrate,
             playbackSettings.AudioBufferSize,
             playbackSettings.AudioSampleRate,
-            videoPath == audioPath,
+            audioFormat != AudioFormat.Copy && videoPath == audioPath,
             playbackSettings.NormalizeLoudnessMode switch
             {
                 NormalizeLoudnessMode.LoudNorm => AudioFilter.LoudNorm,
