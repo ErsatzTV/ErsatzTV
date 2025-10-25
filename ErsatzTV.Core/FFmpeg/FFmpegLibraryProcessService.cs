@@ -86,6 +86,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         Option<int> targetFramerate,
         Option<string> customReportsFolder,
         Action<FFmpegPipeline> pipelineAction,
+        bool canProxy,
         CancellationToken cancellationToken)
     {
         MediaStream videoStream = await _ffmpegStreamSelector.SelectVideoStream(videoVersion);
@@ -153,17 +154,20 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             maybeSubtitle = allSubtitles.HeadOrNone();
         }
 
-        foreach (Subtitle subtitle in maybeSubtitle)
+        if (canProxy)
         {
-            if (subtitle.SubtitleKind == SubtitleKind.Sidecar || subtitle is
-                    { SubtitleKind: SubtitleKind.Embedded, IsImage: false, IsExtracted: true })
+            foreach (Subtitle subtitle in maybeSubtitle)
             {
-                // proxy to avoid dealing with escaping
-                subtitle.Path = $"http://localhost:{Settings.StreamingPort}/media/subtitle/{subtitle.Id}";
-
-                foreach (TimeSpan seek in playbackSettings.StreamSeek)
+                if (subtitle.SubtitleKind == SubtitleKind.Sidecar || subtitle is
+                        { SubtitleKind: SubtitleKind.Embedded, IsImage: false, IsExtracted: true })
                 {
-                    subtitle.Path += $"?seekToMs={(int)seek.TotalMilliseconds}";
+                    // proxy to avoid dealing with escaping
+                    subtitle.Path = $"http://localhost:{Settings.StreamingPort}/media/subtitle/{subtitle.Id}";
+
+                    foreach (TimeSpan seek in playbackSettings.StreamSeek)
+                    {
+                        subtitle.Path += $"?seekToMs={(int)seek.TotalMilliseconds}";
+                    }
                 }
             }
         }
@@ -282,7 +286,13 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                 subtitle.Codec,
                 StreamKind.Video);
 
-            string path = subtitle.IsImage ? videoPath : subtitle.Path;
+            string subtitlePath = subtitle.Path;
+            if (!canProxy && !subtitle.IsImage && subtitle.IsExtracted)
+            {
+                subtitlePath = Path.Combine(FileSystemLayout.SubtitleCacheFolder, subtitlePath);
+            }
+
+            string path = subtitle.IsImage ? videoPath : subtitlePath;
 
             SubtitleMethod method = SubtitleMethod.Burn;
             if (channel.StreamingMode == StreamingMode.HttpLiveStreamingDirect)

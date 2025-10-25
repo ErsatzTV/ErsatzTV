@@ -113,7 +113,7 @@ public class TranscodingTests
         public static Watermark[] Watermarks =
         [
             Watermark.None,
-            //Watermark.PermanentOpaqueScaled,
+            Watermark.PermanentOpaqueScaled,
             // Watermark.PermanentOpaqueActualSize,
             // Watermark.PermanentTransparentScaled,
             // Watermark.PermanentTransparentActualSize
@@ -122,8 +122,8 @@ public class TranscodingTests
         public static Subtitle[] Subtitles =
         [
             Subtitle.None,
-            //Subtitle.Picture,
-            // Subtitle.Text
+            Subtitle.Picture,
+            Subtitle.Text
         ];
 
         public static Padding[] Paddings =
@@ -151,7 +151,7 @@ public class TranscodingTests
             new("libx264", "yuv420p", "tv", "smpte170m", "bt709", "smpte170m"),
             // // //
             // // // // example format that requires setparams filter
-            //new("libx264", "yuv420p", string.Empty, string.Empty, string.Empty, string.Empty),
+            new("libx264", "yuv420p", string.Empty, string.Empty, string.Empty, string.Empty),
             // // //
             // // // // new("libx264", "yuvj420p"),
             //new("libx264", "yuv420p10le"),
@@ -159,7 +159,7 @@ public class TranscodingTests
             // // //
             // // // // new("mpeg1video", "yuv420p"),
             // // // //
-            //new("mpeg2video", "yuv420p"),
+            new("mpeg2video", "yuv420p"),
             // //
             //new InputFormat("libx265", "yuv420p"),
             //new("libx265", "yuv420p10le"),
@@ -188,7 +188,7 @@ public class TranscodingTests
         public static FFmpegProfileBitDepth[] BitDepths =
         [
             FFmpegProfileBitDepth.EightBit,
-            //FFmpegProfileBitDepth.TenBit
+            FFmpegProfileBitDepth.TenBit
         ];
 
         public static FFmpegProfileVideoFormat[] VideoFormats =
@@ -200,10 +200,10 @@ public class TranscodingTests
 
         public static HardwareAccelerationKind[] TestAccelerations =
         [
-            //HardwareAccelerationKind.None,
-            HardwareAccelerationKind.Nvenc
-            //HardwareAccelerationKind.Vaapi
-            //HardwareAccelerationKind.Qsv,
+            HardwareAccelerationKind.None,
+            //HardwareAccelerationKind.Nvenc
+            HardwareAccelerationKind.Vaapi,
+            HardwareAccelerationKind.Qsv,
             // HardwareAccelerationKind.VideoToolbox,
             // HardwareAccelerationKind.Amf
         ];
@@ -400,6 +400,7 @@ public class TranscodingTests
             None,
             Option<string>.None,
             _ => { },
+            canProxy: false,
             CancellationToken.None);
 
         // Console.WriteLine($"ffmpeg arguments {process.Arguments}");
@@ -711,6 +712,7 @@ public class TranscodingTests
             None,
             Option<string>.None,
             PipelineAction,
+            canProxy: false,
             CancellationToken.None);
 
         // Console.WriteLine($"ffmpeg arguments {string.Join(" ", process.StartInfo.ArgumentList)}");

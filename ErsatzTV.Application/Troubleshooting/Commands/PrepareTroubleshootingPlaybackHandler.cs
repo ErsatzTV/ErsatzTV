@@ -251,6 +251,7 @@ public class PrepareTroubleshootingPlaybackHandler(
             Option<int>.None,
             FileSystemLayout.TranscodeTroubleshootingFolder,
             _ => { },
+            canProxy: true,
             cancellationToken);
 
         return playoutItemResult;
