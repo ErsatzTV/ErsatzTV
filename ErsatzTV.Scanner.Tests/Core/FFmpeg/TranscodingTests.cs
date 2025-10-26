@@ -388,7 +388,7 @@ public class TranscodingTests
             watermarks,
             [],
             "drm",
-            VaapiDriver.RadeonSI,
+            VaapiDriver.iHD,
             "/dev/dri/renderD128",
             Option<int>.None,
             false,
@@ -411,7 +411,7 @@ public class TranscodingTests
             profileBitDepth,
             profileVideoFormat,
             profileAcceleration,
-            VaapiDriver.RadeonSI,
+            VaapiDriver.iHD,
             localStatisticsProvider,
             streamingMode,
             () => videoVersion);
@@ -445,7 +445,14 @@ public class TranscodingTests
         [ValueSource(typeof(TestData), nameof(TestData.StreamingModes))]
         StreamingMode streamingMode)
     {
-        NvEncSharpRedirector.Init();
+        try
+        {
+            NvEncSharpRedirector.Init();
+        }
+        catch (FileNotFoundException)
+        {
+            // do nothing
+        }
 
         string file = fileToTest;
         if (string.IsNullOrWhiteSpace(file))
@@ -603,7 +610,7 @@ public class TranscodingTests
 
             // TODO: bit depth
 
-            bool hasPadding = filterChain.VideoFilterSteps.Any(s => s is PadFilter);
+            bool hasPadding = filterChain.VideoFilterSteps.Any(s => s is PadFilter or PadVaapiFilter);
 
             // TODO: optimize out padding
             // hasPadding.ShouldBe(padding == Padding.WithPadding);
@@ -700,7 +707,7 @@ public class TranscodingTests
             watermarks,
             [],
             "drm",
-            VaapiDriver.RadeonSI,
+            VaapiDriver.iHD,
             "/dev/dri/renderD128",
             Option<int>.None,
             false,
@@ -723,7 +730,7 @@ public class TranscodingTests
             profileBitDepth,
             profileVideoFormat,
             profileAcceleration,
-            VaapiDriver.RadeonSI,
+            VaapiDriver.iHD,
             localStatisticsProvider,
             streamingMode,
             () => v);
