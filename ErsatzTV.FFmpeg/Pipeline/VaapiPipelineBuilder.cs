@@ -510,6 +510,14 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
                             subtitle.FilterSteps.Add(scaleFilter);
                         }
 
+                        foreach (FrameSize croppedSize in currentState.CroppedSize)
+                        {
+                            var cropStep = new CropFilter(
+                                currentState with { FrameDataLocation = FrameDataLocation.Software },
+                                croppedSize);
+                            subtitle.FilterSteps.Add(cropStep);
+                        }
+
                         var subtitlesFilter = new OverlaySubtitleFilter(pf);
                         subtitleOverlayFilterSteps.Add(subtitlesFilter);
                     }
@@ -521,6 +529,14 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
                     {
                         var scaleFilter = new ScaleSubtitleImageFilter(desiredState.PaddedSize);
                         subtitle.FilterSteps.Add(scaleFilter);
+                    }
+
+                    foreach (FrameSize croppedSize in currentState.CroppedSize)
+                    {
+                        var cropStep = new CropFilter(
+                            currentState with { FrameDataLocation = FrameDataLocation.Software },
+                            croppedSize);
+                        subtitle.FilterSteps.Add(cropStep);
                     }
 
                     var subtitleHardwareUpload = new HardwareUploadVaapiFilter(false);
