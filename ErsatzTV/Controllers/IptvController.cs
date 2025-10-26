@@ -282,6 +282,9 @@ public class IptvController : StreamingControllerBase
     }
 
     [HttpGet("iptv/hls-direct/{channelNumber}")]
+    [HttpGet("iptv/hls-direct/{channelNumber}.ts")]
+    [HttpGet("iptv/hls-direct/{channelNumber}.mkv")]
+    [HttpGet("iptv/hls-direct/{channelNumber}.mp4")]
     public async Task<IActionResult> GetStream(string channelNumber) =>
         await GetHlsDirectStream(channelNumber);
 
