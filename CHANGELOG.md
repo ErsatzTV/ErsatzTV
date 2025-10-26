@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [25.8.0] - 2025-10-26
 ### Added
 - Graphics engine:
   - Add template data (like `MediaItem_Title`) for other video files
@@ -2886,7 +2888,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/ErsatzTV/ErsatzTV/compare/v25.7.1...HEAD
+[Unreleased]: https://github.com/ErsatzTV/ErsatzTV/compare/v25.8.0...HEAD
+[25.8.0]: https://github.com/ErsatzTV/ErsatzTV/compare/v25.7.1...v25.8.0
 [25.7.1]: https://github.com/ErsatzTV/ErsatzTV/compare/v25.7.0...v25.7.1
 [25.7.0]: https://github.com/ErsatzTV/ErsatzTV/compare/v25.6.0...v25.7.0
 [25.6.0]: https://github.com/ErsatzTV/ErsatzTV/compare/v25.5.0...v25.6.0
