@@ -92,7 +92,7 @@ public class SchedulingEngine(
         {
             foreach (PlayoutAnchor anchor in maybeAnchor)
             {
-                _state.CurrentTime = new DateTimeOffset(anchor.NextStart.ToLocalTime(), _state.CurrentTime.Offset);
+                _state.CurrentTime = new DateTimeOffset(anchor.NextStart, TimeSpan.Zero).ToLocalTime();
 
                 if (string.IsNullOrWhiteSpace(anchor.Context))
                 {
