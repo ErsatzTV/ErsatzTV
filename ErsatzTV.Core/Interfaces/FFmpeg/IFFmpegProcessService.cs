@@ -41,6 +41,7 @@ public interface IFFmpegProcessService
         Option<int> targetFramerate,
         Option<string> customReportsFolder,
         Action<FFmpegPipeline> pipelineAction,
+        bool canProxy,
         CancellationToken cancellationToken);
 
     Task<Command> ForError(

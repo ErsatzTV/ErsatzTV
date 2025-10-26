@@ -437,6 +437,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 request.TargetFramerate,
                 Option<string>.None,
                 _ => { },
+                canProxy: true,
                 cancellationToken);
 
             var result = new PlayoutItemProcessModel(

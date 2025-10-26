@@ -41,6 +41,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Improve reliability of live remote streams; they should transcode closer to realtime in most cases
 - Dramatically improve stream startup time
 - VAAPI: fix scaling image-based subtitles (e.g. dvdsub)
+- VAAPI: fix overlaying picture subtitles with scaling behavior crop
 - Fix HLS Segmenter (fmp4) on Windows
 - Playback troubleshooting: wait for at least 2 initial segments (up to configured initial segment count) to reduce stalls
 - Fix Trakt List sync
