@@ -56,6 +56,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix playout builder getting stuck (forever) on block item with an empty collection
 - Fix HLS Direct playback when using custom stream selector or preferred audio language/title
 - Fix selecting embedded subtitles (text and picture) with HLS Direct
+- Fix building scripted schedules across a UTC offset change
 
 ### Changed
 - Do not use graphics engine for single, permanent watermark
