@@ -1,5 +1,7 @@
 ﻿using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.FFmpeg.OutputFormat;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
@@ -11,13 +13,16 @@ public class GetHlsPlaylistByChannelNumberHandler :
     IRequestHandler<GetHlsPlaylistByChannelNumber, Either<BaseError, string>>
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
+    private readonly IConfigElementRepository _configElementRepository;
     private readonly IMemoryCache _memoryCache;
 
     public GetHlsPlaylistByChannelNumberHandler(
         IDbContextFactory<TvContext> dbContextFactory,
+        IConfigElementRepository configElementRepository,
         IMemoryCache memoryCache)
     {
         _dbContextFactory = dbContextFactory;
+        _configElementRepository = configElementRepository;
         _memoryCache = memoryCache;
     }
 
@@ -31,7 +36,7 @@ public class GetHlsPlaylistByChannelNumberHandler :
         return await validation.Apply(parameters => GetPlaylist(dbContext, request, parameters, now));
     }
 
-    private Task<string> GetPlaylist(
+    private async Task<string> GetPlaylist(
         TvContext dbContext,
         GetHlsPlaylistByChannelNumber request,
         Parameters parameters,
@@ -44,11 +49,25 @@ public class GetHlsPlaylistByChannelNumberHandler :
             _ => string.Empty
         };
 
-        string endpoint = request.Mode switch
+        string endpoint = "ffmpeg/stream";
+        string extension = string.Empty;
+
+        if (request.Mode is "hls-direct")
         {
-            "hls-direct" => "iptv/hls-direct",
-            _ => "ffmpeg/stream"
-        };
+            endpoint = "iptv/hls-direct";
+
+            OutputFormatKind outputFormat = await _configElementRepository
+                .GetValue<OutputFormatKind>(ConfigElementKey.FFmpegHlsDirectOutputFormat, CancellationToken.None)
+                .IfNoneAsync(OutputFormatKind.MpegTs);
+
+            extension = outputFormat switch
+            {
+                OutputFormatKind.MpegTs => ".ts",
+                OutputFormatKind.Mp4 => ".mp4",
+                OutputFormatKind.Mkv => ".mkv",
+                _ => string.Empty
+            };
+        }
 
         long index = GetIndexForChannel(parameters.Channel, parameters.PlayoutItem);
         double timeRemaining = Math.Abs((parameters.PlayoutItem.FinishOffset - now).TotalSeconds);
@@ -58,8 +77,8 @@ public class GetHlsPlaylistByChannelNumberHandler :
 #EXT-X-MEDIA-SEQUENCE:{index}
 #EXT-X-DISCONTINUITY
 #EXTINF:{timeRemaining:F2},
-{request.Scheme}://{request.Host}/{endpoint}/{request.ChannelNumber}?index={index}{mode}
-".AsTask();
+{request.Scheme}://{request.Host}/{endpoint}/{request.ChannelNumber}{extension}?index={index}{mode}
+";
     }
 
     private static Task<Validation<BaseError, Parameters>> Validate(
