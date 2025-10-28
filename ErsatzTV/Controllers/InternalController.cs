@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System.CommandLine.Parsing;
+using System.Diagnostics;
 using CliWrap;
 using ErsatzTV.Application.Emby;
 using ErsatzTV.Application.Jellyfin;
@@ -59,13 +60,13 @@ public class InternalController : StreamingControllerBase
 
             if (!string.IsNullOrWhiteSpace(remoteStream.Script))
             {
-                string[] split = remoteStream.Script.Split(" ");
-                if (split.Length > 0)
+                var split = CommandLineParser.SplitCommandLine(remoteStream.Script).ToList();
+                if (split.Count > 0)
                 {
-                    _logger.LogDebug("Remote stream script: {Arguments}", split.ToList());
+                    _logger.LogDebug("Remote stream script: {Arguments}", split);
 
                     Command command = Cli.Wrap(split.Head());
-                    if (split.Length > 1)
+                    if (split.Count > 1)
                     {
                         command = command.WithArguments(split.Tail());
                     }
