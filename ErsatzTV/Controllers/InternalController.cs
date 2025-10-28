@@ -62,6 +62,8 @@ public class InternalController : StreamingControllerBase
                 string[] split = remoteStream.Script.Split(" ");
                 if (split.Length > 0)
                 {
+                    _logger.LogDebug("Remote stream script: {Arguments}", split.ToList());
+
                     Command command = Cli.Wrap(split.Head());
                     if (split.Length > 1)
                     {
