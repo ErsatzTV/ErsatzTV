@@ -366,7 +366,7 @@
             ? playout.PlayoutId
             : null;
 
-        _buildMessage = !playout.BuildStatus.Success && !string.IsNullOrWhiteSpace(playout.BuildStatus.Message)
+        _buildMessage = !(playout.BuildStatus?.Success ?? false) && !string.IsNullOrWhiteSpace(playout.BuildStatus?.Message)
             ? playout.BuildStatus.Message
             : string.Empty;
 

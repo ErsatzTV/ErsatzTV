@@ -77,7 +77,8 @@ public partial class SearchQueryParser(ISmartCollectionCache smartCollectionCach
                 if (parsedQuery == replaceResult.Query)
                 {
                     logger.LogWarning(
-                        "Failed to replace smart_collection in query; is the syntax correct? Quotes are required. Giving up...");
+                        "Failed to replace smart_collection in query; is the syntax correct? Quotes are required. Giving up on collection {Name}...",
+                        smartCollectionName);
                     break;
                 }
 
@@ -124,6 +125,12 @@ public partial class SearchQueryParser(ISmartCollectionCache smartCollectionCach
                 foreach (string smartCollectionQuery in maybeQuery)
                 {
                     result = result.Replace(match.Value, $"({smartCollectionQuery})");
+                }
+
+                if (maybeQuery.IsNone)
+                {
+                    //logger.LogError("Cannot find nested smart collection {Name}; removing from query.", smartCollectionName);
+                    result = result.Replace(match.Value, "(type:bad_query)");
                 }
             }
 
