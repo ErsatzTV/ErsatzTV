@@ -367,8 +367,8 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
         {
             try
             {
-                await dbContext.PlayoutBuildStatus.AddAsync(newBuildStatus, cancellationToken);
-                await dbContext.SaveChangesAsync(cancellationToken);
+                await dbContext.PlayoutBuildStatus.AddAsync(newBuildStatus, CancellationToken.None);
+                await dbContext.SaveChangesAsync(CancellationToken.None);
             }
             catch (Exception)
             {

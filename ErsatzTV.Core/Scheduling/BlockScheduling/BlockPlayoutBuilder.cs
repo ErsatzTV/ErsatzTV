@@ -397,7 +397,7 @@ public class BlockPlayoutBuilder(
         IEnumerable<PlayoutHistory> allItemsToDelete = referenceData.PlayoutHistory
             .GroupBy(h => h.Key)
             .SelectMany(group => group
-                .Filter(h => h.Finish < start.UtcDateTime)
+                .Filter(h => h.Finish < start.UtcDateTime - referenceData.MaxPlayoutOffset)
                 .OrderByDescending(h => h.Finish)
                 .Tail());
 
