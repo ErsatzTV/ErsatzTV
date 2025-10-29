@@ -32,7 +32,7 @@
         <PackageReference Include="Bugsnag.AspNet.Core" Version="4.1.0" />
         <PackageReference Include="FluentValidation" Version="12.0.0" />
         <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.1" />
-        <PackageReference Include="Heron.MudCalendar" Version="3.2.0" />
+        <PackageReference Include="Heron.MudCalendar" Version="3.3.0" />
         <PackageReference Include="HtmlSanitizer" Version="9.0.886" />
         <PackageReference Include="LanguageExt.Core" Version="4.4.9" />
         <PackageReference Include="Markdig" Version="0.43.0" />
