@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix block history being removed when it is still needed for mirror channel
   - This caused playout build errors like "Unable to locate history for playout item"
 - Fix crashes due to invalid smart collection searches, e.g. `smart_collection:"this collection does not exist"`
+- Fix UI crash when editing block playout that has default deco
 
 ## [25.8.0] - 2025-10-26
 ### Added
