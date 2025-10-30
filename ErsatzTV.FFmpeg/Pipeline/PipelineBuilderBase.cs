@@ -457,7 +457,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         // workaround for seeking with dts; certain seeks will change format when decoding (e.g. s16p to s32p)
         foreach (TimeSpan _ in ffmpegState.Start.Filter(s => s > TimeSpan.Zero))
         {
-            if (audioInputFile.Streams.OfType<AudioStream>() .Any(s => s.Codec == AudioFormat.Dts))
+            if (audioInputFile.Streams.OfType<AudioStream>().Any(s => s.Codec == AudioFormat.Dts))
             {
                 audioInputFile.AddOption(new DecoderDtsCoreOnly());
             }
