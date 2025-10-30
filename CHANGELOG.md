@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix crashes due to invalid smart collection searches, e.g. `smart_collection:"this collection does not exist"`
 - Fix UI crash when editing block playout that has default deco
 - Fix playback failure when seeking content with certain DTS audio (e.g. DTS-HD MA)
+- Properly set explicit audio decoder on combined audio and video input file
 
 ## [25.8.0] - 2025-10-26
 ### Added

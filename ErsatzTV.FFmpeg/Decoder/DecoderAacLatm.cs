@@ -1,10 +1,10 @@
 ﻿using ErsatzTV.FFmpeg.Environment;
-using ErsatzTV.FFmpeg.InputOption;
 
 namespace ErsatzTV.FFmpeg.Decoder;
 
-public class DecoderAacLatm : IInputOption
+public class DecoderAacLatm : IDecoder
 {
+    public string Name => "aac_latm";
     public EnvironmentVariable[] EnvironmentVariables => [];
     public string[] GlobalOptions => [];
     public string[] FilterOptions => [];
