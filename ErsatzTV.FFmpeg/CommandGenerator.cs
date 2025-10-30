@@ -1,4 +1,5 @@
-﻿using ErsatzTV.FFmpeg.Encoder;
+﻿using ErsatzTV.FFmpeg.Decoder;
+using ErsatzTV.FFmpeg.Encoder;
 using ErsatzTV.FFmpeg.Environment;
 using ErsatzTV.FFmpeg.Filter;
 using ErsatzTV.FFmpeg.GlobalOption;
@@ -27,6 +28,9 @@ public static class CommandGenerator
             arguments.AddRange(step.GlobalOptions);
         }
 
+        bool isSameAudioAndVideo = maybeAudioInputFile.IsSome && maybeVideoInputFile.IsSome &&
+                                   maybeAudioInputFile.Map(f => f.Path) == maybeVideoInputFile.Map(f => f.Path);
+
         var includedPaths = new System.Collections.Generic.HashSet<string>();
         foreach (VideoInputFile videoInputFile in maybeVideoInputFile)
         {
@@ -35,6 +39,17 @@ public static class CommandGenerator
             foreach (IInputOption step in videoInputFile.InputOptions)
             {
                 arguments.AddRange(step.InputOptions(videoInputFile));
+            }
+
+            if (isSameAudioAndVideo)
+            {
+                foreach (AudioInputFile audioInputFile in maybeAudioInputFile)
+                {
+                    foreach (IDecoder decoder in audioInputFile.InputOptions.OfType<IDecoder>())
+                    {
+                        arguments.AddRange(decoder.InputOptions(audioInputFile));
+                    }
+                }
             }
 
             arguments.AddRange(["-i", videoInputFile.Path]);

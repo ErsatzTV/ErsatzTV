@@ -1,10 +1,10 @@
 ﻿using ErsatzTV.FFmpeg.Environment;
-using ErsatzTV.FFmpeg.InputOption;
 
 namespace ErsatzTV.FFmpeg.Decoder;
 
-public class DecoderDtsCoreOnly : IInputOption
+public class DecoderDtsCoreOnly : IDecoder
 {
+    public string Name => "dts";
     public EnvironmentVariable[] EnvironmentVariables => [];
     public string[] GlobalOptions => [];
     public string[] FilterOptions => [];
