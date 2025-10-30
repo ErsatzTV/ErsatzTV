@@ -5,6 +5,7 @@ public static class AudioFormat
     public const string Aac = "aac";
     public const string Ac3 = "ac3";
     public const string AacLatm = "aac-latm";
+    public const string Dts = "dts";
 
     public const string Copy = "copy";
 }
