@@ -137,7 +137,7 @@ public class YamlPlayoutContext(Playout playout, YamlPlayoutDefinition definitio
 
     public void Reset(PlayoutAnchor anchor, DateTimeOffset start)
     {
-        CurrentTime = new DateTimeOffset(anchor.NextStart.ToLocalTime(), start.Offset);
+        CurrentTime = new DateTimeOffset(anchor.NextStart, TimeSpan.Zero).ToLocalTime();
 
         if (string.IsNullOrWhiteSpace(anchor.Context))
         {
