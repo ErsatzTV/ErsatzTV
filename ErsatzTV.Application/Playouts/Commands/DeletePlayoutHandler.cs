@@ -3,6 +3,7 @@ using ErsatzTV.Application.Channels;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
+using ErsatzTV.Core.Notifications;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
@@ -13,16 +14,19 @@ public class DeletePlayoutHandler : IRequestHandler<DeletePlayout, Either<BaseEr
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly ILocalFileSystem _localFileSystem;
+    private readonly IMediator _mediator;
     private readonly ChannelWriter<IBackgroundServiceRequest> _workerChannel;
 
     public DeletePlayoutHandler(
         ChannelWriter<IBackgroundServiceRequest> workerChannel,
         IDbContextFactory<TvContext> dbContextFactory,
-        ILocalFileSystem localFileSystem)
+        ILocalFileSystem localFileSystem,
+        IMediator mediator)
     {
         _workerChannel = workerChannel;
         _dbContextFactory = dbContextFactory;
         _localFileSystem = localFileSystem;
+        _mediator = mediator;
     }
 
     public async Task<Either<BaseError, Unit>> Handle(DeletePlayout request, CancellationToken cancellationToken)
@@ -47,6 +51,8 @@ public class DeletePlayoutHandler : IRequestHandler<DeletePlayout, Either<BaseEr
 
             // refresh channel list to remove channel that has no playout
             await _workerChannel.WriteAsync(new RefreshChannelList(), cancellationToken);
+
+            await _mediator.Publish(new PlayoutUpdatedNotification(playout.Id, false), cancellationToken);
         }
 
         return maybePlayout

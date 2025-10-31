@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Added
+- Show playout warnings count badge in left menu
+
 ### Fixed
 - Fix HLS Direct playback with Jellyfin 10.11
 - Fix remote stream scripts (parsing issue with spaces and quotes)

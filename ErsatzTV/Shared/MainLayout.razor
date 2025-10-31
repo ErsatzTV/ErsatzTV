@@ -1,9 +1,11 @@
 @inherits LayoutComponentBase
 @using System.Reflection
 @using ErsatzTV.Application.Configuration
+@using ErsatzTV.Application.Playouts
 @using ErsatzTV.Application.Search
 @using ErsatzTV.Core.Health
 @using ErsatzTV.Core.Interfaces.Search
+@using ErsatzTV.Core.Notifications
 @using ErsatzTV.Extensions
 @using MediatR.Courier
 @implements IDisposable
@@ -144,13 +146,42 @@
                     <MudNavLink Href="media/trakt/lists">Trakt Lists</MudNavLink>
                     <MudNavLink Href="media/filler/presets">Filler Presets</MudNavLink>
                 </MudNavGroup>
-                <MudNavGroup Title="Scheduling">
-                    <MudNavLink Href="schedules">Schedules</MudNavLink>
-                    <MudNavLink Href="blocks">Blocks</MudNavLink>
-                    <MudNavLink Href="templates">Templates</MudNavLink>
-                    <MudNavLink Href="decos">Decos</MudNavLink>
-                    <MudNavLink Href="deco-templates">Deco Templates</MudNavLink>
-                    <MudNavLink Href="playouts">Playouts</MudNavLink>
+                <MudNavGroup>
+                    <TitleContent>
+                        @if (_playoutWarnings > 0)
+                        {
+                            <div style="align-items: center; display: flex">
+                                Scheduling
+                                <MudIcon Color="@Color.Warning" Icon="@Icons.Material.Filled.Warning" Class="mx-2"/>
+                            </div>
+                        }
+                        else
+                        {
+                            @:Scheduling
+                        }
+                    </TitleContent>
+                    <ChildContent>
+                        <MudNavLink Href="schedules">Schedules</MudNavLink>
+                        <MudNavLink Href="blocks">Blocks</MudNavLink>
+                        <MudNavLink Href="templates">Templates</MudNavLink>
+                        <MudNavLink Href="decos">Decos</MudNavLink>
+                        <MudNavLink Href="deco-templates">Deco Templates</MudNavLink>
+                        <MudNavLink Href="playouts">
+                            @if (_playoutWarnings > 0)
+                            {
+                                <MudBadge Content="_playoutWarnings"
+                                          Color="Color.Warning"
+                                          Origin="Origin.CenterRight"
+                                          BadgeClass="mx-3">
+                                    Playouts
+                                </MudBadge>
+                            }
+                            else
+                            {
+                                @:Playouts
+                            }
+                        </MudNavLink>
+                    </ChildContent>
                 </MudNavGroup>
                 <MudNavGroup Title="Settings">
                     <MudNavLink Href="settings/ffmpeg">FFmpeg</MudNavLink>
@@ -241,6 +272,7 @@
     private bool _drawerIsOpen = true;
     private bool _isOpen;
     private List<SearchTargetViewModel> _searchTargets;
+    private int _playoutWarnings;
     private int _errors;
     private int _warnings;
     private bool _isDarkMode = true;
@@ -253,6 +285,7 @@
         SearchTargets.OnSearchTargetsChanged += OnSearchTargetsChanged;
 
         Courier.Subscribe<HealthCheckSummary>(HandleHealthCheckSummary);
+        Courier.Subscribe<PlayoutUpdatedNotification>(HandlePlayoutUpdated);
     }
 
     protected override async Task OnInitializedAsync()
@@ -385,14 +418,16 @@
             await base.OnParametersSetAsync();
             _query = NavigationManager.Uri.GetSearchQuery();
 
-            if (SystemStartup.IsDatabaseReady && _searchTargets is null)
+            if (SystemStartup.IsDatabaseReady)
             {
-                _searchTargets = await Mediator.Send(new QuerySearchTargets(), token);
-            }
+                _searchTargets ??= await Mediator.Send(new QuerySearchTargets(), token);
 
-            _isDarkMode = await Mediator.Send(new GetConfigElementByKey(ConfigElementKey.PagesIsDarkMode), token)
-                .MapT(result => !bool.TryParse(result.Value, out bool value) || value)
-                .IfNoneAsync(true);
+                _isDarkMode = await Mediator.Send(new GetConfigElementByKey(ConfigElementKey.PagesIsDarkMode), token)
+                    .MapT(result => !bool.TryParse(result.Value, out bool value) || value)
+                    .IfNoneAsync(true);
+
+                _playoutWarnings = await Mediator.Send(new GetPlayoutWarningsCount(), token);
+            }
         }
         catch (OperationCanceledException)
         {
@@ -478,6 +513,19 @@
         catch (Exception)
         {
             // ignore
+        }
+    }
+
+    private async Task HandlePlayoutUpdated(PlayoutUpdatedNotification _, CancellationToken cancellationToken)
+    {
+        try
+        {
+            _playoutWarnings = await Mediator.Send(new GetPlayoutWarningsCount(), cancellationToken);
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception)
+        {
+            // do nothing
         }
     }
 
