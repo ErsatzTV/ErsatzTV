@@ -2,8 +2,7 @@ namespace ErsatzTV.Core.Metadata;
 
 public static class MediaItemTemplateDataKey
 {
-    public static readonly string Resolution = "Resolution";
-
+    //public static readonly string MediaItemResolution = "MediaItem_Resolution";
     public static readonly string Duration = "MediaItem_Duration";
     public static readonly string StreamSeek = "MediaItem_StreamSeek";
 
