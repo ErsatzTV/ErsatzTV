@@ -143,6 +143,8 @@ public class TemplateDataRepository(ILocalFileSystem localFileSystem, IDbContext
         {
             foreach (MovieMetadata metadata in movie.MovieMetadata.HeadOrNone())
             {
+                var headVersion = movie.GetHeadVersion();
+
                 var result = new Dictionary<string, object>
                 {
                     [MediaItemTemplateDataKey.Title] = metadata.Title,
@@ -152,7 +154,9 @@ public class TemplateDataRepository(ILocalFileSystem localFileSystem, IDbContext
                     [MediaItemTemplateDataKey.Directors] =
                         (metadata.Directors ?? []).Map(d => d.Name).OrderBy(identity),
                     [MediaItemTemplateDataKey.Genres] = (metadata.Genres ?? []).Map(g => g.Name).OrderBy(identity),
-                    [MediaItemTemplateDataKey.Duration] = movie.GetHeadVersion().Duration,
+                    [MediaItemTemplateDataKey.Resolution] = new Resolution
+                        { Height = headVersion.Height, Width = headVersion.Width },
+                    [MediaItemTemplateDataKey.Duration] = headVersion.Duration,
                     [MediaItemTemplateDataKey.ContentRating] = metadata.ContentRating
                 };
 
@@ -206,6 +210,8 @@ public class TemplateDataRepository(ILocalFileSystem localFileSystem, IDbContext
                     (showMetadata.Genres ?? []).Map(s => s.Name).OrderBy(identity));
             }
 
+            var headVersion = episode.GetHeadVersion();
+
             foreach (EpisodeMetadata metadata in episode.EpisodeMetadata.HeadOrNone())
             {
                 result.Add(MediaItemTemplateDataKey.Title, metadata.Title);
@@ -220,7 +226,10 @@ public class TemplateDataRepository(ILocalFileSystem localFileSystem, IDbContext
                 result.Add(
                     MediaItemTemplateDataKey.Genres,
                     (metadata.Genres ?? []).Map(s => s.Name).OrderBy(identity));
-                result.Add(MediaItemTemplateDataKey.Duration, episode.GetHeadVersion().Duration);
+                result.Add(
+                    MediaItemTemplateDataKey.Resolution,
+                    new Resolution { Height = headVersion.Height, Width = headVersion.Width });
+                result.Add(MediaItemTemplateDataKey.Duration, headVersion.Duration);
             }
 
             foreach (var version in episode.MediaVersions.HeadOrNone())
@@ -269,6 +278,8 @@ public class TemplateDataRepository(ILocalFileSystem localFileSystem, IDbContext
                     artist = artistMetadata.Title;
                 }
 
+                var headVersion = musicVideo.GetHeadVersion();
+
                 var result = new Dictionary<string, object>
                 {
                     [MediaItemTemplateDataKey.Title] = metadata.Title,
@@ -282,7 +293,9 @@ public class TemplateDataRepository(ILocalFileSystem localFileSystem, IDbContext
                     [MediaItemTemplateDataKey.Directors] =
                         (metadata.Directors ?? []).Map(d => d.Name).OrderBy(identity),
                     [MediaItemTemplateDataKey.Genres] = (metadata.Genres ?? []).Map(g => g.Name).OrderBy(identity),
-                    [MediaItemTemplateDataKey.Duration] = musicVideo.GetHeadVersion().Duration
+                    [MediaItemTemplateDataKey.Resolution] = new Resolution
+                        { Height = headVersion.Height, Width = headVersion.Width },
+                    [MediaItemTemplateDataKey.Duration] = headVersion.Duration
                 };
 
                 foreach (var version in musicVideo.MediaVersions.HeadOrNone())
@@ -323,6 +336,8 @@ public class TemplateDataRepository(ILocalFileSystem localFileSystem, IDbContext
         {
             foreach (OtherVideoMetadata metadata in otherVideo.OtherVideoMetadata.HeadOrNone())
             {
+                var headVersion = otherVideo.GetHeadVersion();
+
                 var result = new Dictionary<string, object>
                 {
                     [MediaItemTemplateDataKey.Title] = metadata.Title,
@@ -332,7 +347,9 @@ public class TemplateDataRepository(ILocalFileSystem localFileSystem, IDbContext
                     [MediaItemTemplateDataKey.Directors] =
                         (metadata.Directors ?? []).Map(d => d.Name).OrderBy(identity),
                     [MediaItemTemplateDataKey.Genres] = (metadata.Genres ?? []).Map(g => g.Name).OrderBy(identity),
-                    [MediaItemTemplateDataKey.Duration] = otherVideo.GetHeadVersion().Duration
+                    [MediaItemTemplateDataKey.Resolution] = new Resolution
+                        { Height = headVersion.Height, Width = headVersion.Width },
+                    [MediaItemTemplateDataKey.Duration] = headVersion.Duration
                 };
 
                 foreach (var version in otherVideo.MediaVersions.HeadOrNone())

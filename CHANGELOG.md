@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 ### Added
 - Show playout warnings count badge in left menu
+- Graphics Engine:
+  - Add `MediaItem_Resolution` template data (the current `Resolution` variable is the FFmpeg Profile resolution)
+  - Add `MediaItem_Start` template data (DateTimeOffset)
+  - Add `MediaItem_Stop` template data (DateTimeOffset)
 
 ### Fixed
 - Fix HLS Direct playback with Jellyfin 10.11
