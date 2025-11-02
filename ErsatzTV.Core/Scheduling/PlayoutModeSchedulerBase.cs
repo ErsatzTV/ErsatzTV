@@ -60,16 +60,16 @@ public abstract class PlayoutModeSchedulerBase<T>(ILogger logger) : IPlayoutMode
             TimeSpan itemStartTime = scheduleItem.StartTime.GetValueOrDefault();
 
             DateTime date = startTime.Date;
-            DateTimeOffset result = new DateTimeOffset(
-                    date.Year,
-                    date.Month,
-                    date.Day,
-                    0,
-                    0,
-                    0,
-                    TimeZoneInfo.Local.GetUtcOffset(
-                        new DateTime(date.Year, date.Month, date.Day, 0, 0, 0, DateTimeKind.Local)))
-                .Add(itemStartTime);
+            var withStartTime = new DateTime(
+                date.Year,
+                date.Month,
+                date.Day,
+                0,
+                0,
+                0,
+                DateTimeKind.Unspecified).Add(itemStartTime);
+
+            DateTimeOffset result = new DateTimeOffset(withStartTime, TimeZoneInfo.Local.GetUtcOffset(withStartTime));
 
             // Serilog.Log.Logger.Debug(
             //     "StartTimeOfDay: {StartTimeOfDay} Item Start Time: {ItemStartTime}",

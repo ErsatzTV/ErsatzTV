@@ -22,6 +22,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Properly set explicit audio decoder on combined audio and video input file
 - Fix building sequential schedules across a UTC offset change
 - Fix block start time calculation across a UTC offset change
+- Fix classic schedule start time calculation across a UTC offset change
 - Fix XMLTV generation for channels using on-demand playout mode
 - Fix some removed songs from appearing in the trash
 
