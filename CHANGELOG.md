@@ -24,6 +24,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix building sequential schedules across a UTC offset change
 - Fix block start time calculation across a UTC offset change
 
+### Changed
+- Use smaller batch size for search index updates (100, down from 1000)
+  - This should help newly scanned items appear in the UI more quickly
+
 ## [25.8.0] - 2025-10-26
 ### Added
 - Graphics engine:
