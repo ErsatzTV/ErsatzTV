@@ -14,7 +14,7 @@ public class SearchIndexService : BackgroundService
     private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly SystemStartup _systemStartup;
 
-    private const int MaxBatchSize = 1000;
+    private const int MaxBatchSize = 100;
     private readonly TimeSpan _maxBatchTime = TimeSpan.FromSeconds(10);
 
     private enum SearchOperation { Reindex, Remove }
