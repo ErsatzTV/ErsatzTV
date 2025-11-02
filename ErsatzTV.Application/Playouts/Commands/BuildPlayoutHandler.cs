@@ -298,7 +298,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
                     // and therefore the segmenter may need to seek into the next item instead of
                     // starting at the beginning (if already working ahead)
                     changeCount += await dbContext.SaveChangesAsync(cancellationToken);
-                    bool hasChanges = changeCount > 0;
+                    bool hasChanges = changeCount > 0 || referenceData.Channel.PlayoutMode is ChannelPlayoutMode.OnDemand;
 
                     if (request.Mode != PlayoutBuildMode.Continue && hasChanges)
                     {

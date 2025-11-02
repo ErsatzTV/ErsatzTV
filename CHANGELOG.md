@@ -10,7 +10,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Add `MediaItem_Resolution` template data (the current `Resolution` variable is the FFmpeg Profile resolution)
   - Add `MediaItem_Start` template data (DateTimeOffset)
   - Add `MediaItem_Stop` template data (DateTimeOffset)
-- Time shift on-demand playouts every hour to prevent XMLTV from appearing empty
 
 ### Fixed
 - Fix HLS Direct playback with Jellyfin 10.11
@@ -23,6 +22,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Properly set explicit audio decoder on combined audio and video input file
 - Fix building sequential schedules across a UTC offset change
 - Fix block start time calculation across a UTC offset change
+- Fix XMLTV generation for channels using on-demand playout mode
 
 ### Changed
 - Use smaller batch size for search index updates (100, down from 1000)
