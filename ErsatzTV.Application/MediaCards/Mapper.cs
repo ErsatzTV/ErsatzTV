@@ -140,7 +140,7 @@ internal static class Mapper
         return new SongCardViewModel(
             songMetadata.SongId,
             songMetadata.Title,
-            string.Join(", ", songMetadata.Artists) + album,
+            string.Join(", ", songMetadata.Artists ?? []) + album,
             songMetadata.SortTitle,
             GetThumbnail(songMetadata, None, None),
             songMetadata.Song.State);
