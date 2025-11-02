@@ -697,7 +697,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
 
             if (!string.IsNullOrWhiteSpace(options))
             {
-                hlsSegmentOptions = $"mpegts_options={options}";
+                hlsSegmentOptions = $"mpegts_flags={options}";
             }
         }
 
