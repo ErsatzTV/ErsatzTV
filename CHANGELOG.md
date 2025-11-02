@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Add `MediaItem_Resolution` template data (the current `Resolution` variable is the FFmpeg Profile resolution)
   - Add `MediaItem_Start` template data (DateTimeOffset)
   - Add `MediaItem_Stop` template data (DateTimeOffset)
+- Time shift on-demand playouts every hour to prevent XMLTV from appearing empty
 
 ### Fixed
 - Fix HLS Direct playback with Jellyfin 10.11
