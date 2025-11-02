@@ -213,12 +213,18 @@ public class SchedulerService : BackgroundService
             .Include(p => p.Channel)
             .ToListAsync(cancellationToken);
 
-        foreach (int playoutId in playouts.OrderBy(p => decimal.Parse(p.Channel.Number, CultureInfo.InvariantCulture))
-                     .Map(p => p.Id))
+        foreach (Playout playout in playouts.OrderBy(p => decimal.Parse(p.Channel.Number, CultureInfo.InvariantCulture)))
         {
             await _workerChannel.WriteAsync(
-                new BuildPlayout(playoutId, PlayoutBuildMode.Continue),
+                new BuildPlayout(playout.Id, PlayoutBuildMode.Continue),
                 cancellationToken);
+
+            if (playout.Channel.PlayoutMode is ChannelPlayoutMode.OnDemand)
+            {
+                await _workerChannel.WriteAsync(
+                    new TimeShiftOnDemandPlayout(playout.Id, DateTimeOffset.Now, false),
+                    cancellationToken);
+            }
         }
     }
 
