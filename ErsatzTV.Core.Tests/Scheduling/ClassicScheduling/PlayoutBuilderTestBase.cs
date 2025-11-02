@@ -37,14 +37,15 @@ public abstract class PlayoutBuilderTestBase
 
     protected static DateTimeOffset HoursAfterMidnight(int hours)
     {
-        DateTimeOffset now = DateTimeOffset.Now;
-        return now - now.TimeOfDay + TimeSpan.FromHours(hours);
+        // DateTimeOffset now = DateTimeOffset.Now;
+        // return now - now.TimeOfDay + TimeSpan.FromHours(hours);
 
-        // // pick a timezone that has DST and a known offset on a specific date
-        // TimeZoneInfo eastern = TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
-        // DateTime date = new DateTime(2025, 11, 2, 0, 0, 0, DateTimeKind.Unspecified);
-        // DateTimeOffset now = new DateTimeOffset(date, eastern.GetUtcOffset(date));
-        // return now.Date + TimeSpan.FromHours(hours);
+        // pick a timezone that has DST and a known offset on a specific date
+        TimeZoneInfo eastern = TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
+        //DateTime date = new DateTime(2025, 11, 2, 0, 0, 0, DateTimeKind.Unspecified);
+        DateTime date = new DateTime(2025, 10, 4, 0, 0, 0, DateTimeKind.Unspecified);
+        DateTimeOffset now = new DateTimeOffset(date, eastern.GetUtcOffset(date));
+        return now.Date + TimeSpan.FromHours(hours);
     }
 
     protected TestData TestDataFloodForItems(

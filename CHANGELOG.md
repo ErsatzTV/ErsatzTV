@@ -21,6 +21,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix playback failure when seeking content with certain DTS audio (e.g. DTS-HD MA)
 - Properly set explicit audio decoder on combined audio and video input file
 - Fix building sequential schedules across a UTC offset change
+- Fix block start time calculation across a UTC offset change
 
 ## [25.8.0] - 2025-10-26
 ### Added

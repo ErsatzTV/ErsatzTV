@@ -101,9 +101,82 @@ public static class EffectiveBlockTests
             result[2].Start.Date.ShouldBe(GetLocalDate(2024, 1, 19).Date);
         }
 
-        // TODO: test when clocks spring forward
-        // TODO: test when clocks fall back
+        [Test]
+        public void Should_Handle_Spring_Forward()
+        {
+            DateTimeOffset now = DateTimeOffset.Now;
 
-        // TODO: offset may be incorrect on days with time change, since start offset is re-used
+            List<PlayoutTemplate> templates =
+            [
+                new()
+                {
+                    Index = 1,
+                    DaysOfWeek = PlayoutTemplate.AllDaysOfWeek(),
+                    DaysOfMonth = PlayoutTemplate.AllDaysOfMonth(),
+                    MonthsOfYear = PlayoutTemplate.AllMonthsOfYear(),
+                    Template = SingleBlockTemplate(now), // 9am block
+                    DateUpdated = now.UtcDateTime
+                }
+            ];
+
+            // In 2024, DST starts on March 10 for America/Chicago
+            // For Windows, this would be "Central Standard Time"
+            var tz = TimeZoneInfo.FindSystemTimeZoneById("America/Chicago");
+            var start = new DateTime(2024, 3, 9, 0, 0, 0, DateTimeKind.Unspecified);
+            var dto = new DateTimeOffset(start, tz.GetUtcOffset(start));
+
+            List<EffectiveBlock> result = EffectiveBlock.GetEffectiveBlocks(templates, dto, 5);
+
+            result.Count.ShouldBe(5);
+
+            // Saturday March 9, 9am is CST (-6)
+            var blockOnSat = result.Single(r => r.Start.Day == 9);
+            blockOnSat.Start.Hour.ShouldBe(9);
+            blockOnSat.Start.Offset.ShouldBe(TimeSpan.FromHours(-6));
+
+            // Sunday March 10, 9am is CDT (-5)
+            var blockOnSun = result.Single(r => r.Start.Day == 10);
+            blockOnSun.Start.Hour.ShouldBe(9);
+            blockOnSun.Start.Offset.ShouldBe(TimeSpan.FromHours(-5));
+        }
+
+        [Test]
+        public void Should_Handle_Fall_Back()
+        {
+            DateTimeOffset now = DateTimeOffset.Now;
+
+            List<PlayoutTemplate> templates =
+            [
+                new()
+                {
+                    Index = 1,
+                    DaysOfWeek = PlayoutTemplate.AllDaysOfWeek(),
+                    DaysOfMonth = PlayoutTemplate.AllDaysOfMonth(),
+                    MonthsOfYear = PlayoutTemplate.AllMonthsOfYear(),
+                    Template = SingleBlockTemplate(now), // 9am block
+                    DateUpdated = now.UtcDateTime
+                }
+            ];
+
+            // In 2024, DST ends on Nov 3 for America/Chicago
+            // For Windows, this would be "Central Standard Time"
+            var tz = TimeZoneInfo.FindSystemTimeZoneById("America/Chicago");
+            var start = new DateTime(2024, 11, 2, 0, 0, 0, DateTimeKind.Unspecified);
+            var dto = new DateTimeOffset(start, tz.GetUtcOffset(start));
+
+            List<EffectiveBlock> result = EffectiveBlock.GetEffectiveBlocks(templates, dto, 5);
+
+            result.Count.ShouldBe(5);
+
+            // Saturday Nov 2, 9am is CDT (-5)
+            var blockOnSat = result.Single(r => r.Start.Day == 2);
+            blockOnSat.Start.Hour.ShouldBe(9);
+            blockOnSat.Start.Offset.ShouldBe(TimeSpan.FromHours(-5));
+
+            // Sunday Nov 3, 9am is CST (-6)
+            var blockOnSun = result.Single(r => r.Start.Day == 3);
+            blockOnSun.Start.Hour.ShouldBe(9);
+            blockOnSun.Start.Offset.ShouldBe(TimeSpan.FromHours(-6));
+        }
     }
 }
