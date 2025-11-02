@@ -9,6 +9,8 @@ internal record EffectiveBlock(Block Block, BlockKey BlockKey, DateTimeOffset St
         DateTimeOffset start,
         int daysToBuild)
     {
+        var timeZone = TimeZoneInfo.Local;
+
         DateTimeOffset finish = start.AddDays(daysToBuild);
 
         var effectiveBlocks = new List<EffectiveBlock>();
@@ -26,14 +28,15 @@ internal record EffectiveBlock(Block Block, BlockKey BlockKey, DateTimeOffset St
                 DateTimeOffset today = current;
 
                 var newBlocks = playoutTemplate.Template.Items
-                    .Map(i => ToEffectiveBlock(playoutTemplate, i, today, start))
+                    .Map(i => ToEffectiveBlock(playoutTemplate, i, today))
                     .Map(NormalizeGuideMode)
                     .ToList();
 
                 effectiveBlocks.AddRange(newBlocks);
             }
 
-            current = current.AddDays(1);
+            var localDate = TimeZoneInfo.ConvertTime(current, timeZone).Date;
+            current = new DateTimeOffset(localDate.AddDays(1), timeZone.GetUtcOffset(localDate.AddDays(1)));
         }
 
         effectiveBlocks.RemoveAll(b => b.Start.AddMinutes(b.Block.Minutes) < start || b.Start > finish);
@@ -45,20 +48,27 @@ internal record EffectiveBlock(Block Block, BlockKey BlockKey, DateTimeOffset St
     private static EffectiveBlock ToEffectiveBlock(
         PlayoutTemplate playoutTemplate,
         TemplateItem templateItem,
-        DateTimeOffset current,
-        DateTimeOffset start) =>
-        new(
+        DateTimeOffset current)
+    {
+        var blockStartTime = new DateTime(
+            current.Year,
+            current.Month,
+            current.Day,
+            templateItem.StartTime.Hours,
+            templateItem.StartTime.Minutes,
+            0,
+            DateTimeKind.Unspecified);
+
+        // use the system's local time zone
+        var timeZone = TimeZoneInfo.Local;
+        var blockStart = new DateTimeOffset(blockStartTime, timeZone.GetUtcOffset(blockStartTime));
+
+        return new EffectiveBlock(
             templateItem.Block,
             new BlockKey(templateItem.Block, templateItem.Template, playoutTemplate),
-            new DateTimeOffset(
-                current.Year,
-                current.Month,
-                current.Day,
-                templateItem.StartTime.Hours,
-                templateItem.StartTime.Minutes,
-                0,
-                start.Offset),
+            blockStart,
             templateItem.Id);
+    }
 
     private static EffectiveBlock NormalizeGuideMode(EffectiveBlock effectiveBlock)
     {
