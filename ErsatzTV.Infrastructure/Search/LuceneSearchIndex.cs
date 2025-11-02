@@ -1287,12 +1287,13 @@ public sealed class LuceneSearchIndex : ISearchIndex
     private async Task UpdateSong(ISearchRepository searchRepository, Song song)
     {
         Option<SongMetadata> maybeMetadata = song.SongMetadata.HeadOrNone();
-        if (maybeMetadata.IsSome)
+        foreach (var metadata in maybeMetadata)
         {
-            SongMetadata metadata = maybeMetadata.ValueUnsafe();
-
             try
             {
+                metadata.AlbumArtists ??= [];
+                metadata.Artists ??= [];
+
                 var doc = new Document
                 {
                     new StringField(IdField, song.Id.ToString(CultureInfo.InvariantCulture), Field.Store.YES),

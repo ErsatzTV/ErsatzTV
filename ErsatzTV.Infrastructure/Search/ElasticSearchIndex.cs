@@ -730,6 +730,9 @@ public class ElasticSearchIndex : ISearchIndex
         {
             try
             {
+                metadata.AlbumArtists ??= [];
+                metadata.Artists ??= [];
+
                 var doc = new ElasticSearchItem
                 {
                     Id = song.Id,
