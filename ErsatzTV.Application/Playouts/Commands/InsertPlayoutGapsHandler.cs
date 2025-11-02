@@ -24,8 +24,8 @@ public class InsertPlayoutGapsHandler(IDbContextFactory<TvContext> dbContextFact
             PlayoutItem one = queue.Dequeue();
             PlayoutItem two = queue.Peek();
 
-            DateTimeOffset start = one.FinishOffset;
-            DateTimeOffset finish = two.StartOffset;
+            DateTime start = one.Finish;
+            DateTime finish = two.Start;
 
             if (start == finish)
             {
@@ -35,8 +35,8 @@ public class InsertPlayoutGapsHandler(IDbContextFactory<TvContext> dbContextFact
             var gap = new PlayoutGap
             {
                 PlayoutId = request.PlayoutId,
-                Start = start.UtcDateTime,
-                Finish = finish.UtcDateTime
+                Start = start,
+                Finish = finish
             };
 
             toAdd.Add(gap);
