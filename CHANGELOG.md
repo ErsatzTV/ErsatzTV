@@ -24,7 +24,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix block start time calculation across a UTC offset change
 - Fix classic schedule start time calculation across a UTC offset change
 - Fix XMLTV generation for channels using on-demand playout mode
-- Fix some removed songs from appearing in the trash
+- Fix some file not found songs missing from trash view
 
 ### Changed
 - Use smaller batch size for search index updates (100, down from 1000)
