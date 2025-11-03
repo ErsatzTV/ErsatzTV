@@ -1018,6 +1018,7 @@ public class JellyfinApiClient : IJellyfinApiClient
                 var stream = new MediaStream
                 {
                     MediaVersionId = version.Id,
+                    Title = subtitleStream.Title,
                     Codec = (subtitleStream.Codec ?? string.Empty).ToLowerInvariant(),
                     Default = subtitleStream.IsDefault,
                     Forced = subtitleStream.IsForced,
