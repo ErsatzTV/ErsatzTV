@@ -14,6 +14,8 @@ public interface IProgramScheduleItemRequest
     int? RerunCollectionId { get; }
     int? MediaItemId { get; }
     int? PlaylistId { get; }
+    string SearchTitle { get; }
+    string SearchQuery { get; }
     PlayoutMode PlayoutMode { get; }
     PlaybackOrder PlaybackOrder { get; }
     MarathonGroupBy MarathonGroupBy { get; }

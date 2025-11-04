@@ -29,6 +29,7 @@ public class PlayoutProgramScheduleAnchor
     public MediaItem MediaItem { get; set; }
     public int? PlaylistId { get; set; }
     public Playlist Playlist { get; set; }
+    public string SearchQuery { get; set; }
     public string FakeCollectionKey { get; set; }
     public CollectionEnumeratorState EnumeratorState { get; set; }
 }

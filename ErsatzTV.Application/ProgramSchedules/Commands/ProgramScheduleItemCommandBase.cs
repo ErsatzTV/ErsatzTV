@@ -189,6 +189,13 @@ public abstract class ProgramScheduleItemCommandBase
                 }
 
                 break;
+            case CollectionType.SearchQuery:
+                if (string.IsNullOrWhiteSpace(item.SearchQuery))
+                {
+                    return BaseError.New("[SearchQuery] is required for collection type 'SearchQuery'");
+                }
+
+                break;
             default:
                 return BaseError.New("[CollectionType] is invalid");
         }
@@ -216,6 +223,8 @@ public abstract class ProgramScheduleItemCommandBase
                 RerunCollectionId = item.RerunCollectionId,
                 MediaItemId = item.MediaItemId,
                 PlaylistId = item.PlaylistId,
+                SearchTitle = item.SearchTitle,
+                SearchQuery = item.SearchQuery,
                 PlaybackOrder = item.PlaybackOrder,
                 MarathonGroupBy = item.MarathonGroupBy,
                 MarathonShuffleGroups = item.MarathonShuffleGroups,
@@ -247,6 +256,8 @@ public abstract class ProgramScheduleItemCommandBase
                 RerunCollectionId = item.RerunCollectionId,
                 MediaItemId = item.MediaItemId,
                 PlaylistId = item.PlaylistId,
+                SearchTitle = item.SearchTitle,
+                SearchQuery = item.SearchQuery,
                 PlaybackOrder = item.PlaybackOrder,
                 MarathonGroupBy = item.MarathonGroupBy,
                 MarathonShuffleGroups = item.MarathonShuffleGroups,
@@ -278,6 +289,8 @@ public abstract class ProgramScheduleItemCommandBase
                 RerunCollectionId = item.RerunCollectionId,
                 MediaItemId = item.MediaItemId,
                 PlaylistId = item.PlaylistId,
+                SearchTitle = item.SearchTitle,
+                SearchQuery = item.SearchQuery,
                 PlaybackOrder = item.PlaybackOrder,
                 MarathonGroupBy = item.MarathonGroupBy,
                 MarathonShuffleGroups = item.MarathonShuffleGroups,
@@ -311,6 +324,8 @@ public abstract class ProgramScheduleItemCommandBase
                 RerunCollectionId = item.RerunCollectionId,
                 MediaItemId = item.MediaItemId,
                 PlaylistId = item.PlaylistId,
+                SearchTitle = item.SearchTitle,
+                SearchQuery = item.SearchQuery,
                 PlaybackOrder = item.PlaybackOrder,
                 MarathonGroupBy = item.MarathonGroupBy,
                 MarathonShuffleGroups = item.MarathonShuffleGroups,

@@ -62,6 +62,8 @@ public class ProgramScheduleItemEditViewModel : INotifyPropertyChanged
                 MultiCollection = null;
                 MediaItem = null;
                 SmartCollection = null;
+                SearchTitle = null;
+                SearchQuery = null;
                 RerunCollection = null;
 
                 if (_collectionType != CollectionType.Playlist &&
@@ -81,6 +83,8 @@ public class ProgramScheduleItemEditViewModel : INotifyPropertyChanged
                 OnPropertyChanged(nameof(MultiCollection));
                 OnPropertyChanged(nameof(MediaItem));
                 OnPropertyChanged(nameof(SmartCollection));
+                OnPropertyChanged(nameof(SearchTitle));
+                OnPropertyChanged(nameof(SearchQuery));
                 OnPropertyChanged(nameof(RerunCollection));
                 OnPropertyChanged(nameof(MultiCollection));
                 OnPropertyChanged(nameof(PlaybackOrder));
@@ -99,6 +103,8 @@ public class ProgramScheduleItemEditViewModel : INotifyPropertyChanged
     public RerunCollectionViewModel RerunCollection { get; set; }
     public NamedMediaItemViewModel MediaItem { get; set; }
     public PlaylistViewModel Playlist { get; set; }
+    public string SearchTitle { get; set; }
+    public string SearchQuery { get; set; }
     public FillerPresetViewModel PreRollFiller { get; set; }
     public FillerPresetViewModel MidRollFiller { get; set; }
     public FillerPresetViewModel PostRollFiller { get; set; }
@@ -121,6 +127,7 @@ public class ProgramScheduleItemEditViewModel : INotifyPropertyChanged
         CollectionType.SmartCollection => SmartCollection?.Name,
         CollectionType.Playlist => Playlist?.Name,
         CollectionType.RerunFirstRun or CollectionType.RerunRerun => RerunCollection?.Name,
+        CollectionType.SearchQuery => string.IsNullOrWhiteSpace(SearchTitle) ? SearchQuery : SearchTitle,
         _ => string.Empty
     };
 

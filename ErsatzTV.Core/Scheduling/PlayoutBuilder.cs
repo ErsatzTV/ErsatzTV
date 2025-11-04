@@ -1214,6 +1214,7 @@ public class PlayoutBuilder : IPlayoutBuilder
                 && a.RerunCollectionId == collectionKey.RerunCollectionId
                 && a.MultiCollectionId == collectionKey.MultiCollectionId
                 && a.PlaylistId == collectionKey.PlaylistId
+                && a.SearchQuery == collectionKey.SearchQuery
                 && a.AnchorDate is null);
 
             var maybeEnumeratorState = collectionEnumerators.ToDictionary(e => e.Key, e => e.Value.State);
@@ -1235,6 +1236,7 @@ public class PlayoutBuilder : IPlayoutBuilder
                     RerunCollectionId = collectionKey.RerunCollectionId,
                     MediaItemId = collectionKey.MediaItemId,
                     PlaylistId = collectionKey.PlaylistId,
+                    SearchQuery = collectionKey.SearchQuery,
                     FakeCollectionKey = collectionKey.FakeCollectionKey,
                     EnumeratorState = maybeEnumeratorState[collectionKey]
                 });
@@ -1277,7 +1279,8 @@ public class PlayoutBuilder : IPlayoutBuilder
                                  && a.SmartCollectionId == collectionKey.SmartCollectionId
                                  && a.RerunCollectionId == collectionKey.RerunCollectionId
                                  && a.MediaItemId == collectionKey.MediaItemId
-                                 && a.PlaylistId == collectionKey.PlaylistId);
+                                 && a.PlaylistId == collectionKey.PlaylistId
+                                 && a.SearchQuery == collectionKey.SearchQuery);
 
         CollectionEnumeratorState state = null;
 

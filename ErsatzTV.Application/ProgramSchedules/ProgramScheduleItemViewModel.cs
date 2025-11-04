@@ -22,6 +22,8 @@ public abstract record ProgramScheduleItemViewModel(
     RerunCollectionViewModel RerunCollection,
     PlaylistViewModel Playlist,
     NamedMediaItemViewModel MediaItem,
+    string SearchTitle,
+    string SearchQuery,
     PlaybackOrder PlaybackOrder,
     MarathonGroupBy MarathonGroupBy,
     bool MarathonShuffleGroups,
@@ -55,6 +57,8 @@ public abstract record ProgramScheduleItemViewModel(
             MultiCollection?.Name,
         CollectionType.SmartCollection =>
             SmartCollection?.Name,
+        CollectionType.SearchQuery =>
+            string.IsNullOrWhiteSpace(SearchTitle) ? SearchQuery : SearchTitle,
         CollectionType.Playlist =>
             Playlist?.Name,
         CollectionType.RerunFirstRun or CollectionType.RerunRerun =>

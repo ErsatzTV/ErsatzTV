@@ -17,6 +17,8 @@ public record ReplaceProgramScheduleItem(
     int? RerunCollectionId,
     int? MediaItemId,
     int? PlaylistId,
+    string SearchTitle,
+    string SearchQuery,
     PlaybackOrder PlaybackOrder,
     MarathonGroupBy MarathonGroupBy,
     bool MarathonShuffleGroups,
