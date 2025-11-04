@@ -30,9 +30,9 @@
         <PackageReference Include="Blazored.FluentValidation" Version="2.2.0" />
         <PackageReference Include="BlazorSortable" Version="5.1.3" />
         <PackageReference Include="Bugsnag.AspNet.Core" Version="4.1.0" />
-        <PackageReference Include="FluentValidation" Version="12.0.0" />
+        <PackageReference Include="FluentValidation" Version="12.1.0" />
         <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.1" />
-        <PackageReference Include="Heron.MudCalendar" Version="3.2.0" />
+        <PackageReference Include="Heron.MudCalendar" Version="3.3.0" />
         <PackageReference Include="HtmlSanitizer" Version="9.0.886" />
         <PackageReference Include="LanguageExt.Core" Version="4.4.9" />
         <PackageReference Include="Markdig" Version="0.43.0" />
@@ -57,7 +57,7 @@
         <PackageReference Include="MudBlazor" Version="8.13.0" />
         <PackageReference Include="NaturalSort.Extension" Version="4.4.0" />
         <PackageReference Include="Refit.HttpClientFactory" Version="8.0.0" />
-        <PackageReference Include="Scalar.AspNetCore" Version="2.9.0" />
+        <PackageReference Include="Scalar.AspNetCore" Version="2.10.1" />
         <PackageReference Include="Serilog" Version="4.3.0" />
         <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
         <PackageReference Include="Serilog.Settings.Configuration" Version="9.0.0" />
