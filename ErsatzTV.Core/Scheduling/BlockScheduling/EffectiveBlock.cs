@@ -7,10 +7,9 @@ internal record EffectiveBlock(Block Block, BlockKey BlockKey, DateTimeOffset St
     public static List<EffectiveBlock> GetEffectiveBlocks(
         ICollection<PlayoutTemplate> templates,
         DateTimeOffset start,
+        TimeZoneInfo timeZone,
         int daysToBuild)
     {
-        var timeZone = TimeZoneInfo.Local;
-
         DateTimeOffset finish = start.AddDays(daysToBuild);
 
         var effectiveBlocks = new List<EffectiveBlock>();
