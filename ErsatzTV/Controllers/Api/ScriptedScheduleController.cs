@@ -445,7 +445,7 @@ public class ScriptedScheduleController(IScriptedPlayoutBuilderService scriptedP
             return NotFound($"Active build engine not found for build {buildId}.");
         }
 
-        engine.LockGuideGroup(request.Advance);
+        engine.LockGuideGroup(request.Advance, request.CustomTitle);
         return Ok();
     }
 

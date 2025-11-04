@@ -119,7 +119,7 @@ public interface ISchedulingEngine
     Option<MediaItem> PeekNext(string content);
 
     // control instructions
-    void LockGuideGroup(bool advance);
+    void LockGuideGroup(bool advance, string customTitle);
     void UnlockGuideGroup();
 
     Task GraphicsOn(

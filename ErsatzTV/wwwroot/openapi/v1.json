@@ -915,6 +915,7 @@
           "None",
           "Aac",
           "Ac3",
+          "AacLatm",
           "Copy"
         ]
       },
