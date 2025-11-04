@@ -27,6 +27,8 @@ public abstract class ProgramScheduleItem
     public MultiCollection MultiCollection { get; set; }
     public int? SmartCollectionId { get; set; }
     public SmartCollection SmartCollection { get; set; }
+    public string SearchTitle { get; set; }
+    public string SearchQuery { get; set; }
     public int? RerunCollectionId { get; set; }
     public RerunCollection RerunCollection { get; set; }
     public int? PlaylistId { get; set; }

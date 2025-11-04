@@ -11,6 +11,7 @@ public enum CollectionType
     Playlist = 6,
     RerunFirstRun = 7,
     RerunRerun = 8,
+    SearchQuery = 9,
 
     Movie = 10,
     Episode = 20,

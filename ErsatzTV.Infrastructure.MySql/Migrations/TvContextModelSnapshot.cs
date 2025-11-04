@@ -2104,6 +2104,9 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<int?>("RerunCollectionId")
                         .HasColumnType("int");
 
+                    b.Property<string>("SearchQuery")
+                        .HasColumnType("longtext");
+
                     b.Property<int?>("SmartCollectionId")
                         .HasColumnType("int");
 
@@ -2370,6 +2373,12 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
 
                     b.Property<int?>("RerunCollectionId")
                         .HasColumnType("int");
+
+                    b.Property<string>("SearchQuery")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("SearchTitle")
+                        .HasColumnType("longtext");
 
                     b.Property<int?>("SmartCollectionId")
                         .HasColumnType("int");

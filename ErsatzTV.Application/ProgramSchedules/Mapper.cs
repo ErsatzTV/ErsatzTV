@@ -47,6 +47,8 @@ internal static class Mapper
                         Artist artist => MediaItems.Mapper.ProjectToViewModel(artist),
                         _ => null
                     },
+                    duration.SearchTitle,
+                    duration.SearchQuery,
                     duration.PlaybackOrder,
                     duration.MarathonGroupBy,
                     duration.MarathonShuffleGroups,
@@ -111,6 +113,8 @@ internal static class Mapper
                         Artist artist => MediaItems.Mapper.ProjectToViewModel(artist),
                         _ => null
                     },
+                    flood.SearchTitle,
+                    flood.SearchQuery,
                     flood.PlaybackOrder,
                     flood.MarathonGroupBy,
                     flood.MarathonShuffleGroups,
@@ -172,6 +176,8 @@ internal static class Mapper
                         Artist artist => MediaItems.Mapper.ProjectToViewModel(artist),
                         _ => null
                     },
+                    multiple.SearchTitle,
+                    multiple.SearchQuery,
                     multiple.PlaybackOrder,
                     multiple.MarathonGroupBy,
                     multiple.MarathonShuffleGroups,
@@ -235,6 +241,8 @@ internal static class Mapper
                         Artist artist => MediaItems.Mapper.ProjectToViewModel(artist),
                         _ => null
                     },
+                    one.SearchTitle,
+                    one.SearchQuery,
                     one.PlaybackOrder,
                     one.MarathonGroupBy,
                     one.MarathonShuffleGroups,

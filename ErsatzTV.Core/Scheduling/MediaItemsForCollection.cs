@@ -52,6 +52,13 @@ public static class MediaItemsForCollection
                 result.AddRange(
                     await mediaCollectionRepository.GetPlaylistItems(collectionKey.PlaylistId ?? 0, cancellationToken));
                 break;
+            case CollectionType.SearchQuery:
+                result.AddRange(
+                    await mediaCollectionRepository.GetSmartCollectionItems(
+                        collectionKey.SearchQuery,
+                        string.Empty,
+                        cancellationToken));
+                break;
             case CollectionType.Movie:
                 foreach (int mediaItemId in Optional(collectionKey.MediaItemId))
                 {

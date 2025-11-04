@@ -10,6 +10,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Add `MediaItem_Resolution` template data (the current `Resolution` variable is the FFmpeg Profile resolution)
   - Add `MediaItem_Start` template data (DateTimeOffset)
   - Add `MediaItem_Stop` template data (DateTimeOffset)
+- Classic schedules: add collection type `Search Query`
+  - This allows defining search queries directly on schedule items without creating smart collections beforehand
+  - As an example, this can be used to filter or combine existing smart collections
+    - Filter: `smart_collection:"sd movies" AND plot:"christmas"`
+    - Combine: `smart_collection:"old commercials" AND smart_collection:"nick promos"`
 
 ### Fixed
 - Fix HLS Direct playback with Jellyfin 10.11
