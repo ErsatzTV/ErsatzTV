@@ -14,7 +14,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - This allows defining search queries directly on schedule items without creating smart collections beforehand
   - As an example, this can be used to filter or combine existing smart collections
     - Filter: `smart_collection:"sd movies" AND plot:"christmas"`
-    - Combine: `smart_collection:"old commercials" AND smart_collection:"nick promos"`
+    - Combine: `smart_collection:"old commercials" OR smart_collection:"nick promos"`
+- Scripted schedules: add `custom_title` to `start_epg_group`
 
 ### Fixed
 - Fix HLS Direct playback with Jellyfin 10.11

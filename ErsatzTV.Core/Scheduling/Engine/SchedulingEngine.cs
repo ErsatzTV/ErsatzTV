@@ -737,11 +737,20 @@ public class SchedulingEngine(
                     OutPoint = itemDuration,
                     GuideGroup = _state.PeekNextGuideGroup(),
                     FillerKind = fillerKind,
-                    CustomTitle = string.IsNullOrWhiteSpace(customTitle) ? null : customTitle,
+                    CustomTitle = null,
                     DisableWatermarks = disableWatermarks,
                     PlayoutItemWatermarks = [],
                     PlayoutItemGraphicsElements = []
                 };
+
+                if (!string.IsNullOrWhiteSpace(customTitle))
+                {
+                    playoutItem.CustomTitle = customTitle;
+                }
+                else if (!string.IsNullOrWhiteSpace(_state.CustomTitle))
+                {
+                    playoutItem.CustomTitle = _state.CustomTitle;
+                }
 
                 foreach (int watermarkId in _state.GetChannelWatermarkIds())
                 {
@@ -918,12 +927,21 @@ public class SchedulingEngine(
                     InPoint = TimeSpan.Zero,
                     OutPoint = itemDuration,
                     FillerKind = GetFillerKind(fillerKind),
-                    CustomTitle = string.IsNullOrWhiteSpace(customTitle) ? null : customTitle,
+                    CustomTitle = null,
                     DisableWatermarks = disableWatermarks,
                     GuideGroup = _state.PeekNextGuideGroup(),
                     PlayoutItemWatermarks = [],
                     PlayoutItemGraphicsElements = []
                 };
+
+                if (!string.IsNullOrWhiteSpace(customTitle))
+                {
+                    playoutItem.CustomTitle = customTitle;
+                }
+                else if (!string.IsNullOrWhiteSpace(_state.CustomTitle))
+                {
+                    playoutItem.CustomTitle = _state.CustomTitle;
+                }
 
                 foreach (int watermarkId in _state.GetChannelWatermarkIds())
                 {
@@ -986,9 +1004,9 @@ public class SchedulingEngine(
         return enumeratorDetails.Enumerator.Current;
     }
 
-    public void LockGuideGroup(bool advance)
+    public void LockGuideGroup(bool advance, string customTitle)
     {
-        _state.LockGuideGroup(advance);
+        _state.LockGuideGroup(advance, customTitle);
     }
 
     public void UnlockGuideGroup()
@@ -1519,6 +1537,7 @@ public class SchedulingEngine(
         public DateTimeOffset Finish { get; set; }
         public DateTimeOffset Start { get; set; }
         public DateTimeOffset CurrentTime { get; set; }
+        public string CustomTitle { get; private set; }
 
         // guide group
         public int PeekNextGuideGroup()
@@ -1551,7 +1570,7 @@ public class SchedulingEngine(
             }
         }
 
-        public void LockGuideGroup(bool advance = true)
+        public void LockGuideGroup(bool advance = true, string customTitle = null)
         {
             if (advance)
             {
@@ -1559,6 +1578,11 @@ public class SchedulingEngine(
             }
 
             _guideGroupLocked = true;
+
+            if (!string.IsNullOrWhiteSpace(customTitle))
+            {
+                CustomTitle = customTitle;
+            }
         }
 
         public void UnlockGuideGroup() => _guideGroupLocked = false;

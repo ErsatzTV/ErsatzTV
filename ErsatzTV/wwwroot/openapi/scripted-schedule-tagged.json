@@ -1778,6 +1778,11 @@
           "advance": {
             "type": "boolean",
             "description": "When true, will make a new EPG group. When false, will continue the existing EPG group."
+          },
+          "customTitle": {
+            "type": "string",
+            "description": "Custom title to apply to all items in the EPG group.",
+            "nullable": true
           }
         }
       },
