@@ -2,6 +2,7 @@ using ErsatzTV.Core.Domain.Scheduling;
 using ErsatzTV.Core.Scheduling.BlockScheduling;
 using NUnit.Framework;
 using Shouldly;
+using TimeZoneConverter;
 
 namespace ErsatzTV.Core.Tests.Scheduling.BlockScheduling;
 
@@ -123,7 +124,7 @@ public static class EffectiveBlockTests
 
             // In 2024, DST starts on March 10 for America/Chicago
             // For Windows, this would be "Central Standard Time"
-            var tz = TimeZoneInfo.FindSystemTimeZoneById("America/Chicago");
+            var tz = TZConvert.GetTimeZoneInfo("America/Chicago");
             var start = new DateTime(2024, 3, 9, 0, 0, 0, DateTimeKind.Unspecified);
             var dto = new DateTimeOffset(start, tz.GetUtcOffset(start));
 
@@ -162,7 +163,7 @@ public static class EffectiveBlockTests
 
             // In 2024, DST ends on Nov 3 for America/Chicago
             // For Windows, this would be "Central Standard Time"
-            var tz = TimeZoneInfo.FindSystemTimeZoneById("America/Chicago");
+            var tz = TZConvert.GetTimeZoneInfo("America/Chicago");
             var start = new DateTime(2024, 11, 2, 0, 0, 0, DateTimeKind.Unspecified);
             var dto = new DateTimeOffset(start, tz.GetUtcOffset(start));
 
