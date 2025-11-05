@@ -58,8 +58,7 @@ public class BlockPlayoutBuilder(
             referenceData.PlayoutTemplates,
             start,
             TimeZoneInfo.Local,
-            daysToBuild,
-            logger);
+            daysToBuild);
 
         if (blocksToSchedule.Count == 0)
         {
