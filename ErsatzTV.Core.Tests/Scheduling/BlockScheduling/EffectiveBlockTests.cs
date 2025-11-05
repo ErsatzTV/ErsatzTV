@@ -2,13 +2,14 @@ using ErsatzTV.Core.Domain.Scheduling;
 using ErsatzTV.Core.Scheduling.BlockScheduling;
 using NUnit.Framework;
 using Shouldly;
+using TimeZoneConverter;
 
 namespace ErsatzTV.Core.Tests.Scheduling.BlockScheduling;
 
-public static class EffectiveBlockTests
+public class EffectiveBlockTests
 {
-    private static DateTimeOffset GetLocalDate(int year, int month, int day) =>
-        new(year, month, day, 0, 0, 0, TimeSpan.FromHours(-6));
+    private static DateTimeOffset GetLocalDate(int year, int month, int day, TimeZoneInfo tz) =>
+        new(year, month, day, 0, 0, 0, tz.GetUtcOffset(new DateTime(year, month, day)));
 
     private static Template SingleBlockTemplate(DateTimeOffset dateUpdated)
     {
@@ -60,9 +61,10 @@ public static class EffectiveBlockTests
                 }
             ];
 
-            DateTimeOffset start = GetLocalDate(2024, 1, 15).AddHours(9);
+            TimeZoneInfo tz = TimeZoneInfo.Local;
+            DateTimeOffset start = GetLocalDate(2024, 1, 15, tz).AddHours(9);
 
-            List<EffectiveBlock> result = EffectiveBlock.GetEffectiveBlocks(templates, start, 5);
+            List<EffectiveBlock> result = EffectiveBlock.GetEffectiveBlocks(templates, start, tz, 5);
 
             result.Count.ShouldBe(0);
         }
@@ -85,20 +87,21 @@ public static class EffectiveBlockTests
                 }
             ];
 
-            DateTimeOffset start = GetLocalDate(2024, 1, 15).AddHours(9);
+            TimeZoneInfo tz = TimeZoneInfo.Local;
+            DateTimeOffset start = GetLocalDate(2024, 1, 15, tz).AddHours(9);
 
-            List<EffectiveBlock> result = EffectiveBlock.GetEffectiveBlocks(templates, start, 5);
+            List<EffectiveBlock> result = EffectiveBlock.GetEffectiveBlocks(templates, start, tz, 5);
 
             result.Count.ShouldBe(3);
 
             result[0].Start.DayOfWeek.ShouldBe(DayOfWeek.Monday);
-            result[0].Start.Date.ShouldBe(GetLocalDate(2024, 1, 15).Date);
+            result[0].Start.Date.ShouldBe(GetLocalDate(2024, 1, 15, tz).Date);
 
             result[1].Start.DayOfWeek.ShouldBe(DayOfWeek.Wednesday);
-            result[1].Start.Date.ShouldBe(GetLocalDate(2024, 1, 17).Date);
+            result[1].Start.Date.ShouldBe(GetLocalDate(2024, 1, 17, tz).Date);
 
             result[2].Start.DayOfWeek.ShouldBe(DayOfWeek.Friday);
-            result[2].Start.Date.ShouldBe(GetLocalDate(2024, 1, 19).Date);
+            result[2].Start.Date.ShouldBe(GetLocalDate(2024, 1, 19, tz).Date);
         }
 
         [Test]
@@ -121,11 +124,11 @@ public static class EffectiveBlockTests
 
             // In 2024, DST starts on March 10 for America/Chicago
             // For Windows, this would be "Central Standard Time"
-            var tz = TimeZoneInfo.FindSystemTimeZoneById("America/Chicago");
+            var tz = TZConvert.GetTimeZoneInfo("America/Chicago");
             var start = new DateTime(2024, 3, 9, 0, 0, 0, DateTimeKind.Unspecified);
             var dto = new DateTimeOffset(start, tz.GetUtcOffset(start));
 
-            List<EffectiveBlock> result = EffectiveBlock.GetEffectiveBlocks(templates, dto, 5);
+            List<EffectiveBlock> result = EffectiveBlock.GetEffectiveBlocks(templates, dto, tz, 5);
 
             result.Count.ShouldBe(5);
 
@@ -160,11 +163,11 @@ public static class EffectiveBlockTests
 
             // In 2024, DST ends on Nov 3 for America/Chicago
             // For Windows, this would be "Central Standard Time"
-            var tz = TimeZoneInfo.FindSystemTimeZoneById("America/Chicago");
+            var tz = TZConvert.GetTimeZoneInfo("America/Chicago");
             var start = new DateTime(2024, 11, 2, 0, 0, 0, DateTimeKind.Unspecified);
             var dto = new DateTimeOffset(start, tz.GetUtcOffset(start));
 
-            List<EffectiveBlock> result = EffectiveBlock.GetEffectiveBlocks(templates, dto, 5);
+            List<EffectiveBlock> result = EffectiveBlock.GetEffectiveBlocks(templates, dto, tz, 5);
 
             result.Count.ShouldBe(5);
 

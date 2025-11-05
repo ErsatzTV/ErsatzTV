@@ -54,8 +54,11 @@ public class BlockPlayoutBuilder(
         int daysToBuild = await GetDaysToBuild(cancellationToken);
 
         // get blocks to schedule
-        List<EffectiveBlock> blocksToSchedule =
-            EffectiveBlock.GetEffectiveBlocks(referenceData.PlayoutTemplates, start, daysToBuild);
+        List<EffectiveBlock> blocksToSchedule = EffectiveBlock.GetEffectiveBlocks(
+            referenceData.PlayoutTemplates,
+            start,
+            TimeZoneInfo.Local,
+            daysToBuild);
 
         if (blocksToSchedule.Count == 0)
         {
