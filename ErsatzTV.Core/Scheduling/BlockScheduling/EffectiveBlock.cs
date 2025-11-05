@@ -15,7 +15,7 @@ internal record EffectiveBlock(Block Block, BlockKey BlockKey, DateTimeOffset St
         DateTimeOffset finish = start.AddDays(daysToBuild);
 
         var effectiveBlocks = new List<EffectiveBlock>();
-        DateTimeOffset current = start.Date;
+        DateTimeOffset current = new DateTimeOffset(start.Year, start.Month, start.Day, 0, 0, 0, start.Offset);
         while (current < finish)
         {
             Option<PlayoutTemplate> maybeTemplate = PlayoutTemplateSelector.GetPlayoutTemplateFor(templates, current);
