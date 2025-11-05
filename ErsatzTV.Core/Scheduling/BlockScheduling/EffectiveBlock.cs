@@ -1,4 +1,5 @@
 using ErsatzTV.Core.Domain.Scheduling;
+using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Core.Scheduling.BlockScheduling;
 
@@ -8,7 +9,8 @@ internal record EffectiveBlock(Block Block, BlockKey BlockKey, DateTimeOffset St
         ICollection<PlayoutTemplate> templates,
         DateTimeOffset start,
         TimeZoneInfo timeZone,
-        int daysToBuild)
+        int daysToBuild,
+        ILogger logger)
     {
         DateTimeOffset finish = start.AddDays(daysToBuild);
 
@@ -19,15 +21,15 @@ internal record EffectiveBlock(Block Block, BlockKey BlockKey, DateTimeOffset St
             Option<PlayoutTemplate> maybeTemplate = PlayoutTemplateSelector.GetPlayoutTemplateFor(templates, current);
             foreach (PlayoutTemplate playoutTemplate in maybeTemplate)
             {
-                // logger.LogDebug(
-                //     "Will schedule day {Date} using template {Template}",
-                //     current,
-                //     playoutTemplate.Template.Name);
+                logger.LogDebug(
+                    "Will schedule day {Date} using template {Template}",
+                    current,
+                    playoutTemplate.Template.Id);
 
                 DateTimeOffset today = current;
 
                 var newBlocks = playoutTemplate.Template.Items
-                    .Map(i => ToEffectiveBlock(playoutTemplate, i, today, timeZone))
+                    .Map(i => ToEffectiveBlock(playoutTemplate, i, today, timeZone, logger))
                     .Map(NormalizeGuideMode)
                     .ToList();
 
@@ -48,7 +50,8 @@ internal record EffectiveBlock(Block Block, BlockKey BlockKey, DateTimeOffset St
         PlayoutTemplate playoutTemplate,
         TemplateItem templateItem,
         DateTimeOffset current,
-        TimeZoneInfo timeZone)
+        TimeZoneInfo timeZone,
+        ILogger logger)
     {
         var blockStartTime = new DateTime(
             current.Year,
@@ -60,6 +63,11 @@ internal record EffectiveBlock(Block Block, BlockKey BlockKey, DateTimeOffset St
             DateTimeKind.Unspecified);
 
         var blockStart = new DateTimeOffset(blockStartTime, timeZone.GetUtcOffset(blockStartTime));
+
+        logger.LogDebug(
+            "Starting block {Block} at {BlockStart}",
+            templateItem.Block.Name,
+            blockStart);
 
         return new EffectiveBlock(
             templateItem.Block,

@@ -1,13 +1,31 @@
+using Destructurama;
 using ErsatzTV.Core.Domain.Scheduling;
 using ErsatzTV.Core.Scheduling.BlockScheduling;
+using Microsoft.Extensions.Logging;
 using NUnit.Framework;
+using Serilog;
 using Shouldly;
 using TimeZoneConverter;
 
 namespace ErsatzTV.Core.Tests.Scheduling.BlockScheduling;
 
-public static class EffectiveBlockTests
+public class EffectiveBlockTests
 {
+    private static readonly ILogger<EffectiveBlock> _logger;
+
+    static EffectiveBlockTests()
+    {
+        Log.Logger = new LoggerConfiguration()
+            .MinimumLevel.Debug()
+            .WriteTo.Console()
+            .Destructure.UsingAttributes()
+            .CreateLogger();
+
+        ILoggerFactory loggerFactory = new LoggerFactory().AddSerilog(Log.Logger);
+
+        _logger = loggerFactory.CreateLogger<EffectiveBlock>();
+    }
+
     private static DateTimeOffset GetLocalDate(int year, int month, int day, TimeZoneInfo tz) =>
         new(year, month, day, 0, 0, 0, tz.GetUtcOffset(new DateTime(year, month, day)));
 
@@ -64,7 +82,7 @@ public static class EffectiveBlockTests
             TimeZoneInfo tz = TimeZoneInfo.Local;
             DateTimeOffset start = GetLocalDate(2024, 1, 15, tz).AddHours(9);
 
-            List<EffectiveBlock> result = EffectiveBlock.GetEffectiveBlocks(templates, start, tz, 5);
+            List<EffectiveBlock> result = EffectiveBlock.GetEffectiveBlocks(templates, start, tz, 5, _logger);
 
             result.Count.ShouldBe(0);
         }
@@ -90,7 +108,7 @@ public static class EffectiveBlockTests
             TimeZoneInfo tz = TimeZoneInfo.Local;
             DateTimeOffset start = GetLocalDate(2024, 1, 15, tz).AddHours(9);
 
-            List<EffectiveBlock> result = EffectiveBlock.GetEffectiveBlocks(templates, start, tz, 5);
+            List<EffectiveBlock> result = EffectiveBlock.GetEffectiveBlocks(templates, start, tz, 5, _logger);
 
             result.Count.ShouldBe(3);
 
@@ -128,7 +146,7 @@ public static class EffectiveBlockTests
             var start = new DateTime(2024, 3, 9, 0, 0, 0, DateTimeKind.Unspecified);
             var dto = new DateTimeOffset(start, tz.GetUtcOffset(start));
 
-            List<EffectiveBlock> result = EffectiveBlock.GetEffectiveBlocks(templates, dto, tz, 5);
+            List<EffectiveBlock> result = EffectiveBlock.GetEffectiveBlocks(templates, dto, tz, 5, _logger);
 
             result.Count.ShouldBe(5);
 
@@ -167,7 +185,7 @@ public static class EffectiveBlockTests
             var start = new DateTime(2024, 11, 2, 0, 0, 0, DateTimeKind.Unspecified);
             var dto = new DateTimeOffset(start, tz.GetUtcOffset(start));
 
-            List<EffectiveBlock> result = EffectiveBlock.GetEffectiveBlocks(templates, dto, tz, 5);
+            List<EffectiveBlock> result = EffectiveBlock.GetEffectiveBlocks(templates, dto, tz, 5, _logger);
 
             result.Count.ShouldBe(5);
 
