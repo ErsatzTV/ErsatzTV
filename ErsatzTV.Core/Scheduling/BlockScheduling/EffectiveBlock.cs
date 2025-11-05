@@ -27,7 +27,7 @@ internal record EffectiveBlock(Block Block, BlockKey BlockKey, DateTimeOffset St
                 DateTimeOffset today = current;
 
                 var newBlocks = playoutTemplate.Template.Items
-                    .Map(i => ToEffectiveBlock(playoutTemplate, i, today))
+                    .Map(i => ToEffectiveBlock(playoutTemplate, i, today, timeZone))
                     .Map(NormalizeGuideMode)
                     .ToList();
 
@@ -47,7 +47,8 @@ internal record EffectiveBlock(Block Block, BlockKey BlockKey, DateTimeOffset St
     private static EffectiveBlock ToEffectiveBlock(
         PlayoutTemplate playoutTemplate,
         TemplateItem templateItem,
-        DateTimeOffset current)
+        DateTimeOffset current,
+        TimeZoneInfo timeZone)
     {
         var blockStartTime = new DateTime(
             current.Year,
@@ -58,8 +59,6 @@ internal record EffectiveBlock(Block Block, BlockKey BlockKey, DateTimeOffset St
             0,
             DateTimeKind.Unspecified);
 
-        // use the system's local time zone
-        var timeZone = TimeZoneInfo.Local;
         var blockStart = new DateTimeOffset(blockStartTime, timeZone.GetUtcOffset(blockStartTime));
 
         return new EffectiveBlock(
