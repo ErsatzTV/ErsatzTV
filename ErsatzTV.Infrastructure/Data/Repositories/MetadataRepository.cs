@@ -717,6 +717,7 @@ public class MetadataRepository(IDbContextFactory<TvContext> dbContextFactory) :
                     existingSubtitle.SubtitleKind = incomingSubtitle.SubtitleKind;
                     existingSubtitle.Codec = incomingSubtitle.Codec;
                     existingSubtitle.DateUpdated = incomingSubtitle.DateUpdated;
+                    existingSubtitle.Title = incomingSubtitle.Title;
 
                     dbContext.Entry(existingSubtitle).State = EntityState.Modified;
                 }
