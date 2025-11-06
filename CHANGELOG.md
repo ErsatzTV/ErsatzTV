@@ -36,7 +36,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Deep scans will be required to update subtitle titles on existing media items
 - Fix saving subtitle title changes to the database
   - This fixes e.g. where stream selection would continue to use the original title
-  - This applies to all libraries (local and media server) and may require deep scans to fix
+  - This fix applies to all libraries (local and media server)
 
 ### Changed
 - Use smaller batch size for search index updates (100, down from 1000)
