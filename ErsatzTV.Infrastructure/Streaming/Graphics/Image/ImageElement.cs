@@ -42,7 +42,7 @@ public class ImageElement(ImageGraphicsElement imageGraphicsElement, ILogger log
                 imageGraphicsElement.ScaleWidthPercent,
                 imageGraphicsElement.HorizontalMarginPercent,
                 imageGraphicsElement.VerticalMarginPercent,
-                false,
+                imageGraphicsElement.PlaceWithinSourceContent,
                 cancellationToken);
         }
         catch (Exception ex)

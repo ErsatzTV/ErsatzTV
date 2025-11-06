@@ -176,6 +176,7 @@ public partial class GraphicsElementLoader(
         var result = new Dictionary<string, object>
         {
             [FFmpegProfileTemplateDataKey.Resolution] = context.FrameSize,
+            [FFmpegProfileTemplateDataKey.ScaledResolution] = context.SquarePixelFrameSize,
             [MediaItemTemplateDataKey.StreamSeek] = context.Seek,
             [MediaItemTemplateDataKey.Start] = context.ContentStartTime,
             [MediaItemTemplateDataKey.Stop] = context.ContentStartTime + context.Duration

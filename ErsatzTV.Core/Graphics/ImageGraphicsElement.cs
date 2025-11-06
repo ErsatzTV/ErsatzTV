@@ -34,4 +34,7 @@ public class ImageGraphicsElement
 
     [YamlMember(Alias = "scale_width_percent", ApplyNamingConventions = false)]
     public double? ScaleWidthPercent { get; set; }
+
+    [YamlMember(Alias = "place_within_source_content", ApplyNamingConventions = false)]
+    public bool PlaceWithinSourceContent { get; set; }
 }
