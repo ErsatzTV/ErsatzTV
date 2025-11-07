@@ -37,7 +37,8 @@ public class GetWrappedProcessByChannelNumberHandler : FFmpegProcessHandler<GetW
             channel,
             request.Scheme,
             request.Host,
-            request.AccessToken);
+            request.AccessToken,
+            cancellationToken);
 
         return new PlayoutItemProcessModel(
             process,

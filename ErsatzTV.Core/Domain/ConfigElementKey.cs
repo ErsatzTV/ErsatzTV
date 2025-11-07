@@ -26,6 +26,7 @@ public class ConfigElementKey
     public static ConfigElementKey FFmpegWorkAheadSegmenters => new("ffmpeg.segmenter.work_ahead_limit");
     public static ConfigElementKey FFmpegInitialSegmentCount => new("ffmpeg.segmenter.initial_segment_count");
     public static ConfigElementKey FFmpegHlsDirectOutputFormat => new("ffmpeg.hls_direct.output_format");
+    public static ConfigElementKey FFmpegDefaultMpegTsScript => new("ffmpeg.default_mpegts_script");
     public static ConfigElementKey SearchIndexVersion => new("search_index.version");
     public static ConfigElementKey HDHRTunerCount => new("hdhr.tuner_count");
     public static ConfigElementKey HDHRUUID => new("hdhr.uuid");

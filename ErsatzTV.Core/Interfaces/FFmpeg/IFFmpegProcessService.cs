@@ -65,7 +65,8 @@ public interface IFFmpegProcessService
         Channel channel,
         string scheme,
         string host,
-        string accessToken);
+        string accessToken,
+        CancellationToken cancellationToken);
 
     Task<Command> ResizeImage(string ffmpegPath, string inputFile, string outputFile, int height);
 

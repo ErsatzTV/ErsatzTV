@@ -25,6 +25,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
     private readonly IConfigElementRepository _configElementRepository;
     private readonly IGraphicsElementLoader _graphicsElementLoader;
     private readonly IMemoryCache _memoryCache;
+    private readonly IMpegTsScriptService _mpegTsScriptService;
     private readonly ICustomStreamSelector _customStreamSelector;
     private readonly FFmpegProcessService _ffmpegProcessService;
     private readonly IFFmpegStreamSelector _ffmpegStreamSelector;
@@ -41,6 +42,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         IConfigElementRepository configElementRepository,
         IGraphicsElementLoader graphicsElementLoader,
         IMemoryCache memoryCache,
+        IMpegTsScriptService mpegTsScriptService,
         ILogger<FFmpegLibraryProcessService> logger)
     {
         _ffmpegProcessService = ffmpegProcessService;
@@ -51,6 +53,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         _configElementRepository = configElementRepository;
         _graphicsElementLoader = graphicsElementLoader;
         _memoryCache = memoryCache;
+        _mpegTsScriptService = mpegTsScriptService;
         _logger = logger;
     }
 
@@ -823,7 +826,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         Channel channel,
         string scheme,
         string host,
-        string accessToken)
+        string accessToken,
+        CancellationToken cancellationToken)
     {
         var resolution = new FrameSize(channel.FFmpegProfile.Resolution.Width, channel.FFmpegProfile.Resolution.Height);
 
@@ -838,6 +842,27 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         if (channel.FFmpegProfile.AudioFormat is FFmpegProfileAudioFormat.AacLatm)
         {
             concatInputFile.AudioFormat = AudioFormat.AacLatm;
+        }
+
+        // TODO: save reports?
+        string defaultScript = await _configElementRepository
+            .GetValue<string>(ConfigElementKey.FFmpegDefaultMpegTsScript, cancellationToken)
+            .IfNoneAsync("Default");
+        List<MpegTsScript> allScripts = _mpegTsScriptService.GetScripts();
+        foreach (var script in allScripts.Where(s => string.Equals(
+                     s.Name,
+                     defaultScript,
+                     StringComparison.OrdinalIgnoreCase)))
+        {
+            Option<Command> maybeCommand = await _mpegTsScriptService.Execute(
+                script,
+                channel,
+                concatInputFile.Url,
+                ffmpegPath);
+            foreach (var command in maybeCommand)
+            {
+                return command;
+            }
         }
 
         IPipelineBuilder pipelineBuilder = await _pipelineBuilderFactory.GetBuilder(

@@ -102,6 +102,18 @@ public class ResourceExtractorService : BackgroundService
             "_movie.js",
             FileSystemLayout.AudioStreamSelectorScriptsFolder,
             stoppingToken);
+
+        await ExtractMpegTsScriptResource(
+            assembly,
+            "run.sh",
+            FileSystemLayout.DefaultMpegTsScriptFolder,
+            stoppingToken);
+
+        await ExtractMpegTsScriptResource(
+            assembly,
+            "mpegts.yml",
+            FileSystemLayout.DefaultMpegTsScriptFolder,
+            stoppingToken);
     }
 
     private static async Task ExtractResource(Assembly assembly, string name, CancellationToken cancellationToken)
@@ -151,6 +163,20 @@ public class ResourceExtractorService : BackgroundService
         CancellationToken cancellationToken)
     {
         await using Stream resource = assembly.GetManifestResourceStream($"ErsatzTV.Resources.Scripts.{name}");
+        if (resource != null)
+        {
+            await using FileStream fs = File.Create(Path.Combine(targetFolder, name));
+            await resource.CopyToAsync(fs, cancellationToken);
+        }
+    }
+
+    private static async Task ExtractMpegTsScriptResource(
+        Assembly assembly,
+        string name,
+        string targetFolder,
+        CancellationToken cancellationToken)
+    {
+        await using Stream resource = assembly.GetManifestResourceStream($"ErsatzTV.Resources.Scripts.MpegTs.{name}");
         if (resource != null)
         {
             await using FileStream fs = File.Create(Path.Combine(targetFolder, name));
