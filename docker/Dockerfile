@@ -2,6 +2,7 @@ FROM mcr.microsoft.com/dotnet/aspnet:9.0-noble-amd64 AS dotnet-runtime
 
 FROM --platform=linux/amd64 ghcr.io/ersatztv/ersatztv-ffmpeg:7.1.1 AS runtime-base
 COPY --from=dotnet-runtime /usr/share/dotnet /usr/share/dotnet
+RUN apt-get update && apt-get install -y python3-pip && apt-get clean -y && python3 -m pip install --target=/app/pythonlibs streamlink
 
 # https://hub.docker.com/_/microsoft-dotnet
 FROM mcr.microsoft.com/dotnet/sdk:9.0-noble-amd64 AS build
