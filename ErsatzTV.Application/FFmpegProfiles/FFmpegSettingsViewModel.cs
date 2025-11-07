@@ -17,4 +17,5 @@ public class FFmpegSettingsViewModel
     public int WorkAheadSegmenterLimit { get; set; }
     public int InitialSegmentCount { get; set; }
     public OutputFormatKind HlsDirectOutputFormat { get; set; }
+    public string DefaultMpegTsScript { get; set; }
 }

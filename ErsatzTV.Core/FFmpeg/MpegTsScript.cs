@@ -4,6 +4,9 @@ namespace ErsatzTV.Core.FFmpeg;
 
 public class MpegTsScript
 {
+    [YamlIgnore]
+    public string Id { get; set; }
+
     [YamlMember(Alias = "name", ApplyNamingConventions = false)]
     public string Name { get; set; }
 

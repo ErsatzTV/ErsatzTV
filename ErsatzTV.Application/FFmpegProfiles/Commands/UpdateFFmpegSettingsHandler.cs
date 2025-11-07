@@ -85,6 +85,10 @@ public class UpdateFFmpegSettingsHandler : IRequestHandler<UpdateFFmpegSettings,
             ConfigElementKey.FFmpegHlsDirectOutputFormat,
             request.Settings.HlsDirectOutputFormat,
             cancellationToken);
+        await _configElementRepository.Upsert(
+            ConfigElementKey.FFmpegDefaultMpegTsScript,
+            request.Settings.DefaultMpegTsScript,
+            cancellationToken);
 
         if (request.Settings.SaveReports && !Directory.Exists(FileSystemLayout.FFmpegReportsFolder))
         {

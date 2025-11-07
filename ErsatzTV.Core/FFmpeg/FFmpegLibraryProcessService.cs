@@ -826,7 +826,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         Channel channel,
         string scheme,
         string host,
-        string accessToken)
+        string accessToken,
+        CancellationToken cancellationToken)
     {
         var resolution = new FrameSize(channel.FFmpegProfile.Resolution.Width, channel.FFmpegProfile.Resolution.Height);
 
@@ -844,10 +845,13 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         }
 
         // TODO: save reports?
+        string defaultScript = await _configElementRepository
+            .GetValue<string>(ConfigElementKey.FFmpegDefaultMpegTsScript, cancellationToken)
+            .IfNoneAsync("Default");
         List<MpegTsScript> allScripts = _mpegTsScriptService.GetScripts();
         foreach (var script in allScripts.Where(s => string.Equals(
                      s.Name,
-                     "Default",
+                     defaultScript,
                      StringComparison.OrdinalIgnoreCase)))
         {
             Option<Command> maybeCommand = await _mpegTsScriptService.Execute(

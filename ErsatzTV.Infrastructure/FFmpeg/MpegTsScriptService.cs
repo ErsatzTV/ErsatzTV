@@ -31,6 +31,7 @@ public class MpegTsScriptService(
                 Option<MpegTsScript> maybeScript = FromYaml(await localFileSystem.ReadAllText(definition));
                 foreach (var script in maybeScript)
                 {
+                    script.Id = Path.GetFileName(folder);
                     Scripts[folder] = script;
                 }
             }

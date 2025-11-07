@@ -791,7 +791,7 @@ public class HlsSessionWorker : IHlsSessionWorker
 
             foreach (PtsTime pts in queryResult.RightToSeq())
             {
-                _logger.LogWarning("Last pts offset is {Pts}", pts.Value);
+                _logger.LogDebug("Last pts offset is {Pts}", pts.Value);
                 result = pts.Value;
             }
 
