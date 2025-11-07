@@ -849,10 +849,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             .GetValue<string>(ConfigElementKey.FFmpegDefaultMpegTsScript, cancellationToken)
             .IfNoneAsync("Default");
         List<MpegTsScript> allScripts = _mpegTsScriptService.GetScripts();
-        foreach (var script in allScripts.Where(s => string.Equals(
-                     s.Name,
-                     defaultScript,
-                     StringComparison.OrdinalIgnoreCase)))
+        Option<MpegTsScript> maybeScript = Optional(allScripts.Find(s => s.Id == defaultScript));
+        foreach (var script in maybeScript)
         {
             Option<Command> maybeCommand = await _mpegTsScriptService.Execute(
                 script,
@@ -863,6 +861,11 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             {
                 return command;
             }
+        }
+
+        if (maybeScript.IsNone)
+        {
+            _logger.LogWarning("Unable to locate MPEG-TS Script in folder {Id}", defaultScript);
         }
 
         IPipelineBuilder pipelineBuilder = await _pipelineBuilderFactory.GetBuilder(
