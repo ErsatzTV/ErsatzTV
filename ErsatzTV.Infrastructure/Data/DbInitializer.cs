@@ -110,7 +110,7 @@ public static class DbInitializer
         await context.ConfigElements.AddAsync(resolutionConfig, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
 
-        var defaultProfile = FFmpegProfile.New("1920x1080 x264 ac3", resolutions[2]);
+        var defaultProfile = FFmpegProfile.New("1920x1080 x264 aac", resolutions[2]);
         await context.FFmpegProfiles.AddAsync(defaultProfile, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
 
