@@ -18,6 +18,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - Filter: `smart_collection:"sd movies" AND plot:"christmas"`
     - Combine: `smart_collection:"old commercials" OR smart_collection:"nick promos"`
 - Scripted schedules: add `custom_title` to `start_epg_group`
+- Add MPEG-TS Script system
+  - This allows using something other than ffmpeg (e.g. streamlink) to concatenate segments back together when using MPEG-TS streaming mode
+  - Scripts live in config / scripts / mpegts
+  - Each script gets its own subfolder which contains an `mpegts.yml` definition and corresponding windows (powershell) and linux (bash) scripts
 
 ### Fixed
 - Fix HLS Direct playback with Jellyfin 10.11
