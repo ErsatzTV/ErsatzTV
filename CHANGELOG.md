@@ -22,6 +22,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - This allows using something other than ffmpeg (e.g. streamlink) to concatenate segments back together when using MPEG-TS streaming mode
   - Scripts live in config / scripts / mpegts
   - Each script gets its own subfolder which contains an `mpegts.yml` definition and corresponding windows (powershell) and linux (bash) scripts
+  - The global MPEG-TS script can be configured in **Settings** > **FFmpeg** > **Default MPEG-TS Script**
 
 ### Fixed
 - Fix HLS Direct playback with Jellyfin 10.11
