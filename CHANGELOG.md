@@ -10,7 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Add `MediaItem_Resolution` template data (the current `Resolution` variable is the FFmpeg Profile resolution)
   - Add `MediaItem_Start` template data (DateTimeOffset)
   - Add `MediaItem_Stop` template data (DateTimeOffset)
-  - Add `ScaledResolution` (the final size of the frame before padding)
+  - Add `ScaledResolution` template data (the final size of the frame before padding)
   - Add `place_within_source_content` (true/false) field to image graphics element
 - Classic schedules: add collection type `Search Query`
   - This allows defining search queries directly on schedule items without creating smart collections beforehand

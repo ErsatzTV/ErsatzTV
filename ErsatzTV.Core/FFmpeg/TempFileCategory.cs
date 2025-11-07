@@ -6,6 +6,7 @@ public enum TempFileCategory
     SongBackground = 1,
     CoverArt = 2,
     CachedArtwork = 3,
+    MpegTsScript = 4,
 
     Fmp4LastSegment = 97,
     BadTranscodeFolder = 98,

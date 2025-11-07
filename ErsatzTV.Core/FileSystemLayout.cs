@@ -61,6 +61,10 @@ public static class FileSystemLayout
 
     public static readonly string ChannelStreamSelectorsFolder;
 
+    public static readonly string MpegTsScriptsFolder;
+
+    public static readonly string DefaultMpegTsScriptFolder;
+
     public static readonly string MacOsOldAppDataFolder = Path.Combine(
         Environment.GetEnvironmentVariable("HOME") ?? string.Empty,
         ".local",
@@ -181,5 +185,8 @@ public static class FileSystemLayout
         AudioStreamSelectorScriptsFolder = Path.Combine(ScriptsFolder, "audio-stream-selector");
 
         ChannelStreamSelectorsFolder = Path.Combine(ScriptsFolder, "channel-stream-selectors");
+
+        MpegTsScriptsFolder = Path.Combine(ScriptsFolder, "mpegts");
+        DefaultMpegTsScriptFolder = Path.Combine(MpegTsScriptsFolder, "default");
     }
 }

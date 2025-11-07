@@ -13,6 +13,7 @@ using ErsatzTV.Application.Playouts;
 using ErsatzTV.Application.Plex;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Locking;
 using ErsatzTV.Core.Scheduling;
 using ErsatzTV.Infrastructure.Data;
@@ -118,6 +119,7 @@ public class SchedulerService : BackgroundService
         {
             await DeleteOrphanedArtwork(cancellationToken);
             await DeleteOrphanedSubtitles(cancellationToken);
+            await RefreshMpegTsScripts(cancellationToken);
             await RefreshChannelGuideChannelList(cancellationToken);
             await BuildPlayouts(cancellationToken);
 #if !DEBUG_NO_SYNC
@@ -374,6 +376,13 @@ public class SchedulerService : BackgroundService
                     cancellationToken);
             }
         }
+    }
+
+    private async Task RefreshMpegTsScripts(CancellationToken _)
+    {
+        using IServiceScope scope = _serviceScopeFactory.CreateScope();
+        var service = scope.ServiceProvider.GetRequiredService<IMpegTsScriptService>();
+        await service.RefreshScripts();
     }
 
     private ValueTask RefreshGraphicsElements(CancellationToken cancellationToken) =>

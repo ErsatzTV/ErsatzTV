@@ -380,7 +380,9 @@ public class Startup
             FileSystemLayout.GraphicsElementsMotionTemplatesFolder,
             FileSystemLayout.ScriptsFolder,
             FileSystemLayout.MultiEpisodeShuffleTemplatesFolder,
-            FileSystemLayout.AudioStreamSelectorScriptsFolder
+            FileSystemLayout.AudioStreamSelectorScriptsFolder,
+            FileSystemLayout.MpegTsScriptsFolder,
+            FileSystemLayout.DefaultMpegTsScriptFolder
         ];
 
         foreach (string directory in directoriesToCreate)
@@ -817,6 +819,7 @@ public class Startup
         services.AddScoped<IWatermarkSelector, WatermarkSelector>();
         services.AddScoped<IGraphicsElementSelector, GraphicsElementSelector>();
         services.AddScoped<IHlsInitSegmentCache, HlsInitSegmentCache>();
+        services.AddScoped<IMpegTsScriptService, MpegTsScriptService>();
 
         services.AddScoped<IFFmpegProcessService, FFmpegLibraryProcessService>();
         services.AddScoped<IPipelineBuilderFactory, PipelineBuilderFactory>();
