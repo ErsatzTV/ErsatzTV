@@ -352,6 +352,7 @@ public class TranscodingTests
             metadataRepository,
             new LocalFileSystem(Substitute.For<IClient>(), LoggerFactory.CreateLogger<LocalFileSystem>()),
             Substitute.For<IClient>(),
+            Substitute.For<IHardwareCapabilitiesFactory>(),
             LoggerFactory.CreateLogger<LocalStatisticsProvider>());
 
         await localStatisticsProvider.RefreshStatistics(ExecutableName("ffmpeg"), ExecutableName("ffprobe"), song);
@@ -500,6 +501,7 @@ public class TranscodingTests
             metadataRepository,
             new LocalFileSystem(Substitute.For<IClient>(), LoggerFactory.CreateLogger<LocalFileSystem>()),
             Substitute.For<IClient>(),
+            Substitute.For<IHardwareCapabilitiesFactory>(),
             LoggerFactory.CreateLogger<LocalStatisticsProvider>());
 
         await localStatisticsProvider.RefreshStatistics(
