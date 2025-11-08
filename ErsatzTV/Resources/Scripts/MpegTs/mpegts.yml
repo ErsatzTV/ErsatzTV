@@ -1,2 +1,3 @@
 name: "Default"
 linux_script: "run.sh"
+windows_script: "run.bat"
