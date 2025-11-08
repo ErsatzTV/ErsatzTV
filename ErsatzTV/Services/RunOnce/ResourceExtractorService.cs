@@ -112,6 +112,12 @@ public class ResourceExtractorService : BackgroundService
 
         await ExtractMpegTsScriptResource(
             assembly,
+            "run.bat",
+            FileSystemLayout.DefaultMpegTsScriptFolder,
+            stoppingToken);
+
+        await ExtractMpegTsScriptResource(
+            assembly,
             "mpegts.yml",
             FileSystemLayout.DefaultMpegTsScriptFolder,
             stoppingToken);

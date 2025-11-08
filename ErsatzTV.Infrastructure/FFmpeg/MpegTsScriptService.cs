@@ -60,9 +60,9 @@ public class MpegTsScriptService(
                     ffmpegPath);
                 foreach (string finalScript in maybeScript)
                 {
-                    string fileName = tempFilePool.GetNextTempFile(TempFileCategory.MpegTsScript);
+                    var fileName = $"{tempFilePool.GetNextTempFile(TempFileCategory.MpegTsScript)}.bat";
                     await File.WriteAllTextAsync(fileName, finalScript);
-                    return Cli.Wrap("pwsh").WithArguments(["-File", fileName]);
+                    return Cli.Wrap(fileName);
                 }
             }
         }

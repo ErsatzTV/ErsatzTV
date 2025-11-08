@@ -83,6 +83,7 @@
         <EmbeddedResource Include="Resources\Scripts\_episode.js" />
         <EmbeddedResource Include="Resources\Scripts\_movie.js" />
         <EmbeddedResource Include="Resources\Scripts\MpegTs\run.sh" />
+        <EmbeddedResource Include="Resources\Scripts\MpegTs\run.bat" />
         <EmbeddedResource Include="Resources\Scripts\MpegTs\mpegts.yml" />
         <EmbeddedResource Include="Resources\song_album_cover_512.png" />
         <EmbeddedResource Include="Resources\song_background_1.png" />

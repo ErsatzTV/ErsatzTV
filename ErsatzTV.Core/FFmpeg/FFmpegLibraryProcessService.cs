@@ -847,7 +847,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         // TODO: save reports?
         string defaultScript = await _configElementRepository
             .GetValue<string>(ConfigElementKey.FFmpegDefaultMpegTsScript, cancellationToken)
-            .IfNoneAsync("Default");
+            .IfNoneAsync("default");
         List<MpegTsScript> allScripts = _mpegTsScriptService.GetScripts();
         Option<MpegTsScript> maybeScript = Optional(allScripts.Find(s => s.Id == defaultScript));
         foreach (var script in maybeScript)
