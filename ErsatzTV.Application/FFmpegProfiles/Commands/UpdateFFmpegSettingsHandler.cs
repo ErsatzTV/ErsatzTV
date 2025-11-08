@@ -9,22 +9,12 @@ using ErsatzTV.Core.Interfaces.Repositories;
 
 namespace ErsatzTV.Application.FFmpegProfiles;
 
-public class UpdateFFmpegSettingsHandler : IRequestHandler<UpdateFFmpegSettings, Either<BaseError, Unit>>
+public class UpdateFFmpegSettingsHandler(
+    IConfigElementRepository configElementRepository,
+    ILocalFileSystem localFileSystem,
+    ChannelWriter<IBackgroundServiceRequest> workerChannel)
+    : IRequestHandler<UpdateFFmpegSettings, Either<BaseError, Unit>>
 {
-    private readonly IConfigElementRepository _configElementRepository;
-    private readonly ILocalFileSystem _localFileSystem;
-    private readonly ChannelWriter<IBackgroundServiceRequest> _workerChannel;
-
-    public UpdateFFmpegSettingsHandler(
-        IConfigElementRepository configElementRepository,
-        ILocalFileSystem localFileSystem,
-        ChannelWriter<IBackgroundServiceRequest> workerChannel)
-    {
-        _configElementRepository = configElementRepository;
-        _localFileSystem = localFileSystem;
-        _workerChannel = workerChannel;
-    }
-
     public Task<Either<BaseError, Unit>> Handle(
         UpdateFFmpegSettings request,
         CancellationToken cancellationToken) =>
@@ -44,7 +34,7 @@ public class UpdateFFmpegSettingsHandler : IRequestHandler<UpdateFFmpegSettings,
 
     private async Task<Validation<BaseError, Unit>> ValidateToolPath(string path, string name)
     {
-        if (!_localFileSystem.FileExists(path))
+        if (!localFileSystem.FileExists(path))
         {
             return BaseError.New($"{name} path does not exist");
         }
@@ -71,21 +61,21 @@ public class UpdateFFmpegSettingsHandler : IRequestHandler<UpdateFFmpegSettings,
 
     private async Task<Unit> ApplyUpdate(UpdateFFmpegSettings request, CancellationToken cancellationToken)
     {
-        await _configElementRepository.Upsert(ConfigElementKey.FFmpegPath, request.Settings.FFmpegPath, cancellationToken);
-        await _configElementRepository.Upsert(ConfigElementKey.FFprobePath, request.Settings.FFprobePath, cancellationToken);
-        await _configElementRepository.Upsert(
+        await configElementRepository.Upsert(ConfigElementKey.FFmpegPath, request.Settings.FFmpegPath, cancellationToken);
+        await configElementRepository.Upsert(ConfigElementKey.FFprobePath, request.Settings.FFprobePath, cancellationToken);
+        await configElementRepository.Upsert(
             ConfigElementKey.FFmpegDefaultProfileId,
             request.Settings.DefaultFFmpegProfileId.ToString(CultureInfo.InvariantCulture),
             cancellationToken);
-        await _configElementRepository.Upsert(
+        await configElementRepository.Upsert(
             ConfigElementKey.FFmpegSaveReports,
             request.Settings.SaveReports.ToString(),
             cancellationToken);
-        await _configElementRepository.Upsert(
+        await configElementRepository.Upsert(
             ConfigElementKey.FFmpegHlsDirectOutputFormat,
             request.Settings.HlsDirectOutputFormat,
             cancellationToken);
-        await _configElementRepository.Upsert(
+        await configElementRepository.Upsert(
             ConfigElementKey.FFmpegDefaultMpegTsScript,
             request.Settings.DefaultMpegTsScript,
             cancellationToken);
@@ -95,12 +85,12 @@ public class UpdateFFmpegSettingsHandler : IRequestHandler<UpdateFFmpegSettings,
             Directory.CreateDirectory(FileSystemLayout.FFmpegReportsFolder);
         }
 
-        await _configElementRepository.Upsert(
+        await configElementRepository.Upsert(
             ConfigElementKey.FFmpegPreferredLanguageCode,
             request.Settings.PreferredAudioLanguageCode,
             cancellationToken);
 
-        await _configElementRepository.Upsert(
+        await configElementRepository.Upsert(
             ConfigElementKey.FFmpegUseEmbeddedSubtitles,
             request.Settings.UseEmbeddedSubtitles,
             cancellationToken);
@@ -111,7 +101,7 @@ public class UpdateFFmpegSettingsHandler : IRequestHandler<UpdateFFmpegSettings,
             request.Settings.ExtractEmbeddedSubtitles = false;
         }
 
-        await _configElementRepository.Upsert(
+        await configElementRepository.Upsert(
             ConfigElementKey.FFmpegExtractEmbeddedSubtitles,
             request.Settings.ExtractEmbeddedSubtitles,
             cancellationToken);
@@ -119,44 +109,44 @@ public class UpdateFFmpegSettingsHandler : IRequestHandler<UpdateFFmpegSettings,
         // queue extracting all embedded subtitles
         if (request.Settings.ExtractEmbeddedSubtitles)
         {
-            await _workerChannel.WriteAsync(new ExtractEmbeddedSubtitles(Option<int>.None), cancellationToken);
+            await workerChannel.WriteAsync(new ExtractEmbeddedSubtitles(Option<int>.None), cancellationToken);
         }
 
         if (request.Settings.GlobalWatermarkId is not null)
         {
-            await _configElementRepository.Upsert(
+            await configElementRepository.Upsert(
                 ConfigElementKey.FFmpegGlobalWatermarkId,
                 request.Settings.GlobalWatermarkId.Value,
                 cancellationToken);
         }
         else
         {
-            await _configElementRepository.Delete(ConfigElementKey.FFmpegGlobalWatermarkId, cancellationToken);
+            await configElementRepository.Delete(ConfigElementKey.FFmpegGlobalWatermarkId, cancellationToken);
         }
 
         if (request.Settings.GlobalFallbackFillerId is not null)
         {
-            await _configElementRepository.Upsert(
+            await configElementRepository.Upsert(
                 ConfigElementKey.FFmpegGlobalFallbackFillerId,
                 request.Settings.GlobalFallbackFillerId.Value,
                 cancellationToken);
         }
         else
         {
-            await _configElementRepository.Delete(ConfigElementKey.FFmpegGlobalFallbackFillerId, cancellationToken);
+            await configElementRepository.Delete(ConfigElementKey.FFmpegGlobalFallbackFillerId, cancellationToken);
         }
 
-        await _configElementRepository.Upsert(
+        await configElementRepository.Upsert(
             ConfigElementKey.FFmpegSegmenterTimeout,
             request.Settings.HlsSegmenterIdleTimeout,
             cancellationToken);
 
-        await _configElementRepository.Upsert(
+        await configElementRepository.Upsert(
             ConfigElementKey.FFmpegWorkAheadSegmenters,
             request.Settings.WorkAheadSegmenterLimit,
             cancellationToken);
 
-        await _configElementRepository.Upsert(
+        await configElementRepository.Upsert(
             ConfigElementKey.FFmpegInitialSegmentCount,
             request.Settings.InitialSegmentCount,
             cancellationToken);

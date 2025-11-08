@@ -4,6 +4,8 @@ namespace ErsatzTV.FFmpeg.Capabilities;
 
 public interface IHardwareCapabilitiesFactory
 {
+    void ClearCache();
+
     Task<IFFmpegCapabilities> GetFFmpegCapabilities(string ffmpegPath);
 
     Task<IHardwareCapabilities> GetHardwareCapabilities(
