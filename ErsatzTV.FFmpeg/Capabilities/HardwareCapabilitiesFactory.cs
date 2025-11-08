@@ -72,12 +72,16 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
         IReadOnlySet<string> ffmpegOptions = await GetFFmpegOptions(ffmpegPath)
             .Map(set => set.Intersect(FFmpegKnownOption.AllOptions).ToImmutableHashSet());
 
+        IReadOnlySet<string> ffmpegDemuxFormats = await GetFFmpegFormats(ffmpegPath, "D")
+            .Map(set => set.Intersect(FFmpegKnownFormat.AllFormats).ToImmutableHashSet());
+
         return new FFmpegCapabilities(
             ffmpegHardwareAccelerations,
             ffmpegDecoders,
             ffmpegFilters,
             ffmpegEncoders,
-            ffmpegOptions);
+            ffmpegOptions,
+            ffmpegDemuxFormats);
     }
 
     public async Task<IHardwareCapabilities> GetHardwareCapabilities(
@@ -358,6 +362,33 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
             .ToImmutableHashSet();
     }
 
+    private async Task<IReadOnlySet<string>> GetFFmpegFormats(string ffmpegPath, string muxDemux)
+    {
+        var cacheKey = string.Format(CultureInfo.InvariantCulture, FFmpegCapabilitiesCacheKeyFormat, "formats");
+        if (_memoryCache.TryGetValue(cacheKey, out IReadOnlySet<string>? cachedCapabilities) &&
+            cachedCapabilities is not null)
+        {
+            return cachedCapabilities;
+        }
+
+        string[] arguments = { "-hide_banner", "-formats" };
+
+        BufferedCommandResult result = await Cli.Wrap(ffmpegPath)
+            .WithArguments(arguments)
+            .WithValidation(CommandResultValidation.None)
+            .ExecuteBufferedAsync(Encoding.UTF8);
+
+        string output = string.IsNullOrWhiteSpace(result.StandardOutput)
+            ? result.StandardError
+            : result.StandardOutput;
+
+        return output.Split("\n").Map(s => s.Trim())
+            .Bind(l => ParseFFmpegFormatLine(l))
+            .Where(tuple => tuple.Item1.Contains(muxDemux))
+            .Map(tuple => tuple.Item2)
+            .ToImmutableHashSet();
+    }
+
     private static Option<string> ParseFFmpegAccelLine(string input)
     {
         const string PATTERN = @"^([\w]+)$";
@@ -377,6 +408,13 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
         const string PATTERN = @"^-([a-z_]+)\s+.*";
         Match match = Regex.Match(input, PATTERN);
         return match.Success ? match.Groups[1].Value : Option<string>.None;
+    }
+
+    private static Option<Tuple<string, string>> ParseFFmpegFormatLine(string input)
+    {
+        const string PATTERN = @"([DE]+)\s+(\w+)";
+        Match match = Regex.Match(input, PATTERN);
+        return match.Success ? Tuple(match.Groups[1].Value, match.Groups[2].Value) : Option<Tuple<string, string>>.None;
     }
 
     private async Task<IHardwareCapabilities> GetVaapiCapabilities(

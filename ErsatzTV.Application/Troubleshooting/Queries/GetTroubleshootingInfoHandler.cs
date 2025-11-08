@@ -73,6 +73,8 @@ public class GetTroubleshootingInfoHandler : IRequestHandler<GetTroubleshootingI
             .AsNoTracking()
             .ToListAsync(cancellationToken);
 
+        bool aviSynthDemuxer = false;
+
         string nvidiaCapabilities = null;
         StringBuilder qsvCapabilities = new();
         StringBuilder vaapiCapabilities = new();
@@ -157,6 +159,9 @@ public class GetTroubleshootingInfoHandler : IRequestHandler<GetTroubleshootingI
                     videoToolboxCapabilities.AppendLine();
                     videoToolboxCapabilities.AppendLine();
                 }
+
+                var ffmpegCapabilities = await _hardwareCapabilitiesFactory.GetFFmpegCapabilities(ffmpegPath.Value);
+                aviSynthDemuxer = ffmpegCapabilities.HasDemuxFormat(FFmpegKnownFormat.AviSynth);
             }
         }
 
@@ -189,6 +194,7 @@ public class GetTroubleshootingInfoHandler : IRequestHandler<GetTroubleshootingI
             ffmpegProfiles,
             channels,
             channelWatermarks,
+            aviSynthDemuxer,
             nvidiaCapabilities,
             qsvCapabilities.ToString(),
             vaapiCapabilities.ToString(),

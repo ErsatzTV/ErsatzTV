@@ -14,6 +14,7 @@ public record TroubleshootingInfo(
     List<FFmpegProfile> FFmpegProfiles,
     List<Channel> Channels,
     List<ChannelWatermark> Watermarks,
+    bool AviSynthDemuxer,
     string NvidiaCapabilities,
     string QsvCapabilities,
     string VaapiCapabilities,

@@ -11,9 +11,8 @@ public record FFmpegKnownFilter
     public string Name { get; }
 
     public static IList<string> AllFilters =>
-        new[]
-        {
-            ScaleNpp.Name,
-            TonemapOpenCL.Name
-        };
+    [
+        ScaleNpp.Name,
+        TonemapOpenCL.Name
+    ];
 }
