@@ -11,6 +11,7 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.FFmpeg.Capabilities;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using File = TagLib.File;
@@ -20,6 +21,7 @@ namespace ErsatzTV.Infrastructure.Metadata;
 public class LocalStatisticsProvider : ILocalStatisticsProvider
 {
     private readonly IClient _client;
+    private readonly IHardwareCapabilitiesFactory _hardwareCapabilitiesFactory;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILogger<LocalStatisticsProvider> _logger;
     private readonly IMetadataRepository _metadataRepository;
@@ -28,11 +30,13 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
         IMetadataRepository metadataRepository,
         ILocalFileSystem localFileSystem,
         IClient client,
+        IHardwareCapabilitiesFactory hardwareCapabilitiesFactory,
         ILogger<LocalStatisticsProvider> logger)
     {
         _metadataRepository = metadataRepository;
         _localFileSystem = localFileSystem;
         _client = client;
+        _hardwareCapabilitiesFactory = hardwareCapabilitiesFactory;
         _logger = logger;
     }
 
@@ -52,6 +56,12 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
         try
         {
             string filePath = await PathForMediaItem(mediaItem);
+
+            if (Path.GetExtension(filePath) == ".avs" && !_hardwareCapabilitiesFactory.IsAviSynthInstalled())
+            {
+                return BaseError.New(".avs files are not supported; compatible ffmpeg and avisynth are both required");
+            }
+
             return await RefreshStatistics(ffmpegPath, ffprobePath, mediaItem, filePath);
         }
         catch (Exception ex)

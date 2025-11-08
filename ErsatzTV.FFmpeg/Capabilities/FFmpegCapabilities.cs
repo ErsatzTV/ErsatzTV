@@ -3,34 +3,21 @@ using ErsatzTV.FFmpeg.Format;
 
 namespace ErsatzTV.FFmpeg.Capabilities;
 
-public class FFmpegCapabilities : IFFmpegCapabilities
+public class FFmpegCapabilities(
+    IReadOnlySet<string> ffmpegHardwareAccelerations,
+    IReadOnlySet<string> ffmpegDecoders,
+    IReadOnlySet<string> ffmpegFilters,
+    IReadOnlySet<string> ffmpegEncoders,
+    IReadOnlySet<string> ffmpegOptions,
+    IReadOnlySet<string> ffmpegDemuxFormats)
+    : IFFmpegCapabilities
 {
-    private readonly IReadOnlySet<string> _ffmpegDecoders;
-    private readonly IReadOnlySet<string> _ffmpegEncoders;
-    private readonly IReadOnlySet<string> _ffmpegFilters;
-    private readonly IReadOnlySet<string> _ffmpegHardwareAccelerations;
-    private readonly IReadOnlySet<string> _ffmpegOptions;
-
-    public FFmpegCapabilities(
-        IReadOnlySet<string> ffmpegHardwareAccelerations,
-        IReadOnlySet<string> ffmpegDecoders,
-        IReadOnlySet<string> ffmpegFilters,
-        IReadOnlySet<string> ffmpegEncoders,
-        IReadOnlySet<string> ffmpegOptions)
-    {
-        _ffmpegHardwareAccelerations = ffmpegHardwareAccelerations;
-        _ffmpegDecoders = ffmpegDecoders;
-        _ffmpegFilters = ffmpegFilters;
-        _ffmpegEncoders = ffmpegEncoders;
-        _ffmpegOptions = ffmpegOptions;
-    }
-
     public bool HasHardwareAcceleration(HardwareAccelerationMode hardwareAccelerationMode)
     {
         // AMF isn't a "hwaccel" in ffmpeg, so check for presence of encoders
         if (hardwareAccelerationMode is HardwareAccelerationMode.Amf)
         {
-            return _ffmpegEncoders.Any(e => e.EndsWith(
+            return ffmpegEncoders.Any(e => e.EndsWith(
                 $"_{FFmpegKnownHardwareAcceleration.Amf.Name}",
                 StringComparison.OrdinalIgnoreCase));
         }
@@ -38,7 +25,7 @@ public class FFmpegCapabilities : IFFmpegCapabilities
         // V4l2m2m isn't a "hwaccel" in ffmpeg, so check for presence of encoders
         if (hardwareAccelerationMode is HardwareAccelerationMode.V4l2m2m)
         {
-            return _ffmpegEncoders.Any(e => e.EndsWith(
+            return ffmpegEncoders.Any(e => e.EndsWith(
                 $"_{FFmpegKnownHardwareAcceleration.V4l2m2m.Name}",
                 StringComparison.OrdinalIgnoreCase));
         }
@@ -57,19 +44,21 @@ public class FFmpegCapabilities : IFFmpegCapabilities
 
         foreach (FFmpegKnownHardwareAcceleration accelToCheck in maybeAccelToCheck)
         {
-            return _ffmpegHardwareAccelerations.Contains(accelToCheck.Name);
+            return ffmpegHardwareAccelerations.Contains(accelToCheck.Name);
         }
 
         return false;
     }
 
-    public bool HasDecoder(FFmpegKnownDecoder decoder) => _ffmpegDecoders.Contains(decoder.Name);
+    public bool HasDecoder(FFmpegKnownDecoder decoder) => ffmpegDecoders.Contains(decoder.Name);
 
-    public bool HasEncoder(FFmpegKnownEncoder encoder) => _ffmpegEncoders.Contains(encoder.Name);
+    public bool HasEncoder(FFmpegKnownEncoder encoder) => ffmpegEncoders.Contains(encoder.Name);
 
-    public bool HasFilter(FFmpegKnownFilter filter) => _ffmpegFilters.Contains(filter.Name);
+    public bool HasFilter(FFmpegKnownFilter filter) => ffmpegFilters.Contains(filter.Name);
 
-    public bool HasOption(FFmpegKnownOption ffmpegOption) => _ffmpegOptions.Contains(ffmpegOption.Name);
+    public bool HasOption(FFmpegKnownOption ffmpegOption) => ffmpegOptions.Contains(ffmpegOption.Name);
+
+    public bool HasDemuxFormat(FFmpegKnownFormat format) => ffmpegDemuxFormats.Contains(format.Name);
 
     public Option<IDecoder> SoftwareDecoderForVideoFormat(string videoFormat) =>
         videoFormat switch
@@ -83,9 +72,9 @@ public class FFmpegCapabilities : IFFmpegCapabilities
             VideoFormat.MsMpeg4V3 => new DecoderMsMpeg4V3(),
             VideoFormat.Mpeg4 => new DecoderMpeg4(),
             VideoFormat.Vp9 => new DecoderVp9(),
-            VideoFormat.Av1 => new DecoderAv1(_ffmpegDecoders),
+            VideoFormat.Av1 => new DecoderAv1(ffmpegDecoders),
 
-            VideoFormat.Raw => new DecoderRawVideo(),
+            VideoFormat.Raw or VideoFormat.RawVideo => new DecoderRawVideo(),
             VideoFormat.Undetermined => new DecoderImplicit(),
             VideoFormat.Copy => new DecoderImplicit(),
             VideoFormat.GeneratedImage => new DecoderImplicit(),

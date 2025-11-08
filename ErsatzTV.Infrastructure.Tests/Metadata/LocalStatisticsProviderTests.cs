@@ -2,6 +2,7 @@
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.FFmpeg.Capabilities;
 using ErsatzTV.Infrastructure.Metadata;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
@@ -22,6 +23,7 @@ public class LocalStatisticsProviderTests
             Substitute.For<IMetadataRepository>(),
             Substitute.For<ILocalFileSystem>(),
             Substitute.For<IClient>(),
+            Substitute.For<IHardwareCapabilitiesFactory>(),
             Substitute.For<ILogger<LocalStatisticsProvider>>());
 
         var input = new LocalStatisticsProvider.FFprobe(

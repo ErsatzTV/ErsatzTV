@@ -544,16 +544,11 @@ public class PipelineBuilderBaseTests
         return command;
     }
 
-    public class DefaultFFmpegCapabilities : FFmpegCapabilities
-    {
-        public DefaultFFmpegCapabilities()
-            : base(
-                new System.Collections.Generic.HashSet<string>(),
-                new System.Collections.Generic.HashSet<string>(),
-                new System.Collections.Generic.HashSet<string>(),
-                new System.Collections.Generic.HashSet<string>(),
-                new System.Collections.Generic.HashSet<string>())
-        {
-        }
-    }
+    public class DefaultFFmpegCapabilities() : FFmpegCapabilities(
+        new System.Collections.Generic.HashSet<string>(),
+        new System.Collections.Generic.HashSet<string>(),
+        new System.Collections.Generic.HashSet<string>(),
+        new System.Collections.Generic.HashSet<string>(),
+        new System.Collections.Generic.HashSet<string>(),
+        new System.Collections.Generic.HashSet<string>());
 }

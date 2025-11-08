@@ -23,6 +23,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Scripts live in config / scripts / mpegts
   - Each script gets its own subfolder which contains an `mpegts.yml` definition and corresponding windows (powershell) and linux (bash) scripts
   - The global MPEG-TS script can be configured in **Settings** > **FFmpeg** > **Default MPEG-TS Script**
+- Add `.avs` AviSynth Script support to all local libraries
+  - `.avs` was added as a valid extension, so they should behave the same any other video file
+  - There are two requirements for AviSynth Scripts to work:
+    - FFmpeg needs to be compiled with AviSynth support (not currently available in Docker)
+    - AviSynth itself needs to be installed
 
 ### Fixed
 - Fix HLS Direct playback with Jellyfin 10.11

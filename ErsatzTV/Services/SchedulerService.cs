@@ -4,6 +4,7 @@ using Bugsnag;
 using ErsatzTV.Application;
 using ErsatzTV.Application.Channels;
 using ErsatzTV.Application.Emby;
+using ErsatzTV.Application.FFmpeg;
 using ErsatzTV.Application.Graphics;
 using ErsatzTV.Application.Jellyfin;
 using ErsatzTV.Application.Maintenance;
@@ -65,6 +66,7 @@ public class SchedulerService : BackgroundService
             // run once immediately at startup
             if (!stoppingToken.IsCancellationRequested)
             {
+                await QueueFFmpegCapabilitiesRefresh(stoppingToken);
                 await DoWork(stoppingToken);
             }
 
@@ -396,4 +398,7 @@ public class SchedulerService : BackgroundService
 
     private ValueTask ReleaseMemory(CancellationToken cancellationToken) =>
         _workerChannel.WriteAsync(new ReleaseMemory(false), cancellationToken);
+
+    private ValueTask QueueFFmpegCapabilitiesRefresh(CancellationToken cancellationToken) =>
+        _workerChannel.WriteAsync(new RefreshFFmpegCapabilities(), cancellationToken);
 }

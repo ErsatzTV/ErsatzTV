@@ -1,6 +1,7 @@
 using System.CommandLine;
 using System.Diagnostics;
 using ErsatzTV.Scanner.Application.Emby;
+using ErsatzTV.Scanner.Application.FFmpeg;
 using ErsatzTV.Scanner.Application.Jellyfin;
 using ErsatzTV.Scanner.Application.MediaSources;
 using ErsatzTV.Scanner.Application.Plex;
@@ -28,6 +29,10 @@ public class Worker : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        using IServiceScope scope = _serviceScopeFactory.CreateScope();
+        IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+        await mediator.Send(new RefreshFFmpegCapabilities(), stoppingToken);
+
         RootCommand rootCommand = ConfigureCommandLine();
 
         // need to strip program name (head) from command line args

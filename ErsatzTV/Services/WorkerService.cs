@@ -3,6 +3,7 @@ using System.Threading.Channels;
 using Bugsnag;
 using ErsatzTV.Application;
 using ErsatzTV.Application.Channels;
+using ErsatzTV.Application.FFmpeg;
 using ErsatzTV.Application.Graphics;
 using ErsatzTV.Application.Maintenance;
 using ErsatzTV.Application.MediaCollections;
@@ -52,6 +53,9 @@ public class WorkerService : BackgroundService
 
                     switch (request)
                     {
+                        case RefreshFFmpegCapabilities refreshFFmpegCapabilities:
+                            await mediator.Send(refreshFFmpegCapabilities, stoppingToken);
+                            break;
                         case RefreshChannelList refreshChannelList:
                             await mediator.Send(refreshChannelList, stoppingToken);
                             break;

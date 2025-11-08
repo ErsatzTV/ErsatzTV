@@ -4,6 +4,8 @@ namespace ErsatzTV.FFmpeg.Capabilities;
 
 public interface IHardwareCapabilitiesFactory
 {
+    void ClearCache();
+
     Task<IFFmpegCapabilities> GetFFmpegCapabilities(string ffmpegPath);
 
     Task<IHardwareCapabilities> GetHardwareCapabilities(
@@ -29,4 +31,8 @@ public interface IHardwareCapabilitiesFactory
     List<string> GetVideoToolboxDecoders();
 
     List<string> GetVideoToolboxEncoders();
+
+    void SetAviSynthInstalled(bool aviSynthInstalled);
+
+    bool IsAviSynthInstalled();
 }

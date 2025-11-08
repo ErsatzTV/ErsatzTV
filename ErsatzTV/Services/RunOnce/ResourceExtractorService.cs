@@ -26,6 +26,7 @@ public class ResourceExtractorService : BackgroundService
         await ExtractResource(assembly, "ErsatzTV.png", stoppingToken);
         await ExtractResource(assembly, "sequential-schedule.schema.json", stoppingToken);
         await ExtractResource(assembly, "sequential-schedule-import.schema.json", stoppingToken);
+        await ExtractResource(assembly, "test.avs", stoppingToken);
 
         await ExtractFontResource(assembly, "Sen.ttf", stoppingToken);
         await ExtractFontResource(assembly, "Roboto-Regular.ttf", stoppingToken);
