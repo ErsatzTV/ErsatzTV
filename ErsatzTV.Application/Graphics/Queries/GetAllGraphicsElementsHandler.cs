@@ -14,6 +14,6 @@ public class GetAllGraphicsElementsHandler(IDbContextFactory<TvContext> dbContex
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await dbContext.GraphicsElements
             .ToListAsync(cancellationToken)
-            .Map(list => list.Map(ProjectToViewModel).ToList());
+            .Map(list => list.Map(ProjectToViewModel).OrderBy(e => e.Name == e.FileName).ThenBy(e => e.Name).ToList());
     }
 }

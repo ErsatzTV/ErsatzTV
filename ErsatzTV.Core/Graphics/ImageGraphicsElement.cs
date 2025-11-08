@@ -3,7 +3,7 @@ using YamlDotNet.Serialization;
 
 namespace ErsatzTV.Core.Graphics;
 
-public class ImageGraphicsElement
+public class ImageGraphicsElement : BaseGraphicsElement
 {
     public string Image { get; set; }
 

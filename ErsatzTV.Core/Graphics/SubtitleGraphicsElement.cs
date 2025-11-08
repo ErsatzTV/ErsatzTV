@@ -2,7 +2,7 @@ using YamlDotNet.Serialization;
 
 namespace ErsatzTV.Core.Graphics;
 
-public class SubtitleGraphicsElement
+public class SubtitleGraphicsElement : BaseGraphicsElement
 {
     [YamlMember(Alias = "z_index", ApplyNamingConventions = false)]
     public int? ZIndex { get; set; }

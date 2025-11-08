@@ -7,13 +7,21 @@ public static class Mapper
     public static GraphicsElementViewModel ProjectToViewModel(GraphicsElement graphicsElement)
     {
         string fileName = Path.GetFileName(graphicsElement.Path);
-        return graphicsElement.Kind switch
+        fileName = graphicsElement.Kind switch
         {
-            GraphicsElementKind.Text => new GraphicsElementViewModel(graphicsElement.Id, $"text/{fileName}"),
-            GraphicsElementKind.Image => new GraphicsElementViewModel(graphicsElement.Id, $"image/{fileName}"),
-            GraphicsElementKind.Subtitle => new GraphicsElementViewModel(graphicsElement.Id, $"subtitle/{fileName}"),
-            GraphicsElementKind.Motion => new GraphicsElementViewModel(graphicsElement.Id, $"motion/{fileName}"),
-            _ => new GraphicsElementViewModel(graphicsElement.Id, graphicsElement.Path)
+            GraphicsElementKind.Text => $"text/{fileName}",
+            GraphicsElementKind.Image => $"image/{fileName}",
+            GraphicsElementKind.Subtitle => $"subtitle/{fileName}",
+            GraphicsElementKind.Motion => $"motion/{fileName}",
+            _ => graphicsElement.Path
         };
+
+        string name = fileName;
+        if (!string.IsNullOrWhiteSpace(graphicsElement.Name))
+        {
+            name = $"{graphicsElement.Name} ({fileName})";
+        }
+
+        return new GraphicsElementViewModel(graphicsElement.Id, name, fileName);
     }
 }
