@@ -152,13 +152,13 @@ public partial class HardwareCapabilitiesFactory(
         // if we don't have a list of cuda devices, fall back to ffmpeg check
 
         string[] arguments =
-        {
+        [
             "-f", "lavfi",
             "-i", "nullsrc",
             "-c:v", "h264_nvenc",
             "-gpu", "list",
             "-f", "null", "-"
-        };
+        ];
 
         BufferedCommandResult result = await Cli.Wrap(ffmpegPath)
             .WithArguments(arguments)
@@ -310,6 +310,26 @@ public partial class HardwareCapabilitiesFactory(
 
     public List<string> GetVideoToolboxEncoders() => VideoToolboxUtil.GetAvailableEncoders(logger);
 
+    public void SetAviSynthInstalled(bool aviSynthInstalled)
+    {
+        var cacheKey = string.Format(
+            CultureInfo.InvariantCulture,
+            FFmpegCapabilitiesCacheKeyFormat,
+            "avisynth_installed");
+
+        memoryCache.Set(cacheKey, aviSynthInstalled);
+    }
+
+    public bool IsAviSynthInstalled()
+    {
+        var cacheKey = string.Format(
+            CultureInfo.InvariantCulture,
+            FFmpegCapabilitiesCacheKeyFormat,
+            "avisynth_installed");
+
+        return memoryCache.TryGetValue(cacheKey, out bool installed) && installed;
+    }
+
     private async Task<IReadOnlySet<string>> GetFFmpegCapabilities(
         string ffmpegPath,
         string capabilities,
@@ -322,7 +342,7 @@ public partial class HardwareCapabilitiesFactory(
             return cachedCapabilities;
         }
 
-        string[] arguments = { "-hide_banner", $"-{capabilities}" };
+        string[] arguments = ["-hide_banner", $"-{capabilities}"];
 
         BufferedCommandResult result = await Cli.Wrap(ffmpegPath)
             .WithArguments(arguments)
@@ -351,7 +371,7 @@ public partial class HardwareCapabilitiesFactory(
             return cachedCapabilities;
         }
 
-        string[] arguments = { "-hide_banner", "-h", "long" };
+        string[] arguments = ["-hide_banner", "-h", "long"];
 
         BufferedCommandResult result = await Cli.Wrap(ffmpegPath)
             .WithArguments(arguments)
@@ -380,7 +400,7 @@ public partial class HardwareCapabilitiesFactory(
             return cachedCapabilities;
         }
 
-        string[] arguments = { "-hide_banner", "-formats" };
+        string[] arguments = ["-hide_banner", "-formats"];
 
         BufferedCommandResult result = await Cli.Wrap(ffmpegPath)
             .WithArguments(arguments)

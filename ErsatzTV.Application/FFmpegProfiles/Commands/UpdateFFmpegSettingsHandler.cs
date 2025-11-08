@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Globalization;
 using System.Threading.Channels;
+using ErsatzTV.Application.FFmpeg;
 using ErsatzTV.Application.Subtitles;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
@@ -150,6 +151,8 @@ public class UpdateFFmpegSettingsHandler(
             ConfigElementKey.FFmpegInitialSegmentCount,
             request.Settings.InitialSegmentCount,
             cancellationToken);
+
+        await workerChannel.WriteAsync(new RefreshFFmpegCapabilities(), cancellationToken);
 
         return Unit.Default;
     }

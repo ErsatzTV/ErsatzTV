@@ -1,4 +1,6 @@
+using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.FFmpeg.Capabilities;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
@@ -8,7 +10,8 @@ namespace ErsatzTV.Application.FFmpeg;
 
 public class RefreshFFmpegCapabilitiesHandler(
     IDbContextFactory<TvContext> dbContextFactory,
-    IHardwareCapabilitiesFactory hardwareCapabilitiesFactory)
+    IHardwareCapabilitiesFactory hardwareCapabilitiesFactory,
+    ILocalStatisticsProvider localStatisticsProvider)
     : IRequestHandler<RefreshFFmpegCapabilities>
 {
     public async Task Handle(RefreshFFmpegCapabilities request, CancellationToken cancellationToken)
@@ -24,6 +27,19 @@ public class RefreshFFmpegCapabilitiesHandler(
         foreach (string ffmpegPath in maybeFFmpegPath)
         {
             _ = await hardwareCapabilitiesFactory.GetFFmpegCapabilities(ffmpegPath);
+
+            Option<string> maybeFFprobePath = await dbContext.ConfigElements
+                .GetValue<string>(ConfigElementKey.FFprobePath, cancellationToken)
+                .FilterT(File.Exists);
+
+            foreach (string ffprobePath in maybeFFprobePath)
+            {
+                Either<BaseError, MediaVersion> result = await localStatisticsProvider.GetStatistics(
+                    ffprobePath,
+                    Path.Combine(FileSystemLayout.ResourcesCacheFolder, "test.avs"));
+
+                hardwareCapabilitiesFactory.SetAviSynthInstalled(result.IsRight);
+            }
         }
     }
 }

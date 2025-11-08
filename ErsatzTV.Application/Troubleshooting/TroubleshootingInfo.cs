@@ -15,6 +15,7 @@ public record TroubleshootingInfo(
     List<Channel> Channels,
     List<ChannelWatermark> Watermarks,
     bool AviSynthDemuxer,
+    bool AviSynthInstalled,
     string NvidiaCapabilities,
     string QsvCapabilities,
     string VaapiCapabilities,

@@ -31,4 +31,8 @@ public interface IHardwareCapabilitiesFactory
     List<string> GetVideoToolboxDecoders();
 
     List<string> GetVideoToolboxEncoders();
+
+    void SetAviSynthInstalled(bool aviSynthInstalled);
+
+    bool IsAviSynthInstalled();
 }
