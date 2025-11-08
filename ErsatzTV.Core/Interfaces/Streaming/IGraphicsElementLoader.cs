@@ -8,4 +8,6 @@ public interface IGraphicsElementLoader
         GraphicsEngineContext context,
         List<PlayoutItemGraphicsElement> elements,
         CancellationToken cancellationToken);
+
+    Task<Option<string>> TryLoadName(string fileName, CancellationToken cancellationToken);
 }

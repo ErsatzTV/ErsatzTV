@@ -3,7 +3,7 @@ using YamlDotNet.Serialization;
 
 namespace ErsatzTV.Core.Graphics;
 
-public class TextGraphicsElement
+public class TextGraphicsElement : BaseGraphicsElement
 {
     [YamlMember(Alias = "opacity_percent", ApplyNamingConventions = false)]
     public int? OpacityPercent { get; set; }

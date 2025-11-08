@@ -3,7 +3,7 @@ using YamlDotNet.Serialization;
 
 namespace ErsatzTV.Core.Graphics;
 
-public class MotionGraphicsElement
+public class MotionGraphicsElement : BaseGraphicsElement
 {
     [YamlMember(Alias = "video_path", ApplyNamingConventions = false)]
     public string VideoPath { get; set; }

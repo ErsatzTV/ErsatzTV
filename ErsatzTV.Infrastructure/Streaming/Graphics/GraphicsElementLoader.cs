@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.RegularExpressions;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Graphics;
@@ -9,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Scriban;
 using Scriban.Runtime;
+using Scriban.Syntax;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
@@ -131,6 +133,41 @@ public partial class GraphicsElementLoader(
         return context;
     }
 
+    public async Task<Option<string>> TryLoadName(string fileName, CancellationToken cancellationToken)
+    {
+        try
+        {
+            string yaml = await localFileSystem.ReadAllText(fileName);
+            var template = Template.Parse(yaml);
+
+            var builder = new StringBuilder();
+            var scriptPage = template.Page;
+
+            if (scriptPage.Body != null)
+            {
+                foreach (var statement in scriptPage.Body.Statements)
+                {
+                    if (statement is ScriptRawStatement rawStatement)
+                    {
+                        builder.Append(rawStatement.Text);
+                    }
+                }
+            }
+
+            Option<BaseGraphicsElement> maybeElement = FromYamlIgnoreUnmatched<BaseGraphicsElement>(builder.ToString());
+            foreach (BaseGraphicsElement element in maybeElement.Where(e => !string.IsNullOrWhiteSpace(e.Name)))
+            {
+                return element.Name;
+            }
+        }
+        catch (Exception)
+        {
+            // do nothing
+        }
+
+        return Option<string>.None;
+    }
+
     private async Task<int> GetMaxEpgEntries(List<PlayoutItemGraphicsElement> elements)
     {
         var epgEntries = 0;
@@ -250,6 +287,23 @@ public partial class GraphicsElementLoader(
         catch (Exception ex)
         {
             logger.LogWarning(ex, "Failed to load graphics element YAML definition");
+            return Option<T>.None;
+        }
+    }
+
+    private static Option<T> FromYamlIgnoreUnmatched<T>(string yaml)
+    {
+        try
+        {
+            IDeserializer deserializer = new DeserializerBuilder()
+                .WithNamingConvention(CamelCaseNamingConvention.Instance)
+                .IgnoreUnmatchedProperties()
+                .Build();
+
+            return deserializer.Deserialize<T>(yaml);
+        }
+        catch (Exception)
+        {
             return Option<T>.None;
         }
     }
