@@ -10,6 +10,7 @@ public interface ILocalFileSystem
     IEnumerable<string> ListSubdirectories(string folder);
     IEnumerable<string> ListFiles(string folder);
     IEnumerable<string> ListFiles(string folder, string searchPattern);
+    IEnumerable<string> ListFiles(string folder, params string[] searchPatterns);
     bool FileExists(string path);
     bool FolderExists(string folder);
     Task<Either<BaseError, Unit>> CopyFile(string source, string destination);

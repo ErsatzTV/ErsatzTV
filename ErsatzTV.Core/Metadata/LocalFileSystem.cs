@@ -109,6 +109,32 @@ public class LocalFileSystem(IClient client, ILogger<LocalFileSystem> logger) : 
         return new List<string>();
     }
 
+    public IEnumerable<string> ListFiles(string folder, params string[] searchPatterns)
+    {
+        if (folder is not null && Directory.Exists(folder))
+        {
+            try
+            {
+                return searchPatterns
+                    .SelectMany(searchPattern =>
+                        Directory.EnumerateFiles(folder, searchPattern, SearchOption.TopDirectoryOnly)
+                            .Where(path => !Path.GetFileName(path).StartsWith("._", StringComparison.OrdinalIgnoreCase)))
+                    .Distinct();
+            }
+            catch (UnauthorizedAccessException)
+            {
+                logger.LogWarning("Unauthorized access exception listing files in folder {Folder}", folder);
+            }
+            catch (Exception ex)
+            {
+                // do nothing
+                client.Notify(ex);
+            }
+        }
+
+        return new List<string>();
+    }
+
     public bool FileExists(string path) => File.Exists(path);
 
     public bool FolderExists(string folder) => Directory.Exists(folder);
