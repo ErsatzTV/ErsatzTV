@@ -27,7 +27,7 @@
                 <ColGroup>
                     <MudHidden Breakpoint="Breakpoint.Xs">
                         <col/>
-                        <col style="width: 240px;"/>
+                        <col style="width: 300px;"/>
                     </MudHidden>
                 </ColGroup>
                 <ToolBarContent>
@@ -56,6 +56,11 @@
                             <MudTooltip Text="Copy Schedule">
                                 <MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
                                                OnClick="@(_ => CopySchedule(context))">
+                                </MudIconButton>
+                            </MudTooltip>
+                            <MudTooltip Text="Troubleshoot">
+                                <MudIconButton Icon="@Icons.Material.Filled.Info"
+                                               OnClick="@(_ => Troubleshoot(context))">
                                 </MudIconButton>
                             </MudTooltip>
                             <MudTooltip Text="Delete Schedule">
@@ -211,6 +216,18 @@
         _selectedSchedule = null;
         _searchString = query;
         _table.ReloadServerData();
+    }
+
+    private async Task Troubleshoot(ProgramScheduleViewModel schedule)
+    {
+        Option<IEnumerable<ProgramScheduleItemViewModel>> maybeResults = await Mediator.Send(new GetProgramScheduleItems(schedule.Id), _cts.Token);
+        foreach (IEnumerable<ProgramScheduleItemViewModel> results in maybeResults)
+        {
+            var parameters = new DialogParameters { { "Schedule", schedule }, { "Items", results } };
+            var options = new DialogOptions { CloseButton = true, CloseOnEscapeKey = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
+            IDialogReference dialog = await Dialog.ShowAsync<ScheduleItemsDialog>(schedule.Name, parameters, options);
+            DialogResult _ = await dialog.Result;
+        }
     }
 
     private string SelectedRowClassFunc(ProgramScheduleViewModel element, int rowNumber) => _selectedSchedule != null && _selectedSchedule == element ? "selected" : string.Empty;

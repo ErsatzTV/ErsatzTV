@@ -10,7 +10,6 @@
 @using ErsatzTV.Core.Scheduling
 @implements IDisposable
 @inject NavigationManager NavigationManager
-@inject IDialogService Dialog
 @inject ILogger<ScheduleItemsEditor> Logger
 @inject ISnackbar Snackbar
 @inject IMediator Mediator
@@ -58,16 +57,12 @@
             <MudButton Class="ml-3" Variant="Variant.Filled" Color="Color.Default" OnClick="@AddScheduleItem" StartIcon="@Icons.Material.Filled.PlaylistAdd" Disabled="@(_schedule?.Items is null)">
                 Add Schedule Item
             </MudButton>
-            <MudButton Class="ml-3" Variant="Variant.Filled" Color="Color.Default" OnClick="@Troubleshoot" StartIcon="@Icons.Material.Filled.Info" Disabled="@(_schedule?.Items is null)">
-                Troubleshoot
-            </MudButton>
         </div>
         <div style="align-items: center; display: flex; margin-left: auto;" class="d-md-none">
             <div class="flex-grow-1"></div>
             <MudMenu Icon="@Icons.Material.Filled.MoreVert">
                 <MudMenuItem Icon="@Icons.Material.Filled.Save" Label="Save Schedule Items" OnClick="@SaveChanges"/>
                 <MudMenuItem Icon="@Icons.Material.Filled.PlaylistAdd" Label="Add Schedule Item" OnClick="@AddScheduleItem"/>
-                <MudMenuItem Icon="@Icons.Material.Filled.Info" Label="Troubleshoot" OnClick="@Troubleshoot"/>
             </MudMenu>
         </div>
     </div>
@@ -969,23 +964,6 @@
         }
 
         return result;
-    }
-
-    private async Task Troubleshoot()
-    {
-        Option<ProgramScheduleViewModel> maybeSchedule = await Mediator.Send(new GetProgramScheduleById(Id), _cts.Token);
-        Option<IEnumerable<ProgramScheduleItemViewModel>> maybeResults = await Mediator.Send(new GetProgramScheduleItems(Id), _cts.Token);
-
-        foreach (ProgramScheduleViewModel schedule in maybeSchedule)
-        {
-            foreach (IEnumerable<ProgramScheduleItemViewModel> results in maybeResults)
-            {
-                var parameters = new DialogParameters { { "Schedule", schedule }, { "Items", results } };
-                var options = new DialogOptions { CloseButton = true, CloseOnEscapeKey = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
-                IDialogReference dialog = await Dialog.ShowAsync<ScheduleItemsDialog>(_schedule.Name, parameters, options);
-                DialogResult _ = await dialog.Result;
-            }
-        }
     }
 
     private void AddScheduleItem()
