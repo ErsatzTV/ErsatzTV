@@ -49,6 +49,9 @@ public class FakeLocalFileSystem : ILocalFileSystem
     public IEnumerable<string> ListFiles(string folder, string searchPattern) =>
         _files.Map(f => f.Path).Filter(f => Path.GetDirectoryName(f) == folder);
 
+    public IEnumerable<string> ListFiles(string folder, params string[] searchPatterns) =>
+        _files.Map(f => f.Path).Filter(f => Path.GetDirectoryName(f) == folder);
+
     public bool FileExists(string path) => _files.Any(f => f.Path == path);
     public bool FolderExists(string folder) => false;
 
