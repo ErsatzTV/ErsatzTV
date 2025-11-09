@@ -223,7 +223,8 @@
         Option<IEnumerable<ProgramScheduleItemViewModel>> maybeResults = await Mediator.Send(new GetProgramScheduleItems(schedule.Id), _cts.Token);
         foreach (IEnumerable<ProgramScheduleItemViewModel> results in maybeResults)
         {
-            var parameters = new DialogParameters { { "Schedule", schedule }, { "Items", results } };
+            var sorted = results.OrderBy(i => i.Index).ToList();
+            var parameters = new DialogParameters { { "Schedule", schedule }, { "Items", sorted } };
             var options = new DialogOptions { CloseButton = true, CloseOnEscapeKey = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
             IDialogReference dialog = await Dialog.ShowAsync<ScheduleItemsDialog>(schedule.Name, parameters, options);
             DialogResult _ = await dialog.Result;

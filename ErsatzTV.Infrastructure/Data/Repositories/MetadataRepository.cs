@@ -587,7 +587,7 @@ public class MetadataRepository(IDbContextFactory<TvContext> dbContextFactory) :
     {
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
         return await dbContext.Connection.ExecuteAsync(
-                "DELETE FROM Tag WHERE Id = @TagId AND ExternalCollectionId = @ExternalCollectionId",
+                "DELETE FROM Tag WHERE Id = @TagId AND ((ExternalCollectionId = @ExternalCollectionId) OR (ExternalCollectionId IS NULL AND @ExternalCollectionId IS NULL))",
                 new { TagId = tag.Id, tag.ExternalCollectionId })
             .Map(result => result > 0);
     }
