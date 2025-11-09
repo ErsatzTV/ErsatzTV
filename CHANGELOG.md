@@ -29,6 +29,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - There are two requirements for AviSynth Scripts to work:
     - FFmpeg needs to be compiled with AviSynth support (not currently available in Docker)
     - AviSynth itself needs to be installed
+- Add `Troubleshoot` button to classic schedule items editor
+  - This generates JSON representing the entire schedule which can easily be shared when requested for troubleshooting
 
 ### Fixed
 - Fix HLS Direct playback with Jellyfin 10.11
