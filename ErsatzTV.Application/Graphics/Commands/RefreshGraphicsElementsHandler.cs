@@ -24,7 +24,7 @@ public class RefreshGraphicsElementsHandler(
             .ToListAsync(cancellationToken);
 
         var missing = allExisting
-            .Where(e => !localFileSystem.FileExists(e.Path) || Path.GetExtension(e.Path) != ".yml")
+            .Where(e => !localFileSystem.FileExists(e.Path) || (Path.GetExtension(e.Path) != ".yml" && Path.GetExtension(e.Path) != ".yaml"))
             .ToList();
 
         foreach (GraphicsElement existing in missing)
@@ -42,7 +42,7 @@ public class RefreshGraphicsElementsHandler(
         }
 
         // add new text elements
-        var newTextPaths = localFileSystem.ListFiles(FileSystemLayout.GraphicsElementsTextTemplatesFolder, "*.yml")
+        var newTextPaths = localFileSystem.ListFiles(FileSystemLayout.GraphicsElementsTextTemplatesFolder, "*.yml", "*.yaml")
             .Where(f => allExisting.All(e => e.Path != f))
             .ToList();
 
@@ -62,7 +62,7 @@ public class RefreshGraphicsElementsHandler(
         }
 
         // add new image elements
-        var newImagePaths = localFileSystem.ListFiles(FileSystemLayout.GraphicsElementsImageTemplatesFolder, "*.yml")
+        var newImagePaths = localFileSystem.ListFiles(FileSystemLayout.GraphicsElementsImageTemplatesFolder, "*.yml", "*.yaml")
             .Where(f => allExisting.All(e => e.Path != f))
             .ToList();
 
@@ -82,7 +82,7 @@ public class RefreshGraphicsElementsHandler(
         }
 
         // add new motion elements
-        var newMotionPaths = localFileSystem.ListFiles(FileSystemLayout.GraphicsElementsMotionTemplatesFolder, "*.yml")
+        var newMotionPaths = localFileSystem.ListFiles(FileSystemLayout.GraphicsElementsMotionTemplatesFolder, "*.yml", "*.yaml")
             .Where(f => allExisting.All(e => e.Path != f))
             .ToList();
 
@@ -102,7 +102,7 @@ public class RefreshGraphicsElementsHandler(
         }
 
         // add new subtitle elements
-        var newSubtitlePaths = localFileSystem.ListFiles(FileSystemLayout.GraphicsElementsSubtitleTemplatesFolder, "*.yml")
+        var newSubtitlePaths = localFileSystem.ListFiles(FileSystemLayout.GraphicsElementsSubtitleTemplatesFolder, "*.yml", "*.yaml")
             .Where(f => allExisting.All(e => e.Path != f))
             .ToList();
 
