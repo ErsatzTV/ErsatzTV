@@ -250,7 +250,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
             _watermarkInputFile.IsSome,
             _subtitleInputFile.Map(s => s is { IsImageBased: true, Method: SubtitleMethod.Burn }).IfNone(false),
             _subtitleInputFile.Map(s => s is { IsImageBased: false, Method: SubtitleMethod.Burn }).IfNone(false),
-            desiredState.Deinterlaced,
+            desiredState.Deinterlaced && videoStream.ScanKind is ScanKind.Interlaced,
             desiredState.BitDepth == 10,
             false,
             videoStream.ColorParams.IsHdr);

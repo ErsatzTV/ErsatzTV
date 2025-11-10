@@ -309,17 +309,21 @@ public partial class LocalStatisticsProvider : ILocalStatisticsProvider
 
         var stats = new IdetStatistics();
 
-        var singleMatch = SingleFrameRegex().Match(idet.StandardOutput);
-        if (singleMatch.Success)
+        //_logger.LogDebug("StdErr: {Match}", idet.StandardError);
+
+        var singleMatch = SingleFrameRegex().Matches(idet.StandardError).LastOrDefault();
+        if (singleMatch?.Success == true)
         {
+            _logger.LogDebug("Matched single frame: {Match}", singleMatch.Value);
             stats.SingleTff = int.Parse(singleMatch.Groups[1].Value, NumberFormatInfo.InvariantInfo);
             stats.SingleBff = int.Parse(singleMatch.Groups[2].Value, NumberFormatInfo.InvariantInfo);
             stats.SingleProgressive = int.Parse(singleMatch.Groups[3].Value, NumberFormatInfo.InvariantInfo);
         }
 
-        var multiMatch = MultiFrameRegex().Match(idet.StandardOutput);
-        if (multiMatch.Success)
+        var multiMatch = MultiFrameRegex().Matches(idet.StandardError).LastOrDefault();
+        if (multiMatch?.Success == true)
         {
+            _logger.LogDebug("Matched multi frame: {Match}", multiMatch.Value);
             stats.MultiTff = int.Parse(multiMatch.Groups[1].Value, NumberFormatInfo.InvariantInfo);
             stats.MultiBff = int.Parse(multiMatch.Groups[2].Value, NumberFormatInfo.InvariantInfo);
             stats.MultiProgressive = int.Parse(multiMatch.Groups[3].Value, NumberFormatInfo.InvariantInfo);
@@ -699,10 +703,10 @@ public partial class LocalStatisticsProvider : ILocalStatisticsProvider
     [GeneratedRegex(@"\[SAR\s+([0-9]+:[0-9]+)\s+DAR\s+([0-9]+:[0-9]+)\]")]
     private static partial Regex SarDarRegex();
 
-    [GeneratedRegex(@"Single frame detection: TFF: (\d+) BFF: (\d+) Progressive: (\d+)")]
+    [GeneratedRegex(@"Single frame detection: TFF:\s+(\d+) BFF:\s+(\d+) Progressive:\s+(\d+)")]
     private static partial Regex SingleFrameRegex();
 
-    [GeneratedRegex(@"Multi frame detection: TFF: (\d+) BFF: (\d+) Progressive: (\d+)")]
+    [GeneratedRegex(@"Multi frame detection: TFF:\s+(\d+) BFF:\s+(\d+) Progressive:\s+(\d+)")]
     private static partial Regex MultiFrameRegex();
 
     private class IdetStatistics
