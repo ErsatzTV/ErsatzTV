@@ -1520,6 +1520,7 @@ public class SchedulingEngine(
     {
         private int _guideGroup = guideGroup;
         private bool _guideGroupLocked;
+        private bool _guideGroupTitle;
         private readonly Dictionary<int, string> _graphicsElements = [];
         private readonly System.Collections.Generic.HashSet<int> _channelWatermarkIds = [];
         private readonly Stack<FillerKind> _fillerKind = new();
@@ -1581,11 +1582,22 @@ public class SchedulingEngine(
 
             if (!string.IsNullOrWhiteSpace(customTitle))
             {
+                _guideGroupTitle = true;
                 CustomTitle = customTitle;
             }
         }
 
-        public void UnlockGuideGroup() => _guideGroupLocked = false;
+        public void UnlockGuideGroup()
+        {
+            _guideGroupLocked = false;
+
+            if (_guideGroupTitle)
+            {
+                CustomTitle = null;
+            }
+
+            _guideGroupTitle = false;
+        }
 
         public void SetGraphicsElement(int id, string variablesJson) => _graphicsElements.Add(id, variablesJson);
         public void RemoveGraphicsElement(int id) => _graphicsElements.Remove(id);
