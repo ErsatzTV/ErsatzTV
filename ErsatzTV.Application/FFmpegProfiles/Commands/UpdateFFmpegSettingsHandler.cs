@@ -113,6 +113,11 @@ public class UpdateFFmpegSettingsHandler(
             await workerChannel.WriteAsync(new ExtractEmbeddedSubtitles(Option<int>.None), cancellationToken);
         }
 
+        await configElementRepository.Upsert(
+            ConfigElementKey.FFmpegProbeForInterlacedFrames,
+            request.Settings.ProbeForInterlacedFrames,
+            cancellationToken);
+
         if (request.Settings.GlobalWatermarkId is not null)
         {
             await configElementRepository.Upsert(

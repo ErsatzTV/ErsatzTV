@@ -70,6 +70,12 @@
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                 <div class="d-flex">
+                    <MudText>Probe For Interlaced Frames</MudText>
+                </div>
+                <MudCheckBox @bind-Value="_ffmpegSettings.ProbeForInterlacedFrames" Dense="true"/>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
                     <MudText>Save Troubleshooting Reports To Disk</MudText>
                 </div>
                 <MudCheckBox @bind-Value="_ffmpegSettings.SaveReports" Dense="true"/>

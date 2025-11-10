@@ -9,4 +9,9 @@ public interface ILocalStatisticsProvider
     Task<Either<BaseError, bool>> RefreshStatistics(string ffmpegPath, string ffprobePath, MediaItem mediaItem);
 
     Either<BaseError, List<SongTag>> GetSongTags(MediaItem mediaItem);
+
+    Task<Option<double>> GetInterlacedRatio(
+        string ffmpegPath,
+        MediaItem mediaItem,
+        CancellationToken cancellationToken);
 }

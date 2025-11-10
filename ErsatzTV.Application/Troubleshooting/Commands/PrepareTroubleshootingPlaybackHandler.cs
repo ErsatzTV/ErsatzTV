@@ -224,7 +224,7 @@ public class PrepareTroubleshootingPlaybackHandler(
             ffprobePath,
             true,
             channel,
-            videoVersion,
+            new MediaItemVideoVersion(mediaItem, videoVersion),
             new MediaItemAudioVersion(mediaItem, version),
             videoPath,
             mediaPath,

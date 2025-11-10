@@ -13,4 +13,5 @@ public interface IMediaItemRepository
     Task<Unit> FlagNormal(MediaItem mediaItem);
     Task<Either<BaseError, Unit>> DeleteItems(List<int> mediaItemIds);
     Task<ImmutableHashSet<string>> GetAllTrashedItems(LibraryPath libraryPath);
+    Task SetInterlacedRatio(MediaItem mediaItem, double interlacedRatio);
 }

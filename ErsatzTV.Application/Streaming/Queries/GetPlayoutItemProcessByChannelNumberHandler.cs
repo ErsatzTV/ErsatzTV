@@ -408,7 +408,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 ffprobePath,
                 saveReports,
                 channel,
-                videoVersion,
+                new MediaItemVideoVersion(playoutItemWithPath.PlayoutItem.MediaItem, videoVersion),
                 new MediaItemAudioVersion(playoutItemWithPath.PlayoutItem.MediaItem, audioVersion),
                 videoPath,
                 audioPath,

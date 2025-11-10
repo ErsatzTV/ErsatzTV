@@ -33,6 +33,10 @@ public class GetFFmpegSettingsHandler(IConfigElementRepository configElementRepo
             await configElementRepository.GetValue<bool>(
                 ConfigElementKey.FFmpegExtractEmbeddedSubtitles,
                 cancellationToken);
+        Option<bool> probeForInterlacedFrames =
+            await configElementRepository.GetValue<bool>(
+                ConfigElementKey.FFmpegProbeForInterlacedFrames,
+                cancellationToken);
         Option<int> watermark =
             await configElementRepository.GetValue<int>(ConfigElementKey.FFmpegGlobalWatermarkId, cancellationToken);
         Option<int> fallbackFiller =
@@ -62,6 +66,7 @@ public class GetFFmpegSettingsHandler(IConfigElementRepository configElementRepo
             SaveReports = await saveReports.IfNoneAsync(false),
             UseEmbeddedSubtitles = await useEmbeddedSubtitles.IfNoneAsync(true),
             ExtractEmbeddedSubtitles = await extractEmbeddedSubtitles.IfNoneAsync(false),
+            ProbeForInterlacedFrames = await probeForInterlacedFrames.IfNoneAsync(false),
             PreferredAudioLanguageCode = await preferredAudioLanguageCode.IfNoneAsync("eng"),
             HlsSegmenterIdleTimeout = await hlsSegmenterIdleTimeout.IfNoneAsync(60),
             WorkAheadSegmenterLimit = await workAheadSegmenterLimit.IfNoneAsync(1),

@@ -1326,6 +1326,9 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Property<int?>("ImageId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<double?>("InterlacedRatio")
+                        .HasColumnType("REAL");
+
                     b.Property<int?>("MovieId")
                         .HasColumnType("INTEGER");
 

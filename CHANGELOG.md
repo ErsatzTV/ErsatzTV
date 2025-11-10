@@ -31,6 +31,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - AviSynth itself needs to be installed
 - Add `Troubleshoot` button to classic schedule list
   - This generates JSON representing the entire schedule which can be shared when requested for troubleshooting
+- Add **Settings** > **FFmpeg** > **Probe For Interlaced Frames**
+  - When enabled, this will probe *local content* for interlaced frames on demand (immediately before playback)
+  - This will be used as a more accurate check for interlaced content
+  - The result will be cached (only probed once and stored) in the database along with all other media item statistics (e.g. duration)
+  - This feature will currently ignore content that is not streamed from disk
 
 ### Fixed
 - Fix HLS Direct playback with Jellyfin 10.11

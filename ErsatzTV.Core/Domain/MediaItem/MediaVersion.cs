@@ -14,6 +14,7 @@ public class MediaVersion : IDisplaySize
     public string DisplayAspectRatio { get; set; }
     public string RFrameRate { get; set; }
     public VideoScanKind VideoScanKind { get; set; }
+    public double? InterlacedRatio { get; set; }
     public DateTime DateAdded { get; set; }
     public DateTime DateUpdated { get; set; }
     public int Width { get; set; }
