@@ -147,6 +147,7 @@ public class GetMediaItemInfoHandler : IRequestHandler<GetMediaItemInfo, Either<
             version.DisplayAspectRatio,
             version.RFrameRate,
             version.VideoScanKind,
+            version.InterlacedRatio,
             version.Width,
             version.Height,
             allStreams,

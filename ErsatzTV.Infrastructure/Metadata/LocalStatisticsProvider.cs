@@ -166,7 +166,7 @@ public partial class LocalStatisticsProvider : ILocalStatisticsProvider
                     return 0;
                 }
 
-                return (double)stats.TotalInterlacedFrames / stats.TotalInterlacedFrames;
+                return (double)stats.TotalInterlacedFrames / stats.TotalFrames;
             }
         }
         catch (Exception ex)

@@ -15,6 +15,7 @@ public record MediaItemInfo(
     string DisplayAspectRatio,
     string RFrameRate,
     VideoScanKind VideoScanKind,
+    double? InterlacedRatio,
     int Width,
     int Height,
     List<MediaItemInfoStream> Streams,
