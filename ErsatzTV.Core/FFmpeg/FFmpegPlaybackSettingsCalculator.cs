@@ -165,8 +165,7 @@ public static class FFmpegPlaybackSettingsCalculator
                 result.PadAudio = true;
                 result.NormalizeLoudnessMode = ffmpegProfile.NormalizeLoudnessMode;
 
-                result.Deinterlace = ffmpegProfile.DeinterlaceVideo == true &&
-                                     videoVersion.VideoScanKind == VideoScanKind.Interlaced;
+                result.Deinterlace = ffmpegProfile.DeinterlaceVideo == true;
 
                 break;
         }

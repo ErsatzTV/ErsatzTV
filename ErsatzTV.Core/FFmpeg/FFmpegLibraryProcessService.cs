@@ -222,7 +222,11 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                 };
             });
 
-        ScanKind scanKind = await ProbeScanKind(ffmpegPath, videoVersion.MediaItem, cancellationToken);
+        ScanKind scanKind = ScanKind.Progressive;
+        if (playbackSettings.Deinterlace)
+        {
+            scanKind = await ProbeScanKind(ffmpegPath, videoVersion.MediaItem, cancellationToken);
+        }
 
         var ffmpegVideoStream = new VideoStream(
             videoStream.Index,
