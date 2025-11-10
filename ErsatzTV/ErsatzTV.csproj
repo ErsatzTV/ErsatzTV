@@ -76,7 +76,7 @@
 
     <ItemGroup>
         <EmbeddedResource Include="Resources\Fonts\Sen.ttf" />
-        <EmbeddedResource Include="Resources\background.png" />
+        <EmbeddedResource Include="Resources\_background.png" />
         <EmbeddedResource Include="Resources\Fonts\OPTIKabel-Heavy.otf" />
         <EmbeddedResource Include="Resources\Fonts\Roboto-Regular.ttf" />
         <EmbeddedResource Include="Resources\Scripts\_threePartEpisodes.js" />

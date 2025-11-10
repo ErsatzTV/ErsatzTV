@@ -760,6 +760,10 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         }
 
         string videoPath = Path.Combine(FileSystemLayout.ResourcesCacheFolder, "background.png");
+        if (!File.Exists(videoPath))
+        {
+            videoPath = Path.Combine(FileSystemLayout.ResourcesCacheFolder, "_background.png");
+        }
 
         var videoVersion = BackgroundImageMediaVersion.ForPath(videoPath, desiredResolution);
 

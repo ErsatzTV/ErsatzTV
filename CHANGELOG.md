@@ -36,6 +36,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - This will be used as a more accurate check for interlaced content
   - The result will be cached (only probed once and stored) in the database along with all other media item statistics (e.g. duration)
   - This feature will currently ignore content that is not streamed from disk
+- Add error/offline background customization
+  - Default error background is now named `_background.png`
+  - Error streams will prioritize using `background.png` if it exists
+    - Replacing this `background.png` file will allow custom error/offline backgrounds
 
 ### Fixed
 - Fix HLS Direct playback with Jellyfin 10.11
@@ -63,6 +67,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 - Use smaller batch size for search index updates (100, down from 1000)
   - This should help newly scanned items appear in the UI more quickly
+- Replace favicon and logo in background image used for error streams
 
 ## [25.8.0] - 2025-10-26
 ### Added
