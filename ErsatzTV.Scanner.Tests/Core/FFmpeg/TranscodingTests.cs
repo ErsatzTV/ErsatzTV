@@ -283,6 +283,8 @@ public class TranscodingTests
             graphicsElementLoader,
             MemoryCache,
             Substitute.For<IMpegTsScriptService>(),
+            Substitute.For<ILocalStatisticsProvider>(),
+            Substitute.For<IMediaItemRepository>(),
             LoggerFactory.CreateLogger<FFmpegLibraryProcessService>());
 
         var songVideoGenerator = new SongVideoGenerator(tempFilePool, mockImageCache, service);
@@ -375,7 +377,7 @@ public class TranscodingTests
             ExecutableName("ffprobe"),
             true,
             channel,
-            videoVersion,
+            new MediaItemVideoVersion(song, videoVersion),
             new MediaItemAudioVersion(song, songVersion),
             videoPath,
             file,
@@ -695,7 +697,7 @@ public class TranscodingTests
             ExecutableName("ffprobe"),
             true,
             channel,
-            v,
+            new MediaItemVideoVersion(null, v),
             new MediaItemAudioVersion(null, v),
             file,
             file,
@@ -990,6 +992,8 @@ public class TranscodingTests
             graphicsElementLoader,
             MemoryCache,
             Substitute.For<IMpegTsScriptService>(),
+            Substitute.For<ILocalStatisticsProvider>(),
+            Substitute.For<IMediaItemRepository>(),
             LoggerFactory.CreateLogger<FFmpegLibraryProcessService>());
 
         return service;

@@ -112,6 +112,18 @@ public class MediaItemRepository : IMediaItemRepository
             .Map(list => list.ToImmutableHashSet());
     }
 
+    public async Task SetInterlacedRatio(MediaItem mediaItem, double interlacedRatio)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+
+        var mediaVersion = mediaItem.GetHeadVersion();
+        mediaVersion.InterlacedRatio = interlacedRatio;
+
+        await dbContext.Connection.ExecuteAsync(
+            @"UPDATE MediaVersion SET InterlacedRatio = @InterlacedRatio WHERE Id = @Id",
+            new { mediaVersion.Id, InterlacedRatio = interlacedRatio });
+    }
+
     public async Task<Unit> FlagNormal(MediaItem mediaItem)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();

@@ -137,6 +137,7 @@ public class MetadataRepository(IDbContextFactory<TvContext> dbContextFactory) :
                     existing.Width = incoming.Width;
                     existing.Height = incoming.Height;
                     existing.VideoScanKind = incoming.VideoScanKind;
+                    existing.InterlacedRatio = incoming.InterlacedRatio;
                     existing.RFrameRate = incoming.RFrameRate;
                 }
 

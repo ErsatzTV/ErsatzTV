@@ -18,7 +18,7 @@ using File = TagLib.File;
 
 namespace ErsatzTV.Infrastructure.Metadata;
 
-public class LocalStatisticsProvider : ILocalStatisticsProvider
+public partial class LocalStatisticsProvider : ILocalStatisticsProvider
 {
     private readonly IClient _client;
     private readonly IHardwareCapabilitiesFactory _hardwareCapabilitiesFactory;
@@ -131,6 +131,52 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
         }
     }
 
+    public async Task<Option<double>> GetInterlacedRatio(
+        string ffmpegPath,
+        MediaItem mediaItem,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            string filePath = await PathForMediaItem(mediaItem);
+
+            if (Path.GetExtension(filePath) == ".avs" && !_hardwareCapabilitiesFactory.IsAviSynthInstalled())
+            {
+                return Option<double>.None;
+            }
+
+            if (filePath.StartsWith("http", StringComparison.OrdinalIgnoreCase) ||
+                !_localFileSystem.FileExists(filePath))
+            {
+                _logger.LogDebug("Skipping interlaced ratio check for remote content");
+                return Option<double>.None;
+            }
+
+            var duration = mediaItem.GetDurationForPlayout();
+            if (duration < TimeSpan.FromSeconds(3))
+            {
+                return Option<double>.None;
+            }
+
+            Option<IdetStatistics> maybeStats = await GetIdetOutput(ffmpegPath, filePath, duration / 3);
+            foreach (var stats in maybeStats)
+            {
+                if (stats.TotalFrames == 0)
+                {
+                    return 0;
+                }
+
+                return (double)stats.TotalInterlacedFrames / stats.TotalInterlacedFrames;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to check interlaced ratio for media item {Id}", mediaItem.Id);
+        }
+
+        return Option<double>.None;
+    }
+
     private async Task<Either<BaseError, bool>> RefreshStatistics(
         string ffmpegPath,
         string ffprobePath,
@@ -200,8 +246,7 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
         FFprobe ffprobe = JsonConvert.DeserializeObject<FFprobe>(probe.StandardOutput);
         if (ffprobe is not null)
         {
-            const string PATTERN = @"\[SAR\s+([0-9]+:[0-9]+)\s+DAR\s+([0-9]+:[0-9]+)\]";
-            Match match = Regex.Match(probe.StandardError, PATTERN);
+            Match match = SarDarRegex().Match(probe.StandardError);
             if (match.Success)
             {
                 string sar = match.Groups[1].Value;
@@ -232,6 +277,55 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
         }
 
         return BaseError.New("Unable to deserialize ffprobe output");
+    }
+
+    private async Task<Option<IdetStatistics>> GetIdetOutput(string ffmpegPath, string filePath, TimeSpan seek)
+    {
+        string[] arguments =
+        [
+            "-hide_banner",
+            "-ss", $"{seek:c}",
+            "-i", filePath,
+            "-vf", "idet",
+            "-frames:v", "200",
+            "-an",
+            "-f", "null", "-"
+        ];
+
+        BufferedCommandResult idet = await Cli.Wrap(ffmpegPath)
+            .WithArguments(arguments)
+            .WithValidation(CommandResultValidation.None)
+            .ExecuteBufferedAsync(Encoding.UTF8);
+
+        if (idet.ExitCode != 0)
+        {
+            _logger.LogInformation(
+                "FFmpeg idet with arguments {Arguments} exited with code {ExitCode}",
+                arguments,
+                idet.ExitCode);
+
+            return Option<IdetStatistics>.None;
+        }
+
+        var stats = new IdetStatistics();
+
+        var singleMatch = SingleFrameRegex().Match(idet.StandardOutput);
+        if (singleMatch.Success)
+        {
+            stats.SingleTff = int.Parse(singleMatch.Groups[1].Value, NumberFormatInfo.InvariantInfo);
+            stats.SingleBff = int.Parse(singleMatch.Groups[2].Value, NumberFormatInfo.InvariantInfo);
+            stats.SingleProgressive = int.Parse(singleMatch.Groups[3].Value, NumberFormatInfo.InvariantInfo);
+        }
+
+        var multiMatch = MultiFrameRegex().Match(idet.StandardOutput);
+        if (multiMatch.Success)
+        {
+            stats.MultiTff = int.Parse(multiMatch.Groups[1].Value, NumberFormatInfo.InvariantInfo);
+            stats.MultiBff = int.Parse(multiMatch.Groups[2].Value, NumberFormatInfo.InvariantInfo);
+            stats.MultiProgressive = int.Parse(multiMatch.Groups[3].Value, NumberFormatInfo.InvariantInfo);
+        }
+
+        return stats;
     }
 
     private async Task AnalyzeDuration(string ffmpegPath, string path, MediaVersion version)
@@ -366,6 +460,7 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
                         version.Width = videoStream.width;
                         version.Height = videoStream.height;
                         version.VideoScanKind = ScanKindFromFieldOrder(videoStream.field_order);
+                        version.InterlacedRatio = null;
                         version.RFrameRate = videoStream.r_frame_rate;
 
                         var stream = new MediaStream
@@ -600,4 +695,27 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
             null);
     }
     // ReSharper restore InconsistentNaming
+
+    [GeneratedRegex(@"\[SAR\s+([0-9]+:[0-9]+)\s+DAR\s+([0-9]+:[0-9]+)\]")]
+    private static partial Regex SarDarRegex();
+
+    [GeneratedRegex(@"Single frame detection: TFF: (\d+) BFF: (\d+) Progressive: (\d+)")]
+    private static partial Regex SingleFrameRegex();
+
+    [GeneratedRegex(@"Multi frame detection: TFF: (\d+) BFF: (\d+) Progressive: (\d+)")]
+    private static partial Regex MultiFrameRegex();
+
+    private class IdetStatistics
+    {
+        public int SingleTff { get; set; }
+        public int SingleBff { get; set; }
+        public int SingleProgressive { get; set; }
+        public int MultiTff { get; set; }
+        public int MultiBff { get; set; }
+        public int MultiProgressive { get; set; }
+
+        public int TotalInterlacedFrames => SingleTff + SingleBff + MultiTff + MultiBff;
+        public int TotalProgressiveFrames => SingleProgressive + MultiProgressive;
+        public int TotalFrames => TotalInterlacedFrames + TotalProgressiveFrames;
+    }
 }

@@ -4,7 +4,9 @@ using CliWrap;
 using CliWrap.Buffered;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
+using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.FFmpeg;
+using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Streaming;
 using ErsatzTV.FFmpeg;
@@ -26,6 +28,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
     private readonly IGraphicsElementLoader _graphicsElementLoader;
     private readonly IMemoryCache _memoryCache;
     private readonly IMpegTsScriptService _mpegTsScriptService;
+    private readonly ILocalStatisticsProvider _localStatisticsProvider;
+    private readonly IMediaItemRepository _mediaItemRepository;
     private readonly ICustomStreamSelector _customStreamSelector;
     private readonly FFmpegProcessService _ffmpegProcessService;
     private readonly IFFmpegStreamSelector _ffmpegStreamSelector;
@@ -43,6 +47,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         IGraphicsElementLoader graphicsElementLoader,
         IMemoryCache memoryCache,
         IMpegTsScriptService mpegTsScriptService,
+        ILocalStatisticsProvider localStatisticsProvider,
+        IMediaItemRepository mediaItemRepository,
         ILogger<FFmpegLibraryProcessService> logger)
     {
         _ffmpegProcessService = ffmpegProcessService;
@@ -54,6 +60,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         _graphicsElementLoader = graphicsElementLoader;
         _memoryCache = memoryCache;
         _mpegTsScriptService = mpegTsScriptService;
+        _localStatisticsProvider = localStatisticsProvider;
+        _mediaItemRepository = mediaItemRepository;
         _logger = logger;
     }
 
@@ -62,7 +70,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         string ffprobePath,
         bool saveReports,
         Channel channel,
-        MediaVersion videoVersion,
+        MediaItemVideoVersion videoVersion,
         MediaItemAudioVersion audioVersion,
         string videoPath,
         string audioPath,
@@ -92,7 +100,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         bool canProxy,
         CancellationToken cancellationToken)
     {
-        MediaStream videoStream = await _ffmpegStreamSelector.SelectVideoStream(videoVersion);
+        MediaStream videoStream = await _ffmpegStreamSelector.SelectVideoStream(videoVersion.MediaVersion);
 
         // we cannot burst live input
         hlsRealtime = hlsRealtime || streamInputKind is StreamInputKind.Live;
@@ -100,7 +108,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         FFmpegPlaybackSettings playbackSettings = FFmpegPlaybackSettingsCalculator.CalculateSettings(
             channel.StreamingMode,
             channel.FFmpegProfile,
-            videoVersion,
+            videoVersion.MediaVersion,
             videoStream,
             start,
             now,
@@ -214,6 +222,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                 };
             });
 
+        ScanKind scanKind = await ProbeScanKind(ffmpegPath, videoVersion.MediaItem, cancellationToken);
+
         var ffmpegVideoStream = new VideoStream(
             videoStream.Index,
             videoStream.Codec,
@@ -224,12 +234,12 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                 videoStream.ColorSpace,
                 videoStream.ColorTransfer,
                 videoStream.ColorPrimaries),
-            new FrameSize(videoVersion.Width, videoVersion.Height),
-            videoVersion.SampleAspectRatio,
-            videoVersion.DisplayAspectRatio,
-            videoVersion.RFrameRate,
+            new FrameSize(videoVersion.MediaVersion.Width, videoVersion.MediaVersion.Height),
+            videoVersion.MediaVersion.SampleAspectRatio,
+            videoVersion.MediaVersion.DisplayAspectRatio,
+            videoVersion.MediaVersion.RFrameRate,
             videoPath != audioPath, // still image when paths are different
-            videoVersion.VideoScanKind == VideoScanKind.Progressive ? ScanKind.Progressive : ScanKind.Interlaced);
+            scanKind);
 
         var videoInputFile = new VideoInputFile(
             videoPath,
@@ -455,8 +465,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
 
         if (channel.FFmpegProfile.ScalingBehavior is ScalingBehavior.Crop)
         {
-            bool isTooSmallToCrop = videoVersion.Height < channel.FFmpegProfile.Resolution.Height ||
-                                    videoVersion.Width < channel.FFmpegProfile.Resolution.Width;
+            bool isTooSmallToCrop = videoVersion.MediaVersion.Height < channel.FFmpegProfile.Resolution.Height ||
+                                    videoVersion.MediaVersion.Width < channel.FFmpegProfile.Resolution.Width;
 
             // if any dimension is smaller than the crop, scale beyond the crop (beyond the target resolution)
             if (isTooSmallToCrop)
@@ -546,7 +556,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             ptsOffset,
             playbackSettings.ThreadCount,
             qsvExtraHardwareFrames,
-            videoVersion is BackgroundImageMediaVersion { IsSongWithProgress: true },
+            videoVersion.MediaVersion is BackgroundImageMediaVersion { IsSongWithProgress: true },
             false,
             GetTonemapAlgorithm(playbackSettings),
             channel.UniqueId == Guid.Empty);
@@ -582,6 +592,47 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             pipeline);
 
         return new PlayoutItemResult(command, graphicsEngineContext);
+    }
+
+    private async Task<ScanKind> ProbeScanKind(
+        string ffmpegPath,
+        MediaItem mediaItem,
+        CancellationToken cancellationToken)
+    {
+        var headVersion = mediaItem.GetHeadVersion();
+        if (headVersion.VideoScanKind is VideoScanKind.Interlaced)
+        {
+            _logger.LogDebug("Container is marked {ScanKind}", headVersion.VideoScanKind);
+            return ScanKind.Interlaced;
+        }
+
+        // skip probe if disabled
+        if (!await _configElementRepository.GetValue<bool>(
+                ConfigElementKey.FFmpegProbeForInterlacedFrames,
+                cancellationToken).IfNoneAsync(false))
+        {
+            _logger.LogDebug("Probe for interlaced frames is disabled");
+            return ScanKind.Progressive;
+        }
+
+        if (headVersion.InterlacedRatio is null)
+        {
+            _logger.LogDebug("Will probe for interlaced frames");
+
+            Option<double> maybeInterlacedRatio =
+                await _localStatisticsProvider.GetInterlacedRatio(ffmpegPath, mediaItem, cancellationToken);
+            foreach (double ratio in maybeInterlacedRatio)
+            {
+                await _mediaItemRepository.SetInterlacedRatio(mediaItem, ratio);
+            }
+        }
+
+        var result = headVersion.InterlacedRatio > 0.05 ? ScanKind.Interlaced : ScanKind.Progressive;
+        _logger.LogDebug(
+            "Content has interlaced ratio of {Ratio} - will consider as {ScanKind}",
+            headVersion.InterlacedRatio,
+            result);
+        return result;
     }
 
     public async Task<Command> ForError(
@@ -847,7 +898,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         // TODO: save reports?
         string defaultScript = await _configElementRepository
             .GetValue<string>(ConfigElementKey.FFmpegDefaultMpegTsScript, cancellationToken)
-            .IfNoneAsync("default");
+            .IfNoneAsync("Default");
         List<MpegTsScript> allScripts = _mpegTsScriptService.GetScripts();
         Option<MpegTsScript> maybeScript = Optional(allScripts.Find(s => s.Id == defaultScript));
         foreach (var script in maybeScript)

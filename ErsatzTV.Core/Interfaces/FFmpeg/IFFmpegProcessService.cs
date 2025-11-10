@@ -14,7 +14,7 @@ public interface IFFmpegProcessService
         string ffprobePath,
         bool saveReports,
         Channel channel,
-        MediaVersion videoVersion,
+        MediaItemVideoVersion videoVersion,
         MediaItemAudioVersion audioVersion,
         string videoPath,
         string audioPath,
