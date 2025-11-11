@@ -102,23 +102,25 @@
                             <MudText Typo="Typo.h4" Class="mb-6">@episode.Episode. @episode.Title</MudText>
                             <MudText Class="d-none d-md-flex" Style="flex-grow: 1">@episode.Plot</MudText>
                             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown">
-                                <MudButton Variant="Variant.Filled"
-                                           Color="Color.Primary"
-                                           StartIcon="@Icons.Material.Filled.Add"
-                                           OnClick="@(_ => AddEpisodeToCollection(episode))">
-                                    Add To Collection
-                                </MudButton>
-                                <MudButton Variant="Variant.Filled"
-                                           Color="Color.Primary"
-                                           StartIcon="@Icons.Material.Filled.PlaylistAdd"
-                                           OnClick="@(_ => AddEpisodeToPlaylist(episode))">
-                                    Add To Playlist
-                                </MudButton>
+                                <MudMenu Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Label="Add To ...">
+                                    <MudMenuItem OnClick="@(_ => AddEpisodeToCollection(episode))" Icon="@Icons.Material.Filled.Add">
+                                        Add To Collection
+                                    </MudMenuItem>
+                                    <MudMenuItem OnClick="@(_ => AddEpisodeToPlaylist(episode))" Icon="@Icons.Material.Filled.PlaylistAdd">
+                                        Add To Playlist
+                                    </MudMenuItem>
+                                </MudMenu>
                                 <MudButton Variant="Variant.Filled"
                                            Color="Color.Secondary"
                                            StartIcon="@Icons.Material.Filled.Info"
                                            OnClick="@(_ => ShowInfo(episode))">
                                     Show Media Info
+                                </MudButton>
+                                <MudButton Variant="Variant.Filled"
+                                           Color="Color.Secondary"
+                                           StartIcon="@Icons.Material.Filled.Troubleshoot"
+                                           Href="@($"system/troubleshooting/playback?mediaItem={episode.EpisodeId}")">
+                                    Troubleshoot Playback
                                 </MudButton>
                             </MudStack>
                         </div>
