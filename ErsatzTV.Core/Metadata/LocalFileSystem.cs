@@ -194,4 +194,10 @@ public class LocalFileSystem(IClient client, ILogger<LocalFileSystem> logger) : 
         await using var stream = File.OpenRead(path);
         return await md5.ComputeHashAsync(stream);
     }
+
+    public string GetCustomOrDefaultFile(string folder, string file)
+    {
+        string path = Path.Combine(folder, file);
+        return FileExists(path) ? path : Path.Combine(folder, $"_{file}");
+    }
 }

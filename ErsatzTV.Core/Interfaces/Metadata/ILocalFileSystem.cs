@@ -18,4 +18,5 @@ public interface ILocalFileSystem
     Task<string> ReadAllText(string path);
     Task<string[]> ReadAllLines(string path);
     Task<byte[]> GetHash(string path);
+    string GetCustomOrDefaultFile(string folder, string file);
 }
