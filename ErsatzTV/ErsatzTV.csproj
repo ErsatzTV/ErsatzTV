@@ -85,7 +85,7 @@
         <EmbeddedResource Include="Resources\Scripts\MpegTs\run.sh" />
         <EmbeddedResource Include="Resources\Scripts\MpegTs\run.bat" />
         <EmbeddedResource Include="Resources\Scripts\MpegTs\mpegts.yml" />
-        <EmbeddedResource Include="Resources\song_album_cover_512.png" />
+        <EmbeddedResource Include="Resources\_song_album_cover_512.png" />
         <EmbeddedResource Include="Resources\_song_background_1.png" />
         <EmbeddedResource Include="Resources\_song_background_2.png" />
         <EmbeddedResource Include="Resources\_song_background_3.png" />

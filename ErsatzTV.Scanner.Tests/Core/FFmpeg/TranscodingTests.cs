@@ -288,7 +288,7 @@ public class TranscodingTests
             localFileSystem,
             LoggerFactory.CreateLogger<FFmpegLibraryProcessService>());
 
-        var songVideoGenerator = new SongVideoGenerator(tempFilePool, mockImageCache, service);
+        var songVideoGenerator = new SongVideoGenerator(tempFilePool, mockImageCache, service, localFileSystem);
 
         var channel = new Channel(Guid.NewGuid())
         {
