@@ -28,109 +28,119 @@ public partial class GraphicsElementLoader(
         List<PlayoutItemGraphicsElement> elements,
         CancellationToken cancellationToken)
     {
-        // get max epg entries
-        int epgEntries = await GetMaxEpgEntries(elements);
-
-        // init template element variables once
-        Dictionary<string, object> templateVariables =
-            await InitTemplateVariables(context, epgEntries, cancellationToken);
-
-        // subtitles are in separate files, so they need template variables for later processing
-        context = context with { TemplateVariables = templateVariables };
-
-        // fully process references (using template variables)
-        foreach (PlayoutItemGraphicsElement reference in elements)
+        try
         {
-            switch (reference.GraphicsElement.Kind)
+            // get max epg entries
+            int epgEntries = await GetMaxEpgEntries(elements);
+
+            // init template element variables once
+            Dictionary<string, object> templateVariables =
+                await InitTemplateVariables(context, epgEntries, cancellationToken);
+
+            // subtitles are in separate files, so they need template variables for later processing
+            context = context with { TemplateVariables = templateVariables };
+
+            // fully process references (using template variables)
+            foreach (PlayoutItemGraphicsElement reference in elements)
             {
-                case GraphicsElementKind.Text:
+                switch (reference.GraphicsElement.Kind)
                 {
-                    Option<TextGraphicsElement> maybeElement = await LoadText(
-                        reference.GraphicsElement.Path,
-                        templateVariables);
-                    if (maybeElement.IsNone)
+                    case GraphicsElementKind.Text:
                     {
-                        logger.LogWarning(
-                            "Failed to load text graphics element from file {Path}; ignoring",
-                            reference.GraphicsElement.Path);
-                    }
-
-                    foreach (TextGraphicsElement element in maybeElement)
-                    {
-                        context.Elements.Add(new TextElementDataContext(element));
-                    }
-
-                    break;
-                }
-                case GraphicsElementKind.Image:
-                {
-                    Option<ImageGraphicsElement> maybeElement = await LoadImage(
-                        reference.GraphicsElement.Path,
-                        templateVariables);
-                    if (maybeElement.IsNone)
-                    {
-                        logger.LogWarning(
-                            "Failed to load image graphics element from file {Path}; ignoring",
-                            reference.GraphicsElement.Path);
-                    }
-
-                    context.Elements.AddRange(maybeElement.Select(element => new ImageElementContext(element)));
-
-                    break;
-                }
-                case GraphicsElementKind.Motion:
-                {
-                    Option<MotionGraphicsElement> maybeElement = await LoadMotion(
-                        reference.GraphicsElement.Path,
-                        templateVariables);
-                    if (maybeElement.IsNone)
-                    {
-                        logger.LogWarning(
-                            "Failed to load motion graphics element from file {Path}; ignoring",
-                            reference.GraphicsElement.Path);
-                    }
-
-                    foreach (MotionGraphicsElement element in maybeElement)
-                    {
-                        context.Elements.Add(new MotionElementDataContext(element));
-                    }
-
-                    break;
-                }
-                case GraphicsElementKind.Subtitle:
-                {
-                    Option<SubtitleGraphicsElement> maybeElement = await LoadSubtitle(
-                        reference.GraphicsElement.Path,
-                        templateVariables);
-                    if (maybeElement.IsNone)
-                    {
-                        logger.LogWarning(
-                            "Failed to load subtitle graphics element from file {Path}; ignoring",
-                            reference.GraphicsElement.Path);
-                    }
-
-                    foreach (SubtitleGraphicsElement element in maybeElement)
-                    {
-                        var variables = new Dictionary<string, string>();
-                        if (!string.IsNullOrWhiteSpace(reference.Variables))
+                        Option<TextGraphicsElement> maybeElement = await LoadText(
+                            reference.GraphicsElement.Path,
+                            templateVariables);
+                        if (maybeElement.IsNone)
                         {
-                            variables = JsonConvert.DeserializeObject<Dictionary<string, string>>(reference.Variables);
+                            logger.LogWarning(
+                                "Failed to load text graphics element from file {Path}; ignoring",
+                                reference.GraphicsElement.Path);
                         }
 
-                        context.Elements.Add(new SubtitleElementDataContext(element, variables));
-                    }
+                        foreach (TextGraphicsElement element in maybeElement)
+                        {
+                            context.Elements.Add(new TextElementDataContext(element));
+                        }
 
-                    break;
+                        break;
+                    }
+                    case GraphicsElementKind.Image:
+                    {
+                        Option<ImageGraphicsElement> maybeElement = await LoadImage(
+                            reference.GraphicsElement.Path,
+                            templateVariables);
+                        if (maybeElement.IsNone)
+                        {
+                            logger.LogWarning(
+                                "Failed to load image graphics element from file {Path}; ignoring",
+                                reference.GraphicsElement.Path);
+                        }
+
+                        context.Elements.AddRange(maybeElement.Select(element => new ImageElementContext(element)));
+
+                        break;
+                    }
+                    case GraphicsElementKind.Motion:
+                    {
+                        Option<MotionGraphicsElement> maybeElement = await LoadMotion(
+                            reference.GraphicsElement.Path,
+                            templateVariables);
+                        if (maybeElement.IsNone)
+                        {
+                            logger.LogWarning(
+                                "Failed to load motion graphics element from file {Path}; ignoring",
+                                reference.GraphicsElement.Path);
+                        }
+
+                        foreach (MotionGraphicsElement element in maybeElement)
+                        {
+                            context.Elements.Add(new MotionElementDataContext(element));
+                        }
+
+                        break;
+                    }
+                    case GraphicsElementKind.Subtitle:
+                    {
+                        Option<SubtitleGraphicsElement> maybeElement = await LoadSubtitle(
+                            reference.GraphicsElement.Path,
+                            templateVariables);
+                        if (maybeElement.IsNone)
+                        {
+                            logger.LogWarning(
+                                "Failed to load subtitle graphics element from file {Path}; ignoring",
+                                reference.GraphicsElement.Path);
+                        }
+
+                        foreach (SubtitleGraphicsElement element in maybeElement)
+                        {
+                            var variables = new Dictionary<string, string>();
+                            if (!string.IsNullOrWhiteSpace(reference.Variables))
+                            {
+                                variables = JsonConvert.DeserializeObject<Dictionary<string, string>>(
+                                    reference.Variables);
+                            }
+
+                            context.Elements.Add(new SubtitleElementDataContext(element, variables));
+                        }
+
+                        break;
+                    }
+                    default:
+                        logger.LogInformation(
+                            "Ignoring unsupported graphics element kind {Kind}",
+                            nameof(reference.GraphicsElement.Kind));
+                        break;
                 }
-                default:
-                    logger.LogInformation(
-                        "Ignoring unsupported graphics element kind {Kind}",
-                        nameof(reference.GraphicsElement.Kind));
-                    break;
             }
+
+            return context;
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
         }
 
-        return context;
+        return null;
     }
 
     public async Task<Option<string>> TryLoadName(string fileName, CancellationToken cancellationToken)

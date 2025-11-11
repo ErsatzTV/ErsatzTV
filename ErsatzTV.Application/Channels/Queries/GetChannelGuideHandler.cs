@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using System.Text;
+using System.Text.RegularExpressions;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Iptv;
@@ -9,7 +10,7 @@ using Microsoft.IO;
 
 namespace ErsatzTV.Application.Channels;
 
-public class GetChannelGuideHandler : IRequestHandler<GetChannelGuide, Either<BaseError, ChannelGuide>>
+public partial class GetChannelGuideHandler : IRequestHandler<GetChannelGuide, Either<BaseError, ChannelGuide>>
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly ILocalFileSystem _localFileSystem;
@@ -78,9 +79,14 @@ public class GetChannelGuideHandler : IRequestHandler<GetChannelGuide, Either<Ba
                 .Replace("{RequestBase}", $"{request.Scheme}://{request.Host}{request.BaseUrl}")
                 .Replace("{AccessTokenUri}", accessTokenUri);
 
+            channelDataFragment = EtvTagRegex().Replace(channelDataFragment, string.Empty);
+
             channelDataFragments.Add(Path.GetFileNameWithoutExtension(fileName), channelDataFragment);
         }
 
         return new ChannelGuide(_recyclableMemoryStreamManager, channelsFragment, channelDataFragments);
     }
+
+    [GeneratedRegex(@"<etv:[^>]+?>.*?<\/etv:[^>]+?>|<etv:[^>]+?\/>", RegexOptions.Singleline)]
+    private static partial Regex EtvTagRegex();
 }

@@ -8,6 +8,7 @@ namespace ErsatzTV.Infrastructure.Epg;
 public static class EpgReader
 {
     public const string XmlTvDateFormat = "yyyyMMddHHmmss zzz";
+    public const string XmlTvCustomNamespace = "https://ersatztv.org/xmltv/extensions";
 
     public static List<EpgProgramme> FindProgrammesAt(Stream xmlStream, DateTimeOffset targetTime, int count)
     {
@@ -16,10 +17,15 @@ public static class EpgReader
         var serializer = new XmlSerializer(typeof(EpgProgramme));
         var settings = new XmlReaderSettings
         {
-            ConformanceLevel = ConformanceLevel.Fragment
+            ConformanceLevel = ConformanceLevel.Fragment,
         };
 
-        using var reader = XmlReader.Create(xmlStream, settings);
+        var nt = new NameTable();
+        var nsmgr = new XmlNamespaceManager(nt);
+        nsmgr.AddNamespace("etv", XmlTvCustomNamespace);
+        var context = new XmlParserContext(nt, nsmgr, null, XmlSpace.None);
+
+        using var reader = XmlReader.Create(xmlStream, settings, context);
 
         var foundCurrent = false;
 
