@@ -69,19 +69,28 @@ public class TemplateDataRepository(ILocalFileSystem localFileSystem, IDbContext
             {
                 await using FileStream stream = File.OpenRead(targetFile);
                 List<EpgProgramme> xmlProgrammes = EpgReader.FindProgrammesAt(stream, time, count);
-                var result = new List<EpgProgrammeTemplateData>();
+                var result = new List<Dictionary<string, object>>();
 
                 foreach (EpgProgramme epgProgramme in xmlProgrammes)
                 {
-                    var data = new EpgProgrammeTemplateData
+                    Dictionary<string, object> data = new()
                     {
-                        Title = epgProgramme.Title?.Value,
-                        SubTitle = epgProgramme.SubTitle?.Value,
-                        Description = epgProgramme.Description?.Value,
-                        Rating = epgProgramme.Rating?.Value,
-                        Categories = (epgProgramme.Categories ?? []).Map(c => c.Value).ToArray(),
-                        Date = epgProgramme.Date?.Value
+                        ["Title"] = epgProgramme.Title?.Value,
+                        ["SubTitle"] = epgProgramme.SubTitle?.Value,
+                        ["Description"] = epgProgramme.Description?.Value,
+                        ["Rating"] = epgProgramme.Rating?.Value,
+                        ["Categories"] = (epgProgramme.Categories ?? []).Map(c => c.Value).ToArray(),
+                        ["Date"] = epgProgramme.Date?.Value
                     };
+
+                    if (epgProgramme.OtherElements?.Length > 0)
+                    {
+                        foreach (var otherElement in epgProgramme.OtherElements.Where(e =>
+                                     e.NamespaceURI == EpgReader.XmlTvCustomNamespace))
+                        {
+                            data[otherElement.LocalName] = otherElement.InnerText;
+                        }
+                    }
 
                     if (DateTimeOffset.TryParseExact(
                             epgProgramme.Start,
@@ -90,7 +99,7 @@ public class TemplateDataRepository(ILocalFileSystem localFileSystem, IDbContext
                             DateTimeStyles.None,
                             out DateTimeOffset start))
                     {
-                        data.Start = start;
+                        data["Start"] = start;
                     }
 
                     if (DateTimeOffset.TryParseExact(
@@ -100,7 +109,7 @@ public class TemplateDataRepository(ILocalFileSystem localFileSystem, IDbContext
                             DateTimeStyles.None,
                             out DateTimeOffset stop))
                     {
-                        data.Stop = stop;
+                        data["Stop"] = stop;
                     }
 
                     result.Add(data);

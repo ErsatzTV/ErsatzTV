@@ -1,3 +1,4 @@
+using System.Xml;
 using System.Xml.Serialization;
 
 namespace ErsatzTV.Infrastructure.Epg.Models;
@@ -36,8 +37,11 @@ public class EpgProgramme
     public EpgRating Rating { get; set; }
 
     [XmlElement("previously-shown")]
-    public object PreviouslyShown { get; set; } // Use object for presence check
+    public object PreviouslyShown { get; set; }
 
     [XmlElement("date")]
     public EpgDate Date { get; set; }
+
+    [XmlAnyElement]
+    public XmlElement[] OtherElements { get; set; }
 }

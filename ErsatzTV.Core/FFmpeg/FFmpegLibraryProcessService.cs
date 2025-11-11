@@ -534,7 +534,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
 
             context = await _graphicsElementLoader.LoadAll(context, graphicsElements, cancellationToken);
 
-            if (context.Elements.Count > 0)
+            if (context?.Elements?.Count > 0)
             {
                 graphicsEngineInput = new GraphicsEngineInput();
                 graphicsEngineContext = context;

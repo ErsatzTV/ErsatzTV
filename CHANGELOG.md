@@ -43,6 +43,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Add `Troubleshoot Playback` buttons on movie and episode detail pages
 - Add song background and missing album art customization
   - Default files start with an underscore; custom versions must remove the underscore
+- Expose arbitrary EPG data to graphics engine via channel guide templates
+  - XML nodes using the `etv:` namespace will be passed to the graphics engine EPG template data
+  - For example, adding `<etv:episode_number_key>{{ episode_number }}</etv:episode_number_key>` to `episode.sbntxt` will also add the `episode_number_key` field to all EPG items in the graphics engine
+  - All values parsed from XMLTV will be available as strings in the graphics engine (not numbers)
+  - All `etv:` nodes will be stripped from the XMLTV data when requested by a client
 
 ### Fixed
 - Fix HLS Direct playback with Jellyfin 10.11
