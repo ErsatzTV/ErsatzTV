@@ -3,6 +3,7 @@ using System.Text;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
+using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.FFmpeg.State;
 
 namespace ErsatzTV.Core.FFmpeg;
@@ -12,6 +13,7 @@ public class SongVideoGenerator : ISongVideoGenerator
     private static readonly Random Random = new();
     private static readonly Lock RandomLock = new();
     private readonly IFFmpegProcessService _ffmpegProcessService;
+    private readonly ILocalFileSystem _localFileSystem;
     private readonly IImageCache _imageCache;
 
     private readonly ITempFilePool _tempFilePool;
@@ -19,11 +21,13 @@ public class SongVideoGenerator : ISongVideoGenerator
     public SongVideoGenerator(
         ITempFilePool tempFilePool,
         IImageCache imageCache,
-        IFFmpegProcessService ffmpegProcessService)
+        IFFmpegProcessService ffmpegProcessService,
+        ILocalFileSystem localFileSystem)
     {
         _tempFilePool = tempFilePool;
         _imageCache = imageCache;
         _ffmpegProcessService = ffmpegProcessService;
+        _localFileSystem = localFileSystem;
     }
 
     public async Task<Tuple<string, MediaVersion>> GenerateSongVideo(
@@ -46,14 +50,14 @@ public class SongVideoGenerator : ISongVideoGenerator
         };
 
         string[] backgrounds =
-        {
+        [
             "song_background_1.png",
             "song_background_2.png",
             "song_background_3.png"
-        };
+        ];
 
         // use random ETV color by default
-        string backgroundPath = Path.Combine(
+        string backgroundPath = _localFileSystem.GetCustomOrDefaultFile(
             FileSystemLayout.ResourcesCacheFolder,
             backgrounds[NextRandom(backgrounds.Length)]);
 
@@ -163,7 +167,7 @@ public class SongVideoGenerator : ISongVideoGenerator
                     {
                         Id = 0,
                         ArtworkKind = ArtworkKind.Thumbnail,
-                        Path = Path.Combine(FileSystemLayout.ResourcesCacheFolder, "song_album_cover_512.png")
+                        Path = _localFileSystem.GetCustomOrDefaultFile(FileSystemLayout.ResourcesCacheFolder, "song_album_cover_512.png")
                     });
 
             // signal that we want to use cover art as watermark

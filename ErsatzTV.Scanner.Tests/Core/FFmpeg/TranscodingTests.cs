@@ -285,9 +285,10 @@ public class TranscodingTests
             Substitute.For<IMpegTsScriptService>(),
             Substitute.For<ILocalStatisticsProvider>(),
             Substitute.For<IMediaItemRepository>(),
+            localFileSystem,
             LoggerFactory.CreateLogger<FFmpegLibraryProcessService>());
 
-        var songVideoGenerator = new SongVideoGenerator(tempFilePool, mockImageCache, service);
+        var songVideoGenerator = new SongVideoGenerator(tempFilePool, mockImageCache, service, localFileSystem);
 
         var channel = new Channel(Guid.NewGuid())
         {
@@ -994,6 +995,7 @@ public class TranscodingTests
             Substitute.For<IMpegTsScriptService>(),
             Substitute.For<ILocalStatisticsProvider>(),
             Substitute.For<IMediaItemRepository>(),
+            Substitute.For<ILocalFileSystem>(),
             LoggerFactory.CreateLogger<FFmpegLibraryProcessService>());
 
         return service;

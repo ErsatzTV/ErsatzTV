@@ -881,13 +881,9 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
 
     private string GetMovieTemplateFileName()
     {
-        string templateFileName = Path.Combine(FileSystemLayout.ChannelGuideTemplatesFolder, "movie.sbntxt");
-
-        // fall back to default template
-        if (!_localFileSystem.FileExists(templateFileName))
-        {
-            templateFileName = Path.Combine(FileSystemLayout.ChannelGuideTemplatesFolder, "_movie.sbntxt");
-        }
+        string templateFileName = _localFileSystem.GetCustomOrDefaultFile(
+            FileSystemLayout.ChannelGuideTemplatesFolder,
+            "movie.sbntxt");
 
         // fail if file doesn't exist
         if (!_localFileSystem.FileExists(templateFileName))
@@ -904,13 +900,9 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
 
     private string GetEpisodeTemplateFileName()
     {
-        string templateFileName = Path.Combine(FileSystemLayout.ChannelGuideTemplatesFolder, "episode.sbntxt");
-
-        // fall back to default template
-        if (!_localFileSystem.FileExists(templateFileName))
-        {
-            templateFileName = Path.Combine(FileSystemLayout.ChannelGuideTemplatesFolder, "_episode.sbntxt");
-        }
+        string templateFileName = _localFileSystem.GetCustomOrDefaultFile(
+            FileSystemLayout.ChannelGuideTemplatesFolder,
+            "episode.sbntxt");
 
         // fail if file doesn't exist
         if (!_localFileSystem.FileExists(templateFileName))
@@ -927,13 +919,9 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
 
     private string GetMusicVideoTemplateFileName()
     {
-        string templateFileName = Path.Combine(FileSystemLayout.ChannelGuideTemplatesFolder, "musicVideo.sbntxt");
-
-        // fall back to default template
-        if (!_localFileSystem.FileExists(templateFileName))
-        {
-            templateFileName = Path.Combine(FileSystemLayout.ChannelGuideTemplatesFolder, "_musicVideo.sbntxt");
-        }
+        string templateFileName = _localFileSystem.GetCustomOrDefaultFile(
+            FileSystemLayout.ChannelGuideTemplatesFolder,
+            "musicVideo.sbntxt");
 
         // fail if file doesn't exist
         if (!_localFileSystem.FileExists(templateFileName))
@@ -950,13 +938,9 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
 
     private string GetSongTemplateFileName()
     {
-        string templateFileName = Path.Combine(FileSystemLayout.ChannelGuideTemplatesFolder, "song.sbntxt");
-
-        // fall back to default template
-        if (!_localFileSystem.FileExists(templateFileName))
-        {
-            templateFileName = Path.Combine(FileSystemLayout.ChannelGuideTemplatesFolder, "_song.sbntxt");
-        }
+        string templateFileName = _localFileSystem.GetCustomOrDefaultFile(
+            FileSystemLayout.ChannelGuideTemplatesFolder,
+            "song.sbntxt");
 
         // fail if file doesn't exist
         if (!_localFileSystem.FileExists(templateFileName))
@@ -973,13 +957,9 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
 
     private string GetOtherVideoTemplateFileName()
     {
-        string templateFileName = Path.Combine(FileSystemLayout.ChannelGuideTemplatesFolder, "otherVideo.sbntxt");
-
-        // fall back to default template
-        if (!_localFileSystem.FileExists(templateFileName))
-        {
-            templateFileName = Path.Combine(FileSystemLayout.ChannelGuideTemplatesFolder, "_otherVideo.sbntxt");
-        }
+        string templateFileName = _localFileSystem.GetCustomOrDefaultFile(
+            FileSystemLayout.ChannelGuideTemplatesFolder,
+            "otherVideo.sbntxt");
 
         // fail if file doesn't exist
         if (!_localFileSystem.FileExists(templateFileName))

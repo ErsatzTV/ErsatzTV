@@ -41,6 +41,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Error streams will prioritize using `background.png` if it exists
     - Replacing this `background.png` file will allow custom error/offline backgrounds
 - Add `Troubleshoot Playback` buttons on movie and episode detail pages
+- Add song background and missing album art customization
+  - Default files start with an underscore; custom versions must remove the underscore
 
 ### Fixed
 - Fix HLS Direct playback with Jellyfin 10.11

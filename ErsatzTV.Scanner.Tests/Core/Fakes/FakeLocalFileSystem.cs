@@ -6,8 +6,6 @@ namespace ErsatzTV.Scanner.Tests.Core.Fakes;
 
 public class FakeLocalFileSystem : ILocalFileSystem
 {
-    public static readonly byte[] TestBytes = { 1, 2, 3, 4, 5 };
-
     private readonly List<FakeFileEntry> _files;
     private readonly List<FakeFolderEntry> _folders;
 
@@ -64,7 +62,11 @@ public class FakeLocalFileSystem : ILocalFileSystem
     public Task<string[]> ReadAllLines(string path) => throw new NotImplementedException();
     public Task<byte[]> GetHash(string path) => throw new NotImplementedException();
 
-    public Task<byte[]> ReadAllBytes(string path) => TestBytes.AsTask();
+    public string GetCustomOrDefaultFile(string folder, string file)
+    {
+        string path = Path.Combine(folder, file);
+        return FileExists(path) ? path : Path.Combine(folder, $"_{file}");
+    }
 
     private static List<DirectoryInfo> Split(DirectoryInfo path)
     {
