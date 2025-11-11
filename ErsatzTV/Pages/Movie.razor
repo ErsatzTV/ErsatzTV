@@ -66,23 +66,25 @@
                 </MudCard>
             }
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="mb-6">
-                <MudButton Variant="Variant.Filled"
-                           Color="Color.Primary"
-                           StartIcon="@Icons.Material.Filled.Add"
-                           OnClick="@AddToCollection">
-                    Add To Collection
-                </MudButton>
-                <MudButton Variant="Variant.Filled"
-                           Color="Color.Primary"
-                           StartIcon="@Icons.Material.Filled.PlaylistAdd"
-                           OnClick="@AddToPlaylist">
-                    Add To Playlist
-                </MudButton>
+                <MudMenu Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Label="Add To ...">
+                    <MudMenuItem OnClick="@AddToCollection" Icon="@Icons.Material.Filled.Add">
+                        Add To Collection
+                    </MudMenuItem>
+                    <MudMenuItem OnClick="@AddToPlaylist" Icon="@Icons.Material.Filled.PlaylistAdd">
+                        Add To Playlist
+                    </MudMenuItem>
+                </MudMenu>
                 <MudButton Variant="Variant.Filled"
                            Color="Color.Secondary"
                            StartIcon="@Icons.Material.Filled.Info"
                            OnClick="@ShowInfo">
                     Show Media Info
+                </MudButton>
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Secondary"
+                           StartIcon="@Icons.Material.Filled.Troubleshoot"
+                           Href="@($"system/troubleshooting/playback?mediaItem={MovieId}")">
+                    Troubleshoot Playback
                 </MudButton>
             </MudStack>
         </div>
