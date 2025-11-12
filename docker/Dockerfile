@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/aspnet:9.0-noble-amd64 AS dotnet-runtime
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-noble-amd64 AS dotnet-runtime
 
 FROM --platform=linux/amd64 ghcr.io/ersatztv/ersatztv-ffmpeg:7.1.1 AS runtime-base
 COPY --from=dotnet-runtime /usr/share/dotnet /usr/share/dotnet
