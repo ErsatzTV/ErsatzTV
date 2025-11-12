@@ -788,7 +788,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         _logger.LogDebug("HW accel mode: {HwAccel}", hwAccel);
 
         var ffmpegState = new FFmpegState(
-            false,
+            channel.Number == ".troubleshooting",
             HardwareAccelerationMode.None, // no hw accel decode since errors loop
             hwAccel,
             VaapiDriverName(hwAccel, vaapiDriver),
@@ -836,7 +836,9 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             VaapiDisplayName(hwAccel, vaapiDisplay),
             VaapiDriverName(hwAccel, vaapiDriver),
             VaapiDeviceName(hwAccel, vaapiDevice),
-            FileSystemLayout.FFmpegReportsFolder,
+            channel.Number == ".troubleshooting"
+                ? FileSystemLayout.TranscodeTroubleshootingFolder
+                : FileSystemLayout.FFmpegReportsFolder,
             FileSystemLayout.FontsCacheFolder,
             ffmpegPath);
 
