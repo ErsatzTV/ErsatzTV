@@ -63,7 +63,7 @@ public class MotionElement(
             ProbeResult probeResult = await ProbeMotionElement(context.FrameSize);
             var overlayDuration = motionElement.EndBehavior switch
             {
-                MotionEndBehavior.Loop => context.Duration,
+                MotionEndBehavior.Loop => context.Seek + context.Duration,
                 MotionEndBehavior.Hold => probeResult.Duration + holdDuration,
                 _ => probeResult.Duration
             };

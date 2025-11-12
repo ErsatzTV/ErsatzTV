@@ -71,6 +71,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - This fix applies to all libraries (local and media server)
 - Fix (3 year old) bug removing tags from local libraries when they are removed from NFO files (all content types)
   - New scans will properly remove old tags; NFO files may need to be touched to force updating during a scan
+- Fix bug where looping motion graphics wouldn't be displayed when seeking into second half of content
 
 ### Changed
 - Use smaller batch size for search index updates (100, down from 1000)
