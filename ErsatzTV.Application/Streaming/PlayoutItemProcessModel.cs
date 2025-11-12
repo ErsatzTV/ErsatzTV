@@ -9,4 +9,5 @@ public record PlayoutItemProcessModel(
     Option<TimeSpan> MaybeDuration,
     DateTimeOffset Until,
     bool IsComplete,
-    Option<long> SegmentKey);
+    Option<long> SegmentKey,
+    Option<int> MediaItemId);

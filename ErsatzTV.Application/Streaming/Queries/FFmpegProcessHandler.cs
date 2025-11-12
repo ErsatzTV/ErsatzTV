@@ -49,22 +49,41 @@ public abstract class FFmpegProcessHandler<T> : IRequestHandler<T, Either<BaseEr
             await FFprobePathMustExist(dbContext, cancellationToken))
         .Apply((channel, ffmpegPath, ffprobePath) => Tuple(channel, ffmpegPath, ffprobePath));
 
-    private static Task<Validation<BaseError, Channel>> ChannelMustExist(
+    private static async Task<Validation<BaseError, Channel>> ChannelMustExist(
         TvContext dbContext,
         T request,
-        CancellationToken cancellationToken) =>
-        dbContext.Channels
+        CancellationToken cancellationToken)
+    {
+        Option<Channel> maybeChannel = await dbContext.Channels
+            .AsNoTracking()
             .Include(c => c.FFmpegProfile)
             .ThenInclude(p => p.Resolution)
             .Include(c => c.Artwork)
             .Include(c => c.Watermark)
-            .SelectOneAsync(c => c.Number, c => c.Number == request.ChannelNumber, cancellationToken)
-            .MapT(channel =>
+            .SelectOneAsync(c => c.Number, c => c.Number == request.ChannelNumber, cancellationToken);
+
+        foreach (var channel in maybeChannel)
+        {
+            channel.StreamingMode = request.Mode;
+            foreach (int ffmpegProfileId in request.FFmpegProfileId)
             {
-                channel.StreamingMode = request.Mode;
-                return channel;
-            })
-            .Map(o => o.ToValidation<BaseError>($"Channel number {request.ChannelNumber} does not exist."));
+                Option<FFmpegProfile> maybeFFmpegProfile = await dbContext.FFmpegProfiles
+                    .AsNoTracking()
+                    .Include(ff => ff.Resolution)
+                    .SelectOneAsync(ff => ff.Id, ff => ff.Id == ffmpegProfileId, cancellationToken);
+
+                foreach (var ffmpegProfile in maybeFFmpegProfile)
+                {
+                    channel.FFmpegProfile = ffmpegProfile;
+                    channel.FFmpegProfileId = ffmpegProfile.Id;
+                }
+            }
+
+            return channel;
+        }
+
+        return BaseError.New($"Channel number {request.ChannelNumber} does not exist.");
+    }
 
     private static Task<Validation<BaseError, string>> FFmpegPathMustExist(
         TvContext dbContext,

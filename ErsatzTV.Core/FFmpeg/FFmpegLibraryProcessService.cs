@@ -566,7 +566,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             videoVersion.MediaVersion is BackgroundImageMediaVersion { IsSongWithProgress: true },
             false,
             GetTonemapAlgorithm(playbackSettings),
-            channel.UniqueId == Guid.Empty);
+            channel.Number == ".troubleshooting");
 
         _logger.LogDebug("FFmpeg desired state {FrameState}", desiredState);
 
@@ -598,7 +598,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             graphicsEngineInput,
             pipeline);
 
-        return new PlayoutItemResult(command, graphicsEngineContext);
+        return new PlayoutItemResult(command, graphicsEngineContext, videoVersion.MediaItem.Id);
     }
 
     private async Task<ScanKind> ProbeScanKind(
@@ -788,7 +788,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         _logger.LogDebug("HW accel mode: {HwAccel}", hwAccel);
 
         var ffmpegState = new FFmpegState(
-            false,
+            channel.Number == ".troubleshooting",
             HardwareAccelerationMode.None, // no hw accel decode since errors loop
             hwAccel,
             VaapiDriverName(hwAccel, vaapiDriver),
@@ -812,7 +812,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             false,
             false,
             GetTonemapAlgorithm(playbackSettings),
-            channel.UniqueId == Guid.Empty);
+            channel.Number == ".troubleshooting");
 
         var ffmpegSubtitleStream = new ErsatzTV.FFmpeg.MediaStream(0, "ass", StreamKind.Video);
 
@@ -836,7 +836,9 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             VaapiDisplayName(hwAccel, vaapiDisplay),
             VaapiDriverName(hwAccel, vaapiDriver),
             VaapiDeviceName(hwAccel, vaapiDevice),
-            FileSystemLayout.FFmpegReportsFolder,
+            channel.Number == ".troubleshooting"
+                ? FileSystemLayout.TranscodeTroubleshootingFolder
+                : FileSystemLayout.FFmpegReportsFolder,
             FileSystemLayout.FontsCacheFolder,
             ffmpegPath);
 

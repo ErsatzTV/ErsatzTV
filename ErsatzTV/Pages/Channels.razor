@@ -36,7 +36,7 @@
                         <col style="width: 15%"/>
                         <col style="width: 15%"/>
                         <col style="width: 15%"/>
-                        <col style="width: 240px;"/>
+                        <col style="width: 300px;"/>
                     </MudHidden>
                 </ColGroup>
                 <HeaderContent>
@@ -110,13 +110,25 @@
                             }
                             else
                             {
-                                <div style="width: 48px"></div>
+                            <div style="width: 48px"></div>
                             }
                             <MudTooltip Text="Edit Channel">
                                 <MudIconButton Icon="@Icons.Material.Filled.Edit"
                                                Href="@($"channels/{context.Id}")">
                                 </MudIconButton>
                             </MudTooltip>
+                            @if (context.PlayoutCount > 0)
+                            {
+                                <MudTooltip Text="Troubleshoot Channel">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Troubleshoot"
+                                                   Href="@($"system/troubleshooting/playback?channel={context.Id}")">
+                                    </MudIconButton>
+                                </MudTooltip>
+                            }
+                            else
+                            {
+                                <div style="width: 48px"></div>
+                            }
                             <MudTooltip Text="Delete Channel">
                                 <MudIconButton Icon="@Icons.Material.Filled.Delete"
                                                OnClick="@(_ => DeleteChannelAsync(context))">

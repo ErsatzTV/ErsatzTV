@@ -1,4 +1,5 @@
 using Dapper;
+using ErsatzTV.Application.Streaming;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
@@ -49,6 +50,70 @@ public class PrepareTroubleshootingPlaybackHandler(
         {
             using var logContext = LogContext.PushProperty(InMemoryLogService.CorrelationIdKey, request.SessionId);
             await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+
+            if (request.ChannelId > 0)
+            {
+                if (request.Start.IsNone)
+                {
+                    return BaseError.New("Channel start is required");
+                }
+
+                if (entityLocker.IsTroubleshootingPlaybackLocked())
+                {
+                    return BaseError.New("Troubleshooting playback is locked");
+                }
+
+                entityLocker.LockTroubleshootingPlayback();
+
+                localFileSystem.EnsureFolderExists(FileSystemLayout.TranscodeTroubleshootingFolder);
+                localFileSystem.EmptyFolder(FileSystemLayout.TranscodeTroubleshootingFolder);
+
+                foreach (var start in request.Start)
+                {
+                    Option<Channel> maybeChannel = await dbContext.Channels
+                        .AsNoTracking()
+                        .SelectOneAsync(c => c.Id, c => c.Id == request.ChannelId, cancellationToken);
+
+                    foreach (var channel in maybeChannel)
+                    {
+                        Either<BaseError, PlayoutItemProcessModel> result = await mediator.Send(
+                            new GetPlayoutItemProcessByChannelNumber(
+                                channel.Number,
+                                request.StreamingMode,
+                                start,
+                                StartAtZero: false,
+                                HlsRealtime: false,
+                                start,
+                                TimeSpan.Zero,
+                                TargetFramerate: Option<int>.None,
+                                IsTroubleshooting: true,
+                                request.FFmpegProfileId),
+                            cancellationToken);
+
+                        foreach (var error in result.LeftToSeq())
+                        {
+                            await mediator.Publish(
+                                new PlaybackTroubleshootingCompletedNotification(
+                                    -1,
+#pragma warning disable CA2201
+                                    new Exception(error.ToString()),
+#pragma warning restore CA2201
+                                    Option<double>.None),
+                                cancellationToken);
+                            entityLocker.UnlockTroubleshootingPlayback();
+                        }
+
+                        return result.Map(model => new PlayoutItemResult(model.Process, model.GraphicsEngineContext, model.MediaItemId));
+                    }
+
+                    if (maybeChannel.IsNone)
+                    {
+                        entityLocker.UnlockTroubleshootingPlayback();
+                        return BaseError.New($"Channel {request.ChannelId} does not exist");
+                    }
+                }
+            }
+
             Validation<BaseError, Tuple<MediaItem, string, string, FFmpegProfile>> validation = await Validate(
                 dbContext,
                 request,
@@ -67,7 +132,9 @@ public class PrepareTroubleshootingPlaybackHandler(
         catch (Exception ex)
         {
             entityLocker.UnlockTroubleshootingPlayback();
-            await mediator.Publish(new PlaybackTroubleshootingCompletedNotification(-1, ex, Option<double>.None), cancellationToken);
+            await mediator.Publish(
+                new PlaybackTroubleshootingCompletedNotification(-1, ex, Option<double>.None),
+                cancellationToken);
             logger.LogError(ex, "Error while preparing troubleshooting playback");
             return BaseError.New(ex.Message);
         }
@@ -222,7 +289,7 @@ public class PrepareTroubleshootingPlaybackHandler(
         PlayoutItemResult playoutItemResult = await ffmpegProcessService.ForPlayoutItem(
             ffmpegPath,
             ffprobePath,
-            true,
+            saveReports: true,
             channel,
             new MediaItemVideoVersion(mediaItem, videoVersion),
             new MediaItemAudioVersion(mediaItem, version),

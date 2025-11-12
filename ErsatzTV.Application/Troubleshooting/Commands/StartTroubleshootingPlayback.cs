@@ -7,5 +7,5 @@ public record StartTroubleshootingPlayback(
     Guid SessionId,
     string StreamSelector,
     PlayoutItemResult PlayoutItemResult,
-    MediaItemInfo MediaItemInfo,
+    Option<MediaItemInfo> MediaItemInfo,
     TroubleshootingInfo TroubleshootingInfo) : IRequest, IFFmpegWorkerRequest;

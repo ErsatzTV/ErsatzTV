@@ -25,6 +25,12 @@ public class ArchiveTroubleshootingResultsHandler(ILocalFileSystem localFileSyst
                 continue;
             }
 
+            if (fileName.Equals("logs.txt", StringComparison.OrdinalIgnoreCase))
+            {
+                zipArchive.CreateEntryFromFile(file, fileName);
+                continue;
+            }
+
             if (Path.GetExtension(file).Equals(".json", StringComparison.OrdinalIgnoreCase))
             {
                 zipArchive.CreateEntryFromFile(file, fileName);

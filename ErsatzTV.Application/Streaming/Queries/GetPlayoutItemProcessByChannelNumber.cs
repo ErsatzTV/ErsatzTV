@@ -10,11 +10,14 @@ public record GetPlayoutItemProcessByChannelNumber(
     bool HlsRealtime,
     DateTimeOffset ChannelStart,
     TimeSpan PtsOffset,
-    Option<int> TargetFramerate) : FFmpegProcessRequest(
+    Option<int> TargetFramerate,
+    bool IsTroubleshooting,
+    Option<int> FFmpegProfileId) : FFmpegProcessRequest(
     ChannelNumber,
     Mode,
     Now,
     StartAtZero,
     HlsRealtime,
     ChannelStart,
-    PtsOffset);
+    PtsOffset,
+    FFmpegProfileId);

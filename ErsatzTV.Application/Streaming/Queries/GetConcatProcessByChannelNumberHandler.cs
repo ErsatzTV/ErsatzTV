@@ -44,6 +44,7 @@ public class GetConcatProcessByChannelNumberHandler : FFmpegProcessHandler<GetCo
             Option<TimeSpan>.None,
             DateTimeOffset.MaxValue,
             true,
-            Option<long>.None);
+            Option<long>.None,
+            Option<int>.None);
     }
 }

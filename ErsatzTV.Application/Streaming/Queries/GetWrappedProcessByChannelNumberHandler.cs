@@ -46,6 +46,7 @@ public class GetWrappedProcessByChannelNumberHandler : FFmpegProcessHandler<GetW
             Option<TimeSpan>.None,
             DateTimeOffset.MaxValue,
             true,
-            Option<long>.None);
+            Option<long>.None,
+            Option<int>.None);
     }
 }

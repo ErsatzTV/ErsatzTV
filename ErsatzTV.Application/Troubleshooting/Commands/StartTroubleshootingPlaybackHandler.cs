@@ -45,11 +45,14 @@ public partial class StartTroubleshootingPlaybackHandler(
             using var logContext = LogContext.PushProperty(InMemoryLogService.CorrelationIdKey, request.SessionId);
 
             // write media info without title
-            string infoJson = JsonSerializer.Serialize(request.MediaItemInfo with { Title = null }, Options);
-            await File.WriteAllTextAsync(
-                Path.Combine(FileSystemLayout.TranscodeTroubleshootingFolder, "media_info.json"),
-                infoJson,
-                cancellationToken);
+            foreach (var mediaInfo in request.MediaItemInfo)
+            {
+                string infoJson = JsonSerializer.Serialize(mediaInfo with { Title = null }, Options);
+                await File.WriteAllTextAsync(
+                    Path.Combine(FileSystemLayout.TranscodeTroubleshootingFolder, "media_info.json"),
+                    infoJson,
+                    cancellationToken);
+            }
 
             // write troubleshooting info
             string troubleshootingInfoJson = JsonSerializer.Serialize(
@@ -140,6 +143,8 @@ public partial class StartTroubleshootingPlaybackHandler(
                     .WithValidation(CommandResultValidation.None)
                     .ExecuteAsync(linkedCts.Token);
 
+                logger.LogDebug("Troubleshooting playback completed with exit code {ExitCode}", commandResult.ExitCode);
+
                 try
                 {
                     IEnumerable<string> logs = logService.Sink.GetLogs(request.SessionId);
@@ -175,8 +180,6 @@ public partial class StartTroubleshootingPlaybackHandler(
                         Option<Exception>.None,
                         maybeSpeed),
                     linkedCts.Token);
-
-                logger.LogDebug("Troubleshooting playback completed with exit code {ExitCode}", commandResult.ExitCode);
 
                 if (commandResult.ExitCode != 0)
                 {
