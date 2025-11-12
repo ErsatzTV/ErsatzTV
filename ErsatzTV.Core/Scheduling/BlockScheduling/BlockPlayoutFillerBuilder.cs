@@ -65,12 +65,16 @@ public class BlockPlayoutFillerBuilder(
 
         var collectionEnumerators = new Dictionary<CollectionKey, IMediaCollectionEnumerator>();
 
+        // history doesn't have an equivalent to "remove before"
+        // so for break content, let's remove all corresponding items that should be removed
+        var itemsForBreakContent = allItems.Where(x => x.FinishOffset >= removeBefore).ToList();
+
         var breakContentResult = await AddBreakContent(
             playout,
             referenceData,
             mode,
             collectionEnumerators,
-            allItems,
+            itemsForBreakContent,
             filteredExistingHistory,
             result.AddedHistory,
             cancellationToken);
@@ -92,12 +96,16 @@ public class BlockPlayoutFillerBuilder(
             .ToList();
         allItems.AddRange(result.AddedItems);
 
+        // history doesn't have an equivalent to "remove before"
+        // so for break content, let's remove all corresponding items that should be removed
+        itemsForBreakContent = allItems.Where(x => x.FinishOffset >= removeBefore).ToList();
+
         result = await AddDefaultFiller(
             playout,
             referenceData,
             result,
             collectionEnumerators,
-            allItems,
+            itemsForBreakContent,
             filteredExistingHistory,
             cancellationToken);
 
