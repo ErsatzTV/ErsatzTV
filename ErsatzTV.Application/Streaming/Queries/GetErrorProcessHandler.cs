@@ -42,6 +42,7 @@ public class GetErrorProcessHandler(
             request.MaybeDuration,
             request.Until,
             true,
-            now.ToUnixTimeSeconds());
+            now.ToUnixTimeSeconds(),
+            Option<int>.None);
     }
 }

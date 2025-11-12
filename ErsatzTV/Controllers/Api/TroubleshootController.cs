@@ -29,6 +29,8 @@ public class TroubleshootController(
         [FromQuery]
         int mediaItem,
         [FromQuery]
+        int channel,
+        [FromQuery]
         int ffmpegProfile,
         [FromQuery]
         StreamingMode streamingMode,
@@ -42,6 +44,8 @@ public class TroubleshootController(
         int? subtitleId,
         [FromQuery]
         int seekSeconds,
+        [FromQuery]
+        DateTimeOffset? start,
         CancellationToken cancellationToken)
     {
         var sessionId = Guid.NewGuid();
@@ -56,12 +60,14 @@ public class TroubleshootController(
                     sessionId,
                     streamingMode,
                     mediaItem,
+                    channel,
                     ffmpegProfile,
                     streamSelector,
                     watermark,
                     graphicsElement,
                     subtitleId,
-                    ss),
+                    ss,
+                    Optional(start)),
                 cancellationToken);
 
             if (result.IsLeft)
@@ -72,74 +78,74 @@ public class TroubleshootController(
             foreach (PlayoutItemResult playoutItemResult in result.RightToSeq())
             {
                 Either<BaseError, MediaItemInfo> maybeMediaInfo =
-                    await mediator.Send(new GetMediaItemInfo(mediaItem), cancellationToken);
-                foreach (MediaItemInfo mediaInfo in maybeMediaInfo.RightToSeq())
+                    await mediator.Send(
+                        new GetMediaItemInfo(await playoutItemResult.MediaItemId.IfNoneAsync(0)),
+                        cancellationToken);
+
+                try
                 {
-                    try
+                    TroubleshootingInfo troubleshootingInfo = await mediator.Send(
+                        new GetTroubleshootingInfo(),
+                        cancellationToken);
+
+                    // filter ffmpeg profiles
+                    troubleshootingInfo.FFmpegProfiles.RemoveAll(p => p.Id != ffmpegProfile);
+
+                    // filter watermarks
+                    troubleshootingInfo.Watermarks.RemoveAll(p => !watermark.Contains(p.Id));
+
+                    await channelWriter.WriteAsync(
+                        new StartTroubleshootingPlayback(
+                            sessionId,
+                            streamSelector,
+                            playoutItemResult,
+                            maybeMediaInfo.ToOption(),
+                            troubleshootingInfo),
+                        cancellationToken);
+
+                    string playlistFile = Path.Combine(FileSystemLayout.TranscodeTroubleshootingFolder, "live.m3u8");
+                    while (!localFileSystem.FileExists(playlistFile))
                     {
-                        TroubleshootingInfo troubleshootingInfo = await mediator.Send(
-                            new GetTroubleshootingInfo(),
-                            cancellationToken);
-
-                        // filter ffmpeg profiles
-                        troubleshootingInfo.FFmpegProfiles.RemoveAll(p => p.Id != ffmpegProfile);
-
-                        // filter watermarks
-                        troubleshootingInfo.Watermarks.RemoveAll(p => !watermark.Contains(p.Id));
-
-                        await channelWriter.WriteAsync(
-                            new StartTroubleshootingPlayback(
-                                sessionId,
-                                streamSelector,
-                                playoutItemResult,
-                                mediaInfo,
-                                troubleshootingInfo),
-                            cancellationToken);
-
-                        string playlistFile = Path.Combine(FileSystemLayout.TranscodeTroubleshootingFolder, "live.m3u8");
-                        while (!localFileSystem.FileExists(playlistFile))
+                        await Task.Delay(TimeSpan.FromMilliseconds(100), cancellationToken);
+                        if (cancellationToken.IsCancellationRequested || notifier.IsFailed(sessionId))
                         {
-                            await Task.Delay(TimeSpan.FromMilliseconds(100), cancellationToken);
-                            if (cancellationToken.IsCancellationRequested || notifier.IsFailed(sessionId))
-                            {
-                                break;
-                            }
-                        }
-
-                        int initialSegmentCount = await configElementRepository
-                            .GetValue<int>(ConfigElementKey.FFmpegInitialSegmentCount, cancellationToken)
-                            .Map(maybeCount => maybeCount.Match(c => c, () => 1));
-
-                        initialSegmentCount = Math.Max(initialSegmentCount, 2);
-
-                        bool hasSegments = false;
-                        while (!hasSegments)
-                        {
-                            await Task.Delay(TimeSpan.FromMilliseconds(100), cancellationToken);
-
-                            string[] segmentFiles = streamingMode switch
-                            {
-                                // StreamingMode.HttpLiveStreamingSegmenter => Directory.GetFiles(
-                                //     FileSystemLayout.TranscodeTroubleshootingFolder,
-                                //     "*.m4s"),
-                                _ => Directory.GetFiles(FileSystemLayout.TranscodeTroubleshootingFolder, "*.ts")
-                            };
-
-                            if (segmentFiles.Length >= initialSegmentCount)
-                            {
-                                hasSegments = true;
-                            }
-                        }
-
-                        if (!notifier.IsFailed(sessionId))
-                        {
-                            return Redirect("~/iptv/session/.troubleshooting/live.m3u8");
+                            break;
                         }
                     }
-                    finally
+
+                    int initialSegmentCount = await configElementRepository
+                        .GetValue<int>(ConfigElementKey.FFmpegInitialSegmentCount, cancellationToken)
+                        .Map(maybeCount => maybeCount.Match(c => c, () => 1));
+
+                    initialSegmentCount = Math.Max(initialSegmentCount, 2);
+
+                    bool hasSegments = false;
+                    while (!hasSegments)
                     {
-                        notifier.RemoveSession(sessionId);
+                        await Task.Delay(TimeSpan.FromMilliseconds(100), cancellationToken);
+
+                        string[] segmentFiles = streamingMode switch
+                        {
+                            // StreamingMode.HttpLiveStreamingSegmenter => Directory.GetFiles(
+                            //     FileSystemLayout.TranscodeTroubleshootingFolder,
+                            //     "*.m4s"),
+                            _ => Directory.GetFiles(FileSystemLayout.TranscodeTroubleshootingFolder, "*.ts")
+                        };
+
+                        if (segmentFiles.Length >= initialSegmentCount)
+                        {
+                            hasSegments = true;
+                        }
                     }
+
+                    if (!notifier.IsFailed(sessionId))
+                    {
+                        return Redirect("~/iptv/session/.troubleshooting/live.m3u8");
+                    }
+                }
+                finally
+                {
+                    notifier.RemoveSession(sessionId);
                 }
             }
         }
@@ -153,33 +159,9 @@ public class TroubleshootController(
 
     [HttpHead("api/troubleshoot/playback/archive")]
     [HttpGet("api/troubleshoot/playback/archive")]
-    public async Task<IActionResult> TroubleshootPlaybackArchive(
-        [FromQuery]
-        int mediaItem,
-        [FromQuery]
-        int ffmpegProfile,
-        [FromQuery]
-        StreamingMode streamingMode,
-        [FromQuery]
-        List<int> watermark,
-        [FromQuery]
-        List<int> graphicsElement,
-        [FromQuery]
-        int seekSeconds,
-        CancellationToken cancellationToken)
+    public async Task<IActionResult> TroubleshootPlaybackArchive(CancellationToken cancellationToken)
     {
-        Option<int> ss = seekSeconds > 0 ? seekSeconds : Option<int>.None;
-
-        Option<string> maybeArchivePath = await mediator.Send(
-            new ArchiveTroubleshootingResults(
-                mediaItem,
-                ffmpegProfile,
-                streamingMode,
-                watermark,
-                graphicsElement,
-                ss),
-            cancellationToken);
-
+        Option<string> maybeArchivePath = await mediator.Send(new ArchiveTroubleshootingResults(), cancellationToken);
         foreach (string archivePath in maybeArchivePath)
         {
             FileStream fs = System.IO.File.OpenRead(archivePath);

@@ -283,18 +283,31 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
 
             bool isComplete = true;
 
-            // if we are working ahead, limit to 44s (multiple of segment size)
+            TimeSpan limit = TimeSpan.Zero;
+
             if (!request.HlsRealtime)
             {
-                TimeSpan limit = TimeSpan.FromSeconds(44);
+                // if we are working ahead, limit to 44s (multiple of segment size)
+                limit = TimeSpan.FromSeconds(44);
+            }
 
-                if (duration > limit)
-                {
-                    finish = effectiveNow + limit;
-                    outPoint = inPoint + limit;
-                    duration = limit;
-                    isComplete = false;
-                }
+            if (request.IsTroubleshooting)
+            {
+                // if we are troubleshooting, limit to 30s
+                limit = TimeSpan.FromSeconds(30);
+            }
+
+            if (limit > TimeSpan.Zero && duration > limit)
+            {
+                finish = effectiveNow + limit;
+                outPoint = inPoint + limit;
+                duration = limit;
+                isComplete = false;
+            }
+
+            if (request.IsTroubleshooting)
+            {
+                channel.Number = ".troubleshooting";
             }
 
             if (_isDebugNoSync)
@@ -318,7 +331,8 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                     duration,
                     finish,
                     true,
-                    now.ToUnixTimeSeconds());
+                    now.ToUnixTimeSeconds(),
+                    Option<int>.None);
             }
 
             MediaVersion version = playoutItemWithPath.PlayoutItem.MediaItem.GetHeadVersion();
@@ -392,7 +406,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
 
             bool saveReports = await dbContext.ConfigElements
                 .GetValue<bool>(ConfigElementKey.FFmpegSaveReports, cancellationToken)
-                .Map(result => result.IfNone(false));
+                .Map(result => result.IfNone(false)) || request.IsTroubleshooting;
 
             _logger.LogDebug(
                 "S: {Start}, F: {Finish}, In: {InPoint}, Out: {OutPoint}, EffNow: {EffectiveNow}, Dur: {Duration}",
@@ -435,7 +449,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 request.ChannelStartTime,
                 request.PtsOffset,
                 request.TargetFramerate,
-                Option<string>.None,
+                request.IsTroubleshooting ? FileSystemLayout.TranscodeTroubleshootingFolder : Option<string>.None,
                 _ => { },
                 canProxy: true,
                 cancellationToken);
@@ -446,7 +460,8 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 duration,
                 finish,
                 isComplete,
-                effectiveNow.ToUnixTimeSeconds());
+                effectiveNow.ToUnixTimeSeconds(),
+                playoutItemResult.MediaItemId);
 
             return Right<BaseError, PlayoutItemProcessModel>(result);
         }
@@ -464,6 +479,14 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
             Option<TimeSpan> maybeDuration = maybeNextStart.Map(s => s - now);
 
             DateTimeOffset finish = maybeNextStart.Match(s => s, () => now);
+
+            if (request.IsTroubleshooting)
+            {
+                channel.Number = ".troubleshooting";
+
+                maybeDuration = TimeSpan.FromSeconds(30);
+                finish = now + TimeSpan.FromSeconds(30);
+            }
 
             _logger.LogWarning(
                 "Error locating playout item {@Error}. Will display error from {Start} to {Finish}",
@@ -493,7 +516,8 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                         maybeDuration,
                         finish,
                         true,
-                        now.ToUnixTimeSeconds());
+                        now.ToUnixTimeSeconds(),
+                        Option<int>.None);
                 case PlayoutItemDoesNotExistOnDisk:
                     Command doesNotExistProcess = await _ffmpegProcessService.ForError(
                         ffmpegPath,
@@ -514,7 +538,8 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                         maybeDuration,
                         finish,
                         true,
-                        now.ToUnixTimeSeconds());
+                        now.ToUnixTimeSeconds(),
+                        Option<int>.None);
                 default:
                     Command errorProcess = await _ffmpegProcessService.ForError(
                         ffmpegPath,
@@ -535,7 +560,8 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                         maybeDuration,
                         finish,
                         true,
-                        now.ToUnixTimeSeconds());
+                        now.ToUnixTimeSeconds(),
+                        Option<int>.None);
             }
         }
 

@@ -48,6 +48,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - For example, adding `<etv:episode_number_key>{{ episode_number }}</etv:episode_number_key>` to `episode.sbntxt` will also add the `episode_number_key` field to all EPG items in the graphics engine
   - All values parsed from XMLTV will be available as strings in the graphics engine (not numbers)
   - All `etv:` nodes will be stripped from the XMLTV data when requested by a client
+- Add channel troubleshooting button to channels list
+  - This will open the playback troubleshooting tool in "channel" mode
+  - This mode requires entering a date and time, and will play up to 30 seconds of *one item from that channel's playout*
 
 ### Fixed
 - Fix HLS Direct playback with Jellyfin 10.11

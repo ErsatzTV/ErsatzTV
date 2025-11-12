@@ -461,7 +461,9 @@ public class HlsSessionWorker : IHlsSessionWorker
                 realtime,
                 _channelStart,
                 ptsOffset,
-                _targetFramerate);
+                _targetFramerate,
+                IsTroubleshooting: false,
+                Option<int>.None);
 
             // _logger.LogInformation("Request {@Request}", request);
 
