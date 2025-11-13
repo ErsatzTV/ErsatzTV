@@ -26,6 +26,7 @@ public interface IFFmpegProcessService
         DateTimeOffset start,
         DateTimeOffset finish,
         DateTimeOffset now,
+        TimeSpan originalContentDuration,
         List<WatermarkOptions> watermarks,
         List<PlayoutItemGraphicsElement> graphicsElements,
         string vaapiDisplay,

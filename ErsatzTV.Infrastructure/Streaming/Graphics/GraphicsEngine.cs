@@ -94,7 +94,7 @@ public class GraphicsEngine(
         try
         {
             // `content_total_seconds` - the total number of seconds in the content
-            TimeSpan contentTotalTime = context.Seek + context.Duration;
+            TimeSpan contentTotalTime = context.Seek + context.ContentTotalDuration;
 
             while (!cancellationToken.IsCancellationRequested && frameCount < totalFrames)
             {

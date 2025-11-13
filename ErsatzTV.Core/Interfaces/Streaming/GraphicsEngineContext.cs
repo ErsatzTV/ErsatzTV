@@ -15,7 +15,8 @@ public record GraphicsEngineContext(
     DateTimeOffset ChannelStartTime,
     DateTimeOffset ContentStartTime,
     TimeSpan Seek,
-    TimeSpan Duration);
+    TimeSpan Duration,
+    TimeSpan ContentTotalDuration);
 
 public abstract record GraphicsElementContext;
 
