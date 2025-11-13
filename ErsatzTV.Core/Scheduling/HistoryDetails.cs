@@ -23,7 +23,8 @@ internal static class HistoryDetails
             blockItem.CollectionId,
             blockItem.MultiCollectionId,
             blockItem.SmartCollectionId,
-            blockItem.MediaItemId
+            blockItem.MediaItemId,
+            blockItem.SearchQuery
         };
 
         return JsonConvert.SerializeObject(key, Formatting.None, JsonSettings);
@@ -96,6 +97,7 @@ internal static class HistoryDetails
             collectionKey.SmartCollectionId,
             collectionKey.MediaItemId,
             collectionKey.PlaylistId,
+            collectionKey.SearchQuery,
             collectionKey.FakeCollectionKey
         };
 
