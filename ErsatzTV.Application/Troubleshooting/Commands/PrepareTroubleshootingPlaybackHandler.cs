@@ -303,6 +303,7 @@ public class PrepareTroubleshootingPlaybackHandler(
             now,
             now + duration,
             now,
+            duration,
             watermarks,
             graphicsElements.Map(ge => new PlayoutItemGraphicsElement { GraphicsElement = ge }).ToList(),
             ffmpegProfile.VaapiDisplay,

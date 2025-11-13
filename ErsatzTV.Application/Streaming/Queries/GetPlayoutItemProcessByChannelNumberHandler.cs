@@ -280,6 +280,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
             TimeSpan outPoint = playoutItemWithPath.PlayoutItem.OutPoint;
             DateTimeOffset effectiveNow = request.StartAtZero ? start : now;
             TimeSpan duration = finish - effectiveNow;
+            TimeSpan originalDuration = duration;
 
             bool isComplete = true;
 
@@ -434,6 +435,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 start,
                 finish,
                 effectiveNow,
+                originalDuration,
                 watermarks,
                 graphicsElements,
                 channel.FFmpegProfile.VaapiDisplay,

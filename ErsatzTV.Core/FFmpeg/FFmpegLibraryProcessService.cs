@@ -85,6 +85,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         DateTimeOffset start,
         DateTimeOffset finish,
         DateTimeOffset now,
+        TimeSpan originalContentDuration,
         List<WatermarkOptions> watermarks,
         List<PlayoutItemGraphicsElement> graphicsElements,
         string vaapiDisplay,
@@ -530,7 +531,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                 channelStartTime,
                 start,
                 await playbackSettings.StreamSeek.IfNoneAsync(TimeSpan.Zero),
-                finish - now);
+                finish - now,
+                originalContentDuration);
 
             context = await _graphicsElementLoader.LoadAll(context, graphicsElements, cancellationToken);
 

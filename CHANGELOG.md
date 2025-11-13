@@ -50,7 +50,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - All `etv:` nodes will be stripped from the XMLTV data when requested by a client
 - Add channel troubleshooting button to channels list
   - This will open the playback troubleshooting tool in "channel" mode
-  - This mode requires entering a date and time, and will play up to 30 seconds of *one item from that channel's playout*
+  - This mode requires entering a date and time, and will play up to 30 seconds of *one item from that channel's playout* starting at the entered date and time
 
 ### Fixed
 - Fix HLS Direct playback with Jellyfin 10.11
@@ -75,6 +75,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix (3 year old) bug removing tags from local libraries when they are removed from NFO files (all content types)
   - New scans will properly remove old tags; NFO files may need to be touched to force updating during a scan
 - Fix bug where looping motion graphics wouldn't be displayed when seeking into second half of content
+- Fix `content_total_duration` value in graphics engine opacity expressions
+  - This bug caused some graphics elements to display too early after first joining a channel
 
 ### Changed
 - Use smaller batch size for search index updates (100, down from 1000)
