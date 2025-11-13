@@ -4,6 +4,7 @@ using Dapper;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Extensions;
+using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Metadata;
 using ErsatzTV.Infrastructure.Extensions;
@@ -12,15 +13,13 @@ using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Infrastructure.Data.Repositories;
 
-public class MediaItemRepository : IMediaItemRepository
+public class MediaItemRepository(
+    IDbContextFactory<TvContext> dbContextFactory,
+    ILanguageCodeService languageCodeService) : IMediaItemRepository
 {
-    private readonly IDbContextFactory<TvContext> _dbContextFactory;
-
-    public MediaItemRepository(IDbContextFactory<TvContext> dbContextFactory) => _dbContextFactory = dbContextFactory;
-
     public async Task<List<CultureInfo>> GetAllKnownCultures()
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
 
         var result = new System.Collections.Generic.HashSet<CultureInfo>();
 
@@ -44,7 +43,7 @@ public class MediaItemRepository : IMediaItemRepository
 
     public async Task<List<LanguageCodeAndName>> GetAllLanguageCodesAndNames()
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
 
         var result = new System.Collections.Generic.HashSet<LanguageCodeAndName>();
 
@@ -53,7 +52,7 @@ public class MediaItemRepository : IMediaItemRepository
         var unseenCodes = new System.Collections.Generic.HashSet<string>(mediaCodes);
         foreach (string mediaCode in mediaCodes)
         {
-            foreach (string code in await dbContext.LanguageCodes.GetAllLanguageCodes(mediaCode))
+            foreach (string code in languageCodeService.GetAllLanguageCodes(mediaCode))
             {
                 Option<CultureInfo> maybeCulture = allCultures.Find(c => string.Equals(
                     code,
@@ -81,7 +80,7 @@ public class MediaItemRepository : IMediaItemRepository
 
     public async Task<List<int>> FlagFileNotFound(LibraryPath libraryPath, string path)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
 
         List<int> ids = await dbContext.Connection.QueryAsync<int>(
                 @"SELECT M.Id
@@ -101,7 +100,7 @@ public class MediaItemRepository : IMediaItemRepository
 
     public async Task<ImmutableHashSet<string>> GetAllTrashedItems(LibraryPath libraryPath)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
         return await dbContext.Connection.QueryAsync<string>(
                 @"SELECT MF.Path
                 FROM MediaItem M
@@ -114,7 +113,7 @@ public class MediaItemRepository : IMediaItemRepository
 
     public async Task SetInterlacedRatio(MediaItem mediaItem, double interlacedRatio)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
 
         var mediaVersion = mediaItem.GetHeadVersion();
         mediaVersion.InterlacedRatio = interlacedRatio;
@@ -126,7 +125,7 @@ public class MediaItemRepository : IMediaItemRepository
 
     public async Task<Unit> FlagNormal(MediaItem mediaItem)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
 
         mediaItem.State = MediaItemState.Normal;
 
@@ -137,7 +136,7 @@ public class MediaItemRepository : IMediaItemRepository
 
     public async Task<Either<BaseError, Unit>> DeleteItems(List<int> mediaItemIds)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
 
         foreach (int mediaItemId in mediaItemIds)
         {
@@ -229,7 +228,7 @@ public class MediaItemRepository : IMediaItemRepository
 
     private async Task<List<string>> GetAllLanguageCodes()
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
         return await dbContext.Connection.QueryAsync<string>(
                 @"SELECT LanguageCode FROM
                     (SELECT Language AS LanguageCode

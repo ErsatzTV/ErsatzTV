@@ -1,28 +1,25 @@
 using ErsatzTV.Core.Interfaces.Metadata;
-using ErsatzTV.Core.Interfaces.Repositories.Caching;
+using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Search;
 
 namespace ErsatzTV.Application.Search;
 
-public class ReindexMediaItemsHandler : IRequestHandler<ReindexMediaItems>
+public class ReindexMediaItemsHandler(
+    ISearchRepository searchRepository,
+    IFallbackMetadataProvider fallbackMetadataProvider,
+    ILanguageCodeService languageCodeService,
+    ISearchIndex searchIndex)
+    : IRequestHandler<ReindexMediaItems>
 {
-    private readonly ICachingSearchRepository _cachingSearchRepository;
-    private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
-    private readonly ISearchIndex _searchIndex;
-
-    public ReindexMediaItemsHandler(
-        ICachingSearchRepository cachingSearchRepository,
-        IFallbackMetadataProvider fallbackMetadataProvider,
-        ISearchIndex searchIndex)
-    {
-        _cachingSearchRepository = cachingSearchRepository;
-        _fallbackMetadataProvider = fallbackMetadataProvider;
-        _searchIndex = searchIndex;
-    }
-
     public async Task Handle(ReindexMediaItems request, CancellationToken cancellationToken)
     {
-        await _searchIndex.RebuildItems(_cachingSearchRepository, _fallbackMetadataProvider, request.MediaItemIds, cancellationToken);
-        _searchIndex.Commit();
+        await searchIndex.RebuildItems(
+            searchRepository,
+            fallbackMetadataProvider,
+            languageCodeService,
+            request.MediaItemIds,
+            cancellationToken);
+
+        searchIndex.Commit();
     }
 }

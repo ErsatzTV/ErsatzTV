@@ -2,7 +2,7 @@
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Locking;
 using ErsatzTV.Core.Interfaces.Metadata;
-using ErsatzTV.Core.Interfaces.Repositories.Caching;
+using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Interfaces.Trakt;
 using ErsatzTV.Infrastructure.Data;
@@ -16,22 +16,25 @@ public class DeleteTraktListHandler : TraktCommandBase, IRequestHandler<DeleteTr
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly IEntityLocker _entityLocker;
     private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
+    private readonly ILanguageCodeService _languageCodeService;
     private readonly ISearchIndex _searchIndex;
-    private readonly ICachingSearchRepository _searchRepository;
+    private readonly ISearchRepository _searchRepository;
 
     public DeleteTraktListHandler(
         ITraktApiClient traktApiClient,
-        ICachingSearchRepository searchRepository,
+        ISearchRepository searchRepository,
         ISearchIndex searchIndex,
         IFallbackMetadataProvider fallbackMetadataProvider,
+        ILanguageCodeService languageCodeService,
         IDbContextFactory<TvContext> dbContextFactory,
         ILogger<DeleteTraktListHandler> logger,
         IEntityLocker entityLocker)
-        : base(traktApiClient, searchRepository, searchIndex, fallbackMetadataProvider, logger)
+        : base(traktApiClient, searchRepository, searchIndex, fallbackMetadataProvider, languageCodeService, logger)
     {
         _searchRepository = searchRepository;
         _searchIndex = searchIndex;
         _fallbackMetadataProvider = fallbackMetadataProvider;
+        _languageCodeService = languageCodeService;
         _dbContextFactory = dbContextFactory;
         _entityLocker = entityLocker;
     }
@@ -65,6 +68,7 @@ public class DeleteTraktListHandler : TraktCommandBase, IRequestHandler<DeleteTr
             await _searchIndex.RebuildItems(
                 _searchRepository,
                 _fallbackMetadataProvider,
+                _languageCodeService,
                 mediaItemIds,
                 cancellationToken);
         }

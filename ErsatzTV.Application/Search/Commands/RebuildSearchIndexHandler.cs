@@ -3,7 +3,6 @@ using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
-using ErsatzTV.Core.Interfaces.Repositories.Caching;
 using ErsatzTV.Core.Interfaces.Search;
 using Humanizer;
 using Microsoft.Extensions.Logging;
@@ -14,18 +13,20 @@ public class RebuildSearchIndexHandler : IRequestHandler<RebuildSearchIndex>
 {
     private readonly IConfigElementRepository _configElementRepository;
     private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
+    private readonly ILanguageCodeService _languageCodeService;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILogger<RebuildSearchIndexHandler> _logger;
     private readonly ISearchIndex _searchIndex;
-    private readonly ICachingSearchRepository _searchRepository;
+    private readonly ISearchRepository _searchRepository;
     private readonly SystemStartup _systemStartup;
 
     public RebuildSearchIndexHandler(
         ISearchIndex searchIndex,
-        ICachingSearchRepository searchRepository,
+        ISearchRepository searchRepository,
         IConfigElementRepository configElementRepository,
         ILocalFileSystem localFileSystem,
         IFallbackMetadataProvider fallbackMetadataProvider,
+        ILanguageCodeService languageCodeService,
         SystemStartup systemStartup,
         ILogger<RebuildSearchIndexHandler> logger)
     {
@@ -35,6 +36,7 @@ public class RebuildSearchIndexHandler : IRequestHandler<RebuildSearchIndex>
         _configElementRepository = configElementRepository;
         _localFileSystem = localFileSystem;
         _fallbackMetadataProvider = fallbackMetadataProvider;
+        _languageCodeService = languageCodeService;
         _systemStartup = systemStartup;
     }
 
@@ -58,7 +60,11 @@ public class RebuildSearchIndexHandler : IRequestHandler<RebuildSearchIndex>
             _logger.LogInformation("Migrating search index to version {Version}", _searchIndex.Version);
 
             var sw = Stopwatch.StartNew();
-            await _searchIndex.Rebuild(_searchRepository, _fallbackMetadataProvider, cancellationToken);
+            await _searchIndex.Rebuild(
+                _searchRepository,
+                _fallbackMetadataProvider,
+                _languageCodeService,
+                cancellationToken);
 
             await _configElementRepository.Upsert(
                 ConfigElementKey.SearchIndexVersion,

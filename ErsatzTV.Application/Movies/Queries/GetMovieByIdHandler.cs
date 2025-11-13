@@ -2,10 +2,10 @@
 using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Emby;
 using ErsatzTV.Core.Interfaces.Jellyfin;
+using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Infrastructure.Data;
-using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
 using static ErsatzTV.Application.Movies.Mapper;
 
@@ -15,6 +15,7 @@ public class GetMovieByIdHandler : IRequestHandler<GetMovieById, Option<MovieVie
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly IEmbyPathReplacementService _embyPathReplacementService;
+    private readonly ILanguageCodeService _languageCodeService;
     private readonly IJellyfinPathReplacementService _jellyfinPathReplacementService;
     private readonly IMediaSourceRepository _mediaSourceRepository;
     private readonly IMovieRepository _movieRepository;
@@ -26,7 +27,8 @@ public class GetMovieByIdHandler : IRequestHandler<GetMovieById, Option<MovieVie
         IMediaSourceRepository mediaSourceRepository,
         IPlexPathReplacementService plexPathReplacementService,
         IJellyfinPathReplacementService jellyfinPathReplacementService,
-        IEmbyPathReplacementService embyPathReplacementService)
+        IEmbyPathReplacementService embyPathReplacementService,
+        ILanguageCodeService languageCodeService)
     {
         _dbContextFactory = dbContextFactory;
         _movieRepository = movieRepository;
@@ -34,6 +36,7 @@ public class GetMovieByIdHandler : IRequestHandler<GetMovieById, Option<MovieVie
         _plexPathReplacementService = plexPathReplacementService;
         _jellyfinPathReplacementService = jellyfinPathReplacementService;
         _embyPathReplacementService = embyPathReplacementService;
+        _languageCodeService = languageCodeService;
     }
 
     public async Task<Option<MovieViewModel>> Handle(
@@ -59,7 +62,7 @@ public class GetMovieByIdHandler : IRequestHandler<GetMovieById, Option<MovieVie
                 .Map(ms => ms.Language)
                 .ToList();
 
-            languageCodes.AddRange(await dbContext.LanguageCodes.GetAllLanguageCodes(mediaCodes));
+            languageCodes.AddRange(_languageCodeService.GetAllLanguageCodes(mediaCodes));
         }
 
         foreach (Movie movie in maybeMovie)

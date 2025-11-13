@@ -1,7 +1,7 @@
 ﻿using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
-using ErsatzTV.Core.Interfaces.Repositories.Caching;
+using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Interfaces.Trakt;
 using ErsatzTV.Core.Trakt;
@@ -15,20 +15,23 @@ namespace ErsatzTV.Application.MediaCollections;
 public abstract class TraktCommandBase
 {
     private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
+    private readonly ILanguageCodeService _languageCodeService;
     private readonly ILogger _logger;
     private readonly ISearchIndex _searchIndex;
-    private readonly ICachingSearchRepository _searchRepository;
+    private readonly ISearchRepository _searchRepository;
 
     protected TraktCommandBase(
         ITraktApiClient traktApiClient,
-        ICachingSearchRepository searchRepository,
+        ISearchRepository searchRepository,
         ISearchIndex searchIndex,
         IFallbackMetadataProvider fallbackMetadataProvider,
+        ILanguageCodeService languageCodeService,
         ILogger logger)
     {
         _searchRepository = searchRepository;
         _searchIndex = searchIndex;
         _fallbackMetadataProvider = fallbackMetadataProvider;
+        _languageCodeService = languageCodeService;
         _logger = logger;
 
         TraktApiClient = traktApiClient;
@@ -228,6 +231,7 @@ public abstract class TraktCommandBase
                 await _searchIndex.RebuildItems(
                     _searchRepository,
                     _fallbackMetadataProvider,
+                    _languageCodeService,
                     ids.ToList(),
                     cancellationToken);
             }

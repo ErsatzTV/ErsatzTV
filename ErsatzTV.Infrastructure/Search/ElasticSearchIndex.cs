@@ -6,7 +6,6 @@ using Elastic.Clients.Elasticsearch.IndexManagement;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
-using ErsatzTV.Core.Interfaces.Repositories.Caching;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Search;
 using ErsatzTV.FFmpeg;
@@ -69,8 +68,9 @@ public class ElasticSearchIndex : ISearchIndex
     }
 
     public async Task<Unit> Rebuild(
-        ICachingSearchRepository searchRepository,
+        ISearchRepository searchRepository,
         IFallbackMetadataProvider fallbackMetadataProvider,
+        ILanguageCodeService languageCodeService,
         CancellationToken cancellationToken)
     {
         DeleteIndexResponse deleteResponse = await _client.Indices.DeleteAsync(IndexName, cancellationToken);
@@ -85,17 +85,18 @@ public class ElasticSearchIndex : ISearchIndex
             return Unit.Default;
         }
 
-        await foreach (MediaItem mediaItem in searchRepository.GetAllMediaItems().WithCancellation(cancellationToken))
+        await foreach (MediaItem mediaItem in searchRepository.GetAllMediaItems(cancellationToken))
         {
-            await RebuildItem(searchRepository, fallbackMetadataProvider, mediaItem);
+            await RebuildItem(searchRepository, fallbackMetadataProvider, languageCodeService, mediaItem);
         }
 
         return Unit.Default;
     }
 
     public async Task<Unit> RebuildItems(
-        ICachingSearchRepository searchRepository,
+        ISearchRepository searchRepository,
         IFallbackMetadataProvider fallbackMetadataProvider,
+        ILanguageCodeService languageCodeService,
         IEnumerable<int> itemIds,
         CancellationToken cancellationToken)
     {
@@ -103,7 +104,7 @@ public class ElasticSearchIndex : ISearchIndex
         {
             foreach (MediaItem mediaItem in await searchRepository.GetItemToIndex(id, cancellationToken))
             {
-                await RebuildItem(searchRepository, fallbackMetadataProvider, mediaItem);
+                await RebuildItem(searchRepository, fallbackMetadataProvider, languageCodeService, mediaItem);
             }
         }
 
@@ -111,8 +112,9 @@ public class ElasticSearchIndex : ISearchIndex
     }
 
     public async Task<Unit> UpdateItems(
-        ICachingSearchRepository searchRepository,
+        ISearchRepository searchRepository,
         IFallbackMetadataProvider fallbackMetadataProvider,
+        ILanguageCodeService languageCodeService,
         List<MediaItem> items)
     {
         foreach (MediaItem item in items)
@@ -120,31 +122,31 @@ public class ElasticSearchIndex : ISearchIndex
             switch (item)
             {
                 case Movie movie:
-                    await UpdateMovie(searchRepository, movie);
+                    await UpdateMovie(languageCodeService, movie);
                     break;
                 case Show show:
-                    await UpdateShow(searchRepository, show);
+                    await UpdateShow(searchRepository, languageCodeService, show);
                     break;
                 case Season season:
-                    await UpdateSeason(searchRepository, season);
+                    await UpdateSeason(searchRepository, languageCodeService, season);
                     break;
                 case Artist artist:
-                    await UpdateArtist(searchRepository, artist);
+                    await UpdateArtist(searchRepository, languageCodeService, artist);
                     break;
                 case MusicVideo musicVideo:
-                    await UpdateMusicVideo(searchRepository, musicVideo);
+                    await UpdateMusicVideo(languageCodeService, musicVideo);
                     break;
                 case Episode episode:
-                    await UpdateEpisode(searchRepository, fallbackMetadataProvider, episode);
+                    await UpdateEpisode(languageCodeService, fallbackMetadataProvider, episode);
                     break;
                 case OtherVideo otherVideo:
-                    await UpdateOtherVideo(searchRepository, otherVideo);
+                    await UpdateOtherVideo(languageCodeService, otherVideo);
                     break;
                 case Song song:
-                    await UpdateSong(searchRepository, song);
+                    await UpdateSong(languageCodeService, song);
                     break;
                 case Image image:
-                    await UpdateImage(searchRepository, image);
+                    await UpdateImage(languageCodeService, image);
                     break;
             }
         }
@@ -266,38 +268,39 @@ public class ElasticSearchIndex : ISearchIndex
     private async Task RebuildItem(
         ISearchRepository searchRepository,
         IFallbackMetadataProvider fallbackMetadataProvider,
+        ILanguageCodeService languageCodeService,
         MediaItem mediaItem)
     {
         switch (mediaItem)
         {
             case Movie movie:
-                await UpdateMovie(searchRepository, movie);
+                await UpdateMovie(languageCodeService, movie);
                 break;
             case Show show:
-                await UpdateShow(searchRepository, show);
+                await UpdateShow(searchRepository, languageCodeService, show);
                 break;
             case Season season:
-                await UpdateSeason(searchRepository, season);
+                await UpdateSeason(searchRepository, languageCodeService, season);
                 break;
             case Artist artist:
-                await UpdateArtist(searchRepository, artist);
+                await UpdateArtist(searchRepository, languageCodeService, artist);
                 break;
             case MusicVideo musicVideo:
-                await UpdateMusicVideo(searchRepository, musicVideo);
+                await UpdateMusicVideo(languageCodeService, musicVideo);
                 break;
             case Episode episode:
-                await UpdateEpisode(searchRepository, fallbackMetadataProvider, episode);
+                await UpdateEpisode(languageCodeService, fallbackMetadataProvider, episode);
                 break;
             case OtherVideo otherVideo:
-                await UpdateOtherVideo(searchRepository, otherVideo);
+                await UpdateOtherVideo(languageCodeService, otherVideo);
                 break;
             case Song song:
-                await UpdateSong(searchRepository, song);
+                await UpdateSong(languageCodeService, song);
                 break;
         }
     }
 
-    private async Task UpdateMovie(ISearchRepository searchRepository, Movie movie)
+    private async Task UpdateMovie(ILanguageCodeService languageCodeService, Movie movie)
     {
         foreach (MovieMetadata metadata in movie.MovieMetadata.HeadOrNone())
         {
@@ -315,9 +318,9 @@ public class ElasticSearchIndex : ISearchIndex
                     JumpLetter = LuceneSearchIndex.GetJumpLetter(metadata),
                     State = movie.State.ToString(),
                     MetadataKind = metadata.MetadataKind.ToString(),
-                    Language = await GetLanguages(searchRepository, movie.MediaVersions),
+                    Language = GetLanguages(languageCodeService, movie.MediaVersions),
                     LanguageTag = GetLanguageTags(movie.MediaVersions),
-                    SubLanguage = await GetSubLanguages(searchRepository, movie.MediaVersions),
+                    SubLanguage = GetSubLanguages(languageCodeService, movie.MediaVersions),
                     SubLanguageTag = GetSubLanguageTags(movie.MediaVersions),
                     ContentRating = GetContentRatings(metadata.ContentRating),
                     ReleaseDate = GetReleaseDate(metadata.ReleaseDate),
@@ -356,7 +359,7 @@ public class ElasticSearchIndex : ISearchIndex
         }
     }
 
-    private async Task UpdateShow(ISearchRepository searchRepository, Show show)
+    private async Task UpdateShow(ISearchRepository searchRepository, ILanguageCodeService languageCodeService, Show show)
     {
         foreach (ShowMetadata metadata in show.ShowMetadata.HeadOrNone())
         {
@@ -374,10 +377,10 @@ public class ElasticSearchIndex : ISearchIndex
                     JumpLetter = LuceneSearchIndex.GetJumpLetter(metadata),
                     State = show.State.ToString(),
                     MetadataKind = metadata.MetadataKind.ToString(),
-                    Language = await GetLanguages(searchRepository, await searchRepository.GetLanguagesForShow(show)),
+                    Language = GetLanguages(languageCodeService, await searchRepository.GetLanguagesForShow(show)),
                     LanguageTag = await searchRepository.GetLanguagesForShow(show),
-                    SubLanguage = await GetLanguages(
-                        searchRepository,
+                    SubLanguage = GetLanguages(
+                        languageCodeService,
                         await searchRepository.GetSubLanguagesForShow(show)),
                     SubLanguageTag = await searchRepository.GetSubLanguagesForShow(show),
                     ContentRating = GetContentRatings(metadata.ContentRating),
@@ -412,7 +415,10 @@ public class ElasticSearchIndex : ISearchIndex
         }
     }
 
-    private async Task UpdateSeason(ISearchRepository searchRepository, Season season)
+    private async Task UpdateSeason(
+        ISearchRepository searchRepository,
+        ILanguageCodeService languageCodeService,
+        Season season)
     {
         foreach (SeasonMetadata metadata in season.SeasonMetadata.HeadOrNone())
         foreach (ShowMetadata showMetadata in season.Show.ShowMetadata.HeadOrNone())
@@ -442,12 +448,12 @@ public class ElasticSearchIndex : ISearchIndex
                     ShowTag = showMetadata.Tags.Map(t => t.Name).ToList(),
                     ShowStudio = showMetadata.Studios.Map(s => s.Name).ToList(),
                     ShowContentRating = GetContentRatings(showMetadata.ContentRating),
-                    Language = await GetLanguages(
-                        searchRepository,
+                    Language = GetLanguages(
+                        languageCodeService,
                         await searchRepository.GetLanguagesForSeason(season)),
                     LanguageTag = await searchRepository.GetLanguagesForSeason(season),
-                    SubLanguage = await GetLanguages(
-                        searchRepository,
+                    SubLanguage = GetLanguages(
+                        languageCodeService,
                         await searchRepository.GetSubLanguagesForSeason(season)),
                     SubLanguageTag = await searchRepository.GetSubLanguagesForSeason(season),
                     ContentRating = GetContentRatings(showMetadata.ContentRating),
@@ -474,7 +480,10 @@ public class ElasticSearchIndex : ISearchIndex
         }
     }
 
-    private async Task UpdateArtist(ISearchRepository searchRepository, Artist artist)
+    private async Task UpdateArtist(
+        ISearchRepository searchRepository,
+        ILanguageCodeService languageCodeService,
+        Artist artist)
     {
         foreach (ArtistMetadata metadata in artist.ArtistMetadata.HeadOrNone())
         {
@@ -492,12 +501,12 @@ public class ElasticSearchIndex : ISearchIndex
                     JumpLetter = LuceneSearchIndex.GetJumpLetter(metadata),
                     State = artist.State.ToString(),
                     MetadataKind = metadata.MetadataKind.ToString(),
-                    Language = await GetLanguages(
-                        searchRepository,
+                    Language = GetLanguages(
+                        languageCodeService,
                         await searchRepository.GetLanguagesForArtist(artist)),
                     LanguageTag = await searchRepository.GetLanguagesForArtist(artist),
-                    SubLanguage = await GetLanguages(
-                        searchRepository,
+                    SubLanguage = GetLanguages(
+                        languageCodeService,
                         await searchRepository.GetSubLanguagesForArtist(artist)),
                     SubLanguageTag = await searchRepository.GetSubLanguagesForArtist(artist),
                     AddedDate = GetAddedDate(metadata.DateAdded),
@@ -521,7 +530,7 @@ public class ElasticSearchIndex : ISearchIndex
         }
     }
 
-    private async Task UpdateMusicVideo(ISearchRepository searchRepository, MusicVideo musicVideo)
+    private async Task UpdateMusicVideo(ILanguageCodeService languageCodeService, MusicVideo musicVideo)
     {
         foreach (MusicVideoMetadata metadata in musicVideo.MusicVideoMetadata.HeadOrNone())
         {
@@ -539,9 +548,9 @@ public class ElasticSearchIndex : ISearchIndex
                     JumpLetter = LuceneSearchIndex.GetJumpLetter(metadata),
                     State = musicVideo.State.ToString(),
                     MetadataKind = metadata.MetadataKind.ToString(),
-                    Language = await GetLanguages(searchRepository, musicVideo.MediaVersions),
+                    Language = GetLanguages(languageCodeService, musicVideo.MediaVersions),
                     LanguageTag = GetLanguageTags(musicVideo.MediaVersions),
-                    SubLanguage = await GetSubLanguages(searchRepository, musicVideo.MediaVersions),
+                    SubLanguage = GetSubLanguages(languageCodeService, musicVideo.MediaVersions),
                     SubLanguageTag = GetSubLanguageTags(musicVideo.MediaVersions),
                     ReleaseDate = GetReleaseDate(metadata.ReleaseDate),
                     AddedDate = GetAddedDate(metadata.DateAdded),
@@ -589,7 +598,7 @@ public class ElasticSearchIndex : ISearchIndex
     }
 
     private async Task UpdateEpisode(
-        ISearchRepository searchRepository,
+        ILanguageCodeService languageCodeService,
         IFallbackMetadataProvider fallbackMetadataProvider,
         Episode episode)
     {
@@ -622,9 +631,9 @@ public class ElasticSearchIndex : ISearchIndex
                     MetadataKind = metadata.MetadataKind.ToString(),
                     SeasonNumber = episode.Season?.SeasonNumber ?? 0,
                     EpisodeNumber = metadata.EpisodeNumber,
-                    Language = await GetLanguages(searchRepository, episode.MediaVersions),
+                    Language = GetLanguages(languageCodeService, episode.MediaVersions),
                     LanguageTag = GetLanguageTags(episode.MediaVersions),
-                    SubLanguage = await GetSubLanguages(searchRepository, episode.MediaVersions),
+                    SubLanguage = GetSubLanguages(languageCodeService, episode.MediaVersions),
                     SubLanguageTag = GetSubLanguageTags(episode.MediaVersions),
                     ReleaseDate = GetReleaseDate(metadata.ReleaseDate),
                     AddedDate = GetAddedDate(metadata.DateAdded),
@@ -671,7 +680,7 @@ public class ElasticSearchIndex : ISearchIndex
         }
     }
 
-    private async Task UpdateOtherVideo(ISearchRepository searchRepository, OtherVideo otherVideo)
+    private async Task UpdateOtherVideo(ILanguageCodeService languageCodeService, OtherVideo otherVideo)
     {
         foreach (OtherVideoMetadata metadata in otherVideo.OtherVideoMetadata.HeadOrNone())
         {
@@ -689,9 +698,9 @@ public class ElasticSearchIndex : ISearchIndex
                     JumpLetter = LuceneSearchIndex.GetJumpLetter(metadata),
                     State = otherVideo.State.ToString(),
                     MetadataKind = metadata.MetadataKind.ToString(),
-                    Language = await GetLanguages(searchRepository, otherVideo.MediaVersions),
+                    Language = GetLanguages(languageCodeService, otherVideo.MediaVersions),
                     LanguageTag = GetLanguageTags(otherVideo.MediaVersions),
-                    SubLanguage = await GetSubLanguages(searchRepository, otherVideo.MediaVersions),
+                    SubLanguage = GetSubLanguages(languageCodeService, otherVideo.MediaVersions),
                     SubLanguageTag = GetSubLanguageTags(otherVideo.MediaVersions),
                     ContentRating = GetContentRatings(metadata.ContentRating),
                     ReleaseDate = GetReleaseDate(metadata.ReleaseDate),
@@ -724,7 +733,7 @@ public class ElasticSearchIndex : ISearchIndex
         }
     }
 
-    private async Task UpdateSong(ISearchRepository searchRepository, Song song)
+    private async Task UpdateSong(ILanguageCodeService languageCodeService, Song song)
     {
         foreach (SongMetadata metadata in song.SongMetadata.HeadOrNone())
         {
@@ -745,9 +754,9 @@ public class ElasticSearchIndex : ISearchIndex
                     JumpLetter = LuceneSearchIndex.GetJumpLetter(metadata),
                     State = song.State.ToString(),
                     MetadataKind = metadata.MetadataKind.ToString(),
-                    Language = await GetLanguages(searchRepository, song.MediaVersions),
+                    Language = GetLanguages(languageCodeService, song.MediaVersions),
                     LanguageTag = GetLanguageTags(song.MediaVersions),
-                    SubLanguage = await GetSubLanguages(searchRepository, song.MediaVersions),
+                    SubLanguage = GetSubLanguages(languageCodeService, song.MediaVersions),
                     SubLanguageTag = GetSubLanguageTags(song.MediaVersions),
                     AddedDate = GetAddedDate(metadata.DateAdded),
                     Album = metadata.Album ?? string.Empty,
@@ -776,7 +785,7 @@ public class ElasticSearchIndex : ISearchIndex
         }
     }
 
-    private async Task UpdateImage(ISearchRepository searchRepository, Image image)
+    private async Task UpdateImage(ILanguageCodeService languageCodeService, Image image)
     {
         foreach (ImageMetadata metadata in image.ImageMetadata.HeadOrNone())
         {
@@ -794,9 +803,9 @@ public class ElasticSearchIndex : ISearchIndex
                     JumpLetter = LuceneSearchIndex.GetJumpLetter(metadata),
                     State = image.State.ToString(),
                     MetadataKind = metadata.MetadataKind.ToString(),
-                    Language = await GetLanguages(searchRepository, image.MediaVersions),
+                    Language = GetLanguages(languageCodeService, image.MediaVersions),
                     LanguageTag = GetLanguageTags(image.MediaVersions),
-                    SubLanguage = await GetSubLanguages(searchRepository, image.MediaVersions),
+                    SubLanguage = GetSubLanguages(languageCodeService, image.MediaVersions),
                     SubLanguageTag = GetSubLanguageTags(image.MediaVersions),
                     AddedDate = GetAddedDate(metadata.DateAdded),
                     Genre = metadata.Genres.Map(g => g.Name).ToList(),
@@ -853,9 +862,7 @@ public class ElasticSearchIndex : ISearchIndex
         return contentRatings;
     }
 
-    private async Task<List<string>> GetLanguages(
-        ISearchRepository searchRepository,
-        IEnumerable<MediaVersion> mediaVersions)
+    private List<string> GetLanguages(ILanguageCodeService languageCodeService, IEnumerable<MediaVersion> mediaVersions)
     {
         var result = new List<string>();
 
@@ -867,14 +874,14 @@ public class ElasticSearchIndex : ISearchIndex
                 .Distinct()
                 .ToList();
 
-            result.AddRange(await GetLanguages(searchRepository, mediaCodes));
+            result.AddRange(GetLanguages(languageCodeService, mediaCodes));
         }
 
         return result;
     }
 
-    private async Task<List<string>> GetSubLanguages(
-        ISearchRepository searchRepository,
+    private List<string> GetSubLanguages(
+        ILanguageCodeService languageCodeService,
         IEnumerable<MediaVersion> mediaVersions)
     {
         var result = new List<string>();
@@ -887,16 +894,16 @@ public class ElasticSearchIndex : ISearchIndex
                 .Distinct()
                 .ToList();
 
-            result.AddRange(await GetLanguages(searchRepository, mediaCodes));
+            result.AddRange(GetLanguages(languageCodeService, mediaCodes));
         }
 
         return result;
     }
 
-    private async Task<List<string>> GetLanguages(ISearchRepository searchRepository, List<string> mediaCodes)
+    private List<string> GetLanguages(ILanguageCodeService languageCodeService, List<string> mediaCodes)
     {
         var englishNames = new System.Collections.Generic.HashSet<string>();
-        foreach (string code in await searchRepository.GetAllThreeLetterLanguageCodes(mediaCodes))
+        foreach (string code in languageCodeService.GetAllLanguageCodes(mediaCodes))
         {
             Option<CultureInfo> maybeCultureInfo = _cultureInfos.Find(ci => string.Equals(
                 ci.ThreeLetterISOLanguageName,

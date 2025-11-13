@@ -27,7 +27,6 @@ using ErsatzTV.Core.Interfaces.Locking;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
-using ErsatzTV.Core.Interfaces.Repositories.Caching;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using ErsatzTV.Core.Interfaces.Scripting;
 using ErsatzTV.Core.Interfaces.Search;
@@ -52,7 +51,6 @@ using ErsatzTV.Filters;
 using ErsatzTV.Formatters;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Data.Repositories;
-using ErsatzTV.Infrastructure.Data.Repositories.Caching;
 using ErsatzTV.Infrastructure.Database;
 using ErsatzTV.Infrastructure.Emby;
 using ErsatzTV.Infrastructure.FFmpeg;
@@ -728,6 +726,7 @@ public class Startup
         services.AddSingleton<IHlsPlaylistFilter, HlsPlaylistFilter>();
         services.AddSingleton<RecyclableMemoryStreamManager>();
         services.AddSingleton<SystemStartup>();
+        services.AddSingleton<ILanguageCodeCache, LanguageCodeCache>();
         AddChannel<IBackgroundServiceRequest>(services);
         AddChannel<IPlexBackgroundServiceRequest>(services);
         AddChannel<IJellyfinBackgroundServiceRequest>(services);
@@ -759,7 +758,6 @@ public class Startup
         services.AddScoped<IConfigElementRepository, ConfigElementRepository>();
         services.AddScoped<ITelevisionRepository, TelevisionRepository>();
         services.AddScoped<ISearchRepository, SearchRepository>();
-        services.AddScoped<ICachingSearchRepository, CachingSearchRepository>();
         services.AddScoped<IMovieRepository, MovieRepository>();
         services.AddScoped<IArtistRepository, ArtistRepository>();
         services.AddScoped<IMusicVideoRepository, MusicVideoRepository>();
@@ -820,6 +818,7 @@ public class Startup
         services.AddScoped<IGraphicsElementSelector, GraphicsElementSelector>();
         services.AddScoped<IHlsInitSegmentCache, HlsInitSegmentCache>();
         services.AddScoped<IMpegTsScriptService, MpegTsScriptService>();
+        services.AddScoped<ILanguageCodeService, LanguageCodeService>();
 
         services.AddScoped<IFFmpegProcessService, FFmpegLibraryProcessService>();
         services.AddScoped<IPipelineBuilderFactory, PipelineBuilderFactory>();

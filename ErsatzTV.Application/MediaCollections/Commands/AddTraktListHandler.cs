@@ -3,7 +3,7 @@ using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Locking;
 using ErsatzTV.Core.Interfaces.Metadata;
-using ErsatzTV.Core.Interfaces.Repositories.Caching;
+using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Interfaces.Trakt;
 using ErsatzTV.Infrastructure.Data;
@@ -19,13 +19,14 @@ public partial class AddTraktListHandler : TraktCommandBase, IRequestHandler<Add
 
     public AddTraktListHandler(
         ITraktApiClient traktApiClient,
-        ICachingSearchRepository searchRepository,
+        ISearchRepository searchRepository,
         ISearchIndex searchIndex,
         IFallbackMetadataProvider fallbackMetadataProvider,
+        ILanguageCodeService languageCodeService,
         IDbContextFactory<TvContext> dbContextFactory,
         ILogger<AddTraktListHandler> logger,
         IEntityLocker entityLocker)
-        : base(traktApiClient, searchRepository, searchIndex, fallbackMetadataProvider, logger)
+        : base(traktApiClient, searchRepository, searchIndex, fallbackMetadataProvider, languageCodeService, logger)
     {
         _dbContextFactory = dbContextFactory;
         _entityLocker = entityLocker;

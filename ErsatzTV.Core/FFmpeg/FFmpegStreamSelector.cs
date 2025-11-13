@@ -16,24 +16,24 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
 {
     private readonly IConfigElementRepository _configElementRepository;
     private readonly ILocalFileSystem _localFileSystem;
+    private readonly ILanguageCodeService _languageCodeService;
     private readonly ILogger<FFmpegStreamSelector> _logger;
     private readonly IScriptEngine _scriptEngine;
-    private readonly ISearchRepository _searchRepository;
     private readonly IStreamSelectorRepository _streamSelectorRepository;
 
     public FFmpegStreamSelector(
         IScriptEngine scriptEngine,
         IStreamSelectorRepository streamSelectorRepository,
-        ISearchRepository searchRepository,
         IConfigElementRepository configElementRepository,
         ILocalFileSystem localFileSystem,
+        ILanguageCodeService languageCodeService,
         ILogger<FFmpegStreamSelector> logger)
     {
         _scriptEngine = scriptEngine;
         _streamSelectorRepository = streamSelectorRepository;
-        _searchRepository = searchRepository;
         _configElementRepository = configElementRepository;
         _localFileSystem = localFileSystem;
+        _languageCodeService = languageCodeService;
         _logger = logger;
     }
 
@@ -73,8 +73,8 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
                 });
         }
 
-        List<string> allLanguageCodes = await _searchRepository.GetAllThreeLetterLanguageCodes([language])
-            .Map(GetTwoAndThreeLetterLanguageCodes);
+        List<string> allLanguageCodes =
+            GetTwoAndThreeLetterLanguageCodes(_languageCodeService.GetAllLanguageCodes([language]));
         if (allLanguageCodes.Count > 1)
         {
             _logger.LogDebug("Preferred audio language has multiple codes {Codes}", allLanguageCodes);
@@ -190,8 +190,7 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
         else
         {
             // filter to preferred language
-            allCodes = await _searchRepository.GetAllThreeLetterLanguageCodes([language])
-                .Map(GetTwoAndThreeLetterLanguageCodes);
+            allCodes = GetTwoAndThreeLetterLanguageCodes(_languageCodeService.GetAllLanguageCodes([language]));
             if (allCodes.Count > 1)
             {
                 _logger.LogDebug("Preferred subtitle language has multiple codes {Codes}", allCodes);
