@@ -53,6 +53,8 @@ internal static class Mapper
                 Artist artist => MediaItems.Mapper.ProjectToViewModel(artist),
                 _ => null
             },
+            blockItem.SearchTitle,
+            blockItem.SearchQuery,
             blockItem.PlaybackOrder,
             blockItem.IncludeInProgramGuide,
             blockItem.DisableWatermarks,

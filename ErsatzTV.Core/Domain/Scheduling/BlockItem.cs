@@ -15,6 +15,8 @@ public class BlockItem
     public MultiCollection MultiCollection { get; set; }
     public int? SmartCollectionId { get; set; }
     public SmartCollection SmartCollection { get; set; }
+    public string SearchTitle { get; set; }
+    public string SearchQuery { get; set; }
     public PlaybackOrder PlaybackOrder { get; set; }
     public bool IncludeInProgramGuide { get; set; }
     public bool DisableWatermarks { get; set; }

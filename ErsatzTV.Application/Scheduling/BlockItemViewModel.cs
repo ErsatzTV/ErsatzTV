@@ -14,6 +14,8 @@ public record BlockItemViewModel(
     MultiCollectionViewModel MultiCollection,
     SmartCollectionViewModel SmartCollection,
     NamedMediaItemViewModel MediaItem,
+    string SearchTitle,
+    string SearchQuery,
     PlaybackOrder PlaybackOrder,
     bool IncludeInProgramGuide,
     bool DisableWatermarks,

@@ -28,11 +28,15 @@ public class BlockItemEditViewModel : INotifyPropertyChanged
                 MultiCollection = null;
                 MediaItem = null;
                 SmartCollection = null;
+                SearchTitle = null;
+                SearchQuery = null;
 
                 OnPropertyChanged(nameof(Collection));
                 OnPropertyChanged(nameof(MultiCollection));
                 OnPropertyChanged(nameof(MediaItem));
                 OnPropertyChanged(nameof(SmartCollection));
+                OnPropertyChanged(nameof(SearchTitle));
+                OnPropertyChanged(nameof(SearchQuery));
             }
 
             if (_collectionType == CollectionType.MultiCollection)
@@ -46,6 +50,8 @@ public class BlockItemEditViewModel : INotifyPropertyChanged
     public MultiCollectionViewModel MultiCollection { get; set; }
     public SmartCollectionViewModel SmartCollection { get; set; }
     public NamedMediaItemViewModel MediaItem { get; set; }
+    public string SearchTitle { get; set; }
+    public string SearchQuery { get; set; }
 
     public string CollectionName => CollectionType switch
     {
@@ -55,6 +61,7 @@ public class BlockItemEditViewModel : INotifyPropertyChanged
         CollectionType.Artist => MediaItem?.Name,
         CollectionType.MultiCollection => MultiCollection?.Name,
         CollectionType.SmartCollection => SmartCollection?.Name,
+        CollectionType.SearchQuery => string.IsNullOrWhiteSpace(SearchTitle) ? SearchQuery : SearchTitle,
         _ => string.Empty
     };
 

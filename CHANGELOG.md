@@ -13,7 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Add `ScaledResolution` template data (the final size of the frame before padding)
   - Add `place_within_source_content` (true/false) field to image graphics element
   - Add `name` field to all graphics elements to display in the UI
-- Classic schedules: add collection type `Search Query`
+- Classic and block schedules: add collection type `Search Query`
   - This allows defining search queries directly on schedule items without creating smart collections beforehand
   - As an example, this can be used to filter or combine existing smart collections
     - Filter: `smart_collection:"sd movies" AND plot:"christmas"`

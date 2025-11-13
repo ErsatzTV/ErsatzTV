@@ -55,6 +55,8 @@ public class ReplaceBlockItemsHandler(IDbContextFactory<TvContext> dbContextFact
             MultiCollectionId = item.MultiCollectionId,
             SmartCollectionId = item.SmartCollectionId,
             MediaItemId = item.MediaItemId,
+            SearchTitle = item.SearchTitle,
+            SearchQuery = item.SearchQuery,
             PlaybackOrder = item.PlaybackOrder,
             IncludeInProgramGuide = item.IncludeInProgramGuide,
             DisableWatermarks = item.DisableWatermarks,
@@ -161,6 +163,13 @@ public class ReplaceBlockItemsHandler(IDbContextFactory<TvContext> dbContextFact
                 if (item.SmartCollectionId is null)
                 {
                     return BaseError.New("[SmartCollection] is required for collection type 'SmartCollection'");
+                }
+
+                break;
+            case CollectionType.SearchQuery:
+                if (string.IsNullOrWhiteSpace(item.SearchQuery))
+                {
+                    return BaseError.New("[SearchQuery] is required for collection type 'SearchQuery'");
                 }
 
                 break;
