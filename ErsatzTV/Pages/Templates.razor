@@ -30,10 +30,10 @@
                 <div class="d-flex">
                     <MudText>Template Group</MudText>
                 </div>
-                <MudSelect @bind-Value="_selectedTemplateGroup">
+                <MudSelect T="string" ValueChanged="@UpdateSelectedTemplateGroup">
                     @foreach (TemplateGroupViewModel templateGroup in _templateGroups)
                     {
-                        <MudSelectItem Value="@templateGroup">@templateGroup.Name</MudSelectItem>
+                        <MudSelectItem Value="@templateGroup.Name">@templateGroup.Name</MudSelectItem>
                     }
                 </MudSelect>
             </MudStack>
@@ -138,6 +138,12 @@
                 await InvokeAsync(StateHasChanged);
             }
         }
+    }
+
+    private void UpdateSelectedTemplateGroup(string templateGroupName)
+    {
+        _selectedTemplateGroup = _templateGroups.Find(tg => tg.Name == templateGroupName);
+        InvokeAsync(StateHasChanged);
     }
 
     private async Task AddTemplate()

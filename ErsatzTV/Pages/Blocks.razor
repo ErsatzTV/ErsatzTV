@@ -30,10 +30,10 @@
                 <div class="d-flex">
                     <MudText>Block Group</MudText>
                 </div>
-                <MudSelect @bind-Value="_selectedBlockGroup">
+                <MudSelect T="string" ValueChanged="@(name => UpdateSelectedBlockGroup(name))">
                     @foreach (BlockGroupViewModel blockGroup in _blockGroups)
                     {
-                        <MudSelectItem Value="@blockGroup">@blockGroup.Name</MudSelectItem>
+                        <MudSelectItem Value="@blockGroup.Name">@blockGroup.Name</MudSelectItem>
                     }
                 </MudSelect>
             </MudStack>
@@ -190,6 +190,12 @@
                 await InvokeAsync(StateHasChanged);
             }
         }
+    }
+
+    private void UpdateSelectedBlockGroup(string blockGroupName)
+    {
+        _selectedBlockGroup = _blockGroups.Find(bg => bg.Name == blockGroupName);
+        InvokeAsync(StateHasChanged);
     }
 
     private async Task AddBlock()

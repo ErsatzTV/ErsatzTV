@@ -100,7 +100,6 @@ public class BlockPlayoutFillerBuilder(
             collectionEnumerators,
             allItems,
             filteredExistingHistory,
-            result.RemoveBefore,
             cancellationToken);
 
         return result;
@@ -130,7 +129,7 @@ public class BlockPlayoutFillerBuilder(
         // guide group is template item id
         // they are reused over multiple days, so we only want to group consecutive items
         IEnumerable<IGrouping<int, PlayoutItem>> consecutiveBlocks = allItems
-            .Where(i => i.FinishOffset > result.RemoveBefore.IfNone(SystemTime.MinValueUtc))
+            .Where(i => i.FinishOffset > removeBefore.IfNone(SystemTime.MinValueUtc))
             .GroupConsecutiveBy(item => item.GuideGroup);
         foreach (IGrouping<int, PlayoutItem> blockGroup in consecutiveBlocks)
         {
@@ -303,7 +302,6 @@ public class BlockPlayoutFillerBuilder(
         Dictionary<CollectionKey, IMediaCollectionEnumerator> collectionEnumerators,
         List<PlayoutItem> allItems,
         List<PlayoutHistory> filteredExistingHistory,
-        Option<DateTimeOffset> removeBefore,
         CancellationToken cancellationToken)
     {
         // find all unscheduled periods
