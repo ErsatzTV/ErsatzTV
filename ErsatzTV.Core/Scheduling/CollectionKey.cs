@@ -124,6 +124,11 @@ public class CollectionKey : Record<CollectionKey>
                 CollectionType = item.CollectionType,
                 SmartCollectionId = item.SmartCollectionId
             },
+            CollectionType.SearchQuery => new CollectionKey
+            {
+                CollectionType = item.CollectionType,
+                SearchQuery = item.SearchQuery
+            },
             CollectionType.FakeCollection => new CollectionKey
             {
                 CollectionType = item.CollectionType

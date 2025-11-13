@@ -136,6 +136,8 @@ public class PreviewBlockPlayoutHandler(
             CollectionId = request.CollectionId,
             MultiCollectionId = request.MultiCollectionId,
             SmartCollectionId = request.SmartCollectionId,
+            SearchTitle = request.SearchTitle,
+            SearchQuery = request.SearchQuery,
             MediaItemId = request.MediaItemId,
             PlaybackOrder = request.PlaybackOrder
         };

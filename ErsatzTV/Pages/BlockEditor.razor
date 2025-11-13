@@ -160,6 +160,7 @@
             @* <MudSelectItem Value="ProgramScheduleItemCollectionType.Artist">Artist</MudSelectItem> *@
             @* <MudSelectItem Value="ProgramScheduleItemCollectionType.MultiCollection">Multi Collection</MudSelectItem> *@
             <MudSelectItem Value="CollectionType.SmartCollection">Smart Collection</MudSelectItem>
+            <MudSelectItem Value="CollectionType.SearchQuery">Search Query</MudSelectItem>
         </MudSelect>
     </MudStack>
     @if (_selectedItem.CollectionType == CollectionType.Collection)
@@ -213,6 +214,24 @@
                     </MudText>
                 </MoreItemsTemplate>
             </MudAutocomplete>
+        </MudStack>
+    }
+
+    @if (_selectedItem.CollectionType == CollectionType.SearchQuery)
+    {
+        <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+            <div class="d-flex">
+                <MudText>Search Title</MudText>
+            </div>
+            <MudTextField @bind-Value="@_selectedItem.SearchTitle"
+                          For="@(() => _selectedItem.SearchTitle)"
+                          HelperText="Optional title that will be displayed in the UI"/>
+        </MudStack>
+        <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+            <div class="d-flex">
+                <MudText>Search Query</MudText>
+            </div>
+            <MudTextField @bind-Value="@_selectedItem.SearchQuery" For="@(() => _selectedItem.SearchQuery)"/>
         </MudStack>
     }
 
@@ -489,6 +508,8 @@ else if (_previewItems != null)
             MultiCollection = item.MultiCollection,
             SmartCollection = item.SmartCollection,
             MediaItem = item.MediaItem,
+            SearchTitle = item.SearchTitle,
+            SearchQuery = item.SearchQuery,
             PlaybackOrder = item.PlaybackOrder,
             IncludeInProgramGuide = item.IncludeInProgramGuide,
             DisableWatermarks = item.DisableWatermarks,
@@ -522,6 +543,8 @@ else if (_previewItems != null)
             MultiCollection = item.MultiCollection,
             SmartCollection = item.SmartCollection,
             MediaItem = item.MediaItem,
+            SearchTitle = item.SearchTitle,
+            SearchQuery = item.SearchQuery,
             IncludeInProgramGuide = item.IncludeInProgramGuide,
             DisableWatermarks = item.DisableWatermarks,
             Watermarks = item.Watermarks.ToList(),
@@ -581,6 +604,8 @@ else if (_previewItems != null)
             item.MultiCollection?.Id,
             item.SmartCollection?.Id,
             item.MediaItem?.MediaItemId,
+            item.SearchTitle,
+            item.SearchQuery,
             item.PlaybackOrder,
             item.IncludeInProgramGuide,
             item.DisableWatermarks,

@@ -9,6 +9,8 @@ public record ReplaceBlockItem(
     int? MultiCollectionId,
     int? SmartCollectionId,
     int? MediaItemId,
+    string SearchTitle,
+    string SearchQuery,
     PlaybackOrder PlaybackOrder,
     bool IncludeInProgramGuide,
     bool DisableWatermarks,

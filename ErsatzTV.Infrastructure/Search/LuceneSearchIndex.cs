@@ -226,6 +226,8 @@ public sealed class LuceneSearchIndex : ISearchIndex
 
         client?.Breadcrumbs?.Leave("SearchIndex.Search", BreadcrumbType.State, metadata);
 
+        query ??= string.Empty;
+
         if (string.IsNullOrWhiteSpace(query.Replace("*", string.Empty).Replace("?", string.Empty)) ||
             _writer.MaxDoc == 0)
         {

@@ -2658,6 +2658,12 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<int>("PlaybackOrder")
                         .HasColumnType("int");
 
+                    b.Property<string>("SearchQuery")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("SearchTitle")
+                        .HasColumnType("longtext");
+
                     b.Property<int?>("SmartCollectionId")
                         .HasColumnType("int");
 
