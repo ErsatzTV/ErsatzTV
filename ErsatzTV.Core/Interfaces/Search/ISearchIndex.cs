@@ -2,7 +2,6 @@
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
-using ErsatzTV.Core.Interfaces.Repositories.Caching;
 using ErsatzTV.Core.Search;
 
 namespace ErsatzTV.Core.Interfaces.Search;
@@ -18,19 +17,22 @@ public interface ISearchIndex : IDisposable
         CancellationToken cancellationToken);
 
     Task<Unit> Rebuild(
-        ICachingSearchRepository searchRepository,
+        ISearchRepository searchRepository,
         IFallbackMetadataProvider fallbackMetadataProvider,
+        ILanguageCodeService languageCodeService,
         CancellationToken cancellationToken);
 
     Task<Unit> RebuildItems(
-        ICachingSearchRepository searchRepository,
+        ISearchRepository searchRepository,
         IFallbackMetadataProvider fallbackMetadataProvider,
+        ILanguageCodeService languageCodeService,
         IEnumerable<int> itemIds,
         CancellationToken cancellationToken);
 
     Task<Unit> UpdateItems(
-        ICachingSearchRepository searchRepository,
+        ISearchRepository searchRepository,
         IFallbackMetadataProvider fallbackMetadataProvider,
+        ILanguageCodeService languageCodeService,
         List<MediaItem> items);
 
     Task<bool> RemoveItems(IEnumerable<int> ids);

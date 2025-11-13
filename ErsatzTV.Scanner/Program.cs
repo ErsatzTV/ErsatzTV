@@ -11,7 +11,6 @@ using ErsatzTV.Core.Interfaces.Jellyfin;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
-using ErsatzTV.Core.Interfaces.Repositories.Caching;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Jellyfin;
 using ErsatzTV.Core.Metadata;
@@ -21,7 +20,6 @@ using ErsatzTV.FFmpeg.Capabilities;
 using ErsatzTV.FFmpeg.Runtime;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Data.Repositories;
-using ErsatzTV.Infrastructure.Data.Repositories.Caching;
 using ErsatzTV.Infrastructure.Emby;
 using ErsatzTV.Infrastructure.Images;
 using ErsatzTV.Infrastructure.Jellyfin;
@@ -185,7 +183,7 @@ public class Program
                 services.AddScoped<IRemoteStreamRepository, RemoteStreamRepository>();
                 services.AddScoped<ILibraryRepository, LibraryRepository>();
                 services.AddScoped<ISearchRepository, SearchRepository>();
-                services.AddScoped<ICachingSearchRepository, CachingSearchRepository>();
+                services.AddScoped<ILanguageCodeService, LanguageCodeService>();
                 services.AddScoped<ILocalMetadataProvider, LocalMetadataProvider>();
                 services.AddScoped<IFallbackMetadataProvider, FallbackMetadataProvider>();
                 services.AddScoped<ILocalStatisticsProvider, LocalStatisticsProvider>();
@@ -252,6 +250,7 @@ public class Program
                 // TODO: real bugsnag?
                 services.AddSingleton<IClient>(_ => new BugsnagNoopClient());
                 services.AddSingleton<IScannerProxy, ScannerProxy>();
+                services.AddSingleton<ILanguageCodeCache, LanguageCodeCache>();
 
                 services.AddMediatR(config => config.RegisterServicesFromAssemblyContaining<Worker>());
                 services.AddMemoryCache();

@@ -1,4 +1,5 @@
-﻿using Dapper;
+﻿using System.Runtime.CompilerServices;
+using Dapper;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Infrastructure.Extensions;
@@ -6,183 +7,91 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Infrastructure.Data.Repositories;
 
-public class SearchRepository : ISearchRepository
+public class SearchRepository(IDbContextFactory<TvContext> dbContextFactory) : ISearchRepository
 {
-    private readonly IDbContextFactory<TvContext> _dbContextFactory;
-
-    public SearchRepository(IDbContextFactory<TvContext> dbContextFactory) => _dbContextFactory = dbContextFactory;
-
     public async Task<Option<MediaItem>> GetItemToIndex(int id, CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        return await dbContext.MediaItems
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+
+        var baseItem = await dbContext.MediaItems
             .AsNoTracking()
-            .Include(mi => mi.Collections)
-            .Include(mi => mi.LibraryPath)
-            .ThenInclude(lp => lp.Library)
-            .Include(mi => (mi as Movie).MovieMetadata)
-            .ThenInclude(mm => mm.Genres)
-            .Include(mi => (mi as Movie).MovieMetadata)
-            .ThenInclude(mm => mm.Tags)
-            .Include(mi => (mi as Movie).MovieMetadata)
-            .ThenInclude(mm => mm.Studios)
-            .Include(mi => (mi as Movie).MovieMetadata)
-            .ThenInclude(mm => mm.Actors)
-            .Include(mi => (mi as Movie).MovieMetadata)
-            .ThenInclude(mm => mm.Directors)
-            .Include(mi => (mi as Movie).MovieMetadata)
-            .ThenInclude(mm => mm.Writers)
-            .Include(mi => (mi as Movie).MovieMetadata)
-            .ThenInclude(em => em.Guids)
-            .Include(mi => (mi as Movie).MediaVersions)
-            .ThenInclude(mv => mv.Chapters)
-            .Include(mi => (mi as Movie).MediaVersions)
-            .ThenInclude(mm => mm.Streams)
-            .Include(mi => (mi as Episode).EpisodeMetadata)
-            .ThenInclude(em => em.Genres)
-            .Include(mi => (mi as Episode).EpisodeMetadata)
-            .ThenInclude(em => em.Tags)
-            .Include(mi => (mi as Episode).EpisodeMetadata)
-            .ThenInclude(em => em.Studios)
-            .Include(mi => (mi as Episode).EpisodeMetadata)
-            .ThenInclude(em => em.Actors)
-            .Include(mi => (mi as Episode).EpisodeMetadata)
-            .ThenInclude(em => em.Directors)
-            .Include(mi => (mi as Episode).EpisodeMetadata)
-            .ThenInclude(em => em.Writers)
-            .Include(mi => (mi as Episode).EpisodeMetadata)
-            .ThenInclude(em => em.Guids)
-            .Include(mi => (mi as Episode).MediaVersions)
-            .ThenInclude(mv => mv.Chapters)
-            .Include(mi => (mi as Episode).MediaVersions)
-            .ThenInclude(em => em.Streams)
-            .Include(mi => (mi as Episode).MediaVersions)
-            .ThenInclude(em => em.MediaFiles)
-            .Include(mi => (mi as Episode).Season)
-            .ThenInclude(s => s.Show)
-            .ThenInclude(s => s.ShowMetadata)
-            .ThenInclude(s => s.Genres)
-            .Include(mi => (mi as Episode).Season)
-            .ThenInclude(s => s.Show)
-            .ThenInclude(s => s.ShowMetadata)
-            .ThenInclude(s => s.Tags)
-            .Include(mi => (mi as Episode).Season)
-            .ThenInclude(s => s.Show)
-            .ThenInclude(s => s.ShowMetadata)
-            .ThenInclude(s => s.Studios)
-            .Include(mi => (mi as Season).SeasonMetadata)
-            .ThenInclude(sm => sm.Genres)
-            .Include(mi => (mi as Season).SeasonMetadata)
-            .ThenInclude(sm => sm.Tags)
-            .Include(mi => (mi as Season).SeasonMetadata)
-            .ThenInclude(sm => sm.Studios)
-            .Include(mi => (mi as Season).SeasonMetadata)
-            .ThenInclude(sm => sm.Actors)
-            .Include(mi => (mi as Season).SeasonMetadata)
-            .ThenInclude(sm => sm.Guids)
-            .Include(mi => (mi as Season).Show)
-            .ThenInclude(sm => sm.ShowMetadata)
-            .ThenInclude(sm => sm.Genres)
-            .Include(mi => (mi as Season).Show)
-            .ThenInclude(sm => sm.ShowMetadata)
-            .ThenInclude(sm => sm.Tags)
-            .Include(mi => (mi as Season).Show)
-            .ThenInclude(sm => sm.ShowMetadata)
-            .ThenInclude(sm => sm.Studios)
-            .Include(mi => (mi as Show).ShowMetadata)
-            .ThenInclude(mm => mm.Genres)
-            .Include(mi => (mi as Show).ShowMetadata)
-            .ThenInclude(mm => mm.Tags)
-            .Include(mi => (mi as Show).ShowMetadata)
-            .ThenInclude(mm => mm.Studios)
-            .Include(mi => (mi as Show).ShowMetadata)
-            .ThenInclude(mm => mm.Actors)
-            .Include(mi => (mi as Show).ShowMetadata)
-            .ThenInclude(mm => mm.Guids)
-            .Include(mi => (mi as MusicVideo).Artist)
-            .ThenInclude(mm => mm.ArtistMetadata)
-            .Include(mi => (mi as MusicVideo).MusicVideoMetadata)
-            .ThenInclude(mm => mm.Artists)
-            .Include(mi => (mi as MusicVideo).MusicVideoMetadata)
-            .ThenInclude(mm => mm.Genres)
-            .Include(mi => (mi as MusicVideo).MusicVideoMetadata)
-            .ThenInclude(mm => mm.Tags)
-            .Include(mi => (mi as MusicVideo).MusicVideoMetadata)
-            .ThenInclude(mm => mm.Studios)
-            .Include(mi => (mi as MusicVideo).MusicVideoMetadata)
-            .ThenInclude(mm => mm.Guids)
-            .Include(mi => (mi as MusicVideo).MediaVersions)
-            .ThenInclude(mv => mv.Chapters)
-            .Include(mi => (mi as MusicVideo).MediaVersions)
-            .ThenInclude(mm => mm.Streams)
-            .Include(mi => (mi as Artist).ArtistMetadata)
-            .ThenInclude(mm => mm.Genres)
-            .Include(mi => (mi as Artist).ArtistMetadata)
-            .ThenInclude(mm => mm.Styles)
-            .Include(mi => (mi as Artist).ArtistMetadata)
-            .ThenInclude(mm => mm.Moods)
-            .Include(mi => (mi as Artist).ArtistMetadata)
-            .ThenInclude(mm => mm.Guids)
-            .Include(mi => (mi as OtherVideo).OtherVideoMetadata)
-            .ThenInclude(ovm => ovm.Genres)
-            .Include(mi => (mi as OtherVideo).OtherVideoMetadata)
-            .ThenInclude(ovm => ovm.Tags)
-            .Include(mi => (mi as OtherVideo).OtherVideoMetadata)
-            .ThenInclude(ovm => ovm.Studios)
-            .Include(mi => (mi as OtherVideo).OtherVideoMetadata)
-            .ThenInclude(ovm => ovm.Actors)
-            .Include(mi => (mi as OtherVideo).OtherVideoMetadata)
-            .ThenInclude(ovm => ovm.Directors)
-            .Include(mi => (mi as OtherVideo).OtherVideoMetadata)
-            .ThenInclude(ovm => ovm.Writers)
-            .Include(mi => (mi as OtherVideo).OtherVideoMetadata)
-            .ThenInclude(ovm => ovm.Guids)
-            .Include(mi => (mi as OtherVideo).MediaVersions)
-            .ThenInclude(mv => mv.Chapters)
-            .Include(mi => (mi as OtherVideo).MediaVersions)
-            .ThenInclude(ovm => ovm.Streams)
-            .Include(mi => (mi as Song).SongMetadata)
-            .ThenInclude(mm => mm.Tags)
-            .Include(mi => (mi as Song).SongMetadata)
-            .ThenInclude(mm => mm.Genres)
-            .Include(mi => (mi as Song).SongMetadata)
-            .ThenInclude(mm => mm.Guids)
-            .Include(mi => (mi as Song).MediaVersions)
-            .ThenInclude(mv => mv.Chapters)
-            .Include(mi => (mi as Song).MediaVersions)
-            .ThenInclude(mm => mm.Streams)
-            .Include(mi => (mi as Image).ImageMetadata)
-            .ThenInclude(mm => mm.Tags)
-            .Include(mi => (mi as Image).ImageMetadata)
-            .ThenInclude(mm => mm.Genres)
-            .Include(mi => (mi as Image).ImageMetadata)
-            .ThenInclude(mm => mm.Guids)
-            .Include(mi => (mi as Image).MediaVersions)
-            .ThenInclude(mv => mv.Chapters)
-            .Include(mi => (mi as Image).MediaVersions)
-            .ThenInclude(mm => mm.Streams)
-            .Include(mi => (mi as Image).MediaVersions)
-            .ThenInclude(mm => mm.MediaFiles)
-            .Include(mi => (mi as RemoteStream).RemoteStreamMetadata)
-            .ThenInclude(mm => mm.Tags)
-            .Include(mi => (mi as RemoteStream).RemoteStreamMetadata)
-            .ThenInclude(mm => mm.Genres)
-            .Include(mi => (mi as RemoteStream).RemoteStreamMetadata)
-            .ThenInclude(mm => mm.Guids)
-            .Include(mi => (mi as RemoteStream).MediaVersions)
-            .ThenInclude(mv => mv.Chapters)
-            .Include(mi => (mi as RemoteStream).MediaVersions)
-            .ThenInclude(mm => mm.Streams)
-            .Include(mi => (mi as RemoteStream).MediaVersions)
-            .ThenInclude(mm => mm.MediaFiles)
-            .Include(mi => mi.TraktListItems)
-            .ThenInclude(tli => tli.TraktList)
-            .SelectOneAsync(mi => mi.Id, mi => mi.Id == id, cancellationToken);
+            .SingleOrDefaultAsync(mi => mi.Id == id, cancellationToken);
+
+        if (baseItem is null)
+        {
+            return Option<MediaItem>.None;
+        }
+
+        switch (baseItem)
+        {
+            case Movie:
+                return await dbContext.Movies
+                    .AsNoTracking()
+                    .IncludeForSearch()
+                    .AsSplitQuery()
+                    .SingleOrDefaultAsync(mi => mi.Id == id, cancellationToken);
+            case Episode:
+                return await dbContext.Episodes
+                    .AsNoTracking()
+                    .IncludeForSearch()
+                    .AsSplitQuery()
+                    .SingleOrDefaultAsync(mi => mi.Id == id, cancellationToken);
+            case Season:
+                return await dbContext.Seasons
+                    .AsNoTracking()
+                    .IncludeForSearch()
+                    .AsSplitQuery()
+                    .SingleOrDefaultAsync(mi => mi.Id == id, cancellationToken);
+            case Show:
+                return await dbContext.Shows
+                    .AsNoTracking()
+                    .IncludeForSearch()
+                    .AsSplitQuery()
+                    .SingleOrDefaultAsync(mi => mi.Id == id, cancellationToken);
+            case MusicVideo:
+                return await dbContext.MusicVideos
+                    .AsNoTracking()
+                    .IncludeForSearch()
+                    .AsSplitQuery()
+                    .SingleOrDefaultAsync(mi => mi.Id == id, cancellationToken);
+            case Artist:
+                return await dbContext.Artists
+                    .AsNoTracking()
+                    .IncludeForSearch()
+                    .AsSplitQuery()
+                    .SingleOrDefaultAsync(mi => mi.Id == id, cancellationToken);
+            case OtherVideo:
+                return await dbContext.OtherVideos
+                    .AsNoTracking()
+                    .IncludeForSearch()
+                    .AsSplitQuery()
+                    .SingleOrDefaultAsync(mi => mi.Id == id, cancellationToken);
+            case Song:
+                return await dbContext.Songs
+                    .AsNoTracking()
+                    .IncludeForSearch()
+                    .AsSplitQuery()
+                    .SingleOrDefaultAsync(mi => mi.Id == id, cancellationToken);
+            case Image:
+                return await dbContext.Images
+                    .AsNoTracking()
+                    .IncludeForSearch()
+                    .AsSplitQuery()
+                    .SingleOrDefaultAsync(mi => mi.Id == id, cancellationToken);
+            case RemoteStream:
+                return await dbContext.RemoteStreams
+                    .AsNoTracking()
+                    .IncludeForSearch()
+                    .AsSplitQuery()
+                    .SingleOrDefaultAsync(mi => mi.Id == id, cancellationToken);
+        }
+
+        return Option<MediaItem>.None;
     }
 
     public async Task<List<string>> GetLanguagesForShow(Show show)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
         return await dbContext.Connection.QueryAsync<string>(
             @"SELECT DISTINCT Language
                     FROM MediaStream
@@ -195,7 +104,7 @@ public class SearchRepository : ISearchRepository
 
     public async Task<List<string>> GetSubLanguagesForShow(Show show)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
         return await dbContext.Connection.QueryAsync<string>(
             @"SELECT DISTINCT Language
                     FROM MediaStream
@@ -208,7 +117,7 @@ public class SearchRepository : ISearchRepository
 
     public async Task<List<string>> GetLanguagesForSeason(Season season)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
         return await dbContext.Connection.QueryAsync<string>(
             @"SELECT DISTINCT Language
                     FROM MediaStream
@@ -220,7 +129,7 @@ public class SearchRepository : ISearchRepository
 
     public async Task<List<string>> GetSubLanguagesForSeason(Season season)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
         return await dbContext.Connection.QueryAsync<string>(
             @"SELECT DISTINCT Language
                     FROM MediaStream
@@ -232,7 +141,7 @@ public class SearchRepository : ISearchRepository
 
     public async Task<List<string>> GetLanguagesForArtist(Artist artist)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
         return await dbContext.Connection.QueryAsync<string>(
             @"SELECT DISTINCT Language
                     FROM MediaStream
@@ -245,7 +154,7 @@ public class SearchRepository : ISearchRepository
 
     public async Task<List<string>> GetSubLanguagesForArtist(Artist artist)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
         return await dbContext.Connection.QueryAsync<string>(
             @"SELECT DISTINCT Language
                     FROM MediaStream
@@ -256,177 +165,230 @@ public class SearchRepository : ISearchRepository
             new { ArtistId = artist.Id }).Map(result => result.ToList());
     }
 
-    public virtual async Task<List<string>> GetAllThreeLetterLanguageCodes(List<string> mediaCodes)
+    public async IAsyncEnumerable<MediaItem> GetAllMediaItems(
+        [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
-        return await dbContext.LanguageCodes.GetAllLanguageCodes(mediaCodes);
+        await foreach (var item in GetAllMovies(cancellationToken))
+        {
+            yield return item;
+        }
+
+        await foreach (var item in GetAllShows(cancellationToken))
+        {
+            yield return item;
+        }
+
+        await foreach (var item in GetAllSeasons(cancellationToken))
+        {
+            yield return item;
+        }
+
+        await foreach (var item in GetAllEpisodes(cancellationToken))
+        {
+            yield return item;
+        }
+
+        await foreach (var item in GetAllMusicVideos(cancellationToken))
+        {
+            yield return item;
+        }
+
+        await foreach (var item in GetAllArtists(cancellationToken))
+        {
+            yield return item;
+        }
+
+        await foreach (var item in GetAllOtherVideos(cancellationToken))
+        {
+            yield return item;
+        }
+
+        await foreach (var item in GetAllSongs(cancellationToken))
+        {
+            yield return item;
+        }
+
+        await foreach (var item in GetAllImages(cancellationToken))
+        {
+            yield return item;
+        }
+
+        await foreach (var item in GetAllRemoteStreams(cancellationToken))
+        {
+            yield return item;
+        }
     }
 
-    public IAsyncEnumerable<MediaItem> GetAllMediaItems()
+    private async IAsyncEnumerable<Movie> GetAllMovies([EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        TvContext dbContext = _dbContextFactory.CreateDbContext();
-        return dbContext.MediaItems
+        await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+
+        ConfiguredCancelableAsyncEnumerable<Movie> movies = dbContext.Movies
             .AsNoTracking()
-            .Include(mi => mi.Collections)
-            .Include(mi => mi.LibraryPath)
-            .ThenInclude(lp => lp.Library)
-            .Include(mi => (mi as Movie).MovieMetadata)
-            .ThenInclude(mm => mm.Genres)
-            .Include(mi => (mi as Movie).MovieMetadata)
-            .ThenInclude(mm => mm.Tags)
-            .Include(mi => (mi as Movie).MovieMetadata)
-            .ThenInclude(mm => mm.Studios)
-            .Include(mi => (mi as Movie).MovieMetadata)
-            .ThenInclude(mm => mm.Actors)
-            .Include(mi => (mi as Movie).MovieMetadata)
-            .ThenInclude(mm => mm.Directors)
-            .Include(mi => (mi as Movie).MovieMetadata)
-            .ThenInclude(mm => mm.Writers)
-            .Include(mi => (mi as Movie).MovieMetadata)
-            .ThenInclude(mm => mm.Guids)
-            .Include(mi => (mi as Movie).MediaVersions)
-            .ThenInclude(mv => mv.Chapters)
-            .Include(mi => (mi as Movie).MediaVersions)
-            .ThenInclude(mm => mm.Streams)
-            .Include(mi => (mi as Episode).EpisodeMetadata)
-            .ThenInclude(em => em.Genres)
-            .Include(mi => (mi as Episode).EpisodeMetadata)
-            .ThenInclude(em => em.Tags)
-            .Include(mi => (mi as Episode).EpisodeMetadata)
-            .ThenInclude(em => em.Studios)
-            .Include(mi => (mi as Episode).EpisodeMetadata)
-            .ThenInclude(em => em.Actors)
-            .Include(mi => (mi as Episode).EpisodeMetadata)
-            .ThenInclude(em => em.Directors)
-            .Include(mi => (mi as Episode).EpisodeMetadata)
-            .ThenInclude(em => em.Writers)
-            .Include(mi => (mi as Episode).EpisodeMetadata)
-            .ThenInclude(em => em.Guids)
-            .Include(mi => (mi as Episode).MediaVersions)
-            .ThenInclude(mv => mv.Chapters)
-            .Include(mi => (mi as Episode).MediaVersions)
-            .ThenInclude(em => em.Streams)
-            .Include(mi => (mi as Episode).MediaVersions)
-            .ThenInclude(em => em.MediaFiles)
-            .Include(mi => (mi as Episode).Season)
-            .ThenInclude(s => s.Show)
-            .ThenInclude(s => s.ShowMetadata)
-            .ThenInclude(s => s.Genres)
-            .Include(mi => (mi as Episode).Season)
-            .ThenInclude(s => s.Show)
-            .ThenInclude(s => s.ShowMetadata)
-            .ThenInclude(s => s.Tags)
-            .Include(mi => (mi as Episode).Season)
-            .ThenInclude(s => s.Show)
-            .ThenInclude(s => s.ShowMetadata)
-            .ThenInclude(s => s.Studios)
-            .Include(mi => (mi as Season).SeasonMetadata)
-            .ThenInclude(sm => sm.Genres)
-            .Include(mi => (mi as Season).SeasonMetadata)
-            .ThenInclude(sm => sm.Tags)
-            .Include(mi => (mi as Season).SeasonMetadata)
-            .ThenInclude(sm => sm.Studios)
-            .Include(mi => (mi as Season).SeasonMetadata)
-            .ThenInclude(sm => sm.Actors)
-            .Include(mi => (mi as Season).SeasonMetadata)
-            .ThenInclude(sm => sm.Guids)
-            .Include(mi => (mi as Season).Show)
-            .ThenInclude(sm => sm.ShowMetadata)
-            .ThenInclude(sm => sm.Genres)
-            .Include(mi => (mi as Season).Show)
-            .ThenInclude(sm => sm.ShowMetadata)
-            .ThenInclude(sm => sm.Tags)
-            .Include(mi => (mi as Season).Show)
-            .ThenInclude(sm => sm.ShowMetadata)
-            .ThenInclude(sm => sm.Studios)
-            .Include(mi => (mi as Show).ShowMetadata)
-            .ThenInclude(mm => mm.Genres)
-            .Include(mi => (mi as Show).ShowMetadata)
-            .ThenInclude(mm => mm.Tags)
-            .Include(mi => (mi as Show).ShowMetadata)
-            .ThenInclude(mm => mm.Studios)
-            .Include(mi => (mi as Show).ShowMetadata)
-            .ThenInclude(mm => mm.Actors)
-            .Include(mi => (mi as Show).ShowMetadata)
-            .ThenInclude(mm => mm.Guids)
-            .Include(mi => (mi as MusicVideo).Artist)
-            .ThenInclude(mm => mm.ArtistMetadata)
-            .Include(mi => (mi as MusicVideo).MusicVideoMetadata)
-            .ThenInclude(mm => mm.Artists)
-            .Include(mi => (mi as MusicVideo).MusicVideoMetadata)
-            .ThenInclude(mm => mm.Genres)
-            .Include(mi => (mi as MusicVideo).MusicVideoMetadata)
-            .ThenInclude(mm => mm.Tags)
-            .Include(mi => (mi as MusicVideo).MusicVideoMetadata)
-            .ThenInclude(mm => mm.Studios)
-            .Include(mi => (mi as MusicVideo).MusicVideoMetadata)
-            .ThenInclude(mm => mm.Guids)
-            .Include(mi => (mi as MusicVideo).MediaVersions)
-            .ThenInclude(mv => mv.Chapters)
-            .Include(mi => (mi as MusicVideo).MediaVersions)
-            .ThenInclude(mm => mm.Streams)
-            .Include(mi => (mi as Artist).ArtistMetadata)
-            .ThenInclude(mm => mm.Genres)
-            .Include(mi => (mi as Artist).ArtistMetadata)
-            .ThenInclude(mm => mm.Styles)
-            .Include(mi => (mi as Artist).ArtistMetadata)
-            .ThenInclude(mm => mm.Moods)
-            .Include(mi => (mi as Artist).ArtistMetadata)
-            .ThenInclude(mm => mm.Guids)
-            .Include(mi => (mi as OtherVideo).OtherVideoMetadata)
-            .ThenInclude(ovm => ovm.Genres)
-            .Include(mi => (mi as OtherVideo).OtherVideoMetadata)
-            .ThenInclude(ovm => ovm.Tags)
-            .Include(mi => (mi as OtherVideo).OtherVideoMetadata)
-            .ThenInclude(ovm => ovm.Studios)
-            .Include(mi => (mi as OtherVideo).OtherVideoMetadata)
-            .ThenInclude(ovm => ovm.Actors)
-            .Include(mi => (mi as OtherVideo).OtherVideoMetadata)
-            .ThenInclude(ovm => ovm.Directors)
-            .Include(mi => (mi as OtherVideo).OtherVideoMetadata)
-            .ThenInclude(ovm => ovm.Writers)
-            .Include(mi => (mi as OtherVideo).OtherVideoMetadata)
-            .ThenInclude(ovm => ovm.Guids)
-            .Include(mi => (mi as OtherVideo).MediaVersions)
-            .ThenInclude(mv => mv.Chapters)
-            .Include(mi => (mi as OtherVideo).MediaVersions)
-            .ThenInclude(ovm => ovm.Streams)
-            .Include(mi => (mi as Song).SongMetadata)
-            .ThenInclude(mm => mm.Tags)
-            .Include(mi => (mi as Song).SongMetadata)
-            .ThenInclude(mm => mm.Genres)
-            .Include(mi => (mi as Song).SongMetadata)
-            .ThenInclude(mm => mm.Guids)
-            .Include(mi => (mi as Song).MediaVersions)
-            .ThenInclude(mv => mv.Chapters)
-            .Include(mi => (mi as Song).MediaVersions)
-            .ThenInclude(mm => mm.Streams)
-            .Include(mi => (mi as Image).ImageMetadata)
-            .ThenInclude(mm => mm.Tags)
-            .Include(mi => (mi as Image).ImageMetadata)
-            .ThenInclude(mm => mm.Genres)
-            .Include(mi => (mi as Image).ImageMetadata)
-            .ThenInclude(mm => mm.Guids)
-            .Include(mi => (mi as Image).MediaVersions)
-            .ThenInclude(mv => mv.Chapters)
-            .Include(mi => (mi as Image).MediaVersions)
-            .ThenInclude(mm => mm.Streams)
-            .Include(mi => (mi as Image).MediaVersions)
-            .ThenInclude(mm => mm.MediaFiles)
-            .Include(mi => (mi as RemoteStream).RemoteStreamMetadata)
-            .ThenInclude(mm => mm.Tags)
-            .Include(mi => (mi as RemoteStream).RemoteStreamMetadata)
-            .ThenInclude(mm => mm.Genres)
-            .Include(mi => (mi as RemoteStream).RemoteStreamMetadata)
-            .ThenInclude(mm => mm.Guids)
-            .Include(mi => (mi as RemoteStream).MediaVersions)
-            .ThenInclude(mv => mv.Chapters)
-            .Include(mi => (mi as RemoteStream).MediaVersions)
-            .ThenInclude(mm => mm.Streams)
-            .Include(mi => (mi as RemoteStream).MediaVersions)
-            .ThenInclude(mm => mm.MediaFiles)
-            .Include(mi => mi.TraktListItems)
-            .ThenInclude(tli => tli.TraktList)
-            .AsAsyncEnumerable();
+            .IncludeForSearch()
+            .AsSplitQuery()
+            .AsAsyncEnumerable()
+            .WithCancellation(cancellationToken);
+
+        await foreach (var movie in movies)
+        {
+            yield return movie;
+        }
+    }
+
+    private async IAsyncEnumerable<Show> GetAllShows([EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+        await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+
+        ConfiguredCancelableAsyncEnumerable<Show> shows = dbContext.Shows
+            .AsNoTracking()
+            .IncludeForSearch()
+            .AsSplitQuery()
+            .AsAsyncEnumerable()
+            .WithCancellation(cancellationToken);
+
+        await foreach (var movie in shows)
+        {
+            yield return movie;
+        }
+    }
+
+    private async IAsyncEnumerable<Season> GetAllSeasons([EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+        await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+
+        ConfiguredCancelableAsyncEnumerable<Season> seasons = dbContext.Seasons
+            .AsNoTracking()
+            .IncludeForSearch()
+            .AsSplitQuery()
+            .AsAsyncEnumerable()
+            .WithCancellation(cancellationToken);
+
+        await foreach (var movie in seasons)
+        {
+            yield return movie;
+        }
+    }
+
+    private async IAsyncEnumerable<Episode> GetAllEpisodes([EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+        await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+
+        ConfiguredCancelableAsyncEnumerable<Episode> episodes = dbContext.Episodes
+            .AsNoTracking()
+            .IncludeForSearch()
+            .AsSplitQuery()
+            .AsAsyncEnumerable()
+            .WithCancellation(cancellationToken);
+
+        await foreach (var movie in episodes)
+        {
+            yield return movie;
+        }
+    }
+
+    private async IAsyncEnumerable<MusicVideo> GetAllMusicVideos(
+        [EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+        await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+
+        ConfiguredCancelableAsyncEnumerable<MusicVideo> musicVideos = dbContext.MusicVideos
+            .AsNoTracking()
+            .IncludeForSearch()
+            .AsSplitQuery()
+            .AsAsyncEnumerable()
+            .WithCancellation(cancellationToken);
+
+        await foreach (var movie in musicVideos)
+        {
+            yield return movie;
+        }
+    }
+
+    private async IAsyncEnumerable<Artist> GetAllArtists([EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+        await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+
+        ConfiguredCancelableAsyncEnumerable<Artist> artists = dbContext.Artists
+            .AsNoTracking()
+            .IncludeForSearch()
+            .AsSplitQuery()
+            .AsAsyncEnumerable()
+            .WithCancellation(cancellationToken);
+
+        await foreach (var movie in artists)
+        {
+            yield return movie;
+        }
+    }
+
+    private async IAsyncEnumerable<OtherVideo> GetAllOtherVideos(
+        [EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+        await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+
+        ConfiguredCancelableAsyncEnumerable<OtherVideo> otherVideos = dbContext.OtherVideos
+            .AsNoTracking()
+            .IncludeForSearch()
+            .AsSplitQuery()
+            .AsAsyncEnumerable()
+            .WithCancellation(cancellationToken);
+
+        await foreach (var movie in otherVideos)
+        {
+            yield return movie;
+        }
+    }
+
+    private async IAsyncEnumerable<Song> GetAllSongs([EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+        await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+
+        ConfiguredCancelableAsyncEnumerable<Song> songs = dbContext.Songs
+            .AsNoTracking()
+            .IncludeForSearch()
+            .AsSplitQuery()
+            .AsAsyncEnumerable()
+            .WithCancellation(cancellationToken);
+
+        await foreach (var movie in songs)
+        {
+            yield return movie;
+        }
+    }
+
+    private async IAsyncEnumerable<Image> GetAllImages([EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+        await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+
+        ConfiguredCancelableAsyncEnumerable<Image> images = dbContext.Images
+            .AsNoTracking()
+            .IncludeForSearch()
+            .AsSplitQuery()
+            .AsAsyncEnumerable()
+            .WithCancellation(cancellationToken);
+
+        await foreach (var movie in images)
+        {
+            yield return movie;
+        }
+    }
+
+    private async IAsyncEnumerable<RemoteStream> GetAllRemoteStreams(
+        [EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+        await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+
+        ConfiguredCancelableAsyncEnumerable<RemoteStream> remoteStreams = dbContext.RemoteStreams
+            .AsNoTracking()
+            .IncludeForSearch()
+            .AsSplitQuery()
+            .AsAsyncEnumerable()
+            .WithCancellation(cancellationToken);
+
+        await foreach (var movie in remoteStreams)
+        {
+            yield return movie;
+        }
     }
 }

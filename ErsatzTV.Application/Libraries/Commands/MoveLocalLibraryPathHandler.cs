@@ -2,7 +2,7 @@
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
-using ErsatzTV.Core.Interfaces.Repositories.Caching;
+using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
@@ -15,20 +15,23 @@ public class MoveLocalLibraryPathHandler : IRequestHandler<MoveLocalLibraryPath,
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
+    private readonly ILanguageCodeService _languageCodeService;
     private readonly ILogger<MoveLocalLibraryPathHandler> _logger;
     private readonly ISearchIndex _searchIndex;
-    private readonly ICachingSearchRepository _searchRepository;
+    private readonly ISearchRepository _searchRepository;
 
     public MoveLocalLibraryPathHandler(
         ISearchIndex searchIndex,
-        ICachingSearchRepository searchRepository,
+        ISearchRepository searchRepository,
         IFallbackMetadataProvider fallbackMetadataProvider,
+        ILanguageCodeService languageCodeService,
         IDbContextFactory<TvContext> dbContextFactory,
         ILogger<MoveLocalLibraryPathHandler> logger)
     {
         _searchIndex = searchIndex;
         _searchRepository = searchRepository;
         _fallbackMetadataProvider = fallbackMetadataProvider;
+        _languageCodeService = languageCodeService;
         _dbContextFactory = dbContextFactory;
         _logger = logger;
     }
@@ -64,6 +67,7 @@ public class MoveLocalLibraryPathHandler : IRequestHandler<MoveLocalLibraryPath,
                     await _searchIndex.UpdateItems(
                         _searchRepository,
                         _fallbackMetadataProvider,
+                        _languageCodeService,
                         [mediaItem]);
                 }
             }

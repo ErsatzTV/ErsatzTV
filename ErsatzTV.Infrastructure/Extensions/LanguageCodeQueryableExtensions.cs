@@ -7,38 +7,6 @@ public static class LanguageCodeQueryableExtensions
 {
     public static async Task<List<string>> GetAllLanguageCodes(
         this IQueryable<LanguageCode> languageCodes,
-        string mediaCode)
-    {
-        if (string.IsNullOrWhiteSpace(mediaCode))
-        {
-            return new List<string>();
-        }
-
-        string code = mediaCode.ToLowerInvariant();
-
-        List<LanguageCode> maybeLanguages = await languageCodes
-            .Filter(lc => lc.ThreeCode1 == code || lc.ThreeCode2 == code)
-            .ToListAsync();
-
-        var result = new System.Collections.Generic.HashSet<string>();
-        foreach (LanguageCode language in maybeLanguages)
-        {
-            if (!string.IsNullOrWhiteSpace(language.ThreeCode1))
-            {
-                result.Add(language.ThreeCode1);
-            }
-
-            if (!string.IsNullOrWhiteSpace(language.ThreeCode2))
-            {
-                result.Add(language.ThreeCode2);
-            }
-        }
-
-        return result.ToList();
-    }
-
-    public static async Task<List<string>> GetAllLanguageCodes(
-        this IQueryable<LanguageCode> languageCodes,
         List<string> mediaCodes)
     {
         var validCodes = mediaCodes

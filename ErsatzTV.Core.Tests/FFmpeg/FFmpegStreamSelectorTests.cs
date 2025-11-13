@@ -53,16 +53,16 @@ public class FFmpegStreamSelectorTests
                 PreferredAudioLanguageCode = "eng"
             };
 
-            ISearchRepository searchRepository = Substitute.For<ISearchRepository>();
-            searchRepository.GetAllThreeLetterLanguageCodes(Arg.Any<List<string>>())
-                .Returns(Task.FromResult(new List<string> { "jpn" }));
+            ILanguageCodeService languageCodeService = Substitute.For<ILanguageCodeService>();
+            languageCodeService.GetAllLanguageCodes(Arg.Any<List<string>>())
+                .Returns(["jpn"]);
 
             var selector = new FFmpegStreamSelector(
                 new ScriptEngine(Substitute.For<ILogger<ScriptEngine>>()),
                 Substitute.For<IStreamSelectorRepository>(),
-                searchRepository,
                 Substitute.For<IConfigElementRepository>(),
                 Substitute.For<ILocalFileSystem>(),
+                languageCodeService,
                 Substitute.For<ILogger<FFmpegStreamSelector>>());
 
             Option<MediaStream> selectedStream = await selector.SelectAudioStream(
@@ -115,16 +115,16 @@ public class FFmpegStreamSelectorTests
                 PreferredAudioTitle = "Some"
             };
 
-            ISearchRepository searchRepository = Substitute.For<ISearchRepository>();
-            searchRepository.GetAllThreeLetterLanguageCodes(Arg.Any<List<string>>())
-                .Returns(Task.FromResult(new List<string> { "jpn", "eng" }));
+            ILanguageCodeService languageCodeService = Substitute.For<ILanguageCodeService>();
+            languageCodeService.GetAllLanguageCodes(Arg.Any<List<string>>())
+                .Returns(["jpn", "eng"]);
 
             var selector = new FFmpegStreamSelector(
                 new ScriptEngine(Substitute.For<ILogger<ScriptEngine>>()),
                 Substitute.For<IStreamSelectorRepository>(),
-                searchRepository,
                 Substitute.For<IConfigElementRepository>(),
                 Substitute.For<ILocalFileSystem>(),
+                languageCodeService,
                 Substitute.For<ILogger<FFmpegStreamSelector>>());
 
             Option<MediaStream> selectedStream = await selector.SelectAudioStream(
@@ -165,16 +165,16 @@ public class FFmpegStreamSelectorTests
 
             var channel = new Channel(Guid.NewGuid());
 
-            ISearchRepository searchRepository = Substitute.For<ISearchRepository>();
-            searchRepository.GetAllThreeLetterLanguageCodes(Arg.Any<List<string>>())
-                .Returns(Task.FromResult(new List<string> { "heb" }));
+            ILanguageCodeService languageCodeService = Substitute.For<ILanguageCodeService>();
+            languageCodeService.GetAllLanguageCodes(Arg.Any<List<string>>())
+                .Returns(["heb"]);
 
             var selector = new FFmpegStreamSelector(
                 new ScriptEngine(Substitute.For<ILogger<ScriptEngine>>()),
                 Substitute.For<IStreamSelectorRepository>(),
-                searchRepository,
                 Substitute.For<IConfigElementRepository>(),
                 Substitute.For<ILocalFileSystem>(),
+                languageCodeService,
                 Substitute.For<ILogger<FFmpegStreamSelector>>());
 
             Option<Subtitle> selectedStream = await selector.SelectSubtitleStream(

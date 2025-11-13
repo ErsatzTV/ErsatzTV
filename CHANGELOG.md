@@ -77,6 +77,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix bug where looping motion graphics wouldn't be displayed when seeking into second half of content
 - Fix `content_total_duration` value in graphics engine opacity expressions
   - This bug caused some graphics elements to display too early after first joining a channel
+- Optimize database calls made for search index rebuilds and updates
+  - This should improve performance of library scans
 
 ### Changed
 - Use smaller batch size for search index updates (100, down from 1000)

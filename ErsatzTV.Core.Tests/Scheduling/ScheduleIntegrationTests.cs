@@ -5,15 +5,14 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Scheduling;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
-using ErsatzTV.Core.Interfaces.Repositories.Caching;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Metadata;
 using ErsatzTV.Core.Scheduling;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Data.Repositories;
-using ErsatzTV.Infrastructure.Data.Repositories.Caching;
 using ErsatzTV.Infrastructure.Extensions;
+using ErsatzTV.Infrastructure.Metadata;
 using ErsatzTV.Infrastructure.Search;
 using ErsatzTV.Infrastructure.Sqlite.Data;
 using LanguageExt.UnsafeValueAccess;
@@ -86,11 +85,12 @@ public class ScheduleIntegrationTests
         services.AddSingleton((Func<IServiceProvider, ILoggerFactory>)(_ => new SerilogLoggerFactory()));
 
         services.AddScoped<ISearchRepository, SearchRepository>();
-        services.AddScoped<ICachingSearchRepository, CachingSearchRepository>();
+        services.AddScoped<ILanguageCodeService, LanguageCodeService>();
         services.AddScoped<IConfigElementRepository, ConfigElementRepository>();
         services.AddScoped<IFallbackMetadataProvider, FallbackMetadataProvider>();
 
         services.AddSingleton<ISearchIndex, LuceneSearchIndex>();
+        services.AddSingleton<ILanguageCodeCache, LanguageCodeCache>();
 
         services.AddSingleton(_ => Substitute.For<IClient>());
 
@@ -114,8 +114,9 @@ public class ScheduleIntegrationTests
             _cancellationToken);
 
         await searchIndex.Rebuild(
-            provider.GetRequiredService<ICachingSearchRepository>(),
+            provider.GetRequiredService<ISearchRepository>(),
             provider.GetRequiredService<IFallbackMetadataProvider>(),
+            provider.GetRequiredService<ILanguageCodeService>(),
             _cancellationToken);
 
         var builder = new PlayoutBuilder(

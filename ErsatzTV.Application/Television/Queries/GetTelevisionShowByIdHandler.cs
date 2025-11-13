@@ -1,4 +1,5 @@
 ﻿using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
@@ -7,27 +8,18 @@ using static ErsatzTV.Application.Television.Mapper;
 
 namespace ErsatzTV.Application.Television;
 
-public class GetTelevisionShowByIdHandler : IRequestHandler<GetTelevisionShowById, Option<TelevisionShowViewModel>>
+public class GetTelevisionShowByIdHandler(
+    IDbContextFactory<TvContext> dbContextFactory,
+    ISearchRepository searchRepository,
+    ILanguageCodeService languageCodeService,
+    IMediaSourceRepository mediaSourceRepository)
+    : IRequestHandler<GetTelevisionShowById, Option<TelevisionShowViewModel>>
 {
-    private readonly IDbContextFactory<TvContext> _dbContextFactory;
-    private readonly IMediaSourceRepository _mediaSourceRepository;
-    private readonly ISearchRepository _searchRepository;
-
-    public GetTelevisionShowByIdHandler(
-        IDbContextFactory<TvContext> dbContextFactory,
-        ISearchRepository searchRepository,
-        IMediaSourceRepository mediaSourceRepository)
-    {
-        _dbContextFactory = dbContextFactory;
-        _searchRepository = searchRepository;
-        _mediaSourceRepository = mediaSourceRepository;
-    }
-
     public async Task<Option<TelevisionShowViewModel>> Handle(
         GetTelevisionShowById request,
         CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         Option<Show> maybeShow = await dbContext.Shows
             .AsNoTracking()
@@ -50,14 +42,14 @@ public class GetTelevisionShowByIdHandler : IRequestHandler<GetTelevisionShowByI
 
         foreach (Show show in maybeShow)
         {
-            Option<JellyfinMediaSource> maybeJellyfin = await _mediaSourceRepository.GetAllJellyfin(cancellationToken)
+            Option<JellyfinMediaSource> maybeJellyfin = await mediaSourceRepository.GetAllJellyfin(cancellationToken)
                 .Map(list => list.HeadOrNone());
 
-            Option<EmbyMediaSource> maybeEmby = await _mediaSourceRepository.GetAllEmby(cancellationToken)
+            Option<EmbyMediaSource> maybeEmby = await mediaSourceRepository.GetAllEmby(cancellationToken)
                 .Map(list => list.HeadOrNone());
 
-            List<string> mediaCodes = await _searchRepository.GetLanguagesForShow(show);
-            List<string> languageCodes = await _searchRepository.GetAllThreeLetterLanguageCodes(mediaCodes);
+            List<string> mediaCodes = await searchRepository.GetLanguagesForShow(show);
+            List<string> languageCodes = languageCodeService.GetAllLanguageCodes(mediaCodes);
             return ProjectToViewModel(show, languageCodes, maybeJellyfin, maybeEmby);
         }
 

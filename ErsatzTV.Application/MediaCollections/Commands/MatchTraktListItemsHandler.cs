@@ -2,7 +2,7 @@
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Locking;
 using ErsatzTV.Core.Interfaces.Metadata;
-using ErsatzTV.Core.Interfaces.Repositories.Caching;
+using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Interfaces.Trakt;
 using ErsatzTV.Infrastructure.Data;
@@ -19,9 +19,10 @@ public class MatchTraktListItemsHandler : TraktCommandBase,
 
     public MatchTraktListItemsHandler(
         ITraktApiClient traktApiClient,
-        ICachingSearchRepository searchRepository,
+        ISearchRepository searchRepository,
         ISearchIndex searchIndex,
         IFallbackMetadataProvider fallbackMetadataProvider,
+        ILanguageCodeService languageCodeService,
         IDbContextFactory<TvContext> dbContextFactory,
         ILogger<MatchTraktListItemsHandler> logger,
         IEntityLocker entityLocker) : base(
@@ -29,6 +30,7 @@ public class MatchTraktListItemsHandler : TraktCommandBase,
         searchRepository,
         searchIndex,
         fallbackMetadataProvider,
+        languageCodeService,
         logger)
     {
         _dbContextFactory = dbContextFactory;
