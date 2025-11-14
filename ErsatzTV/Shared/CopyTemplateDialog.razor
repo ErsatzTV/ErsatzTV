@@ -1,0 +1,100 @@
+﻿@using ErsatzTV.Application.Scheduling
+@implements IDisposable
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@inject ILogger<CopyScheduleDialog> Logger
+
+<MudDialog>
+    <DialogContent>
+        <EditForm Model="@_dummyModel" OnSubmit="@(_ => Submit())">
+            <div class="d-flex mb-6">
+                <MudText>Select a group for the new template</MudText>
+            </div>
+            <MudSelect @bind-Value="_selectedTemplateGroup" Class="mb-6 mx-4" Label="New Template Group">
+                @foreach (TemplateGroupViewModel templateGroup in _templateGroups)
+                {
+                    <MudSelectItem Value="@templateGroup">@templateGroup.Name</MudSelectItem>
+                }
+            </MudSelect>
+            <div class="d-flex mb-6">
+                <MudText>Enter a name for the new template</MudText>
+            </div>
+            <MudTextField T="string" Label="New Template Name"
+                          @bind-Text="@_newName"
+                          Class="mb-6 mx-4">
+            </MudTextField>
+        </EditForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@Cancel" ButtonType="ButtonType.Reset">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="@Submit">
+            Copy Template
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private CancellationTokenSource _cts;
+
+    [CascadingParameter]
+    IMudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public int TemplateId { get; set; }
+
+    private record DummyModel;
+
+    private readonly DummyModel _dummyModel = new();
+
+    private List<TemplateGroupViewModel> _templateGroups = [];
+    private TemplateGroupViewModel _selectedTemplateGroup;
+
+    private string _newName;
+
+    public void Dispose()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
+
+        try
+        {
+            _templateGroups = await Mediator.Send(new GetAllTemplateGroups(), token);
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
+        }
+    }
+
+    private bool CanSubmit() => _selectedTemplateGroup != null && !string.IsNullOrWhiteSpace(_newName);
+
+    private async Task Submit()
+    {
+        if (!CanSubmit())
+        {
+            return;
+        }
+
+        Either<BaseError, TemplateViewModel> maybeResult =
+            await Mediator.Send(new CopyTemplate(TemplateId, _selectedTemplateGroup.Id, _newName), _cts.Token);
+
+        maybeResult.Match(
+            schedule => { MudDialog.Close(DialogResult.Ok(schedule)); },
+            error =>
+            {
+                Snackbar.Add(error.Value, Severity.Error);
+                Logger.LogError("Error copying template: {Error}", error.Value);
+                MudDialog.Close(DialogResult.Cancel());
+            });
+    }
+
+    private void Cancel(MouseEventArgs e) => MudDialog.Cancel();
+}

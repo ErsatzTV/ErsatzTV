@@ -1,11 +1,11 @@
 @page "/templates"
 @using ErsatzTV.Application.Scheduling
-@using ErsatzTV.Application.Tree
 @implements IDisposable
 @inject ILogger<Templates> Logger
 @inject ISnackbar Snackbar
 @inject IMediator Mediator
 @inject IDialogService Dialog
+@inject NavigationManager NavigationManager
 
 <MudForm Style="max-height: 100%">
     <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
@@ -30,10 +30,10 @@
                 <div class="d-flex">
                     <MudText>Template Group</MudText>
                 </div>
-                <MudSelect @bind-Value="_selectedTemplateGroup">
+                <MudSelect T="string" ValueChanged="@UpdateSelectedTemplateGroup">
                     @foreach (TemplateGroupViewModel templateGroup in _templateGroups)
                     {
-                        <MudSelectItem Value="@templateGroup">@templateGroup.Name</MudSelectItem>
+                        <MudSelectItem Value="@templateGroup.Name">@templateGroup.Name</MudSelectItem>
                     }
                 </MudSelect>
             </MudStack>
@@ -49,42 +49,88 @@
                     Add Template
                 </MudButton>
             </MudStack>
-            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                <div class="d-flex"></div>
-                <MudTreeView T="TemplateTreeItemViewModel" Items="@_treeItems" Hover="true" Style="width: 100%">
-                    <ItemTemplate Context="item">
-                        <MudTreeViewItem T="TemplateTreeItemViewModel" Items="@item.Value!.TreeItems" Icon="@item.Value.Icon" Value="@item.Value">
-                            <BodyContent>
-                                <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%">
-                                    <MudGrid Justify="Justify.FlexStart">
-                                        <MudItem xs="5">
-                                            <MudText>@item.Value.Text</MudText>
-                                        </MudItem>
-                                    </MudGrid>
-                                    <div style="justify-self: end;">
-                                        @foreach (int templateId in Optional(item.Value.TemplateId))
-                                        {
-                                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Medium" Color="Color.Inherit" Href="@($"templates/{templateId}")"/>
-                                        }
-                                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Medium" Color="Color.Inherit" OnClick="@(_ => DeleteItem(item.Value))"/>
-                                    </div>
-                                </div>
-                            </BodyContent>
-                        </MudTreeViewItem>
-                    </ItemTemplate>
-                </MudTreeView>
-            </MudStack>
+            <MudTable Hover="true"
+                      Dense="true"
+                      Class="mt-8"
+                      Items="@_templates"
+                      GroupBy="@_groupDefinition"
+                      GroupHeaderStyle="background-color:var(--mud-palette-appbarbackground)"
+                      RowStyle="background-color:var(--mud-palette-background-gray)"
+                      Filter="new Func<TemplateViewModel,bool>(FilterTemplates)">
+                <ColGroup>
+                    <MudHidden Breakpoint="Breakpoint.Xs">
+                        <col style="width: 60px;"/>
+                        <col/>
+                        <col style="width: 180px;"/>
+                    </MudHidden>
+                </ColGroup>
+                <ToolBarContent>
+                    <MudTextField T="string"
+                                  ValueChanged="@(s => OnSearch(s))"
+                                  Placeholder="Search for templates"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.FilterList"
+                                  Clearable="true">
+                    </MudTextField>
+                </ToolBarContent>
+                <GroupHeaderTemplate>
+                    <MudTd Class="mud-table-cell-custom-group">
+                        @($"{context.Key}")
+                    </MudTd>
+                    <MudTd>
+                        <div style="align-items: center; display: flex;">
+                            <div style="width: 48px;"></div>
+                            <div style="width: 48px;"></div>
+                            <MudTooltip Text="Delete Template Group">
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                               OnClick="@(_ => DeleteTemplateGroup(context.Items?.FirstOrDefault()))">
+                                </MudIconButton>
+                            </MudTooltip>
+                        </div>
+                    </MudTd>
+                </GroupHeaderTemplate>
+                <RowTemplate>
+                    <MudTd>@context.Name</MudTd>
+                    <MudTd>
+                        <div class="d-flex">
+                            @if (context.Id >= 0)
+                            {
+                                <MudTooltip Text="Edit Template">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                                   Href="@($"templates/{context.Id}")">
+                                    </MudIconButton>
+                                </MudTooltip>
+                                <MudTooltip Text="Copy Template">
+                                    <MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+                                                   OnClick="@(_ => CopyTemplate(context))">
+                                    </MudIconButton>
+                                </MudTooltip>
+                                <MudTooltip Text="Delete Template">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                   OnClick="@(_ => DeleteTemplate(context))">
+                                    </MudIconButton>
+                                </MudTooltip>
+                            }
+                            else
+                            {
+                                <div style="height: 48px; width: 48px"></div>
+                            }
+                        </div>
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
         </MudContainer>
     </div>
 </MudForm>
 
 @code {
     private CancellationTokenSource _cts;
-    private readonly List<TreeItemData<TemplateTreeItemViewModel>> _treeItems = [];
+    private readonly List<TemplateViewModel> _templates = [];
     private List<TemplateGroupViewModel> _templateGroups = [];
     private TemplateGroupViewModel _selectedTemplateGroup;
     private string _templateGroupName;
     private string _templateName;
+    private string _searchString;
 
     public void Dispose()
     {
@@ -103,18 +149,22 @@
         {
             _templateGroups = await Mediator.Send(new GetAllTemplateGroups(), token);
 
-            _treeItems.Clear();
-            TreeViewModel tree = await Mediator.Send(new GetTemplateTree(), token);
-            foreach (TreeGroupViewModel group in tree.Groups)
-            {
-                _treeItems.Add(new TreeItemData<TemplateTreeItemViewModel> { Value = new TemplateTreeItemViewModel(group) });
-            }
+            _templates.Clear();
+            _templates.AddRange(await Mediator.Send(new GetAllTemplates(), token));
         }
         catch (OperationCanceledException)
         {
             // do nothing
         }
     }
+
+    private readonly TableGroupDefinition<TemplateViewModel> _groupDefinition = new()
+    {
+        GroupName = "Group",
+        Indentation = false,
+        Expandable = true,
+        Selector = (e) => e.GroupName
+    };
 
     private async Task AddTemplateGroup()
     {
@@ -130,14 +180,22 @@
 
             foreach (TemplateGroupViewModel templateGroup in result.RightToSeq())
             {
-                _treeItems.Add(new TreeItemData<TemplateTreeItemViewModel> { Value = new TemplateTreeItemViewModel(templateGroup) });
-                _treeItems.Sort((x, y) => string.Compare(x.Value?.Text, y.Value?.Text, StringComparison.CurrentCulture));
                 _templateGroupName = null;
-
                 _templateGroups = await Mediator.Send(new GetAllTemplateGroups(), _cts.Token);
+                _selectedTemplateGroup = _templateGroups.Find(tg => tg.Id == templateGroup.Id);
+
+                _templates.Clear();
+                _templates.AddRange(await Mediator.Send(new GetAllTemplates(), _cts.Token));
+
                 await InvokeAsync(StateHasChanged);
             }
         }
+    }
+
+    private void UpdateSelectedTemplateGroup(string templateGroupName)
+    {
+        _selectedTemplateGroup = _templateGroups.Find(tg => tg.Name == templateGroupName);
+        InvokeAsync(StateHasChanged);
     }
 
     private async Task AddTemplate()
@@ -152,13 +210,10 @@
                 Logger.LogError("Unexpected error adding template: {Error}", error.Value);
             }
 
-            foreach (TemplateViewModel template in result.RightToSeq())
+            if (result.IsRight)
             {
-                foreach (TemplateTreeItemViewModel item in _treeItems.Map(i => i.Value).Where(item => item.TemplateGroupId == _selectedTemplateGroup.Id))
-                {
-                    item.TreeItems.Add(new TreeItemData<TemplateTreeItemViewModel> { Value = new TemplateTreeItemViewModel(template) });
-                    item.TreeItems.Sort((x, y) => string.Compare(x.Value?.Text, y.Value?.Text, StringComparison.CurrentCulture));
-                }
+                _templates.Clear();
+                _templates.AddRange(await Mediator.Send(new GetAllTemplates(), _cts.Token));
 
                 _templateName = null;
                 await InvokeAsync(StateHasChanged);
@@ -166,46 +221,88 @@
         }
     }
 
-    private async Task DeleteItem(TemplateTreeItemViewModel treeItem)
+    private void OnSearch(string query)
     {
-        foreach (int templateGroupId in Optional(treeItem.TemplateGroupId))
+        _searchString = query;
+    }
+
+    private bool FilterTemplates(TemplateViewModel template) => FilterTemplates(template, _searchString);
+
+    private bool FilterTemplates(TemplateViewModel template, string searchString)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
         {
-            var parameters = new DialogParameters { { "EntityType", "template group" }, { "EntityName", treeItem.Text } };
-            var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
-
-            IDialogReference dialog = await Dialog.ShowAsync<DeleteDialog>("Delete Template Group", parameters, options);
-            DialogResult result = await dialog.Result;
-            if (result is not null && !result.Canceled)
-            {
-                await Mediator.Send(new DeleteTemplateGroup(templateGroupId), _cts.Token);
-                _treeItems.RemoveAll(i => i.Value?.TemplateGroupId == templateGroupId);
-                if (_selectedTemplateGroup?.Id == templateGroupId)
-                {
-                    _selectedTemplateGroup = null;
-                }
-
-                _templateGroups = await Mediator.Send(new GetAllTemplateGroups(), _cts.Token);
-                await InvokeAsync(StateHasChanged);
-            }
+            return true;
         }
 
-        foreach (int templateId in Optional(treeItem.TemplateId))
+        if (template.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
         {
-            var parameters = new DialogParameters { { "EntityType", "template" }, { "EntityName", treeItem.Text } };
-            var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+            return true;
+        }
 
-            IDialogReference dialog = await Dialog.ShowAsync<DeleteDialog>("Delete Template", parameters, options);
-            DialogResult result = await dialog.Result;
-            if (result is not null && !result.Canceled)
+        return false;
+    }
+
+    private async Task DeleteTemplateGroup(TemplateViewModel template)
+    {
+        if (template is null)
+        {
+            return;
+        }
+
+        var parameters = new DialogParameters { { "EntityType", "template group" }, { "EntityName", template.GroupName } };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        IDialogReference dialog = await Dialog.ShowAsync<DeleteDialog>("Delete Template Group", parameters, options);
+        DialogResult result = await dialog.Result;
+        if (result is not null && !result.Canceled)
+        {
+            await Mediator.Send(new DeleteTemplateGroup(template.TemplateGroupId), _cts.Token);
+            if (_selectedTemplateGroup?.Id == template.TemplateGroupId)
             {
-                await Mediator.Send(new DeleteTemplate(templateId), _cts.Token);
-                foreach (TemplateTreeItemViewModel parent in _treeItems.Map(i => i.Value))
-                {
-                    parent.TreeItems.RemoveAll(i => i.Value == treeItem);
-                }
-
-                await InvokeAsync(StateHasChanged);
+                _selectedTemplateGroup = null;
             }
+
+            _templateGroups = await Mediator.Send(new GetAllTemplateGroups(), _cts.Token);
+            _templates.Clear();
+            _templates.AddRange(await Mediator.Send(new GetAllTemplates(), _cts.Token));
+
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task CopyTemplate(TemplateViewModel template)
+    {
+        var parameters = new DialogParameters { { "TemplateId", template.Id } };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        IDialogReference dialog = await Dialog.ShowAsync<CopyTemplateDialog>("Copy Template", parameters, options);
+        DialogResult dialogResult = await dialog.Result;
+        if (dialogResult is { Canceled: false, Data: TemplateViewModel data })
+        {
+            NavigationManager.NavigateTo($"templates/{data.Id}");
+        }
+    }
+
+    private async Task DeleteTemplate(TemplateViewModel template)
+    {
+        if (template is null)
+        {
+            return;
+        }
+
+        var parameters = new DialogParameters { { "EntityType", "template" }, { "EntityName", template.Name } };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        IDialogReference dialog = await Dialog.ShowAsync<DeleteDialog>("Delete Template", parameters, options);
+        DialogResult result = await dialog.Result;
+        if (result is not null && !result.Canceled)
+        {
+            await Mediator.Send(new DeleteTemplate(template.Id), _cts.Token);
+            _templates.Clear();
+            _templates.AddRange(await Mediator.Send(new GetAllTemplates(), _cts.Token));
+
+            await InvokeAsync(StateHasChanged);
         }
     }
 

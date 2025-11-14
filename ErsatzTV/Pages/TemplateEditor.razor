@@ -35,10 +35,10 @@
                 <div class="d-flex">
                     <MudText>Block Group</MudText>
                 </div>
-                <MudSelect T="BlockGroupViewModel" ValueChanged="@(vm => UpdateBlockGroupItems(vm))">
+                <MudSelect T="string" ValueChanged="@(name => UpdateBlockGroupItems(name))">
                     @foreach (BlockGroupViewModel blockGroup in _blockGroups)
                     {
-                        <MudSelectItem Value="@blockGroup">@blockGroup.Name</MudSelectItem>
+                        <MudSelectItem Value="@blockGroup.Name">@blockGroup.Name</MudSelectItem>
                     }
                 </MudSelect>
             </MudStack>
@@ -46,10 +46,10 @@
                 <div class="d-flex">
                     <MudText>Block</MudText>
                 </div>
-                <MudSelect T="BlockViewModel" @bind-value="_selectedBlock">
+                <MudSelect T="string" ValueChanged="@(name => UpdateSelectedBlock(name))">
                     @foreach (BlockViewModel block in _blocks)
                     {
-                        <MudSelectItem Value="@block">@block.Name</MudSelectItem>
+                        <MudSelectItem Value="@block.Name">@block.Name</MudSelectItem>
                     }
                 </MudSelect>
             </MudStack>
@@ -94,7 +94,8 @@
             </MudStack>
             <MudText Typo="Typo.h5" Class="mt-10 mb-2">Content</MudText>
             <MudDivider Class="mb-6"/>
-            <MudCalendar T="CalendarItem"
+            <MudCalendar @ref="_calendar"
+                         T="CalendarItem"
                          Class="mb-6"
                          Items="@_template.Items"
                          ShowMonth="false"
@@ -125,6 +126,7 @@
     private BlockGroupViewModel _selectedBlockGroup;
     private BlockViewModel _selectedBlock;
     private DateTime _selectedBlockStart;
+    private MudCalendar<CalendarItem> _calendar;
 
     public void Dispose()
     {
@@ -194,12 +196,22 @@
             End = item.EndTime
         };
 
-    private async Task UpdateBlockGroupItems(BlockGroupViewModel blockGroup)
+    private async Task UpdateBlockGroupItems(string blockGroupName)
     {
-        _selectedBlockGroup = blockGroup;
+        Option<BlockGroupViewModel> maybeBlockGroup = Optional(_blockGroups.Find(bg => bg.Name == blockGroupName));
+        foreach (var blockGroup in maybeBlockGroup)
+        {
+            _selectedBlockGroup = blockGroup;
 
-        _blocks.Clear();
-        _blocks.AddRange(await Mediator.Send(new GetBlocksByBlockGroupId(_selectedBlockGroup.Id), _cts.Token));
+            _blocks.Clear();
+            _blocks.AddRange(await Mediator.Send(new GetBlocksByBlockGroupId(_selectedBlockGroup.Id), _cts.Token));
+        }
+    }
+
+    private void UpdateSelectedBlock(string blockName)
+    {
+        _selectedBlock = _blocks.Find(bg => bg.Name == blockName);
+        InvokeAsync(StateHasChanged);
     }
 
     private void AddBlockToTemplate()
@@ -223,6 +235,8 @@
 
                 _template.Items.Add(item);
 
+                InvokeAsync(() => { _calendar.ScrollToTime(TimeOnly.FromDateTime(item.Start)); });
+
                 break;
             }
 
@@ -235,6 +249,9 @@
         if (_blockToRemove is not null)
         {
             _template.Items.Remove(_blockToRemove);
+
+            await InvokeAsync(() => { _calendar.ScrollToTime(TimeOnly.FromDateTime(_blockToRemove.Start)); });
+
             _blockToRemove = null;
 
             await InvokeAsync(StateHasChanged);
