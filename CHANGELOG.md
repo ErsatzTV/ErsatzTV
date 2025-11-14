@@ -51,6 +51,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Add channel troubleshooting button to channels list
   - This will open the playback troubleshooting tool in "channel" mode
   - This mode requires entering a date and time, and will play up to 30 seconds of *one item from that channel's playout* starting at the entered date and time
+- Block schedules: add copy template button to templates table
 
 ### Fixed
 - Fix HLS Direct playback with Jellyfin 10.11
@@ -90,6 +91,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - Block groups in block list
     - Template groups in template list
     - Block groups and blocks in template editor
+  - Replace template tree view with searchable table (like blocks)
 
 ## [25.8.0] - 2025-10-26
 ### Added
