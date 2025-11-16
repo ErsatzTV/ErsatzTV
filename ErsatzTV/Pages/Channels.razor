@@ -27,7 +27,11 @@
             <MudTable Hover="true"
                       @bind-RowsPerPage="@_rowsPerPage"
                       ServerData="@(new Func<TableState, CancellationToken, Task<TableData<ChannelViewModel>>>(ServerReload))"
-                      @ref="_table">
+                      @ref="_table"
+                      RowClassFunc="ChannelRowClassFunc">
+                <ToolBarContent>
+                    <MudSwitch T="bool" Class="ml-6" @bind-Value="@ShowDisabled" Color="Color.Secondary" Label="Show Disabled"/>
+                </ToolBarContent>
                 <ColGroup>
                     <MudHidden Breakpoint="Breakpoint.Xs">
                         <col style="width: 60px;"/>
@@ -53,7 +57,24 @@
                     <MudTh/>
                 </HeaderContent>
                 <RowTemplate>
-                    <MudTd DataLabel="Number">@context.Number</MudTd>
+                    <MudTd DataLabel="Number">
+                        @if (!context.IsEnabled)
+                        {
+                            <MudTooltip Text="Channel is disabled">
+                                @($"(D) {context.Number}")
+                            </MudTooltip>
+                        }
+                        else if (!context.ShowInEpg)
+                        {
+                            <MudTooltip Text="Channel is hidden from EPG">
+                                @($"(H) {context.Number}")
+                            </MudTooltip>
+                        }
+                        else
+                        {
+                            @context.Number
+                        }
+                    </MudTd>
                     <MudTd DataLabel="Logo">
                         @if (!string.IsNullOrWhiteSpace(context.Logo?.Path))
                         {
@@ -110,14 +131,14 @@
                             }
                             else
                             {
-                            <div style="width: 48px"></div>
+                                <div style="width: 48px"></div>
                             }
                             <MudTooltip Text="Edit Channel">
                                 <MudIconButton Icon="@Icons.Material.Filled.Edit"
                                                Href="@($"channels/{context.Id}")">
                                 </MudIconButton>
                             </MudTooltip>
-                            @if (context.PlayoutCount > 0)
+                            @if (context.PlayoutCount > 0 && context.IsEnabled)
                             {
                                 <MudTooltip Text="Troubleshoot Channel">
                                     <MudIconButton Icon="@Icons.Material.Filled.Troubleshoot"
@@ -152,8 +173,21 @@
     private List<FFmpegProfileViewModel> _ffmpegProfiles = [];
     private readonly System.Collections.Generic.HashSet<int> _channelsThatCanPreview = [];
     private readonly Dictionary<int, bool> _ffmpegProfilesThatCanPreview = [];
-
+    private bool _showDisabled;
     private int _rowsPerPage = 10;
+
+    private bool ShowDisabled
+    {
+        get => _showDisabled;
+        set
+        {
+            if (_showDisabled != value)
+            {
+                _showDisabled = value;
+                _table?.ReloadServerData();
+            }
+        }
+    }
 
     protected override void OnInitialized() => SegmenterService.OnWorkersChanged += WorkersChanged;
 
@@ -181,6 +215,8 @@
             token.ThrowIfCancellationRequested();
             _rowsPerPage = await Mediator.Send(new GetConfigElementByKey(ConfigElementKey.ChannelsPageSize), token)
                 .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
+            _showDisabled = await Mediator.Send(new GetConfigElementByKey(ConfigElementKey.ChannelsShowDisabled), token)
+                .Map(maybeShow => maybeShow.Match(ce => bool.TryParse(ce.Value, out bool show) && show, () => false));
         }
         catch (OperationCanceledException)
         {
@@ -292,9 +328,11 @@
     private async Task<TableData<ChannelViewModel>> ServerReload(TableState state, CancellationToken cancellationToken)
     {
         await Mediator.Send(new SaveConfigElementByKey(ConfigElementKey.ChannelsPageSize, state.PageSize.ToString()), cancellationToken);
+        await Mediator.Send(new SaveConfigElementByKey(ConfigElementKey.ChannelsShowDisabled, _showDisabled.ToString()), cancellationToken);
+
         cancellationToken.ThrowIfCancellationRequested();
 
-        List<ChannelViewModel> channels = await Mediator.Send(new GetAllChannels(), cancellationToken);
+        List<ChannelViewModel> channels = await Mediator.Send(new GetAllChannels(_showDisabled), cancellationToken);
         // TODO: properly page this data
         IOrderedEnumerable<ChannelViewModel> sorted = channels.OrderBy(c => decimal.Parse(c.Number, CultureInfo.InvariantCulture))
             .Skip(state.Page * state.PageSize)
@@ -346,6 +384,11 @@
     private async Task<bool> BrowserSupportsCodec(string codecString)
     {
         return await JsRuntime.InvokeAsync<bool>("mediaSourceSupports", codecString);
+    }
+
+    private string ChannelRowClassFunc(ChannelViewModel channel, int index)
+    {
+        return channel.IsEnabled && channel.ShowInEpg ? string.Empty : "channel-disabled";
     }
 
 }
