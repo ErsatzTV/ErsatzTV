@@ -15,13 +15,16 @@ public class ErasePlayoutHistoryHandler(IDbContextFactory<TvContext> dbContextFa
         Option<Playout> maybePlayout = await dbContext.Playouts
             .Filter(p => p.ScheduleKind == PlayoutScheduleKind.Block ||
                          p.ScheduleKind == PlayoutScheduleKind.Sequential ||
-                         p.ScheduleKind == PlayoutScheduleKind.Scripted)
+                         p.ScheduleKind == PlayoutScheduleKind.Scripted ||
+                         p.ScheduleKind == PlayoutScheduleKind.Classic)
             .SelectOneAsync(p => p.Id, p => p.Id == request.PlayoutId, cancellationToken);
 
         foreach (Playout playout in maybePlayout)
         {
             int nextSeed = new Random().Next();
             playout.Seed = nextSeed;
+            playout.Anchor = null;
+            playout.OnDemandCheckpoint = null;
             await dbContext.SaveChangesAsync(cancellationToken);
 
             await dbContext.Database.ExecuteSqlAsync(
@@ -30,6 +33,14 @@ public class ErasePlayoutHistoryHandler(IDbContextFactory<TvContext> dbContextFa
 
             await dbContext.Database.ExecuteSqlAsync(
                 $"DELETE FROM PlayoutHistory WHERE PlayoutId = {playout.Id}",
+                cancellationToken);
+
+            await dbContext.Database.ExecuteSqlAsync(
+                $"DELETE FROM PlayoutAnchor WHERE PlayoutId = {playout.Id}",
+                cancellationToken);
+
+            await dbContext.Database.ExecuteSqlAsync(
+                $"DELETE FROM PlayoutProgramScheduleAnchor WHERE PlayoutId = {playout.Id}",
                 cancellationToken);
         }
     }

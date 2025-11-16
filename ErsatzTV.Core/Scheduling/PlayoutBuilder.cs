@@ -18,7 +18,6 @@ namespace ErsatzTV.Core.Scheduling;
 // because the change happens during the playout
 public class PlayoutBuilder : IPlayoutBuilder
 {
-    private static readonly Random Random = new();
     private readonly IArtistRepository _artistRepository;
     private readonly IConfigElementRepository _configElementRepository;
     private readonly ILocalFileSystem _localFileSystem;
@@ -196,6 +195,9 @@ public class PlayoutBuilder : IPlayoutBuilder
         var smartCollectionIds =
             playout.ProgramScheduleAnchors.Map(a => Optional(a.SmartCollectionId)).Somes().ToHashSet();
 
+        var searchQueries =
+            playout.ProgramScheduleAnchors.Map(a => Optional(a.SearchQuery)).Somes().ToHashSet();
+
         var rerunCollectionIds =
             playout.ProgramScheduleAnchors.Map(a => Optional(a.RerunCollectionId)).Somes().ToHashSet();
 
@@ -220,6 +222,13 @@ public class PlayoutBuilder : IPlayoutBuilder
         foreach (int smartCollectionId in smartCollectionIds)
         {
             PlayoutProgramScheduleAnchor minAnchor = allAnchors.Filter(a => a.SmartCollectionId == smartCollectionId)
+                .MinBy(a => a.AnchorDateOffset.IfNone(DateTimeOffset.MaxValue).Ticks);
+            playout.ProgramScheduleAnchors.Add(minAnchor);
+        }
+
+        foreach (string searchQuery in searchQueries)
+        {
+            PlayoutProgramScheduleAnchor minAnchor = allAnchors.Filter(a => a.SearchQuery == searchQuery)
                 .MinBy(a => a.AnchorDateOffset.IfNone(DateTimeOffset.MaxValue).Ticks);
             playout.ProgramScheduleAnchors.Add(minAnchor);
         }
@@ -290,6 +299,7 @@ public class PlayoutBuilder : IPlayoutBuilder
         playout.Anchor = null;
         playout.ProgramScheduleAnchors.Clear();
         playout.OnDemandCheckpoint = null;
+        playout.Seed = new Random().Next();
 
         // don't trim start for on demand channels, we want to time shift it all forward
         if (referenceData.Channel.PlayoutMode is ChannelPlayoutMode.OnDemand)
@@ -558,6 +568,8 @@ public class PlayoutBuilder : IPlayoutBuilder
         bool randomStartPoint,
         CancellationToken cancellationToken)
     {
+        var random = new Random(playout.Seed);
+
         ProgramSchedule activeSchedule = PlayoutScheduleSelector.GetProgramScheduleFor(
             referenceData.ProgramSchedule,
             referenceData.ProgramScheduleAlternates,
@@ -584,7 +596,7 @@ public class PlayoutBuilder : IPlayoutBuilder
         var sortedScheduleItems = activeSchedule.Items.OrderBy(i => i.Index).ToList();
         CollectionEnumeratorState scheduleItemsEnumeratorState =
             playout.Anchor?.ScheduleItemsEnumeratorState ?? new CollectionEnumeratorState
-                { Seed = Random.Next(), Index = 0 };
+                { Seed = random.Next(), Index = 0 };
         IScheduleItemsEnumerator scheduleItemsEnumerator = activeSchedule.ShuffleScheduleItems
             ? new ShuffledScheduleItemsEnumerator(activeSchedule.Items, scheduleItemsEnumeratorState)
             : new OrderedScheduleItemsEnumerator(activeSchedule.Items, scheduleItemsEnumeratorState);
@@ -609,6 +621,7 @@ public class PlayoutBuilder : IPlayoutBuilder
                         scheduleItem.MarathonShuffleItems,
                         scheduleItem.MarathonBatchSize,
                         randomStartPoint,
+                        random,
                         cancellationToken);
 
                 collectionEnumerators.Add(collectionKey, enumerator);
@@ -629,6 +642,7 @@ public class PlayoutBuilder : IPlayoutBuilder
                         marathonShuffleItems: false,
                         marathonBatchSize: null,
                         randomStartPoint,
+                        random,
                         cancellationToken);
 
                 collectionEnumerators.Add(collectionKey, enumerator);
@@ -714,6 +728,7 @@ public class PlayoutBuilder : IPlayoutBuilder
                     scheduleItem.MarathonShuffleItems,
                     scheduleItem.MarathonBatchSize,
                     randomStartPoint,
+                    random,
                     cancellationToken);
 
                 collectionEnumerators.Add(key, enumerator);
@@ -725,7 +740,7 @@ public class PlayoutBuilder : IPlayoutBuilder
             CollectionEnumeratorState enumeratorState =
                 playout.FillGroupIndices.Any(fgi => fgi.ProgramScheduleItemId == scheduleItem.Id)
                     ? playout.FillGroupIndices.Find(fgi => fgi.ProgramScheduleItemId == scheduleItem.Id).EnumeratorState
-                    : new CollectionEnumeratorState { Seed = Random.Next(), Index = 0 };
+                    : new CollectionEnumeratorState { Seed = random.Next() + scheduleItem.Id, Index = 0 };
 
             switch (scheduleItem.FillWithGroupMode)
             {
@@ -1269,6 +1284,7 @@ public class PlayoutBuilder : IPlayoutBuilder
         bool marathonShuffleItems,
         int? marathonBatchSize,
         bool randomStartPoint,
+        Random random,
         CancellationToken cancellationToken)
     {
         Option<PlayoutProgramScheduleAnchor> maybeAnchor = playout.ProgramScheduleAnchors
@@ -1288,12 +1304,12 @@ public class PlayoutBuilder : IPlayoutBuilder
         {
             // _logger.LogDebug("Selecting anchor {@Anchor}", anchor);
 
-            anchor.EnumeratorState ??= new CollectionEnumeratorState { Seed = Random.Next(), Index = 0 };
+            anchor.EnumeratorState ??= new CollectionEnumeratorState { Seed = random.Next(), Index = 0 };
 
             state = anchor.EnumeratorState;
         }
 
-        state ??= new CollectionEnumeratorState { Seed = Random.Next(), Index = 0 };
+        state ??= new CollectionEnumeratorState { Seed = random.Next(), Index = 0 };
 
         if (collectionKey.CollectionType is CollectionType.RerunFirstRun or CollectionType.RerunRerun)
         {
@@ -1347,7 +1363,7 @@ public class PlayoutBuilder : IPlayoutBuilder
                     state = new CollectionEnumeratorState
                     {
                         Seed = state.Seed,
-                        Index = Random.Next(0, mediaItems.Count - 1)
+                        Index = random.Next(0, mediaItems.Count - 1)
                     };
                 }
 
@@ -1358,7 +1374,7 @@ public class PlayoutBuilder : IPlayoutBuilder
                     state = new CollectionEnumeratorState
                     {
                         Seed = state.Seed,
-                        Index = Random.Next(0, mediaItems.Count - 1)
+                        Index = random.Next(0, mediaItems.Count - 1)
                     };
                 }
 
