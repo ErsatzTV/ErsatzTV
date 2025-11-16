@@ -22,7 +22,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Add MPEG-TS Script system
   - This allows using something other than ffmpeg (e.g. streamlink) to concatenate segments back together when using MPEG-TS streaming mode
   - Scripts live in config / scripts / mpegts
-  - Each script gets its own subfolder which contains an `mpegts.yml` definition and corresponding windows (powershell) and linux (bash) scripts
+  - Each script gets its own subfolder which contains an `mpegts.yml` definition and corresponding windows (batch) and linux (bash) scripts
   - The global MPEG-TS script can be configured in **Settings** > **FFmpeg** > **Default MPEG-TS Script**
 - Add `.avs` AviSynth Script support to all local libraries
   - `.avs` was added as a valid extension, so they should behave the same any other video file
@@ -82,6 +82,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - This should improve performance of library scans
 
 ### Changed
+- Classic playouts: `Refresh` classic playouts from playout list; do not `Reset` them
+  - This mode maintains progress; progress can be reset by editing the playout and clicking `Erase Items and History`
 - Use smaller batch size for search index updates (100, down from 1000)
   - This should help newly scanned items appear in the UI more quickly
 - Replace favicon and logo in background image used for error streams

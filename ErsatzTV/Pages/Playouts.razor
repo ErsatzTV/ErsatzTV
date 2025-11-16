@@ -128,25 +128,13 @@
                             </div>
                             @if (context.ScheduleKind == PlayoutScheduleKind.Classic)
                             {
-                                if (context.PlayoutMode is ChannelPlayoutMode.OnDemand)
-                                {
-                                    <MudTooltip Text="Alternate Schedules are not supported with On Demand playout mode">
-                                        <MudIconButton Icon="@Icons.Material.Filled.EditCalendar"
-                                                       Disabled="true">
-                                        </MudIconButton>
-                                    </MudTooltip>
-                                }
-                                else
-                                {
-                                    <MudTooltip Text="Edit Alternate Schedules">
-                                        <MudIconButton Icon="@Icons.Material.Filled.EditCalendar"
-                                                       Disabled="@EntityLocker.IsPlayoutLocked(context.PlayoutId)"
-                                                       Href="@($"playouts/{context.PlayoutId}/alternate-schedules")">
-                                        </MudIconButton>
-                                    </MudTooltip>
-                                }
-
-                                <MudTooltip Text="Reset Playout">
+                                <MudTooltip Text="Edit Playout">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                                   Disabled="@EntityLocker.IsPlayoutLocked(context.PlayoutId)"
+                                                   Href="@($"playouts/classic/{context.PlayoutId}")">
+                                    </MudIconButton>
+                                </MudTooltip>
+                                <MudTooltip Text="Refresh Playout">
                                     <MudIconButton Icon="@Icons.Material.Filled.Refresh"
                                                    Disabled="@EntityLocker.IsPlayoutLocked(context.PlayoutId)"
                                                    OnClick="@(_ => ResetPlayout(context))">
@@ -210,7 +198,7 @@
                                                    Href="@($"playouts/block/{context.PlayoutId}")">
                                     </MudIconButton>
                                 </MudTooltip>
-                                <MudTooltip Text="Reset Playout">
+                                <MudTooltip Text="Refresh Playout">
                                     <MudIconButton Icon="@Icons.Material.Filled.Refresh"
                                                    Disabled="@EntityLocker.IsPlayoutLocked(context.PlayoutId)"
                                                    OnClick="@(_ => ResetPlayout(context))">
@@ -423,7 +411,16 @@
         await Mediator.Send(new ResetAllPlayouts(), _cts.Token);
     }
 
-    private async Task ResetPlayout(PlayoutNameViewModel playout) => await WorkerChannel.WriteAsync(new BuildPlayout(playout.PlayoutId, PlayoutBuildMode.Reset), _cts.Token);
+    private async Task ResetPlayout(PlayoutNameViewModel playout)
+    {
+        PlayoutBuildMode mode = playout.ScheduleKind switch
+        {
+            PlayoutScheduleKind.Classic => PlayoutBuildMode.Refresh,
+            _ => PlayoutBuildMode.Reset
+        };
+
+        await WorkerChannel.WriteAsync(new BuildPlayout(playout.PlayoutId, mode), _cts.Token);
+    }
 
     private async Task ScheduleReset(PlayoutNameViewModel playout)
     {

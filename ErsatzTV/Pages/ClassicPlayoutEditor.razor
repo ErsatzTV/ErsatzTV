@@ -1,0 +1,97 @@
+﻿@page "/playouts/classic/{Id:int}"
+@using ErsatzTV.Application.Channels
+@using ErsatzTV.Application.Scheduling
+@implements IDisposable
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+@inject IMediator Mediator
+@inject IEntityLocker EntityLocker;
+
+<MudForm Style="max-height: 100%">
+    <MudPaper Square="true" Style="display: flex; height: 64px; min-height: 64px; width: 100%; z-index: 100; align-items: center">
+    </MudPaper>
+    <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+            <MudText Typo="Typo.h5" Class="mb-2">@_channelName - Classic Playout</MudText>
+            <MudDivider Class="mb-6"/>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Alternate Schedules</MudText>
+                </div>
+                @if (_playoutMode is ChannelPlayoutMode.OnDemand)
+                {
+                    <MudButton Disabled="@true" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Edit">
+                        Edit Alternate Schedules
+                    </MudButton>
+                }
+                else
+                {
+                    <MudButton Disabled="@EntityLocker.IsPlayoutLocked(Id)" Variant="Variant.Filled" Color="Color.Primary" Href="@($"playouts/{Id}/alternate-schedules")" StartIcon="@Icons.Material.Filled.Edit">
+                        Edit Alternate Schedules
+                    </MudButton>
+                }
+            </MudStack>
+            <MudText Typo="Typo.h5" Class="mt-10 mb-2">Maintenance</MudText>
+            <MudDivider Class="mb-6"/>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Playout Items and History</MudText>
+                </div>
+                <MudButton Disabled="@EntityLocker.IsPlayoutLocked(Id)" Variant="Variant.Filled" Color="Color.Error" OnClick="@(_ => EraseItemsAndHistory())" StartIcon="@Icons.Material.Filled.Delete">
+                    Erase Items and History
+                </MudButton>
+            </MudStack>
+        </MudContainer>
+    </div>
+</MudForm>
+
+@code {
+    private CancellationTokenSource _cts;
+    private ChannelPlayoutMode _playoutMode;
+
+    [Parameter]
+    public int Id { get; set; }
+
+    private string _channelName;
+
+    public void Dispose()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
+
+        try
+        {
+            Option<ChannelViewModel> maybeChannel = await Mediator.Send(new GetChannelByPlayoutId(Id), token);
+            if (maybeChannel.IsNone)
+            {
+                NavigationManager.NavigateTo("playouts");
+                return;
+            }
+
+            foreach (ChannelViewModel channel in maybeChannel)
+            {
+                _channelName = channel.Name;
+                _playoutMode = channel.PlayoutMode;
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
+        }
+    }
+
+    private async Task EraseItemsAndHistory()
+    {
+        await Mediator.Send(new ErasePlayoutHistory(Id), _cts.Token);
+        Snackbar.Add("Erased playout items and history", Severity.Info);
+    }
+
+}

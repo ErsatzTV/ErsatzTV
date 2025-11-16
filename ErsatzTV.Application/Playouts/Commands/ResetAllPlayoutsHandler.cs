@@ -22,6 +22,14 @@ public class ResetAllPlayoutsHandler(
             switch (playout.ScheduleKind)
             {
                 case PlayoutScheduleKind.Classic:
+                    if (!locker.IsPlayoutLocked(playout.Id))
+                    {
+                        await channel.WriteAsync(
+                            new BuildPlayout(playout.Id, PlayoutBuildMode.Refresh),
+                            cancellationToken);
+                    }
+
+                    break;
                 case PlayoutScheduleKind.Block:
                 case PlayoutScheduleKind.Sequential:
                 case PlayoutScheduleKind.Scripted:
