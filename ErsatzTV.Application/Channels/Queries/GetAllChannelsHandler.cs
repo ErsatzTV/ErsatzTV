@@ -9,7 +9,8 @@ public class GetAllChannelsHandler(IChannelRepository channelRepository)
 {
     public async Task<List<ChannelViewModel>> Handle(GetAllChannels request, CancellationToken cancellationToken) =>
         await channelRepository.GetAll(cancellationToken)
-            .Map(list => list.Map(c => ProjectToViewModel(c, GetPlayoutsCount(c))).ToList());
+            .Map(list => list.Where(c => c.IsEnabled || request.ShowDisabled)
+                .Map(c => ProjectToViewModel(c, GetPlayoutsCount(c))).ToList());
 
     private static int GetPlayoutsCount(Channel channel)
     {

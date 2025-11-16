@@ -80,9 +80,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - This bug caused some graphics elements to display too early after first joining a channel
 - Optimize database calls made for search index rebuilds and updates
   - This should improve performance of library scans
+- Add toggle to hide/show disabled channels in channel list
+- Add disabled text color and `(D)` and `(H)` labels for disabled and hidden channels in channel list
 
 ### Changed
-- Classic playouts: `Refresh` classic playouts from playout list; do not `Reset` them
+- Classic schedules: `Refresh` classic playouts from playout list; do not `Reset` them
   - This mode maintains progress; progress can be reset by editing the playout and clicking `Erase Items and History`
 - Use smaller batch size for search index updates (100, down from 1000)
   - This should help newly scanned items appear in the UI more quickly

@@ -226,3 +226,7 @@ div.ersatztv-light {
 .playout-filler-unscheduled {
     background-color: #52040d;
 }
+
+.channel-disabled .mud-table-cell {
+    color: var(--mud-palette-text-disabled) !important;
+}
