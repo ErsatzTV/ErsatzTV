@@ -85,7 +85,7 @@ public class SubtitleElement(
             await File.WriteAllTextAsync(subtitleTemplateFile, textToRender, cancellationToken);
 
             string subtitleFile = Path.GetFileName(subtitleTemplateFile);
-            string fontsDir = FileSystemLayout.ResourcesCacheFolder;
+            string fontsDir = FileSystemLayout.FontsCacheFolder;
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
