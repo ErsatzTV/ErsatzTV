@@ -1,5 +1,6 @@
 using System.Buffers;
 using System.IO.Pipelines;
+using System.Runtime.InteropServices;
 using CliWrap;
 using ErsatzTV.Core;
 using ErsatzTV.Core.FFmpeg;
@@ -84,12 +85,25 @@ public class SubtitleElement(
             await File.WriteAllTextAsync(subtitleTemplateFile, textToRender, cancellationToken);
 
             string subtitleFile = Path.GetFileName(subtitleTemplateFile);
+            string fontsDir = FileSystemLayout.ResourcesCacheFolder;
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                fontsDir = fontsDir
+                    .Replace(@"\", @"/\")
+                    .Replace(@":/", @"\\:/");
+
+                subtitleFile = subtitleFile
+                    .Replace(@"\", @"/\")
+                    .Replace(@":/", @"\\:/");
+            }
+
             List<string> arguments =
             [
                 "-nostdin", "-hide_banner", "-nostats", "-loglevel", "error",
                 "-f", "lavfi",
                 "-i",
-                $"color=c=black@0.0:s={context.FrameSize.Width}x{context.FrameSize.Height}:r={context.FrameRate},format=bgra,subtitles='{subtitleFile}':alpha=1",
+                $"color=c=black@0.0:s={context.FrameSize.Width}x{context.FrameSize.Height}:r={context.FrameRate},format=bgra,subtitles={subtitleFile}:fontsdir={fontsDir}:alpha=1",
                 "-f", "image2pipe",
                 "-pix_fmt", "bgra",
                 "-vcodec", "rawvideo",
