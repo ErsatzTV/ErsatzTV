@@ -82,6 +82,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - This should improve performance of library scans
 - Add toggle to hide/show disabled channels in channel list
 - Add disabled text color and `(D)` and `(H)` labels for disabled and hidden channels in channel list
+- Graphics engine: fix subtitle path escaping and font loading
 
 ### Changed
 - Classic schedules: `Refresh` classic playouts from playout list; do not `Reset` them
