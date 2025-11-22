@@ -12,8 +12,6 @@ public class VaapiHardwareCapabilities(
 {
     public int EntrypointCount => profileEntrypoints.Count;
 
-    public string Generation => generation;
-
     public FFmpegCapability CanDecode(
         string videoFormat,
         Option<string> videoProfile,
@@ -22,10 +20,15 @@ public class VaapiHardwareCapabilities(
     {
         int bitDepth = maybePixelFormat.Map(pf => pf.BitDepth).IfNone(8);
 
+        bool isPolaris = generation.Contains("polaris", StringComparison.OrdinalIgnoreCase);
+
         bool isHardware = (videoFormat, videoProfile.IfNone(string.Empty).ToLowerInvariant()) switch
         {
             // no hardware decoding of 10-bit h264
             (VideoFormat.H264, _) when bitDepth == 10 => false,
+
+            // skip polaris hardware decoding 10-bit
+            (_, _) when bitDepth == 10 && isPolaris => false,
 
             // no hardware decoding of h264 baseline profile
             (VideoFormat.H264, "baseline" or "66") => false,
