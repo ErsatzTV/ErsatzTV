@@ -355,7 +355,7 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
 
                 if (currentState.FrameDataLocation == FrameDataLocation.Hardware)
                 {
-                    result.Add(new VaapiFormatFilter(format));
+                        result.Add(new VaapiFormatFilter(format));
                 }
                 else
                 {

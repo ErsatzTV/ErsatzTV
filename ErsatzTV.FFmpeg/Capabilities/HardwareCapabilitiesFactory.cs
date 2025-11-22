@@ -29,6 +29,9 @@ public partial class HardwareCapabilitiesFactory(
     private static readonly CompositeFormat VaapiCacheKeyFormat =
         CompositeFormat.Parse("ffmpeg.hardware.vaapi.{0}.{1}.{2}");
 
+    private static readonly CompositeFormat VaapiGenerationCacheKeyFormat =
+        CompositeFormat.Parse("ffmpeg.hardware.vaapi.generation.{0}.{1}.{2}");
+
     private static readonly CompositeFormat QsvCacheKeyFormat = CompositeFormat.Parse("ffmpeg.hardware.qsv.{0}");
     private static readonly CompositeFormat FFmpegCapabilitiesCacheKeyFormat = CompositeFormat.Parse("ffmpeg.{0}");
 
@@ -467,12 +470,25 @@ public partial class HardwareCapabilitiesFactory(
             string display = vaapiDisplay.IfNone("drm");
             string driver = vaapiDriver.IfNone(string.Empty);
             string device = vaapiDevice.IfNone(string.Empty);
+            string generation = string.Empty;
             var cacheKey = string.Format(CultureInfo.InvariantCulture, VaapiCacheKeyFormat, display, driver, device);
+            var generationCacheKey = string.Format(
+                CultureInfo.InvariantCulture,
+                VaapiGenerationCacheKeyFormat,
+                display,
+                driver,
+                device);
 
             if (memoryCache.TryGetValue(cacheKey, out List<VaapiProfileEntrypoint>? profileEntrypoints) &&
                 profileEntrypoints is not null)
             {
-                return new VaapiHardwareCapabilities(profileEntrypoints, logger);
+                if (memoryCache.TryGetValue(generationCacheKey, out string? cachedGeneration) &&
+                    cachedGeneration is not null)
+                {
+                    generation = cachedGeneration;
+                }
+
+                return new VaapiHardwareCapabilities(profileEntrypoints, generation, logger);
             }
 
             Option<string> output = await GetVaapiOutput(display, vaapiDriver, device);
@@ -485,6 +501,7 @@ public partial class HardwareCapabilitiesFactory(
             foreach (string o in output)
             {
                 profileEntrypoints = VaapiCapabilityParser.ParseFull(o);
+                generation = VaapiCapabilityParser.ParseGeneration(o);
             }
 
             if (profileEntrypoints is not null && profileEntrypoints.Count != 0)
@@ -507,7 +524,8 @@ public partial class HardwareCapabilitiesFactory(
                 }
 
                 memoryCache.Set(cacheKey, profileEntrypoints);
-                return new VaapiHardwareCapabilities(profileEntrypoints, logger);
+                memoryCache.Set(generationCacheKey, generation);
+                return new VaapiHardwareCapabilities(profileEntrypoints, generation, logger);
             }
         }
         catch (Exception ex)
@@ -541,7 +559,7 @@ public partial class HardwareCapabilitiesFactory(
             if (memoryCache.TryGetValue(cacheKey, out List<VaapiProfileEntrypoint>? profileEntrypoints) &&
                 profileEntrypoints is not null)
             {
-                return new VaapiHardwareCapabilities(profileEntrypoints, logger);
+                return new VaapiHardwareCapabilities(profileEntrypoints, string.Empty, logger);
             }
 
             QsvOutput output = await GetQsvOutput(ffmpegPath, qsvDevice);
@@ -583,7 +601,7 @@ public partial class HardwareCapabilitiesFactory(
                             device);
 
                         memoryCache.Set(cacheKey, profileEntrypoints);
-                        return new VaapiHardwareCapabilities(profileEntrypoints, logger);
+                        return new VaapiHardwareCapabilities(profileEntrypoints, string.Empty, logger);
                     }
                 }
             }

@@ -9,6 +9,16 @@ namespace ErsatzTV.FFmpeg.Tests.Capabilities.Vaapi;
 [TestFixture]
 public class VaapiCapabilityParserTests
 {
+    private const string GenerationPolarisOutput = @"Trying display: drm
+vainfo: VA-API version: 1.22 (libva 2.22.0)
+vainfo: Driver version: Mesa Gallium driver 25.2.7-arch1.1 for AMD Radeon RX 550 / 550 Series (radeonsi, polaris12, ACO, DRM 3.64, 6.17.8-arch1-1)
+vainfo: Supported config attributes per profile/entrypoint pair
+VAProfileMPEG2Simple/VAEntrypointVLD
+    VAConfigAttribRTFormat                 : VA_RT_FORMAT_YUV420
+    VAConfigAttribMaxPictureWidth          : 1920
+    VAConfigAttribMaxPictureHeight         : 1088
+";
+
     private const string BriefOutput = @"Trying display: wayland
 vainfo: VA-API version: 1.18 (libva 2.18.2)
 vainfo: Driver version: Mesa Gallium driver 23.1.2 for AMD Radeon RX 6750 XT (navi22, LLVM 15.0.7, DRM 3.52, 6.3.8-arch1-1)
@@ -200,5 +210,19 @@ VAProfileNone/VAEntrypointVideoProc
         {
             entrypoint.RateControlModes.Count.ShouldBeGreaterThan(0);
         }
+    }
+
+    [Test]
+    public void Full_ShouldParseGeneration()
+    {
+        string generation = VaapiCapabilityParser.ParseGeneration(FullOutput);
+        generation.ShouldBe("navi22");
+    }
+
+    [Test]
+    public void Polaris_ShouldParseGeneration()
+    {
+        string generation = VaapiCapabilityParser.ParseGeneration(GenerationPolarisOutput);
+        generation.ShouldBe("polaris12");
     }
 }
