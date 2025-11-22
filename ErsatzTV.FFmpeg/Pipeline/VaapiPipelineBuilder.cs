@@ -355,7 +355,25 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
 
                 if (currentState.FrameDataLocation == FrameDataLocation.Hardware)
                 {
-                    result.Add(new VaapiFormatFilter(format));
+                    if (_hardwareCapabilities is VaapiHardwareCapabilities vaapiCapabilities &&
+                        vaapiCapabilities.Generation.Contains("polaris", StringComparison.OrdinalIgnoreCase))
+                    {
+                        // don't try to download from 8-bit to 10-bit, or 10-bit to 8-bit
+                        HardwareDownloadFilter hardwareDownload =
+                            currentState.BitDepth == 8 && desiredPixelFormat.Map(pf => pf.BitDepth).IfNone(8) == 10 ||
+                            currentState.BitDepth == 10 && desiredPixelFormat.Map(pf => pf.BitDepth).IfNone(10) == 8
+                                ? new HardwareDownloadFilter(currentState)
+                                : new HardwareDownloadFilter(currentState with { PixelFormat = Some(format) });
+
+                        currentState = hardwareDownload.NextState(currentState);
+                        result.Add(hardwareDownload);
+
+                        result.Add(new PixelFormatFilter(format));
+                    }
+                    else
+                    {
+                        result.Add(new VaapiFormatFilter(format));
+                    }
                 }
                 else
                 {

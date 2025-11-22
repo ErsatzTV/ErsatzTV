@@ -2,7 +2,7 @@ using System.Text.RegularExpressions;
 
 namespace ErsatzTV.FFmpeg.Capabilities.Vaapi;
 
-public static class VaapiCapabilityParser
+public static partial class VaapiCapabilityParser
 {
     public static List<VaapiProfileEntrypoint> Parse(string output)
     {
@@ -10,8 +10,7 @@ public static class VaapiCapabilityParser
 
         foreach (string line in string.Join("", output).Split("\n"))
         {
-            const string PROFILE_ENTRYPOINT_PATTERN = @"(VAProfile\w*).*(VAEntrypoint\w*)";
-            Match match = Regex.Match(line, PROFILE_ENTRYPOINT_PATTERN);
+            Match match = ProfileEntrypointRegex().Match(line);
             if (match.Success)
             {
                 profileEntrypoints.Add(
@@ -33,9 +32,7 @@ public static class VaapiCapabilityParser
         for (var i = 0; i < allLines.Length; i++)
         {
             string line = allLines[i];
-            const string PROFILE_ENTRYPOINT_PATTERN = @"(VAProfile\w*).*(VAEntrypoint\w*)";
-            const string PROFILE_RATE_CONTROL_PATTERN = @".*VA_RC_(\w*).*";
-            Match match = Regex.Match(line, PROFILE_ENTRYPOINT_PATTERN);
+            Match match = ProfileEntrypointRegex().Match(line);
             if (match.Success)
             {
                 profile = new VaapiProfileEntrypoint(match.Groups[1].Value.Trim(), match.Groups[2].Value.Trim());
@@ -44,7 +41,7 @@ public static class VaapiCapabilityParser
             else
             {
                 // check for rate control
-                match = Regex.Match(line, PROFILE_RATE_CONTROL_PATTERN);
+                match = ProfileRateControlRegex().Match(line);
                 if (match.Success)
                 {
                     switch (match.Groups[1].Value.Trim().ToLowerInvariant())
@@ -65,4 +62,36 @@ public static class VaapiCapabilityParser
 
         return profileEntrypoints;
     }
+
+    public static string ParseGeneration(string output)
+    {
+        string generation = string.Empty;
+        Match match = MiscGenerationRegex().Match(output);
+        if (match.Success)
+        {
+            generation = match.Groups[1].Value.Trim().ToLowerInvariant();
+            if (generation is "radeonsi")
+            {
+                match = RadeonSiGenerationRegex().Match(output);
+                if (match.Success)
+                {
+                    generation = match.Groups[1].Value.Trim().ToLowerInvariant();
+                }
+            }
+        }
+
+        return generation;
+    }
+
+    [GeneratedRegex(@"(VAProfile\w*).*(VAEntrypoint\w*)")]
+    private static partial Regex ProfileEntrypointRegex();
+
+    [GeneratedRegex(@".*VA_RC_(\w*).*")]
+    private static partial Regex ProfileRateControlRegex();
+
+    [GeneratedRegex(@"Driver version:.*\(radeonsi, (\w+)")]
+    private static partial Regex RadeonSiGenerationRegex();
+
+    [GeneratedRegex(@"Driver version:.*\((\w+),")]
+    private static partial Regex MiscGenerationRegex();
 }
