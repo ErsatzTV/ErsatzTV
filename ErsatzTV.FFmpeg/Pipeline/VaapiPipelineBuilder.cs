@@ -101,6 +101,16 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
             decodeCapability = FFmpegCapability.Software;
         }
 
+        // use software decode with irregular dimensions and AMD Polaris
+        if (videoStream.FrameSize.Width % 32 != 0 &&
+            _hardwareCapabilities is VaapiHardwareCapabilities vaapiCapabilities)
+        {
+            if (vaapiCapabilities.Generation.Contains("polaris", StringComparison.OrdinalIgnoreCase))
+            {
+                decodeCapability = FFmpegCapability.Software;
+            }
+        }
+
         // disable auto scaling when using hw encoding
         if (encodeCapability is FFmpegCapability.Hardware)
         {
