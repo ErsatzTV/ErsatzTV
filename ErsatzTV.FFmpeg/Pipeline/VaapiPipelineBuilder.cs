@@ -85,16 +85,6 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
             throw new NotSupportedException("AV1 output is only supported with HLS Segmenter (fmp4)");
         }
 
-        foreach (string vaapiDevice in ffmpegState.VaapiDevice)
-        {
-            pipelineSteps.Add(new VaapiHardwareAccelerationOption(vaapiDevice, decodeCapability));
-
-            foreach (string driverName in ffmpegState.VaapiDriver)
-            {
-                pipelineSteps.Add(new LibvaDriverNameVariable(driverName));
-            }
-        }
-
         // use software decoding with an extensive pipeline
         if (context is { HasSubtitleOverlay: true, HasWatermark: true })
         {
@@ -108,6 +98,16 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
             if (vaapiCapabilities.Generation.Contains("polaris", StringComparison.OrdinalIgnoreCase))
             {
                 decodeCapability = FFmpegCapability.Software;
+            }
+        }
+
+        foreach (string vaapiDevice in ffmpegState.VaapiDevice)
+        {
+            pipelineSteps.Add(new VaapiHardwareAccelerationOption(vaapiDevice, decodeCapability));
+
+            foreach (string driverName in ffmpegState.VaapiDriver)
+            {
+                pipelineSteps.Add(new LibvaDriverNameVariable(driverName));
             }
         }
 
