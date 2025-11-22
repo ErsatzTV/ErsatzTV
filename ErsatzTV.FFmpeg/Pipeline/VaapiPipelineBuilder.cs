@@ -85,6 +85,22 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
             throw new NotSupportedException("AV1 output is only supported with HLS Segmenter (fmp4)");
         }
 
+        // use software decoding with an extensive pipeline
+        if (context is { HasSubtitleOverlay: true, HasWatermark: true })
+        {
+            decodeCapability = FFmpegCapability.Software;
+        }
+
+        // use software decode with irregular dimensions and AMD Polaris
+        if (videoStream.FrameSize.Width % 32 != 0 &&
+            _hardwareCapabilities is VaapiHardwareCapabilities vaapiCapabilities)
+        {
+            if (vaapiCapabilities.Generation.Contains("polaris", StringComparison.OrdinalIgnoreCase))
+            {
+                decodeCapability = FFmpegCapability.Software;
+            }
+        }
+
         foreach (string vaapiDevice in ffmpegState.VaapiDevice)
         {
             pipelineSteps.Add(new VaapiHardwareAccelerationOption(vaapiDevice, decodeCapability));
@@ -93,12 +109,6 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
             {
                 pipelineSteps.Add(new LibvaDriverNameVariable(driverName));
             }
-        }
-
-        // use software decoding with an extensive pipeline
-        if (context is { HasSubtitleOverlay: true, HasWatermark: true })
-        {
-            decodeCapability = FFmpegCapability.Software;
         }
 
         // disable auto scaling when using hw encoding
