@@ -83,7 +83,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Add toggle to hide/show disabled channels in channel list
 - Add disabled text color and `(D)` and `(H)` labels for disabled and hidden channels in channel list
 - Graphics engine: fix subtitle path escaping and font loading
-- Fix corrupt output (green artifacts) when converting 10-bit content to 8-bit using AMD Polaris GPUs
+- Fix corrupt output (green artifacts) when decoding 10-bit content using AMD Polaris GPUs
 
 ### Changed
 - Classic schedules: `Refresh` classic playouts from playout list; do not `Reset` them
