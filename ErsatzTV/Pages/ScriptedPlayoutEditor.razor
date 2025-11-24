@@ -23,7 +23,10 @@
                 <div class="d-flex">
                     <MudText>Scripted Schedule</MudText>
                 </div>
-                <MudTextField @bind-Value="@_playout.ScheduleFile" For="@(() => _playout.ScheduleFile)"/>
+                @if (_playout is not null)
+                {
+                    <MudTextField @bind-Value="@_playout.ScheduleFile" For="@(() => _playout.ScheduleFile)"/>
+                }
             </MudStack>
             <MudText Typo="Typo.h5" Class="mt-10 mb-2">Maintenance</MudText>
             <MudDivider Class="mb-6"/>
