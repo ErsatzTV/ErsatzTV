@@ -48,7 +48,6 @@ public class FakeLocalFileSystem : ILocalFileSystem
         _files.Map(f => f.Path).Filter(f => Path.GetDirectoryName(f) == folder);
 
     public bool FileExists(string path) => _files.Any(f => f.Path == path);
-    public bool FolderExists(string folder) => false;
 
     public Task<Either<BaseError, Unit>> CopyFile(string source, string destination) =>
         Task.FromResult(Right<BaseError, Unit>(Unit.Default));

@@ -133,8 +133,6 @@ public class LocalFileSystem(IFileSystem fileSystem, IClient client, ILogger<Loc
         return new List<string>();
     }
 
-    public bool FolderExists(string folder) => Directory.Exists(folder);
-
     public async Task<Either<BaseError, Unit>> CopyFile(string source, string destination)
     {
         try

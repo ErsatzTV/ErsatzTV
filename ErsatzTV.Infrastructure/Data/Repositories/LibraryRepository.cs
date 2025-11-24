@@ -1,26 +1,18 @@
-﻿using Dapper;
+﻿using System.IO.Abstractions;
+using Dapper;
 using ErsatzTV.Core.Domain;
-using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Infrastructure.Data.Repositories;
 
-public class LibraryRepository : ILibraryRepository
+public class LibraryRepository(IFileSystem fileSystem, IDbContextFactory<TvContext> dbContextFactory)
+    : ILibraryRepository
 {
-    private readonly IDbContextFactory<TvContext> _dbContextFactory;
-    private readonly ILocalFileSystem _localFileSystem;
-
-    public LibraryRepository(ILocalFileSystem localFileSystem, IDbContextFactory<TvContext> dbContextFactory)
-    {
-        _localFileSystem = localFileSystem;
-        _dbContextFactory = dbContextFactory;
-    }
-
     public async Task<LibraryPath> Add(LibraryPath libraryPath)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
         await dbContext.LibraryPaths.AddAsync(libraryPath);
         await dbContext.SaveChangesAsync();
         return libraryPath;
@@ -28,7 +20,7 @@ public class LibraryRepository : ILibraryRepository
 
     public async Task<Option<Library>> GetLibrary(int libraryId)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
         return await dbContext.Libraries
             .Include(l => l.Paths)
             .ThenInclude(p => p.LibraryFolders)
@@ -40,7 +32,7 @@ public class LibraryRepository : ILibraryRepository
 
     public async Task<Option<LocalLibrary>> GetLocal(int libraryId)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
         return await dbContext.LocalLibraries
             .OrderBy(l => l.Id)
             .SingleOrDefaultAsync(l => l.Id == libraryId)
@@ -49,7 +41,7 @@ public class LibraryRepository : ILibraryRepository
 
     public async Task<List<Library>> GetAll()
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
         return await dbContext.Libraries
             .AsNoTracking()
             .Include(l => l.MediaSource)
@@ -59,7 +51,7 @@ public class LibraryRepository : ILibraryRepository
 
     public async Task<Unit> UpdateLastScan(Library library)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
         return await dbContext.Connection.ExecuteAsync(
             "UPDATE Library SET LastScan = @LastScan WHERE Id = @Id",
             new { library.LastScan, library.Id }).ToUnit();
@@ -67,7 +59,7 @@ public class LibraryRepository : ILibraryRepository
 
     public async Task<Unit> UpdateLastScan(LibraryPath libraryPath)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
         return await dbContext.Connection.ExecuteAsync(
             "UPDATE LibraryPath SET LastScan = @LastScan WHERE Id = @Id",
             new { libraryPath.LastScan, libraryPath.Id }).ToUnit();
@@ -75,7 +67,7 @@ public class LibraryRepository : ILibraryRepository
 
     public async Task<List<LibraryPath>> GetLocalPaths(int libraryId)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
         return await dbContext.LocalLibraries
             .Include(l => l.Paths)
             .OrderBy(l => l.Id)
@@ -86,7 +78,7 @@ public class LibraryRepository : ILibraryRepository
 
     public async Task<int> CountMediaItemsByPath(int libraryPathId)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
         return await dbContext.Connection.QuerySingleAsync<int>(
             @"SELECT COUNT(*) FROM MediaItem WHERE LibraryPathId = @LibraryPathId",
             new { LibraryPathId = libraryPathId });
@@ -98,7 +90,7 @@ public class LibraryRepository : ILibraryRepository
         string path,
         string etag)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
 
         foreach (LibraryFolder folder in knownFolder)
         {
@@ -123,10 +115,10 @@ public class LibraryRepository : ILibraryRepository
 
     public async Task CleanEtagsForLibraryPath(LibraryPath libraryPath)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
 
         IOrderedEnumerable<LibraryFolder> orderedFolders = libraryPath.LibraryFolders
-            .Where(f => !_localFileSystem.FolderExists(f.Path))
+            .Where(f => !fileSystem.Directory.Exists(f.Path))
             .OrderByDescending(lp => lp.Path.Length);
 
         foreach (LibraryFolder folder in orderedFolders)
@@ -152,7 +144,7 @@ public class LibraryRepository : ILibraryRepository
             return Option<int>.None;
         }
 
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         return await dbContext.LibraryFolders
             .AsNoTracking()
@@ -166,7 +158,7 @@ public class LibraryRepository : ILibraryRepository
         Option<int> maybeParentFolder,
         string folder)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
 
         // load from db or create new folder
         LibraryFolder knownFolder = await libraryPath.LibraryFolders
@@ -199,7 +191,7 @@ public class LibraryRepository : ILibraryRepository
 
     public async Task UpdateLibraryFolderId(MediaFile mediaFile, int libraryFolderId)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
         mediaFile.LibraryFolderId = libraryFolderId;
         await dbContext.Connection.ExecuteAsync(
             "UPDATE MediaFile SET LibraryFolderId = @LibraryFolderId WHERE Id = @Id",
@@ -208,7 +200,7 @@ public class LibraryRepository : ILibraryRepository
 
     public async Task UpdatePath(LibraryPath libraryPath, string normalizedLibraryPath)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
         libraryPath.Path = normalizedLibraryPath;
         await dbContext.Connection.ExecuteAsync(
             "UPDATE LibraryPath SET Path = @Path WHERE Id = @Id",

@@ -28,7 +28,7 @@ public class CacheCleanerService(
         ILocalFileSystem localFileSystem = scope.ServiceProvider.GetRequiredService<ILocalFileSystem>();
         IFileSystem fileSystem = scope.ServiceProvider.GetRequiredService<IFileSystem>();
 
-        if (localFileSystem.FolderExists(FileSystemLayout.LegacyImageCacheFolder))
+        if (fileSystem.Directory.Exists(FileSystemLayout.LegacyImageCacheFolder))
         {
             logger.LogInformation("Migrating channel logos from legacy image cache folder");
 
@@ -54,14 +54,14 @@ public class CacheCleanerService(
             Directory.Delete(FileSystemLayout.LegacyImageCacheFolder, true);
         }
 
-        if (localFileSystem.FolderExists(FileSystemLayout.TranscodeFolder))
+        if (fileSystem.Directory.Exists(FileSystemLayout.TranscodeFolder))
         {
             logger.LogInformation("Emptying transcode cache folder");
             localFileSystem.EmptyFolder(FileSystemLayout.TranscodeFolder);
             logger.LogInformation("Done emptying transcode cache folder");
         }
 
-        if (localFileSystem.FolderExists(FileSystemLayout.ChannelGuideCacheFolder))
+        if (fileSystem.Directory.Exists(FileSystemLayout.ChannelGuideCacheFolder))
         {
             logger.LogInformation("Cleaning channel cache");
 
