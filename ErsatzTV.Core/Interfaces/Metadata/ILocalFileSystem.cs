@@ -1,12 +1,9 @@
-﻿using ErsatzTV.Core.Domain;
-
-namespace ErsatzTV.Core.Interfaces.Metadata;
+﻿namespace ErsatzTV.Core.Interfaces.Metadata;
 
 public interface ILocalFileSystem
 {
     Unit EnsureFolderExists(string folder);
     DateTime GetLastWriteTime(string path);
-    bool IsLibraryPathAccessible(LibraryPath libraryPath);
     IEnumerable<string> ListSubdirectories(string folder);
     IEnumerable<string> ListFiles(string folder);
     IEnumerable<string> ListFiles(string folder, string searchPattern);

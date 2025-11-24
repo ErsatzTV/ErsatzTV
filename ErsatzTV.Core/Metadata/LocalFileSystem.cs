@@ -1,7 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Security.Cryptography;
 using Bugsnag;
-using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
 using Microsoft.Extensions.Logging;
 
@@ -37,9 +36,6 @@ public class LocalFileSystem(IClient client, ILogger<LocalFileSystem> logger) : 
             return SystemTime.MinValueUtc;
         }
     }
-
-    public bool IsLibraryPathAccessible(LibraryPath libraryPath) =>
-        Directory.Exists(libraryPath.Path);
 
     public IEnumerable<string> ListSubdirectories(string folder)
     {

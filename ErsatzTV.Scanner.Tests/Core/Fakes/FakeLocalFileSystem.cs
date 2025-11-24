@@ -35,9 +35,6 @@ public class FakeLocalFileSystem : ILocalFileSystem
             .Map(f => f.LastWriteTime)
             .IfNone(SystemTime.MinValueUtc);
 
-    public bool IsLibraryPathAccessible(LibraryPath libraryPath) =>
-        _folders.Any(f => f.Path == libraryPath.Path);
-
     public IEnumerable<string> ListSubdirectories(string folder) =>
         _folders.Map(f => f.Path).Filter(f => f.StartsWith(folder) && Directory.GetParent(f)?.FullName == folder);
 
