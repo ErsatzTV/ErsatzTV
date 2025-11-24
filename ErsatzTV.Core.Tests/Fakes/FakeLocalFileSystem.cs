@@ -58,12 +58,6 @@ public class FakeLocalFileSystem : ILocalFileSystem
 
     public Unit EmptyFolder(string folder) => Unit.Default;
 
-    public async Task<string> ReadAllText(string path) => await _files
-        .Filter(f => f.Path == path)
-        .HeadOrNone()
-        .Select(f => f.Contents)
-        .IfNoneAsync(string.Empty);
-
     public async Task<string[]> ReadAllLines(string path) => await _files
         .Filter(f => f.Path == path)
         .HeadOrNone()

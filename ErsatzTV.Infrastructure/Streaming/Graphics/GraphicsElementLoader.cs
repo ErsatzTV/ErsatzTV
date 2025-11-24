@@ -1,3 +1,4 @@
+using System.IO.Abstractions;
 using System.Text;
 using System.Text.RegularExpressions;
 using ErsatzTV.Core.Domain;
@@ -18,6 +19,7 @@ namespace ErsatzTV.Infrastructure.Streaming.Graphics;
 
 public partial class GraphicsElementLoader(
     TemplateFunctions templateFunctions,
+    IFileSystem fileSystem,
     ILocalFileSystem localFileSystem,
     ITemplateDataRepository templateDataRepository,
     ILogger<GraphicsElementLoader> logger)
@@ -147,7 +149,7 @@ public partial class GraphicsElementLoader(
     {
         try
         {
-            string yaml = await localFileSystem.ReadAllText(fileName);
+            string yaml = await fileSystem.File.ReadAllTextAsync(fileName, cancellationToken);
             var template = Template.Parse(yaml);
 
             var builder = new StringBuilder();
@@ -257,7 +259,7 @@ public partial class GraphicsElementLoader(
 
     private async Task<Option<string>> GetTemplatedYaml(string fileName, Dictionary<string, object> variables)
     {
-        string yaml = await localFileSystem.ReadAllText(fileName);
+        string yaml = await fileSystem.File.ReadAllTextAsync(fileName);
         try
         {
             var scriptObject = new ScriptObject();

@@ -32,6 +32,7 @@
         <PackageReference Include="SkiaSharp" Version="3.119.1" />
         <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.119.1" />
         <PackageReference Include="System.CommandLine" Version="2.0.0-rc.2.25502.107" />
+        <PackageReference Include="Testably.Abstractions" Version="10.0.0" />
         <PackageReference Include="TimeSpanParserUtil" Version="1.2.0" />
         <PackageReference Include="YamlDotNet" Version="16.3.0" />
     </ItemGroup>

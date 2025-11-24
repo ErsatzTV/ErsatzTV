@@ -1,3 +1,4 @@
+using System.IO.Abstractions;
 using Bugsnag;
 using Bugsnag.Payload;
 using Dapper;
@@ -47,6 +48,7 @@ using Microsoft.IO;
 using Serilog;
 using Serilog.Events;
 using Serilog.Formatting.Compact;
+using Testably.Abstractions;
 using Exception = System.Exception;
 using IConfiguration = Bugsnag.IConfiguration;
 
@@ -251,6 +253,8 @@ public class Program
                 services.AddSingleton<IClient>(_ => new BugsnagNoopClient());
                 services.AddSingleton<IScannerProxy, ScannerProxy>();
                 services.AddSingleton<ILanguageCodeCache, LanguageCodeCache>();
+
+                services.AddSingleton<IFileSystem, RealFileSystem>();
 
                 services.AddMediatR(config => config.RegisterServicesFromAssemblyContaining<Worker>());
                 services.AddMemoryCache();

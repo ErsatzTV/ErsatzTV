@@ -184,7 +184,6 @@ public class LocalFileSystem(IClient client, ILogger<LocalFileSystem> logger) : 
         return Unit.Default;
     }
 
-    public Task<string> ReadAllText(string path) => File.ReadAllTextAsync(path);
     public Task<string[]> ReadAllLines(string path) => File.ReadAllLinesAsync(path);
 
     [SuppressMessage("Security", "CA5351:Do Not Use Broken Cryptographic Algorithms")]
