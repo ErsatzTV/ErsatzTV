@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.IO.Abstractions;
 using System.Text.Json;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Interfaces.Scheduling;
@@ -11,7 +12,8 @@ using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace ErsatzTV.Infrastructure.Scheduling;
 
-public class SequentialScheduleValidator(ILogger<SequentialScheduleValidator> logger) : ISequentialScheduleValidator
+public class SequentialScheduleValidator(IFileSystem fileSystem, ILogger<SequentialScheduleValidator> logger)
+    : ISequentialScheduleValidator
 {
     public async Task<bool> ValidateSchedule(string yaml, bool isImport)
     {
@@ -20,7 +22,7 @@ public class SequentialScheduleValidator(ILogger<SequentialScheduleValidator> lo
             string schemaFileName = Path.Combine(
                 FileSystemLayout.ResourcesCacheFolder,
                 isImport ? "sequential-schedule-import.schema.json" : "sequential-schedule.schema.json");
-            using StreamReader sr = File.OpenText(schemaFileName);
+            using StreamReader sr = fileSystem.File.OpenText(schemaFileName);
             await using var reader = new JsonTextReader(sr);
             var schema = JSchema.Load(reader);
 
@@ -63,7 +65,7 @@ public class SequentialScheduleValidator(ILogger<SequentialScheduleValidator> lo
             string schemaFileName = Path.Combine(
                 FileSystemLayout.ResourcesCacheFolder,
                 isImport ? "sequential-schedule-import.schema.json" : "sequential-schedule.schema.json");
-            using StreamReader sr = File.OpenText(schemaFileName);
+            using StreamReader sr = fileSystem.File.OpenText(schemaFileName);
             await using var reader = new JsonTextReader(sr);
             var schema = JSchema.Load(reader);
 
