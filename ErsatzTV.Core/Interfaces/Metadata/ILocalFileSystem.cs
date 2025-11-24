@@ -1,22 +1,15 @@
-﻿using ErsatzTV.Core.Domain;
-
-namespace ErsatzTV.Core.Interfaces.Metadata;
+﻿namespace ErsatzTV.Core.Interfaces.Metadata;
 
 public interface ILocalFileSystem
 {
     Unit EnsureFolderExists(string folder);
     DateTime GetLastWriteTime(string path);
-    bool IsLibraryPathAccessible(LibraryPath libraryPath);
     IEnumerable<string> ListSubdirectories(string folder);
     IEnumerable<string> ListFiles(string folder);
     IEnumerable<string> ListFiles(string folder, string searchPattern);
     IEnumerable<string> ListFiles(string folder, params string[] searchPatterns);
-    bool FileExists(string path);
-    bool FolderExists(string folder);
     Task<Either<BaseError, Unit>> CopyFile(string source, string destination);
     Unit EmptyFolder(string folder);
-    Task<string> ReadAllText(string path);
-    Task<string[]> ReadAllLines(string path);
     Task<byte[]> GetHash(string path);
     string GetCustomOrDefaultFile(string folder, string file);
 }

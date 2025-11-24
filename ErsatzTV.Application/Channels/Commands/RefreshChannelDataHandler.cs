@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.IO.Abstractions;
 using System.Xml;
 using ErsatzTV.Application.Configuration;
 using ErsatzTV.Core;
@@ -26,6 +27,7 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
 {
     private readonly IConfigElementRepository _configElementRepository;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
+    private readonly IFileSystem _fileSystem;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILogger<RefreshChannelDataHandler> _logger;
     private readonly RecyclableMemoryStreamManager _recyclableMemoryStreamManager;
@@ -33,12 +35,14 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
     public RefreshChannelDataHandler(
         RecyclableMemoryStreamManager recyclableMemoryStreamManager,
         IDbContextFactory<TvContext> dbContextFactory,
+        IFileSystem fileSystem,
         ILocalFileSystem localFileSystem,
         IConfigElementRepository configElementRepository,
         ILogger<RefreshChannelDataHandler> logger)
     {
         _recyclableMemoryStreamManager = recyclableMemoryStreamManager;
         _dbContextFactory = dbContextFactory;
+        _fileSystem = fileSystem;
         _localFileSystem = localFileSystem;
         _configElementRepository = configElementRepository;
         _logger = logger;
@@ -886,7 +890,7 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
             "movie.sbntxt");
 
         // fail if file doesn't exist
-        if (!_localFileSystem.FileExists(templateFileName))
+        if (!_fileSystem.File.Exists(templateFileName))
         {
             _logger.LogError(
                 "Unable to generate movie XMLTV fragment without template file {File}; please restart ErsatzTV",
@@ -905,7 +909,7 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
             "episode.sbntxt");
 
         // fail if file doesn't exist
-        if (!_localFileSystem.FileExists(templateFileName))
+        if (!_fileSystem.File.Exists(templateFileName))
         {
             _logger.LogError(
                 "Unable to generate episode XMLTV fragment without template file {File}; please restart ErsatzTV",
@@ -924,7 +928,7 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
             "musicVideo.sbntxt");
 
         // fail if file doesn't exist
-        if (!_localFileSystem.FileExists(templateFileName))
+        if (!_fileSystem.File.Exists(templateFileName))
         {
             _logger.LogError(
                 "Unable to generate music video XMLTV fragment without template file {File}; please restart ErsatzTV",
@@ -943,7 +947,7 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
             "song.sbntxt");
 
         // fail if file doesn't exist
-        if (!_localFileSystem.FileExists(templateFileName))
+        if (!_fileSystem.File.Exists(templateFileName))
         {
             _logger.LogError(
                 "Unable to generate song XMLTV fragment without template file {File}; please restart ErsatzTV",
@@ -962,7 +966,7 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
             "otherVideo.sbntxt");
 
         // fail if file doesn't exist
-        if (!_localFileSystem.FileExists(templateFileName))
+        if (!_fileSystem.File.Exists(templateFileName))
         {
             _logger.LogError(
                 "Unable to generate other video XMLTV fragment without template file {File}; please restart ErsatzTV",
@@ -1077,7 +1081,7 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
     {
         var result = new List<PlayoutItem>();
 
-        if (_localFileSystem.FileExists(path))
+        if (_fileSystem.File.Exists(path))
         {
             Option<ExternalJsonChannel> maybeChannel = JsonConvert.DeserializeObject<ExternalJsonChannel>(
                 await File.ReadAllTextAsync(path));

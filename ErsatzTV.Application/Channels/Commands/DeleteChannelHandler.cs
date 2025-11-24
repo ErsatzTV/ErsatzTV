@@ -1,6 +1,6 @@
+using System.IO.Abstractions;
 using System.Threading.Channels;
 using ErsatzTV.Core;
-using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
@@ -12,19 +12,19 @@ namespace ErsatzTV.Application.Channels;
 public class DeleteChannelHandler : IRequestHandler<DeleteChannel, Either<BaseError, Unit>>
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
-    private readonly ILocalFileSystem _localFileSystem;
+    private readonly IFileSystem _fileSystem;
     private readonly ISearchTargets _searchTargets;
     private readonly ChannelWriter<IBackgroundServiceRequest> _workerChannel;
 
     public DeleteChannelHandler(
         ChannelWriter<IBackgroundServiceRequest> workerChannel,
         IDbContextFactory<TvContext> dbContextFactory,
-        ILocalFileSystem localFileSystem,
+        IFileSystem fileSystem,
         ISearchTargets searchTargets)
     {
         _workerChannel = workerChannel;
         _dbContextFactory = dbContextFactory;
-        _localFileSystem = localFileSystem;
+        _fileSystem = fileSystem;
         _searchTargets = searchTargets;
     }
 
@@ -44,7 +44,7 @@ public class DeleteChannelHandler : IRequestHandler<DeleteChannel, Either<BaseEr
 
         // delete channel data from channel guide cache
         string cacheFile = Path.Combine(FileSystemLayout.ChannelGuideCacheFolder, $"{channel.Number}.xml");
-        if (_localFileSystem.FileExists(cacheFile))
+        if (_fileSystem.File.Exists(cacheFile))
         {
             File.Delete(cacheFile);
         }

@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.IO.Abstractions;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Metadata;
@@ -15,7 +16,7 @@ namespace ErsatzTV.Core.FFmpeg;
 public class FFmpegStreamSelector : IFFmpegStreamSelector
 {
     private readonly IConfigElementRepository _configElementRepository;
-    private readonly ILocalFileSystem _localFileSystem;
+    private readonly IFileSystem _fileSystem;
     private readonly ILanguageCodeService _languageCodeService;
     private readonly ILogger<FFmpegStreamSelector> _logger;
     private readonly IScriptEngine _scriptEngine;
@@ -25,14 +26,14 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
         IScriptEngine scriptEngine,
         IStreamSelectorRepository streamSelectorRepository,
         IConfigElementRepository configElementRepository,
-        ILocalFileSystem localFileSystem,
+        IFileSystem fileSystem,
         ILanguageCodeService languageCodeService,
         ILogger<FFmpegStreamSelector> logger)
     {
         _scriptEngine = scriptEngine;
         _streamSelectorRepository = streamSelectorRepository;
         _configElementRepository = configElementRepository;
-        _localFileSystem = localFileSystem;
+        _fileSystem = fileSystem;
         _languageCodeService = languageCodeService;
         _logger = logger;
     }
@@ -318,7 +319,7 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
             "js");
 
         _logger.LogDebug("Checking for JS Script at {Path}", jsScriptPath);
-        if (!_localFileSystem.FileExists(jsScriptPath))
+        if (!_fileSystem.File.Exists(jsScriptPath))
         {
             _logger.LogDebug("Unable to locate episode audio stream selector script; falling back to built-in logic");
             return Option<MediaStream>.None;
@@ -358,7 +359,7 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
             "js");
 
         _logger.LogDebug("Checking for JS Script at {Path}", jsScriptPath);
-        if (!_localFileSystem.FileExists(jsScriptPath))
+        if (!_fileSystem.File.Exists(jsScriptPath))
         {
             _logger.LogDebug(
                 "Unable to locate movie audio stream selector script; falling back to built-in logic");

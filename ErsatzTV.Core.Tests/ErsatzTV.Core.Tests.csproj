@@ -27,6 +27,7 @@
         <PackageReference Include="Serilog.Extensions.Logging" Version="9.0.2" />
         <PackageReference Include="Serilog.Sinks.Debug" Version="3.0.0" />
         <PackageReference Include="Shouldly" Version="4.3.0" />
+        <PackageReference Include="Testably.Abstractions.Testing" Version="5.0.0" />
     </ItemGroup>
 
     <ItemGroup>

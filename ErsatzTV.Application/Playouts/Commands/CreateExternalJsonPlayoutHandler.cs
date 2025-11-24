@@ -1,8 +1,8 @@
+using System.IO.Abstractions;
 using System.Threading.Channels;
 using ErsatzTV.Application.Channels;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
-using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Scheduling;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
@@ -14,16 +14,16 @@ namespace ErsatzTV.Application.Playouts;
 public class CreateExternalJsonPlayoutHandler
     : IRequestHandler<CreateExternalJsonPlayout, Either<BaseError, CreatePlayoutResponse>>
 {
+    private readonly IFileSystem _fileSystem;
     private readonly ChannelWriter<IBackgroundServiceRequest> _channel;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
-    private readonly ILocalFileSystem _localFileSystem;
 
     public CreateExternalJsonPlayoutHandler(
-        ILocalFileSystem localFileSystem,
+        IFileSystem fileSystem,
         ChannelWriter<IBackgroundServiceRequest> channel,
         IDbContextFactory<TvContext> dbContextFactory)
     {
-        _localFileSystem = localFileSystem;
+        _fileSystem = fileSystem;
         _channel = channel;
         _dbContextFactory = dbContextFactory;
     }
@@ -76,7 +76,7 @@ public class CreateExternalJsonPlayoutHandler
 
     private Validation<BaseError, string> ValidateExternalJsonFile(CreateExternalJsonPlayout request)
     {
-        if (!_localFileSystem.FileExists(request.ScheduleFile))
+        if (!_fileSystem.File.Exists(request.ScheduleFile))
         {
             return BaseError.New("External Json File does not exist!");
         }

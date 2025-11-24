@@ -1,4 +1,5 @@
 ﻿using System.Collections.Immutable;
+using System.IO.Abstractions;
 using Bugsnag;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
@@ -23,6 +24,7 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
     private readonly ILibraryRepository _libraryRepository;
     private readonly ILocalChaptersProvider _localChaptersProvider;
     private readonly IScannerProxy _scannerProxy;
+    private readonly IFileSystem _fileSystem;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalMetadataProvider _localMetadataProvider;
     private readonly ILocalSubtitlesProvider _localSubtitlesProvider;
@@ -32,6 +34,7 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
 
     public MusicVideoFolderScanner(
         IScannerProxy scannerProxy,
+        IFileSystem fileSystem,
         ILocalFileSystem localFileSystem,
         ILocalStatisticsProvider localStatisticsProvider,
         ILocalMetadataProvider localMetadataProvider,
@@ -47,7 +50,7 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
         ITempFilePool tempFilePool,
         IClient client,
         ILogger<MusicVideoFolderScanner> logger) : base(
-        localFileSystem,
+        fileSystem,
         localStatisticsProvider,
         metadataRepository,
         mediaItemRepository,
@@ -58,6 +61,7 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
         logger)
     {
         _scannerProxy = scannerProxy;
+        _fileSystem = fileSystem;
         _localFileSystem = localFileSystem;
         _localMetadataProvider = localMetadataProvider;
         _localSubtitlesProvider = localSubtitlesProvider;
@@ -173,7 +177,7 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
 
             foreach (string path in await _musicVideoRepository.FindMusicVideoPaths(libraryPath))
             {
-                if (!_localFileSystem.FileExists(path))
+                if (!_fileSystem.File.Exists(path))
                 {
                     _logger.LogInformation("Flagging missing music video at {Path}", path);
                     List<int> musicVideoIds = await FlagFileNotFound(libraryPath, path);
@@ -459,7 +463,7 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
     }
 
     private Option<string> LocateNfoFileForArtist(string artistFolder) =>
-        Optional(Path.Combine(artistFolder, "artist.nfo")).Filter(s => _localFileSystem.FileExists(s));
+        Optional(Path.Combine(artistFolder, "artist.nfo")).Filter(s => _fileSystem.File.Exists(s));
 
     private Option<string> LocateArtworkForArtist(string artistFolder, ArtworkKind artworkKind)
     {
@@ -473,7 +477,7 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
         return ImageFileExtensions
             .Map(ext => $"{segment}.{ext}")
             .Map(f => Path.Combine(artistFolder, f))
-            .Filter(s => _localFileSystem.FileExists(s))
+            .Filter(s => _fileSystem.File.Exists(s))
             .HeadOrNone();
     }
 
@@ -481,7 +485,7 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
     {
         string path = musicVideo.MediaVersions.Head().MediaFiles.Head().Path;
         return Optional(Path.ChangeExtension(path, "nfo"))
-            .Filter(s => _localFileSystem.FileExists(s))
+            .Filter(s => _fileSystem.File.Exists(s))
             .HeadOrNone();
     }
 
@@ -554,7 +558,7 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
 
         return ImageFileExtensions
             .SelectMany(ext => new[] { Path.ChangeExtension(path, ext), Path.ChangeExtension(thumbPath, ext) })
-            .Filter(f => _localFileSystem.FileExists(f))
+            .Filter(f => _fileSystem.File.Exists(f))
             .HeadOrNone();
     }
 }

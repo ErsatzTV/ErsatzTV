@@ -1,12 +1,16 @@
 ﻿using System.Globalization;
+using Bugsnag;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Metadata;
 using ErsatzTV.Scanner.Core.Metadata;
 using ErsatzTV.Scanner.Tests.Core.Fakes;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NUnit.Framework;
 using Shouldly;
+using Testably.Abstractions.Testing;
+using Testably.Abstractions.Testing.Initializer;
 
 namespace ErsatzTV.Scanner.Tests.Core.Metadata;
 
@@ -46,10 +50,17 @@ public class LocalSubtitlesProviderTests
             new(@"/Movies/Avatar (2009)/Avatar (2009).DE.SDH.FORCED.SRT")
         };
 
+        var fileSystem = new MockFileSystem();
+        IFileSystemInitializer<MockFileSystem> init = fileSystem.Initialize();
+        foreach (var file in fakeFiles)
+        {
+            init.WithFile(file.Path);
+        }
+
         var provider = new LocalSubtitlesProvider(
             Substitute.For<IMediaItemRepository>(),
             Substitute.For<IMetadataRepository>(),
-            new FakeLocalFileSystem(fakeFiles),
+            new LocalFileSystem(fileSystem, Substitute.For<IClient>(), Substitute.For<ILogger<LocalFileSystem>>()),
             Substitute.For<ILogger<LocalSubtitlesProvider>>());
 
         List<Subtitle> result = provider.LocateExternalSubtitles(
@@ -91,10 +102,17 @@ public class LocalSubtitlesProviderTests
             new(@"/Movies/Avatar (2009)/Avatar (2009).DE.SDH.FORCED.SRT")
         };
 
+        var fileSystem = new MockFileSystem();
+        IFileSystemInitializer<MockFileSystem> init = fileSystem.Initialize();
+        foreach (var file in fakeFiles)
+        {
+            init.WithFile(file.Path);
+        }
+
         var provider = new LocalSubtitlesProvider(
             Substitute.For<IMediaItemRepository>(),
             Substitute.For<IMetadataRepository>(),
-            new FakeLocalFileSystem(fakeFiles),
+            new LocalFileSystem(fileSystem, Substitute.For<IClient>(), Substitute.For<ILogger<LocalFileSystem>>()),
             Substitute.For<ILogger<LocalSubtitlesProvider>>());
 
         List<Subtitle> result = provider.LocateExternalSubtitles(

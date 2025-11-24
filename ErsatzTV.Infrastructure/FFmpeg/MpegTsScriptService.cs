@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.IO.Abstractions;
 using System.Runtime.InteropServices;
 using CliWrap;
 using ErsatzTV.Core;
@@ -15,6 +16,7 @@ using YamlDotNet.Serialization.NamingConventions;
 namespace ErsatzTV.Infrastructure.FFmpeg;
 
 public class MpegTsScriptService(
+    IFileSystem fileSystem,
     ILocalFileSystem localFileSystem,
     ITempFilePool tempFilePool,
     ILogger<MpegTsScriptService> logger) : IMpegTsScriptService
@@ -26,9 +28,9 @@ public class MpegTsScriptService(
         foreach (string folder in localFileSystem.ListSubdirectories(FileSystemLayout.MpegTsScriptsFolder))
         {
             string definition = Path.Combine(folder, "mpegts.yml");
-            if (!Scripts.ContainsKey(folder) && localFileSystem.FileExists(definition))
+            if (!Scripts.ContainsKey(folder) && fileSystem.File.Exists(definition))
             {
-                Option<MpegTsScript> maybeScript = FromYaml(await localFileSystem.ReadAllText(definition));
+                Option<MpegTsScript> maybeScript = FromYaml(await fileSystem.File.ReadAllTextAsync(definition));
                 foreach (var script in maybeScript)
                 {
                     script.Id = Path.GetFileName(folder);
@@ -94,7 +96,7 @@ public class MpegTsScriptService(
         string channelName,
         string ffmpegPath)
     {
-        string script = await localFileSystem.ReadAllText(fileName);
+        string script = await fileSystem.File.ReadAllTextAsync(fileName);
         try
         {
             var data = new Dictionary<string, string>

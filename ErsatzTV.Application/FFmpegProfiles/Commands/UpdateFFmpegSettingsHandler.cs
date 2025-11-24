@@ -1,18 +1,18 @@
 ﻿using System.Diagnostics;
 using System.Globalization;
+using System.IO.Abstractions;
 using System.Threading.Channels;
 using ErsatzTV.Application.FFmpeg;
 using ErsatzTV.Application.Subtitles;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
-using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 
 namespace ErsatzTV.Application.FFmpegProfiles;
 
 public class UpdateFFmpegSettingsHandler(
     IConfigElementRepository configElementRepository,
-    ILocalFileSystem localFileSystem,
+    IFileSystem fileSystem,
     ChannelWriter<IBackgroundServiceRequest> workerChannel)
     : IRequestHandler<UpdateFFmpegSettings, Either<BaseError, Unit>>
 {
@@ -35,7 +35,7 @@ public class UpdateFFmpegSettingsHandler(
 
     private async Task<Validation<BaseError, Unit>> ValidateToolPath(string path, string name)
     {
-        if (!localFileSystem.FileExists(path))
+        if (!fileSystem.File.Exists(path))
         {
             return BaseError.New($"{name} path does not exist");
         }

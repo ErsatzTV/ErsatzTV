@@ -1,11 +1,11 @@
-﻿using System.Text;
+﻿using System.IO.Abstractions;
+using System.Text;
 using Bugsnag;
 using CliWrap;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.FFmpeg;
-using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -14,7 +14,7 @@ namespace ErsatzTV.Application.Streaming;
 
 public class GetLastPtsTimeHandler(
     IClient client,
-    ILocalFileSystem localFileSystem,
+    IFileSystem fileSystem,
     ITempFilePool tempFilePool,
     IConfigElementRepository configElementRepository,
     ILogger<GetLastPtsTimeHandler> logger)
@@ -168,7 +168,7 @@ public class GetLastPtsTimeHandler(
 
             string playlistFileName = Path.Combine(FileSystemLayout.TranscodeFolder, channelNumber, "live.m3u8");
             string playlistContents = string.Empty;
-            if (localFileSystem.FileExists(playlistFileName))
+            if (fileSystem.File.Exists(playlistFileName))
             {
                 playlistContents = await File.ReadAllTextAsync(playlistFileName);
             }

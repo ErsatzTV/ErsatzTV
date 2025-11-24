@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.IO.Abstractions;
 using System.IO.Pipelines;
 using System.Text;
 using System.Timers;
@@ -30,6 +31,7 @@ public class HlsSessionWorker : IHlsSessionWorker
     private readonly IHlsInitSegmentCache _hlsInitSegmentCache;
     private readonly Dictionary<long, int> _discontinuityMap = [];
     private readonly IConfigElementRepository _configElementRepository;
+    private readonly IFileSystem _fileSystem;
     private readonly IGraphicsEngine _graphicsEngine;
     private readonly IHlsPlaylistFilter _hlsPlaylistFilter;
     private readonly ILocalFileSystem _localFileSystem;
@@ -60,6 +62,7 @@ public class HlsSessionWorker : IHlsSessionWorker
         IHlsPlaylistFilter hlsPlaylistFilter,
         IHlsInitSegmentCache hlsInitSegmentCache,
         IConfigElementRepository configElementRepository,
+        IFileSystem fileSystem,
         ILocalFileSystem localFileSystem,
         ILogger<HlsSessionWorker> logger,
         Option<int> targetFramerate)
@@ -72,6 +75,7 @@ public class HlsSessionWorker : IHlsSessionWorker
         _hlsInitSegmentCache = hlsInitSegmentCache;
         _hlsPlaylistFilter = hlsPlaylistFilter;
         _configElementRepository = configElementRepository;
+        _fileSystem = fileSystem;
         _localFileSystem = localFileSystem;
         _logger = logger;
         _targetFramerate = targetFramerate;
@@ -308,7 +312,7 @@ public class HlsSessionWorker : IHlsSessionWorker
             string playlistFileName = Path.Combine(_workingDirectory, "live.m3u8");
 
             _logger.LogDebug("Waiting for playlist to exist");
-            while (!_localFileSystem.FileExists(playlistFileName))
+            while (!_fileSystem.File.Exists(playlistFileName))
             {
                 await Task.Delay(TimeSpan.FromMilliseconds(100), cancellationToken);
             }
@@ -679,9 +683,9 @@ public class HlsSessionWorker : IHlsSessionWorker
         var generatedAtHash = new System.Collections.Generic.HashSet<long>();
 
         // delete old segments
-        var allSegments = Directory.GetFiles(_workingDirectory, "live*.ts")
-            .Append(Directory.GetFiles(_workingDirectory, "live*.mp4"))
-            .Append(Directory.GetFiles(_workingDirectory, "live*.m4s"))
+        var allSegments = _fileSystem.Directory.GetFiles(_workingDirectory, "live*.ts")
+            .Append(_fileSystem.Directory.GetFiles(_workingDirectory, "live*.mp4"))
+            .Append(_fileSystem.Directory.GetFiles(_workingDirectory, "live*.m4s"))
             .Map(file =>
             {
                 string fileName = Path.GetFileName(file);
@@ -699,7 +703,7 @@ public class HlsSessionWorker : IHlsSessionWorker
             })
             .ToList();
 
-        var allInits = Directory.GetFiles(_workingDirectory, "*init.mp4")
+        var allInits = _fileSystem.Directory.GetFiles(_workingDirectory, "*init.mp4")
             .Map(file => long.TryParse(Path.GetFileName(file).Split('_')[0], out long generatedAt) && !generatedAtHash.Contains(generatedAt)
                 ? new Segment(file, 0, generatedAt)
                 : Option<Segment>.None)
@@ -739,7 +743,7 @@ public class HlsSessionWorker : IHlsSessionWorker
         {
             try
             {
-                File.Delete(segment.File);
+                _fileSystem.File.Delete(segment.File);
             }
             catch (IOException)
             {
@@ -752,12 +756,12 @@ public class HlsSessionWorker : IHlsSessionWorker
 
     private async Task RefreshInits()
     {
-        var allSegments = Directory.GetFiles(_workingDirectory, "live*.m4s")
+        var allSegments = _fileSystem.Directory.GetFiles(_workingDirectory, "live*.m4s")
             .Map(Path.GetFileName)
             .Map(s => s.Split("_")[1])
             .ToHashSet();
 
-        foreach (string file in Directory.GetFiles(_workingDirectory, "*init.mp4"))
+        foreach (string file in _fileSystem.Directory.GetFiles(_workingDirectory, "*init.mp4"))
         {
             string key = Path.GetFileName(file).Split("_")[0];
             if (allSegments.Contains(key))
@@ -812,9 +816,9 @@ public class HlsSessionWorker : IHlsSessionWorker
     private async Task<Option<string[]>> ReadPlaylistLines(CancellationToken cancellationToken)
     {
         string fileName = PlaylistFileName();
-        if (File.Exists(fileName))
+        if (_fileSystem.File.Exists(fileName))
         {
-            return await File.ReadAllLinesAsync(fileName, cancellationToken);
+            return await _fileSystem.File.ReadAllLinesAsync(fileName, cancellationToken);
         }
 
         _logger.LogDebug("Playlist does not exist at expected location {File}", fileName);
@@ -824,7 +828,7 @@ public class HlsSessionWorker : IHlsSessionWorker
     private async Task WritePlaylist(string playlist, CancellationToken cancellationToken)
     {
         string fileName = PlaylistFileName();
-        await File.WriteAllTextAsync(fileName, playlist, cancellationToken);
+        await _fileSystem.File.WriteAllTextAsync(fileName, playlist, cancellationToken);
     }
 
     private string PlaylistFileName() => Path.Combine(_workingDirectory, "live.m3u8");

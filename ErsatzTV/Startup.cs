@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.IO.Abstractions;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -99,6 +100,7 @@ using Refit;
 using Scalar.AspNetCore;
 using Serilog;
 using Serilog.Events;
+using Testably.Abstractions;
 
 namespace ErsatzTV;
 
@@ -691,6 +693,8 @@ public class Startup
     private static void CustomServices(IServiceCollection services)
     {
         services.AddSingleton<IEnvironmentValidator, EnvironmentValidator>();
+
+        services.AddSingleton<IFileSystem, RealFileSystem>();
 
         services.AddSingleton<IDatabaseMigrations, DatabaseMigrations>();
         services.AddSingleton<IPlexSecretStore, PlexSecretStore>();

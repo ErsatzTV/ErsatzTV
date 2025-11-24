@@ -1,8 +1,8 @@
+using System.IO.Abstractions;
 using System.Text;
 using System.Text.RegularExpressions;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Graphics;
-using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Streaming;
 using ErsatzTV.Core.Metadata;
@@ -18,7 +18,7 @@ namespace ErsatzTV.Infrastructure.Streaming.Graphics;
 
 public partial class GraphicsElementLoader(
     TemplateFunctions templateFunctions,
-    ILocalFileSystem localFileSystem,
+    IFileSystem fileSystem,
     ITemplateDataRepository templateDataRepository,
     ILogger<GraphicsElementLoader> logger)
     : IGraphicsElementLoader
@@ -147,7 +147,7 @@ public partial class GraphicsElementLoader(
     {
         try
         {
-            string yaml = await localFileSystem.ReadAllText(fileName);
+            string yaml = await fileSystem.File.ReadAllTextAsync(fileName, cancellationToken);
             var template = Template.Parse(yaml);
 
             var builder = new StringBuilder();
@@ -187,7 +187,7 @@ public partial class GraphicsElementLoader(
 
         foreach (var reference in elementsWithEpg)
         {
-            foreach (string line in await localFileSystem.ReadAllLines(reference.GraphicsElement.Path))
+            foreach (string line in await fileSystem.File.ReadAllLinesAsync(reference.GraphicsElement.Path))
             {
                 Match match = EpgEntriesRegex().Match(line);
                 if (!match.Success || !int.TryParse(match.Groups[1].Value, out int value))
@@ -257,7 +257,7 @@ public partial class GraphicsElementLoader(
 
     private async Task<Option<string>> GetTemplatedYaml(string fileName, Dictionary<string, object> variables)
     {
-        string yaml = await localFileSystem.ReadAllText(fileName);
+        string yaml = await fileSystem.File.ReadAllTextAsync(fileName);
         try
         {
             var scriptObject = new ScriptObject();

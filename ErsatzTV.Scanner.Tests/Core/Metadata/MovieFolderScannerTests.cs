@@ -17,16 +17,14 @@ using NSubstitute;
 using NUnit.Framework;
 using Serilog;
 using Shouldly;
+using Testably.Abstractions.Testing;
+using Testably.Abstractions.Testing.Initializer;
 
 namespace ErsatzTV.Scanner.Tests.Core.Metadata;
 
 [TestFixture]
 public class MovieFolderScannerTests
 {
-    private static readonly string BadFakeRoot = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-        ? @"C:\Movies-That-Dont-Exist"
-        : @"/movies-that-dont-exist";
-
     private static readonly string FakeRoot = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
         ? @"C:\Movies"
         : "/movies";
@@ -718,28 +716,19 @@ public class MovieFolderScannerTests
             await _mediaItemRepository.Received(1).FlagFileNotFound(libraryPath, oldMoviePath);
         }
 
-        private MovieFolderScanner GetService(params FakeFileEntry[] files) =>
-            new(
-                _scannerProxy,
-                new FakeLocalFileSystem([..files]),
-                _movieRepository,
-                _localStatisticsProvider,
-                Substitute.For<ILocalSubtitlesProvider>(),
-                Substitute.For<ILocalChaptersProvider>(),
-                _localMetadataProvider,
-                Substitute.For<IMetadataRepository>(),
-                _imageCache,
-                _libraryRepository,
-                _mediaItemRepository,
-                Substitute.For<IFFmpegPngService>(),
-                Substitute.For<ITempFilePool>(),
-                Substitute.For<IClient>(),
-                Logger);
+        private MovieFolderScanner GetService(params FakeFileEntry[] files)
+        {
+            var fileSystem = new MockFileSystem();
+            IFileSystemInitializer<MockFileSystem> init = fileSystem.Initialize();
+            foreach (var file in files)
+            {
+                init.WithFile(file.Path).Which(f => f.File.LastWriteTime = file.LastWriteTime);
+            }
 
-        private MovieFolderScanner GetService(params FakeFolderEntry[] folders) =>
-            new(
+            return new MovieFolderScanner(
                 _scannerProxy,
-                new FakeLocalFileSystem([], [..folders]),
+                fileSystem,
+                new LocalFileSystem(fileSystem, Substitute.For<IClient>(), Substitute.For<ILogger<LocalFileSystem>>()),
                 _movieRepository,
                 _localStatisticsProvider,
                 Substitute.For<ILocalSubtitlesProvider>(),
@@ -753,5 +742,34 @@ public class MovieFolderScannerTests
                 Substitute.For<ITempFilePool>(),
                 Substitute.For<IClient>(),
                 Logger);
+        }
+
+        private MovieFolderScanner GetService(params FakeFolderEntry[] folders)
+        {
+            var fileSystem = new MockFileSystem();
+            IFileSystemInitializer<MockFileSystem> init = fileSystem.Initialize();
+            foreach (var folder in folders)
+            {
+                init.WithSubdirectory(folder.Path);
+            }
+
+            return new MovieFolderScanner(
+                _scannerProxy,
+                fileSystem,
+                new LocalFileSystem(fileSystem, Substitute.For<IClient>(), Substitute.For<ILogger<LocalFileSystem>>()),
+                _movieRepository,
+                _localStatisticsProvider,
+                Substitute.For<ILocalSubtitlesProvider>(),
+                Substitute.For<ILocalChaptersProvider>(),
+                _localMetadataProvider,
+                Substitute.For<IMetadataRepository>(),
+                _imageCache,
+                _libraryRepository,
+                _mediaItemRepository,
+                Substitute.For<IFFmpegPngService>(),
+                Substitute.For<ITempFilePool>(),
+                Substitute.For<IClient>(),
+                Logger);
+        }
     }
 }

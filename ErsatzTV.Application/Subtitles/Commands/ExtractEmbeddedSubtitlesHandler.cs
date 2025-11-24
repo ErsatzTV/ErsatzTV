@@ -1,9 +1,9 @@
-﻿using System.Threading.Channels;
+﻿using System.IO.Abstractions;
+using System.Threading.Channels;
 using ErsatzTV.Application.Maintenance;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Locking;
-using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
@@ -23,12 +23,12 @@ public class ExtractEmbeddedSubtitlesHandler : ExtractEmbeddedSubtitlesHandlerBa
 
     public ExtractEmbeddedSubtitlesHandler(
         IDbContextFactory<TvContext> dbContextFactory,
-        ILocalFileSystem localFileSystem,
+        IFileSystem fileSystem,
         IEntityLocker entityLocker,
         IConfigElementRepository configElementRepository,
         ChannelWriter<IBackgroundServiceRequest> workerChannel,
         ILogger<ExtractEmbeddedSubtitlesHandler> logger)
-        : base(localFileSystem, logger)
+        : base(fileSystem, logger)
     {
         _dbContextFactory = dbContextFactory;
         _entityLocker = entityLocker;

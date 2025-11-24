@@ -1,8 +1,8 @@
+using System.IO.Abstractions;
 using System.IO.Enumeration;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.FFmpeg.Selector;
 using ErsatzTV.Core.Interfaces.FFmpeg;
-using ErsatzTV.Core.Interfaces.Metadata;
 using Microsoft.Extensions.Logging;
 using NCalc;
 using YamlDotNet.Serialization;
@@ -10,7 +10,7 @@ using YamlDotNet.Serialization.NamingConventions;
 
 namespace ErsatzTV.Core.FFmpeg;
 
-public class CustomStreamSelector(ILocalFileSystem localFileSystem, ILogger<CustomStreamSelector> logger)
+public class CustomStreamSelector(IFileSystem fileSystem, ILogger<CustomStreamSelector> logger)
     : ICustomStreamSelector
 {
     public async Task<StreamSelectorResult> SelectStreams(
@@ -25,7 +25,7 @@ public class CustomStreamSelector(ILocalFileSystem localFileSystem, ILogger<Cust
                 FileSystemLayout.ChannelStreamSelectorsFolder,
                 channel.StreamSelector);
 
-            if (!localFileSystem.FileExists(streamSelectorFile))
+            if (!fileSystem.File.Exists(streamSelectorFile))
             {
                 logger.LogWarning("YAML stream selector file {File} does not exist; aborting.", channel.StreamSelector);
                 return StreamSelectorResult.None;
@@ -327,7 +327,7 @@ public class CustomStreamSelector(ILocalFileSystem localFileSystem, ILogger<Cust
     {
         try
         {
-            string yaml = await localFileSystem.ReadAllText(streamSelectorFile);
+            string yaml = await fileSystem.File.ReadAllTextAsync(streamSelectorFile);
 
             IDeserializer deserializer = new DeserializerBuilder()
                 .WithNamingConvention(CamelCaseNamingConvention.Instance)

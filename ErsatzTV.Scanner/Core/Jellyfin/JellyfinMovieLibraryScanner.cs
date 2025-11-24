@@ -1,8 +1,8 @@
-﻿using ErsatzTV.Core;
+﻿using System.IO.Abstractions;
+using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Jellyfin;
-using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Jellyfin;
 using ErsatzTV.Core.Metadata;
@@ -29,13 +29,13 @@ public class JellyfinMovieLibraryScanner :
         IJellyfinMovieRepository jellyfinMovieRepository,
         IJellyfinPathReplacementService pathReplacementService,
         IMediaSourceRepository mediaSourceRepository,
-        ILocalFileSystem localFileSystem,
+        IFileSystem fileSystem,
         ILocalChaptersProvider localChaptersProvider,
         IMetadataRepository metadataRepository,
         ILogger<JellyfinMovieLibraryScanner> logger)
         : base(
             scannerProxy,
-            localFileSystem,
+            fileSystem,
             localChaptersProvider,
             metadataRepository,
             logger)

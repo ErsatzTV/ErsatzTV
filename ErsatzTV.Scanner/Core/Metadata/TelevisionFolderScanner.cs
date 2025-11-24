@@ -1,4 +1,5 @@
 ﻿using System.Collections.Immutable;
+using System.IO.Abstractions;
 using Bugsnag;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
@@ -23,6 +24,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
     private readonly ILibraryRepository _libraryRepository;
     private readonly ILocalChaptersProvider _localChaptersProvider;
     private readonly IScannerProxy _scannerProxy;
+    private readonly IFileSystem _fileSystem;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalMetadataProvider _localMetadataProvider;
     private readonly ILocalSubtitlesProvider _localSubtitlesProvider;
@@ -33,6 +35,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
 
     public TelevisionFolderScanner(
         IScannerProxy scannerProxy,
+        IFileSystem fileSystem,
         ILocalFileSystem localFileSystem,
         ITelevisionRepository televisionRepository,
         ILocalStatisticsProvider localStatisticsProvider,
@@ -48,7 +51,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
         IClient client,
         IFallbackMetadataProvider fallbackMetadataProvider,
         ILogger<TelevisionFolderScanner> logger) : base(
-        localFileSystem,
+        fileSystem,
         localStatisticsProvider,
         metadataRepository,
         mediaItemRepository,
@@ -59,6 +62,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
         logger)
     {
         _scannerProxy = scannerProxy;
+        _fileSystem = fileSystem;
         _localFileSystem = localFileSystem;
         _televisionRepository = televisionRepository;
         _localMetadataProvider = localMetadataProvider;
@@ -169,7 +173,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
 
             foreach (string path in await _televisionRepository.FindEpisodePaths(libraryPath))
             {
-                if (!_localFileSystem.FileExists(path))
+                if (!_fileSystem.File.Exists(path))
                 {
                     _logger.LogInformation("Flagging missing episode at {Path}", path);
 
@@ -584,12 +588,12 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
     }
 
     private Option<string> LocateNfoFileForShow(string showFolder) =>
-        Optional(Path.Combine(showFolder, "tvshow.nfo")).Filter(s => _localFileSystem.FileExists(s));
+        Optional(Path.Combine(showFolder, "tvshow.nfo")).Filter(s => _fileSystem.File.Exists(s));
 
     private Option<string> LocateNfoFile(Episode episode)
     {
         string path = episode.MediaVersions.Head().MediaFiles.Head().Path;
-        return Optional(Path.ChangeExtension(path, "nfo")).Filter(s => _localFileSystem.FileExists(s));
+        return Optional(Path.ChangeExtension(path, "nfo")).Filter(s => _fileSystem.File.Exists(s));
     }
 
     private Option<string> LocateArtworkForShow(string showFolder, ArtworkKind artworkKind)
@@ -606,7 +610,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
             .Map(ext => segments.Map(segment => $"{segment}.{ext}"))
             .Flatten()
             .Map(f => Path.Combine(showFolder, f))
-            .Filter(s => _localFileSystem.FileExists(s))
+            .Filter(s => _fileSystem.File.Exists(s))
             .HeadOrNone();
     }
 
@@ -615,7 +619,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
         string folder = Path.GetDirectoryName(seasonFolder) ?? string.Empty;
         return ImageFileExtensions
             .Map(ext => Path.Combine(folder, $"season{season.SeasonNumber:00}-poster.{ext}"))
-            .Filter(s => _localFileSystem.FileExists(s))
+            .Filter(s => _fileSystem.File.Exists(s))
             .HeadOrNone();
     }
 
@@ -626,7 +630,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
         return ImageFileExtensions
             .Map(ext => Path.GetFileNameWithoutExtension(path) + $"-thumb.{ext}")
             .Map(f => Path.Combine(folder, f))
-            .Filter(f => _localFileSystem.FileExists(f))
+            .Filter(f => _fileSystem.File.Exists(f))
             .HeadOrNone();
     }
 }

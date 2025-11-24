@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.IO.Abstractions;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
@@ -19,7 +20,7 @@ namespace ErsatzTV.Infrastructure.Streaming;
 public class ExternalJsonPlayoutItemProvider : IExternalJsonPlayoutItemProvider
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
-    private readonly ILocalFileSystem _localFileSystem;
+    private readonly IFileSystem _fileSystem;
     private readonly ILocalStatisticsProvider _localStatisticsProvider;
     private readonly ILogger<ExternalJsonPlayoutItemProvider> _logger;
     private readonly IPlexPathReplacementService _plexPathReplacementService;
@@ -28,7 +29,7 @@ public class ExternalJsonPlayoutItemProvider : IExternalJsonPlayoutItemProvider
 
     public ExternalJsonPlayoutItemProvider(
         IDbContextFactory<TvContext> dbContextFactory,
-        ILocalFileSystem localFileSystem,
+        IFileSystem fileSystem,
         IPlexPathReplacementService plexPathReplacementService,
         IPlexServerApiClient plexServerApiClient,
         IPlexSecretStore plexSecretStore,
@@ -36,7 +37,7 @@ public class ExternalJsonPlayoutItemProvider : IExternalJsonPlayoutItemProvider
         ILogger<ExternalJsonPlayoutItemProvider> logger)
     {
         _dbContextFactory = dbContextFactory;
-        _localFileSystem = localFileSystem;
+        _fileSystem = fileSystem;
         _plexPathReplacementService = plexPathReplacementService;
         _plexServerApiClient = plexServerApiClient;
         _plexSecretStore = plexSecretStore;
@@ -62,7 +63,7 @@ public class ExternalJsonPlayoutItemProvider : IExternalJsonPlayoutItemProvider
             if (playout.ScheduleKind == PlayoutScheduleKind.ExternalJson)
             {
                 // json file must exist
-                if (_localFileSystem.FileExists(playout.ScheduleFile))
+                if (_fileSystem.File.Exists(playout.ScheduleFile))
                 {
                     return await GetExternalJsonPlayoutItem(dbContext, playout, now, ffprobePath, cancellationToken);
                 }
@@ -86,7 +87,7 @@ public class ExternalJsonPlayoutItemProvider : IExternalJsonPlayoutItemProvider
         CancellationToken cancellationToken)
     {
         Option<ExternalJsonChannel> maybeChannel = JsonConvert.DeserializeObject<ExternalJsonChannel>(
-            await File.ReadAllTextAsync(playout.ScheduleFile, cancellationToken));
+            await _fileSystem.File.ReadAllTextAsync(playout.ScheduleFile, cancellationToken));
 
         // must deserialize channel from json
         foreach (ExternalJsonChannel channel in maybeChannel)
@@ -139,7 +140,7 @@ public class ExternalJsonPlayoutItemProvider : IExternalJsonPlayoutItemProvider
                 program.File,
                 cancellationToken);
 
-            if (_localFileSystem.FileExists(localPath))
+            if (_fileSystem.File.Exists(localPath))
             {
                 return await StreamLocally(startTime, program, ffprobePath, localPath);
             }

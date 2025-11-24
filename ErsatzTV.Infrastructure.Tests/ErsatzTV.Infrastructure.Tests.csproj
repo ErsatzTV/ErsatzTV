@@ -22,10 +22,17 @@
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
         <PackageReference Include="Shouldly" Version="4.3.0" />
+        <PackageReference Include="Testably.Abstractions.Testing" Version="5.0.0" />
     </ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\ErsatzTV.Infrastructure\ErsatzTV.Infrastructure.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <EmbeddedResource Include="..\ErsatzTV\Resources\sequential-schedule.schema.json">
+        <Link>Resources/sequential-schedule.schema.json</Link>
+      </EmbeddedResource>
     </ItemGroup>
 
 </Project>

@@ -84,6 +84,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Add disabled text color and `(D)` and `(H)` labels for disabled and hidden channels in channel list
 - Graphics engine: fix subtitle path escaping and font loading
 - Fix corrupt output (green artifacts) when decoding certain 10-bit content using AMD Polaris GPUs
+- Work around sequential schedule validation limit (1000/hr by Newtonsoft.Json.Schema library)
+  - Playout builds now use JsonSchema.Net library which has no validation limit
+  - Validation tool in the UI still uses Newtonsoft.Json.Schema (with 1000/hr limit) as the error output is easier to understand
 
 ### Changed
 - Classic schedules: `Refresh` classic playouts from playout list; do not `Reset` them

@@ -1,9 +1,9 @@
 ﻿using System.CommandLine.Parsing;
+using System.IO.Abstractions;
 using System.Threading.Channels;
 using ErsatzTV.Application.Channels;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
-using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
@@ -14,7 +14,7 @@ public class
     UpdateScriptedPlayoutHandler(
         IDbContextFactory<TvContext> dbContextFactory,
         ChannelWriter<IBackgroundServiceRequest> workerChannel,
-        ILocalFileSystem localFileSystem)
+        IFileSystem fileSystem)
     : IRequestHandler<UpdateScriptedPlayout,
         Either<BaseError, PlayoutNameViewModel>>
 {
@@ -63,7 +63,7 @@ public class
     {
         var args = CommandLineParser.SplitCommandLine(request.ScheduleFile).ToList();
         string scriptFile = args[0];
-        if (!localFileSystem.FileExists(scriptFile))
+        if (!fileSystem.File.Exists(scriptFile))
         {
             return BaseError.New("Scripted schedule does not exist!");
         }

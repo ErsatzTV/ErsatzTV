@@ -1,4 +1,5 @@
-﻿using CliWrap;
+﻿using System.IO.Abstractions;
+using CliWrap;
 using Dapper;
 using ErsatzTV.Application.Playouts;
 using ErsatzTV.Core;
@@ -31,6 +32,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
     private readonly IEmbyPathReplacementService _embyPathReplacementService;
     private readonly IExternalJsonPlayoutItemProvider _externalJsonPlayoutItemProvider;
     private readonly IFFmpegProcessService _ffmpegProcessService;
+    private readonly IFileSystem _fileSystem;
     private readonly IJellyfinPathReplacementService _jellyfinPathReplacementService;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILogger<GetPlayoutItemProcessByChannelNumberHandler> _logger;
@@ -47,6 +49,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
     public GetPlayoutItemProcessByChannelNumberHandler(
         IDbContextFactory<TvContext> dbContextFactory,
         IFFmpegProcessService ffmpegProcessService,
+        IFileSystem fileSystem,
         ILocalFileSystem localFileSystem,
         IExternalJsonPlayoutItemProvider externalJsonPlayoutItemProvider,
         IPlexPathReplacementService plexPathReplacementService,
@@ -64,6 +67,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
         : base(dbContextFactory)
     {
         _ffmpegProcessService = ffmpegProcessService;
+        _fileSystem = fileSystem;
         _localFileSystem = localFileSystem;
         _externalJsonPlayoutItemProvider = externalJsonPlayoutItemProvider;
         _plexPathReplacementService = plexPathReplacementService;
@@ -775,7 +779,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
         }
 
         // check filesystem first
-        if (_localFileSystem.FileExists(path))
+        if (_fileSystem.File.Exists(path))
         {
             if (playoutItem.MediaItem is RemoteStream remoteStream)
             {

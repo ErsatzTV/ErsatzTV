@@ -2,11 +2,11 @@ using Destructurama;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.FFmpeg;
-using ErsatzTV.Core.Tests.Fakes;
 using Microsoft.Extensions.Logging;
 using NUnit.Framework;
 using Serilog;
 using Shouldly;
+using Testably.Abstractions.Testing;
 
 namespace ErsatzTV.Core.Tests.FFmpeg;
 
@@ -94,9 +94,10 @@ public class CustomStreamSelectorTests
                     - "eng"
                 """;
 
-            var streamSelector = new CustomStreamSelector(
-                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
-                _logger);
+            var fileSystem = new MockFileSystem();
+            fileSystem.Initialize()
+                .WithFile(TestFileName).Which(f => f.HasStringContent(YAML));
+            var streamSelector = new CustomStreamSelector(fileSystem, _logger);
 
             StreamSelectorResult result = await streamSelector.SelectStreams(
                 _channel,
@@ -123,9 +124,10 @@ public class CustomStreamSelectorTests
                   - audio_language: ["und"]
                 """;
 
-            var streamSelector = new CustomStreamSelector(
-                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
-                _logger);
+            var fileSystem = new MockFileSystem();
+            fileSystem.Initialize()
+                .WithFile(TestFileName).Which(f => f.HasStringContent(YAML));
+            var streamSelector = new CustomStreamSelector(fileSystem, _logger);
 
             StreamSelectorResult result = await streamSelector.SelectStreams(
                 _channel,
@@ -152,9 +154,10 @@ public class CustomStreamSelectorTests
                   - audio_language: ["en", "eng"]
                 """;
 
-            var streamSelector = new CustomStreamSelector(
-                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
-                _logger);
+            var fileSystem = new MockFileSystem();
+            fileSystem.Initialize()
+                .WithFile(TestFileName).Which(f => f.HasStringContent(YAML));
+            var streamSelector = new CustomStreamSelector(fileSystem, _logger);
 
             StreamSelectorResult result = await streamSelector.SelectStreams(
                 _channel,
@@ -187,9 +190,10 @@ public class CustomStreamSelectorTests
                     disable_subtitles: true
                 """;
 
-            var streamSelector = new CustomStreamSelector(
-                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
-                _logger);
+            var fileSystem = new MockFileSystem();
+            fileSystem.Initialize()
+                .WithFile(TestFileName).Which(f => f.HasStringContent(YAML));
+            var streamSelector = new CustomStreamSelector(fileSystem, _logger);
 
             StreamSelectorResult result = await streamSelector.SelectStreams(
                 _channel,
@@ -217,9 +221,10 @@ public class CustomStreamSelectorTests
                     - "en*"
                 """;
 
-            var streamSelector = new CustomStreamSelector(
-                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
-                _logger);
+            var fileSystem = new MockFileSystem();
+            fileSystem.Initialize()
+                .WithFile(TestFileName).Which(f => f.HasStringContent(YAML));
+            var streamSelector = new CustomStreamSelector(fileSystem, _logger);
 
             StreamSelectorResult result = await streamSelector.SelectStreams(
                 _channel,
@@ -248,9 +253,10 @@ public class CustomStreamSelectorTests
                 """;
             _audioVersion = GetTestAudioVersion("en");
 
-            var streamSelector = new CustomStreamSelector(
-                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
-                _logger);
+            var fileSystem = new MockFileSystem();
+            fileSystem.Initialize()
+                .WithFile(TestFileName).Which(f => f.HasStringContent(YAML));
+            var streamSelector = new CustomStreamSelector(fileSystem, _logger);
 
             StreamSelectorResult result = await streamSelector.SelectStreams(
                 _channel,
@@ -279,9 +285,10 @@ public class CustomStreamSelectorTests
                     disable_subtitles: true
                 """;
 
-            var streamSelector = new CustomStreamSelector(
-                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
-                _logger);
+            var fileSystem = new MockFileSystem();
+            fileSystem.Initialize()
+                .WithFile(TestFileName).Which(f => f.HasStringContent(YAML));
+            var streamSelector = new CustomStreamSelector(fileSystem, _logger);
 
             StreamSelectorResult result = await streamSelector.SelectStreams(
                 _channel,
@@ -305,9 +312,10 @@ public class CustomStreamSelectorTests
                     - "eng"
                 """;
 
-            var streamSelector = new CustomStreamSelector(
-                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
-                _logger);
+            var fileSystem = new MockFileSystem();
+            fileSystem.Initialize()
+                .WithFile(TestFileName).Which(f => f.HasStringContent(YAML));
+            var streamSelector = new CustomStreamSelector(fileSystem, _logger);
 
             StreamSelectorResult result = await streamSelector.SelectStreams(
                 _channel,
@@ -337,9 +345,10 @@ public class CustomStreamSelectorTests
                     - "en*"
                 """;
 
-            var streamSelector = new CustomStreamSelector(
-                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
-                _logger);
+            var fileSystem = new MockFileSystem();
+            fileSystem.Initialize()
+                .WithFile(TestFileName).Which(f => f.HasStringContent(YAML));
+            var streamSelector = new CustomStreamSelector(fileSystem, _logger);
 
             StreamSelectorResult result = await streamSelector.SelectStreams(
                 _channel,
@@ -378,9 +387,10 @@ public class CustomStreamSelectorTests
                 }
             ];
 
-            var streamSelector = new CustomStreamSelector(
-                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
-                _logger);
+            var fileSystem = new MockFileSystem();
+            fileSystem.Initialize()
+                .WithFile(TestFileName).Which(f => f.HasStringContent(YAML));
+            var streamSelector = new CustomStreamSelector(fileSystem, _logger);
 
             StreamSelectorResult result = await streamSelector.SelectStreams(
                 _channel,
@@ -413,9 +423,10 @@ public class CustomStreamSelectorTests
                     disable_subtitles: true
                 """;
 
-            var streamSelector = new CustomStreamSelector(
-                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
-                _logger);
+            var fileSystem = new MockFileSystem();
+            fileSystem.Initialize()
+                .WithFile(TestFileName).Which(f => f.HasStringContent(YAML));
+            var streamSelector = new CustomStreamSelector(fileSystem, _logger);
 
             StreamSelectorResult result = await streamSelector.SelectStreams(
                 _channel,
@@ -450,9 +461,10 @@ public class CustomStreamSelectorTests
                     disable_subtitles: true
                 """;
 
-            var streamSelector = new CustomStreamSelector(
-                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
-                _logger);
+            var fileSystem = new MockFileSystem();
+            fileSystem.Initialize()
+                .WithFile(TestFileName).Which(f => f.HasStringContent(YAML));
+            var streamSelector = new CustomStreamSelector(fileSystem, _logger);
 
             StreamSelectorResult result = await streamSelector.SelectStreams(
                 _channel,
@@ -492,9 +504,10 @@ public class CustomStreamSelectorTests
                     disable_subtitles: true
                 """;
 
-            var streamSelector = new CustomStreamSelector(
-                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
-                _logger);
+            var fileSystem = new MockFileSystem();
+            fileSystem.Initialize()
+                .WithFile(TestFileName).Which(f => f.HasStringContent(YAML));
+            var streamSelector = new CustomStreamSelector(fileSystem, _logger);
 
             StreamSelectorResult result = await streamSelector.SelectStreams(
                 _channel,
@@ -528,9 +541,10 @@ public class CustomStreamSelectorTests
                     disable_subtitles: true
                 """;
 
-            var streamSelector = new CustomStreamSelector(
-                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
-                _logger);
+            var fileSystem = new MockFileSystem();
+            fileSystem.Initialize()
+                .WithFile(TestFileName).Which(f => f.HasStringContent(YAML));
+            var streamSelector = new CustomStreamSelector(fileSystem, _logger);
 
             StreamSelectorResult result = await streamSelector.SelectStreams(
                 _channel,
@@ -568,9 +582,10 @@ public class CustomStreamSelectorTests
                     - "riff"
                 """;
 
-            var streamSelector = new CustomStreamSelector(
-                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
-                _logger);
+            var fileSystem = new MockFileSystem();
+            fileSystem.Initialize()
+                .WithFile(TestFileName).Which(f => f.HasStringContent(YAML));
+            var streamSelector = new CustomStreamSelector(fileSystem, _logger);
 
             StreamSelectorResult result = await streamSelector.SelectStreams(
                 _channel,
@@ -600,9 +615,10 @@ public class CustomStreamSelectorTests
                     - "movie"
                 """;
 
-            var streamSelector = new CustomStreamSelector(
-                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
-                _logger);
+            var fileSystem = new MockFileSystem();
+            fileSystem.Initialize()
+                .WithFile(TestFileName).Which(f => f.HasStringContent(YAML));
+            var streamSelector = new CustomStreamSelector(fileSystem, _logger);
 
             StreamSelectorResult result = await streamSelector.SelectStreams(
                 _channel,
@@ -634,9 +650,10 @@ public class CustomStreamSelectorTests
                     - "signs"
                 """;
 
-            var streamSelector = new CustomStreamSelector(
-                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
-                _logger);
+            var fileSystem = new MockFileSystem();
+            fileSystem.Initialize()
+                .WithFile(TestFileName).Which(f => f.HasStringContent(YAML));
+            var streamSelector = new CustomStreamSelector(fileSystem, _logger);
 
             StreamSelectorResult result = await streamSelector.SelectStreams(
                 _channel,
@@ -668,9 +685,10 @@ public class CustomStreamSelectorTests
                     - "songs"
                 """;
 
-            var streamSelector = new CustomStreamSelector(
-                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
-                _logger);
+            var fileSystem = new MockFileSystem();
+            fileSystem.Initialize()
+                .WithFile(TestFileName).Which(f => f.HasStringContent(YAML));
+            var streamSelector = new CustomStreamSelector(fileSystem, _logger);
 
             StreamSelectorResult result = await streamSelector.SelectStreams(
                 _channel,
@@ -699,9 +717,10 @@ public class CustomStreamSelectorTests
                     subtitle_condition: "forced"
                 """;
 
-            var streamSelector = new CustomStreamSelector(
-                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
-                _logger);
+            var fileSystem = new MockFileSystem();
+            fileSystem.Initialize()
+                .WithFile(TestFileName).Which(f => f.HasStringContent(YAML));
+            var streamSelector = new CustomStreamSelector(fileSystem, _logger);
 
             StreamSelectorResult result = await streamSelector.SelectStreams(
                 _channel,
@@ -730,9 +749,10 @@ public class CustomStreamSelectorTests
                     subtitle_condition: "lang like 'en%' and external"
                 """;
 
-            var streamSelector = new CustomStreamSelector(
-                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
-                _logger);
+            var fileSystem = new MockFileSystem();
+            fileSystem.Initialize()
+                .WithFile(TestFileName).Which(f => f.HasStringContent(YAML));
+            var streamSelector = new CustomStreamSelector(fileSystem, _logger);
 
             StreamSelectorResult result = await streamSelector.SelectStreams(
                 _channel,
@@ -761,9 +781,10 @@ public class CustomStreamSelectorTests
                     audio_condition: "title like '%movie%'"
                 """;
 
-            var streamSelector = new CustomStreamSelector(
-                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
-                _logger);
+            var fileSystem = new MockFileSystem();
+            fileSystem.Initialize()
+                .WithFile(TestFileName).Which(f => f.HasStringContent(YAML));
+            var streamSelector = new CustomStreamSelector(fileSystem, _logger);
 
             StreamSelectorResult result = await streamSelector.SelectStreams(
                 _channel,
@@ -792,9 +813,10 @@ public class CustomStreamSelectorTests
                     audio_condition: "channels > 2"
                 """;
 
-            var streamSelector = new CustomStreamSelector(
-                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
-                _logger);
+            var fileSystem = new MockFileSystem();
+            fileSystem.Initialize()
+                .WithFile(TestFileName).Which(f => f.HasStringContent(YAML));
+            var streamSelector = new CustomStreamSelector(fileSystem, _logger);
 
             StreamSelectorResult result = await streamSelector.SelectStreams(
                 _channel,
@@ -822,9 +844,10 @@ public class CustomStreamSelectorTests
                     audio_title_blocklist: ["riff"]
                 """;
 
-            var streamSelector = new CustomStreamSelector(
-                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
-                _logger);
+            var fileSystem = new MockFileSystem();
+            fileSystem.Initialize()
+                .WithFile(TestFileName).Which(f => f.HasStringContent(YAML));
+            var streamSelector = new CustomStreamSelector(fileSystem, _logger);
 
             StreamSelectorResult result = await streamSelector.SelectStreams(
                 _channel,
@@ -853,9 +876,10 @@ public class CustomStreamSelectorTests
                     subtitle_language: ["jp","en*"]
                 """;
 
-            var streamSelector = new CustomStreamSelector(
-                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
-                _logger);
+            var fileSystem = new MockFileSystem();
+            fileSystem.Initialize()
+                .WithFile(TestFileName).Which(f => f.HasStringContent(YAML));
+            var streamSelector = new CustomStreamSelector(fileSystem, _logger);
 
             StreamSelectorResult result = await streamSelector.SelectStreams(
                 _channel,
@@ -885,9 +909,10 @@ public class CustomStreamSelectorTests
                     subtitle_language: ["es*","de*"]
                 """;
 
-            var streamSelector = new CustomStreamSelector(
-                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
-                _logger);
+            var fileSystem = new MockFileSystem();
+            fileSystem.Initialize()
+                .WithFile(TestFileName).Which(f => f.HasStringContent(YAML));
+            var streamSelector = new CustomStreamSelector(fileSystem, _logger);
 
             StreamSelectorResult result = await streamSelector.SelectStreams(
                 _channel,

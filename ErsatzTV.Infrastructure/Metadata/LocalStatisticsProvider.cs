@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.IO.Abstractions;
 using System.Text;
 using System.Text.RegularExpressions;
 using Bugsnag;
@@ -25,15 +26,18 @@ public partial class LocalStatisticsProvider : ILocalStatisticsProvider
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILogger<LocalStatisticsProvider> _logger;
     private readonly IMetadataRepository _metadataRepository;
+    private readonly IFileSystem _fileSystem;
 
     public LocalStatisticsProvider(
         IMetadataRepository metadataRepository,
+        IFileSystem fileSystem,
         ILocalFileSystem localFileSystem,
         IClient client,
         IHardwareCapabilitiesFactory hardwareCapabilitiesFactory,
         ILogger<LocalStatisticsProvider> logger)
     {
         _metadataRepository = metadataRepository;
+        _fileSystem = fileSystem;
         _localFileSystem = localFileSystem;
         _client = client;
         _hardwareCapabilitiesFactory = hardwareCapabilitiesFactory;
@@ -146,7 +150,7 @@ public partial class LocalStatisticsProvider : ILocalStatisticsProvider
             }
 
             if (filePath.StartsWith("http", StringComparison.OrdinalIgnoreCase) ||
-                !_localFileSystem.FileExists(filePath))
+                !_fileSystem.File.Exists(filePath))
             {
                 _logger.LogDebug("Skipping interlaced ratio check for remote content");
                 return Option<double>.None;

@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.IO.Abstractions;
 using System.Security.Cryptography;
 using System.Text;
 using Blurhash.SkiaSharp;
@@ -14,27 +15,18 @@ using SkiaSharp;
 namespace ErsatzTV.Infrastructure.Images;
 
 [SuppressMessage("Security", "CA5350:Do Not Use Weak Cryptographic Algorithms")]
-public class ImageCache : IImageCache
+public class ImageCache(IFileSystem fileSystem, ILocalFileSystem localFileSystem, ITempFilePool tempFilePool)
+    : IImageCache
 {
     private static readonly SHA1 Crypto;
-    private readonly ILocalFileSystem _localFileSystem;
-    private readonly ITempFilePool _tempFilePool;
 
     static ImageCache() => Crypto = SHA1.Create();
-
-    public ImageCache(
-        ILocalFileSystem localFileSystem,
-        ITempFilePool tempFilePool)
-    {
-        _localFileSystem = localFileSystem;
-        _tempFilePool = tempFilePool;
-    }
 
     public async Task<Either<BaseError, string>> SaveArtworkToCache(Stream stream, ArtworkKind artworkKind)
     {
         try
         {
-            string tempFileName = _tempFilePool.GetNextTempFile(TempFileCategory.CachedArtwork);
+            string tempFileName = tempFilePool.GetNextTempFile(TempFileCategory.CachedArtwork);
             // ReSharper disable once UseAwaitUsing
             using (var fs = new FileStream(tempFileName, FileMode.OpenOrCreate, FileAccess.Write))
             {
@@ -63,7 +55,7 @@ public class ImageCache : IImageCache
                 Directory.CreateDirectory(baseFolder);
             }
 
-            await _localFileSystem.CopyFile(tempFileName, target);
+            await localFileSystem.CopyFile(tempFileName, target);
 
             return hex;
         }
@@ -77,7 +69,7 @@ public class ImageCache : IImageCache
     {
         try
         {
-            var filenameKey = $"{path}:{_localFileSystem.GetLastWriteTime(path).ToFileTimeUtc()}";
+            var filenameKey = $"{path}:{localFileSystem.GetLastWriteTime(path).ToFileTimeUtc()}";
             byte[] hash = Crypto.ComputeHash(Encoding.UTF8.GetBytes(filenameKey));
             string hex = Convert.ToHexString(hash);
             string subfolder = hex[..2];
@@ -90,7 +82,7 @@ public class ImageCache : IImageCache
                 _ => FileSystemLayout.LegacyImageCacheFolder
             };
             string target = Path.Combine(baseFolder, hex);
-            Either<BaseError, Unit> maybeResult = await _localFileSystem.CopyFile(path, target);
+            Either<BaseError, Unit> maybeResult = await localFileSystem.CopyFile(path, target);
             return maybeResult.Match<Either<BaseError, string>>(
                 _ => hex,
                 error => error);
@@ -159,14 +151,14 @@ public class ImageCache : IImageCache
     {
         byte[] bytes = Encoding.UTF8.GetBytes(blurHash);
         string base64 = Convert.ToBase64String(bytes).Replace("+", "_").Replace("/", "-").Replace("=", "");
-        string targetFile = GetPathForImage(base64, ArtworkKind.Poster, targetSize.Height);
-        if (!_localFileSystem.FileExists(targetFile))
+        string targetFile = GetPathForImage(base64, ArtworkKind.Poster, targetSize.Height) ?? string.Empty;
+        if (!fileSystem.File.Exists(targetFile))
         {
             string folder = Path.GetDirectoryName(targetFile);
-            _localFileSystem.EnsureFolderExists(folder);
+            localFileSystem.EnsureFolderExists(folder);
 
             // ReSharper disable once ConvertToUsingDeclaration
-            using (FileStream fs = File.OpenWrite(targetFile))
+            using (FileSystemStream fs = fileSystem.File.OpenWrite(targetFile))
             {
                 using (SKBitmap image = Blurhasher.Decode(blurHash, targetSize.Width, targetSize.Height))
                 {

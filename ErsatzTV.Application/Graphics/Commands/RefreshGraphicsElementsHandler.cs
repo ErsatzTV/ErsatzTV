@@ -1,3 +1,4 @@
+using System.IO.Abstractions;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
@@ -10,6 +11,7 @@ namespace ErsatzTV.Application.Graphics;
 
 public class RefreshGraphicsElementsHandler(
     IDbContextFactory<TvContext> dbContextFactory,
+    IFileSystem fileSystem,
     ILocalFileSystem localFileSystem,
     IGraphicsElementLoader graphicsElementLoader,
     ILogger<RefreshGraphicsElementsHandler> logger)
@@ -24,7 +26,7 @@ public class RefreshGraphicsElementsHandler(
             .ToListAsync(cancellationToken);
 
         var missing = allExisting
-            .Where(e => !localFileSystem.FileExists(e.Path) || (Path.GetExtension(e.Path) != ".yml" && Path.GetExtension(e.Path) != ".yaml"))
+            .Where(e => !fileSystem.File.Exists(e.Path) || (Path.GetExtension(e.Path) != ".yml" && Path.GetExtension(e.Path) != ".yaml"))
             .ToList();
 
         foreach (GraphicsElement existing in missing)

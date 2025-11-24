@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using System.IO.Abstractions;
 using System.Text;
 using System.Text.RegularExpressions;
 using ErsatzTV.Core;
@@ -15,14 +16,17 @@ public partial class GetChannelGuideHandler : IRequestHandler<GetChannelGuide, E
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly RecyclableMemoryStreamManager _recyclableMemoryStreamManager;
+    private readonly IFileSystem _fileSystem;
 
     public GetChannelGuideHandler(
         IDbContextFactory<TvContext> dbContextFactory,
         RecyclableMemoryStreamManager recyclableMemoryStreamManager,
+        IFileSystem fileSystem,
         ILocalFileSystem localFileSystem)
     {
         _dbContextFactory = dbContextFactory;
         _recyclableMemoryStreamManager = recyclableMemoryStreamManager;
+        _fileSystem = fileSystem;
         _localFileSystem = localFileSystem;
     }
 
@@ -39,7 +43,7 @@ public partial class GetChannelGuideHandler : IRequestHandler<GetChannelGuide, E
             .ToImmutableHashSet();
 
         string channelsFile = Path.Combine(FileSystemLayout.ChannelGuideCacheFolder, "channels.xml");
-        if (!_localFileSystem.FileExists(channelsFile))
+        if (!_fileSystem.File.Exists(channelsFile))
         {
             return BaseError.New($"Required file {channelsFile} is missing");
         }

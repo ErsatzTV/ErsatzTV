@@ -1,9 +1,9 @@
-﻿using System.Reflection;
+﻿using System.IO.Abstractions;
+using System.Reflection;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Extensions;
-using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using ErsatzTV.Core.Scheduling.Engine;
@@ -20,10 +20,10 @@ public class PlayoutBuilder : IPlayoutBuilder
 {
     private readonly IArtistRepository _artistRepository;
     private readonly IConfigElementRepository _configElementRepository;
-    private readonly ILocalFileSystem _localFileSystem;
     private readonly IRerunHelper _rerunHelper;
     private readonly IMediaCollectionRepository _mediaCollectionRepository;
     private readonly IMultiEpisodeShuffleCollectionEnumeratorFactory _multiEpisodeFactory;
+    private readonly IFileSystem _fileSystem;
     private readonly ITelevisionRepository _televisionRepository;
     private Playlist _debugPlaylist;
     private ILogger<PlayoutBuilder> _logger;
@@ -34,7 +34,7 @@ public class PlayoutBuilder : IPlayoutBuilder
         ITelevisionRepository televisionRepository,
         IArtistRepository artistRepository,
         IMultiEpisodeShuffleCollectionEnumeratorFactory multiEpisodeFactory,
-        ILocalFileSystem localFileSystem,
+        IFileSystem fileSystem,
         IRerunHelper rerunHelper,
         ILogger<PlayoutBuilder> logger)
     {
@@ -43,7 +43,7 @@ public class PlayoutBuilder : IPlayoutBuilder
         _televisionRepository = televisionRepository;
         _artistRepository = artistRepository;
         _multiEpisodeFactory = multiEpisodeFactory;
-        _localFileSystem = localFileSystem;
+        _fileSystem = fileSystem;
         _rerunHelper = rerunHelper;
         _logger = logger;
     }
@@ -400,12 +400,12 @@ public class PlayoutBuilder : IPlayoutBuilder
                 name =>
                 {
                     _logger.LogError(
-                        "Unable to rebuild playout; {CollectionType} {CollectionName} has no valid items!",
+                        "Unable to rebuild playout; {CollectionType} \"{CollectionName}\" has no valid items!",
                         emptyCollection.CollectionType,
                         name);
 
                     return BaseError.New(
-                        $"Unable to rebuild playout; {emptyCollection.CollectionType} {name} has no valid items!");
+                        $"Unable to rebuild playout; {emptyCollection.CollectionType} \"{name}\" has no valid items!");
                 },
                 () =>
                 {
@@ -1403,7 +1403,7 @@ public class PlayoutBuilder : IPlayoutBuilder
                                 guid.Guid.Replace("://", "_")),
                             "js");
                         _logger.LogDebug("Checking for JS Script at {Path}", jsScriptPath);
-                        if (_localFileSystem.FileExists(jsScriptPath))
+                        if (_fileSystem.File.Exists(jsScriptPath))
                         {
                             _logger.LogDebug("Found JS Script at {Path}", jsScriptPath);
                             try

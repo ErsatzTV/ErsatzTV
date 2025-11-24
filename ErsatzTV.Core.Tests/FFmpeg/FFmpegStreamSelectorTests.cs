@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NUnit.Framework;
 using Shouldly;
+using Testably.Abstractions.Testing;
 
 namespace ErsatzTV.Core.Tests.FFmpeg;
 
@@ -61,7 +62,7 @@ public class FFmpegStreamSelectorTests
                 new ScriptEngine(Substitute.For<ILogger<ScriptEngine>>()),
                 Substitute.For<IStreamSelectorRepository>(),
                 Substitute.For<IConfigElementRepository>(),
-                Substitute.For<ILocalFileSystem>(),
+                new MockFileSystem(),
                 languageCodeService,
                 Substitute.For<ILogger<FFmpegStreamSelector>>());
 
@@ -123,7 +124,7 @@ public class FFmpegStreamSelectorTests
                 new ScriptEngine(Substitute.For<ILogger<ScriptEngine>>()),
                 Substitute.For<IStreamSelectorRepository>(),
                 Substitute.For<IConfigElementRepository>(),
-                Substitute.For<ILocalFileSystem>(),
+                new MockFileSystem(),
                 languageCodeService,
                 Substitute.For<ILogger<FFmpegStreamSelector>>());
 
@@ -173,7 +174,7 @@ public class FFmpegStreamSelectorTests
                 new ScriptEngine(Substitute.For<ILogger<ScriptEngine>>()),
                 Substitute.For<IStreamSelectorRepository>(),
                 Substitute.For<IConfigElementRepository>(),
-                Substitute.For<ILocalFileSystem>(),
+                new MockFileSystem(),
                 languageCodeService,
                 Substitute.For<ILogger<FFmpegStreamSelector>>());
 

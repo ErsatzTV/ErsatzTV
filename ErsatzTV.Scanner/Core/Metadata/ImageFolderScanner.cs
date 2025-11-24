@@ -1,4 +1,5 @@
 ﻿using System.Collections.Immutable;
+using System.IO.Abstractions;
 using Bugsnag;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
@@ -22,6 +23,7 @@ public class ImageFolderScanner : LocalFolderScanner, IImageFolderScanner
     private readonly IImageRepository _imageRepository;
     private readonly ILibraryRepository _libraryRepository;
     private readonly IScannerProxy _scannerProxy;
+    private readonly IFileSystem _fileSystem;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalMetadataProvider _localMetadataProvider;
     private readonly ILogger<ImageFolderScanner> _logger;
@@ -29,6 +31,7 @@ public class ImageFolderScanner : LocalFolderScanner, IImageFolderScanner
 
     public ImageFolderScanner(
         IScannerProxy scannerProxy,
+        IFileSystem fileSystem,
         ILocalFileSystem localFileSystem,
         ILocalStatisticsProvider localStatisticsProvider,
         ILocalMetadataProvider localMetadataProvider,
@@ -41,7 +44,7 @@ public class ImageFolderScanner : LocalFolderScanner, IImageFolderScanner
         ITempFilePool tempFilePool,
         IClient client,
         ILogger<ImageFolderScanner> logger) : base(
-        localFileSystem,
+        fileSystem,
         localStatisticsProvider,
         metadataRepository,
         mediaItemRepository,
@@ -52,6 +55,7 @@ public class ImageFolderScanner : LocalFolderScanner, IImageFolderScanner
         logger)
     {
         _scannerProxy = scannerProxy;
+        _fileSystem = fileSystem;
         _localFileSystem = localFileSystem;
         _localMetadataProvider = localMetadataProvider;
         _imageRepository = imageRepository;
@@ -226,7 +230,7 @@ public class ImageFolderScanner : LocalFolderScanner, IImageFolderScanner
 
             foreach (string path in await _imageRepository.FindImagePaths(libraryPath))
             {
-                if (!_localFileSystem.FileExists(path))
+                if (!_fileSystem.File.Exists(path))
                 {
                     _logger.LogInformation("Flagging missing image at {Path}", path);
                     List<int> imageIds = await FlagFileNotFound(libraryPath, path);

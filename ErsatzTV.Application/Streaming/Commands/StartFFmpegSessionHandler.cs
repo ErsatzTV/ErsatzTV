@@ -1,4 +1,5 @@
-﻿using System.Threading.Channels;
+﻿using System.IO.Abstractions;
+using System.Threading.Channels;
 using Bugsnag;
 using ErsatzTV.Application.Channels;
 using ErsatzTV.Application.Graphics;
@@ -21,6 +22,7 @@ namespace ErsatzTV.Application.Streaming;
 public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Either<BaseError, Unit>>
 {
     private readonly IClient _client;
+    private readonly IFileSystem _fileSystem;
     private readonly IConfigElementRepository _configElementRepository;
     private readonly IFFmpegSegmenterService _ffmpegSegmenterService;
     private readonly IGraphicsEngine _graphicsEngine;
@@ -40,6 +42,7 @@ public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Eit
         IServiceScopeFactory serviceScopeFactory,
         IMediator mediator,
         IClient client,
+        IFileSystem fileSystem,
         ILocalFileSystem localFileSystem,
         ILogger<StartFFmpegSessionHandler> logger,
         ILogger<HlsSessionWorker> sessionWorkerLogger,
@@ -54,6 +57,7 @@ public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Eit
         _serviceScopeFactory = serviceScopeFactory;
         _mediator = mediator;
         _client = client;
+        _fileSystem = fileSystem;
         _localFileSystem = localFileSystem;
         _logger = logger;
         _sessionWorkerLogger = sessionWorkerLogger;
@@ -129,6 +133,7 @@ public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Eit
                 _hlsPlaylistFilter,
                 _hlsInitSegmentCache,
                 _configElementRepository,
+                _fileSystem,
                 _localFileSystem,
                 _sessionWorkerLogger,
                 targetFramerate)
