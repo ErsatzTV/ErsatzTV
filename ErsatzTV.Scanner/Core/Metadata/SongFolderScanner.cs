@@ -1,4 +1,5 @@
 ﻿using System.Collections.Immutable;
+using System.IO.Abstractions;
 using Bugsnag;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
@@ -21,6 +22,7 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
     private readonly IClient _client;
     private readonly ILibraryRepository _libraryRepository;
     private readonly IScannerProxy _scannerProxy;
+    private readonly IFileSystem _fileSystem;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalMetadataProvider _localMetadataProvider;
     private readonly ILogger<SongFolderScanner> _logger;
@@ -29,6 +31,7 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
 
     public SongFolderScanner(
         IScannerProxy scannerProxy,
+        IFileSystem fileSystem,
         ILocalFileSystem localFileSystem,
         ILocalStatisticsProvider localStatisticsProvider,
         ILocalMetadataProvider localMetadataProvider,
@@ -41,7 +44,7 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
         ITempFilePool tempFilePool,
         IClient client,
         ILogger<SongFolderScanner> logger) : base(
-        localFileSystem,
+        fileSystem,
         localStatisticsProvider,
         metadataRepository,
         mediaItemRepository,
@@ -52,6 +55,7 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
         logger)
     {
         _scannerProxy = scannerProxy;
+        _fileSystem = fileSystem;
         _localFileSystem = localFileSystem;
         _localMetadataProvider = localMetadataProvider;
         _songRepository = songRepository;
@@ -201,7 +205,7 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
 
             foreach (string path in await _songRepository.FindSongPaths(libraryPath))
             {
-                if (!_localFileSystem.FileExists(path))
+                if (!_fileSystem.File.Exists(path))
                 {
                     _logger.LogInformation("Flagging missing song at {Path}", path);
                     List<int> songIds = await FlagFileNotFound(libraryPath, path);
@@ -336,7 +340,7 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
             string coverPath = Path.Combine(di.FullName, "cover.jpg");
             return ImageFileExtensions
                 .Map(ext => Path.ChangeExtension(coverPath, ext))
-                .Filter(f => _localFileSystem.FileExists(f))
+                .Filter(f => _fileSystem.File.Exists(f))
                 .HeadOrNone();
         }).Flatten();
     }

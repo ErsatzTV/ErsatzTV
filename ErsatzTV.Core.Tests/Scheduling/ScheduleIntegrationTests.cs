@@ -24,6 +24,7 @@ using NUnit.Framework;
 using Serilog;
 using Serilog.Events;
 using Serilog.Extensions.Logging;
+using MockFileSystem = Testably.Abstractions.Testing.MockFileSystem;
 
 namespace ErsatzTV.Core.Tests.Scheduling;
 
@@ -108,6 +109,7 @@ public class ScheduleIntegrationTests
         ISearchIndex searchIndex = provider.GetRequiredService<ISearchIndex>();
         await searchIndex.Initialize(
             new LocalFileSystem(
+                new MockFileSystem(),
                 provider.GetRequiredService<IClient>(),
                 provider.GetRequiredService<ILogger<LocalFileSystem>>()),
             provider.GetRequiredService<IConfigElementRepository>(),
@@ -125,7 +127,7 @@ public class ScheduleIntegrationTests
             new TelevisionRepository(factory, provider.GetRequiredService<ILogger<TelevisionRepository>>()),
             new ArtistRepository(factory),
             Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>(),
-            Substitute.For<ILocalFileSystem>(),
+            new MockFileSystem(),
             Substitute.For<IRerunHelper>(),
             provider.GetRequiredService<ILogger<PlayoutBuilder>>());
 
@@ -321,7 +323,7 @@ public class ScheduleIntegrationTests
             new TelevisionRepository(factory, provider.GetRequiredService<ILogger<TelevisionRepository>>()),
             new ArtistRepository(factory),
             Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>(),
-            Substitute.For<ILocalFileSystem>(),
+            new MockFileSystem(),
             Substitute.For<IRerunHelper>(),
             provider.GetRequiredService<ILogger<PlayoutBuilder>>());
 

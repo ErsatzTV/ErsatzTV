@@ -1,7 +1,7 @@
-﻿using ErsatzTV.Core;
+﻿using System.IO.Abstractions;
+using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Extensions;
-using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Metadata;
@@ -33,12 +33,12 @@ public class PlexMovieLibraryScanner :
         IMediaSourceRepository mediaSourceRepository,
         IPlexMovieRepository plexMovieRepository,
         IPlexPathReplacementService plexPathReplacementService,
-        ILocalFileSystem localFileSystem,
+        IFileSystem fileSystem,
         ILocalChaptersProvider localChaptersProvider,
         ILogger<PlexMovieLibraryScanner> logger)
         : base(
             scannerProxy,
-            localFileSystem,
+            fileSystem,
             localChaptersProvider,
             metadataRepository,
             logger)

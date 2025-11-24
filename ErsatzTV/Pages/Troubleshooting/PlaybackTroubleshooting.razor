@@ -1,5 +1,6 @@
 @page "/system/troubleshooting/playback"
 @using System.Globalization
+@using System.IO.Abstractions
 @using ErsatzTV.Application.Channels
 @using ErsatzTV.Application.FFmpegProfiles
 @using ErsatzTV.Application.Graphics
@@ -7,7 +8,6 @@
 @using ErsatzTV.Application.Troubleshooting
 @using ErsatzTV.Application.Troubleshooting.Queries
 @using ErsatzTV.Application.Watermarks
-@using ErsatzTV.Core.Interfaces.Metadata
 @using ErsatzTV.Core.Notifications
 @using MediatR.Courier
 @using Microsoft.AspNetCore.WebUtilities
@@ -18,7 +18,7 @@
 @inject IEntityLocker Locker
 @inject ICourier Courier;
 @inject ISnackbar Snackbar;
-@inject ILocalFileSystem LocalFileSystem;
+@inject IFileSystem FileSystem;
 
 <MudForm Style="max-height: 100%">
     <MudPaper Square="true" Style="display: flex; height: 64px; min-height: 64px; width: 100%; z-index: 100; align-items: center">
@@ -422,7 +422,7 @@
         }
 
         string logFileName = Path.Combine(FileSystemLayout.TranscodeTroubleshootingFolder, "logs.txt");
-        if (LocalFileSystem.FileExists(logFileName))
+        if (FileSystem.File.Exists(logFileName))
         {
             string text = await File.ReadAllTextAsync(logFileName);
             await InvokeAsync(async () => { await _logsField.SetText(text); });

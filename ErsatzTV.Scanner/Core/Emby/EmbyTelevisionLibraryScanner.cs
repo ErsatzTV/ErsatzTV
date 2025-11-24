@@ -1,10 +1,10 @@
-﻿using ErsatzTV.Core;
+﻿using System.IO.Abstractions;
+using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Emby;
 using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Emby;
-using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Metadata;
 using ErsatzTV.Scanner.Core.Interfaces;
@@ -30,13 +30,13 @@ public class EmbyTelevisionLibraryScanner : MediaServerTelevisionLibraryScanner<
         IMediaSourceRepository mediaSourceRepository,
         IEmbyTelevisionRepository televisionRepository,
         IEmbyPathReplacementService pathReplacementService,
-        ILocalFileSystem localFileSystem,
+        IFileSystem fileSystem,
         ILocalChaptersProvider localChaptersProvider,
         IMetadataRepository metadataRepository,
         ILogger<EmbyTelevisionLibraryScanner> logger)
         : base(
             scannerProxy,
-            localFileSystem,
+            fileSystem,
             localChaptersProvider,
             metadataRepository,
             logger)

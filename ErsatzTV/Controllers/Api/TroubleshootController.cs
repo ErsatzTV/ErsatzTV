@@ -1,3 +1,4 @@
+using System.IO.Abstractions;
 using System.Threading.Channels;
 using ErsatzTV.Application;
 using ErsatzTV.Application.MediaItems;
@@ -6,7 +7,6 @@ using ErsatzTV.Application.Troubleshooting.Queries;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.FFmpeg;
-using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Troubleshooting;
 using MediatR;
@@ -18,7 +18,7 @@ namespace ErsatzTV.Controllers.Api;
 [ApiController]
 public class TroubleshootController(
     ChannelWriter<IFFmpegWorkerRequest> channelWriter,
-    ILocalFileSystem localFileSystem,
+    IFileSystem fileSystem,
     IConfigElementRepository configElementRepository,
     ITroubleshootingNotifier notifier,
     IMediator mediator) : ControllerBase
@@ -104,7 +104,7 @@ public class TroubleshootController(
                         cancellationToken);
 
                     string playlistFile = Path.Combine(FileSystemLayout.TranscodeTroubleshootingFolder, "live.m3u8");
-                    while (!localFileSystem.FileExists(playlistFile))
+                    while (!fileSystem.File.Exists(playlistFile))
                     {
                         await Task.Delay(TimeSpan.FromMilliseconds(100), cancellationToken);
                         if (cancellationToken.IsCancellationRequested || notifier.IsFailed(sessionId))

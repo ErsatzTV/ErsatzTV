@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.IO.Abstractions;
 using System.Security.Cryptography;
 using Bugsnag;
 using ErsatzTV.Core.Interfaces.Metadata;
@@ -6,7 +7,7 @@ using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Core.Metadata;
 
-public class LocalFileSystem(IClient client, ILogger<LocalFileSystem> logger) : ILocalFileSystem
+public class LocalFileSystem(IFileSystem fileSystem, IClient client, ILogger<LocalFileSystem> logger) : ILocalFileSystem
 {
     public Unit EnsureFolderExists(string folder)
     {
@@ -114,7 +115,8 @@ public class LocalFileSystem(IClient client, ILogger<LocalFileSystem> logger) : 
                 return searchPatterns
                     .SelectMany(searchPattern =>
                         Directory.EnumerateFiles(folder, searchPattern, SearchOption.TopDirectoryOnly)
-                            .Where(path => !Path.GetFileName(path).StartsWith("._", StringComparison.OrdinalIgnoreCase)))
+                            .Where(path =>
+                                !Path.GetFileName(path).StartsWith("._", StringComparison.OrdinalIgnoreCase)))
                     .Distinct();
             }
             catch (UnauthorizedAccessException)
@@ -130,8 +132,6 @@ public class LocalFileSystem(IClient client, ILogger<LocalFileSystem> logger) : 
 
         return new List<string>();
     }
-
-    public bool FileExists(string path) => File.Exists(path);
 
     public bool FolderExists(string folder) => Directory.Exists(folder);
 
@@ -193,6 +193,6 @@ public class LocalFileSystem(IClient client, ILogger<LocalFileSystem> logger) : 
     public string GetCustomOrDefaultFile(string folder, string file)
     {
         string path = Path.Combine(folder, file);
-        return FileExists(path) ? path : Path.Combine(folder, $"_{file}");
+        return fileSystem.File.Exists(path) ? path : Path.Combine(folder, $"_{file}");
     }
 }

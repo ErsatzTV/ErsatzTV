@@ -1,3 +1,4 @@
+using System.IO.Abstractions;
 using Dapper;
 using ErsatzTV.Application.Streaming;
 using ErsatzTV.Core;
@@ -30,6 +31,7 @@ public class PrepareTroubleshootingPlaybackHandler(
     IJellyfinPathReplacementService jellyfinPathReplacementService,
     IEmbyPathReplacementService embyPathReplacementService,
     IFFmpegProcessService ffmpegProcessService,
+    IFileSystem fileSystem,
     ILocalFileSystem localFileSystem,
     ISongVideoGenerator songVideoGenerator,
     IWatermarkSelector watermarkSelector,
@@ -471,7 +473,7 @@ public class PrepareTroubleshootingPlaybackHandler(
         string path = await GetLocalPath(mediaItem, cancellationToken);
 
         // check filesystem first
-        if (localFileSystem.FileExists(path))
+        if (fileSystem.File.Exists(path))
         {
             if (mediaItem is RemoteStream remoteStream)
             {

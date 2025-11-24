@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.IO.Abstractions;
 using System.Security.Cryptography;
 using System.Text;
 using CliWrap;
@@ -8,7 +9,6 @@ using Dapper;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Extensions;
-using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
@@ -17,7 +17,7 @@ using Microsoft.Extensions.Logging;
 namespace ErsatzTV.Application.Subtitles;
 
 [SuppressMessage("Security", "CA5351:Do Not Use Broken Cryptographic Algorithms")]
-public abstract class ExtractEmbeddedSubtitlesHandlerBase(ILocalFileSystem localFileSystem, ILogger logger)
+public abstract class ExtractEmbeddedSubtitlesHandlerBase(IFileSystem fileSystem, ILogger logger)
 {
     protected static Task<Validation<BaseError, string>> FFmpegPathMustExist(
         TvContext dbContext,
@@ -133,7 +133,7 @@ public abstract class ExtractEmbeddedSubtitlesHandlerBase(ILocalFileSystem local
                 {
                     string fullOutputPath = Path.Combine(FileSystemLayout.SubtitleCacheFolder, subtitle.OutputPath);
                     Directory.CreateDirectory(Path.GetDirectoryName(fullOutputPath));
-                    if (localFileSystem.FileExists(fullOutputPath))
+                    if (fileSystem.File.Exists(fullOutputPath))
                     {
                         File.Delete(fullOutputPath);
                     }
@@ -193,7 +193,7 @@ public abstract class ExtractEmbeddedSubtitlesHandlerBase(ILocalFileSystem local
                 }
 
                 string fullOutputPath = Path.Combine(FileSystemLayout.FontsCacheFolder, fontStream.FileName);
-                if (localFileSystem.FileExists(fullOutputPath))
+                if (fileSystem.File.Exists(fullOutputPath))
                 {
                     // already extracted
                     continue;
@@ -212,7 +212,7 @@ public abstract class ExtractEmbeddedSubtitlesHandlerBase(ILocalFileSystem local
 
                 // ffmpeg seems to return exit code 1 in all cases when dumping an attachment
                 // so ignore it and check success a different way
-                if (localFileSystem.FileExists(fullOutputPath))
+                if (fileSystem.File.Exists(fullOutputPath))
                 {
                     logger.LogDebug("Successfully extracted font {Font}", fontStream.FileName);
                 }
@@ -300,7 +300,7 @@ public abstract class ExtractEmbeddedSubtitlesHandlerBase(ILocalFileSystem local
     {
         foreach (string path in GetRelativeOutputPath(mediaItemId, subtitle))
         {
-            return !localFileSystem.FileExists(path);
+            return !fileSystem.File.Exists(path);
         }
 
         return false;

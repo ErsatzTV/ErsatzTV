@@ -34,6 +34,7 @@ using NSubstitute;
 using NUnit.Framework;
 using Serilog;
 using Shouldly;
+using Testably.Abstractions.Testing;
 using MediaStream = ErsatzTV.Core.Domain.MediaStream;
 
 namespace ErsatzTV.Scanner.Tests.Core.FFmpeg;
@@ -235,8 +236,10 @@ public class TranscodingTests
         StreamingMode streamingMode)
     {
         var localFileSystem = new LocalFileSystem(
+            new MockFileSystem(),
             Substitute.For<IClient>(),
             LoggerFactory.CreateLogger<LocalFileSystem>());
+        var fileSystem = new MockFileSystem();
         var tempFilePool = new TempFilePool();
 
         ImageCache mockImageCache = Substitute.For<ImageCache>(localFileSystem, tempFilePool);
@@ -353,7 +356,8 @@ public class TranscodingTests
 
         var localStatisticsProvider = new LocalStatisticsProvider(
             metadataRepository,
-            new LocalFileSystem(Substitute.For<IClient>(), LoggerFactory.CreateLogger<LocalFileSystem>()),
+            fileSystem,
+            localFileSystem,
             Substitute.For<IClient>(),
             Substitute.For<IHardwareCapabilitiesFactory>(),
             LoggerFactory.CreateLogger<LocalStatisticsProvider>());
@@ -460,6 +464,12 @@ public class TranscodingTests
             // do nothing
         }
 
+        var localFileSystem = new LocalFileSystem(
+            new MockFileSystem(),
+            Substitute.For<IClient>(),
+            LoggerFactory.CreateLogger<LocalFileSystem>());
+        var fileSystem = new MockFileSystem();
+
         string file = fileToTest;
         if (string.IsNullOrWhiteSpace(file))
         {
@@ -503,7 +513,8 @@ public class TranscodingTests
 
         var localStatisticsProvider = new LocalStatisticsProvider(
             metadataRepository,
-            new LocalFileSystem(Substitute.For<IClient>(), LoggerFactory.CreateLogger<LocalFileSystem>()),
+            fileSystem,
+            localFileSystem,
             Substitute.For<IClient>(),
             Substitute.For<IHardwareCapabilitiesFactory>(),
             LoggerFactory.CreateLogger<LocalStatisticsProvider>());
@@ -669,9 +680,6 @@ public class TranscodingTests
             SubtitleMode = subtitleMode
         };
 
-        var localFileSystem = new LocalFileSystem(
-            Substitute.For<IClient>(),
-            LoggerFactory.CreateLogger<LocalFileSystem>());
         var tempFilePool = new TempFilePool();
 
         ImageCache mockImageCache = Substitute.For<ImageCache>(localFileSystem, tempFilePool);

@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.IO.Abstractions;
 using System.IO.Pipelines;
 using System.Text;
 using System.Timers;
@@ -30,6 +31,7 @@ public class HlsSessionWorker : IHlsSessionWorker
     private readonly IHlsInitSegmentCache _hlsInitSegmentCache;
     private readonly Dictionary<long, int> _discontinuityMap = [];
     private readonly IConfigElementRepository _configElementRepository;
+    private readonly IFileSystem _fileSystem;
     private readonly IGraphicsEngine _graphicsEngine;
     private readonly IHlsPlaylistFilter _hlsPlaylistFilter;
     private readonly ILocalFileSystem _localFileSystem;
@@ -60,6 +62,7 @@ public class HlsSessionWorker : IHlsSessionWorker
         IHlsPlaylistFilter hlsPlaylistFilter,
         IHlsInitSegmentCache hlsInitSegmentCache,
         IConfigElementRepository configElementRepository,
+        IFileSystem fileSystem,
         ILocalFileSystem localFileSystem,
         ILogger<HlsSessionWorker> logger,
         Option<int> targetFramerate)
@@ -72,6 +75,7 @@ public class HlsSessionWorker : IHlsSessionWorker
         _hlsInitSegmentCache = hlsInitSegmentCache;
         _hlsPlaylistFilter = hlsPlaylistFilter;
         _configElementRepository = configElementRepository;
+        _fileSystem = fileSystem;
         _localFileSystem = localFileSystem;
         _logger = logger;
         _targetFramerate = targetFramerate;
@@ -308,7 +312,7 @@ public class HlsSessionWorker : IHlsSessionWorker
             string playlistFileName = Path.Combine(_workingDirectory, "live.m3u8");
 
             _logger.LogDebug("Waiting for playlist to exist");
-            while (!_localFileSystem.FileExists(playlistFileName))
+            while (!_fileSystem.File.Exists(playlistFileName))
             {
                 await Task.Delay(TimeSpan.FromMilliseconds(100), cancellationToken);
             }

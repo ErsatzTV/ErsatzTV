@@ -1,6 +1,5 @@
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Scheduling;
-using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using ErsatzTV.Core.Scheduling;
@@ -8,6 +7,7 @@ using ErsatzTV.Core.Tests.Fakes;
 using NSubstitute;
 using NUnit.Framework;
 using Shouldly;
+using Testably.Abstractions.Testing;
 
 namespace ErsatzTV.Core.Tests.Scheduling.ClassicScheduling;
 
@@ -101,7 +101,6 @@ public class RefreshPlayoutTests : PlayoutBuilderTestBase
         IArtistRepository artistRepo = Substitute.For<IArtistRepository>();
         IMultiEpisodeShuffleCollectionEnumeratorFactory factory =
             Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
-        ILocalFileSystem localFileSystem = Substitute.For<ILocalFileSystem>();
         IRerunHelper rerunHelper = Substitute.For<IRerunHelper>();
         var builder = new PlayoutBuilder(
             configRepo,
@@ -109,7 +108,7 @@ public class RefreshPlayoutTests : PlayoutBuilderTestBase
             televisionRepo,
             artistRepo,
             factory,
-            localFileSystem,
+            new MockFileSystem(),
             rerunHelper,
             Logger);
 

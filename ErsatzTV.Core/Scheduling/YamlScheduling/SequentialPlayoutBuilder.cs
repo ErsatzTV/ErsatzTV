@@ -1,7 +1,7 @@
 using System.Collections.Immutable;
+using System.IO.Abstractions;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Scheduling;
-using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Scheduling;
 //using ErsatzTV.Core.Scheduling.Engine;
@@ -17,7 +17,7 @@ namespace ErsatzTV.Core.Scheduling.YamlScheduling;
 
 public class SequentialPlayoutBuilder(
     //ISchedulingEngine schedulingEngine,
-    ILocalFileSystem localFileSystem,
+    IFileSystem fileSystem,
     IConfigElementRepository configElementRepository,
     IMediaCollectionRepository mediaCollectionRepository,
     IChannelRepository channelRepository,
@@ -38,7 +38,7 @@ public class SequentialPlayoutBuilder(
 
         PlayoutBuildResult result = PlayoutBuildResult.Empty;
 
-        if (!localFileSystem.FileExists(playout.ScheduleFile))
+        if (!fileSystem.File.Exists(playout.ScheduleFile))
         {
             logger.LogWarning("Sequential schedule file {File} does not exist; aborting.", playout.ScheduleFile);
             return BaseError.New($"Sequential schedule file {playout.ScheduleFile} does not exist");

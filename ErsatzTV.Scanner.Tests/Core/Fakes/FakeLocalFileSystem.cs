@@ -1,5 +1,4 @@
 ﻿using ErsatzTV.Core;
-using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
 
 namespace ErsatzTV.Scanner.Tests.Core.Fakes;

@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NUnit.Framework;
 using Shouldly;
+using Testably.Abstractions.Testing;
 
 namespace ErsatzTV.Infrastructure.Tests.Metadata;
 
@@ -21,6 +22,7 @@ public class LocalStatisticsProviderTests
     {
         var provider = new LocalStatisticsProvider(
             Substitute.For<IMetadataRepository>(),
+            new MockFileSystem(),
             Substitute.For<ILocalFileSystem>(),
             Substitute.For<IClient>(),
             Substitute.For<IHardwareCapabilitiesFactory>(),

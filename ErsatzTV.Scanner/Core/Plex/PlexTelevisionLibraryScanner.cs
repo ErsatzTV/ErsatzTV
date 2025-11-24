@@ -1,9 +1,9 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.IO.Abstractions;
+using System.Text.RegularExpressions;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Extensions;
-using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Metadata;
@@ -37,12 +37,12 @@ public partial class PlexTelevisionLibraryScanner :
         IMediaSourceRepository mediaSourceRepository,
         IPlexPathReplacementService plexPathReplacementService,
         IPlexTelevisionRepository plexTelevisionRepository,
-        ILocalFileSystem localFileSystem,
+        IFileSystem fileSystem,
         ILocalChaptersProvider localChaptersProvider,
         ILogger<PlexTelevisionLibraryScanner> logger)
         : base(
             scannerProxy,
-            localFileSystem,
+            fileSystem,
             localChaptersProvider,
             metadataRepository,
             logger)

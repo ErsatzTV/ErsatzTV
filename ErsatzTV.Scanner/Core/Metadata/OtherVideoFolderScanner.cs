@@ -1,4 +1,5 @@
 ﻿using System.Collections.Immutable;
+using System.IO.Abstractions;
 using Bugsnag;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
@@ -22,6 +23,7 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
     private readonly ILibraryRepository _libraryRepository;
     private readonly ILocalChaptersProvider _localChaptersProvider;
     private readonly IScannerProxy _scannerProxy;
+    private readonly IFileSystem _fileSystem;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalMetadataProvider _localMetadataProvider;
     private readonly ILocalSubtitlesProvider _localSubtitlesProvider;
@@ -31,6 +33,7 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
 
     public OtherVideoFolderScanner(
         IScannerProxy scannerProxy,
+        IFileSystem fileSystem,
         ILocalFileSystem localFileSystem,
         ILocalStatisticsProvider localStatisticsProvider,
         ILocalMetadataProvider localMetadataProvider,
@@ -45,7 +48,7 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
         ITempFilePool tempFilePool,
         IClient client,
         ILogger<OtherVideoFolderScanner> logger) : base(
-        localFileSystem,
+        fileSystem,
         localStatisticsProvider,
         metadataRepository,
         mediaItemRepository,
@@ -56,6 +59,7 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
         logger)
     {
         _scannerProxy = scannerProxy;
+        _fileSystem = fileSystem;
         _localFileSystem = localFileSystem;
         _localMetadataProvider = localMetadataProvider;
         _localSubtitlesProvider = localSubtitlesProvider;
@@ -220,7 +224,7 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
 
             foreach (string path in await _otherVideoRepository.FindOtherVideoPaths(libraryPath))
             {
-                if (!_localFileSystem.FileExists(path))
+                if (!_fileSystem.File.Exists(path))
                 {
                     _logger.LogInformation("Flagging missing other video at {Path}", path);
                     List<int> otherVideoIds = await FlagFileNotFound(libraryPath, path);
@@ -274,7 +278,7 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
             string path = otherVideo.MediaVersions.Head().MediaFiles.Head().Path;
 
             Option<string> maybeNfoFile = new List<string> { Path.ChangeExtension(path, "nfo") }
-                .Filter(_localFileSystem.FileExists)
+                .Filter(_fileSystem.File.Exists)
                 .HeadOrNone();
 
             if (maybeNfoFile.IsNone)
@@ -376,7 +380,7 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
         string path = otherVideo.MediaVersions.Head().MediaFiles.Head().Path;
         return ImageFileExtensions
             .Map(ext => Path.ChangeExtension(path, ext))
-            .Filter(f => _localFileSystem.FileExists(f))
+            .Filter(f => _fileSystem.File.Exists(f))
             .HeadOrNone();
     }
 }

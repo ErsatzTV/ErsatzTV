@@ -28,7 +28,7 @@ public class MpegTsScriptService(
         foreach (string folder in localFileSystem.ListSubdirectories(FileSystemLayout.MpegTsScriptsFolder))
         {
             string definition = Path.Combine(folder, "mpegts.yml");
-            if (!Scripts.ContainsKey(folder) && localFileSystem.FileExists(definition))
+            if (!Scripts.ContainsKey(folder) && fileSystem.File.Exists(definition))
             {
                 Option<MpegTsScript> maybeScript = FromYaml(await fileSystem.File.ReadAllTextAsync(definition));
                 foreach (var script in maybeScript)

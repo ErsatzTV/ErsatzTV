@@ -1,8 +1,8 @@
 using System.Globalization;
+using System.IO.Abstractions;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Extensions;
-using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Metadata;
 using ErsatzTV.Infrastructure.Epg;
@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Infrastructure.Data.Repositories;
 
-public class TemplateDataRepository(ILocalFileSystem localFileSystem, IDbContextFactory<TvContext> dbContextFactory)
+public class TemplateDataRepository(IFileSystem fileSystem, IDbContextFactory<TvContext> dbContextFactory)
     : ITemplateDataRepository
 {
     public async Task<Option<Dictionary<string, object>>> GetMediaItemTemplateData(
@@ -65,9 +65,9 @@ public class TemplateDataRepository(ILocalFileSystem localFileSystem, IDbContext
             }
 
             string targetFile = Path.Combine(FileSystemLayout.ChannelGuideCacheFolder, $"{channelNumber}.xml");
-            if (localFileSystem.FileExists(targetFile))
+            if (fileSystem.File.Exists(targetFile))
             {
-                await using FileStream stream = File.OpenRead(targetFile);
+                await using FileSystemStream stream = fileSystem.File.OpenRead(targetFile);
                 List<EpgProgramme> xmlProgrammes = EpgReader.FindProgrammesAt(stream, time, count);
                 var result = new List<Dictionary<string, object>>();
 

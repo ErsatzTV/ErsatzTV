@@ -1,3 +1,4 @@
+using System.IO.Abstractions;
 using System.Threading.Channels;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Infrastructure.Data;
@@ -7,7 +8,6 @@ using Microsoft.Extensions.Logging;
 using Dapper;
 using ErsatzTV.Application.Maintenance;
 using ErsatzTV.Core;
-using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 
 namespace ErsatzTV.Application.Subtitles;
@@ -16,9 +16,9 @@ public class ExtractEmbeddedShowSubtitlesHandler(
     IDbContextFactory<TvContext> dbContextFactory,
     ChannelWriter<IBackgroundServiceRequest> workerChannel,
     IConfigElementRepository configElementRepository,
-    ILocalFileSystem localFileSystem,
+    IFileSystem fileSystem,
     ILogger<ExtractEmbeddedSubtitlesHandler> logger)
-    : ExtractEmbeddedSubtitlesHandlerBase(localFileSystem, logger),
+    : ExtractEmbeddedSubtitlesHandlerBase(fileSystem, logger),
         IRequestHandler<ExtractEmbeddedShowSubtitles, Option<BaseError>>
 {
     public async Task<Option<BaseError>> Handle(

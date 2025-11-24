@@ -1,8 +1,8 @@
 using System.CommandLine.Parsing;
+using System.IO.Abstractions;
 using CliWrap;
 using CliWrap.Buffered;
 using ErsatzTV.Core.Domain;
-using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using ErsatzTV.Core.Scheduling.Engine;
@@ -14,7 +14,7 @@ public class ScriptedPlayoutBuilder(
     IConfigElementRepository configElementRepository,
     IScriptedPlayoutBuilderService scriptedPlayoutBuilderService,
     ISchedulingEngine schedulingEngine,
-    ILocalFileSystem localFileSystem,
+    IFileSystem fileSystem,
     ILogger<ScriptedPlayoutBuilder> logger)
     : IScriptedPlayoutBuilder
 {
@@ -38,7 +38,7 @@ public class ScriptedPlayoutBuilder(
             string scriptFile = args[0];
             string[] scriptArgs = args.Skip(1).ToArray();
 
-            if (!localFileSystem.FileExists(scriptFile))
+            if (!fileSystem.File.Exists(scriptFile))
             {
                 logger.LogError(
                     "Cannot build scripted playout; schedule file {File} does not exist",

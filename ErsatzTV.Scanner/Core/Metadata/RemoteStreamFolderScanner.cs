@@ -1,4 +1,5 @@
 ﻿using System.Collections.Immutable;
+using System.IO.Abstractions;
 using Bugsnag;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
@@ -24,6 +25,7 @@ public class RemoteStreamFolderScanner : LocalFolderScanner, IRemoteStreamFolder
     private readonly IClient _client;
     private readonly ILibraryRepository _libraryRepository;
     private readonly IScannerProxy _scannerProxy;
+    private readonly IFileSystem _fileSystem;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalMetadataProvider _localMetadataProvider;
     private readonly ILogger<RemoteStreamFolderScanner> _logger;
@@ -32,6 +34,7 @@ public class RemoteStreamFolderScanner : LocalFolderScanner, IRemoteStreamFolder
 
     public RemoteStreamFolderScanner(
         IScannerProxy scannerProxy,
+        IFileSystem fileSystem,
         ILocalFileSystem localFileSystem,
         ILocalStatisticsProvider localStatisticsProvider,
         ILocalMetadataProvider localMetadataProvider,
@@ -44,7 +47,7 @@ public class RemoteStreamFolderScanner : LocalFolderScanner, IRemoteStreamFolder
         ITempFilePool tempFilePool,
         IClient client,
         ILogger<RemoteStreamFolderScanner> logger) : base(
-        localFileSystem,
+        fileSystem,
         localStatisticsProvider,
         metadataRepository,
         mediaItemRepository,
@@ -55,6 +58,7 @@ public class RemoteStreamFolderScanner : LocalFolderScanner, IRemoteStreamFolder
         logger)
     {
         _scannerProxy = scannerProxy;
+        _fileSystem = fileSystem;
         _localFileSystem = localFileSystem;
         _localMetadataProvider = localMetadataProvider;
         _remoteStreamRepository = remoteStreamRepository;
@@ -213,7 +217,7 @@ public class RemoteStreamFolderScanner : LocalFolderScanner, IRemoteStreamFolder
 
             foreach (string path in await _remoteStreamRepository.FindRemoteStreamPaths(libraryPath, cancellationToken))
             {
-                if (!_localFileSystem.FileExists(path))
+                if (!_fileSystem.File.Exists(path))
                 {
                     _logger.LogInformation("Flagging missing remote stream at {Path}", path);
                     List<int> remoteStreamIds = await FlagFileNotFound(libraryPath, path);

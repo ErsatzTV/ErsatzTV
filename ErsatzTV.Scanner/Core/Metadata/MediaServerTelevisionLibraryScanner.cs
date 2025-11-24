@@ -1,9 +1,9 @@
-﻿using ErsatzTV.Core;
+﻿using System.IO.Abstractions;
+using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.MediaServer;
 using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Extensions;
-using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Metadata;
 using ErsatzTV.Scanner.Core.Interfaces;
@@ -23,19 +23,19 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
 {
     private readonly ILocalChaptersProvider _localChaptersProvider;
     private readonly IScannerProxy _scannerProxy;
-    private readonly ILocalFileSystem _localFileSystem;
+    private readonly IFileSystem _fileSystem;
     private readonly ILogger _logger;
     private readonly IMetadataRepository _metadataRepository;
 
     protected MediaServerTelevisionLibraryScanner(
         IScannerProxy scannerProxy,
-        ILocalFileSystem localFileSystem,
+        IFileSystem fileSystem,
         ILocalChaptersProvider localChaptersProvider,
         IMetadataRepository metadataRepository,
         ILogger logger)
     {
         _scannerProxy = scannerProxy;
-        _localFileSystem = localFileSystem;
+        _fileSystem = fileSystem;
         _localChaptersProvider = localChaptersProvider;
         _metadataRepository = metadataRepository;
         _logger = logger;
@@ -469,7 +469,7 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
             {
                 await televisionRepository.SetEtag(result.Item, MediaServerEtag(incoming), cancellationToken);
 
-                if (_localFileSystem.FileExists(result.LocalPath))
+                if (_fileSystem.File.Exists(result.LocalPath))
                 {
                     Option<int> flagResult = await televisionRepository.FlagNormal(library, result.Item, cancellationToken);
                     if (flagResult.IsSome)
@@ -541,7 +541,7 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
             existingEtag == MediaServerEtag(incoming))
         {
             // skip scanning unavailable/file not found items that are unchanged and still don't exist locally
-            if (!_localFileSystem.FileExists(localPath) && !ServerSupportsRemoteStreaming)
+            if (!_fileSystem.File.Exists(localPath) && !ServerSupportsRemoteStreaming)
             {
                 return false;
             }
@@ -550,7 +550,7 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
         {
             // item is unchanged, but file does not exist
             // don't scan, but mark as unavailable
-            if (!_localFileSystem.FileExists(localPath))
+            if (!_fileSystem.File.Exists(localPath))
             {
                 if (ServerSupportsRemoteStreaming)
                 {
@@ -741,7 +741,7 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
         if (deepScan || result.IsAdded || MediaServerEtag(existing) != MediaServerEtag(incoming) ||
             existing.MediaVersions.Head().Streams.Count == 0)
         {
-            // if (maybeMediaVersion.IsNone && _localFileSystem.FileExists(result.LocalPath))
+            // if (maybeMediaVersion.IsNone && _fileSystem.File.Exists(result.LocalPath))
             // {
             //     _logger.LogDebug("Refreshing {Attribute} for {Path}", "Statistics", result.LocalPath);
             //     Either<BaseError, bool> refreshResult =

@@ -1,8 +1,8 @@
+using System.IO.Abstractions;
 using System.Threading.Channels;
 using ErsatzTV.Application.Channels;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
-using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Scheduling;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
@@ -11,28 +11,17 @@ using Channel = ErsatzTV.Core.Domain.Channel;
 
 namespace ErsatzTV.Application.Playouts;
 
-public class CreateSequentialPlayoutHandler
+public class CreateSequentialPlayoutHandler(
+    IFileSystem fileSystem,
+    ChannelWriter<IBackgroundServiceRequest> channel,
+    IDbContextFactory<TvContext> dbContextFactory)
     : IRequestHandler<CreateSequentialPlayout, Either<BaseError, CreatePlayoutResponse>>
 {
-    private readonly ChannelWriter<IBackgroundServiceRequest> _channel;
-    private readonly IDbContextFactory<TvContext> _dbContextFactory;
-    private readonly ILocalFileSystem _localFileSystem;
-
-    public CreateSequentialPlayoutHandler(
-        ILocalFileSystem localFileSystem,
-        ChannelWriter<IBackgroundServiceRequest> channel,
-        IDbContextFactory<TvContext> dbContextFactory)
-    {
-        _localFileSystem = localFileSystem;
-        _channel = channel;
-        _dbContextFactory = dbContextFactory;
-    }
-
     public async Task<Either<BaseError, CreatePlayoutResponse>> Handle(
         CreateSequentialPlayout request,
         CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, Playout> validation = await Validate(dbContext, request, cancellationToken);
         return await validation.Apply(playout => PersistPlayout(dbContext, playout, cancellationToken));
     }
@@ -44,15 +33,15 @@ public class CreateSequentialPlayoutHandler
     {
         await dbContext.Playouts.AddAsync(playout, cancellationToken);
         await dbContext.SaveChangesAsync(cancellationToken);
-        await _channel.WriteAsync(new BuildPlayout(playout.Id, PlayoutBuildMode.Reset), cancellationToken);
+        await channel.WriteAsync(new BuildPlayout(playout.Id, PlayoutBuildMode.Reset), cancellationToken);
         if (playout.Channel.PlayoutMode is ChannelPlayoutMode.OnDemand)
         {
-            await _channel.WriteAsync(
+            await channel.WriteAsync(
                 new TimeShiftOnDemandPlayout(playout.Id, DateTimeOffset.Now, false),
                 cancellationToken);
         }
 
-        await _channel.WriteAsync(new RefreshChannelList(), cancellationToken);
+        await channel.WriteAsync(new RefreshChannelList(), cancellationToken);
         return new CreatePlayoutResponse(playout.Id);
     }
 
@@ -87,7 +76,7 @@ public class CreateSequentialPlayoutHandler
 
     private Validation<BaseError, string> ValidateYamlFile(CreateSequentialPlayout request)
     {
-        if (!_localFileSystem.FileExists(request.ScheduleFile))
+        if (!fileSystem.File.Exists(request.ScheduleFile))
         {
             return BaseError.New("Sequential schedule does not exist!");
         }

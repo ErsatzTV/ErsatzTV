@@ -1,4 +1,5 @@
-﻿using Bugsnag;
+﻿using System.IO.Abstractions;
+using Bugsnag;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Extensions;
@@ -22,6 +23,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
     private readonly IClient _client;
     private readonly IEpisodeNfoReader _episodeNfoReader;
     private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
+    private readonly IFileSystem _fileSystem;
     private readonly IImageRepository _imageRepository;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalStatisticsProvider _localStatisticsProvider;
@@ -49,6 +51,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
         IImageRepository imageRepository,
         IRemoteStreamRepository remoteStreamRepository,
         IFallbackMetadataProvider fallbackMetadataProvider,
+        IFileSystem fileSystem,
         ILocalFileSystem localFileSystem,
         IMovieNfoReader movieNfoReader,
         IEpisodeNfoReader episodeNfoReader,
@@ -70,6 +73,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
         _imageRepository = imageRepository;
         _remoteStreamRepository = remoteStreamRepository;
         _fallbackMetadataProvider = fallbackMetadataProvider;
+        _fileSystem = fileSystem;
         _localFileSystem = localFileSystem;
         _movieNfoReader = movieNfoReader;
         _episodeNfoReader = episodeNfoReader;
@@ -86,7 +90,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
     {
         string nfoFileName = Path.Combine(showFolder, "tvshow.nfo");
         Option<ShowMetadata> maybeMetadata = None;
-        if (_localFileSystem.FileExists(nfoFileName))
+        if (_fileSystem.File.Exists(nfoFileName))
         {
             maybeMetadata = await LoadTelevisionShowMetadata(nfoFileName);
         }
@@ -106,7 +110,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
     {
         string nfoFileName = Path.Combine(artistFolder, "artist.nfo");
         Option<ArtistMetadata> maybeMetadata = None;
-        if (_localFileSystem.FileExists(nfoFileName))
+        if (_fileSystem.File.Exists(nfoFileName))
         {
             maybeMetadata = await LoadArtistMetadata(nfoFileName);
         }

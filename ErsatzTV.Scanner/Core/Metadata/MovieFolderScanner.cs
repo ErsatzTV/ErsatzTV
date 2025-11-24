@@ -1,4 +1,5 @@
 ﻿using System.Collections.Immutable;
+using System.IO.Abstractions;
 using Bugsnag;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
@@ -23,6 +24,7 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
     private readonly ILibraryRepository _libraryRepository;
     private readonly ILocalChaptersProvider _localChaptersProvider;
     private readonly IScannerProxy _scannerProxy;
+    private readonly IFileSystem _fileSystem;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalMetadataProvider _localMetadataProvider;
     private readonly ILocalSubtitlesProvider _localSubtitlesProvider;
@@ -32,6 +34,7 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
 
     public MovieFolderScanner(
         IScannerProxy scannerProxy,
+        IFileSystem fileSystem,
         ILocalFileSystem localFileSystem,
         IMovieRepository movieRepository,
         ILocalStatisticsProvider localStatisticsProvider,
@@ -47,7 +50,7 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
         IClient client,
         ILogger<MovieFolderScanner> logger)
         : base(
-            localFileSystem,
+            fileSystem,
             localStatisticsProvider,
             metadataRepository,
             mediaItemRepository,
@@ -58,6 +61,7 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
             logger)
     {
         _scannerProxy = scannerProxy;
+        _fileSystem = fileSystem;
         _localFileSystem = localFileSystem;
         _movieRepository = movieRepository;
         _localSubtitlesProvider = localSubtitlesProvider;
@@ -209,7 +213,7 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
 
             foreach (string path in await _movieRepository.FindMoviePaths(libraryPath))
             {
-                if (!_localFileSystem.FileExists(path))
+                if (!_fileSystem.File.Exists(path))
                 {
                     _logger.LogInformation("Flagging missing movie at {Path}", path);
                     List<int> ids = await FlagFileNotFound(libraryPath, path);
@@ -362,7 +366,7 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
         string movieAsNfo = Path.ChangeExtension(path, "nfo");
         string movieNfo = Path.Combine(Path.GetDirectoryName(path) ?? string.Empty, "movie.nfo");
         return Seq.create(movieAsNfo, movieNfo)
-            .Filter(s => _localFileSystem.FileExists(s))
+            .Filter(s => _fileSystem.File.Exists(s))
             .HeadOrNone();
     }
 
@@ -380,12 +384,12 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
         IEnumerable<string> possibleMoviePosters = ImageFileExtensions.Collect(ext =>
                 new[] { $"{segment}.{ext}", Path.GetFileNameWithoutExtension(path) + $"-{segment}.{ext}" })
             .Map(f => Path.Combine(folder, f));
-        Option<string> result = possibleMoviePosters.Filter(p => _localFileSystem.FileExists(p)).HeadOrNone();
+        Option<string> result = possibleMoviePosters.Filter(p => _fileSystem.File.Exists(p)).HeadOrNone();
         if (result.IsNone && artworkKind == ArtworkKind.Poster)
         {
             IEnumerable<string> possibleFolderPosters = ImageFileExtensions.Collect(ext => new[] { $"folder.{ext}" })
                 .Map(f => Path.Combine(folder, f));
-            result = possibleFolderPosters.Filter(p => _localFileSystem.FileExists(p)).HeadOrNone();
+            result = possibleFolderPosters.Filter(p => _fileSystem.File.Exists(p)).HeadOrNone();
         }
 
         return result;

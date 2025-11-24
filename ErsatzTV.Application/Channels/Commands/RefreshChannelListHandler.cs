@@ -1,4 +1,5 @@
 using System.Data.Common;
+using System.IO.Abstractions;
 using System.Net;
 using System.Xml;
 using Dapper;
@@ -19,6 +20,7 @@ namespace ErsatzTV.Application.Channels;
 public class RefreshChannelListHandler : IRequestHandler<RefreshChannelList>
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
+    private readonly IFileSystem _fileSystem;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILogger<RefreshChannelListHandler> _logger;
     private readonly RecyclableMemoryStreamManager _recyclableMemoryStreamManager;
@@ -26,11 +28,13 @@ public class RefreshChannelListHandler : IRequestHandler<RefreshChannelList>
     public RefreshChannelListHandler(
         RecyclableMemoryStreamManager recyclableMemoryStreamManager,
         IDbContextFactory<TvContext> dbContextFactory,
+        IFileSystem fileSystem,
         ILocalFileSystem localFileSystem,
         ILogger<RefreshChannelListHandler> logger)
     {
         _recyclableMemoryStreamManager = recyclableMemoryStreamManager;
         _dbContextFactory = dbContextFactory;
+        _fileSystem = fileSystem;
         _localFileSystem = localFileSystem;
         _logger = logger;
     }
@@ -44,13 +48,13 @@ public class RefreshChannelListHandler : IRequestHandler<RefreshChannelList>
         string templateFileName = Path.Combine(FileSystemLayout.ChannelGuideTemplatesFolder, "channel.sbntxt");
 
         // fall back to default template
-        if (!_localFileSystem.FileExists(templateFileName))
+        if (!_fileSystem.File.Exists(templateFileName))
         {
             templateFileName = Path.Combine(FileSystemLayout.ChannelGuideTemplatesFolder, "_channel.sbntxt");
         }
 
         // fail if file doesn't exist
-        if (!_localFileSystem.FileExists(templateFileName))
+        if (!_fileSystem.File.Exists(templateFileName))
         {
             _logger.LogError(
                 "Unable to generate channel list without template file {File}; please restart ErsatzTV",
