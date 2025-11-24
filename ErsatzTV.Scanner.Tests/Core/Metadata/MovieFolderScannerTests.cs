@@ -728,7 +728,7 @@ public class MovieFolderScannerTests
             return new MovieFolderScanner(
                 _scannerProxy,
                 fileSystem,
-                new FakeLocalFileSystem([..files]),
+                new LocalFileSystem(fileSystem, Substitute.For<IClient>(), Substitute.For<ILogger<LocalFileSystem>>()),
                 _movieRepository,
                 _localStatisticsProvider,
                 Substitute.For<ILocalSubtitlesProvider>(),
@@ -756,7 +756,7 @@ public class MovieFolderScannerTests
             return new MovieFolderScanner(
                 _scannerProxy,
                 fileSystem,
-                new FakeLocalFileSystem([], [..folders]),
+                new LocalFileSystem(fileSystem, Substitute.For<IClient>(), Substitute.For<ILogger<LocalFileSystem>>()),
                 _movieRepository,
                 _localStatisticsProvider,
                 Substitute.For<ILocalSubtitlesProvider>(),

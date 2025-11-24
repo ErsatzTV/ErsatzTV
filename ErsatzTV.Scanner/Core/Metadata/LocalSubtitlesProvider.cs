@@ -10,7 +10,7 @@ namespace ErsatzTV.Scanner.Core.Metadata;
 
 public class LocalSubtitlesProvider : ILocalSubtitlesProvider
 {
-    private readonly List<CultureInfo> _languageCodes = new();
+    private readonly List<CultureInfo> _languageCodes = [];
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILogger<LocalSubtitlesProvider> _logger;
     private readonly IMediaItemRepository _mediaItemRepository;
