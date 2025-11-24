@@ -10,7 +10,6 @@ public interface ILocalFileSystem
     IEnumerable<string> ListFiles(string folder, params string[] searchPatterns);
     Task<Either<BaseError, Unit>> CopyFile(string source, string destination);
     Unit EmptyFolder(string folder);
-    Task<string[]> ReadAllLines(string path);
     Task<byte[]> GetHash(string path);
     string GetCustomOrDefaultFile(string folder, string file);
 }

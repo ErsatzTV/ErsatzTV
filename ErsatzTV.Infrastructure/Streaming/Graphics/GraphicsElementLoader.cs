@@ -3,7 +3,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Graphics;
-using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Streaming;
 using ErsatzTV.Core.Metadata;
@@ -20,7 +19,6 @@ namespace ErsatzTV.Infrastructure.Streaming.Graphics;
 public partial class GraphicsElementLoader(
     TemplateFunctions templateFunctions,
     IFileSystem fileSystem,
-    ILocalFileSystem localFileSystem,
     ITemplateDataRepository templateDataRepository,
     ILogger<GraphicsElementLoader> logger)
     : IGraphicsElementLoader
@@ -189,7 +187,7 @@ public partial class GraphicsElementLoader(
 
         foreach (var reference in elementsWithEpg)
         {
-            foreach (string line in await localFileSystem.ReadAllLines(reference.GraphicsElement.Path))
+            foreach (string line in await fileSystem.File.ReadAllLinesAsync(reference.GraphicsElement.Path))
             {
                 Match match = EpgEntriesRegex().Match(line);
                 if (!match.Success || !int.TryParse(match.Groups[1].Value, out int value))

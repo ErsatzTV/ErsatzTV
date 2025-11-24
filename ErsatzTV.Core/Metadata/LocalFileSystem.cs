@@ -13,9 +13,9 @@ public class LocalFileSystem(IFileSystem fileSystem, IClient client, ILogger<Loc
     {
         try
         {
-            if (folder != null && !Directory.Exists(folder))
+            if (folder != null && !fileSystem.Directory.Exists(folder))
             {
-                Directory.CreateDirectory(folder);
+                fileSystem.Directory.CreateDirectory(folder);
             }
         }
         catch (Exception ex)
@@ -30,7 +30,7 @@ public class LocalFileSystem(IFileSystem fileSystem, IClient client, ILogger<Loc
     {
         try
         {
-            return File.GetLastWriteTimeUtc(path);
+            return fileSystem.File.GetLastWriteTimeUtc(path);
         }
         catch
         {
@@ -40,11 +40,11 @@ public class LocalFileSystem(IFileSystem fileSystem, IClient client, ILogger<Loc
 
     public IEnumerable<string> ListSubdirectories(string folder)
     {
-        if (Directory.Exists(folder))
+        if (fileSystem.Directory.Exists(folder))
         {
             try
             {
-                return Directory.EnumerateDirectories(folder);
+                return fileSystem.Directory.EnumerateDirectories(folder);
             }
             catch (UnauthorizedAccessException)
             {
@@ -62,11 +62,11 @@ public class LocalFileSystem(IFileSystem fileSystem, IClient client, ILogger<Loc
 
     public IEnumerable<string> ListFiles(string folder)
     {
-        if (Directory.Exists(folder))
+        if (fileSystem.Directory.Exists(folder))
         {
             try
             {
-                return Directory.EnumerateFiles(folder, "*", SearchOption.TopDirectoryOnly)
+                return fileSystem.Directory.EnumerateFiles(folder, "*", SearchOption.TopDirectoryOnly)
                     .Where(path => !Path.GetFileName(path).StartsWith("._", StringComparison.OrdinalIgnoreCase));
             }
             catch (UnauthorizedAccessException)
@@ -85,11 +85,11 @@ public class LocalFileSystem(IFileSystem fileSystem, IClient client, ILogger<Loc
 
     public IEnumerable<string> ListFiles(string folder, string searchPattern)
     {
-        if (folder is not null && Directory.Exists(folder))
+        if (folder is not null && fileSystem.Directory.Exists(folder))
         {
             try
             {
-                return Directory.EnumerateFiles(folder, searchPattern, SearchOption.TopDirectoryOnly)
+                return fileSystem.Directory.EnumerateFiles(folder, searchPattern, SearchOption.TopDirectoryOnly)
                     .Where(path => !Path.GetFileName(path).StartsWith("._", StringComparison.OrdinalIgnoreCase));
             }
             catch (UnauthorizedAccessException)
@@ -108,13 +108,13 @@ public class LocalFileSystem(IFileSystem fileSystem, IClient client, ILogger<Loc
 
     public IEnumerable<string> ListFiles(string folder, params string[] searchPatterns)
     {
-        if (folder is not null && Directory.Exists(folder))
+        if (folder is not null && fileSystem.Directory.Exists(folder))
         {
             try
             {
                 return searchPatterns
                     .SelectMany(searchPattern =>
-                        Directory.EnumerateFiles(folder, searchPattern, SearchOption.TopDirectoryOnly)
+                        fileSystem.Directory.EnumerateFiles(folder, searchPattern, SearchOption.TopDirectoryOnly)
                             .Where(path =>
                                 !Path.GetFileName(path).StartsWith("._", StringComparison.OrdinalIgnoreCase)))
                     .Distinct();
@@ -138,13 +138,13 @@ public class LocalFileSystem(IFileSystem fileSystem, IClient client, ILogger<Loc
         try
         {
             string directory = Path.GetDirectoryName(destination) ?? string.Empty;
-            if (!Directory.Exists(directory))
+            if (!fileSystem.Directory.Exists(directory))
             {
-                Directory.CreateDirectory(directory);
+                fileSystem.Directory.CreateDirectory(directory);
             }
 
-            await using FileStream sourceStream = File.OpenRead(source);
-            await using FileStream destinationStream = File.Create(destination);
+            await using FileSystemStream sourceStream = fileSystem.File.OpenRead(source);
+            await using FileSystemStream destinationStream = fileSystem.File.Create(destination);
             await sourceStream.CopyToAsync(destinationStream);
 
             return Unit.Default;
@@ -160,14 +160,14 @@ public class LocalFileSystem(IFileSystem fileSystem, IClient client, ILogger<Loc
     {
         try
         {
-            foreach (string file in Directory.GetFiles(folder))
+            foreach (string file in fileSystem.Directory.GetFiles(folder))
             {
-                File.Delete(file);
+                fileSystem.File.Delete(file);
             }
 
-            foreach (string directory in Directory.GetDirectories(folder))
+            foreach (string directory in fileSystem.Directory.GetDirectories(folder))
             {
-                Directory.Delete(directory, true);
+                fileSystem.Directory.Delete(directory, true);
             }
         }
         catch (Exception ex)
@@ -178,13 +178,11 @@ public class LocalFileSystem(IFileSystem fileSystem, IClient client, ILogger<Loc
         return Unit.Default;
     }
 
-    public Task<string[]> ReadAllLines(string path) => File.ReadAllLinesAsync(path);
-
     [SuppressMessage("Security", "CA5351:Do Not Use Broken Cryptographic Algorithms")]
     public async Task<byte[]> GetHash(string path)
     {
         using var md5 = MD5.Create();
-        await using var stream = File.OpenRead(path);
+        await using var stream = fileSystem.File.OpenRead(path);
         return await md5.ComputeHashAsync(stream);
     }
 

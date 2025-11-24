@@ -53,7 +53,6 @@ public class FakeLocalFileSystem : ILocalFileSystem
         Task.FromResult(Right<BaseError, Unit>(Unit.Default));
 
     public Unit EmptyFolder(string folder) => Unit.Default;
-    public Task<string[]> ReadAllLines(string path) => throw new NotImplementedException();
     public Task<byte[]> GetHash(string path) => throw new NotImplementedException();
 
     public string GetCustomOrDefaultFile(string folder, string file)
