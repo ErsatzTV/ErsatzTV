@@ -400,12 +400,12 @@ public class PlayoutBuilder : IPlayoutBuilder
                 name =>
                 {
                     _logger.LogError(
-                        "Unable to rebuild playout; {CollectionType} {CollectionName} has no valid items!",
+                        "Unable to rebuild playout; {CollectionType} \"{CollectionName}\" has no valid items!",
                         emptyCollection.CollectionType,
                         name);
 
                     return BaseError.New(
-                        $"Unable to rebuild playout; {emptyCollection.CollectionType} {name} has no valid items!");
+                        $"Unable to rebuild playout; {emptyCollection.CollectionType} \"{name}\" has no valid items!");
                 },
                 () =>
                 {

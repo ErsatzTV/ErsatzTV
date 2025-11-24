@@ -1087,7 +1087,10 @@ public class MediaCollectionRepository : IMediaCollectionRepository
                 .AsNoTracking()
                 .SelectOneAsync(a => a.Id, a => a.Id == emptyCollection.MediaItemId.Value, cancellationToken)
                 .MapT(s => s.ShowMetadata.Head().Title),
-            // TODO: get playlist name
+            CollectionType.Playlist => await dbContext.Playlists
+                .AsNoTracking()
+                .SelectOneAsync(p => p.Id, p => p.Id == emptyCollection.PlaylistId.Value, cancellationToken)
+                .MapT(p => p.Name),
             _ => None
         };
     }
