@@ -11,21 +11,21 @@
 
     <ItemGroup>
         <PackageReference Include="Blurhash.SkiaSharp" Version="2.0.0" />
-        <PackageReference Include="CliWrap" Version="3.9.0" />
+        <PackageReference Include="CliWrap" Version="3.10.0" />
         <PackageReference Include="Dapper" Version="2.1.66" />
         <PackageReference Include="EFCore.BulkExtensions" Version="9.0.2" />
-        <PackageReference Include="Elastic.Clients.Elasticsearch" Version="9.2.1" />
+        <PackageReference Include="Elastic.Clients.Elasticsearch" Version="9.2.2" />
         <PackageReference Include="Jint" Version="4.4.2" />
         <PackageReference Include="JsonSchema.Net" Version="7.4.0" />
         <PackageReference Include="Lucene.Net" Version="4.8.0-beta00017" />
         <PackageReference Include="Lucene.Net.Analysis.Common" Version="4.8.0-beta00017" />
         <PackageReference Include="Lucene.Net.QueryParser" Version="4.8.0-beta00017" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.10" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.10">
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.11" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.11">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.10" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.11" />
         <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.14.15">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -35,7 +35,7 @@
         <PackageReference Include="Refit.Newtonsoft.Json" Version="8.0.0" />
         <PackageReference Include="Refit.Xml" Version="8.0.0" />
         <PackageReference Include="RichTextKit.Stbear" Version="0.4.167.3" />
-        <PackageReference Include="Scriban.Signed" Version="6.5.0" />
+        <PackageReference Include="Scriban.Signed" Version="6.5.2" />
         <PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
         <PackageReference Include="SkiaSharp" Version="3.119.1" />
         <PackageReference Include="TagLibSharp" Version="2.3.0" />
