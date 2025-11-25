@@ -88,6 +88,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Playout builds now use JsonSchema.Net library which has no validation limit
   - Validation tool in the UI still uses Newtonsoft.Json.Schema (with 1000/hr limit) as the error output is easier to understand
 - Fix editing scripted and sequential playouts when using MySql
+- Fix HLS Direct streams remaining open after client disconnect
 
 ### Changed
 - Classic schedules: `Refresh` classic playouts from playout list; do not `Reset` them

@@ -30,57 +30,62 @@ public abstract class StreamingControllerBase(IGraphicsEngine graphicsEngine, IL
 
         foreach (PlayoutItemProcessModel processModel in result.RightToSeq())
         {
-            // for process counter
-            var ffmpegProcess = new FFmpegProcess();
-
-            Command process = processModel.Process;
-
-            logger.LogDebug("ffmpeg arguments {FFmpegArguments}", process.Arguments);
-
-            var cts = new CancellationTokenSource();
-            HttpContext.Response.OnCompleted(async () =>
-            {
-                ffmpegProcess.Dispose();
-                await cts.CancelAsync();
-                cts.Dispose();
-            });
-
-            using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(
-                cts.Token,
-                HttpContext.RequestAborted);
-
-            var pipe = new Pipe();
-            var stdErrBuffer = new StringBuilder();
-
-            Command processWithPipe = process;
-            foreach (GraphicsEngineContext graphicsEngineContext in processModel.GraphicsEngineContext)
-            {
-                var gePipe = new Pipe();
-                processWithPipe = process.WithStandardInputPipe(PipeSource.FromStream(gePipe.Reader.AsStream()));
-
-                // fire and forget graphics engine task
-                _ = graphicsEngine.Run(
-                    graphicsEngineContext,
-                    gePipe.Writer,
-                    linkedCts.Token);
-            }
-
-            CommandTask<CommandResult> task = processWithPipe
-                .WithStandardOutputPipe(PipeTarget.ToStream(pipe.Writer.AsStream()))
-                .WithStandardErrorPipe(PipeTarget.ToStringBuilder(stdErrBuffer))
-                .WithValidation(CommandResultValidation.None)
-                .ExecuteAsync(linkedCts.Token);
-
-            // ensure pipe writer is completed when ffmpeg exits
-            _ = task.Task.ContinueWith(
-                (_, state) => ((PipeWriter)state!).Complete(),
-                pipe.Writer,
-                TaskScheduler.Default);
-
-            return new FileStreamResult(pipe.Reader.AsStream(), "video/mp2t");
+            return StartPlayout(processModel);
         }
 
         // this will never happen
         return new NotFoundResult();
+    }
+
+    private FileStreamResult StartPlayout(PlayoutItemProcessModel processModel)
+    {
+        // for process counter
+        var ffmpegProcess = new FFmpegProcess();
+        Command process = processModel.Process;
+
+        logger.LogDebug("ffmpeg arguments {FFmpegArguments}", process.Arguments);
+
+        var cts = new CancellationTokenSource();
+
+        // do not use 'using' here; the token needs to live longer than this method scope
+        var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(
+            cts.Token,
+            HttpContext.RequestAborted);
+
+        var pipe = new Pipe();
+        var stdErrBuffer = new StringBuilder();
+
+        Command processWithPipe = process;
+        foreach (GraphicsEngineContext graphicsEngineContext in processModel.GraphicsEngineContext)
+        {
+            var gePipe = new Pipe();
+            processWithPipe = process.WithStandardInputPipe(PipeSource.FromStream(gePipe.Reader.AsStream()));
+
+            // fire and forget graphics engine task
+            _ = graphicsEngine.Run(
+                graphicsEngineContext,
+                gePipe.Writer,
+                linkedCts.Token);
+        }
+
+        CommandTask<CommandResult> task = processWithPipe
+            .WithStandardOutputPipe(PipeTarget.ToStream(pipe.Writer.AsStream()))
+            .WithStandardErrorPipe(PipeTarget.ToStringBuilder(stdErrBuffer))
+            .WithValidation(CommandResultValidation.None)
+            .ExecuteAsync(linkedCts.Token);
+
+        // ensure cleanup happens when ffmpeg exits (either naturally or via cancellation)
+        _ = task.Task.ContinueWith(
+            (t, _) =>
+            {
+                pipe.Writer.Complete(t.Exception);
+                ffmpegProcess.Dispose();
+                linkedCts.Dispose();
+                cts.Dispose();
+            },
+            null,
+            TaskScheduler.Default);
+
+        return new FileStreamResult(pipe.Reader.AsStream(), "video/mp2t");
     }
 }
