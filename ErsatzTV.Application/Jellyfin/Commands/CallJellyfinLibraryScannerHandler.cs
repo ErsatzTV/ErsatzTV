@@ -9,6 +9,7 @@ using ErsatzTV.FFmpeg.Runtime;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Application.Jellyfin;
 
@@ -22,8 +23,9 @@ public class CallJellyfinLibraryScannerHandler : CallLibraryScannerHandler<ISync
         IDbContextFactory<TvContext> dbContextFactory,
         IConfigElementRepository configElementRepository,
         IScannerProxyService scannerProxyService,
-        IRuntimeInfo runtimeInfo)
-        : base(dbContextFactory, configElementRepository, runtimeInfo)
+        IRuntimeInfo runtimeInfo,
+        ILogger<CallJellyfinLibraryScannerHandler> logger)
+        : base(dbContextFactory, configElementRepository, runtimeInfo, logger)
     {
         _scannerProxyService = scannerProxyService;
     }

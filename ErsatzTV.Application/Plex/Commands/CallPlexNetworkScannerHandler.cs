@@ -10,6 +10,7 @@ using ErsatzTV.FFmpeg.Runtime;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Application.Plex;
 
@@ -22,7 +23,9 @@ public class CallPlexNetworkScannerHandler : CallLibraryScannerHandler<Synchroni
         IDbContextFactory<TvContext> dbContextFactory,
         IConfigElementRepository configElementRepository,
         IScannerProxyService scannerProxyService,
-        IRuntimeInfo runtimeInfo) : base(dbContextFactory, configElementRepository, runtimeInfo)
+        IRuntimeInfo runtimeInfo,
+        ILogger<CallPlexNetworkScannerHandler> logger)
+        : base(dbContextFactory, configElementRepository, runtimeInfo, logger)
     {
         _scannerProxyService = scannerProxyService;
     }
