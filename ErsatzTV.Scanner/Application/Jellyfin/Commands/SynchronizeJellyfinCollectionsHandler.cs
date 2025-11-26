@@ -36,7 +36,6 @@ public class
         CancellationToken cancellationToken)
     {
         Validation<BaseError, RequestParameters> validation = await Validate(request, cancellationToken);
-        Environment.Exit(-1);
         return await validation.Match(
             SynchronizeCollections,
             error => Task.FromResult<Either<BaseError, Unit>>(error.Join()));
