@@ -125,7 +125,7 @@ public class Startup
         {
             options.ForwardedHeaders = ForwardedHeaders.All;
             options.ForwardLimit = 2;
-            options.KnownNetworks.Clear();
+            options.KnownIPNetworks.Clear();
             options.KnownProxies.Clear();
         });
 
