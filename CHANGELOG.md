@@ -103,6 +103,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - Template groups in template list
     - Block groups and blocks in template editor
   - Replace template tree view with searchable table (like blocks)
+- Upgrade to dotnet 10
 
 ## [25.8.0] - 2025-10-26
 ### Added
