@@ -60,6 +60,7 @@ public class LocalSubtitlesProviderTests
         var provider = new LocalSubtitlesProvider(
             Substitute.For<IMediaItemRepository>(),
             Substitute.For<IMetadataRepository>(),
+            fileSystem,
             new LocalFileSystem(fileSystem, Substitute.For<IClient>(), Substitute.For<ILogger<LocalFileSystem>>()),
             Substitute.For<ILogger<LocalSubtitlesProvider>>());
 
@@ -113,6 +114,7 @@ public class LocalSubtitlesProviderTests
         var provider = new LocalSubtitlesProvider(
             Substitute.For<IMediaItemRepository>(),
             Substitute.For<IMetadataRepository>(),
+            fileSystem,
             new LocalFileSystem(fileSystem, Substitute.For<IClient>(), Substitute.For<ILogger<LocalFileSystem>>()),
             Substitute.For<ILogger<LocalSubtitlesProvider>>());
 
