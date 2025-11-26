@@ -11,13 +11,16 @@ using Serilog;
 using Serilog.Core;
 using Serilog.Events;
 using Serilog.Formatting.Compact.Reader;
+using Microsoft.Extensions.Logging;
+using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace ErsatzTV.Application.Libraries;
 
 public abstract class CallLibraryScannerHandler<TRequest>(
     IDbContextFactory<TvContext> dbContextFactory,
     IConfigElementRepository configElementRepository,
-    IRuntimeInfo runtimeInfo)
+    IRuntimeInfo runtimeInfo,
+    ILogger logger)
 {
     protected static string GetBaseUrl(Guid scanId) => $"http://localhost:{Settings.UiPort}/api/scan/{scanId}";
 
@@ -42,6 +45,7 @@ public abstract class CallLibraryScannerHandler<TRequest>(
 
             if (process.ExitCode != 0)
             {
+                logger.LogWarning("ErsatzTV.Scanner exited with code {ExitCode}", process.ExitCode);
                 return BaseError.New($"ErsatzTV.Scanner exited with code {process.ExitCode}");
             }
         }
@@ -64,7 +68,7 @@ public abstract class CallLibraryScannerHandler<TRequest>(
                 // writes in UTC
                 LogEvent logEvent = LogEventReader.ReadFromString(s);
 
-                ILogger log = Log.Logger;
+                Serilog.ILogger log = Log.Logger;
                 if (logEvent.Properties.TryGetValue("SourceContext", out LogEventPropertyValue property))
                 {
                     log = log.ForContext(

@@ -7,6 +7,7 @@ using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.FFmpeg.Runtime;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Application.Emby;
 
@@ -19,8 +20,9 @@ public class CallEmbyShowScannerHandler : CallLibraryScannerHandler<SynchronizeE
         IDbContextFactory<TvContext> dbContextFactory,
         IConfigElementRepository configElementRepository,
         IScannerProxyService scannerProxyService,
-        IRuntimeInfo runtimeInfo)
-        : base(dbContextFactory, configElementRepository, runtimeInfo)
+        IRuntimeInfo runtimeInfo,
+        ILogger<CallEmbyShowScannerHandler> logger)
+        : base(dbContextFactory, configElementRepository, runtimeInfo, logger)
     {
         _scannerProxyService = scannerProxyService;
     }

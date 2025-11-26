@@ -9,6 +9,7 @@ using ErsatzTV.FFmpeg.Runtime;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Application.MediaSources;
 
@@ -22,8 +23,9 @@ public class CallLocalLibraryScannerHandler : CallLibraryScannerHandler<IScanLoc
         IDbContextFactory<TvContext> dbContextFactory,
         IConfigElementRepository configElementRepository,
         IScannerProxyService scannerProxyService,
-        IRuntimeInfo runtimeInfo)
-        : base(dbContextFactory, configElementRepository, runtimeInfo)
+        IRuntimeInfo runtimeInfo,
+        ILogger<CallLocalLibraryScannerHandler> logger)
+        : base(dbContextFactory, configElementRepository, runtimeInfo, logger)
     {
         _scannerProxyService = scannerProxyService;
     }
