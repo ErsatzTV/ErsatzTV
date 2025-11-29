@@ -26,6 +26,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ErsatzTV.Infrastructure.MyS
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ErsatzTV.Infrastructure.Sqlite", "ErsatzTV.Infrastructure.Sqlite\ErsatzTV.Infrastructure.Sqlite.csproj", "{C105FD01-9D6F-4574-A987-BD39E7B349E8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ErsatzTV.Core.Nullable", "ErsatzTV.Core.Nullable\ErsatzTV.Core.Nullable.csproj", "{557D88A6-C982-4FFD-8FD2-6446CB07D093}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -105,6 +107,12 @@ Global
 		{C105FD01-9D6F-4574-A987-BD39E7B349E8}.Release|Any CPU.Build.0 = Release|Any CPU
 		{C105FD01-9D6F-4574-A987-BD39E7B349E8}.Debug No Sync|Any CPU.ActiveCfg = Debug|Any CPU
 		{C105FD01-9D6F-4574-A987-BD39E7B349E8}.Debug No Sync|Any CPU.Build.0 = Debug|Any CPU
+		{557D88A6-C982-4FFD-8FD2-6446CB07D093}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{557D88A6-C982-4FFD-8FD2-6446CB07D093}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{557D88A6-C982-4FFD-8FD2-6446CB07D093}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{557D88A6-C982-4FFD-8FD2-6446CB07D093}.Release|Any CPU.Build.0 = Release|Any CPU
+		{557D88A6-C982-4FFD-8FD2-6446CB07D093}.Debug No Sync|Any CPU.ActiveCfg = Debug|Any CPU
+		{557D88A6-C982-4FFD-8FD2-6446CB07D093}.Debug No Sync|Any CPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{CE7F1ACD-F286-4761-A7BC-A541A1E25C86} = {325E6DA0-52B3-4431-98A2-72C36F403704}

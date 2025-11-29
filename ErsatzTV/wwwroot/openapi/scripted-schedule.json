@@ -1,5 +1,5 @@
 {
-  "openapi": "3.0.1",
+  "openapi": "3.1.1",
   "info": {
     "title": "ErsatzTV | scripted-schedule",
     "version": "1.0.0"
@@ -1487,22 +1487,28 @@
   "components": {
     "schemas": {
       "ContentAll": {
+        "required": [
+          "content"
+        ],
         "type": "object",
         "properties": {
           "content": {
             "type": "string",
-            "description": "The 'key' for the content that should be added",
-            "nullable": true
+            "description": "The 'key' for the content that should be added"
           },
           "fillerKind": {
-            "type": "string",
-            "description": "Flags this content as filler, which influences EPG grouping",
-            "nullable": true
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Flags this content as filler, which influences EPG grouping"
           },
           "customTitle": {
-            "type": "string",
-            "description": "Overrides the title used in the EPG",
-            "nullable": true
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Overrides the title used in the EPG"
           },
           "disableWatermarks": {
             "type": "boolean"
@@ -1510,60 +1516,64 @@
         }
       },
       "ContentCollection": {
+        "required": [
+          "key",
+          "collection"
+        ],
         "type": "object",
         "properties": {
           "key": {
             "type": "string",
-            "description": "Unique name used to reference this content throughout the scripted schedule",
-            "nullable": true
+            "description": "Unique name used to reference this content throughout the scripted schedule"
           },
           "collection": {
             "type": "string",
-            "description": "The name of the existing manual collection",
-            "nullable": true
+            "description": "The name of the existing manual collection"
           },
           "order": {
             "type": "string",
-            "description": "The playback order; only chronological and shuffle are currently supported",
-            "nullable": true
+            "description": "The playback order; only chronological and shuffle are currently supported"
           }
         }
       },
       "ContentCreatePlaylist": {
+        "required": [
+          "key",
+          "items"
+        ],
         "type": "object",
         "properties": {
           "key": {
             "type": "string",
-            "description": "Unique name used to reference this content throughout the scripted schedule",
-            "nullable": true
+            "description": "Unique name used to reference this content throughout the scripted schedule"
           },
           "items": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/PlaylistItem"
             },
-            "description": "List of playlist items",
-            "nullable": true
+            "description": "List of playlist items"
           }
         }
       },
       "ContentMarathon": {
+        "required": [
+          "key",
+          "groupBy"
+        ],
         "type": "object",
         "properties": {
           "key": {
             "type": "string",
-            "description": "Unique name used to reference this content throughout the scripted schedule",
-            "nullable": true
+            "description": "Unique name used to reference this content throughout the scripted schedule"
           },
           "groupBy": {
             "type": "string",
-            "description": "Tells the scheduler how to group the combined content (returned from all guids and searches). Valid values are show, season, artist and album.",
-            "nullable": true
+            "description": "Tells the scheduler how to group the combined content (returned from all guids and searches). Valid values are show, season, artist and album."
           },
           "itemOrder": {
             "type": "string",
-            "description": "Playback order within each group; only chronological and shuffle are currently supported",
-            "nullable": true
+            "description": "Playback order within each group; only chronological and shuffle are currently supported"
           },
           "guids": {
             "type": "object",
@@ -1573,16 +1583,14 @@
                 "type": "string"
               }
             },
-            "description": "List of external content identifiers",
-            "nullable": true
+            "description": "List of external content identifiers"
           },
           "searches": {
             "type": "array",
             "items": {
               "type": "string"
             },
-            "description": "List of search queries",
-            "nullable": true
+            "description": "List of search queries"
           },
           "playAllItems": {
             "type": "boolean",
@@ -1595,102 +1603,111 @@
         }
       },
       "ContentMultiCollection": {
+        "required": [
+          "key",
+          "multiCollection"
+        ],
         "type": "object",
         "properties": {
           "key": {
             "type": "string",
-            "description": "Unique name used to reference this content throughout the scripted schedule",
-            "nullable": true
+            "description": "Unique name used to reference this content throughout the scripted schedule"
           },
           "multiCollection": {
             "type": "string",
-            "description": "The name of the existing multi-collection",
-            "nullable": true
+            "description": "The name of the existing multi-collection"
           },
           "order": {
             "type": "string",
-            "description": "The playback order; only chronological and shuffle are currently supported",
-            "nullable": true
+            "description": "The playback order; only chronological and shuffle are currently supported"
           }
         }
       },
       "ContentPlaylist": {
+        "required": [
+          "key",
+          "playlist",
+          "playlistGroup"
+        ],
         "type": "object",
         "properties": {
           "key": {
             "type": "string",
-            "description": "Unique name used to reference this content throughout the scripted schedule",
-            "nullable": true
+            "description": "Unique name used to reference this content throughout the scripted schedule"
           },
           "playlist": {
             "type": "string",
-            "description": "The name of the existing playlist",
-            "nullable": true
+            "description": "The name of the existing playlist"
           },
           "playlistGroup": {
             "type": "string",
-            "description": "The name of the existing playlist group that contains the named playlist",
-            "nullable": true
+            "description": "The name of the existing playlist group that contains the named playlist"
           }
         }
       },
       "ContentSearch": {
+        "required": [
+          "key",
+          "query"
+        ],
         "type": "object",
         "properties": {
           "key": {
             "type": "string",
-            "nullable": true
+            "description": "Unique name used to reference this content throughout the scripted schedule"
           },
           "query": {
             "type": "string",
-            "nullable": true
+            "description": "The search query"
           },
           "order": {
             "type": "string",
-            "nullable": true
+            "description": "The playback order; only chronological and shuffle are currently supported"
           }
         }
       },
       "ContentShow": {
+        "required": [
+          "key",
+          "guids"
+        ],
         "type": "object",
         "properties": {
           "key": {
             "type": "string",
-            "description": "Unique name used to reference this content throughout the scripted schedule",
-            "nullable": true
+            "description": "Unique name used to reference this content throughout the scripted schedule"
           },
           "guids": {
             "type": "object",
             "additionalProperties": {
               "type": "string"
             },
-            "description": "List of show identifiers",
-            "nullable": true
+            "description": "List of show identifiers"
           },
           "order": {
             "type": "string",
-            "description": "The playback order; only chronological and shuffle are currently supported",
-            "nullable": true
+            "description": "The playback order; only chronological and shuffle are currently supported"
           }
         }
       },
       "ContentSmartCollection": {
+        "required": [
+          "key",
+          "smartCollection"
+        ],
         "type": "object",
         "properties": {
           "key": {
             "type": "string",
-            "description": "Unique name used to reference this content throughout the scripted schedule",
-            "nullable": true
+            "description": "Unique name used to reference this content throughout the scripted schedule"
           },
           "smartCollection": {
             "type": "string",
-            "description": "The name of the existing smart collection",
-            "nullable": true
+            "description": "The name of the existing smart collection"
           },
           "order": {
             "type": "string",
-            "description": "The playback order; only chronological and shuffle are currently supported",
-            "nullable": true
+            "description": "The playback order; only chronological and shuffle are currently supported"
           }
         }
       },
@@ -1702,12 +1719,14 @@
             "items": {
               "type": "string"
             },
-            "description": "A list of graphics elements to turn off. All graphics elements will be turned off if this list is null or empty",
-            "nullable": true
+            "description": "A list of graphics elements to turn off. All graphics elements will be turned off if this list is null or empty"
           }
         }
       },
       "ControlGraphicsOn": {
+        "required": [
+          "graphics"
+        ],
         "type": "object",
         "properties": {
           "graphics": {
@@ -1715,58 +1734,77 @@
             "items": {
               "type": "string"
             },
-            "description": "A list of graphics elements to turn on.",
-            "nullable": true
+            "description": "A list of graphics elements to turn on."
           },
           "variables": {
             "type": "object",
             "additionalProperties": {
               "type": "string"
-            },
-            "nullable": true
+            }
           }
         }
       },
       "ControlPreRollOn": {
+        "required": [
+          "playlist"
+        ],
         "type": "object",
         "properties": {
           "playlist": {
             "type": "string",
-            "description": "The 'key' for the scripted playlist",
-            "nullable": true
+            "description": "The 'key' for the scripted playlist"
           }
         }
       },
       "ControlSkipItems": {
+        "required": [
+          "content",
+          "count"
+        ],
         "type": "object",
         "properties": {
           "content": {
             "type": "string",
-            "description": "The 'key' for the content",
-            "nullable": true
+            "description": "The 'key' for the content"
           },
           "count": {
-            "type": "integer",
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
             "description": "The number of items to skip",
             "format": "int32"
           }
         }
       },
       "ControlSkipToItem": {
+        "required": [
+          "content",
+          "season",
+          "episode"
+        ],
         "type": "object",
         "properties": {
           "content": {
             "type": "string",
-            "description": "The 'key' for the content",
-            "nullable": true
+            "description": "The 'key' for the content"
           },
           "season": {
-            "type": "integer",
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
             "description": "The season number",
             "format": "int32"
           },
           "episode": {
-            "type": "integer",
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
             "description": "The episode number",
             "format": "int32"
           }
@@ -1780,19 +1818,23 @@
             "description": "When true, will make a new EPG group. When false, will continue the existing EPG group."
           },
           "customTitle": {
-            "type": "string",
-            "description": "Custom title to apply to all items in the EPG group.",
-            "nullable": true
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Custom title to apply to all items in the EPG group."
           }
         }
       },
       "ControlWaitUntil": {
+        "required": [
+          "when"
+        ],
         "type": "object",
         "properties": {
           "when": {
             "type": "string",
-            "description": "The time of day to wait (insert unscheduled time) until",
-            "nullable": true
+            "description": "The time of day to wait (insert unscheduled time) until"
           },
           "tomorrow": {
             "type": "boolean",
@@ -1805,6 +1847,9 @@
         }
       },
       "ControlWaitUntilExact": {
+        "required": [
+          "when"
+        ],
         "type": "object",
         "properties": {
           "when": {
@@ -1826,12 +1871,14 @@
             "items": {
               "type": "string"
             },
-            "description": "A list of existing watermark names to turn off. All (scripted) watermarks will be turned off if this list is null or empty.",
-            "nullable": true
+            "description": "A list of existing watermark names to turn off. All (scripted) watermarks will be turned off if this list is null or empty."
           }
         }
       },
       "ControlWatermarkOn": {
+        "required": [
+          "watermark"
+        ],
         "type": "object",
         "properties": {
           "watermark": {
@@ -1839,40 +1886,59 @@
             "items": {
               "type": "string"
             },
-            "description": "A list of existing watermark names to turn on",
-            "nullable": true
+            "description": "A list of existing watermark names to turn on"
           }
         }
       },
       "PeekItemDuration": {
+        "required": [
+          "content",
+          "milliseconds"
+        ],
         "type": "object",
         "properties": {
           "content": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "milliseconds": {
-            "type": "integer",
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
             "description": "Duration in milliseconds",
             "format": "int64"
           }
         }
       },
       "PlaylistItem": {
+        "required": [
+          "content",
+          "count"
+        ],
         "type": "object",
         "properties": {
           "content": {
             "type": "string",
-            "description": "The 'key' for the content",
-            "nullable": true
+            "description": "The 'key' for the content"
           },
           "count": {
-            "type": "integer",
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
             "format": "int32"
           }
         }
       },
       "PlayoutContext": {
+        "required": [
+          "currentTime",
+          "startTime",
+          "finishTime",
+          "isDone"
+        ],
         "type": "object",
         "properties": {
           "currentTime": {
@@ -1897,26 +1963,37 @@
         }
       },
       "PlayoutCount": {
+        "required": [
+          "content",
+          "count"
+        ],
         "type": "object",
         "properties": {
           "content": {
             "type": "string",
-            "description": "The 'key' for the content that should be added",
-            "nullable": true
+            "description": "The 'key' for the content that should be added"
           },
           "count": {
-            "type": "integer",
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
             "format": "int32"
           },
           "fillerKind": {
-            "type": "string",
-            "description": "Flags this content as filler, which influences EPG grouping",
-            "nullable": true
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Flags this content as filler, which influences EPG grouping"
           },
           "customTitle": {
-            "type": "string",
-            "description": "Overrides the title used in the EPG",
-            "nullable": true
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Overrides the title used in the EPG"
           },
           "disableWatermarks": {
             "type": "boolean"
@@ -1924,29 +2001,37 @@
         }
       },
       "PlayoutDuration": {
+        "required": [
+          "content",
+          "duration"
+        ],
         "type": "object",
         "properties": {
           "content": {
             "type": "string",
-            "description": "The 'key' for the content that should be added",
-            "nullable": true
+            "description": "The 'key' for the content that should be added"
           },
           "duration": {
             "type": "string",
-            "description": "The amount of time to add using the referenced content",
-            "nullable": true
+            "description": "The amount of time to add using the referenced content"
           },
           "fallback": {
-            "type": "string",
-            "description": "The 'key' for the content that should be used to fill any remaining unscheduled time. One item will be selected to be looped and trimmed to exactly fit.",
-            "nullable": true
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The 'key' for the content that should be used to fill any remaining unscheduled time. One item will be selected to be looped and trimmed to exactly fit."
           },
           "trim": {
             "type": "boolean",
             "description": "Controls whether content will be trimmed to exactly fit the specified duration"
           },
           "discardAttempts": {
-            "type": "integer",
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
             "description": "When trim is false, this is the number of times to discard items from the collection to find something that fits in the remaining duration",
             "format": "int32"
           },
@@ -1959,14 +2044,18 @@
             "description": "When true, afer scheduling everything that will fit, any remaining time from the specified duration will be unscheduled (offline)"
           },
           "fillerKind": {
-            "type": "string",
-            "description": "Flags this content as filler, which influences EPG grouping",
-            "nullable": true
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Flags this content as filler, which influences EPG grouping"
           },
           "customTitle": {
-            "type": "string",
-            "description": "Overrides the title used in the EPG",
-            "nullable": true
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Overrides the title used in the EPG"
           },
           "disableWatermarks": {
             "type": "boolean"
@@ -1974,29 +2063,42 @@
         }
       },
       "PlayoutPadToNext": {
+        "required": [
+          "content",
+          "minutes"
+        ],
         "type": "object",
         "properties": {
           "content": {
             "type": "string",
-            "description": "The 'key' for the content that should be added",
-            "nullable": true
+            "description": "The 'key' for the content that should be added"
           },
           "minutes": {
-            "type": "integer",
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
             "description": "The minutes interval",
             "format": "int32"
           },
           "fallback": {
-            "type": "string",
-            "description": "The 'key' for the content that should be used to fill any remaining unscheduled time. One item will be selected to be looped and trimmed to exactly fit.",
-            "nullable": true
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The 'key' for the content that should be used to fill any remaining unscheduled time. One item will be selected to be looped and trimmed to exactly fit."
           },
           "trim": {
             "type": "boolean",
             "description": "Controls whether content will be trimmed to exactly fit the specified interval"
           },
           "discardAttempts": {
-            "type": "integer",
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
             "description": "When trim is false, this is the number of times to discard items from the collection to find something that fits in the remaining interval",
             "format": "int32"
           },
@@ -2009,14 +2111,18 @@
             "description": "When true, afer scheduling everything that will fit, any remaining time from the specified interval will be unscheduled (offline)"
           },
           "fillerKind": {
-            "type": "string",
-            "description": "Flags this content as filler, which influences EPG grouping",
-            "nullable": true
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Flags this content as filler, which influences EPG grouping"
           },
           "customTitle": {
-            "type": "string",
-            "description": "Overrides the title used in the EPG",
-            "nullable": true
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Overrides the title used in the EPG"
           },
           "disableWatermarks": {
             "type": "boolean"
@@ -2024,33 +2130,41 @@
         }
       },
       "PlayoutPadUntil": {
+        "required": [
+          "content",
+          "when"
+        ],
         "type": "object",
         "properties": {
           "content": {
             "type": "string",
-            "description": "The 'key' for the content that should be added",
-            "nullable": true
+            "description": "The 'key' for the content that should be added"
           },
           "when": {
             "type": "string",
-            "description": "The time of day that content should be added until",
-            "nullable": true
+            "description": "The time of day that content should be added until"
           },
           "tomorrow": {
             "type": "boolean",
             "description": "Only used when the current playout time is already after the specified pad until time. When true, content will be scheduled until the specified time of day (the next day). When false, no content will be scheduled by this request."
           },
           "fallback": {
-            "type": "string",
-            "description": "The 'key' for the content that should be used to fill any remaining unscheduled time. One item will be selected to be looped and trimmed to exactly fit.",
-            "nullable": true
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The 'key' for the content that should be used to fill any remaining unscheduled time. One item will be selected to be looped and trimmed to exactly fit."
           },
           "trim": {
             "type": "boolean",
             "description": "Controls whether content will be trimmed to exactly fit until the specified time"
           },
           "discardAttempts": {
-            "type": "integer",
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
             "description": "When trim is false, this is the number of times to discard items from the collection to find something that fits until the specified time",
             "format": "int32"
           },
@@ -2063,14 +2177,18 @@
             "description": "When true, afer scheduling everything that will fit, any remaining time from the specified interval will be unscheduled (offline)"
           },
           "fillerKind": {
-            "type": "string",
-            "description": "Flags this content as filler, which influences EPG grouping",
-            "nullable": true
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Flags this content as filler, which influences EPG grouping"
           },
           "customTitle": {
-            "type": "string",
-            "description": "Overrides the title used in the EPG",
-            "nullable": true
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Overrides the title used in the EPG"
           },
           "disableWatermarks": {
             "type": "boolean"
@@ -2078,12 +2196,15 @@
         }
       },
       "PlayoutPadUntilExact": {
+        "required": [
+          "content",
+          "when"
+        ],
         "type": "object",
         "properties": {
           "content": {
             "type": "string",
-            "description": "The 'key' for the content that should be added",
-            "nullable": true
+            "description": "The 'key' for the content that should be added"
           },
           "when": {
             "type": "string",
@@ -2091,16 +2212,22 @@
             "format": "date-time"
           },
           "fallback": {
-            "type": "string",
-            "description": "The 'key' for the content that should be used to fill any remaining unscheduled time. One item will be selected to be looped and trimmed to exactly fit.",
-            "nullable": true
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The 'key' for the content that should be used to fill any remaining unscheduled time. One item will be selected to be looped and trimmed to exactly fit."
           },
           "trim": {
             "type": "boolean",
             "description": "Controls whether content will be trimmed to exactly fit until the specified time"
           },
           "discardAttempts": {
-            "type": "integer",
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
             "description": "When trim is false, this is the number of times to discard items from the collection to find something that fits until the specified time",
             "format": "int32"
           },
@@ -2113,14 +2240,18 @@
             "description": "When true, afer scheduling everything that will fit, any remaining time from the specified interval will be unscheduled (offline)"
           },
           "fillerKind": {
-            "type": "string",
-            "description": "Flags this content as filler, which influences EPG grouping",
-            "nullable": true
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Flags this content as filler, which influences EPG grouping"
           },
           "customTitle": {
-            "type": "string",
-            "description": "Overrides the title used in the EPG",
-            "nullable": true
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Overrides the title used in the EPG"
           },
           "disableWatermarks": {
             "type": "boolean"

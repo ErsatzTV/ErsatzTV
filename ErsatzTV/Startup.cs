@@ -92,7 +92,7 @@ using Microsoft.Extensions.Primitives;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.IO;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using MudBlazor.Services;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -162,10 +162,11 @@ public class Startup
             {
                 options.ShouldInclude += a => a.GroupName == "scripted-schedule";
                 var tag = new OpenApiTag { Name = "ScriptedSchedule" };
+                var tagReference = new OpenApiTagReference("ScriptedSchedule");
                 options.AddOperationTransformer((operation, _, _) =>
                 {
                     operation.Tags.Clear();
-                    operation.Tags.Add(tag);
+                    operation.Tags.Add(tagReference);
                     return Task.CompletedTask;
                 });
                 options.AddDocumentTransformer((document, _, _) =>
