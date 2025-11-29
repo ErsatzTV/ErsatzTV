@@ -242,7 +242,7 @@ public class TranscodingTests
         var fileSystem = new MockFileSystem();
         var tempFilePool = new TempFilePool();
 
-        ImageCache mockImageCache = Substitute.For<ImageCache>(localFileSystem, tempFilePool);
+        ImageCache mockImageCache = Substitute.For<ImageCache>(fileSystem, localFileSystem, tempFilePool);
 
         // always return the static watermark resource
         mockImageCache.GetPathForImage(
@@ -682,7 +682,7 @@ public class TranscodingTests
 
         var tempFilePool = new TempFilePool();
 
-        ImageCache mockImageCache = Substitute.For<ImageCache>(localFileSystem, tempFilePool);
+        ImageCache mockImageCache = Substitute.For<ImageCache>(fileSystem, localFileSystem, tempFilePool);
 
         // always return the static watermark resource
         mockImageCache.GetPathForImage(
@@ -702,13 +702,15 @@ public class TranscodingTests
             watermarks.AddRange(watermarkSelector.GetWatermarkOptions(channel, wm, Option<ChannelWatermark>.None));
         }
 
+        var mediaItem = new OtherVideo { MediaVersions = [v] };
+
         PlayoutItemResult playoutItemResult = await service.ForPlayoutItem(
             ExecutableName("ffmpeg"),
             ExecutableName("ffprobe"),
             true,
             channel,
-            new MediaItemVideoVersion(null, v),
-            new MediaItemAudioVersion(null, v),
+            new MediaItemVideoVersion(mediaItem, v),
+            new MediaItemAudioVersion(mediaItem, v),
             file,
             file,
             _ => subtitles.AsTask(),
