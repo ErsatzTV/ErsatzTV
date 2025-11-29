@@ -4,6 +4,7 @@ using System.IO.Abstractions;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Channels;
 using BlazorSortable;
 using Bugsnag.AspNet.Core;
@@ -176,6 +177,8 @@ public class Startup
                     return Task.CompletedTask;
                 });
             });
+
+        services.ConfigureHttpJsonOptions(o => o.SerializerOptions.NumberHandling = JsonNumberHandling.Strict);
 
         OidcHelper.Init(Configuration);
         JwtHelper.Init(Configuration);

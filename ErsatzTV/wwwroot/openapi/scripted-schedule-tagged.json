@@ -1768,11 +1768,7 @@
             "description": "The 'key' for the content"
           },
           "count": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
+            "type": "integer",
             "description": "The number of items to skip",
             "format": "int32"
           }
@@ -1791,20 +1787,12 @@
             "description": "The 'key' for the content"
           },
           "season": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
+            "type": "integer",
             "description": "The season number",
             "format": "int32"
           },
           "episode": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
+            "type": "integer",
             "description": "The episode number",
             "format": "int32"
           }
@@ -1901,11 +1889,7 @@
             "type": "string"
           },
           "milliseconds": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
+            "type": "integer",
             "description": "Duration in milliseconds",
             "format": "int64"
           }
@@ -1923,11 +1907,7 @@
             "description": "The 'key' for the content"
           },
           "count": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
+            "type": "integer",
             "format": "int32"
           }
         }
@@ -1974,11 +1954,7 @@
             "description": "The 'key' for the content that should be added"
           },
           "count": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
+            "type": "integer",
             "format": "int32"
           },
           "fillerKind": {
@@ -2027,11 +2003,7 @@
             "description": "Controls whether content will be trimmed to exactly fit the specified duration"
           },
           "discardAttempts": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
+            "type": "integer",
             "description": "When trim is false, this is the number of times to discard items from the collection to find something that fits in the remaining duration",
             "format": "int32"
           },
@@ -2074,11 +2046,7 @@
             "description": "The 'key' for the content that should be added"
           },
           "minutes": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
+            "type": "integer",
             "description": "The minutes interval",
             "format": "int32"
           },
@@ -2094,11 +2062,7 @@
             "description": "Controls whether content will be trimmed to exactly fit the specified interval"
           },
           "discardAttempts": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
+            "type": "integer",
             "description": "When trim is false, this is the number of times to discard items from the collection to find something that fits in the remaining interval",
             "format": "int32"
           },
@@ -2160,11 +2124,7 @@
             "description": "Controls whether content will be trimmed to exactly fit until the specified time"
           },
           "discardAttempts": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
+            "type": "integer",
             "description": "When trim is false, this is the number of times to discard items from the collection to find something that fits until the specified time",
             "format": "int32"
           },
@@ -2223,11 +2183,7 @@
             "description": "Controls whether content will be trimmed to exactly fit until the specified time"
           },
           "discardAttempts": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
+            "type": "integer",
             "description": "When trim is false, this is the number of times to discard items from the collection to find something that fits until the specified time",
             "format": "int32"
           },
