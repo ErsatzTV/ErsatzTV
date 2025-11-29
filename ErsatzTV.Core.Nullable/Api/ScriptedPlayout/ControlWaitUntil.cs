@@ -5,7 +5,7 @@ namespace ErsatzTV.Core.Api.ScriptedPlayout;
 public record ControlWaitUntil
 {
     [Description("The time of day to wait (insert unscheduled time) until")]
-    public string When { get; set; }
+    public required string When { get; set; }
 
     [Description("When true, will wait until the specified time tomorrow if it has already passed today.")]
     public bool Tomorrow { get; set; }

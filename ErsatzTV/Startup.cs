@@ -4,6 +4,7 @@ using System.IO.Abstractions;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Channels;
 using BlazorSortable;
 using Bugsnag.AspNet.Core;
@@ -92,7 +93,7 @@ using Microsoft.Extensions.Primitives;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.IO;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using MudBlazor.Services;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -162,10 +163,11 @@ public class Startup
             {
                 options.ShouldInclude += a => a.GroupName == "scripted-schedule";
                 var tag = new OpenApiTag { Name = "ScriptedSchedule" };
+                var tagReference = new OpenApiTagReference("ScriptedSchedule");
                 options.AddOperationTransformer((operation, _, _) =>
                 {
                     operation.Tags.Clear();
-                    operation.Tags.Add(tag);
+                    operation.Tags.Add(tagReference);
                     return Task.CompletedTask;
                 });
                 options.AddDocumentTransformer((document, _, _) =>
@@ -175,6 +177,8 @@ public class Startup
                     return Task.CompletedTask;
                 });
             });
+
+        services.ConfigureHttpJsonOptions(o => o.SerializerOptions.NumberHandling = JsonNumberHandling.Strict);
 
         OidcHelper.Init(Configuration);
         JwtHelper.Init(Configuration);

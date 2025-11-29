@@ -1,5 +1,5 @@
 {
-  "openapi": "3.0.1",
+  "openapi": "3.1.1",
   "info": {
     "title": "ErsatzTV | v1",
     "version": "1.0.0"
@@ -605,24 +605,34 @@
             "format": "int32"
           },
           "number": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "name": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "fFmpegProfile": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "language": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "streamingMode": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -638,8 +648,10 @@
             "format": "int32"
           },
           "appVersion": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -674,8 +686,10 @@
         "type": "object",
         "properties": {
           "name": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "threadCount": {
             "type": "integer",
@@ -685,20 +699,26 @@
             "$ref": "#/components/schemas/HardwareAccelerationKind"
           },
           "vaapiDisplay": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "vaapiDriver": {
             "$ref": "#/components/schemas/VaapiDriver"
           },
           "vaapiDevice": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "qsvExtraHardwareFrames": {
-            "type": "integer",
-            "format": "int32",
-            "nullable": true
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
           },
           "resolutionId": {
             "type": "integer",
@@ -711,12 +731,16 @@
             "$ref": "#/components/schemas/FFmpegProfileVideoFormat"
           },
           "videoProfile": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "videoPreset": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "allowBFrames": {
             "type": "boolean"
@@ -773,12 +797,16 @@
         "type": "object",
         "properties": {
           "query": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "name": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -818,8 +846,10 @@
             "format": "int32"
           },
           "name": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "threadCount": {
             "type": "integer",
@@ -829,24 +859,32 @@
             "$ref": "#/components/schemas/HardwareAccelerationKind"
           },
           "vaapiDisplay": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "vaapiDriver": {
             "$ref": "#/components/schemas/VaapiDriver"
           },
           "vaapiDevice": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "qsvExtraHardwareFrames": {
-            "type": "integer",
-            "format": "int32",
-            "nullable": true
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
           },
           "resolution": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "scalingBehavior": {
             "$ref": "#/components/schemas/ScalingBehavior"
@@ -855,12 +893,16 @@
             "$ref": "#/components/schemas/FFmpegProfileVideoFormat"
           },
           "videoProfile": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "videoPreset": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "allowBFrames": {
             "type": "boolean"
@@ -905,8 +947,10 @@
             "type": "boolean"
           },
           "deinterlaceVideo": {
-            "type": "boolean",
-            "nullable": true
+            "type": [
+              "null",
+              "boolean"
+            ]
           }
         }
       },
@@ -967,12 +1011,16 @@
         "type": "object",
         "properties": {
           "channelNumber": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "state": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "transcodedUntil": {
             "type": "string",
@@ -1005,8 +1053,10 @@
             "format": "int32"
           },
           "name": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "width": {
             "type": "integer",
@@ -1035,8 +1085,10 @@
         "type": "object",
         "properties": {
           "showTitle": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "deepScan": {
             "type": "boolean",
@@ -1057,12 +1109,16 @@
             "format": "int32"
           },
           "name": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "query": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -1102,8 +1158,10 @@
             "format": "int32"
           },
           "name": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "threadCount": {
             "type": "integer",
@@ -1113,20 +1171,26 @@
             "$ref": "#/components/schemas/HardwareAccelerationKind"
           },
           "vaapiDisplay": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "vaapiDriver": {
             "$ref": "#/components/schemas/VaapiDriver"
           },
           "vaapiDevice": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "qsvExtraHardwareFrames": {
-            "type": "integer",
-            "format": "int32",
-            "nullable": true
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
           },
           "resolutionId": {
             "type": "integer",
@@ -1139,12 +1203,16 @@
             "$ref": "#/components/schemas/FFmpegProfileVideoFormat"
           },
           "videoProfile": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "videoPreset": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "allowBFrames": {
             "type": "boolean"
@@ -1206,12 +1274,16 @@
             "format": "int32"
           },
           "name": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "query": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },

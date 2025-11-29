@@ -5,11 +5,11 @@ namespace ErsatzTV.Core.Api.ScriptedPlayout;
 public record ContentMarathon
 {
     [Description("Unique name used to reference this content throughout the scripted schedule")]
-    public string Key { get; set; }
+    public required string Key { get; set; }
 
     [Description(
         "Tells the scheduler how to group the combined content (returned from all guids and searches). Valid values are show, season, artist and album.")]
-    public string GroupBy { get; set; }
+    public required string GroupBy { get; set; }
 
     [Description("Playback order within each group; only chronological and shuffle are currently supported")]
     public string ItemOrder { get; set; } = "shuffle";
