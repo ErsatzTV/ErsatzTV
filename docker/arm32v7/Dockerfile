@@ -14,6 +14,7 @@ COPY artwork/* ./artwork/
 COPY ErsatzTV/*.csproj ./ErsatzTV/
 COPY ErsatzTV.Application/*.csproj ./ErsatzTV.Application/
 COPY ErsatzTV.Core/*.csproj ./ErsatzTV.Core/
+COPY ErsatzTV.Core.Nullable/*.csproj ./ErsatzTV.Core.Nullable/
 COPY ErsatzTV.FFmpeg/*.csproj ./ErsatzTV.FFmpeg/
 COPY ErsatzTV.Infrastructure/*.csproj ./ErsatzTV.Infrastructure/
 COPY ErsatzTV.Infrastructure.Sqlite/*.csproj ./ErsatzTV.Infrastructure.Sqlite/
@@ -25,6 +26,7 @@ RUN dotnet restore -r linux-arm ErsatzTV/
 COPY ErsatzTV/. ./ErsatzTV/
 COPY ErsatzTV.Application/. ./ErsatzTV.Application/
 COPY ErsatzTV.Core/. ./ErsatzTV.Core/
+COPY ErsatzTV.Core.Nullable/. ./ErsatzTV.Core.Nullable/
 COPY ErsatzTV.FFmpeg/. ./ErsatzTV.FFmpeg/
 COPY ErsatzTV.Infrastructure/. ./ErsatzTV.Infrastructure/
 COPY ErsatzTV.Infrastructure.Sqlite/. ./ErsatzTV.Infrastructure.Sqlite/
