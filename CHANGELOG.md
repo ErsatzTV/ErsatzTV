@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [25.9.0] - 2025-11-29
 ### Added
 - Show playout warnings count badge in left menu
 - Graphics Engine:
@@ -2989,7 +2991,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/ErsatzTV/ErsatzTV/compare/v25.8.0...HEAD
+[Unreleased]: https://github.com/ErsatzTV/ErsatzTV/compare/v25.9.0...HEAD
+[25.9.0]: https://github.com/ErsatzTV/ErsatzTV/compare/v25.8.0...v25.9.0
 [25.8.0]: https://github.com/ErsatzTV/ErsatzTV/compare/v25.7.1...v25.8.0
 [25.7.1]: https://github.com/ErsatzTV/ErsatzTV/compare/v25.7.0...v25.7.1
 [25.7.0]: https://github.com/ErsatzTV/ErsatzTV/compare/v25.6.0...v25.7.0
