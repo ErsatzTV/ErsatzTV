@@ -6,6 +6,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <AnalysisLevel>latest-Recommended</AnalysisLevel>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <Nullable>disable</Nullable>
     </PropertyGroup>
 
     <ItemGroup>
@@ -45,6 +46,10 @@
 
     <ItemGroup>
         <ProjectReference Include="..\ErsatzTV.FFmpeg\ErsatzTV.FFmpeg.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Api\" />
     </ItemGroup>
 
 </Project>

@@ -8,5 +8,5 @@ public record ControlStartEpgGroup
     public bool Advance { get; set; } = true;
 
     [Description("Custom title to apply to all items in the EPG group.")]
-    public string CustomTitle { get; set; }
+    public string? CustomTitle { get; set; }
 }

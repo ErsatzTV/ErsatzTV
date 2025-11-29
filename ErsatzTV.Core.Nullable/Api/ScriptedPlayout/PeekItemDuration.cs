@@ -4,8 +4,8 @@ namespace ErsatzTV.Core.Api.ScriptedPlayout;
 
 public class PeekItemDuration
 {
-    public string Content { get; set; }
+    public required string Content { get; set; }
 
     [Description("Duration in milliseconds")]
-    public long Milliseconds { get; set; }
+    public required long Milliseconds { get; set; }
 }
