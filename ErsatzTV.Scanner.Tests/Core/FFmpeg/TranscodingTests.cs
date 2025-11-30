@@ -463,6 +463,10 @@ public class TranscodingTests
         {
             // do nothing
         }
+        catch (TypeInitializationException)
+        {
+            // do nothing
+        }
 
         var localFileSystem = new LocalFileSystem(
             new MockFileSystem(),

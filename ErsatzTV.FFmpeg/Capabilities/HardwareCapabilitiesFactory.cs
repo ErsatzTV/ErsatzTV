@@ -151,6 +151,10 @@ public partial class HardwareCapabilitiesFactory(
         {
             // do nothing
         }
+        catch (TypeInitializationException)
+        {
+            // do nothing
+        }
 
         // if we don't have a list of cuda devices, fall back to ffmpeg check
 
@@ -641,6 +645,10 @@ public partial class HardwareCapabilitiesFactory(
             }
         }
         catch (FileNotFoundException)
+        {
+            // do nothing
+        }
+        catch (TypeInitializationException)
         {
             // do nothing
         }
