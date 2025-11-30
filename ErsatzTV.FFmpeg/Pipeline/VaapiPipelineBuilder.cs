@@ -283,7 +283,8 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
             currentState,
             pipelineSteps);
 
-        if (ffmpegState.VaapiDriver == "radeonsi")
+        if (ffmpegState.VaapiDriver == "radeonsi" &&
+            ffmpegState.EncoderHardwareAccelerationMode is HardwareAccelerationMode.Vaapi)
         {
             pipelineSteps.Add(
                 new AmdCropMetadataWorkaroundFilter(
