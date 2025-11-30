@@ -58,6 +58,10 @@ public class GraphicsEngine(
                             logger));
                     break;
 
+                case ScriptElementDataContext scriptElementDataContext:
+                    elements.Add(new ScriptElement(scriptElementDataContext.ScriptElement, logger));
+                    break;
+
                 case SubtitleElementDataContext subtitleElementContext:
                 {
                     var variables = context.TemplateVariables.ToDictionary();
@@ -85,11 +89,15 @@ public class GraphicsEngine(
         long frameCount = 0;
         var totalFrames = (long)(context.Duration.TotalSeconds * context.FrameRate);
 
-        using var outputBitmap = new SKBitmap(
-            context.FrameSize.Width,
-            context.FrameSize.Height,
-            SKColorType.Bgra8888,
-            SKAlphaType.Unpremul);
+        int width = context.FrameSize.Width;
+        int height = context.FrameSize.Height;
+        int frameBufferSize = width * height * 4; // BGRA = 4 bytes
+        var skImageInfo = new SKImageInfo(width, height, SKColorType.Bgra8888, SKAlphaType.Unpremul);
+
+        using var paint = new SKPaint();
+        var preparedElementImages = new List<PreparedElementImage>(elements.Count);
+
+        var prepareTasks = new List<Task<Option<PreparedElementImage>>>(elements.Count);
 
         try
         {
@@ -111,63 +119,79 @@ public class GraphicsEngine(
                 // `channel_seconds` - the total number of seconds the frame is from when the channel started/activated
                 TimeSpan channelTime = frameTime - context.ChannelStartTime;
 
-                using var canvas = new SKCanvas(outputBitmap);
-                canvas.Clear(SKColors.Transparent);
-
                 // prepare images outside mutate to allow async image generation
-                var preparedElementImages = new List<PreparedElementImage>();
-                foreach (IGraphicsElement element in elements.Where(e => !e.IsFinished).OrderBy(e => e.ZIndex))
+                prepareTasks.Clear();
+                foreach (var element in elements)
                 {
-                    try
+                    if (!element.IsFinished)
                     {
-                        Option<PreparedElementImage> maybePreparedImage = await element.PrepareImage(
+                        Task<Option<PreparedElementImage>> task = SafePrepareImage(
+                            element,
                             frameTime.TimeOfDay,
                             contentTime,
                             contentTotalTime,
                             channelTime,
                             cancellationToken);
 
-                        preparedElementImages.AddRange(maybePreparedImage);
-                    }
-                    catch (Exception ex)
-                    {
-                        element.IsFinished = true;
-                        logger.LogWarning(
-                            ex,
-                            "Failed to draw graphics element of type {Type}; will disable for this content",
-                            element.GetType().Name);
+                        prepareTasks.Add(task);
                     }
                 }
 
-                // draw each element
-                using (var paint = new SKPaint())
-                {
-                    foreach (PreparedElementImage preparedImage in preparedElementImages)
-                    {
-                        using (var colorFilter = SKColorFilter.CreateBlendMode(
-                                   SKColors.White.WithAlpha((byte)(preparedImage.Opacity * 255)),
-                                   SKBlendMode.Modulate))
-                        {
-                            paint.ColorFilter = colorFilter;
-                            canvas.DrawBitmap(
-                                preparedImage.Image,
-                                new SKPoint(preparedImage.Point.X, preparedImage.Point.Y),
-                                paint);
-                        }
+                Option<PreparedElementImage>[] results = await Task.WhenAll(prepareTasks);
 
-                        if (preparedImage.Dispose)
-                        {
-                            preparedImage.Image.Dispose();
-                        }
+                preparedElementImages.Clear();
+                foreach (Option<PreparedElementImage> result in results)
+                {
+                    foreach (var preparedImage in result)
+                    {
+                        preparedElementImages.Add(preparedImage);
                     }
                 }
 
-                // pipe output
-                int frameBufferSize = context.FrameSize.Width * context.FrameSize.Height * 4;
-                using (SKPixmap pixmap = outputBitmap.PeekPixels())
+                preparedElementImages.Sort((a, _) => a.ZIndex);
+
+                Memory<byte> memory = pipeWriter.GetMemory(frameBufferSize);
+
+                unsafe
                 {
-                    Memory<byte> memory = pipeWriter.GetMemory(frameBufferSize);
-                    pixmap.GetPixelSpan().CopyTo(memory.Span);
+                    using (System.Buffers.MemoryHandle handle = memory.Pin())
+                    {
+                        using (var surface = SKSurface.Create(skImageInfo, (IntPtr)handle.Pointer, width * 4))
+                        {
+                            if (surface == null)
+                            {
+                                logger.LogWarning("Failed to create SKSurface for frame");
+                            }
+                            else
+                            {
+                                var canvas = surface.Canvas;
+                                canvas.Clear(SKColors.Transparent);
+
+                                foreach (PreparedElementImage preparedImage in preparedElementImages)
+                                {
+                                    // Optimization: Skip BlendMode if opacity is full
+                                    if (preparedImage.Opacity < 0.99f)
+                                    {
+                                        using var colorFilter = SKColorFilter.CreateBlendMode(
+                                            SKColors.White.WithAlpha((byte)(preparedImage.Opacity * 255)),
+                                            SKBlendMode.Modulate);
+                                        paint.ColorFilter = colorFilter;
+                                        canvas.DrawBitmap(preparedImage.Image, preparedImage.Point, paint);
+                                    }
+                                    else
+                                    {
+                                        paint.ColorFilter = null;
+                                        canvas.DrawBitmap(preparedImage.Image, preparedImage.Point, paint);
+                                    }
+
+                                    if (preparedImage.Dispose)
+                                    {
+                                        preparedImage.Image.Dispose();
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
 
                 pipeWriter.Advance(frameBufferSize);
@@ -188,6 +212,33 @@ public class GraphicsEngine(
             {
                 element.Dispose();
             }
+        }
+    }
+
+    private async Task<Option<PreparedElementImage>> SafePrepareImage(
+        IGraphicsElement element,
+        TimeSpan frameTimeOfDay,
+        TimeSpan contentTime,
+        TimeSpan contentTotalTime,
+        TimeSpan channelTime,
+        CancellationToken ct)
+    {
+        try
+        {
+            return await element.PrepareImage(
+                frameTimeOfDay,
+                contentTime,
+                contentTotalTime,
+                channelTime,
+                ct);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Failed to render element {Type}. Disabling.", element.GetType().Name);
+
+            element.IsFinished = true;
+
+            return Option<PreparedElementImage>.None;
         }
     }
 }

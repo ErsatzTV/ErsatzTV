@@ -13,6 +13,7 @@ public static class Mapper
             GraphicsElementKind.Image => $"image/{fileName}",
             GraphicsElementKind.Subtitle => $"subtitle/{fileName}",
             GraphicsElementKind.Motion => $"motion/{fileName}",
+            GraphicsElementKind.Script => $"script/{fileName}",
             _ => graphicsElement.Path
         };
 

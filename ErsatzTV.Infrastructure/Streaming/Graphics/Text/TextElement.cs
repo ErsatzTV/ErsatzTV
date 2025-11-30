@@ -129,7 +129,7 @@ public partial class TextElement(
 
         return opacity == 0
             ? ValueTask.FromResult(Option<PreparedElementImage>.None)
-            : new ValueTask<Option<PreparedElementImage>>(new PreparedElementImage(_image, _location, opacity, false));
+            : new ValueTask<Option<PreparedElementImage>>(new PreparedElementImage(_image, _location, opacity, ZIndex, false));
     }
 
     private RichTextKit.TextBlock BuildTextBlock(string textToRender)

@@ -76,6 +76,7 @@ public class ImageElement(ImageGraphicsElement imageGraphicsElement, ILogger log
         }
 
         SKBitmap frameForTimestamp = GetFrameForTimestamp(contentTime);
-        return ValueTask.FromResult(Optional(new PreparedElementImage(frameForTimestamp, Location, opacity, false)));
+        return ValueTask.FromResult(
+            Optional(new PreparedElementImage(frameForTimestamp, Location, opacity, ZIndex, false)));
     }
 }

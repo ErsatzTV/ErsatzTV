@@ -43,6 +43,13 @@ public record SubtitleElementDataContext(
     public int EpgEntries => SubtitleElement.EpgEntries;
 }
 
+public record ScriptElementDataContext(ScriptGraphicsElement ScriptElement)
+    : GraphicsElementContext, ITemplateDataContext
+{
+    public int EpgEntries => ScriptElement.EpgEntries;
+}
+
+
 public interface ITemplateDataContext
 {
     int EpgEntries { get; }

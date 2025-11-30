@@ -380,6 +380,7 @@ public class Startup
             FileSystemLayout.GraphicsElementsTemplatesFolder,
             FileSystemLayout.GraphicsElementsTextTemplatesFolder,
             FileSystemLayout.GraphicsElementsImageTemplatesFolder,
+            FileSystemLayout.GraphicsElementsScriptTemplatesFolder,
             FileSystemLayout.GraphicsElementsSubtitleTemplatesFolder,
             FileSystemLayout.GraphicsElementsMotionTemplatesFolder,
             FileSystemLayout.ScriptsFolder,

@@ -230,7 +230,7 @@ public class MotionElement(
             {
                 if (contentTime <= _endTime)
                 {
-                    return new PreparedElementImage(_canvasBitmap, SKPointI.Empty, 1.0f, false);
+                    return new PreparedElementImage(_canvasBitmap, SKPointI.Empty, 1.0f, ZIndex, false);
                 }
 
                 _state = MotionElementState.Finished;
@@ -266,7 +266,7 @@ public class MotionElement(
                         consumed = sequence.End;
 
                         // we are done, return the frame
-                        return new PreparedElementImage(_canvasBitmap, SKPointI.Empty, 1.0f, false);
+                        return new PreparedElementImage(_canvasBitmap, SKPointI.Empty, 1.0f, ZIndex, false);
                     }
 
                     if (readResult.IsCompleted)
@@ -276,7 +276,7 @@ public class MotionElement(
                         if (motionElement.EndBehavior is MotionEndBehavior.Hold)
                         {
                             _state = MotionElementState.Holding;
-                            return new PreparedElementImage(_canvasBitmap, SKPointI.Empty, 1.0f, false);
+                            return new PreparedElementImage(_canvasBitmap, SKPointI.Empty, 1.0f, ZIndex, false);
                         }
                         else
                         {

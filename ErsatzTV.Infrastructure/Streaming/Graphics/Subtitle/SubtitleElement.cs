@@ -165,7 +165,7 @@ public class SubtitleElement(
                     consumed = sequence.End;
 
                     // we are done, return the frame
-                    return new PreparedElementImage(_videoFrame, _point, 1.0f, false);
+                    return new PreparedElementImage(_videoFrame, _point, 1.0f, ZIndex, false);
                 }
 
                 if (readResult.IsCompleted)
