@@ -317,7 +317,7 @@ public class SequentialPlayoutBuilder(
 
                 // Switch to the new schedule
                 currentSchedule = newSchedule;
-                
+
                 // Get the new schedule's instructions
                 List<YamlPlayoutInstruction> newPlayoutInstructions;
                 if (newSchedule != null)
@@ -366,19 +366,49 @@ public class SequentialPlayoutBuilder(
                     newFlattenCount++;
                 }
 
-                // Preserve existing items and history, create new context with new definition
+                // Preserve existing state before creating new context
                 var previousAddedItems = context.AddedItems.ToList();
                 var previousAddedHistory = context.AddedHistory.ToList();
-                
+                var previousPreRollSequence = context.GetPreRollSequence();
+                var previousPostRollSequence = context.GetPostRollSequence();
+                var previousMidRollSequence = context.GetMidRollSequence();
+                var previousWatermarkIds = context.GetChannelWatermarkIds();
+                var previousGraphicsElements = context.GetGraphicsElements();
+
                 context = new YamlPlayoutContext(playout, effectiveDefinition, 1)
                 {
                     CurrentTime = context.CurrentTime,
                     InstructionIndex = 0  // Start from beginning of new schedule
                 };
-                
-                // Restore the items and history
+
+                // Restore all preserved state
                 context.AddedItems.AddRange(previousAddedItems);
                 context.AddedHistory.AddRange(previousAddedHistory);
+
+                foreach (string preRoll in previousPreRollSequence)
+                {
+                    context.SetPreRollSequence(preRoll);
+                }
+
+                foreach (string postRoll in previousPostRollSequence)
+                {
+                    context.SetPostRollSequence(postRoll);
+                }
+
+                foreach (var midRoll in previousMidRollSequence)
+                {
+                    context.SetMidRollSequence(midRoll);
+                }
+
+                foreach (int watermarkId in previousWatermarkIds)
+                {
+                    context.SetChannelWatermarkId(watermarkId);
+                }
+
+                foreach (var (graphicsId, variablesJson) in previousGraphicsElements)
+                {
+                    context.SetGraphicsElement(graphicsId, variablesJson);
+                }
             }
 
             if (context.InstructionIndex >= effectiveDefinition.Playout.Count)
