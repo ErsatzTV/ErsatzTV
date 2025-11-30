@@ -14,16 +14,10 @@ using Refit;
 
 namespace ErsatzTV.Infrastructure.Plex;
 
-public class PlexServerApiClient : IPlexServerApiClient
+public class PlexServerApiClient(PlexEtag plexEtag, ILogger<PlexServerApiClient> logger) : IPlexServerApiClient
 {
-    private readonly ILogger<PlexServerApiClient> _logger;
-    private readonly PlexEtag _plexEtag;
-
-    public PlexServerApiClient(PlexEtag plexEtag, ILogger<PlexServerApiClient> logger)
-    {
-        _plexEtag = plexEtag;
-        _logger = logger;
-    }
+    private const string PersonalMediaAgent = "com.plexapp.agents.none";
+    private const string PlexPersonalMediaAgent = "tv.plex.agents.none";
 
     public async Task<bool> Ping(
         PlexConnection connection,
@@ -537,7 +531,7 @@ public class PlexServerApiClient : IPlexServerApiClient
             {
                 Key = response.Key,
                 Name = response.Title,
-                MediaKind = response.Agent == "com.plexapp.agents.none" && response.Language == "xn"
+                MediaKind = response.Agent is PersonalMediaAgent or PlexPersonalMediaAgent
                     ? LibraryMediaKind.OtherVideos
                     : LibraryMediaKind.Movies,
                 ShouldSyncItems = false,
@@ -565,13 +559,13 @@ public class PlexServerApiClient : IPlexServerApiClient
             return new PlexCollection
             {
                 Key = item.RatingKey,
-                Etag = _plexEtag.ForCollection(item),
+                Etag = plexEtag.ForCollection(item),
                 Name = item.Title
             };
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Error projecting Plex collection");
+            logger.LogWarning(ex, "Error projecting Plex collection");
             return None;
         }
     }
@@ -591,7 +585,7 @@ public class PlexServerApiClient : IPlexServerApiClient
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Error projecting Plex collection media item");
+            logger.LogWarning(ex, "Error projecting Plex collection media item");
             return None;
         }
     }
@@ -610,7 +604,7 @@ public class PlexServerApiClient : IPlexServerApiClient
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Error projecting Plex tag");
+            logger.LogWarning(ex, "Error projecting Plex tag");
             return None;
         }
     }
@@ -651,7 +645,7 @@ public class PlexServerApiClient : IPlexServerApiClient
 
         var movie = new PlexMovie
         {
-            Etag = _plexEtag.ForMovie(response),
+            Etag = plexEtag.ForMovie(response),
             Key = response.Key,
             MovieMetadata = [metadata],
             MediaVersions = [version],
@@ -884,7 +878,7 @@ public class PlexServerApiClient : IPlexServerApiClient
         var show = new PlexShow
         {
             Key = response.Key,
-            Etag = _plexEtag.ForShow(response),
+            Etag = plexEtag.ForShow(response),
             ShowMetadata = new List<ShowMetadata> { metadata },
             TraktListItems = new List<TraktListItem>()
         };
@@ -1046,7 +1040,7 @@ public class PlexServerApiClient : IPlexServerApiClient
         var season = new PlexSeason
         {
             Key = response.Key,
-            Etag = _plexEtag.ForSeason(response),
+            Etag = plexEtag.ForSeason(response),
             SeasonNumber = response.Index,
             SeasonMetadata = new List<SeasonMetadata> { metadata },
             TraktListItems = new List<TraktListItem>()
@@ -1092,7 +1086,7 @@ public class PlexServerApiClient : IPlexServerApiClient
         var episode = new PlexEpisode
         {
             Key = response.Key,
-            Etag = _plexEtag.ForEpisode(response),
+            Etag = plexEtag.ForEpisode(response),
             EpisodeMetadata = [metadata],
             MediaVersions = [version],
             TraktListItems = []
@@ -1238,7 +1232,7 @@ public class PlexServerApiClient : IPlexServerApiClient
 
         var otherVideo = new PlexOtherVideo
         {
-            Etag = _plexEtag.ForMovie(response),
+            Etag = plexEtag.ForMovie(response),
             Key = response.Key,
             OtherVideoMetadata = [metadata],
             MediaVersions = [version],
@@ -1431,7 +1425,7 @@ public class PlexServerApiClient : IPlexServerApiClient
         }
         else
         {
-            _logger.LogWarning("Unsupported guid format from Plex; ignoring: {Guid}", guid);
+            logger.LogWarning("Unsupported guid format from Plex; ignoring: {Guid}", guid);
         }
 
         return None;
