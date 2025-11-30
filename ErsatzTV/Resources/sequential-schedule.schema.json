@@ -83,17 +83,8 @@
           },
           "end_date": { 
             "type": "string",
-            "description": "End date in MM-DD (e.g., '01-31') or YYYY-MM-DD format (e.g., '2024-12-25')",
+            "description": "End date in MM-DD (e.g., '01-31') or YYYY-MM-DD format (e.g., '2024-12-25'). MM-DD dates recur annually, YYYY-MM-DD dates are one-time events.",
             "pattern": "^((\\d{4}-)?(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01]))$"
-          },
-          "years": {
-            "type": "array",
-            "items": { "type": "integer" },
-            "description": "Specific years this schedule applies to. If empty, applies to all years (when recurring is true)."
-          },
-          "recurring": {
-            "type": "boolean",
-            "description": "Whether this schedule repeats annually (default: true when no years are specified)"
           },
           "reset": {
             "description": "Reset instructions for this scheduled playout",

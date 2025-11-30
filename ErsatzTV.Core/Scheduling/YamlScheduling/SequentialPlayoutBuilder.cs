@@ -779,23 +779,10 @@ public class SequentialPlayoutBuilder(
         int currentMonth = date.Month;
         int currentDay = date.Day;
 
-        // Check if years are specified
-        if (schedule.Years.Count > 0)
-        {
-            if (!schedule.Years.Contains(currentYear))
-            {
-                return false;
-            }
-        }
-        else if (!schedule.Recurring)
-        {
-            // If not recurring and no years specified, the schedule doesn't apply
-            return false;
-        }
-
-        // Handle year-specific dates
+        // Handle year-specific dates (YYYY-MM-DD format)
         if (startYear.HasValue && endYear.HasValue)
         {
+            // Dates with years are always non-recurring (one-time events)
             var startDate = new DateTime(startYear.Value, startMonth, startDay);
             var endDate = new DateTime(endYear.Value, endMonth, endDay);
             var currentDate = new DateTime(currentYear, currentMonth, currentDay);
@@ -809,7 +796,7 @@ public class SequentialPlayoutBuilder(
             return false;
         }
 
-        // Both dates are MM-DD format (recurring)
+        // Both dates are MM-DD format - always recurring
         var currentDayOfYear = new DateTime(currentYear, currentMonth, currentDay).DayOfYear;
         var startDayOfYear = new DateTime(currentYear, startMonth, startDay).DayOfYear;
         var endDayOfYear = new DateTime(currentYear, endMonth, endDay).DayOfYear;
