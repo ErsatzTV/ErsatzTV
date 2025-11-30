@@ -125,6 +125,25 @@ public partial class GraphicsElementLoader(
 
                         break;
                     }
+                    case GraphicsElementKind.Script:
+                    {
+                        Option<ScriptGraphicsElement> maybeElement = await LoadScript(
+                            reference.GraphicsElement.Path,
+                            templateVariables);
+                        if (maybeElement.IsNone)
+                        {
+                            logger.LogWarning(
+                                "Failed to load script graphics element from file {Path}; ignoring",
+                                reference.GraphicsElement.Path);
+                        }
+
+                        foreach (ScriptGraphicsElement element in maybeElement)
+                        {
+                            context.Elements.Add(new ScriptElementDataContext(element));
+                        }
+
+                        break;
+                    }
                     default:
                         logger.LogInformation(
                             "Ignoring unsupported graphics element kind {Kind}",
@@ -213,6 +232,9 @@ public partial class GraphicsElementLoader(
 
     private Task<Option<SubtitleGraphicsElement>> LoadSubtitle(string fileName, Dictionary<string, object> variables) =>
         GetTemplatedYaml(fileName, variables).BindT(FromYaml<SubtitleGraphicsElement>);
+
+    private Task<Option<ScriptGraphicsElement>> LoadScript(string fileName, Dictionary<string, object> variables) =>
+        GetTemplatedYaml(fileName, variables).BindT(FromYaml<ScriptGraphicsElement>);
 
     private async Task<Dictionary<string, object>> InitTemplateVariables(
         GraphicsEngineContext context,

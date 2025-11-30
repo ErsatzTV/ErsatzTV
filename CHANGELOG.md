@@ -4,12 +4,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Added
+- Add `script` graphics element type
+  - Supported in playback troubleshooting and all scheduling types
+  - Supports arbitrary scripts or executables that output BGRA data to stdout
+  - Supports EPG and Media Item replacement in entire template
+    - EPG data is sourced from XMLTV for the current time
+      - EPG data can also load a configurable number of subsequent (up next) entries
+    - Media Item data is sourced from the currently playing media item
+  - All template data will also be passed as JSON to the stdin stream of the command
+  - Template supports:
+    - Script and arguments (`command` and `args`)
+    - Draw order (`z_index`)
+    - Timing (`start_seconds` and `duration_seconds`)
+
 ### Fixed
 - Fix startup on systems unsupported by NvEncSharp
 - Fix detection of Plex Other Video libraries using `Plex Personal Media` agent
   - If the library is already detected as a Movies library in ETV, synchronization must be disabled for the library to change it to an Other Videos library
   - A warning will be logged when this scenario is detected
-- VAAPI: work around buggy ffmpeg behavior where hevc_vaapi encoder with RadeonSI driver incorrectly outputs height of 1088 instead of 1080
+- AMD VAAPI: work around buggy ffmpeg behavior where hevc_vaapi encoder with RadeonSI driver incorrectly outputs height of 1088 instead of 1080
+- Optimize graphics engine to generate element frames in parallel and to eliminate redundant frame copies
 
 ## [25.9.0] - 2025-11-29
 ### Added

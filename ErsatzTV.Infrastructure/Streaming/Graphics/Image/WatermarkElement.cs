@@ -106,6 +106,7 @@ public class WatermarkElement : ImageElementBase
         }
 
         SKBitmap frameForTimestamp = GetFrameForTimestamp(contentTime);
-        return ValueTask.FromResult(Optional(new PreparedElementImage(frameForTimestamp, Location, opacity, false)));
+        return ValueTask.FromResult(
+            Optional(new PreparedElementImage(frameForTimestamp, Location, opacity, ZIndex, false)));
     }
 }

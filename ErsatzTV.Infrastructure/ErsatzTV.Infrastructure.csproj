@@ -8,6 +8,7 @@
         <AnalysisLevel>latest-Recommended</AnalysisLevel>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
 
     <ItemGroup>
