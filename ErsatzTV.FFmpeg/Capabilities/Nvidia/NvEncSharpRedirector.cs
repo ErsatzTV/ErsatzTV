@@ -16,6 +16,10 @@ public static class NvEncSharpRedirector
         {
             CudaHelper.IsLoaded = false;
         }
+        catch (TypeInitializationException)
+        {
+            CudaHelper.IsLoaded = false;
+        }
     }
 
     private static IntPtr Resolver(string libraryName, Assembly assembly, DllImportSearchPath? searchPath)

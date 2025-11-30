@@ -27,6 +27,10 @@ public class PlatformSettingsService(IServiceScopeFactory serviceScopeFactory) :
                 {
                     // do nothing
                 }
+                catch (TypeInitializationException)
+                {
+                    // do nothing
+                }
             }
 
             if (runtimeInfo.IsOSPlatform(OSPlatform.Linux))
