@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix detection of Plex Other Video libraries using `Plex Personal Media` agent
   - If the library is already detected as a Movies library in ETV, synchronization must be disabled for the library to change it to an Other Videos library
   - A warning will be logged when this scenario is detected
+- VAAPI: work around buggy ffmpeg behavior where hevc_vaapi encoder with RadeonSI driver incorrectly outputs height of 1088 instead of 1080
 
 ## [25.9.0] - 2025-11-29
 ### Added
