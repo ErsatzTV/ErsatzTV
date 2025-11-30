@@ -6,10 +6,12 @@ using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Jellyfin;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Infrastructure.Data.Repositories;
 
-public class MediaSourceRepository(IDbContextFactory<TvContext> dbContextFactory) : IMediaSourceRepository
+public class MediaSourceRepository(IDbContextFactory<TvContext> dbContextFactory, ILogger<MediaSourceRepository> logger)
+    : IMediaSourceRepository
 {
     public async Task<PlexMediaSource> Add(PlexMediaSource plexMediaSource)
     {
@@ -166,22 +168,41 @@ public class MediaSourceRepository(IDbContextFactory<TvContext> dbContextFactory
             dbContext.PlexLibraries.Remove(delete);
         }
 
-        // update library path (for other video metadata)
         foreach (PlexLibrary incoming in toUpdate)
         {
             Option<PlexLibrary> maybeExisting = await dbContext.PlexLibraries
                 .Include(l => l.Paths)
                 .SelectOneAsync(l => l.Key, l => l.Key == incoming.Key, cancellationToken);
 
-            foreach (LibraryPath existing in maybeExisting.Map(l => l.Paths.HeadOrNone()))
+            foreach (PlexLibrary existingLibrary in maybeExisting)
             {
-                foreach (LibraryPath path in incoming.Paths.HeadOrNone())
+                // update library type, but only if not synchronized
+                if (incoming.MediaKind != existingLibrary.MediaKind)
                 {
-                    existing.Path = path.Path;
+                    if (existingLibrary.ShouldSyncItems)
+                    {
+                        logger.LogWarning(
+                            "Plex library \"{Name}\" should be type {NewType} (currently {OldType}) but cannot be updated while synchronization is enabled for this library.",
+                            incoming.Name,
+                            incoming.MediaKind,
+                            existingLibrary.MediaKind);
+                    }
+                    else
+                    {
+                        existingLibrary.MediaKind = incoming.MediaKind;
+                    }
+                }
+
+                // update library path (for other video metadata)
+                foreach (LibraryPath existing in existingLibrary.Paths.HeadOrNone())
+                {
+                    foreach (LibraryPath path in incoming.Paths.HeadOrNone())
+                    {
+                        existing.Path = path.Path;
+                    }
                 }
             }
         }
-
 
         await dbContext.SaveChangesAsync(cancellationToken);
 

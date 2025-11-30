@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 ### Fixed
 - Fix startup on systems unsupported by NvEncSharp
+- Fix detection of Plex Other Video libraries using `Plex Personal Media` agent
+  - If the library is already detected as a Movies library in ETV, synchronization must be disabled for the library to change it to an Other Videos library
+  - A warning will be logged when this scenario is detected
 
 ## [25.9.0] - 2025-11-29
 ### Added
