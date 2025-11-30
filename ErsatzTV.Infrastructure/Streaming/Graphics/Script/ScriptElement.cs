@@ -1,5 +1,6 @@
 using System.Buffers;
 using System.IO.Pipelines;
+using System.Text.Json;
 using CliWrap;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Graphics;
@@ -80,9 +81,12 @@ public class ScriptElement(ScriptGraphicsElement scriptElement, ILogger logger)
                 pixelFormat,
                 SKAlphaType.Unpremul);
 
+            string json = JsonSerializer.Serialize(context.TemplateVariables);
+
             Command command = Cli.Wrap(scriptElement.Command)
                 .WithArguments(scriptElement.Arguments)
                 .WithWorkingDirectory(FileSystemLayout.TempFilePoolFolder)
+                .WithStandardInputPipe(PipeSource.FromString(json))
                 .WithStandardOutputPipe(PipeTarget.ToStream(pipe.Writer.AsStream()));
 
             logger.LogDebug(
