@@ -743,6 +743,7 @@ public class SequentialPlayoutBuilder(
 
     /// <summary>
     /// Finds the active schedule for the given date, or returns null if no schedule matches.
+    /// Schedules are checked in priority order (highest first), then by definition order.
     /// </summary>
     private static YamlPlayoutSchedule GetActiveSchedule(YamlPlayoutDefinition definition, DateTimeOffset date)
     {
@@ -751,7 +752,13 @@ public class SequentialPlayoutBuilder(
             return null;
         }
 
-        foreach (YamlPlayoutSchedule schedule in definition.Schedules)
+        // Sort by priority (descending), then by original order
+        var sortedSchedules = definition.Schedules
+            .Select((schedule, index) => (schedule, index))
+            .OrderByDescending(x => x.schedule.Priority)
+            .ThenBy(x => x.index);
+
+        foreach ((YamlPlayoutSchedule schedule, int _) in sortedSchedules)
         {
             if (IsDateInSchedule(schedule, date))
             {
