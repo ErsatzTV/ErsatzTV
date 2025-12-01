@@ -12,6 +12,11 @@ public class YamlPlayoutSchedule
     [YamlMember(Alias = "end_date", ApplyNamingConventions = false)]
     public string EndDate { get; set; }
 
+    /// <summary>
+    /// Priority for schedule matching. Higher values are checked first. Default is 0.
+    /// </summary>
+    public int Priority { get; set; } = 0;
+
     public List<YamlPlayoutInstruction> Reset { get; set; } = [];
 
     public List<YamlPlayoutInstruction> Playout { get; set; } = [];
