@@ -20,7 +20,7 @@ public class ArtworkRepository : IArtworkRepository
                       AND A.MovieMetadataId IS NULL AND A.MusicVideoMetadataId IS NULL
                       AND A.SeasonMetadataId IS NULL AND A.ShowMetadataId IS NULL
                       AND A.SongMetadataId IS NULL AND A.ChannelId IS NULL
-                      AND A.OtherVideoMetadataId IS NULL
+                      AND A.OtherVideoMetadataId IS NULL AND A.RemoteStreamMetadataId IS NULL
                       AND NOT EXISTS (SELECT * FROM Actor WHERE Actor.ArtworkId = A.Id)")
             .Map(result => result.ToList());
     }
