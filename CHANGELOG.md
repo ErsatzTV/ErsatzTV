@@ -17,6 +17,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - Script and arguments (`command` and `args`)
     - Draw order (`z_index`)
     - Timing (`start_seconds` and `duration_seconds`)
+- Add remote stream metadata
+  - Remote stream definitions (yaml files) can now contain `title`, `plot`, `year` and `content_rating` fields
+  - Remote streams can now have thumbnails (same name as yaml file but with image extension)
+  - This metadata will be used in generated XMLTV entries, using a template that can be customized like other media kinds
 
 ### Fixed
 - Fix startup on systems unsupported by NvEncSharp

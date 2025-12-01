@@ -300,12 +300,18 @@ public class MetadataRepository(IDbContextFactory<TvContext> dbContextFactory) :
                             VALUES (@ArtworkKind, @Id, @DateAdded, @DateUpdated, @Path, @SourcePath, @BlurHash43, @BlurHash54, @BlurHash64)",
                     parameters)
                 .ToUnit(),
+            RemoteStreamMetadata => await dbContext.Connection.ExecuteAsync(
+                    @"INSERT INTO Artwork (ArtworkKind, RemoteStreamMetadataId, DateAdded, DateUpdated, Path, SourcePath, BlurHash43, BlurHash54, BlurHash64)
+                            VALUES (@ArtworkKind, @Id, @DateAdded, @DateUpdated, @Path, @SourcePath, @BlurHash43, @BlurHash54, @BlurHash64)",
+                    parameters)
+                .ToUnit(),
             _ => Unit.Default
         };
     }
 
     public async Task<Unit> RemoveArtwork(Core.Domain.Metadata metadata, ArtworkKind artworkKind)
     {
+        // this is only used by plex, so only needs to support plex media kinds (movie, show, season, episode, other video)
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
         return await dbContext.Connection.ExecuteAsync(
             @"DELETE FROM Artwork WHERE ArtworkKind = @ArtworkKind AND (MovieMetadataId = @Id

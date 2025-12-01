@@ -73,9 +73,11 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
             string musicVideoTemplateFileName = GetMusicVideoTemplateFileName();
             string songTemplateFileName = GetSongTemplateFileName();
             string otherVideoTemplateFileName = GetOtherVideoTemplateFileName();
+            string remoteStreamTemplateFileName = GetRemoteStreamTemplateFileName();
             if (movieTemplateFileName is null || episodeTemplateFileName is null ||
                 musicVideoTemplateFileName is null ||
-                songTemplateFileName is null || otherVideoTemplateFileName is null)
+                songTemplateFileName is null || otherVideoTemplateFileName is null ||
+                remoteStreamTemplateFileName is null)
             {
                 return;
             }
@@ -104,6 +106,9 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
 
             string otherVideoText = await File.ReadAllTextAsync(otherVideoTemplateFileName, cancellationToken);
             var otherVideoTemplate = Template.Parse(otherVideoText, otherVideoTemplateFileName);
+
+            string remoteStreamText = await File.ReadAllTextAsync(remoteStreamTemplateFileName, cancellationToken);
+            var remoteStreamTemplate = Template.Parse(remoteStreamText, remoteStreamTemplateFileName);
 
             TimeSpan playoutOffset = TimeSpan.Zero;
             string mirrorChannelNumber = null;
@@ -193,6 +198,10 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
                 .ThenInclude(vm => vm.Artwork)
                 .Include(p => p.Items)
                 .ThenInclude(i => i.MediaItem)
+                .ThenInclude(i => (i as RemoteStream).RemoteStreamMetadata)
+                .ThenInclude(vm => vm.Artwork)
+                .Include(p => p.Items)
+                .ThenInclude(i => i.MediaItem)
                 .ThenInclude(i => (i as Song).SongMetadata)
                 .ThenInclude(vm => vm.Artwork)
                 .Include(p => p.Items)
@@ -203,6 +212,7 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
                 .ThenInclude(i => i.MediaItem)
                 .ThenInclude(i => (i as Song).SongMetadata)
                 .ThenInclude(sm => sm.Studios)
+                .AsSplitQuery()
                 .ToListAsync(cancellationToken);
 
             await using RecyclableMemoryStream ms = _recyclableMemoryStreamManager.GetStream();
@@ -243,6 +253,7 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
                             musicVideoTemplate,
                             songTemplate,
                             otherVideoTemplate,
+                            remoteStreamTemplate,
                             minifier,
                             xml,
                             cancellationToken);
@@ -268,6 +279,7 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
                             musicVideoTemplate,
                             songTemplate,
                             otherVideoTemplate,
+                            remoteStreamTemplate,
                             minifier,
                             xml,
                             cancellationToken);
@@ -291,6 +303,7 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
                             musicVideoTemplate,
                             songTemplate,
                             otherVideoTemplate,
+                            remoteStreamTemplate,
                             minifier,
                             xml,
                             cancellationToken);
@@ -320,6 +333,7 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
         Template musicVideoTemplate,
         Template songTemplate,
         Template otherVideoTemplate,
+        Template remoteStreamTemplate,
         XmlMinifier minifier,
         XmlWriter xml,
         CancellationToken cancellationToken)
@@ -394,6 +408,7 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
                 musicVideoTemplate,
                 songTemplate,
                 otherVideoTemplate,
+                remoteStreamTemplate,
                 minifier,
                 xml);
 
@@ -410,6 +425,7 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
         Template musicVideoTemplate,
         Template songTemplate,
         Template otherVideoTemplate,
+        Template remoteStreamTemplate,
         XmlMinifier minifier,
         XmlWriter xml,
         CancellationToken cancellationToken)
@@ -465,6 +481,7 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
                             musicVideoTemplate,
                             songTemplate,
                             otherVideoTemplate,
+                            remoteStreamTemplate,
                             minifier,
                             xml);
                     }
@@ -504,6 +521,7 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
                             musicVideoTemplate,
                             songTemplate,
                             otherVideoTemplate,
+                            remoteStreamTemplate,
                             minifier,
                             xml);
 
@@ -527,6 +545,7 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
         Template musicVideoTemplate,
         Template songTemplate,
         Template otherVideoTemplate,
+        Template remoteStreamTemplate,
         XmlMinifier minifier,
         XmlWriter xml)
     {
@@ -588,6 +607,16 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
                 title,
                 templateContext,
                 otherVideoTemplate),
+            RemoteStream templateRemoteStream => await ProcessRemoteStreamTemplate(
+                request,
+                templateRemoteStream,
+                start,
+                stop,
+                hasCustomTitle,
+                displayItem,
+                title,
+                templateContext,
+                remoteStreamTemplate),
             _ => Option<string>.None
         };
 
@@ -883,6 +912,55 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
         return Option<string>.None;
     }
 
+    private static async Task<Option<string>> ProcessRemoteStreamTemplate(
+        RefreshChannelData request,
+        RemoteStream templateRemoteStream,
+        string start,
+        string stop,
+        bool hasCustomTitle,
+        PlayoutItem displayItem,
+        string title,
+        XmlTemplateContext templateContext,
+        Template remoteStreamTemplate)
+    {
+        foreach (RemoteStreamMetadata metadata in templateRemoteStream.RemoteStreamMetadata.HeadOrNone())
+        {
+            metadata.Genres ??= [];
+            metadata.Guids ??= [];
+
+            string artworkPath = GetPrioritizedArtworkPath(metadata);
+
+            var data = new
+            {
+                ProgrammeStart = start,
+                ProgrammeStop = stop,
+                ChannelId = ChannelIdentifier.FromNumber(request.ChannelNumber),
+                ChannelIdLegacy = ChannelIdentifier.LegacyFromNumber(request.ChannelNumber),
+                request.ChannelNumber,
+                HasCustomTitle = hasCustomTitle,
+                displayItem.CustomTitle,
+                RemoteStreamTitle = title,
+                RemoteStreamHasPlot = !string.IsNullOrWhiteSpace(metadata.Plot),
+                RemoteStreamPlot = metadata.Plot,
+                RemoteStreamHasYear = metadata.Year.HasValue,
+                RemoteStreamYear = metadata.Year,
+                RemoteStreamHasArtwork = !string.IsNullOrWhiteSpace(artworkPath),
+                RemoteStreamArtworkUrl = artworkPath,
+                RemoteStreamGenres = metadata.Genres.Map(g => g.Name).OrderBy(n => n),
+                RemoteStreamHasContentRating = !string.IsNullOrWhiteSpace(metadata.ContentRating),
+                RemoteStreamContentRating = metadata.ContentRating
+            };
+
+            var scriptObject = new ScriptObject();
+            scriptObject.Import(data);
+            templateContext.PushGlobal(scriptObject);
+
+            return await remoteStreamTemplate.RenderAsync(templateContext);
+        }
+
+        return Option<string>.None;
+    }
+
     private string GetMovieTemplateFileName()
     {
         string templateFileName = _localFileSystem.GetCustomOrDefaultFile(
@@ -978,6 +1056,25 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
         return templateFileName;
     }
 
+    private string GetRemoteStreamTemplateFileName()
+    {
+        string templateFileName = _localFileSystem.GetCustomOrDefaultFile(
+            FileSystemLayout.ChannelGuideTemplatesFolder,
+            "remoteStream.sbntxt");
+
+        // fail if file doesn't exist
+        if (!_fileSystem.File.Exists(templateFileName))
+        {
+            _logger.LogError(
+                "Unable to generate remote stream XMLTV fragment without template file {File}; please restart ErsatzTV",
+                templateFileName);
+
+            return null;
+        }
+
+        return templateFileName;
+    }
+
     private static string GetArtworkUrl(Artwork artwork, ArtworkKind artworkKind)
     {
         string artworkPath = artwork.Path;
@@ -1033,6 +1130,8 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
                 .IfNone("[unknown artist]"),
             OtherVideo ov => ov.OtherVideoMetadata.HeadOrNone().Map(vm => vm.Title ?? string.Empty)
                 .IfNone("[unknown video]"),
+            RemoteStream rs => rs.RemoteStreamMetadata.HeadOrNone().Map(vm => vm.Title ?? string.Empty)
+                .IfNone("[unknown remote stream]"),
             _ => "[unknown]"
         };
     }

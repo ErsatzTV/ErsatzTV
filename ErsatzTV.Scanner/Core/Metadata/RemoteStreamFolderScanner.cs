@@ -182,10 +182,10 @@ public class RemoteStreamFolderScanner : LocalFolderScanner, IRemoteStreamFolder
                     Either<BaseError, MediaItemScanResult<RemoteStream>> maybeVideo = await _remoteStreamRepository
                         .GetOrAdd(libraryPath, knownFolder, file, cancellationToken)
                         .BindT(video => ParseRemoteStreamDefinition(video, deserializer, cancellationToken))
+                        .BindT(video => UpdateMetadata(video, cancellationToken))
                         .BindT(video => UpdateStatistics(video, ffmpegPath, ffprobePath))
                         .BindT(video => UpdateLibraryFolderId(video, knownFolder))
-                        .BindT(video => UpdateMetadata(video, cancellationToken))
-                        //.BindT(video => UpdateThumbnail(video, cancellationToken))
+                        .BindT(video => UpdateThumbnail(video, cancellationToken))
                         //.BindT(UpdateSubtitles)
                         .BindT(FlagNormal);
 
@@ -261,7 +261,7 @@ public class RemoteStreamFolderScanner : LocalFolderScanner, IRemoteStreamFolder
         return video;
     }
 
-    private async Task<Either<BaseError, MediaItemScanResult<RemoteStream>>> ParseRemoteStreamDefinition(
+    private async Task<Either<BaseError, RemoteStreamWithDefinition>> ParseRemoteStreamDefinition(
         MediaItemScanResult<RemoteStream> result,
         IDeserializer deserializer,
         CancellationToken cancellationToken)
@@ -331,7 +331,7 @@ public class RemoteStreamFolderScanner : LocalFolderScanner, IRemoteStreamFolder
                 result.IsUpdated = true;
             }
 
-            return result;
+            return new RemoteStreamWithDefinition(result, definition);
         }
         catch (Exception ex)
         {
@@ -341,12 +341,12 @@ public class RemoteStreamFolderScanner : LocalFolderScanner, IRemoteStreamFolder
     }
 
     private async Task<Either<BaseError, MediaItemScanResult<RemoteStream>>> UpdateMetadata(
-        MediaItemScanResult<RemoteStream> result,
+        RemoteStreamWithDefinition result,
         CancellationToken cancellationToken)
     {
         try
         {
-            RemoteStream remoteStream = result.Item;
+            RemoteStream remoteStream = result.Result.Item;
             string path = remoteStream.GetHeadVersion().MediaFiles.Head().Path;
             var shouldUpdate = true;
 
@@ -363,10 +363,34 @@ public class RemoteStreamFolderScanner : LocalFolderScanner, IRemoteStreamFolder
                 remoteStream.RemoteStreamMetadata ??= [];
 
                 _logger.LogDebug("Refreshing {Attribute} for {Path}", "Metadata", path);
-                if (await _localMetadataProvider.RefreshTagMetadata(remoteStream, cancellationToken))
+                if (await _localMetadataProvider.RefreshMetadata(remoteStream, result.Definition, cancellationToken))
                 {
-                    result.IsUpdated = true;
+                    result.Result.IsUpdated = true;
                 }
+            }
+
+            return result.Result;
+        }
+        catch (Exception ex)
+        {
+            _client.Notify(ex);
+            return BaseError.New(ex.ToString());
+        }
+    }
+
+    private async Task<Either<BaseError, MediaItemScanResult<RemoteStream>>> UpdateThumbnail(
+        MediaItemScanResult<RemoteStream> result,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            RemoteStream remoteStream = result.Item;
+
+            Option<string> maybeThumbnail = LocateThumbnail(remoteStream);
+            foreach (string thumbnailFile in maybeThumbnail)
+            {
+                RemoteStreamMetadata metadata = remoteStream.RemoteStreamMetadata.Head();
+                await RefreshArtwork(thumbnailFile, metadata, ArtworkKind.Thumbnail, None, None, cancellationToken);
             }
 
             return result;
@@ -376,5 +400,23 @@ public class RemoteStreamFolderScanner : LocalFolderScanner, IRemoteStreamFolder
             _client.Notify(ex);
             return BaseError.New(ex.ToString());
         }
+    }
+
+    private Option<string> LocateThumbnail(RemoteStream remoteStream)
+    {
+        string path = remoteStream.MediaVersions.Head().MediaFiles.Head().Path;
+        return ImageFileExtensions
+            .Map(ext => Path.ChangeExtension(path, ext))
+            .Filter(f => _fileSystem.File.Exists(f))
+            .HeadOrNone();
+    }
+
+    private class RemoteStreamWithDefinition(
+        MediaItemScanResult<RemoteStream> result,
+        YamlRemoteStreamDefinition definition)
+    {
+        public MediaItemScanResult<RemoteStream> Result { get; } = result;
+
+        public YamlRemoteStreamDefinition Definition { get; } = definition;
     }
 }

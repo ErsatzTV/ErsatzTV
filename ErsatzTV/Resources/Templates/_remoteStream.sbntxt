@@ -1,0 +1,52 @@
+{{ ##
+
+Available values:
+  - programme_start
+  - programme_stop
+  - channel_id
+  - channel_id_legacy
+  - channel_number
+  - has_custom_title
+  - custom_title
+  - remote_stream_title
+  - remote_stream_has_plot
+  - remote_stream_plot
+  - remote_stream_has_year
+  - remote_stream_year
+  - remote_stream_has_artwork
+  - remote_stream_artwork_url
+  - remote_stream_has_content_rating
+  - remote_stream_content_rating
+
+The resulting XML will be minified by ErsatzTV - so feel free to keep things nicely formatted here.
+
+## }}
+
+<programme start="{{ programme_start }}" stop="{{ programme_stop }}" channel="{{ channel_id }}">
+  {{ if has_custom_title }}
+      <title lang="en">{{ custom_title }}</title>
+  {{ else }}
+      <title lang="en">{{ remote_stream_title }}</title>
+      {{ if remote_stream_has_plot }}
+        <desc lang="en">{{ remote_stream_plot }}</desc>
+      {{ end }}
+      {{ if remote_stream_has_year }}
+        <date>{{ remote_stream_year }}</date>
+      {{ end }}
+      {{ if remote_stream_has_artwork }}
+        <icon src="{{ remote_stream_artwork_url }}" />
+      {{ end }}
+  {{ end }}
+  {{ if remote_stream_has_content_rating }}
+    {{ for rating in remote_stream_content_rating | string.split '/' }}
+        {{ if rating | string.starts_with 'us:' }}
+          <rating system="MPAA">
+        {{ else }}
+          <rating>
+        {{ end }}
+          <value>{{ rating | string.replace 'us:' '' }}</value>
+        </rating>
+    {{ end }}
+  {{ end }}
+  <previously-shown />
+</programme>
