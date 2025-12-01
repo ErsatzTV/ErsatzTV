@@ -212,6 +212,7 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
                 .ThenInclude(i => i.MediaItem)
                 .ThenInclude(i => (i as Song).SongMetadata)
                 .ThenInclude(sm => sm.Studios)
+                .AsSplitQuery()
                 .ToListAsync(cancellationToken);
 
             await using RecyclableMemoryStream ms = _recyclableMemoryStreamManager.GetStream();
