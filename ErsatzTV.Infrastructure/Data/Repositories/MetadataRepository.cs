@@ -300,6 +300,11 @@ public class MetadataRepository(IDbContextFactory<TvContext> dbContextFactory) :
                             VALUES (@ArtworkKind, @Id, @DateAdded, @DateUpdated, @Path, @SourcePath, @BlurHash43, @BlurHash54, @BlurHash64)",
                     parameters)
                 .ToUnit(),
+            RemoteStreamMetadata => await dbContext.Connection.ExecuteAsync(
+                    @"INSERT INTO Artwork (ArtworkKind, RemoteStreamMetadataId, DateAdded, DateUpdated, Path, SourcePath, BlurHash43, BlurHash54, BlurHash64)
+                            VALUES (@ArtworkKind, @Id, @DateAdded, @DateUpdated, @Path, @SourcePath, @BlurHash43, @BlurHash54, @BlurHash64)",
+                    parameters)
+                .ToUnit(),
             _ => Unit.Default
         };
     }
@@ -309,7 +314,9 @@ public class MetadataRepository(IDbContextFactory<TvContext> dbContextFactory) :
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
         return await dbContext.Connection.ExecuteAsync(
             @"DELETE FROM Artwork WHERE ArtworkKind = @ArtworkKind AND (MovieMetadataId = @Id
-                OR ShowMetadataId = @Id OR SeasonMetadataId = @Id OR EpisodeMetadataId = @Id OR OtherVideoMetadataId = @Id)",
+                OR ShowMetadataId = @Id OR SeasonMetadataId = @Id OR EpisodeMetadataId = @Id
+                OR ArtistMetadataId = @Id OR MusicVideoMetadataId = @Id OR SongMetadataId = @Id
+                OR OtherVideoMetadataId = @Id OR RemoteStreamMetadataId = @Id)",
             new { ArtworkKind = artworkKind, metadata.Id }).ToUnit();
     }
 

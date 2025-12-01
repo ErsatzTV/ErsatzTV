@@ -161,7 +161,7 @@ internal static class Mapper
             remoteStreamMetadata.Title,
             remoteStreamMetadata.OriginalTitle,
             remoteStreamMetadata.SortTitle,
-            string.Empty, // TODO: thumbnail?
+            GetThumbnail(remoteStreamMetadata, None, None),
             remoteStreamMetadata.RemoteStream.State);
 
     internal static ArtistCardViewModel ProjectToViewModel(ArtistMetadata artistMetadata) =>

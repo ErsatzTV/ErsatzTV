@@ -108,6 +108,7 @@
         <EmbeddedResource Include="Resources\sequential-schedule.schema.json" />
         <EmbeddedResource Include="Resources\empty.sqlite3" />
         <EmbeddedResource Include="Resources\test.avs" />
+        <EmbeddedResource Include="Resources\Templates\_remoteStream.sbntxt" />
     </ItemGroup>
 
     <ItemGroup>
