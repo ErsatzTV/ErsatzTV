@@ -324,7 +324,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
                 {
                     MetadataKind = MetadataKind.Sidecar,
                     DateAdded = DateTime.UtcNow,
-                    DateUpdated = File.GetLastWriteTimeUtc(nfoFileName),
+                    DateUpdated = _fileSystem.File.GetLastWriteTimeUtc(nfoFileName),
                     Album = nfo.Album,
                     Title = nfo.Title,
                     Plot = nfo.Plot,
@@ -365,7 +365,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
                 {
                     MetadataKind = MetadataKind.Embedded,
                     DateAdded = DateTime.UtcNow,
-                    DateUpdated = File.GetLastWriteTimeUtc(path),
+                    DateUpdated = _fileSystem.File.GetLastWriteTimeUtc(path),
 
                     Artists = [],
                     AlbumArtists = [],
@@ -450,7 +450,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
                 {
                     MetadataKind = MetadataKind.Embedded,
                     DateAdded = DateTime.UtcNow,
-                    DateUpdated = File.GetLastWriteTimeUtc(path),
+                    DateUpdated = _fileSystem.File.GetLastWriteTimeUtc(path),
                     DurationSeconds = durationSeconds,
 
                     Artwork = [],
@@ -517,7 +517,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
             {
                 MetadataKind = MetadataKind.Embedded,
                 DateAdded = DateTime.UtcNow,
-                DateUpdated = File.GetLastWriteTimeUtc(path),
+                DateUpdated = _fileSystem.File.GetLastWriteTimeUtc(path),
 
                 Artwork = [],
                 Actors = [],
@@ -1290,7 +1290,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
             foreach (ShowNfo nfo in maybeNfo.RightToSeq())
             {
                 DateTime dateAdded = DateTime.UtcNow;
-                DateTime dateUpdated = File.GetLastWriteTimeUtc(nfoFileName);
+                DateTime dateUpdated = _fileSystem.File.GetLastWriteTimeUtc(nfoFileName);
 
                 return new ShowMetadata
                 {
@@ -1343,7 +1343,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
                 {
                     MetadataKind = MetadataKind.Sidecar,
                     DateAdded = DateTime.UtcNow,
-                    DateUpdated = File.GetLastWriteTimeUtc(nfoFileName),
+                    DateUpdated = _fileSystem.File.GetLastWriteTimeUtc(nfoFileName),
                     Title = nfo.Name,
                     Disambiguation = nfo.Disambiguation,
                     Biography = nfo.Biography,
@@ -1380,7 +1380,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
             foreach (EpisodeNfo nfo in maybeNfo.RightToSeq().Flatten())
             {
                 DateTime dateAdded = DateTime.UtcNow;
-                DateTime dateUpdated = File.GetLastWriteTimeUtc(nfoFileName);
+                DateTime dateUpdated = _fileSystem.File.GetLastWriteTimeUtc(nfoFileName);
 
                 var metadata = new EpisodeMetadata
                 {
@@ -1436,7 +1436,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
             foreach (MovieNfo nfo in maybeNfo.RightToSeq())
             {
                 DateTime dateAdded = DateTime.UtcNow;
-                DateTime dateUpdated = File.GetLastWriteTimeUtc(nfoFileName);
+                DateTime dateUpdated = _fileSystem.File.GetLastWriteTimeUtc(nfoFileName);
 
                 var year = 0;
                 if (nfo.Year > 1000)
@@ -1522,7 +1522,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
             foreach (OtherVideoNfo nfo in maybeNfo.RightToSeq())
             {
                 DateTime dateAdded = DateTime.UtcNow;
-                DateTime dateUpdated = File.GetLastWriteTimeUtc(nfoFileName);
+                DateTime dateUpdated = _fileSystem.File.GetLastWriteTimeUtc(nfoFileName);
 
                 var year = 0;
                 if (nfo.Year > 1000)
