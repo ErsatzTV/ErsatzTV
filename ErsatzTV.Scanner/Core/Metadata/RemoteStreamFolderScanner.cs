@@ -411,8 +411,9 @@ public class RemoteStreamFolderScanner : LocalFolderScanner, IRemoteStreamFolder
             .HeadOrNone();
     }
 
-    private class RemoteStreamWithDefinition(MediaItemScanResult<RemoteStream> result, YamlRemoteStreamDefinition definition)
-        : MediaItem
+    private class RemoteStreamWithDefinition(
+        MediaItemScanResult<RemoteStream> result,
+        YamlRemoteStreamDefinition definition)
     {
         public MediaItemScanResult<RemoteStream> Result { get; } = result;
 
