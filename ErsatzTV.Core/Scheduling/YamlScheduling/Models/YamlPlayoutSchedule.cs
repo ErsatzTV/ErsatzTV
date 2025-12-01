@@ -15,7 +15,7 @@ public class YamlPlayoutSchedule
     /// <summary>
     /// Priority for schedule matching. Higher values are checked first. Default is 0.
     /// </summary>
-    public int Priority { get; set; } = 0;
+    public int Priority { get; set; }
 
     public List<YamlPlayoutInstruction> Reset { get; set; } = [];
 
