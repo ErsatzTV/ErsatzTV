@@ -86,7 +86,7 @@ public class FFmpegProcessService
                 TimeSpan.Zero,
                 false,
                 StreamInputKind.Vod,
-                Option<int>.None);
+                Option<FrameRate>.None);
 
             scalePlaybackSettings.AudioChannels = Option<int>.None;
 

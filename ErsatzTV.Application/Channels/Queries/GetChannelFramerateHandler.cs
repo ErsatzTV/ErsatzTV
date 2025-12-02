@@ -1,29 +1,22 @@
 ﻿using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Extensions;
+using ErsatzTV.FFmpeg;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Application.Channels;
 
-public class GetChannelFramerateHandler : IRequestHandler<GetChannelFramerate, Option<int>>
+public class GetChannelFramerateHandler(
+    IDbContextFactory<TvContext> dbContextFactory,
+    ILogger<GetChannelFramerateHandler> logger)
+    : IRequestHandler<GetChannelFramerate, Option<FrameRate>>
 {
-    private readonly IDbContextFactory<TvContext> _dbContextFactory;
-    private readonly ILogger<GetChannelFramerateHandler> _logger;
-
-    public GetChannelFramerateHandler(
-        IDbContextFactory<TvContext> dbContextFactory,
-        ILogger<GetChannelFramerateHandler> logger)
-    {
-        _dbContextFactory = dbContextFactory;
-        _logger = logger;
-    }
-
-    public async Task<Option<int>> Handle(GetChannelFramerate request, CancellationToken cancellationToken)
+    public async Task<Option<FrameRate>> Handle(GetChannelFramerate request, CancellationToken cancellationToken)
     {
         try
         {
-            await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+            await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
             FFmpegProfile ffmpegProfile = await dbContext.Channels
                 .AsNoTracking()
@@ -34,11 +27,11 @@ public class GetChannelFramerateHandler : IRequestHandler<GetChannelFramerate, O
 
             if (!ffmpegProfile.NormalizeFramerate)
             {
-                return Option<int>.None;
+                return Option<FrameRate>.None;
             }
 
             // TODO: expand to check everything in collection rather than what's scheduled?
-            _logger.LogDebug("Checking frame rates for channel {ChannelNumber}", request.ChannelNumber);
+            logger.LogDebug("Checking frame rates for channel {ChannelNumber}", request.ChannelNumber);
 
             List<Playout> playouts = await dbContext.Playouts
                 .AsNoTracking()
@@ -68,74 +61,58 @@ public class GetChannelFramerateHandler : IRequestHandler<GetChannelFramerate, O
 
             var frameRates = playouts.Map(p => p.Items.Map(i => i.MediaItem.GetHeadVersion()))
                 .Flatten()
-                .Map(mv => mv.RFrameRate)
+                .Map(mv => new FrameRate(mv.RFrameRate))
                 .ToList();
 
             var distinct = frameRates.Distinct().ToList();
             if (distinct.Count > 1)
             {
                 // TODO: something more intelligent than minimum framerate?
-                int result = frameRates.Map(ParseFrameRate).Min();
-                if (result < 24)
+                var validFrameRates = frameRates.Where(fr => fr.ParsedFrameRate > 23).ToList();
+                if (validFrameRates.Count > 0)
                 {
-                    _logger.LogInformation(
-                        "Normalizing frame rate for channel {ChannelNumber} from {Distinct} to {FrameRate} instead of min value {MinFrameRate}",
+                    FrameRate result = validFrameRates.MinBy(fr => fr.ParsedFrameRate);
+                    logger.LogInformation(
+                        "Normalizing frame rate for channel {ChannelNumber} from {Distinct} to {FrameRate}",
                         request.ChannelNumber,
-                        distinct,
-                        24,
-                        result);
-
-                    return 24;
+                        distinct.Map(fr => fr.RFrameRate),
+                        result.RFrameRate);
+                    return result;
                 }
 
-                _logger.LogInformation(
-                    "Normalizing frame rate for channel {ChannelNumber} from {Distinct} to {FrameRate}",
+                FrameRate minFrameRate = frameRates.MinBy(fr => fr.ParsedFrameRate);
+                logger.LogInformation(
+                    "Normalizing frame rate for channel {ChannelNumber} from {Distinct} to {FrameRate} instead of min value {MinFrameRate}",
                     request.ChannelNumber,
-                    distinct,
-                    result);
-                return result;
+                    distinct.Map(fr => fr.RFrameRate),
+                    FrameRate.DefaultFrameRate.RFrameRate,
+                    minFrameRate.RFrameRate);
+
+                return FrameRate.DefaultFrameRate;
             }
 
             if (distinct.Count != 0)
             {
-                _logger.LogInformation(
+                logger.LogInformation(
                     "All content on channel {ChannelNumber} has the same frame rate of {FrameRate}; will not normalize",
                     request.ChannelNumber,
-                    distinct[0]);
+                    distinct[0].RFrameRate);
             }
             else
             {
-                _logger.LogInformation(
+                logger.LogInformation(
                     "No content on channel {ChannelNumber} has frame rate information; will not normalize",
                     request.ChannelNumber);
             }
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(
+            logger.LogWarning(
                 ex,
                 "Unexpected error checking frame rates on channel {ChannelNumber}",
                 request.ChannelNumber);
         }
 
         return None;
-    }
-
-    private int ParseFrameRate(string frameRate)
-    {
-        if (!int.TryParse(frameRate, out int fr))
-        {
-            string[] split = (frameRate ?? string.Empty).Split("/");
-            if (int.TryParse(split[0], out int left) && int.TryParse(split[1], out int right))
-            {
-                fr = (int)Math.Round(left / (double)right);
-            }
-            else
-            {
-                fr = 24;
-            }
-        }
-
-        return fr;
     }
 }

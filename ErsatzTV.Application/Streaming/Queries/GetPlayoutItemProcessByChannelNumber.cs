@@ -1,4 +1,5 @@
 ﻿using ErsatzTV.Core.Domain;
+using ErsatzTV.FFmpeg;
 
 namespace ErsatzTV.Application.Streaming;
 
@@ -10,7 +11,7 @@ public record GetPlayoutItemProcessByChannelNumber(
     bool HlsRealtime,
     DateTimeOffset ChannelStart,
     TimeSpan PtsOffset,
-    Option<int> TargetFramerate,
+    Option<FrameRate> TargetFramerate,
     bool IsTroubleshooting,
     Option<int> FFmpegProfileId) : FFmpegProcessRequest(
     ChannelNumber,

@@ -229,20 +229,23 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
             concatInputFile.AddOption(new InfiniteLoopInputOption(HardwareAccelerationMode.None));
         }
 
-        foreach (GraphicsEngineInput graphicsEngineInput in _graphicsEngineInput)
-        {
-            var targetSize = desiredState.CroppedSize.IfNone(desiredState.PaddedSize);
-
-            graphicsEngineInput.AddOption(
-                new RawVideoInputOption(PixelFormat.BGRA, targetSize, desiredState.FrameRate.IfNone(24)));
-        }
-
         Debug.Assert(_videoInputFile.IsSome, "Pipeline builder requires exactly one video input file");
         VideoInputFile videoInputFile = _videoInputFile.Head();
 
         var allVideoStreams = _videoInputFile.SelectMany(f => f.VideoStreams).ToList();
         Debug.Assert(allVideoStreams.Count == 1, "Pipeline builder requires exactly one video stream");
         VideoStream videoStream = allVideoStreams.Head();
+
+        foreach (GraphicsEngineInput graphicsEngineInput in _graphicsEngineInput)
+        {
+            var targetSize = desiredState.CroppedSize.IfNone(desiredState.PaddedSize);
+
+            graphicsEngineInput.AddOption(
+                new RawVideoInputOption(
+                    PixelFormat.BGRA,
+                    targetSize,
+                    desiredState.FrameRate.IfNone(videoStream.FrameRate.IfNone(FrameRate.DefaultFrameRate))));
+        }
 
         var context = new PipelineContext(
             _hardwareAccelerationMode,
@@ -754,7 +757,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
             return;
         }
 
-        foreach (int desiredFrameRate in desiredState.FrameRate)
+        foreach (FrameRate desiredFrameRate in desiredState.FrameRate)
         {
             pipelineSteps.Add(new FrameRateOutputOption(desiredFrameRate));
         }

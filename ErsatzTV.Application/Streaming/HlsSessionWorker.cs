@@ -16,6 +16,7 @@ using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Streaming;
+using ErsatzTV.FFmpeg;
 using ErsatzTV.FFmpeg.OutputFormat;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -39,7 +40,7 @@ public class HlsSessionWorker : IHlsSessionWorker
     private readonly IMediator _mediator;
     private readonly SemaphoreSlim _slim = new(1, 1);
     private readonly Lock _sync = new();
-    private readonly Option<int> _targetFramerate;
+    private readonly Option<FrameRate> _targetFramerate;
     private CancellationTokenSource _cancellationTokenSource;
     private string _channelNumber;
     private DateTimeOffset _channelStart;
@@ -65,7 +66,7 @@ public class HlsSessionWorker : IHlsSessionWorker
         IFileSystem fileSystem,
         ILocalFileSystem localFileSystem,
         ILogger<HlsSessionWorker> logger,
-        Option<int> targetFramerate)
+        Option<FrameRate> targetFramerate)
     {
         _serviceScope = serviceScopeFactory.CreateScope();
         _mediator = _serviceScope.ServiceProvider.GetRequiredService<IMediator>();

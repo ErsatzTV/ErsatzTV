@@ -12,6 +12,7 @@ using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Streaming;
+using ErsatzTV.FFmpeg;
 using ErsatzTV.FFmpeg.OutputFormat;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -82,7 +83,7 @@ public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Eit
             .GetValue<int>(ConfigElementKey.FFmpegSegmenterTimeout, cancellationToken)
             .Map(maybeTimeout => maybeTimeout.Match(i => TimeSpan.FromSeconds(i), () => TimeSpan.FromMinutes(1)));
 
-        Option<int> targetFramerate = await _mediator.Send(
+        Option<FrameRate> targetFramerate = await _mediator.Send(
             new GetChannelFramerate(request.ChannelNumber),
             cancellationToken);
 
@@ -122,7 +123,7 @@ public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Eit
         return Unit.Default;
     }
 
-    private HlsSessionWorker GetSessionWorker(StartFFmpegSession request, Option<int> targetFramerate) =>
+    private HlsSessionWorker GetSessionWorker(StartFFmpegSession request, Option<FrameRate> targetFramerate) =>
         request.Mode switch
         {
             _ => new HlsSessionWorker(

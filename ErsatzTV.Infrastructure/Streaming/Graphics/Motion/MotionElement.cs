@@ -164,7 +164,7 @@ public class MotionElement(
                 "-i", motionElement.VideoPath,
             ]);
 
-            var videoFilter = $"fps={context.FrameRate}";
+            var videoFilter = $"fps={context.FrameRate.RFrameRate}";
             if (motionElement.Scale)
             {
                 videoFilter += $",scale={targetSize.Width}:{targetSize.Height}";

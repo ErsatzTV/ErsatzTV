@@ -38,7 +38,7 @@ public class PipelineBuilderBaseTests
                     new FrameSize(1920, 1080),
                     "1:1",
                     "16:9",
-                    "24",
+                    FrameRate.DefaultFrameRate,
                     false,
                     ScanKind.Progressive)
             });
@@ -67,7 +67,7 @@ public class PipelineBuilderBaseTests
             new FrameSize(1920, 1080),
             Option<FrameSize>.None,
             false,
-            Option<int>.None,
+            Option<FrameRate>.None,
             2000,
             4000,
             90_000,
@@ -138,7 +138,7 @@ public class PipelineBuilderBaseTests
                     new FrameSize(1920, 1080),
                     "1:1",
                     "16:9",
-                    "24",
+                    FrameRate.DefaultFrameRate,
                     false,
                     ScanKind.Progressive)
             });
@@ -167,7 +167,7 @@ public class PipelineBuilderBaseTests
             new FrameSize(1920, 1080),
             Option<FrameSize>.None,
             false,
-            Option<int>.None,
+            Option<FrameRate>.None,
             2000,
             4000,
             90_000,
@@ -296,7 +296,7 @@ public class PipelineBuilderBaseTests
                     new FrameSize(1920, 1080),
                     "1:1",
                     "16:9",
-                    "24",
+                    FrameRate.DefaultFrameRate,
                     false,
                     ScanKind.Interlaced)
             });
@@ -325,7 +325,7 @@ public class PipelineBuilderBaseTests
             new FrameSize(1920, 1080),
             Option<FrameSize>.None,
             false,
-            Option<int>.None,
+            Option<FrameRate>.None,
             2000,
             4000,
             90_000,
@@ -400,7 +400,7 @@ public class PipelineBuilderBaseTests
                     new FrameSize(1920, 1080),
                     "1:1",
                     "16:9",
-                    "24",
+                    FrameRate.DefaultFrameRate,
                     false,
                     ScanKind.Progressive)
             });
@@ -419,7 +419,7 @@ public class PipelineBuilderBaseTests
             new FrameSize(1920, 1080),
             Option<FrameSize>.None,
             false,
-            Option<int>.None,
+            Option<FrameRate>.None,
             2000,
             4000,
             90_000,
@@ -494,7 +494,7 @@ public class PipelineBuilderBaseTests
                     FrameSize.Unknown,
                     string.Empty,
                     string.Empty,
-                    Option<string>.None,
+                    Option<FrameRate>.None,
                     true,
                     ScanKind.Progressive)
             });

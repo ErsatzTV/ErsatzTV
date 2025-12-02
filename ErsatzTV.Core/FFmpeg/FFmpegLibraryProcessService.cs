@@ -98,7 +98,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         TimeSpan inPoint,
         DateTimeOffset channelStartTime,
         TimeSpan ptsOffset,
-        Option<int> targetFramerate,
+        Option<FrameRate> targetFramerate,
         Option<string> customReportsFolder,
         Action<FFmpegPipeline> pipelineAction,
         bool canProxy,
@@ -245,7 +245,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             new FrameSize(videoVersion.MediaVersion.Width, videoVersion.MediaVersion.Height),
             videoVersion.MediaVersion.SampleAspectRatio,
             videoVersion.MediaVersion.DisplayAspectRatio,
-            videoVersion.MediaVersion.RFrameRate,
+            new FrameRate(videoVersion.MediaVersion.RFrameRate),
             videoPath != audioPath, // still image when paths are different
             scanKind);
 
@@ -381,7 +381,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                         new FrameSize(1, 1),
                         string.Empty,
                         string.Empty,
-                        Option<string>.None,
+                        Option<FrameRate>.None,
                         !await IsWatermarkAnimated(ffprobePath, wm.ImagePath),
                         ScanKind.Progressive)
                 ];
@@ -520,6 +520,9 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         {
             FrameSize targetSize = await desiredState.CroppedSize.IfNoneAsync(desiredState.ScaledSize);
 
+            FrameRate frameRate = await playbackSettings.FrameRate
+                .IfNoneAsync(new FrameRate(videoVersion.MediaVersion.RFrameRate));
+
             var context = new GraphicsEngineContext(
                 channel.Number,
                 audioVersion.MediaItem,
@@ -527,7 +530,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                 TemplateVariables: [],
                 new Resolution { Width = targetSize.Width, Height = targetSize.Height },
                 channel.FFmpegProfile.Resolution,
-                await playbackSettings.FrameRate.IfNoneAsync(24),
+                frameRate,
                 channelStartTime,
                 start,
                 await playbackSettings.StreamSeek.IfNoneAsync(TimeSpan.Zero),

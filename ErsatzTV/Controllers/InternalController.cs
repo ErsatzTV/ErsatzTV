@@ -13,6 +13,7 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.Streaming;
 using ErsatzTV.Extensions;
+using ErsatzTV.FFmpeg;
 using Flurl;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -259,7 +260,7 @@ public class InternalController : StreamingControllerBase
             true,
             DateTimeOffset.Now,
             TimeSpan.Zero,
-            Option<int>.None,
+            Option<FrameRate>.None,
             IsTroubleshooting: false,
             Option<int>.None);
 

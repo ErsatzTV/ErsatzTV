@@ -87,7 +87,7 @@ public class GraphicsEngine(
         await Task.WhenAll(elements.Select(e => e.InitializeAsync(context, cancellationToken)));
 
         long frameCount = 0;
-        var totalFrames = (long)(context.Duration.TotalSeconds * context.FrameRate);
+        var totalFrames = (long)(context.Duration.TotalSeconds * context.FrameRate.ParsedFrameRate);
 
         int width = context.FrameSize.Width;
         int height = context.FrameSize.Height;
@@ -107,7 +107,7 @@ public class GraphicsEngine(
             while (!cancellationToken.IsCancellationRequested && frameCount < totalFrames)
             {
                 // seconds since this specific stream started
-                double streamTimeSeconds = (double)frameCount / context.FrameRate;
+                double streamTimeSeconds = frameCount / context.FrameRate.ParsedFrameRate;
                 var streamTime = TimeSpan.FromSeconds(streamTimeSeconds);
 
                 // `content_seconds` - the total number of seconds the frame is into the content

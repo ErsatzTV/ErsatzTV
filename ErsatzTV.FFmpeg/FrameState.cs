@@ -14,7 +14,7 @@ public record FrameState(
     FrameSize PaddedSize,
     Option<FrameSize> CroppedSize,
     bool IsAnamorphic,
-    Option<int> FrameRate,
+    Option<FrameRate> FrameRate,
     Option<int> VideoBitrate,
     Option<int> VideoBufferSize,
     Option<int> VideoTrackTimeScale,

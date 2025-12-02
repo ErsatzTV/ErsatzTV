@@ -1,4 +1,3 @@
-using System.Globalization;
 using ErsatzTV.FFmpeg.Capabilities;
 using ErsatzTV.FFmpeg.Decoder;
 using ErsatzTV.FFmpeg.Decoder.Qsv;
@@ -203,15 +202,14 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
         }
 
         // use normalized fps, or source fps
-        string fps = desiredState.FrameRate.Match(
-            r => r.ToString(NumberFormatInfo.InvariantInfo),
-            () => videoStream.FrameRate.IfNone("24"));
-        videoInputFile.FilterSteps.Add(new ResetPtsFilter(fps));
+        FrameRate frameRate =
+            desiredState.FrameRate.IfNone(videoStream.FrameRate.IfNone(FrameRate.DefaultFrameRate));
+        videoInputFile.FilterSteps.Add(new ResetPtsFilter(frameRate));
 
         // since fps will set frame rate, remove the output option
-        foreach (var frameRate in pipelineSteps.OfType<FrameRateOutputOption>().HeadOrNone())
+        foreach (var fr in pipelineSteps.OfType<FrameRateOutputOption>().HeadOrNone())
         {
-            pipelineSteps.Remove(frameRate);
+            pipelineSteps.Remove(fr);
         }
 
         currentState = SetSubtitle(
