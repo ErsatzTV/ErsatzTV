@@ -19,7 +19,7 @@ public record FrameRate(string? FrameRateString)
         else
         {
             string[] split = (rFrameRate ?? string.Empty).Split("/");
-            if (int.TryParse(split[0], out int left) && int.TryParse(split[1], out int right))
+            if (int.TryParse(split[0], out int left) && int.TryParse(split[1], out int right) && right != 0)
             {
                 frameRate = left / (double)right;
             }

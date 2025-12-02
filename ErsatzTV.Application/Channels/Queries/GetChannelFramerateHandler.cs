@@ -68,25 +68,27 @@ public class GetChannelFramerateHandler(
             if (distinct.Count > 1)
             {
                 // TODO: something more intelligent than minimum framerate?
-                FrameRate result = frameRates.Where(x => x.ParsedFrameRate > 23).MinBy(x => x.ParsedFrameRate);
-                if (result.ParsedFrameRate < 23)
+                var validFrameRates = frameRates.Where(fr => fr.ParsedFrameRate > 23).ToList();
+                if (validFrameRates.Count > 0)
                 {
+                    FrameRate result = validFrameRates.MinBy(fr => fr.ParsedFrameRate);
                     logger.LogInformation(
-                        "Normalizing frame rate for channel {ChannelNumber} from {Distinct} to {FrameRate} instead of min value {MinFrameRate}",
+                        "Normalizing frame rate for channel {ChannelNumber} from {Distinct} to {FrameRate}",
                         request.ChannelNumber,
                         distinct.Map(fr => fr.RFrameRate),
-                        FrameRate.DefaultFrameRate.RFrameRate,
                         result.RFrameRate);
-
-                    return FrameRate.DefaultFrameRate;
+                    return result;
                 }
 
+                FrameRate minFrameRate = frameRates.MinBy(fr => fr.ParsedFrameRate);
                 logger.LogInformation(
-                    "Normalizing frame rate for channel {ChannelNumber} from {Distinct} to {FrameRate}",
+                    "Normalizing frame rate for channel {ChannelNumber} from {Distinct} to {FrameRate} instead of min value {MinFrameRate}",
                     request.ChannelNumber,
                     distinct.Map(fr => fr.RFrameRate),
-                    result.RFrameRate);
-                return result;
+                    FrameRate.DefaultFrameRate.RFrameRate,
+                    minFrameRate.RFrameRate);
+
+                return FrameRate.DefaultFrameRate;
             }
 
             if (distinct.Count != 0)
@@ -94,7 +96,7 @@ public class GetChannelFramerateHandler(
                 logger.LogInformation(
                     "All content on channel {ChannelNumber} has the same frame rate of {FrameRate}; will not normalize",
                     request.ChannelNumber,
-                    distinct[0]);
+                    distinct[0].RFrameRate);
             }
             else
             {

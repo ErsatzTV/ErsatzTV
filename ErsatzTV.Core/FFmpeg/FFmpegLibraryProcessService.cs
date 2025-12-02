@@ -523,8 +523,6 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             FrameRate frameRate = await playbackSettings.FrameRate
                 .IfNoneAsync(new FrameRate(videoVersion.MediaVersion.RFrameRate));
 
-            Console.WriteLine($"frame rate will be {frameRate}");
-
             var context = new GraphicsEngineContext(
                 channel.Number,
                 audioVersion.MediaItem,
