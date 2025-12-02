@@ -1,5 +1,6 @@
 using System.Globalization;
 using ErsatzTV.FFmpeg.Capabilities;
+using ErsatzTV.FFmpeg.Capabilities.Qsv;
 using ErsatzTV.FFmpeg.Decoder;
 using ErsatzTV.FFmpeg.Decoder.Qsv;
 using ErsatzTV.FFmpeg.Encoder;
@@ -95,7 +96,13 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
         // give a bogus value so no cuda devices are visible to ffmpeg
         pipelineSteps.Add(new CudaVisibleDevicesVariable("999"));
 
-        pipelineSteps.Add(new QsvHardwareAccelerationOption(ffmpegState.VaapiDevice, decodeCapability));
+        QsvInitMode initMode = QsvInitMode.Qsv;
+        if (_hardwareCapabilities is QsvHardwareCapabilities qsvHardwareCapabilities)
+        {
+            initMode = qsvHardwareCapabilities.InitMode;
+        }
+
+        pipelineSteps.Add(new QsvHardwareAccelerationOption(ffmpegState.VaapiDevice, decodeCapability, initMode));
 
         // disable hw accel if decoder/encoder isn't supported
         return ffmpegState with

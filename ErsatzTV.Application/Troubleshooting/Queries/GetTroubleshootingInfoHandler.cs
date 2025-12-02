@@ -102,14 +102,27 @@ public class GetTroubleshootingInfoHandler : IRequestHandler<GetTroubleshootingI
                     vaapiDisplays = ["drm"];
                 }
 
+                List<QsvInitMode> qsvInitModes = [QsvInitMode.None];
+                if (_runtimeInfo.IsOSPlatform(OSPlatform.Windows))
+                {
+                    qsvInitModes.Add(QsvInitMode.D3d11Va);
+                }
+                qsvInitModes.Add(QsvInitMode.Qsv);
+
                 foreach (string qsvDevice in vaapiDevices)
                 {
-                    QsvOutput output = await _hardwareCapabilitiesFactory.GetQsvOutput(ffmpegPath.Value, qsvDevice);
-                    qsvCapabilities.AppendLine(CultureInfo.InvariantCulture, $"Checking device {qsvDevice}");
-                    qsvCapabilities.AppendLine(CultureInfo.InvariantCulture, $"Exit Code: {output.ExitCode}");
-                    qsvCapabilities.AppendLine();
-                    qsvCapabilities.AppendLine(output.Output);
-                    qsvCapabilities.AppendLine();
+                    foreach (var qsvInitMode in qsvInitModes)
+                    {
+                        QsvOutput output = await _hardwareCapabilitiesFactory.GetQsvOutput(
+                            ffmpegPath.Value,
+                            qsvDevice,
+                            qsvInitMode);
+                        qsvCapabilities.AppendLine(CultureInfo.InvariantCulture, $"Checking device {qsvDevice} with init mode {qsvInitMode}");
+                        qsvCapabilities.AppendLine(CultureInfo.InvariantCulture, $"Exit Code: {output.ExitCode}");
+                        qsvCapabilities.AppendLine();
+                        qsvCapabilities.AppendLine(output.Output);
+                        qsvCapabilities.AppendLine();
+                    }
                 }
 
                 if (_runtimeInfo.IsOSPlatform(OSPlatform.Linux))

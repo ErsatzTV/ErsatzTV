@@ -32,7 +32,9 @@ public partial class HardwareCapabilitiesFactory(
     private static readonly CompositeFormat VaapiGenerationCacheKeyFormat =
         CompositeFormat.Parse("ffmpeg.hardware.vaapi.generation.{0}.{1}.{2}");
 
+    private static readonly CompositeFormat QsvVaapiCacheKeyFormat = CompositeFormat.Parse("ffmpeg.hardware.qsv.vaapi.{0}");
     private static readonly CompositeFormat QsvCacheKeyFormat = CompositeFormat.Parse("ffmpeg.hardware.qsv.{0}");
+
     private static readonly CompositeFormat FFmpegCapabilitiesCacheKeyFormat = CompositeFormat.Parse("ffmpeg.{0}");
 
     private static readonly string[] QsvArguments =
@@ -179,14 +181,14 @@ public partial class HardwareCapabilitiesFactory(
         return output;
     }
 
-    public async Task<QsvOutput> GetQsvOutput(string ffmpegPath, Option<string> qsvDevice)
+    public async Task<QsvOutput> GetQsvOutput(string ffmpegPath, Option<string> qsvDevice, QsvInitMode qsvInitMode)
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
         {
             return new QsvOutput(0, string.Empty);
         }
 
-        var option = new QsvHardwareAccelerationOption(qsvDevice, FFmpegCapability.Software);
+        var option = new QsvHardwareAccelerationOption(qsvDevice, FFmpegCapability.Software, qsvInitMode);
         var arguments = option.GlobalOptions.ToList();
 
         arguments.AddRange(QsvArguments);
@@ -558,20 +560,49 @@ public partial class HardwareCapabilitiesFactory(
             }
 
             string device = qsvDevice.IfNone(string.Empty);
-            var cacheKey = string.Format(CultureInfo.InvariantCulture, QsvCacheKeyFormat, device);
+            var qsvCacheKey = string.Format(CultureInfo.InvariantCulture, QsvCacheKeyFormat, device);
+            var qsvVaapiCacheKey = string.Format(CultureInfo.InvariantCulture, QsvVaapiCacheKeyFormat, device);
 
-            if (memoryCache.TryGetValue(cacheKey, out List<VaapiProfileEntrypoint>? profileEntrypoints) &&
-                profileEntrypoints is not null)
+            List<VaapiProfileEntrypoint>? profileEntrypoints = null;
+            Option<VaapiHardwareCapabilities> vaapiCapabilities = None;
+
+            if (memoryCache.TryGetValue(qsvCacheKey, out QsvInitMode? qsvInitMode) &&
+                qsvInitMode is not null)
             {
-                return new VaapiHardwareCapabilities(profileEntrypoints, string.Empty, logger);
+                if (memoryCache.TryGetValue(qsvVaapiCacheKey, out profileEntrypoints) && profileEntrypoints is not null)
+                {
+                    vaapiCapabilities = new VaapiHardwareCapabilities(profileEntrypoints, string.Empty, logger);
+                }
+
+                return new QsvHardwareCapabilities(vaapiCapabilities, qsvInitMode.Value);
             }
 
-            QsvOutput output = await GetQsvOutput(ffmpegPath, qsvDevice);
+            var initModesToTest = new Queue<QsvInitMode>();
+            initModesToTest.Enqueue(QsvInitMode.None);
+            if (runtimeInfo.IsOSPlatform(OSPlatform.Windows))
+            {
+                initModesToTest.Enqueue(QsvInitMode.D3d11Va);
+            }
+            initModesToTest.Enqueue(QsvInitMode.Qsv);
+
+            QsvOutput output;
+            QsvInitMode initMode = initModesToTest.Dequeue();
+            do
+            {
+                output = await GetQsvOutput(ffmpegPath, qsvDevice, initMode);
+                if (output.ExitCode == 0)
+                {
+                    break;
+                }
+            } while (initModesToTest.Count > 0);
+
             if (output.ExitCode != 0)
             {
                 logger.LogWarning("QSV test failed; some hardware accelerated features will be unavailable");
                 return new NoHardwareCapabilities();
             }
+
+            memoryCache.Set(qsvCacheKey, initMode);
 
             if (runtimeInfo.IsOSPlatform(OSPlatform.Linux))
             {
@@ -589,7 +620,7 @@ public partial class HardwareCapabilitiesFactory(
                     if (vaapiOutput.IsNone)
                     {
                         logger.LogWarning("Unable to determine QSV capabilities; please install vainfo");
-                        return new DefaultHardwareCapabilities();
+                        return new QsvHardwareCapabilities(vaapiCapabilities, initMode);
                     }
 
                     foreach (string o in vaapiOutput)
@@ -604,14 +635,14 @@ public partial class HardwareCapabilitiesFactory(
                             profileEntrypoints.Count,
                             device);
 
-                        memoryCache.Set(cacheKey, profileEntrypoints);
-                        return new VaapiHardwareCapabilities(profileEntrypoints, string.Empty, logger);
+                        memoryCache.Set(qsvVaapiCacheKey, profileEntrypoints);
+                        vaapiCapabilities = new VaapiHardwareCapabilities(profileEntrypoints, string.Empty, logger);
                     }
                 }
             }
 
             // not sure how to check capabilities on windows
-            return new DefaultHardwareCapabilities();
+            return new QsvHardwareCapabilities(vaapiCapabilities, initMode);
         }
         catch (Exception ex)
         {

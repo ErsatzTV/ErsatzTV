@@ -1,22 +1,32 @@
 ﻿using ErsatzTV.FFmpeg.Capabilities;
+using ErsatzTV.FFmpeg.Capabilities.Qsv;
 using ErsatzTV.FFmpeg.Format;
 
 namespace ErsatzTV.FFmpeg.GlobalOption.HardwareAcceleration;
 
-public class QsvHardwareAccelerationOption(Option<string> device, FFmpegCapability decodeCapability) : GlobalOption
+public class QsvHardwareAccelerationOption(
+    Option<string> device,
+    FFmpegCapability decodeCapability,
+    QsvInitMode qsvInitMode) : GlobalOption
 {
     // TODO: read this from ffmpeg output
-    private readonly List<string> _supportedFFmpegFormats = new()
-    {
+    private readonly List<string> _supportedFFmpegFormats =
+    [
         FFmpegFormat.NV12,
         FFmpegFormat.P010LE
-    };
+    ];
 
     public override string[] GlobalOptions
     {
         get
         {
-            string[] initDevices = ["-init_hw_device", "qsv=hw", "-filter_hw_device", "hw"];
+            string[] initDevices = qsvInitMode switch
+            {
+                QsvInitMode.None => [],
+                QsvInitMode.Qsv => ["-init_hw_device", "qsv=hw", "-filter_hw_device", "hw"],
+                QsvInitMode.D3d11Va => ["-init_hw_device", "d3d11va=hw:,vendor=0x8086", "-filter_hw_device", "hw"],
+                _ => throw new NotSupportedException()
+            };
 
             var result = new List<string>
             {

@@ -29,6 +29,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - A warning will be logged when this scenario is detected
 - AMD VAAPI: work around buggy ffmpeg behavior where hevc_vaapi encoder with RadeonSI driver incorrectly outputs height of 1088 instead of 1080
 - Optimize graphics engine to generate element frames in parallel and to eliminate redundant frame copies
+- QSV: try multiple variations of ffmpeg init syntax to find one that works for the specific GPU
 
 ## [25.9.0] - 2025-11-29
 ### Added
