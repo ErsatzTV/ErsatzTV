@@ -3,9 +3,9 @@
 public class FrameRateFilter : BaseFilter
 {
     private readonly FrameState _currentState;
-    private readonly int _frameRate;
+    private readonly FrameRate _frameRate;
 
-    public FrameRateFilter(FrameState currentState, int frameRate)
+    public FrameRateFilter(FrameState currentState, FrameRate frameRate)
     {
         _currentState = currentState;
         _frameRate = frameRate;
@@ -15,7 +15,7 @@ public class FrameRateFilter : BaseFilter
     {
         get
         {
-            var frameRate = $"framerate=fps={_frameRate}:flags=-scd";
+            var frameRate = $"framerate=fps={_frameRate.RFrameRate}:flags=-scd";
             string pixelFormat = _currentState.PixelFormat.Match(pf => pf.FFmpegName, () => string.Empty);
 
             if (_currentState.FrameDataLocation == FrameDataLocation.Hardware)

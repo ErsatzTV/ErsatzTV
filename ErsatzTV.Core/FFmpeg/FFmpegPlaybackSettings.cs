@@ -1,5 +1,6 @@
 ﻿using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.FFmpeg;
+using ErsatzTV.FFmpeg;
 using ErsatzTV.FFmpeg.Format;
 
 namespace ErsatzTV.Core.FFmpeg;
@@ -28,5 +29,5 @@ public class FFmpegPlaybackSettings
     public bool Deinterlace { get; set; }
     public Option<int> VideoTrackTimeScale { get; set; }
     public NormalizeLoudnessMode NormalizeLoudnessMode { get; set; }
-    public Option<int> FrameRate { get; set; }
+    public Option<FrameRate> FrameRate { get; set; }
 }

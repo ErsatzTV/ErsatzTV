@@ -1,3 +1,5 @@
-﻿namespace ErsatzTV.Application.Channels;
+﻿using ErsatzTV.FFmpeg;
 
-public record GetChannelFramerate(string ChannelNumber) : IRequest<Option<int>>;
+namespace ErsatzTV.Application.Channels;
+
+public record GetChannelFramerate(string ChannelNumber) : IRequest<Option<FrameRate>>;

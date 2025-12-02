@@ -23,7 +23,7 @@ public record VideoStream(
     FrameSize FrameSize,
     string MaybeSampleAspectRatio,
     string DisplayAspectRatio,
-    Option<string> FrameRate,
+    Option<FrameRate> FrameRate,
     bool StillImage,
     ScanKind ScanKind) : MediaStream(
     Index,

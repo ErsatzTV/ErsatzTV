@@ -52,7 +52,7 @@ public static class FFmpegPlaybackSettingsCalculator
         TimeSpan inPoint,
         bool hlsRealtime,
         StreamInputKind streamInputKind,
-        Option<int> targetFramerate)
+        Option<FrameRate> targetFramerate)
     {
         var result = new FFmpegPlaybackSettings
         {
@@ -195,7 +195,7 @@ public static class FFmpegPlaybackSettingsCalculator
                 _ => true
             },
             VideoTrackTimeScale = 90000,
-            FrameRate = 24
+            FrameRate = FrameRate.DefaultFrameRate
         };
 
     private static bool NeedToScale(FFmpegProfile ffmpegProfile, MediaVersion version, string sampleAspectRatio) =>

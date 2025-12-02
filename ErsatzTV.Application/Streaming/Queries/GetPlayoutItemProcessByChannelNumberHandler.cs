@@ -12,7 +12,6 @@ using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.Emby;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Jellyfin;
-using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Streaming;
@@ -34,7 +33,6 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
     private readonly IFFmpegProcessService _ffmpegProcessService;
     private readonly IFileSystem _fileSystem;
     private readonly IJellyfinPathReplacementService _jellyfinPathReplacementService;
-    private readonly ILocalFileSystem _localFileSystem;
     private readonly ILogger<GetPlayoutItemProcessByChannelNumberHandler> _logger;
     private readonly IMediaCollectionRepository _mediaCollectionRepository;
     private readonly IMusicVideoCreditsGenerator _musicVideoCreditsGenerator;
@@ -50,7 +48,6 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
         IDbContextFactory<TvContext> dbContextFactory,
         IFFmpegProcessService ffmpegProcessService,
         IFileSystem fileSystem,
-        ILocalFileSystem localFileSystem,
         IExternalJsonPlayoutItemProvider externalJsonPlayoutItemProvider,
         IPlexPathReplacementService plexPathReplacementService,
         IJellyfinPathReplacementService jellyfinPathReplacementService,
@@ -68,7 +65,6 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
     {
         _ffmpegProcessService = ffmpegProcessService;
         _fileSystem = fileSystem;
-        _localFileSystem = localFileSystem;
         _externalJsonPlayoutItemProvider = externalJsonPlayoutItemProvider;
         _plexPathReplacementService = plexPathReplacementService;
         _jellyfinPathReplacementService = jellyfinPathReplacementService;

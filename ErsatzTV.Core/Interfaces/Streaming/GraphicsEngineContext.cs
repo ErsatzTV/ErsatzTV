@@ -1,6 +1,7 @@
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Graphics;
+using ErsatzTV.FFmpeg;
 
 namespace ErsatzTV.Core.Interfaces.Streaming;
 
@@ -11,7 +12,7 @@ public record GraphicsEngineContext(
     Dictionary<string, object> TemplateVariables,
     Resolution SquarePixelFrameSize,
     Resolution FrameSize,
-    int FrameRate,
+    FrameRate FrameRate,
     DateTimeOffset ChannelStartTime,
     DateTimeOffset ContentStartTime,
     TimeSpan Seek,

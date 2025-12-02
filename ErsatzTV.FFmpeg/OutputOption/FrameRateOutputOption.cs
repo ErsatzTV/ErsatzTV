@@ -1,24 +1,18 @@
-﻿using System.Globalization;
-using ErsatzTV.FFmpeg.Environment;
+﻿using ErsatzTV.FFmpeg.Environment;
 
 namespace ErsatzTV.FFmpeg.OutputOption;
 
-public class FrameRateOutputOption : IPipelineStep
+public class FrameRateOutputOption(FrameRate frameRate) : IPipelineStep
 {
-    private readonly int _frameRate;
+    public EnvironmentVariable[] EnvironmentVariables => [];
+    public string[] GlobalOptions => [];
+    public string[] InputOptions(InputFile inputFile) => [];
+    public string[] FilterOptions => [];
 
-    public FrameRateOutputOption(int frameRate) => _frameRate = frameRate;
-
-    public EnvironmentVariable[] EnvironmentVariables => Array.Empty<EnvironmentVariable>();
-    public string[] GlobalOptions => Array.Empty<string>();
-    public string[] InputOptions(InputFile inputFile) => Array.Empty<string>();
-    public string[] FilterOptions => Array.Empty<string>();
-
-    public string[] OutputOptions => new[]
-        { "-r", _frameRate.ToString(CultureInfo.InvariantCulture), "-vsync", "cfr" };
+    public string[] OutputOptions => ["-r", frameRate.RFrameRate, "-vsync", "cfr"];
 
     public FrameState NextState(FrameState currentState) => currentState with
     {
-        FrameRate = _frameRate
+        FrameRate = frameRate
     };
 }

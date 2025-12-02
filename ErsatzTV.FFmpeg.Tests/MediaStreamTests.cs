@@ -21,7 +21,7 @@ public class MediaStreamTests
             FrameSize.Unknown,
             "0:0",
             "4:3",
-            Option<string>.None,
+            Option<FrameRate>.None,
             false,
             ScanKind.Progressive);
 
@@ -41,7 +41,7 @@ public class MediaStreamTests
             FrameSize.Unknown,
             "0:0",
             "4:3",
-            Option<string>.None,
+            Option<FrameRate>.None,
             false,
             ScanKind.Progressive);
 
@@ -61,7 +61,7 @@ public class MediaStreamTests
             FrameSize.Unknown,
             "1:1",
             "16:9",
-            Option<string>.None,
+            Option<FrameRate>.None,
             false,
             ScanKind.Progressive);
 
@@ -81,7 +81,7 @@ public class MediaStreamTests
             FrameSize.Unknown,
             "32:27",
             "16:9",
-            Option<string>.None,
+            Option<FrameRate>.None,
             false,
             ScanKind.Progressive);
 
@@ -101,7 +101,7 @@ public class MediaStreamTests
             FrameSize.Unknown,
             "1.5:3.5",
             "16:9",
-            Option<string>.None,
+            Option<FrameRate>.None,
             false,
             ScanKind.Progressive);
 

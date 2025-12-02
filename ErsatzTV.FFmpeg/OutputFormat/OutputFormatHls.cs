@@ -9,7 +9,7 @@ public class OutputFormatHls : IPipelineStep
     private readonly FrameState _desiredState;
     private readonly bool _isFirstTranscode;
     private readonly bool _isTroubleshooting;
-    private readonly Option<string> _mediaFrameRate;
+    private readonly Option<FrameRate> _mediaFrameRate;
     private readonly OutputFormatKind _outputFormat;
     private readonly Option<string> _segmentOptions;
     private readonly bool _oneSecondGop;
@@ -19,7 +19,7 @@ public class OutputFormatHls : IPipelineStep
 
     public OutputFormatHls(
         FrameState desiredState,
-        Option<string> mediaFrameRate,
+        Option<FrameRate> mediaFrameRate,
         OutputFormatKind outputFormat,
         Option<string> segmentOptions,
         string segmentTemplate,
@@ -50,14 +50,16 @@ public class OutputFormatHls : IPipelineStep
     {
         get
         {
-            int frameRate = _desiredState.FrameRate.IfNone(GetFrameRateFromMedia);
+            FrameRate frameRate = _desiredState.FrameRate.IfNone(_mediaFrameRate.IfNone(FrameRate.DefaultFrameRate));
 
-            int gop = _oneSecondGop ? frameRate : frameRate * SegmentSeconds;
+            int gop = _oneSecondGop
+                ? (int)Math.Round(frameRate.ParsedFrameRate)
+                : (int)Math.Round(frameRate.ParsedFrameRate * SegmentSeconds);
 
             List<string> result =
             [
                 "-g", $"{gop}",
-                "-keyint_min", $"{frameRate * SegmentSeconds}",
+                "-keyint_min", $"{(int)Math.Round(frameRate.ParsedFrameRate * SegmentSeconds)}",
                 "-force_key_frames", $"expr:gte(t,n_forced*{SegmentSeconds})",
                 "-f", "hls",
                 "-hls_time", $"{SegmentSeconds}",
@@ -127,31 +129,4 @@ public class OutputFormatHls : IPipelineStep
     }
 
     public FrameState NextState(FrameState currentState) => currentState;
-
-    private int GetFrameRateFromMedia()
-    {
-        var frameRate = 24;
-
-        foreach (string rFrameRate in _mediaFrameRate)
-        {
-            if (double.TryParse(rFrameRate, out double value))
-            {
-                frameRate = (int)Math.Round(value);
-            }
-            else if (!int.TryParse(rFrameRate, out int fr))
-            {
-                string[] split = (rFrameRate ?? string.Empty).Split("/");
-                if (int.TryParse(split[0], out int left) && int.TryParse(split[1], out int right))
-                {
-                    frameRate = (int)Math.Round(left / (double)right);
-                }
-                else
-                {
-                    frameRate = 24;
-                }
-            }
-        }
-
-        return frameRate;
-    }
 }

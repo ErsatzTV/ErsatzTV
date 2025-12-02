@@ -2,7 +2,7 @@
 
 namespace ErsatzTV.FFmpeg.InputOption;
 
-public class RawVideoInputOption(string pixelFormat, FrameSize frameSize, int frameRate) : IInputOption
+public class RawVideoInputOption(string pixelFormat, FrameSize frameSize, FrameRate frameRate) : IInputOption
 {
     public EnvironmentVariable[] EnvironmentVariables => [];
     public string[] GlobalOptions => [];
@@ -13,7 +13,7 @@ public class RawVideoInputOption(string pixelFormat, FrameSize frameSize, int fr
         "-vcodec", "rawvideo",
         "-pix_fmt", pixelFormat,
         "-s", $"{frameSize.Width}x{frameSize.Height}",
-        "-r", $"{frameRate}"
+        "-r", $"{frameRate.RFrameRate}"
     ];
 
     public string[] FilterOptions => [];

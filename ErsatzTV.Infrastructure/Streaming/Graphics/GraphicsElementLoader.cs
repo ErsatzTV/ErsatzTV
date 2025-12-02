@@ -246,6 +246,8 @@ public partial class GraphicsElementLoader(
         {
             [FFmpegProfileTemplateDataKey.Resolution] = context.FrameSize,
             [FFmpegProfileTemplateDataKey.ScaledResolution] = context.SquarePixelFrameSize,
+            [FFmpegProfileTemplateDataKey.RFrameRate] = context.FrameRate.RFrameRate,
+            [FFmpegProfileTemplateDataKey.FrameRate] = context.FrameRate.ParsedFrameRate,
             [MediaItemTemplateDataKey.StreamSeek] = context.Seek,
             [MediaItemTemplateDataKey.Start] = context.ContentStartTime,
             [MediaItemTemplateDataKey.Stop] = context.ContentStartTime + context.Duration

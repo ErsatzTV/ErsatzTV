@@ -13,6 +13,7 @@ using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Streaming;
 using ErsatzTV.Core.Iptv;
 using ErsatzTV.Extensions;
+using ErsatzTV.FFmpeg;
 using ErsatzTV.Filters;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -346,7 +347,7 @@ public class IptvController : StreamingControllerBase
             true,
             DateTimeOffset.Now,
             TimeSpan.Zero,
-            Option<int>.None,
+            Option<FrameRate>.None,
             IsTroubleshooting: false,
             Option<int>.None);
 

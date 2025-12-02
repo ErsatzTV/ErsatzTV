@@ -39,7 +39,7 @@ public interface IFFmpegProcessService
         TimeSpan inPoint,
         DateTimeOffset channelStartTime,
         TimeSpan ptsOffset,
-        Option<int> targetFramerate,
+        Option<FrameRate> targetFramerate,
         Option<string> customReportsFolder,
         Action<FFmpegPipeline> pipelineAction,
         bool canProxy,

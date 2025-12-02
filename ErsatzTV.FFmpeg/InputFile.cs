@@ -23,7 +23,7 @@ public record ConcatInputFile(string Url, FrameSize Resolution) : InputFile(
             Resolution,
             string.Empty,
             string.Empty,
-            Option<string>.None,
+            Option<FrameRate>.None,
             false,
             ScanKind.Unknown)
     })

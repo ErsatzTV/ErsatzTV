@@ -87,7 +87,7 @@ public class PrepareTroubleshootingPlaybackHandler(
                                 HlsRealtime: false,
                                 start,
                                 TimeSpan.Zero,
-                                TargetFramerate: Option<int>.None,
+                                TargetFramerate: Option<FrameRate>.None,
                                 IsTroubleshooting: true,
                                 request.FFmpegProfileId),
                             cancellationToken);
@@ -318,7 +318,7 @@ public class PrepareTroubleshootingPlaybackHandler(
             inPoint,
             channelStartTime: DateTimeOffset.Now,
             TimeSpan.Zero,
-            Option<int>.None,
+            Option<FrameRate>.None,
             FileSystemLayout.TranscodeTroubleshootingFolder,
             _ => { },
             canProxy: true,

@@ -21,6 +21,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Remote stream definitions (yaml files) can now contain `title`, `plot`, `year` and `content_rating` fields
   - Remote streams can now have thumbnails (same name as yaml file but with image extension)
   - This metadata will be used in generated XMLTV entries, using a template that can be customized like other media kinds
+- Add framerate template data to graphics engine
+  - `RFrameRate` - the real content framerate (or channel normalized framerate) as reported by ffmpeg, e.g. `30000/1001`
+  - `FrameRate` - the decimal representation of `RFrameRate`, e.g. `29.97002997`
 
 ### Fixed
 - Fix startup on systems unsupported by NvEncSharp
@@ -29,6 +32,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - A warning will be logged when this scenario is detected
 - AMD VAAPI: work around buggy ffmpeg behavior where hevc_vaapi encoder with RadeonSI driver incorrectly outputs height of 1088 instead of 1080
 - Optimize graphics engine to generate element frames in parallel and to eliminate redundant frame copies
+- Match graphics engine framerate with source content (or channel normalized) framerate
+
+### Changed
+- No longer round framerate to nearest integer when normalizing framerate
 
 ## [25.9.0] - 2025-11-29
 ### Added
