@@ -577,18 +577,13 @@ public partial class HardwareCapabilitiesFactory(
                 return new QsvHardwareCapabilities(vaapiCapabilities, qsvInitMode.Value);
             }
 
-            var initModesToTest = new Queue<QsvInitMode>();
-            initModesToTest.Enqueue(QsvInitMode.None);
-            if (runtimeInfo.IsOSPlatform(OSPlatform.Windows))
-            {
-                initModesToTest.Enqueue(QsvInitMode.D3d11Va);
-            }
-            initModesToTest.Enqueue(QsvInitMode.Qsv);
+            var initModesToTest = new Queue<QsvInitMode>(QsvInitModes.GetModesToTest(runtimeInfo));
 
             QsvOutput output;
-            QsvInitMode initMode = initModesToTest.Dequeue();
+            QsvInitMode initMode;
             do
             {
+                initMode = initModesToTest.Dequeue();
                 output = await GetQsvOutput(ffmpegPath, qsvDevice, initMode);
                 if (output.ExitCode == 0)
                 {

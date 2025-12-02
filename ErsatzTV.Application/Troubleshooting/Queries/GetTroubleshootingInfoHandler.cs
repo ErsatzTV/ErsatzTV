@@ -102,12 +102,7 @@ public class GetTroubleshootingInfoHandler : IRequestHandler<GetTroubleshootingI
                     vaapiDisplays = ["drm"];
                 }
 
-                List<QsvInitMode> qsvInitModes = [QsvInitMode.None];
-                if (_runtimeInfo.IsOSPlatform(OSPlatform.Windows))
-                {
-                    qsvInitModes.Add(QsvInitMode.D3d11Va);
-                }
-                qsvInitModes.Add(QsvInitMode.Qsv);
+                var qsvInitModes = QsvInitModes.GetModesToTest(_runtimeInfo).ToList();
 
                 foreach (string qsvDevice in vaapiDevices)
                 {
