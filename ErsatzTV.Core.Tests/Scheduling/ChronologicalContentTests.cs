@@ -8,13 +8,8 @@ namespace ErsatzTV.Core.Tests.Scheduling;
 [TestFixture]
 public class ChronologicalContentTests
 {
-    [SetUp]
-    public void SetUp() => _cancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(10)).Token;
-
-    private CancellationToken _cancellationToken;
-
     [Test]
-    public void Episodes_Should_Sort_By_Aired()
+    public void Episodes_Should_Sort_By_ReleaseDate()
     {
         List<MediaItem> contents = Episodes(10);
         var state = new CollectionEnumeratorState();
@@ -25,6 +20,22 @@ public class ChronologicalContentTests
         {
             chronologicalContent.Current.IsSome.ShouldBeTrue();
             chronologicalContent.Current.Map(x => x.Id).IfNone(-1).ShouldBe(i);
+            chronologicalContent.MoveNext(Option<DateTimeOffset>.None);
+        }
+    }
+
+    [Test]
+    public void OtherVideos_Should_Sort_By_ReleaseDate()
+    {
+        List<MediaItem> contents = OtherVideos(10);
+        var state = new CollectionEnumeratorState();
+
+        var chronologicalContent = new ChronologicalMediaCollectionEnumerator(contents, state);
+
+        for (var i = 1; i <= 10; i++)
+        {
+            chronologicalContent.Current.IsSome.ShouldBeTrue();
+            chronologicalContent.Current.Map(x => x.Id).IfNone(-1).ShouldBe(10 - i);
             chronologicalContent.MoveNext(Option<DateTimeOffset>.None);
         }
     }
@@ -77,14 +88,31 @@ public class ChronologicalContentTests
         Range(1, count).Map(i => (MediaItem)new Episode
             {
                 Id = i,
-                EpisodeMetadata = new List<EpisodeMetadata>
-                {
-                    new()
+                EpisodeMetadata =
+                [
+                    new EpisodeMetadata
                     {
                         ReleaseDate = new DateTime(2020, 1, i),
                         EpisodeNumber = 20 - i
                     }
-                }
+                ]
+            })
+            .Reverse()
+            .ToList();
+
+    private static List<MediaItem> OtherVideos(int count) =>
+        Range(1, count).Map(i => (MediaItem)new OtherVideo
+            {
+                // ids need to count down because fallback sorting is by id
+                // and we need the test to fail when these are sorted by id
+                Id = count - i,
+                OtherVideoMetadata =
+                [
+                    new OtherVideoMetadata
+                    {
+                        ReleaseDate = new DateTime(2020, 1, i)
+                    }
+                ]
             })
             .Reverse()
             .ToList();
