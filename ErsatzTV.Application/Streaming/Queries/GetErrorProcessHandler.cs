@@ -21,12 +21,10 @@ public class GetErrorProcessHandler(
         string ffprobePath,
         CancellationToken cancellationToken)
     {
-        DateTimeOffset now = DateTimeOffset.Now;
-
         Command process = await ffmpegProcessService.ForError(
             ffmpegPath,
             channel,
-            now,
+            request.Now,
             request.MaybeDuration,
             request.ErrorMessage,
             request.HlsRealtime,
@@ -42,7 +40,8 @@ public class GetErrorProcessHandler(
             request.MaybeDuration,
             request.Until,
             true,
-            now.ToUnixTimeSeconds(),
-            Option<int>.None);
+            request.Now.ToUnixTimeSeconds(),
+            Option<int>.None,
+            Optional(channel.PlayoutOffset));
     }
 }
