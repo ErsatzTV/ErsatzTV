@@ -21,6 +21,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Add framerate template data
     - `RFrameRate` - the real content framerate (or channel normalized framerate) as reported by ffmpeg, e.g. `30000/1001`
     - `FrameRate` - the decimal representation of `RFrameRate`, e.g. `29.97002997`
+  - Add `Channel_StartTime` template data
+    - This indicates the time that the transcode session started for the current channel
 - Add remote stream metadata
   - Remote stream definitions (yaml files) can now contain `title`, `plot`, `year` and `content_rating` fields
   - Remote streams can now have thumbnails (same name as yaml file but with image extension)
