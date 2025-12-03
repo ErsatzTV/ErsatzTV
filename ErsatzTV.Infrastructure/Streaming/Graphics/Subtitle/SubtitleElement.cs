@@ -103,7 +103,7 @@ public class SubtitleElement(
                 "-nostdin", "-hide_banner", "-nostats", "-loglevel", "error",
                 "-f", "lavfi",
                 "-i",
-                $"color=c=black@0.0:s={context.FrameSize.Width}x{context.FrameSize.Height}:r={context.FrameRate},format=bgra,subtitles={subtitleFile}:fontsdir={fontsDir}:alpha=1",
+                $"color=c=black@0.0:s={context.FrameSize.Width}x{context.FrameSize.Height}:r={context.FrameRate.RFrameRate},format=bgra,subtitles={subtitleFile}:fontsdir={fontsDir}:alpha=1",
                 "-f", "image2pipe",
                 "-pix_fmt", "bgra",
                 "-vcodec", "rawvideo",
