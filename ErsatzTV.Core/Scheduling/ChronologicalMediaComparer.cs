@@ -23,6 +23,9 @@ internal class ChronologicalMediaComparer : IComparer<MediaItem>
             MusicVideo mv => mv.MusicVideoMetadata.HeadOrNone().Match(
                 mvm => mvm.ReleaseDate ?? DateTime.MaxValue,
                 () => DateTime.MaxValue),
+            OtherVideo ov => ov.OtherVideoMetadata.HeadOrNone().Match(
+                ovm => ovm.ReleaseDate ?? DateTime.MaxValue,
+                () => DateTime.MaxValue),
             _ => DateTime.MaxValue
         };
 
@@ -36,6 +39,9 @@ internal class ChronologicalMediaComparer : IComparer<MediaItem>
                 () => DateTime.MaxValue),
             MusicVideo mv => mv.MusicVideoMetadata.HeadOrNone().Match(
                 mvm => mvm.ReleaseDate ?? DateTime.MaxValue,
+                () => DateTime.MaxValue),
+            OtherVideo ov => ov.OtherVideoMetadata.HeadOrNone().Match(
+                ovm => ovm.ReleaseDate ?? DateTime.MaxValue,
                 () => DateTime.MaxValue),
             _ => DateTime.MaxValue
         };
