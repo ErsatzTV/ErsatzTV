@@ -36,6 +36,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Optimize graphics engine to generate element frames in parallel and to eliminate redundant frame copies
   - Match graphics engine framerate with source content (or channel normalized) framerate
   - Fix loading requested number of epg entries for motion graphics elements
+- Fix bug with mirror channels where seemingly random content would be played every ~40 seconds
 
 ### Changed
 - No longer round framerate to nearest integer when normalizing framerate

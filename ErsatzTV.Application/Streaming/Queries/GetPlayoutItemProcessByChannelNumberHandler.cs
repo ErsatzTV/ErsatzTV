@@ -332,8 +332,9 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                     duration,
                     finish,
                     true,
-                    now.ToUnixTimeSeconds(),
-                    Option<int>.None);
+                    effectiveNow.ToUnixTimeSeconds(),
+                    Option<int>.None,
+                    Optional(channel.PlayoutOffset));
             }
 
             MediaVersion version = playoutItemWithPath.PlayoutItem.MediaItem.GetHeadVersion();
@@ -463,7 +464,8 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 finish,
                 isComplete,
                 effectiveNow.ToUnixTimeSeconds(),
-                playoutItemResult.MediaItemId);
+                playoutItemResult.MediaItemId,
+                Optional(channel.PlayoutOffset));
 
             return Right<BaseError, PlayoutItemProcessModel>(result);
         }
@@ -519,7 +521,8 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                         finish,
                         true,
                         now.ToUnixTimeSeconds(),
-                        Option<int>.None);
+                        Option<int>.None,
+                        Optional(channel.PlayoutOffset));
                 case PlayoutItemDoesNotExistOnDisk:
                     Command doesNotExistProcess = await _ffmpegProcessService.ForError(
                         ffmpegPath,
@@ -541,7 +544,8 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                         finish,
                         true,
                         now.ToUnixTimeSeconds(),
-                        Option<int>.None);
+                        Option<int>.None,
+                        Optional(channel.PlayoutOffset));
                 default:
                     Command errorProcess = await _ffmpegProcessService.ForError(
                         ffmpegPath,
@@ -563,7 +567,8 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                         finish,
                         true,
                         now.ToUnixTimeSeconds(),
-                        Option<int>.None);
+                        Option<int>.None,
+                        Optional(channel.PlayoutOffset));
             }
         }
 
