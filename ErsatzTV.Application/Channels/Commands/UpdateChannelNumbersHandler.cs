@@ -39,7 +39,14 @@ public class UpdateChannelNumbersHandler(
             foreach (var channel in channelsToUpdate)
             {
                 channel.Number = numberUpdates[channel.Id];
-                channel.SortNumber = double.Parse(numberUpdates[channel.Id], CultureInfo.InvariantCulture);
+                if (double.TryParse(channel.Number, CultureInfo.InvariantCulture, out double sortNumber))
+                {
+                    channel.SortNumber = sortNumber;
+                }
+                else
+                {
+                    return BaseError.New($"Failed to parse channel number {channel.Number}");
+                }
             }
 
             // save those changes
