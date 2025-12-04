@@ -24,4 +24,7 @@ public class ScriptGraphicsElement : BaseGraphicsElement
 
     [YamlMember(Alias = "pixel_format", ApplyNamingConventions = false)]
     public string PixelFormat { get; set; }
+
+    [YamlMember(Alias = "format", ApplyNamingConventions = false)]
+    public ScriptGraphicsFormat Format { get; set; }
 }

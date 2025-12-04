@@ -1,4 +1,5 @@
 using System.Buffers;
+using System.Buffers.Binary;
 using System.IO.Pipelines;
 using System.Text.Json;
 using CliWrap;
@@ -13,6 +14,8 @@ namespace ErsatzTV.Infrastructure.Streaming.Graphics;
 public class ScriptElement(ScriptGraphicsElement scriptElement, ILogger logger)
     : GraphicsElement, IDisposable
 {
+    private const uint EtvGraphicsMagic = 0x47565445;
+
     private CancellationTokenSource _cancellationTokenSource;
     private CommandTask<CommandResult> _commandTask;
     private int _frameSize;
@@ -20,6 +23,7 @@ public class ScriptElement(ScriptGraphicsElement scriptElement, ILogger logger)
     private SKBitmap _canvasBitmap;
     private TimeSpan _startTime;
     private TimeSpan _endTime;
+    private int _repeatCount;
 
     public void Dispose()
     {
@@ -126,48 +130,139 @@ public class ScriptElement(ScriptGraphicsElement scriptElement, ILogger logger)
                 return Option<PreparedElementImage>.None;
             }
 
-            while (true)
-            {
-                ReadResult readResult = await _pipeReader.ReadAsync(cancellationToken);
-                ReadOnlySequence<byte> buffer = readResult.Buffer;
-                SequencePosition consumed = buffer.Start;
-                SequencePosition examined = buffer.End;
-
-                try
-                {
-                    if (buffer.Length >= _frameSize)
-                    {
-                        ReadOnlySequence<byte> sequence = buffer.Slice(0, _frameSize);
-
-                        using (SKPixmap pixmap = _canvasBitmap.PeekPixels())
-                        {
-                            sequence.CopyTo(pixmap.GetPixelSpan());
-                        }
-
-                        // mark this frame as consumed
-                        consumed = sequence.End;
-
-                        // we are done, return the frame
-                        return new PreparedElementImage(_canvasBitmap, SKPointI.Empty, 1.0f, ZIndex, false);
-                    }
-
-                    if (readResult.IsCompleted)
-                    {
-                        await _pipeReader.CompleteAsync();
-
-                        return Option<PreparedElementImage>.None;
-                    }
-                }
-                finally
-                {
-                    // advance the reader, consuming the processed frame and examining the entire buffer
-                    _pipeReader.AdvanceTo(consumed, examined);
-                }
-            }
+            return scriptElement.Format is ScriptGraphicsFormat.Raw
+                ? await PrepareFromRaw(cancellationToken)
+                : await PrepareFromPacket(cancellationToken);
         }
         catch (TaskCanceledException)
         {
             return Option<PreparedElementImage>.None;
         }
+    }
+
+    private async Task<Option<PreparedElementImage>> PrepareFromRaw(CancellationToken cancellationToken)
+    {
+        while (true)
+        {
+            ReadResult readResult = await _pipeReader.ReadAsync(cancellationToken);
+            ReadOnlySequence<byte> buffer = readResult.Buffer;
+            SequencePosition consumed = buffer.Start;
+            SequencePosition examined = buffer.End;
+
+            try
+            {
+                if (buffer.Length >= _frameSize)
+                {
+                    ReadOnlySequence<byte> sequence = buffer.Slice(0, _frameSize);
+
+                    using (SKPixmap pixmap = _canvasBitmap.PeekPixels())
+                    {
+                        sequence.CopyTo(pixmap.GetPixelSpan());
+                    }
+
+                    // mark this frame as consumed
+                    consumed = sequence.End;
+
+                    // we are done, return the frame
+                    return new PreparedElementImage(_canvasBitmap, SKPointI.Empty, 1.0f, ZIndex, false);
+                }
+
+                if (readResult.IsCompleted)
+                {
+                    await _pipeReader.CompleteAsync();
+
+                    return Option<PreparedElementImage>.None;
+                }
+            }
+            finally
+            {
+                // advance the reader, consuming the processed frame and examining the entire buffer
+                _pipeReader.AdvanceTo(consumed, examined);
+            }
+        }
+    }
+
+    private async Task<Option<PreparedElementImage>> PrepareFromPacket(CancellationToken cancellationToken)
+    {
+        if (_repeatCount > 0 || await ReadPacket(cancellationToken))
+        {
+            if (_repeatCount > 0)
+            {
+                _repeatCount--;
+            }
+
+            return new PreparedElementImage(_canvasBitmap, SKPointI.Empty, 1.0f, ZIndex, false);
+        }
+
+        IsFinished = true;
+        await _pipeReader.CompleteAsync();
+        return Option<PreparedElementImage>.None;
+    }
+
+    private async Task<bool> ReadPacket(CancellationToken cancellationToken)
+    {
+        // need 11 bytes - 4 magic, 2 version, 1 packet type, 4 payload len
+        var result = await _pipeReader.ReadAtLeastAsync(11, cancellationToken);
+        ReadOnlySequence<byte> buffer = result.Buffer;
+
+        if (buffer.Length < 11)
+        {
+            return false;
+        }
+
+        Span<byte> headerBytes = stackalloc byte[11];
+        buffer.Slice(0, 11).CopyTo(headerBytes);
+
+        uint magic = BinaryPrimitives.ReadUInt32BigEndian(headerBytes[..4]);
+        ushort version = BinaryPrimitives.ReadUInt16BigEndian(headerBytes.Slice(4, 2));
+        byte type = headerBytes[6];
+        uint payloadLen = BinaryPrimitives.ReadUInt32BigEndian(headerBytes.Slice(7, 4));
+
+        if (magic != EtvGraphicsMagic || version != 1)
+        {
+            // TODO: better error handling?
+            return false;
+        }
+
+        // consume header
+        _pipeReader.AdvanceTo(buffer.GetPosition(11));
+
+        var success = true;
+
+        if (payloadLen > 0)
+        {
+            result = await _pipeReader.ReadAtLeastAsync((int)payloadLen, cancellationToken);
+            buffer = result.Buffer;
+
+            switch (type)
+            {
+                case (byte)ScriptPayloadType.Full:
+                    using (SKPixmap pixmap = _canvasBitmap.PeekPixels())
+                    {
+                        buffer.Slice(0, payloadLen).CopyTo(pixmap.GetPixelSpan());
+                    }
+                    break;
+                case (byte)ScriptPayloadType.Repeat:
+                    uint repeatFrames = BinaryPrimitives.ReadUInt32BigEndian(buffer.First.Span);
+                    _repeatCount = (int)repeatFrames;
+                    break;
+                case (byte)ScriptPayloadType.Rectangles:
+                    // TODO: support rectangles
+                    success = false;
+                    break;
+            }
+
+            // consume payload
+            _pipeReader.AdvanceTo(buffer.GetPosition(payloadLen));
+        }
+        else
+        {
+            if (type == (byte)ScriptPayloadType.Clear)
+            {
+                _canvasBitmap.Erase(SKColors.Transparent);
+            }
+        }
+
+        return success;
     }
 }
