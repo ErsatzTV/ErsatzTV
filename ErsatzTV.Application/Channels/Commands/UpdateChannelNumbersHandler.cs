@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Threading.Channels;
 using ErsatzTV.Core;
 using ErsatzTV.Infrastructure.Data;
@@ -38,6 +39,7 @@ public class UpdateChannelNumbersHandler(
             foreach (var channel in channelsToUpdate)
             {
                 channel.Number = numberUpdates[channel.Id];
+                channel.SortNumber = double.Parse(numberUpdates[channel.Id], CultureInfo.InvariantCulture);
             }
 
             // save those changes
