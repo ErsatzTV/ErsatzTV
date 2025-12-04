@@ -220,7 +220,7 @@ public class ScriptElement(ScriptGraphicsElement scriptElement, ILogger logger)
 
         if (magic != EtvGraphicsMagic || version != 1)
         {
-            // TODO: better error handling?
+            logger.LogWarning("Invalid graphics packet received: magic {Magic}, version {Version}", magic, version);
             return false;
         }
 
@@ -243,11 +243,13 @@ public class ScriptElement(ScriptGraphicsElement scriptElement, ILogger logger)
                     }
                     break;
                 case (byte)ScriptPayloadType.Repeat:
-                    uint repeatFrames = BinaryPrimitives.ReadUInt32BigEndian(buffer.First.Span);
-                    _repeatCount = (int)repeatFrames;
+                    Span<byte> repeatBytes = stackalloc byte[4];
+                    buffer.Slice(0, 4).CopyTo(repeatBytes);
+                    _repeatCount = (int)BinaryPrimitives.ReadUInt32BigEndian(repeatBytes);
                     break;
                 case (byte)ScriptPayloadType.Rectangles:
                     // TODO: support rectangles
+                    logger.LogWarning("Unsupported graphics packet type: {Type}", type);
                     success = false;
                     break;
             }
@@ -260,6 +262,11 @@ public class ScriptElement(ScriptGraphicsElement scriptElement, ILogger logger)
             if (type == (byte)ScriptPayloadType.Clear)
             {
                 _canvasBitmap.Erase(SKColors.Transparent);
+            }
+            else
+            {
+                logger.LogWarning("Unexpected zero-length payload for type {Type}", type);
+                success = false;
             }
         }
 
