@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Graphics Engine:
   - Add `script` graphics element type
     - Supported in playback troubleshooting and all scheduling types
-    - Supports arbitrary scripts or executables that output BGRA data to stdout
+    - Supports arbitrary scripts or executables that output graphics to ETV via stdout
     - Supports EPG and Media Item replacement in entire template
       - EPG data is sourced from XMLTV for the current time
         - EPG data can also load a configurable number of subsequent (up next) entries
@@ -18,6 +18,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
       - Script and arguments (`command` and `args`)
       - Draw order (`z_index`)
       - Timing (`start_seconds` and `duration_seconds`)
+      - Data format (`format`)
+        - `raw` format means full frames of BGRA data to stdout
+        - `packet` format means ETV graphics packets to stdout
   - Add framerate template data
     - `RFrameRate` - the real content framerate (or channel normalized framerate) as reported by ffmpeg, e.g. `30000/1001`
     - `FrameRate` - the decimal representation of `RFrameRate`, e.g. `29.97002997`
