@@ -40,6 +40,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Fix loading requested number of epg entries for motion graphics elements
 - Fix bug with mirror channels where seemingly random content would be played every ~40 seconds
 - Fix chronological sorting for Other Videos that have release date metadata
+- Fix playout sorting after using channel number editor
+  - If your playouts are sorted incorrectly, use the channel number editor to fix (swap two channels, then swap them back)
 
 ### Changed
 - No longer round framerate to nearest integer when normalizing framerate
