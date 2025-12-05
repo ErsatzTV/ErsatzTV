@@ -6,6 +6,7 @@ using CliWrap;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Graphics;
 using ErsatzTV.Core.Interfaces.Streaming;
+using Humanizer;
 using Microsoft.Extensions.Logging;
 using SkiaSharp;
 
@@ -24,9 +25,15 @@ public class ScriptElement(ScriptGraphicsElement scriptElement, ILogger logger)
     private TimeSpan _startTime;
     private TimeSpan _endTime;
     private int _repeatCount;
+    private long _totalBytes;
 
     public void Dispose()
     {
+        logger.LogDebug(
+            "Script element produced {ByteSize} ({Bytes} bytes)",
+            ByteSize.FromBytes(_totalBytes),
+            _totalBytes);
+
         GC.SuppressFinalize(this);
 
         _pipeReader?.Complete();
@@ -94,7 +101,7 @@ public class ScriptElement(ScriptGraphicsElement scriptElement, ILogger logger)
                 .WithStandardOutputPipe(PipeTarget.ToStream(pipe.Writer.AsStream()));
 
             logger.LogDebug(
-                "script element command {Command} arguments {Arguments}",
+                "Script element command {Command} arguments {Arguments}",
                 command.TargetFilePath,
                 command.Arguments);
 
@@ -163,6 +170,8 @@ public class ScriptElement(ScriptGraphicsElement scriptElement, ILogger logger)
                     // mark this frame as consumed
                     consumed = sequence.End;
 
+                    _totalBytes += _frameSize;
+
                     // we are done, return the frame
                     return new PreparedElementImage(_canvasBitmap, SKPointI.Empty, 1.0f, ZIndex, false);
                 }
@@ -226,6 +235,7 @@ public class ScriptElement(ScriptGraphicsElement scriptElement, ILogger logger)
 
         // consume header
         _pipeReader.AdvanceTo(buffer.GetPosition(11));
+        _totalBytes += 11;
 
         var success = true;
 
@@ -248,14 +258,65 @@ public class ScriptElement(ScriptGraphicsElement scriptElement, ILogger logger)
                     _repeatCount = (int)BinaryPrimitives.ReadUInt32BigEndian(repeatBytes);
                     break;
                 case (byte)ScriptPayloadType.Rectangles:
-                    // TODO: support rectangles
-                    logger.LogWarning("Unsupported graphics packet type: {Type}", type);
-                    success = false;
+                    _canvasBitmap.Erase(SKColors.Transparent);
+                    Span<byte> shortBytes = stackalloc byte[2];
+                    buffer.Slice(0, shortBytes.Length).CopyTo(shortBytes);
+                    int rectangleCount = BinaryPrimitives.ReadUInt16BigEndian(shortBytes);
+                    int offset = shortBytes.Length;
+                    using (SKPixmap pixmap = _canvasBitmap.PeekPixels())
+                    {
+                        for (int i = 0; i < rectangleCount; i++)
+                        {
+                            buffer.Slice(offset, 2).CopyTo(shortBytes);
+                            offset += 2;
+                            int x = BinaryPrimitives.ReadUInt16BigEndian(shortBytes);
+
+                            buffer.Slice(offset, 2).CopyTo(shortBytes);
+                            offset += 2;
+                            int y = BinaryPrimitives.ReadUInt16BigEndian(shortBytes);
+
+                            buffer.Slice(offset, 2).CopyTo(shortBytes);
+                            offset += 2;
+                            int w = BinaryPrimitives.ReadUInt16BigEndian(shortBytes);
+
+                            buffer.Slice(offset, 2).CopyTo(shortBytes);
+                            offset += 2;
+                            int h = BinaryPrimitives.ReadUInt16BigEndian(shortBytes);
+
+                            int canvasWidth = pixmap.Width;
+                            int canvasHeight = pixmap.Height;
+
+                            int effectiveW = Math.Min(w, canvasWidth);
+                            int effectiveH = Math.Min(h, canvasHeight);
+
+                            if (effectiveW > 0 && effectiveH > 0)
+                            {
+                                int bytesPerPixel = 4;
+                                int sourceRowBytes = w * bytesPerPixel;
+                                int destRowBytes = pixmap.RowBytes;
+
+                                Span<byte> canvasSpan = pixmap.GetPixelSpan();
+
+                                for (int row = 0; row < effectiveH; row++)
+                                {
+                                    int sourceIndex = offset + (row * sourceRowBytes);
+                                    int destIndex = ((y + row) * destRowBytes) + (x * bytesPerPixel);
+
+                                    buffer.Slice(sourceIndex, effectiveW * bytesPerPixel)
+                                        .CopyTo(canvasSpan.Slice(destIndex, effectiveW * bytesPerPixel));
+                                }
+                            }
+
+                            offset += w * h * 4;
+                        }
+                    }
+
                     break;
             }
 
             // consume payload
             _pipeReader.AdvanceTo(buffer.GetPosition(payloadLen));
+            _totalBytes += payloadLen;
         }
         else
         {
