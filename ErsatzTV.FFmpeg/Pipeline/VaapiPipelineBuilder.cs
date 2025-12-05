@@ -250,6 +250,14 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
         // after everything else is done, apply the encoder
         if (pipelineSteps.OfType<IEncoder>().All(e => e.Kind != StreamKind.Video))
         {
+            bool packedHeaderMisc = false;
+            if (_hardwareCapabilities is VaapiHardwareCapabilities vaapiHardwareCapabilities)
+            {
+                packedHeaderMisc = vaapiHardwareCapabilities.GetPackedHeaderMisc(
+                    desiredState.VideoFormat,
+                    desiredState.PixelFormat);
+            }
+
             RateControlMode rateControlMode =
                 _hardwareCapabilities.GetRateControlMode(desiredState.VideoFormat, desiredState.PixelFormat)
                     .IfNone(RateControlMode.VBR);
@@ -260,9 +268,9 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
                     (HardwareAccelerationMode.Vaapi, VideoFormat.Av1) =>
                         new EncoderAv1Vaapi(rateControlMode),
                     (HardwareAccelerationMode.Vaapi, VideoFormat.Hevc) =>
-                        new EncoderHevcVaapi(rateControlMode),
+                        new EncoderHevcVaapi(rateControlMode, packedHeaderMisc),
                     (HardwareAccelerationMode.Vaapi, VideoFormat.H264) =>
-                        new EncoderH264Vaapi(desiredState.VideoProfile, rateControlMode),
+                        new EncoderH264Vaapi(desiredState.VideoProfile, rateControlMode, packedHeaderMisc),
                     (HardwareAccelerationMode.Vaapi, VideoFormat.Mpeg2Video) =>
                         new EncoderMpeg2Vaapi(rateControlMode),
 
