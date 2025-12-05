@@ -57,6 +57,13 @@ public static partial class VaapiCapabilityParser
                             break;
                     }
                 }
+
+                // check for enc packed header misc
+                match = ProfileEncPackedHeaderMiscRegex().Match(line);
+                if (match.Success)
+                {
+                    profile.AddPackedHeaderMisc();
+                }
             }
         }
 
@@ -88,6 +95,9 @@ public static partial class VaapiCapabilityParser
 
     [GeneratedRegex(@".*VA_RC_(\w*).*")]
     private static partial Regex ProfileRateControlRegex();
+
+    [GeneratedRegex(@".*VA_ENC_PACKED_HEADER_MISC.*")]
+    private static partial Regex ProfileEncPackedHeaderMiscRegex();
 
     [GeneratedRegex(@"Driver version:.*\(radeonsi, (\w+)")]
     private static partial Regex RadeonSiGenerationRegex();

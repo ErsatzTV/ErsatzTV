@@ -20,9 +20,6 @@ public class EncoderAv1Vaapi(RateControlMode rateControlMode) : EncoderBase
                 result.Add("1");
             }
 
-            result.Add("-sei");
-            result.Add("-a53_cc");
-
             return result.ToArray();
         }
     }

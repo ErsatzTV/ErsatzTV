@@ -163,49 +163,7 @@ public class VaapiHardwareCapabilities(
         Option<IPixelFormat> maybePixelFormat)
     {
         int bitDepth = maybePixelFormat.Map(pf => pf.BitDepth).IfNone(8);
-
-        bool isHardware = videoFormat switch
-        {
-            // vaapi cannot encode 10-bit h264
-            VideoFormat.H264 when bitDepth == 10 => false,
-
-            VideoFormat.H264 =>
-                profileEntrypoints.Any(e => e is
-                {
-                    VaapiProfile: VaapiProfile.H264Main,
-                    VaapiEntrypoint: VaapiEntrypoint.Encode or VaapiEntrypoint.EncodeLowPower
-                }),
-
-            VideoFormat.Hevc when bitDepth == 10 =>
-                profileEntrypoints.Any(e => e is
-                {
-                    VaapiProfile: VaapiProfile.HevcMain10,
-                    VaapiEntrypoint: VaapiEntrypoint.Encode or VaapiEntrypoint.EncodeLowPower
-                }),
-
-            VideoFormat.Hevc =>
-                profileEntrypoints.Any(e => e is
-                {
-                    VaapiProfile: VaapiProfile.HevcMain,
-                    VaapiEntrypoint: VaapiEntrypoint.Encode or VaapiEntrypoint.EncodeLowPower
-                }),
-
-            VideoFormat.Av1 =>
-                profileEntrypoints.Any(e => e is
-                {
-                    VaapiProfile: VaapiProfile.Av1Profile0,
-                    VaapiEntrypoint: VaapiEntrypoint.Encode or VaapiEntrypoint.EncodeLowPower
-                }),
-
-            VideoFormat.Mpeg2Video =>
-                profileEntrypoints.Any(e => e is
-                {
-                    VaapiProfile: VaapiProfile.Mpeg2Main,
-                    VaapiEntrypoint: VaapiEntrypoint.Encode or VaapiEntrypoint.EncodeLowPower
-                }),
-
-            _ => false
-        };
+        bool isHardware = GetEntrypoint(videoFormat, bitDepth).IsSome;
 
         if (!isHardware)
         {
@@ -221,7 +179,36 @@ public class VaapiHardwareCapabilities(
     public Option<RateControlMode> GetRateControlMode(string videoFormat, Option<IPixelFormat> maybePixelFormat)
     {
         int bitDepth = maybePixelFormat.Map(pf => pf.BitDepth).IfNone(8);
-        Option<VaapiProfileEntrypoint> maybeEntrypoint = videoFormat switch
+        foreach (VaapiProfileEntrypoint entrypoint in GetEntrypoint(videoFormat, bitDepth))
+        {
+            if (entrypoint.RateControlModes.Contains(RateControlMode.VBR) ||
+                entrypoint.RateControlModes.Contains(RateControlMode.CBR))
+            {
+                return Option<RateControlMode>.None;
+            }
+
+            if (entrypoint.RateControlModes.Contains(RateControlMode.CQP))
+            {
+                return RateControlMode.CQP;
+            }
+        }
+
+        return Option<RateControlMode>.None;
+    }
+
+    public bool GetPackedHeaderMisc(string videoFormat, Option<IPixelFormat> maybePixelFormat)
+    {
+        int bitDepth = maybePixelFormat.Map(pf => pf.BitDepth).IfNone(8);
+        foreach (VaapiProfileEntrypoint entrypoint in GetEntrypoint(videoFormat, bitDepth))
+        {
+            return entrypoint.PackedHeaderMisc;
+        }
+
+        return false;
+    }
+
+    private Option<VaapiProfileEntrypoint> GetEntrypoint(string videoFormat, int bitDepth) =>
+        videoFormat switch
         {
             // vaapi cannot encode 10-bit h264
             VideoFormat.H264 when bitDepth == 10 => None,
@@ -250,6 +237,14 @@ public class VaapiHardwareCapabilities(
                     })
                     .HeadOrNone(),
 
+            VideoFormat.Av1 =>
+                profileEntrypoints.Where(e => e is
+                {
+                    VaapiProfile: VaapiProfile.Av1Profile0,
+                    VaapiEntrypoint: VaapiEntrypoint.Encode or VaapiEntrypoint.EncodeLowPower
+                })
+                .HeadOrNone(),
+
             VideoFormat.Mpeg2Video =>
                 profileEntrypoints.Where(e => e is
                     {
@@ -260,21 +255,4 @@ public class VaapiHardwareCapabilities(
 
             _ => None
         };
-
-        foreach (VaapiProfileEntrypoint entrypoint in maybeEntrypoint)
-        {
-            if (entrypoint.RateControlModes.Contains(RateControlMode.VBR) ||
-                entrypoint.RateControlModes.Contains(RateControlMode.CBR))
-            {
-                return Option<RateControlMode>.None;
-            }
-
-            if (entrypoint.RateControlModes.Contains(RateControlMode.CQP))
-            {
-                return RateControlMode.CQP;
-            }
-        }
-
-        return Option<RateControlMode>.None;
-    }
 }

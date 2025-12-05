@@ -44,6 +44,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix bug with mirror channels where seemingly random content would be played every ~40 seconds
 - Fix chronological sorting for Other Videos that have release date metadata
 - Fix playout sorting after using channel number editor
+- VAAPI: Only include `-sei a53_cc` flags when misc packed headers are supported by the encoder
+  - This should fix playback in some cases, e.g. AMD VAAPI h264 encoder
 
 ### Changed
 - No longer round framerate to nearest integer when normalizing framerate

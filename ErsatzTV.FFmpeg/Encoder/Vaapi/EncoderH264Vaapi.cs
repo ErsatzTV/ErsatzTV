@@ -2,7 +2,8 @@
 
 namespace ErsatzTV.FFmpeg.Encoder.Vaapi;
 
-public class EncoderH264Vaapi(Option<string> maybeVideoProfile, RateControlMode rateControlMode) : EncoderBase
+public class EncoderH264Vaapi(Option<string> maybeVideoProfile, RateControlMode rateControlMode, bool packedHeaderMisc)
+    : EncoderBase
 {
     public override string Name => "h264_vaapi";
 
@@ -20,8 +21,11 @@ public class EncoderH264Vaapi(Option<string> maybeVideoProfile, RateControlMode 
                 result.Add("1");
             }
 
-            result.Add("-sei");
-            result.Add("-a53_cc");
+            if (packedHeaderMisc)
+            {
+                result.Add("-sei");
+                result.Add("-a53_cc");
+            }
 
             foreach (string videoProfile in maybeVideoProfile)
             {

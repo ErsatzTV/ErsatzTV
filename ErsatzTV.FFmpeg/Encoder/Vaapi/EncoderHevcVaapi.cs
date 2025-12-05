@@ -2,12 +2,8 @@
 
 namespace ErsatzTV.FFmpeg.Encoder.Vaapi;
 
-public class EncoderHevcVaapi : EncoderBase
+public class EncoderHevcVaapi(RateControlMode rateControlMode, bool packedHeaderMisc) : EncoderBase
 {
-    private readonly RateControlMode _rateControlMode;
-
-    public EncoderHevcVaapi(RateControlMode rateControlMode) => _rateControlMode = rateControlMode;
-
     public override string Name => "hevc_vaapi";
 
     public override StreamKind Kind => StreamKind.Video;
@@ -18,14 +14,17 @@ public class EncoderHevcVaapi : EncoderBase
         {
             var result = new List<string>(base.OutputOptions);
 
-            if (_rateControlMode == RateControlMode.CQP)
+            if (rateControlMode == RateControlMode.CQP)
             {
                 result.Add("-rc_mode");
                 result.Add("1");
             }
 
-            result.Add("-sei");
-            result.Add("-a53_cc");
+            if (packedHeaderMisc)
+            {
+                result.Add("-sei");
+                result.Add("-a53_cc");
+            }
 
             return result.ToArray();
         }
