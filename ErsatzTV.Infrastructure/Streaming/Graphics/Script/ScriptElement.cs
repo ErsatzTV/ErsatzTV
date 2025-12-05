@@ -265,6 +265,12 @@ public class ScriptElement(ScriptGraphicsElement scriptElement, ILogger logger)
                     int offset = shortBytes.Length;
                     using (SKPixmap pixmap = _canvasBitmap.PeekPixels())
                     {
+                        int canvasWidth = pixmap.Width;
+                        int canvasHeight = pixmap.Height;
+                        const int BYTES_PER_PIXEL = 4;
+                        int destRowBytes = pixmap.RowBytes;
+                        Span<byte> canvasSpan = pixmap.GetPixelSpan();
+
                         for (int i = 0; i < rectangleCount; i++)
                         {
                             buffer.Slice(offset, 2).CopyTo(shortBytes);
@@ -283,27 +289,20 @@ public class ScriptElement(ScriptGraphicsElement scriptElement, ILogger logger)
                             offset += 2;
                             int h = BinaryPrimitives.ReadUInt16BigEndian(shortBytes);
 
-                            int canvasWidth = pixmap.Width;
-                            int canvasHeight = pixmap.Height;
-
-                            int effectiveW = Math.Min(w, canvasWidth);
-                            int effectiveH = Math.Min(h, canvasHeight);
+                            int effectiveW = Math.Max(0, Math.Min(w, canvasWidth - x));
+                            int effectiveH = Math.Max(0, Math.Min(h, canvasHeight - y));
 
                             if (effectiveW > 0 && effectiveH > 0)
                             {
-                                int bytesPerPixel = 4;
-                                int sourceRowBytes = w * bytesPerPixel;
-                                int destRowBytes = pixmap.RowBytes;
-
-                                Span<byte> canvasSpan = pixmap.GetPixelSpan();
+                                int sourceRowBytes = w * BYTES_PER_PIXEL;
 
                                 for (int row = 0; row < effectiveH; row++)
                                 {
                                     int sourceIndex = offset + (row * sourceRowBytes);
-                                    int destIndex = ((y + row) * destRowBytes) + (x * bytesPerPixel);
+                                    int destIndex = ((y + row) * destRowBytes) + (x * BYTES_PER_PIXEL);
 
-                                    buffer.Slice(sourceIndex, effectiveW * bytesPerPixel)
-                                        .CopyTo(canvasSpan.Slice(destIndex, effectiveW * bytesPerPixel));
+                                    buffer.Slice(sourceIndex, effectiveW * BYTES_PER_PIXEL)
+                                        .CopyTo(canvasSpan.Slice(destIndex, effectiveW * BYTES_PER_PIXEL));
                                 }
                             }
 
