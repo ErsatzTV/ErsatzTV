@@ -626,12 +626,19 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
         {
             // pad_vaapi seems to pad with green when input is HDR
             // also green with i965 driver
+            // also green with radeonsi and h264 main profile
             // so use software pad in these cases
             bool is965 = ffmpegState.VaapiDriver
                 .IfNone(string.Empty)
                 .Contains("i965", StringComparison.OrdinalIgnoreCase);
 
-            if (isHdrTonemap || is965)
+            bool isRadeonSiMain = ffmpegState.VaapiDriver.IfNone(string.Empty)
+                                      .Contains("radeonsi", StringComparison.OrdinalIgnoreCase)
+                                  && ffmpegState.EncoderHardwareAccelerationMode is HardwareAccelerationMode.Vaapi
+                                  && desiredState.VideoFormat is VideoFormat.H264
+                                  && desiredState.VideoProfile.IfNone(string.Empty) is VideoProfile.Main;
+
+            if (isHdrTonemap || is965 || isRadeonSiMain)
             {
                 var padStep = new PadFilter(currentState, desiredState.PaddedSize);
                 currentState = padStep.NextState(currentState);
