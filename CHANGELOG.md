@@ -36,7 +36,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix detection of Plex Other Video libraries using `Plex Personal Media` agent
   - If the library is already detected as a Movies library in ETV, synchronization must be disabled for the library to change it to an Other Videos library
   - A warning will be logged when this scenario is detected
-- AMD VAAPI: work around buggy ffmpeg behavior where hevc_vaapi encoder with RadeonSI driver incorrectly outputs height of 1088 instead of 1080
 - Graphics Engine:
   - Optimize graphics engine to generate element frames in parallel and to eliminate redundant frame copies
   - Match graphics engine framerate with source content (or channel normalized) framerate
@@ -46,6 +45,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix playout sorting after using channel number editor
 - VAAPI: Only include `-sei a53_cc` flags when misc packed headers are supported by the encoder
   - This should fix playback in some cases, e.g. AMD VAAPI h264 encoder
+- AMD VAAPI:
+  - work around buggy ffmpeg behavior where hevc_vaapi encoder with RadeonSI driver incorrectly outputs height of 1088 instead of 1080
+  - fix green padding when encoding h264 using main profile
+
 
 ### Changed
 - No longer round framerate to nearest integer when normalizing framerate
