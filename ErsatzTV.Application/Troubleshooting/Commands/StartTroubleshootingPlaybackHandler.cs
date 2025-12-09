@@ -120,7 +120,8 @@ public partial class StartTroubleshootingPlaybackHandler(
 
             try
             {
-                using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(2));
+                using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cts.Token);
 
                 Command processWithPipe = request.PlayoutItemResult.Process;
                 foreach (GraphicsEngineContext graphicsEngineContext in request.PlayoutItemResult.GraphicsEngineContext)

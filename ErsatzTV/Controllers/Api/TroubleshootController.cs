@@ -164,11 +164,40 @@ public class TroubleshootController(
         Option<string> maybeArchivePath = await mediator.Send(new ArchiveTroubleshootingResults(), cancellationToken);
         foreach (string archivePath in maybeArchivePath)
         {
-            FileStream fs = System.IO.File.OpenRead(archivePath);
+            var fs = new FileStream(
+                archivePath,
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.Read,
+                4096,
+                FileOptions.DeleteOnClose);
             return File(
                 fs,
                 "application/zip",
                 $"ersatztv-troubleshooting-{DateTimeOffset.Now.ToUnixTimeSeconds()}.zip");
+        }
+
+        return NotFound();
+    }
+
+    [HttpHead("api/troubleshoot/playback/sample/{mediaItemId:int}")]
+    [HttpGet("api/troubleshoot/playback/sample/{mediaItemId:int}")]
+    public async Task<IActionResult> TroubleshootPlaybackSample(int mediaItemId, CancellationToken cancellationToken)
+    {
+        Option<string> maybeArchivePath = await mediator.Send(new ArchiveMediaSample(mediaItemId), cancellationToken);
+        foreach (string archivePath in maybeArchivePath)
+        {
+            var fs = new FileStream(
+                archivePath,
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.Read,
+                4096,
+                FileOptions.DeleteOnClose);
+            return File(
+                fs,
+                "application/zip",
+                $"ersatztv-media-sample-{DateTimeOffset.Now.ToUnixTimeSeconds()}.zip");
         }
 
         return NotFound();
