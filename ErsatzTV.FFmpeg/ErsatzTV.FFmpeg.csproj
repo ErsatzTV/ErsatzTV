@@ -7,6 +7,7 @@
         <AnalysisLevel>latest-Recommended</AnalysisLevel>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <NoWarn>VSTHRD200</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>
