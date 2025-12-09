@@ -471,9 +471,9 @@ public partial class HardwareCapabilitiesFactory(
                 return new NoHardwareCapabilities();
             }
 
-            string display = vaapiDisplay.IfNone("drm");
-            string driver = vaapiDriver.IfNone(string.Empty);
-            string device = vaapiDevice.IfNone(string.Empty);
+            string display = await vaapiDisplay.IfNoneAsync("drm");
+            string driver = await vaapiDriver.IfNoneAsync(string.Empty);
+            string device = await vaapiDevice.IfNoneAsync(string.Empty);
             string generation = string.Empty;
             var cacheKey = string.Format(CultureInfo.InvariantCulture, VaapiCacheKeyFormat, display, driver, device);
             var generationCacheKey = string.Format(
@@ -557,7 +557,7 @@ public partial class HardwareCapabilitiesFactory(
                 return new NoHardwareCapabilities();
             }
 
-            string device = qsvDevice.IfNone(string.Empty);
+            string device = await qsvDevice.IfNoneAsync(string.Empty);
             var cacheKey = string.Format(CultureInfo.InvariantCulture, QsvCacheKeyFormat, device);
 
             if (memoryCache.TryGetValue(cacheKey, out List<VaapiProfileEntrypoint>? profileEntrypoints) &&

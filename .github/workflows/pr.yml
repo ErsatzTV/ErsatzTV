@@ -2,6 +2,31 @@
 on:
   pull_request:
 jobs:
+  build_and_analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get the sources
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: true
+
+      - name: Setup dotnet
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Clean
+        run: dotnet clean --configuration Release && dotnet nuget locals all --clear
+
+      - name: Install dependencies
+        run: dotnet restore
+
+      - name: Prep project file
+        run: sed -i '' '/Scanner/d' ErsatzTV/ErsatzTV.csproj
+
+      - name: Build
+        run: dotnet build --configuration Release --no-restore /p:EnableThreadingAnalyzers=true
   build_and_test_windows:
     runs-on: windows-latest
     steps:

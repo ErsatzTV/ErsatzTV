@@ -1,0 +1,15 @@
+<Project>
+    <PropertyGroup>
+        <EnableThreadingAnalyzers Condition="'$(EnableThreadingAnalyzers)' == ''">false</EnableThreadingAnalyzers>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference
+            Include="Microsoft.VisualStudio.Threading.Analyzers"
+            Version="17.14.15"
+            Condition="'$(EnableThreadingAnalyzers)' == 'true'">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+    </ItemGroup>
+</Project>
