@@ -76,6 +76,7 @@ public abstract class TroubleshootingHandlerBase(
             .Include(mi => (mi as RemoteStream).MediaVersions)
             .ThenInclude(mv => mv.Streams)
             .Include(mi => (mi as RemoteStream).RemoteStreamMetadata)
+            .AsSplitQuery()
             .SingleOrDefaultAsync(mi => mi.Id == mediaItemId, cancellationToken)
             .Map(Optional)
             .Map(o => o.ToValidation<BaseError>(new UnableToLocatePlayoutItem()));

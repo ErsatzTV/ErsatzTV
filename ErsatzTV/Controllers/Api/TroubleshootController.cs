@@ -164,7 +164,13 @@ public class TroubleshootController(
         Option<string> maybeArchivePath = await mediator.Send(new ArchiveTroubleshootingResults(), cancellationToken);
         foreach (string archivePath in maybeArchivePath)
         {
-            FileStream fs = System.IO.File.OpenRead(archivePath);
+            var fs = new FileStream(
+                archivePath,
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.Read,
+                4096,
+                FileOptions.DeleteOnClose);
             return File(
                 fs,
                 "application/zip",
@@ -181,7 +187,13 @@ public class TroubleshootController(
         Option<string> maybeArchivePath = await mediator.Send(new ArchiveMediaSample(mediaItemId), cancellationToken);
         foreach (string archivePath in maybeArchivePath)
         {
-            FileStream fs = System.IO.File.OpenRead(archivePath);
+            var fs = new FileStream(
+                archivePath,
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.Read,
+                4096,
+                FileOptions.DeleteOnClose);
             return File(
                 fs,
                 "application/zip",

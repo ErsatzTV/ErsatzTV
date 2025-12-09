@@ -26,6 +26,8 @@ public class ArchiveMediaSampleHandler(
         embyPathReplacementService,
         fileSystem), IRequestHandler<ArchiveMediaSample, Option<string>>
 {
+    private readonly IFileSystem _fileSystem = fileSystem;
+
     public async Task<Option<string>> Handle(ArchiveMediaSample request, CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
@@ -57,9 +59,10 @@ public class ArchiveMediaSampleHandler(
         string mediaSample,
         CancellationToken cancellationToken)
     {
+        string tempFile = Path.GetTempFileName();
+
         try
         {
-            string tempFile = Path.GetTempFileName();
             await using ZipArchive zipArchive = await ZipFile.OpenAsync(
                 tempFile,
                 ZipArchiveMode.Update,
@@ -73,6 +76,7 @@ public class ArchiveMediaSampleHandler(
         catch (Exception ex)
         {
             logger.LogWarning(ex, "Failed to archive media sample for media item {MediaItemId}", request.MediaItemId);
+            _fileSystem.File.Delete(tempFile);
         }
 
         return Option<string>.None;
@@ -88,6 +92,14 @@ public class ArchiveMediaSampleHandler(
         try
         {
             string mediaItemPath = await GetMediaItemPath(dbContext, mediaItem, cancellationToken);
+            if (string.IsNullOrEmpty(mediaItemPath))
+            {
+                logger.LogWarning(
+                    "Media item {MediaItemId} does not exist on disk; cannot extract media sample.",
+                    mediaItem.Id);
+
+                return Option<string>.None;
+            }
 
             string extension = Path.GetExtension(mediaItemPath);
             if (string.IsNullOrWhiteSpace(extension))
