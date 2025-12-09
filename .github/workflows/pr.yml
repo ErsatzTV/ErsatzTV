@@ -22,6 +22,9 @@ jobs:
       - name: Install dependencies
         run: dotnet restore
 
+      - name: Prep project file
+        run: sed -i '' '/Scanner/d' ErsatzTV/ErsatzTV.csproj
+
       - name: Build
         run: dotnet build --configuration Release --no-restore /p:EnableThreadingAnalyzers=true
   build_and_test_windows:
