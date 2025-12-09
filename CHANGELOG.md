@@ -30,6 +30,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Remote stream definitions (yaml files) can now contain `title`, `plot`, `year` and `content_rating` fields
   - Remote streams can now have thumbnails (same name as yaml file but with image extension)
   - This metadata will be used in generated XMLTV entries, using a template that can be customized like other media kinds
+- Add `Download Media Sample` button to playback troubleshooting
+  - This button will extract up to 30 seconds of the media item and zip it
 
 ### Fixed
 - Fix startup on systems unsupported by NvEncSharp
@@ -48,7 +50,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - AMD VAAPI:
   - work around buggy ffmpeg behavior where hevc_vaapi encoder with RadeonSI driver incorrectly outputs height of 1088 instead of 1080
   - fix green padding when encoding h264 using main profile
-
+- Automatically kill playback troubleshooting ffmpeg process if it hasn't completed after two minutes
 
 ### Changed
 - No longer round framerate to nearest integer when normalizing framerate

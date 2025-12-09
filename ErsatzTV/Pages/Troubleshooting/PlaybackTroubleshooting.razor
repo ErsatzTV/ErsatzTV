@@ -22,14 +22,26 @@
 
 <MudForm Style="max-height: 100%">
     <MudPaper Square="true" Style="display: flex; height: 64px; min-height: 64px; width: 100%; z-index: 100; align-items: center">
-        <MudButton Variant="Variant.Filled"
-                   Color="Color.Secondary"
-                   Class="ml-6"
-                   StartIcon="@Icons.Material.Filled.Download"
-                   Disabled="@(!_hasPlayed || Locker.IsTroubleshootingPlaybackLocked())"
-                   OnClick="@DownloadResults">
-            Download Results
-        </MudButton>
+        <div class="d-none d-md-flex">
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Secondary"
+                       Class="ml-6"
+                       StartIcon="@Icons.Material.Filled.Download"
+                       Disabled="@(!_hasPlayed || Locker.IsTroubleshootingPlaybackLocked())"
+                       OnClick="@DownloadResults">
+                Download Results
+            </MudButton>
+            @if (MediaItemId.HasValue)
+            {
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Secondary"
+                           Class="ml-6"
+                           StartIcon="@Icons.Material.Filled.DownloadForOffline"
+                           OnClick="@DownloadSample">
+                    Download Media Sample
+                </MudButton>
+            }
+        </div>
     </MudPaper>
     <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
         <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
@@ -64,7 +76,7 @@
                 <div class="d-flex">
                     <MudText>Stream Selector</MudText>
                 </div>
-                <MudSelect @bind-Value="_streamSelector" For="@(() => _streamSelector)" Clearable="true">
+                <MudSelect @bind-Value="_streamSelector" For="@(() => _streamSelector)" Clearable="true" Disabled="@(_streamSelectors.Count == 0)">
                     @foreach (string selector in _streamSelectors)
                     {
                         <MudSelectItem T="string" Value="@selector">@selector</MudSelectItem>
@@ -400,6 +412,11 @@
     private async Task DownloadResults()
     {
         await JsRuntime.InvokeVoidAsync("window.open", "api/troubleshoot/playback/archive");
+    }
+
+    private async Task DownloadSample()
+    {
+        await JsRuntime.InvokeVoidAsync("window.open", $"api/troubleshoot/playback/sample/{MediaItemId}");
     }
 
     private async Task HandleTroubleshootingCompleted(PlaybackTroubleshootingCompletedNotification result)

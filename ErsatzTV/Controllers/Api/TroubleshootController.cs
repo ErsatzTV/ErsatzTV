@@ -173,4 +173,21 @@ public class TroubleshootController(
 
         return NotFound();
     }
+
+    [HttpHead("api/troubleshoot/playback/sample/{mediaItemId:int}")]
+    [HttpGet("api/troubleshoot/playback/sample/{mediaItemId:int}")]
+    public async Task<IActionResult> TroubleshootPlaybackSample(int mediaItemId, CancellationToken cancellationToken)
+    {
+        Option<string> maybeArchivePath = await mediator.Send(new ArchiveMediaSample(mediaItemId), cancellationToken);
+        foreach (string archivePath in maybeArchivePath)
+        {
+            FileStream fs = System.IO.File.OpenRead(archivePath);
+            return File(
+                fs,
+                "application/zip",
+                $"ersatztv-media-sample-{DateTimeOffset.Now.ToUnixTimeSeconds()}.zip");
+        }
+
+        return NotFound();
+    }
 }

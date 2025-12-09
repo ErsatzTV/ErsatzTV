@@ -771,7 +771,11 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
         PlayoutItem playoutItem,
         CancellationToken cancellationToken)
     {
-        string path = await GetPlayoutItemPath(playoutItem, cancellationToken);
+        string path = await playoutItem.MediaItem.GetLocalPath(
+            _plexPathReplacementService,
+            _jellyfinPathReplacementService,
+            _embyPathReplacementService,
+            cancellationToken);
 
         if (_isDebugNoSync)
         {
@@ -851,42 +855,6 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
         }
 
         return new PlayoutItemDoesNotExistOnDisk(path);
-    }
-
-    private async Task<string> GetPlayoutItemPath(PlayoutItem playoutItem, CancellationToken cancellationToken)
-    {
-        MediaVersion version = playoutItem.MediaItem.GetHeadVersion();
-        MediaFile file = version.MediaFiles.Head();
-
-        string path = file.Path;
-        return playoutItem.MediaItem switch
-        {
-            PlexMovie plexMovie => await _plexPathReplacementService.GetReplacementPlexPath(
-                plexMovie.LibraryPathId,
-                path,
-                cancellationToken),
-            PlexEpisode plexEpisode => await _plexPathReplacementService.GetReplacementPlexPath(
-                plexEpisode.LibraryPathId,
-                path,
-                cancellationToken),
-            JellyfinMovie jellyfinMovie => await _jellyfinPathReplacementService.GetReplacementJellyfinPath(
-                jellyfinMovie.LibraryPathId,
-                path,
-                cancellationToken),
-            JellyfinEpisode jellyfinEpisode => await _jellyfinPathReplacementService.GetReplacementJellyfinPath(
-                jellyfinEpisode.LibraryPathId,
-                path,
-                cancellationToken),
-            EmbyMovie embyMovie => await _embyPathReplacementService.GetReplacementEmbyPath(
-                embyMovie.LibraryPathId,
-                path,
-                cancellationToken),
-            EmbyEpisode embyEpisode => await _embyPathReplacementService.GetReplacementEmbyPath(
-                embyEpisode.LibraryPathId,
-                path,
-                cancellationToken),
-            _ => path
-        };
     }
 
     private DeadAirFallbackResult GetDecoDeadAirFallback(Playout playout, DateTimeOffset now)

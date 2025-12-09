@@ -1,10 +1,8 @@
 using System.IO.Abstractions;
-using Dapper;
 using ErsatzTV.Application.Streaming;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
-using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.Emby;
@@ -39,7 +37,11 @@ public class PrepareTroubleshootingPlaybackHandler(
     IMediator mediator,
     LoggingLevelSwitches loggingLevelSwitches,
     ILogger<PrepareTroubleshootingPlaybackHandler> logger)
-    : IRequestHandler<PrepareTroubleshootingPlayback, Either<BaseError, PlayoutItemResult>>
+    : TroubleshootingHandlerBase(
+        plexPathReplacementService,
+        jellyfinPathReplacementService,
+        embyPathReplacementService,
+        fileSystem), IRequestHandler<PrepareTroubleshootingPlayback, Either<BaseError, PlayoutItemResult>>
 {
     public async Task<Either<BaseError, PlayoutItemResult>> Handle(
         PrepareTroubleshootingPlayback request,
@@ -105,7 +107,10 @@ public class PrepareTroubleshootingPlaybackHandler(
                             entityLocker.UnlockTroubleshootingPlayback();
                         }
 
-                        return result.Map(model => new PlayoutItemResult(model.Process, model.GraphicsEngineContext, model.MediaItemId));
+                        return result.Map(model => new PlayoutItemResult(
+                            model.Process,
+                            model.GraphicsEngineContext,
+                            model.MediaItemId));
                     }
 
                     if (maybeChannel.IsNone)
@@ -375,79 +380,12 @@ public class PrepareTroubleshootingPlaybackHandler(
         TvContext dbContext,
         PrepareTroubleshootingPlayback request,
         CancellationToken cancellationToken) =>
-        (await MediaItemMustExist(dbContext, request, cancellationToken),
+        (await MediaItemMustExist(dbContext, request.MediaItemId, cancellationToken),
             await FFmpegPathMustExist(dbContext, cancellationToken),
             await FFprobePathMustExist(dbContext, cancellationToken),
             await FFmpegProfileMustExist(dbContext, request, cancellationToken))
         .Apply((mediaItem, ffmpegPath, ffprobePath, ffmpegProfile) =>
             Tuple(mediaItem, ffmpegPath, ffprobePath, ffmpegProfile));
-
-    private static async Task<Validation<BaseError, MediaItem>> MediaItemMustExist(
-        TvContext dbContext,
-        PrepareTroubleshootingPlayback request,
-        CancellationToken cancellationToken) =>
-        await dbContext.MediaItems
-            .AsNoTracking()
-            .Include(mi => (mi as Episode).EpisodeMetadata)
-            .ThenInclude(em => em.Subtitles)
-            .Include(mi => (mi as Episode).MediaVersions)
-            .ThenInclude(mv => mv.MediaFiles)
-            .Include(mi => (mi as Episode).MediaVersions)
-            .ThenInclude(mv => mv.Streams)
-            .Include(mi => (mi as Episode).Season)
-            .ThenInclude(s => s.Show)
-            .ThenInclude(s => s.ShowMetadata)
-            .Include(mi => (mi as Movie).MovieMetadata)
-            .ThenInclude(mm => mm.Subtitles)
-            .Include(mi => (mi as Movie).MediaVersions)
-            .ThenInclude(mv => mv.MediaFiles)
-            .Include(mi => (mi as Movie).MediaVersions)
-            .ThenInclude(mv => mv.Streams)
-            .Include(mi => (mi as MusicVideo).MusicVideoMetadata)
-            .ThenInclude(mvm => mvm.Subtitles)
-            .Include(mi => (mi as MusicVideo).MusicVideoMetadata)
-            .ThenInclude(mvm => mvm.Artists)
-            .Include(mi => (mi as MusicVideo).MusicVideoMetadata)
-            .ThenInclude(mvm => mvm.Studios)
-            .Include(mi => (mi as MusicVideo).MusicVideoMetadata)
-            .ThenInclude(mvm => mvm.Directors)
-            .Include(mi => (mi as MusicVideo).MediaVersions)
-            .ThenInclude(mv => mv.MediaFiles)
-            .Include(mi => (mi as MusicVideo).MediaVersions)
-            .ThenInclude(mv => mv.Streams)
-            .Include(mi => (mi as MusicVideo).Artist)
-            .ThenInclude(mv => mv.ArtistMetadata)
-            .Include(mi => (mi as OtherVideo).OtherVideoMetadata)
-            .ThenInclude(ovm => ovm.Subtitles)
-            .Include(mi => (mi as OtherVideo).MediaVersions)
-            .ThenInclude(ov => ov.MediaFiles)
-            .Include(mi => (mi as OtherVideo).MediaVersions)
-            .ThenInclude(ov => ov.Streams)
-            .Include(mi => (mi as Song).MediaVersions)
-            .ThenInclude(mv => mv.MediaFiles)
-            .Include(mi => (mi as Song).MediaVersions)
-            .ThenInclude(mv => mv.Streams)
-            .Include(mi => (mi as Song).SongMetadata)
-            .ThenInclude(sm => sm.Artwork)
-            .Include(mi => (mi as Image).MediaVersions)
-            .ThenInclude(mv => mv.MediaFiles)
-            .Include(mi => (mi as Image).MediaVersions)
-            .ThenInclude(mv => mv.Streams)
-            .Include(mi => (mi as Image).ImageMetadata)
-            .Include(mi => (mi as RemoteStream).MediaVersions)
-            .ThenInclude(mv => mv.MediaFiles)
-            .Include(mi => (mi as RemoteStream).MediaVersions)
-            .ThenInclude(mv => mv.Streams)
-            .Include(mi => (mi as RemoteStream).RemoteStreamMetadata)
-            .SelectOneAsync(mi => mi.Id, mi => mi.Id == request.MediaItemId, cancellationToken)
-            .Map(o => o.ToValidation<BaseError>(new UnableToLocatePlayoutItem()));
-
-    private static Task<Validation<BaseError, string>> FFmpegPathMustExist(
-        TvContext dbContext,
-        CancellationToken cancellationToken) =>
-        dbContext.ConfigElements.GetValue<string>(ConfigElementKey.FFmpegPath, cancellationToken)
-            .FilterT(File.Exists)
-            .Map(maybePath => maybePath.ToValidation<BaseError>("FFmpeg path does not exist on filesystem"));
 
     private static Task<Validation<BaseError, string>> FFprobePathMustExist(
         TvContext dbContext,
@@ -464,115 +402,4 @@ public class PrepareTroubleshootingPlaybackHandler(
             .Include(p => p.Resolution)
             .SelectOneAsync(p => p.Id, p => p.Id == request.FFmpegProfileId, cancellationToken)
             .Map(o => o.ToValidation<BaseError>($"FFmpegProfile {request.FFmpegProfileId} does not exist"));
-
-    private async Task<string> GetMediaItemPath(
-        TvContext dbContext,
-        MediaItem mediaItem,
-        CancellationToken cancellationToken)
-    {
-        string path = await GetLocalPath(mediaItem, cancellationToken);
-
-        // check filesystem first
-        if (fileSystem.File.Exists(path))
-        {
-            if (mediaItem is RemoteStream remoteStream)
-            {
-                path = !string.IsNullOrWhiteSpace(remoteStream.Url)
-                    ? remoteStream.Url
-                    : $"http://localhost:{Settings.StreamingPort}/ffmpeg/remote-stream/{remoteStream.Id}";
-            }
-
-            return path;
-        }
-
-        // attempt to remotely stream plex
-        MediaFile file = mediaItem.GetHeadVersion().MediaFiles.Head();
-        switch (file)
-        {
-            case PlexMediaFile pmf:
-                Option<int> maybeId = await dbContext.Connection.QuerySingleOrDefaultAsync<int>(
-                        @"SELECT PMS.Id FROM PlexMediaSource PMS
-                  INNER JOIN Library L on PMS.Id = L.MediaSourceId
-                  INNER JOIN LibraryPath LP on L.Id = LP.LibraryId
-                  WHERE LP.Id = @LibraryPathId",
-                        new { mediaItem.LibraryPathId })
-                    .Map(Optional);
-
-                foreach (int plexMediaSourceId in maybeId)
-                {
-                    logger.LogDebug(
-                        "Attempting to stream Plex file {PlexFileName} using key {PlexKey}",
-                        pmf.Path,
-                        pmf.Key);
-
-                    return $"http://localhost:{Settings.StreamingPort}/media/plex/{plexMediaSourceId}/{pmf.Key}";
-                }
-
-                break;
-        }
-
-        // attempt to remotely stream jellyfin
-        Option<string> jellyfinItemId = mediaItem switch
-        {
-            JellyfinEpisode e => e.ItemId,
-            JellyfinMovie m => m.ItemId,
-            _ => None
-        };
-
-        foreach (string itemId in jellyfinItemId)
-        {
-            return $"http://localhost:{Settings.StreamingPort}/media/jellyfin/{itemId}";
-        }
-
-        // attempt to remotely stream emby
-        Option<string> embyItemId = mediaItem switch
-        {
-            EmbyEpisode e => e.ItemId,
-            EmbyMovie m => m.ItemId,
-            _ => None
-        };
-
-        foreach (string itemId in embyItemId)
-        {
-            return $"http://localhost:{Settings.StreamingPort}/media/emby/{itemId}";
-        }
-
-        return null;
-    }
-
-    private async Task<string> GetLocalPath(MediaItem mediaItem, CancellationToken cancellationToken)
-    {
-        MediaVersion version = mediaItem.GetHeadVersion();
-        MediaFile file = version.MediaFiles.Head();
-
-        string path = file.Path;
-        return mediaItem switch
-        {
-            PlexMovie plexMovie => await plexPathReplacementService.GetReplacementPlexPath(
-                plexMovie.LibraryPathId,
-                path,
-                cancellationToken),
-            PlexEpisode plexEpisode => await plexPathReplacementService.GetReplacementPlexPath(
-                plexEpisode.LibraryPathId,
-                path,
-                cancellationToken),
-            JellyfinMovie jellyfinMovie => await jellyfinPathReplacementService.GetReplacementJellyfinPath(
-                jellyfinMovie.LibraryPathId,
-                path,
-                cancellationToken),
-            JellyfinEpisode jellyfinEpisode => await jellyfinPathReplacementService.GetReplacementJellyfinPath(
-                jellyfinEpisode.LibraryPathId,
-                path,
-                cancellationToken),
-            EmbyMovie embyMovie => await embyPathReplacementService.GetReplacementEmbyPath(
-                embyMovie.LibraryPathId,
-                path,
-                cancellationToken),
-            EmbyEpisode embyEpisode => await embyPathReplacementService.GetReplacementEmbyPath(
-                embyEpisode.LibraryPathId,
-                path,
-                cancellationToken),
-            _ => path
-        };
-    }
 }
