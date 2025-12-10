@@ -29,7 +29,7 @@
 
     <ItemGroup>
         <PackageReference Include="Blazored.FluentValidation" Version="2.2.0" />
-        <PackageReference Include="BlazorSortable" Version="5.1.6" />
+        <PackageReference Include="BlazorSortable" Version="5.2.0" />
         <PackageReference Include="Bugsnag.AspNet.Core" Version="4.1.0" />
         <PackageReference Include="Chronic.Core" Version="0.4.0" />
         <PackageReference Include="FluentValidation" Version="12.1.0" />
