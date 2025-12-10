@@ -57,14 +57,6 @@ public class GetPlaylistItemsHandler(IDbContextFactory<TvContext> dbContextFacto
             .ThenInclude(mm => mm.Artwork)
             .ToListAsync(cancellationToken);
 
-        if (allItems.All(bi => !bi.IncludeInProgramGuide))
-        {
-            foreach (PlaylistItem bi in allItems)
-            {
-                bi.IncludeInProgramGuide = true;
-            }
-        }
-
         return allItems.Map(Mapper.ProjectToViewModel).ToList();
     }
 }
