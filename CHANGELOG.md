@@ -52,6 +52,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - fix green padding when encoding h264 using main profile
 - Automatically kill playback troubleshooting ffmpeg process if it hasn't completed after two minutes
 - Fix playback of certain BT.2020 content
+- Use playlist item count when using a playlist as filler (instead of a fixed count of 1 for each playlist item)
 
 ### Changed
 - No longer round framerate to nearest integer when normalizing framerate
