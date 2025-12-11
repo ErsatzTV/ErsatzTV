@@ -51,7 +51,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - work around buggy ffmpeg behavior where hevc_vaapi encoder with RadeonSI driver incorrectly outputs height of 1088 instead of 1080
   - fix green padding when encoding h264 using main profile
 - Automatically kill playback troubleshooting ffmpeg process if it hasn't completed after two minutes
-- Fix playback of BT.2020 content
+- Fix playback of certain BT.2020 content
 
 ### Changed
 - No longer round framerate to nearest integer when normalizing framerate
