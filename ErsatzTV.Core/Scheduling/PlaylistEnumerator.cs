@@ -23,7 +23,7 @@ public class PlaylistEnumerator : IMediaCollectionEnumerator
 
     public int CountForRandom => _allMediaItemIds.Count;
 
-    public int CountForFiller => _sortedEnumerators.Select(t => t.PlayAll ? t.Enumerator.Count : 1).Sum();
+    public int CountForFiller => _sortedEnumerators.Select(t => t.PlayAll ? t.Enumerator.Count : t.Count ?? 1).Sum();
 
     public ImmutableList<PlaylistEnumeratorCollectionKey> ChildEnumerators { get; private set; }
 
