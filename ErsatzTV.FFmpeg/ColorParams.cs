@@ -30,4 +30,6 @@ public record ColorParams(string ColorRange, string ColorSpace, string ColorTran
                                       && string.IsNullOrWhiteSpace(ColorPrimaries);
         }
     }
+
+    public bool IsBt2020Ten => ColorTransfer is "bt2020-10";
 }

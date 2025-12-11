@@ -15,7 +15,7 @@ public class NvidiaHardwareCapabilities(CudaDevice cudaDevice, IFFmpegCapabiliti
         string videoFormat,
         Option<string> videoProfile,
         Option<IPixelFormat> maybePixelFormat,
-        bool isHdr)
+        ColorParams colorParams)
     {
         int bitDepth = maybePixelFormat.Map(pf => pf.BitDepth).IfNone(8);
 
@@ -50,6 +50,11 @@ public class NvidiaHardwareCapabilities(CudaDevice cudaDevice, IFFmpegCapabiliti
                     videoFormat,
                     bitDepth);
             }
+        }
+
+        if (colorParams.IsBt2020Ten)
+        {
+            isHardware = false;
         }
 
         if (isHardware)

@@ -62,7 +62,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
             videoStream.Codec,
             videoStream.Profile,
             videoStream.PixelFormat,
-            videoStream.ColorParams.IsHdr);
+            videoStream.ColorParams);
         FFmpegCapability encodeCapability = _hardwareCapabilities.CanEncode(
             desiredState.VideoFormat,
             desiredState.VideoProfile,

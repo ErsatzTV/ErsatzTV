@@ -8,12 +8,14 @@ public class V4l2m2mHardwareCapabilities(IFFmpegCapabilities ffmpegCapabilities)
         string videoFormat,
         Option<string> videoProfile,
         Option<IPixelFormat> maybePixelFormat,
-        bool isHdr)
+        ColorParams colorParams)
     {
         int bitDepth = maybePixelFormat.Map(pf => pf.BitDepth).IfNone(8);
 
         return (videoFormat, bitDepth) switch
         {
+            (_, _) when colorParams.IsBt2020Ten => FFmpegCapability.Software,
+
             (VideoFormat.H264, 8) => ffmpegCapabilities.HasDecoder(FFmpegKnownDecoder.H264V4l2m2m)
                 ? FFmpegCapability.Hardware
                 : FFmpegCapability.Software,
@@ -43,7 +45,7 @@ public class V4l2m2mHardwareCapabilities(IFFmpegCapabilities ffmpegCapabilities)
                 : FFmpegCapability.Software,
 
             _ => FFmpegCapability.Software
-        };    
+        };
     }
 
     public FFmpegCapability CanEncode(

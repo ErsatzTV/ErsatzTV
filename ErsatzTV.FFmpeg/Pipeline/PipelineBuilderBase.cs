@@ -589,6 +589,20 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
             ? None
             : SetDecoder(videoInputFile, videoStream, ffmpegState, context);
 
+        Option<IPixelFormat> videoStreamPixelFormat = videoStream.PixelFormat;
+
+        // bt.2020 needs to immediately change to bt709 and a new format
+        if (videoStream.ColorParams.IsBt2020Ten)
+        {
+            IPixelFormat targetFormat = desiredState.PixelFormat.IfNone(new PixelFormatYuv420P());
+
+            videoInputFile.FilterSteps.Add(new ColorspaceFilter(desiredState, videoStream, targetFormat));
+
+            // update pipeline to have accurate color params and pixel format
+            videoStream.ResetColorParams(ColorParams.Default);
+            videoStreamPixelFormat = Some(targetFormat);
+        }
+
         //SetStillImageInfiniteLoop(videoInputFile, videoStream, ffmpegState);
         SetRealtimeInput(videoInputFile, desiredState);
         SetInfiniteLoop(videoInputFile, videoStream, ffmpegState, desiredState);
@@ -603,7 +617,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
 
         FilterChain filterChain = SetVideoFilters(
             videoInputFile,
-            videoStream,
+            videoStream with { PixelFormat = videoStreamPixelFormat },
             _watermarkInputFile,
             _subtitleInputFile,
             _graphicsEngineInput,

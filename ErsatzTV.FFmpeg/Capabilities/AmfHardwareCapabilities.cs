@@ -8,7 +8,7 @@ public class AmfHardwareCapabilities : IHardwareCapabilities
         string videoFormat,
         Option<string> videoProfile,
         Option<IPixelFormat> maybePixelFormat,
-        bool isHdr) => FFmpegCapability.Software;
+        ColorParams colorParams) => FFmpegCapability.Software;
 
     public FFmpegCapability CanEncode(
         string videoFormat,

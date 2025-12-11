@@ -8,7 +8,7 @@ public interface IHardwareCapabilities
         string videoFormat,
         Option<string> videoProfile,
         Option<IPixelFormat> maybePixelFormat,
-        bool isHdr);
+        ColorParams colorParams);
 
     FFmpegCapability CanEncode(
         string videoFormat,
