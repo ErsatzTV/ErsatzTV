@@ -18,12 +18,14 @@ public class VaapiHardwareCapabilities(
         string videoFormat,
         Option<string> videoProfile,
         Option<IPixelFormat> maybePixelFormat,
-        bool isHdr)
+        ColorParams colorParams)
     {
         int bitDepth = maybePixelFormat.Map(pf => pf.BitDepth).IfNone(8);
 
         bool isHardware = (videoFormat, videoProfile.IfNone(string.Empty).ToLowerInvariant()) switch
         {
+            (_, _) when colorParams.IsBt2020Ten => false,
+
             // no hardware decoding of 10-bit h264
             (VideoFormat.H264, _) when bitDepth == 10 => false,
 

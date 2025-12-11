@@ -589,6 +589,17 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
             ? None
             : SetDecoder(videoInputFile, videoStream, ffmpegState, context);
 
+        if (videoStream.ColorParams.IsBt2020Ten)
+        {
+            videoInputFile.FilterSteps.Add(
+                new ColorspaceFilter(
+                    desiredState,
+                    videoStream,
+                    desiredState.PixelFormat.IfNone(new PixelFormatYuv420P())));
+
+            videoStream.ResetColorParams(ColorParams.Default);
+        }
+
         //SetStillImageInfiniteLoop(videoInputFile, videoStream, ffmpegState);
         SetRealtimeInput(videoInputFile, desiredState);
         SetInfiniteLoop(videoInputFile, videoStream, ffmpegState, desiredState);

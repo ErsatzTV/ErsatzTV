@@ -75,7 +75,7 @@ public class ColorspaceFilter : BaseFilter
             }
 
             string inputOverrides = string.Empty;
-            if (cp.IsMixed || _forceInputOverrides)
+            if (!cp.IsBt2020Ten && (cp.IsMixed || _forceInputOverrides))
             {
                 string range = string.IsNullOrWhiteSpace(cp.ColorRange)
                     ? string.Empty

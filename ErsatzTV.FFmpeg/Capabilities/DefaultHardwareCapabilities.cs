@@ -8,7 +8,7 @@ public class DefaultHardwareCapabilities : IHardwareCapabilities
         string videoFormat,
         Option<string> videoProfile,
         Option<IPixelFormat> maybePixelFormat,
-        bool isHdr)
+        ColorParams colorParams)
     {
         int bitDepth = maybePixelFormat.Map(pf => pf.BitDepth).IfNone(8);
 
@@ -16,6 +16,8 @@ public class DefaultHardwareCapabilities : IHardwareCapabilities
         {
             // 10-bit h264 decoding is likely not support by any hardware
             (VideoFormat.H264, 10) => FFmpegCapability.Software,
+
+            (_, _) when colorParams.IsBt2020Ten => FFmpegCapability.Software,
 
             _ => FFmpegCapability.Hardware
         };

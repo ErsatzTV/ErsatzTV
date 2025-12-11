@@ -24,7 +24,7 @@ public class VideoToolboxHardwareCapabilities : IHardwareCapabilities
         string videoFormat,
         Option<string> videoProfile,
         Option<IPixelFormat> maybePixelFormat,
-        bool isHdr)
+        ColorParams colorParams)
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX) && Decoders.IsEmpty)
         {
@@ -64,6 +64,8 @@ public class VideoToolboxHardwareCapabilities : IHardwareCapabilities
         {
             // 10-bit h264 decoding is likely not support by any hardware
             (VideoFormat.H264, 10) => FFmpegCapability.Software,
+
+            (_, _) when colorParams.IsBt2020Ten => FFmpegCapability.Software,
 
             _ => Decoders.ContainsKey(videoFormat) ? FFmpegCapability.Hardware : FFmpegCapability.Software
         };
