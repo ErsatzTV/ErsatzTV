@@ -286,7 +286,7 @@ public class PlaylistEnumeratorTests
     }
 
     [Test]
-    public async Task CountForFiller_Should_Honor_Custom_Count()
+    public async Task CountForFiller_Should_Honor_Custom_Count_And_PlayAll()
     {
         // this isn't needed for chronological, so no need to implement anything
         IMediaCollectionRepository repo = Substitute.For<IMediaCollectionRepository>();
@@ -316,7 +316,7 @@ public class PlaylistEnumeratorTests
                     CollectionType = CollectionType.Collection,
                     CollectionId = 2
                 },
-                [FakeMovie(20)]
+                [FakeMovie(15)]
             },
             {
                 new PlaylistItem
@@ -328,7 +328,19 @@ public class PlaylistEnumeratorTests
                     CollectionType = CollectionType.Collection,
                     CollectionId = 3
                 },
-                [FakeMovie(30)]
+                [FakeMovie(20)]
+            },
+            {
+                new PlaylistItem
+                {
+                    Id = 4,
+                    Index = 3,
+                    PlaybackOrder = PlaybackOrder.Chronological,
+                    PlayAll = true,
+                    CollectionType = CollectionType.Collection,
+                    CollectionId = 4
+                },
+                [FakeMovie(25), FakeMovie(26), FakeMovie(27)]
             }
         };
 
@@ -342,7 +354,7 @@ public class PlaylistEnumeratorTests
             batchSize: Option<int>.None,
             CancellationToken.None);
 
-        enumerator.CountForFiller.ShouldBe(4);
+        enumerator.CountForFiller.ShouldBe(7);
     }
 
     private static Movie FakeMovie(int id) => new()
