@@ -11,7 +11,7 @@ public class CudaHardwareAccelerationOption(bool isVulkanHdr) : GlobalOption
                 return ["-init_hw_device", "cuda=nv", "-init_hw_device", "vulkan=vk@nv", "-hwaccel", "vulkan"];
             }
 
-            return ["-hwaccel", "cuda"];
+            return ["-init_hw_device", "cuda", "-hwaccel", "cuda"];
         }
     }
 }

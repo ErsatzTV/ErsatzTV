@@ -1,14 +1,11 @@
 ﻿namespace ErsatzTV.FFmpeg.Filter;
 
-public class HardwareUploadCudaFilter : BaseFilter
+public class HardwareUploadCudaFilter(FrameDataLocation frameDataLocation) : BaseFilter
 {
-    private readonly FrameState _currentState;
-
-    public HardwareUploadCudaFilter(FrameState currentState) => _currentState = currentState;
-
-    public override string Filter => _currentState.FrameDataLocation switch
+    public override string Filter => frameDataLocation switch
     {
         FrameDataLocation.Hardware => string.Empty,
+        FrameDataLocation.Unknown => "hwupload",
         _ => "hwupload_cuda"
     };
 
