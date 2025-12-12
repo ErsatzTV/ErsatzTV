@@ -134,6 +134,15 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
         foreach (IDecoder decoder in maybeDecoder)
         {
             videoInputFile.AddOption(decoder);
+
+            // sometimes cuda fails to decode in hardware and falls back to software
+            // in that case, we need to upload to get the frame in hardware as expected
+            // this *should* no-op when frames are already in hardware
+            if (ffmpegState.DecoderHardwareAccelerationMode is HardwareAccelerationMode.Nvenc)
+            {
+                videoInputFile.FilterSteps.Add(new CudaSoftwareFallbackUploadFilter());
+            }
+
             return Some(decoder);
         }
 
@@ -266,7 +275,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
             && !context.HasSubtitleText
             && (context.HasSubtitleOverlay || context.HasWatermark || context.HasGraphicsEngine))
         {
-            var hardwareUpload = new HardwareUploadCudaFilter(currentState);
+            var hardwareUpload = new HardwareUploadCudaFilter(currentState.FrameDataLocation);
             currentState = hardwareUpload.NextState(currentState);
             videoInputFile.FilterSteps.Add(hardwareUpload);
         }
@@ -562,7 +571,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
             else
             {
                 watermark.FilterSteps.Add(
-                    new HardwareUploadCudaFilter(currentState with { FrameDataLocation = FrameDataLocation.Software }));
+                    new HardwareUploadCudaFilter(FrameDataLocation.Software));
 
                 var watermarkFilter = new OverlayWatermarkCudaFilter(
                     watermark.DesiredState,
@@ -612,7 +621,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
 
                 if (context.HasWatermark || context.HasGraphicsEngine)
                 {
-                    var subtitleHardwareUpload = new HardwareUploadCudaFilter(currentState);
+                    var subtitleHardwareUpload = new HardwareUploadCudaFilter(currentState.FrameDataLocation);
                     currentState = subtitleHardwareUpload.NextState(currentState);
                     videoInputFile.FilterSteps.Add(subtitleHardwareUpload);
                 }
@@ -626,8 +635,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
                 {
                     if (_ffmpegCapabilities.HasFilter(FFmpegKnownFilter.ScaleNpp))
                     {
-                        var subtitleHardwareUpload = new HardwareUploadCudaFilter(
-                            currentState with { FrameDataLocation = FrameDataLocation.Software });
+                        var subtitleHardwareUpload = new HardwareUploadCudaFilter(FrameDataLocation.Software);
                         subtitle.FilterSteps.Add(subtitleHardwareUpload);
 
                         // only scale if scaling or padding was used for main video stream
@@ -648,8 +656,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
                             subtitle.FilterSteps.Add(scaleFilter);
                         }
 
-                        var subtitleHardwareUpload = new HardwareUploadCudaFilter(
-                            currentState with { FrameDataLocation = FrameDataLocation.Software });
+                        var subtitleHardwareUpload = new HardwareUploadCudaFilter(FrameDataLocation.Software);
                         subtitle.FilterSteps.Add(subtitleHardwareUpload);
                     }
 
@@ -700,8 +707,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
             {
                 graphicsEngine.FilterSteps.Add(new PixelFormatFilter(new PixelFormatYuva420P()));
 
-                graphicsEngine.FilterSteps.Add(
-                    new HardwareUploadCudaFilter(currentState with { FrameDataLocation = FrameDataLocation.Software }));
+                graphicsEngine.FilterSteps.Add(new HardwareUploadCudaFilter(FrameDataLocation.Software));
 
                 var graphicsEngineFilter = new OverlayGraphicsEngineCudaFilter();
                 graphicsEngineOverlayFilterSteps.Add(graphicsEngineFilter);
