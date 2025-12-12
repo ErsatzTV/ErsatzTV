@@ -1,11 +1,10 @@
-﻿namespace ErsatzTV.FFmpeg.Filter;
+﻿namespace ErsatzTV.FFmpeg.Filter.Cuda;
 
 public class HardwareUploadCudaFilter(FrameDataLocation frameDataLocation) : BaseFilter
 {
     public override string Filter => frameDataLocation switch
     {
         FrameDataLocation.Hardware => string.Empty,
-        FrameDataLocation.Unknown => "hwupload",
         _ => "hwupload_cuda"
     };
 

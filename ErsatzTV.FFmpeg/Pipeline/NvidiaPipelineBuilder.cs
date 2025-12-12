@@ -135,9 +135,12 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
         {
             videoInputFile.AddOption(decoder);
 
+            // sometimes cuda fails to decode in hardware and falls back to software
+            // in that case, we need to upload to get the frame in hardware as expected
+            // this *should* no-op when frames are already in hardware
             if (ffmpegState.DecoderHardwareAccelerationMode is HardwareAccelerationMode.Nvenc)
             {
-                videoInputFile.FilterSteps.Add(new HardwareUploadCudaFilter(FrameDataLocation.Unknown));
+                videoInputFile.FilterSteps.Add(new CudaSoftwareFallbackUploadFilter());
             }
 
             return Some(decoder);
