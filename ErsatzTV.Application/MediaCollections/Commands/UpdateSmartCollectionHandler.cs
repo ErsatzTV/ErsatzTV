@@ -89,6 +89,7 @@ public class
         UpdateSmartCollection updateCollection)
     {
         List<string> allNames = await dbContext.SmartCollections
+            .Where(c => c.Id != updateCollection.Id)
             .Map(c => c.Name)
             .ToListAsync();
 
