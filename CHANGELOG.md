@@ -54,10 +54,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix playback of certain BT.2020 content
 - Use playlist item count when using a playlist as filler (instead of a fixed count of 1 for each playlist item)
 - NVIDIA: fix stream failure with certain content that should decode in hardware but falls back to software
+- Fix stream failure when configured fallback filler collection is empty
+- Fix high CPU when errors are displayed; errors will now work ahead before throttling to realtime, similar to primary content
 
 ### Changed
 - No longer round framerate to nearest integer when normalizing framerate
 - Allow playlists to have no items included in EPG
+- Change how fallback filler works
+  - Items will no longer loop; instead, a sequence of random items will be selected from the collection
+  - Items may still be cut as needed
+  - Hardware acceleration will now be used
+  - Items can "work ahead" (transcode faster than realtime) when less than 3 minutes in duration
 
 ## [25.9.0] - 2025-11-29
 ### Added

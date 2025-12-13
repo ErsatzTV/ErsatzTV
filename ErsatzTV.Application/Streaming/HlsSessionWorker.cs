@@ -488,6 +488,11 @@ public class HlsSessionWorker : IHlsSessionWorker
 
             foreach (PlayoutItemProcessModel processModel in result.RightAsEnumerable())
             {
+                if (!realtime && !processModel.IsWorkingAhead)
+                {
+                    _logger.LogDebug("HLS session throttling (NOT working ahead) based on playout item");
+                }
+
                 await TrimAndDelete(cancellationToken);
 
                 // increment discontinuity sequence and store with segment key (generated at)

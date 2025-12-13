@@ -404,7 +404,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             graphicsElementContexts.AddRange(watermarks.Map(wm => new WatermarkElementContext(wm)));
         }
 
-        HardwareAccelerationMode hwAccel = GetHardwareAccelerationMode(playbackSettings, fillerKind);
+        HardwareAccelerationMode hwAccel = GetHardwareAccelerationMode(playbackSettings);
 
         string videoFormat = GetVideoFormat(playbackSettings);
         Option<string> maybeVideoProfile = GetVideoProfile(videoFormat, channel.FFmpegProfile.VideoProfile);
@@ -499,7 +499,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
 
         var desiredState = new FrameState(
             playbackSettings.RealtimeOutput,
-            fillerKind == FillerKind.Fallback,
+            InfiniteLoop: false,
             videoFormat,
             maybeVideoProfile,
             maybeVideoPreset,
@@ -700,7 +700,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
 
         var desiredState = new FrameState(
             playbackSettings.RealtimeOutput,
-            false,
+            InfiniteLoop: false,
             videoFormat,
             GetVideoProfile(videoFormat, channel.FFmpegProfile.VideoProfile),
             VideoPreset.Unset,
@@ -789,7 +789,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         var videoInputFile = new VideoInputFile(videoPath, new List<VideoStream> { ffmpegVideoStream });
 
         // TODO: ignore accel if this already failed once
-        HardwareAccelerationMode hwAccel = GetHardwareAccelerationMode(playbackSettings, FillerKind.None);
+        HardwareAccelerationMode hwAccel = GetHardwareAccelerationMode(playbackSettings);
         _logger.LogDebug("HW accel mode: {HwAccel}", hwAccel);
 
         var ffmpegState = new FFmpegState(
@@ -1187,12 +1187,10 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             .ForAccelAndFormat(hardwareAccelerationMode, videoFormat, bitDepth)
             .Find(p => string.Equals(p, videoPreset, StringComparison.OrdinalIgnoreCase));
 
-    private static HardwareAccelerationMode GetHardwareAccelerationMode(
-        FFmpegPlaybackSettings playbackSettings,
-        FillerKind fillerKind) =>
+    private static HardwareAccelerationMode GetHardwareAccelerationMode(FFmpegPlaybackSettings playbackSettings) =>
         playbackSettings.HardwareAcceleration switch
         {
-            _ when fillerKind == FillerKind.Fallback => HardwareAccelerationMode.None,
+            //_ when fillerKind == FillerKind.Fallback => HardwareAccelerationMode.None,
             HardwareAccelerationKind.Nvenc => HardwareAccelerationMode.Nvenc,
             HardwareAccelerationKind.Qsv => HardwareAccelerationMode.Qsv,
             HardwareAccelerationKind.Vaapi => HardwareAccelerationMode.Vaapi,
