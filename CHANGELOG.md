@@ -54,6 +54,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix playback of certain BT.2020 content
 - Use playlist item count when using a playlist as filler (instead of a fixed count of 1 for each playlist item)
 - NVIDIA: fix stream failure with certain content that should decode in hardware but falls back to software
+- Fix stream failure when configured fallback filler collection is empty
+- Fix high CPU when errors are displayed; errors will now work ahead before throttling to realtime, similar to primary content
 
 ### Changed
 - No longer round framerate to nearest integer when normalizing framerate

@@ -482,6 +482,13 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
 
             Option<TimeSpan> maybeDuration = maybeNextStart.Map(s => s - now);
 
+            // limit working ahead on errors to 1 minute
+            if (!request.HlsRealtime && maybeDuration.IsNone || maybeDuration > TimeSpan.FromMinutes(1))
+            {
+                maybeNextStart = now.AddMinutes(1);
+                maybeDuration = TimeSpan.FromMinutes(1);
+            }
+
             DateTimeOffset finish = maybeNextStart.Match(s => s, () => now);
 
             if (request.IsTroubleshooting)
@@ -710,6 +717,12 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 _artistRepository,
                 collectionKey,
                 cancellationToken);
+
+            // ignore the fallback filler preset if it has no items
+            if (items.Count == 0)
+            {
+                break;
+            }
 
             // TODO: shuffle? does it really matter since we loop anyway
             MediaItem item = items[new Random().Next(items.Count)];
