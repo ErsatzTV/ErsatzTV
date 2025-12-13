@@ -60,8 +60,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 - No longer round framerate to nearest integer when normalizing framerate
 - Allow playlists to have no items included in EPG
-- Use hardware encoding for fallback filler
-  - Fallback filler will continue to use software decoding to avoid issues looping
+- Change how fallback filler works
+  - Items will no longer loop; instead, a sequence of random items will be selected from the collection
+  - Items may still be cut as needed
+  - Hardware acceleration will now be used
+  - Items can "work ahead" (transcode faster than realtime) when less than 3 minutes in duration
 
 ## [25.9.0] - 2025-11-29
 ### Added

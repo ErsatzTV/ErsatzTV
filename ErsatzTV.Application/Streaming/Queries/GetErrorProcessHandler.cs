@@ -42,6 +42,7 @@ public class GetErrorProcessHandler(
             true,
             request.Now.ToUnixTimeSeconds(),
             Option<int>.None,
-            Optional(channel.PlayoutOffset));
+            Optional(channel.PlayoutOffset),
+            !request.HlsRealtime);
     }
 }

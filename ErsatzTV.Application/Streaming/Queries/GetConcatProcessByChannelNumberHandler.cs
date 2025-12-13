@@ -46,6 +46,7 @@ public class GetConcatProcessByChannelNumberHandler : FFmpegProcessHandler<GetCo
             true,
             Option<long>.None,
             Option<int>.None,
-            Option<TimeSpan>.None);
+            Option<TimeSpan>.None,
+            false);
     }
 }

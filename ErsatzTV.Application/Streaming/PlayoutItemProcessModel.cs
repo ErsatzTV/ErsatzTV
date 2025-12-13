@@ -13,7 +13,8 @@ public class PlayoutItemProcessModel
         bool isComplete,
         Option<long> segmentKey,
         Option<int> mediaItemId,
-        Option<TimeSpan> playoutOffset)
+        Option<TimeSpan> playoutOffset,
+        bool isWorkingAhead)
     {
         Process = process;
         GraphicsEngineContext = graphicsEngineContext;
@@ -22,6 +23,7 @@ public class PlayoutItemProcessModel
         IsComplete = isComplete;
         SegmentKey = segmentKey;
         MediaItemId = mediaItemId;
+        IsWorkingAhead = isWorkingAhead;
 
         // undo the offset applied in FFmpegProcessHandler
         // so we don't continually walk backward/forward in time by the offset amount
@@ -49,4 +51,6 @@ public class PlayoutItemProcessModel
     public Option<long> SegmentKey { get; init; }
 
     public Option<int> MediaItemId { get; init; }
+
+    public bool IsWorkingAhead { get; init; }
 }

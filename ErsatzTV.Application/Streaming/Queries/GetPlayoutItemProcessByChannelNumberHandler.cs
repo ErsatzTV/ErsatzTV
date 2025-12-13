@@ -284,9 +284,20 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
 
             bool isComplete = true;
 
+            bool effectiveRealtime = request.HlsRealtime;
+
+            // only work ahead on fallback filler up to 3 minutes in duration
+            // since we always transcode a full fallback filler item
+            if (!effectiveRealtime &&
+                playoutItemWithPath.PlayoutItem.FillerKind is FillerKind.Fallback &&
+                duration > TimeSpan.FromMinutes(3))
+            {
+                effectiveRealtime = true;
+            }
+
             TimeSpan limit = TimeSpan.Zero;
 
-            if (!request.HlsRealtime)
+            if (!effectiveRealtime)
             {
                 // if we are working ahead, limit to 44s (multiple of segment size)
                 limit = TimeSpan.FromSeconds(44);
@@ -319,7 +330,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                     now,
                     duration,
                     $"DEBUG_NO_SYNC:\n{Mapper.GetDisplayTitle(playoutItemWithPath.PlayoutItem.MediaItem, Option<string>.None)}\nFrom: {start} To: {finish}",
-                    request.HlsRealtime,
+                    effectiveRealtime,
                     request.PtsOffset,
                     channel.FFmpegProfile.VaapiDisplay,
                     channel.FFmpegProfile.VaapiDriver,
@@ -334,7 +345,8 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                     true,
                     effectiveNow.ToUnixTimeSeconds(),
                     Option<int>.None,
-                    Optional(channel.PlayoutOffset));
+                    Optional(channel.PlayoutOffset),
+                    !effectiveRealtime);
             }
 
             MediaVersion version = playoutItemWithPath.PlayoutItem.MediaItem.GetHeadVersion();
@@ -443,7 +455,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 channel.FFmpegProfile.VaapiDriver,
                 channel.FFmpegProfile.VaapiDevice,
                 Optional(channel.FFmpegProfile.QsvExtraHardwareFrames),
-                hlsRealtime: request.HlsRealtime,
+                effectiveRealtime,
                 playoutItemWithPath.PlayoutItem.MediaItem is RemoteStream { IsLive: true }
                     ? StreamInputKind.Live
                     : StreamInputKind.Vod,
@@ -465,7 +477,8 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 isComplete,
                 effectiveNow.ToUnixTimeSeconds(),
                 playoutItemResult.MediaItemId,
-                Optional(channel.PlayoutOffset));
+                Optional(channel.PlayoutOffset),
+                !effectiveRealtime);
 
             return Right<BaseError, PlayoutItemProcessModel>(result);
         }
@@ -529,7 +542,8 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                         true,
                         now.ToUnixTimeSeconds(),
                         Option<int>.None,
-                        Optional(channel.PlayoutOffset));
+                        Optional(channel.PlayoutOffset),
+                        !request.HlsRealtime);
                 case PlayoutItemDoesNotExistOnDisk:
                     Command doesNotExistProcess = await _ffmpegProcessService.ForError(
                         ffmpegPath,
@@ -552,7 +566,8 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                         true,
                         now.ToUnixTimeSeconds(),
                         Option<int>.None,
-                        Optional(channel.PlayoutOffset));
+                        Optional(channel.PlayoutOffset),
+                        !request.HlsRealtime);
                 default:
                     Command errorProcess = await _ffmpegProcessService.ForError(
                         ffmpegPath,
@@ -575,7 +590,8 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                         true,
                         now.ToUnixTimeSeconds(),
                         Option<int>.None,
-                        Optional(channel.PlayoutOffset));
+                        Optional(channel.PlayoutOffset),
+                        !request.HlsRealtime);
             }
         }
 
@@ -724,7 +740,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 break;
             }
 
-            // TODO: shuffle? does it really matter since we loop anyway
+            // get a random item
             MediaItem item = items[new Random().Next(items.Count)];
 
             Option<TimeSpan> maybeDuration = await dbContext.PlayoutItems
@@ -747,15 +763,14 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 .Filter(ms => ms.MediaVersionId == version.Id)
                 .ToListAsync(cancellationToken);
 
-            DateTimeOffset finish = maybeDuration.Match(
-                // next playout item exists
-                // loop until it starts
-                now.Add,
-                // no next playout item exists
-                // loop for 5 minutes if less than 30s, otherwise play full item
-                () => version.Duration < TimeSpan.FromSeconds(30)
-                    ? now.AddMinutes(5)
-                    : now.Add(version.Duration));
+            // always play min(duration to next item, version.Duration)
+            TimeSpan duration = maybeDuration.IfNone(version.Duration);
+            if (version.Duration < duration)
+            {
+                duration = version.Duration;
+            }
+
+            DateTimeOffset finish = now.Add(duration);
 
             var playoutItem = new PlayoutItem
             {
@@ -765,7 +780,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 Finish = finish.UtcDateTime,
                 FillerKind = FillerKind.Fallback,
                 InPoint = TimeSpan.Zero,
-                OutPoint = version.Duration,
+                OutPoint = duration,
                 DisableWatermarks = !fallbackPreset.AllowWatermarks,
                 Watermarks = [],
                 PlayoutItemWatermarks = [],
