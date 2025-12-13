@@ -12,7 +12,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Application.MediaCollections;
 
-public class UpdateSmartCollectionHandler : IRequestHandler<UpdateSmartCollection, Either<BaseError, UpdateSmartCollectionResult>>
+public class
+    UpdateSmartCollectionHandler : IRequestHandler<UpdateSmartCollection,
+    Either<BaseError, UpdateSmartCollectionResult>>
 {
     private readonly ChannelWriter<IBackgroundServiceRequest> _channel;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
@@ -71,7 +73,8 @@ public class UpdateSmartCollectionHandler : IRequestHandler<UpdateSmartCollectio
     private static Task<Validation<BaseError, SmartCollection>> Validate(
         TvContext dbContext,
         UpdateSmartCollection request,
-        CancellationToken cancellationToken) => SmartCollectionMustExist(dbContext, request, cancellationToken);
+        CancellationToken cancellationToken) => ValidateName(dbContext, request)
+        .BindT(_ => SmartCollectionMustExist(dbContext, request, cancellationToken));
 
     private static Task<Validation<BaseError, SmartCollection>> SmartCollectionMustExist(
         TvContext dbContext,
@@ -80,4 +83,23 @@ public class UpdateSmartCollectionHandler : IRequestHandler<UpdateSmartCollectio
         dbContext.SmartCollections
             .SelectOneAsync(c => c.Id, c => c.Id == updateCollection.Id, cancellationToken)
             .Map(o => o.ToValidation<BaseError>("SmartCollection does not exist."));
+
+    private static async Task<Validation<BaseError, string>> ValidateName(
+        TvContext dbContext,
+        UpdateSmartCollection updateCollection)
+    {
+        List<string> allNames = await dbContext.SmartCollections
+            .Where(c => c.Id != updateCollection.Id)
+            .Map(c => c.Name)
+            .ToListAsync();
+
+        Validation<BaseError, string> result1 = updateCollection.NotEmpty(c => c.Name)
+            .Bind(_ => updateCollection.NotLongerThan(50)(c => c.Name));
+
+        var result2 = Optional(updateCollection.Name)
+            .Where(name => !allNames.Contains(name))
+            .ToValidation<BaseError>("SmartCollection name must be unique");
+
+        return (result1, result2).Apply((_, _) => updateCollection.Name);
+    }
 }

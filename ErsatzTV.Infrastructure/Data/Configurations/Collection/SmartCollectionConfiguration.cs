@@ -6,5 +6,11 @@ namespace ErsatzTV.Infrastructure.Data.Configurations;
 
 public class SmartCollectionConfiguration : IEntityTypeConfiguration<SmartCollection>
 {
-    public void Configure(EntityTypeBuilder<SmartCollection> builder) => builder.ToTable("SmartCollection");
+    public void Configure(EntityTypeBuilder<SmartCollection> builder)
+    {
+        builder.ToTable("SmartCollection");
+
+        builder.HasIndex(sc => sc.Name)
+            .IsUnique();
+    }
 }

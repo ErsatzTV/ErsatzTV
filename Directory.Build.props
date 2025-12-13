@@ -2,5 +2,6 @@
     <PropertyGroup>
         <InformationalVersion>develop</InformationalVersion>
         <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+        <AllowMissingPrunePackageData>true</AllowMissingPrunePackageData>
     </PropertyGroup>
 </Project>

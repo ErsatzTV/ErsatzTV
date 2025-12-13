@@ -3091,6 +3091,9 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Name")
+                        .IsUnique();
+
                     b.ToTable("SmartCollection", (string)null);
                 });
 
