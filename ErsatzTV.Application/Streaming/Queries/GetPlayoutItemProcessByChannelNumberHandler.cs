@@ -27,6 +27,8 @@ namespace ErsatzTV.Application.Streaming;
 
 public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<GetPlayoutItemProcessByChannelNumber>
 {
+    private static readonly Random FallbackRandom = new();
+
     private readonly IArtistRepository _artistRepository;
     private readonly IEmbyPathReplacementService _embyPathReplacementService;
     private readonly IExternalJsonPlayoutItemProvider _externalJsonPlayoutItemProvider;
@@ -496,7 +498,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
             Option<TimeSpan> maybeDuration = maybeNextStart.Map(s => s - now);
 
             // limit working ahead on errors to 1 minute
-            if (!request.HlsRealtime && maybeDuration.IsNone || maybeDuration > TimeSpan.FromMinutes(1))
+            if (!request.HlsRealtime && maybeDuration.IfNone(TimeSpan.FromMinutes(2)) > TimeSpan.FromMinutes(1))
             {
                 maybeNextStart = now.AddMinutes(1);
                 maybeDuration = TimeSpan.FromMinutes(1);
@@ -741,7 +743,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
             }
 
             // get a random item
-            MediaItem item = items[new Random().Next(items.Count)];
+            MediaItem item = items[FallbackRandom.Next(items.Count)];
 
             Option<TimeSpan> maybeDuration = await dbContext.PlayoutItems
                 .Filter(pi => pi.Playout.ChannelId == (channel.MirrorSourceChannelId ?? channel.Id))
