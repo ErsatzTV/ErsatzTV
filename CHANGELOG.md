@@ -60,6 +60,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 - No longer round framerate to nearest integer when normalizing framerate
 - Allow playlists to have no items included in EPG
+- Use hardware encoding for fallback filler
+  - Fallback filler will continue to use software decoding to avoid issues looping
 
 ## [25.9.0] - 2025-11-29
 ### Added

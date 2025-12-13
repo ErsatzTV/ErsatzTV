@@ -404,12 +404,13 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             graphicsElementContexts.AddRange(watermarks.Map(wm => new WatermarkElementContext(wm)));
         }
 
-        HardwareAccelerationMode hwAccel = GetHardwareAccelerationMode(playbackSettings, fillerKind);
+        HardwareAccelerationMode decodeHwAccel = GetHardwareAccelerationMode(playbackSettings, fillerKind);
+        HardwareAccelerationMode encodeHwAccel = GetHardwareAccelerationMode(playbackSettings, FillerKind.None);
 
         string videoFormat = GetVideoFormat(playbackSettings);
         Option<string> maybeVideoProfile = GetVideoProfile(videoFormat, channel.FFmpegProfile.VideoProfile);
         Option<string> maybeVideoPreset = GetVideoPreset(
-            hwAccel,
+            encodeHwAccel,
             videoFormat,
             channel.FFmpegProfile.VideoPreset,
             FFmpegLibraryHelper.MapBitDepth(channel.FFmpegProfile.BitDepth));
@@ -548,10 +549,10 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
 
         var ffmpegState = new FFmpegState(
             saveReports,
-            hwAccel,
-            hwAccel,
-            VaapiDriverName(hwAccel, vaapiDriver),
-            VaapiDeviceName(hwAccel, vaapiDevice),
+            decodeHwAccel,
+            encodeHwAccel,
+            VaapiDriverName(encodeHwAccel, vaapiDriver),
+            VaapiDeviceName(encodeHwAccel, vaapiDevice),
             playbackSettings.StreamSeek,
             finish - now,
             channel.StreamingMode != StreamingMode.HttpLiveStreamingDirect,
@@ -576,16 +577,16 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         _logger.LogDebug("FFmpeg desired state {FrameState}", desiredState);
 
         IPipelineBuilder pipelineBuilder = await _pipelineBuilderFactory.GetBuilder(
-            hwAccel,
+            encodeHwAccel,
             videoInputFile,
             audioInputFile,
             watermarkInputFile,
             subtitleInputFile,
             Option<ConcatInputFile>.None,
             graphicsEngineInput,
-            VaapiDisplayName(hwAccel, vaapiDisplay),
-            VaapiDriverName(hwAccel, vaapiDriver),
-            VaapiDeviceName(hwAccel, vaapiDevice),
+            VaapiDisplayName(encodeHwAccel, vaapiDisplay),
+            VaapiDriverName(encodeHwAccel, vaapiDriver),
+            VaapiDeviceName(encodeHwAccel, vaapiDevice),
             await customReportsFolder.IfNoneAsync(FileSystemLayout.FFmpegReportsFolder),
             FileSystemLayout.FontsCacheFolder,
             ffmpegPath);
