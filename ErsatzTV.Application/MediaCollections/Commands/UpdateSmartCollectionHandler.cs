@@ -97,7 +97,7 @@ public class
             .Bind(_ => updateCollection.NotLongerThan(50)(c => c.Name));
 
         var result2 = Optional(updateCollection.Name)
-            .Where(name => !allNames.Contains(name))
+            .Where(name => !allNames.Contains(name, StringComparer.OrdinalIgnoreCase))
             .ToValidation<BaseError>("SmartCollection name must be unique");
 
         return (result1, result2).Apply((_, _) => updateCollection.Name);

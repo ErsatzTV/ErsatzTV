@@ -130,6 +130,14 @@ public class TvContext : DbContext
         if ((Database.ProviderName ?? string.Empty).Contains("MySql", StringComparison.InvariantCultureIgnoreCase))
         {
             modelBuilder.Entity<MediaFile>().Property(mf => mf.Path).HasColumnType("longtext");
+
+            modelBuilder.Entity<SmartCollection>().Property(mc => mc.Name).UseCollation("utf8mb4_general_ci");
+        }
+
+        // sqlite-specific configuration
+        if ((Database.ProviderName ?? string.Empty).Contains("Sqlite", StringComparison.InvariantCultureIgnoreCase))
+        {
+            modelBuilder.Entity<SmartCollection>().Property(sc => sc.Name).UseCollation("NOCASE");
         }
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(TvContext).Assembly);

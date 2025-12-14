@@ -3235,7 +3235,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Name")
-                        .HasColumnType("varchar(255)");
+                        .HasColumnType("varchar(255)")
+                        .UseCollation("utf8mb4_general_ci");
 
                     b.Property<string>("Query")
                         .HasColumnType("longtext");
