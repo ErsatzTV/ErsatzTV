@@ -67,7 +67,7 @@ public class CreateSmartCollectionHandler :
             .Bind(_ => createSmartCollection.NotLongerThan(50)(c => c.Name));
 
         var result2 = Optional(createSmartCollection.Name)
-            .Where(name => !allNames.Contains(name))
+            .Where(name => !allNames.Contains(name, StringComparer.OrdinalIgnoreCase))
             .ToValidation<BaseError>("SmartCollection name must be unique");
 
         return (result1, result2).Apply((_, _) => createSmartCollection.Name);
