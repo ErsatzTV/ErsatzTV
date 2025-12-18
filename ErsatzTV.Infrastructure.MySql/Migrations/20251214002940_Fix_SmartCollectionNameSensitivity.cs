@@ -12,16 +12,15 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
         {
             migrationBuilder.Sql(
                 @"
-    WITH Numbered AS (
+UPDATE SmartCollection sc
+    JOIN (
         SELECT
             Id,
             ROW_NUMBER() OVER (PARTITION BY LOWER(Name) ORDER BY Id) as RowNum
         FROM SmartCollection
-    )
-    UPDATE SmartCollection sc
-    JOIN Numbered n ON sc.Id = n.Id
-    SET sc.Name = CONCAT(sc.Name, ' (', n.RowNum - 1, ')')
-    WHERE n.RowNum > 1;
+    ) n ON sc.Id = n.Id
+SET sc.Name = CONCAT(sc.Name, ' (', n.RowNum - 1, ')')
+WHERE n.RowNum > 1;
 ");
 
             migrationBuilder.AlterColumn<string>(
