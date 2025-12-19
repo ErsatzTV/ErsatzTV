@@ -26,6 +26,7 @@ public record CreateFFmpegProfile(
     int AudioBitrate,
     int AudioBufferSize,
     NormalizeLoudnessMode NormalizeLoudnessMode,
+    double? TargetLoudness,
     int AudioChannels,
     int AudioSampleRate,
     bool NormalizeFramerate,

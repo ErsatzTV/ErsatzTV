@@ -207,7 +207,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             {
                 NormalizeLoudnessMode.LoudNorm => AudioFilter.LoudNorm,
                 _ => AudioFilter.None
-            });
+            },
+            playbackSettings.TargetLoudness);
 
         // don't log generated images, or hls direct, which are expected to have unknown format
         bool isUnknownPixelFormatExpected =
@@ -694,7 +695,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             playbackSettings.AudioBufferSize,
             playbackSettings.AudioSampleRate,
             false,
-            AudioFilter.None);
+            AudioFilter.None,
+            playbackSettings.TargetLoudness);
 
         string videoFormat = GetVideoFormat(playbackSettings);
 

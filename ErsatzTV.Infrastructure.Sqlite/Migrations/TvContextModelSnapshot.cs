@@ -721,6 +721,9 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Property<int>("ScalingBehavior")
                         .HasColumnType("INTEGER");
 
+                    b.Property<double?>("TargetLoudness")
+                        .HasColumnType("REAL");
+
                     b.Property<int>("ThreadCount")
                         .HasColumnType("INTEGER");
 
