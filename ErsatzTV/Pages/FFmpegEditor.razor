@@ -278,6 +278,15 @@
                 <MudSelectItem Value="@NormalizeLoudnessMode.LoudNorm">loudnorm</MudSelectItem>
             </MudSelect>
         </MudStack>
+        @if (_model.NormalizeLoudnessMode is NormalizeLoudnessMode.LoudNorm)
+        {
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Target Loudness</MudText>
+                </div>
+                <MudTextField @bind-Value="_model.TargetLoudness" For="@(() => _model.TargetLoudness)" Adornment="Adornment.End" AdornmentText="LUFS"/>
+            </MudStack>
+        }
     </MudContainer>
 </div>
 </MudForm>

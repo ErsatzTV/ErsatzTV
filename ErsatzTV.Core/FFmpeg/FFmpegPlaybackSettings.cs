@@ -29,5 +29,6 @@ public class FFmpegPlaybackSettings
     public bool Deinterlace { get; set; }
     public Option<int> VideoTrackTimeScale { get; set; }
     public NormalizeLoudnessMode NormalizeLoudnessMode { get; set; }
+    public Option<double> TargetLoudness { get; set; }
     public Option<FrameRate> FrameRate { get; set; }
 }

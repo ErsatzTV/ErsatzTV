@@ -32,6 +32,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - This metadata will be used in generated XMLTV entries, using a template that can be customized like other media kinds
 - Add `Download Media Sample` button to playback troubleshooting
   - This button will extract up to 30 seconds of the media item and zip it
+- Add `Target Loudness` (LUFS/LKFS) to ffmpeg profile when loudness normalization is enabled
+  - Default value is `-16`; some sources normalize to a quieter value, e.g. `-24`
 
 ### Fixed
 - Fix startup on systems unsupported by NvEncSharp

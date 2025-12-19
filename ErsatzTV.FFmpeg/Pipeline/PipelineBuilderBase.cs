@@ -504,6 +504,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         {
             var filter = new NormalizeLoudnessFilter(
                 audioInputFile.DesiredState.NormalizeLoudnessFilter,
+                audioInputFile.DesiredState.TargetLoudness,
                 audioInputFile.DesiredState.AudioSampleRate);
 
             _audioInputFile.Iter(f => f.FilterSteps.Add(filter));

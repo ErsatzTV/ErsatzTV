@@ -59,7 +59,12 @@ public class UpdateFFmpegProfileHandler(IDbContextFactory<TvContext> dbContextFa
         p.AudioFormat = update.AudioFormat;
         p.AudioBitrate = update.AudioBitrate;
         p.AudioBufferSize = update.AudioBufferSize;
+
         p.NormalizeLoudnessMode = update.NormalizeLoudnessMode;
+        p.TargetLoudness = update.NormalizeLoudnessMode is NormalizeLoudnessMode.LoudNorm
+            ? update.TargetLoudness
+            : null;
+
         p.AudioChannels = update.AudioChannels;
         p.AudioSampleRate = update.AudioSampleRate;
         p.NormalizeFramerate = update.NormalizeFramerate;

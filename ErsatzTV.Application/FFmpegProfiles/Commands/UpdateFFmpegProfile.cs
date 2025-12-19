@@ -27,6 +27,7 @@ public record UpdateFFmpegProfile(
     int AudioBitrate,
     int AudioBufferSize,
     NormalizeLoudnessMode NormalizeLoudnessMode,
+    double? TargetLoudness,
     int AudioChannels,
     int AudioSampleRate,
     bool NormalizeFramerate,

@@ -27,6 +27,7 @@ public record FFmpegProfile
     public int AudioBitrate { get; set; }
     public int AudioBufferSize { get; set; }
     public NormalizeLoudnessMode NormalizeLoudnessMode { get; set; }
+    public double? TargetLoudness { get; set; }
     public int AudioChannels { get; set; }
     public int AudioSampleRate { get; set; }
     public bool NormalizeFramerate { get; set; }

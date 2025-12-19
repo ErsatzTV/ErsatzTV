@@ -8,6 +8,7 @@ namespace ErsatzTV.ViewModels;
 public class FFmpegProfileEditViewModel
 {
     private string _videoProfile;
+    private NormalizeLoudnessMode _normalizeLoudnessMode;
 
     public FFmpegProfileEditViewModel()
     {
@@ -21,6 +22,7 @@ public class FFmpegProfileEditViewModel
         AudioFormat = viewModel.AudioFormat;
         AudioSampleRate = viewModel.AudioSampleRate;
         NormalizeLoudnessMode = viewModel.NormalizeLoudnessMode;
+        TargetLoudness = viewModel.TargetLoudness;
         Id = viewModel.Id;
         Name = viewModel.Name;
         NormalizeFramerate = viewModel.NormalizeFramerate;
@@ -48,7 +50,28 @@ public class FFmpegProfileEditViewModel
     public int AudioChannels { get; set; }
     public FFmpegProfileAudioFormat AudioFormat { get; set; }
     public int AudioSampleRate { get; set; }
-    public NormalizeLoudnessMode NormalizeLoudnessMode { get; set; }
+
+    public NormalizeLoudnessMode NormalizeLoudnessMode
+    {
+        get => _normalizeLoudnessMode;
+        set
+        {
+            if (_normalizeLoudnessMode != value)
+            {
+                _normalizeLoudnessMode = value;
+                if (_normalizeLoudnessMode is NormalizeLoudnessMode.LoudNorm)
+                {
+                    TargetLoudness = -16;
+                }
+                else
+                {
+                    TargetLoudness = null;
+                }
+            }
+        }
+    }
+
+    public double? TargetLoudness { get; set; }
     public int Id { get; set; }
     public string Name { get; set; }
     public bool NormalizeFramerate { get; set; }
@@ -106,6 +129,7 @@ public class FFmpegProfileEditViewModel
             AudioBitrate,
             AudioBufferSize,
             NormalizeLoudnessMode,
+            TargetLoudness,
             AudioChannels,
             AudioSampleRate,
             NormalizeFramerate,
@@ -136,6 +160,7 @@ public class FFmpegProfileEditViewModel
             AudioBitrate,
             AudioBufferSize,
             NormalizeLoudnessMode,
+            TargetLoudness,
             AudioChannels,
             AudioSampleRate,
             NormalizeFramerate,

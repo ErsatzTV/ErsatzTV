@@ -29,6 +29,7 @@ internal static class Mapper
             profile.AudioBitrate,
             profile.AudioBufferSize,
             profile.NormalizeLoudnessMode,
+            profile.TargetLoudness,
             profile.AudioChannels,
             profile.AudioSampleRate,
             profile.NormalizeFramerate,

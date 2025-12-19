@@ -27,6 +27,7 @@ public record FFmpegProfileViewModel(
     int AudioBitrate,
     int AudioBufferSize,
     NormalizeLoudnessMode NormalizeLoudnessMode,
+    double? TargetLoudness,
     int AudioChannels,
     int AudioSampleRate,
     bool NormalizeFramerate,

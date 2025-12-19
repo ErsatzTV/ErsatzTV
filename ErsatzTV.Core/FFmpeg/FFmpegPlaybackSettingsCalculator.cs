@@ -164,6 +164,9 @@ public static class FFmpegPlaybackSettingsCalculator
                 result.AudioSampleRate = ffmpegProfile.AudioSampleRate;
                 result.PadAudio = true;
                 result.NormalizeLoudnessMode = ffmpegProfile.NormalizeLoudnessMode;
+                result.TargetLoudness = ffmpegProfile.NormalizeLoudnessMode is NormalizeLoudnessMode.LoudNorm
+                    ? Optional(ffmpegProfile.TargetLoudness)
+                    : Option<double>.None;
 
                 result.Deinterlace = ffmpegProfile.DeinterlaceVideo == true;
 
