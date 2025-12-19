@@ -1,4 +1,6 @@
-﻿namespace ErsatzTV.FFmpeg.Filter;
+﻿using System.Globalization;
+
+namespace ErsatzTV.FFmpeg.Filter;
 
 public class NormalizeLoudnessFilter(AudioFilter loudnessFilter, Option<double> targetLoudness, Option<int> sampleRate)
     : BaseFilter
@@ -12,7 +14,7 @@ public class NormalizeLoudnessFilter(AudioFilter loudnessFilter, Option<double> 
 
             return loudnessFilter switch
             {
-                AudioFilter.LoudNorm => $"loudnorm=I={loudness}:TP=-1.5:LRA=11,aresample={audioSampleRate}",
+                AudioFilter.LoudNorm => $"loudnorm=I={loudness.ToString(NumberFormatInfo.InvariantInfo)}:TP=-1.5:LRA=11,aresample={audioSampleRate}",
                 _ => string.Empty
             };
         }
