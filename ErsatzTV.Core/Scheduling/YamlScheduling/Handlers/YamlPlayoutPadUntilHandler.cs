@@ -41,7 +41,7 @@ public class YamlPlayoutPadUntilHandler(EnumeratorCache enumeratorCache) : YamlP
                     };
                 };
 
-                if (expression.Evaluate() as bool? == true)
+                if (expression.Evaluate(cancellationToken) as bool? == true)
                 {
                     // this is wrong when offset changes
                     dayOnly = dayOnly.AddDays(1);

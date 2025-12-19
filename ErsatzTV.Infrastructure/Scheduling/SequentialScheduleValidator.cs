@@ -1,7 +1,6 @@
 using System.Globalization;
 using System.IO.Abstractions;
 using System.Text.Json;
-using System.Text.Json.Nodes;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using Microsoft.Extensions.Logging;
@@ -24,12 +23,16 @@ public class SequentialScheduleValidator(IFileSystem fileSystem, ILogger<Sequent
             string schemaFileName = GetSchemaPath(isImport);
             string schemaText = await fileSystem.File.ReadAllTextAsync(schemaFileName);
 
-            JsonSchemaNet.JsonSchema schema = JsonSchemaNet.JsonSchema.FromText(schemaText);
+            var buildOptions = new JsonSchemaNet.BuildOptions
+            {
+                SchemaRegistry = new JsonSchemaNet.SchemaRegistry()
+            };
+            JsonSchemaNet.JsonSchema schema = JsonSchemaNet.JsonSchema.FromText(schemaText, buildOptions);
 
             string jsonString = ConvertYamlToJsonString(yaml);
-            JsonNode jsonNode = JsonNode.Parse(jsonString);
+            JsonElement jsonElement = JsonElement.Parse(jsonString);
 
-            JsonSchemaNet.EvaluationResults result = schema.Evaluate(jsonNode);
+            JsonSchemaNet.EvaluationResults result = schema.Evaluate(jsonElement);
 
             if (!result.IsValid)
             {
