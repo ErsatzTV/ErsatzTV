@@ -48,7 +48,7 @@ public class YamlPlayoutCountHandler(EnumeratorCache enumeratorCache) : YamlPlay
                 };
             };
 
-            object expressionResult = expression.Evaluate();
+            object expressionResult = expression.Evaluate(cancellationToken);
             int countValue = expressionResult switch
             {
                 double doubleResult => (int)Math.Floor(doubleResult),

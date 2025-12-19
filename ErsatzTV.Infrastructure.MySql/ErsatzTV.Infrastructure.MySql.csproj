@@ -16,8 +16,8 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="EFCore.BulkExtensions.MySql" Version="9.0.2" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.11" />
+        <PackageReference Include="EFCore.BulkExtensions.MySql" Version="[9.0.2,10)" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="[9.0.11,10)" />
         <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="9.0.0" />
     </ItemGroup>
 

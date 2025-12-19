@@ -45,7 +45,7 @@ public class YamlPlayoutSkipItemsHandler(EnumeratorCache enumeratorCache) : IYam
                 };
             };
 
-            object expressionResult = expression.Evaluate();
+            object expressionResult = expression.Evaluate(cancellationToken);
             int skipCount = expressionResult switch
             {
                 double doubleResult => (int)Math.Floor(doubleResult),
