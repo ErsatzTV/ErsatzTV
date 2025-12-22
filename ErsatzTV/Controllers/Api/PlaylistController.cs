@@ -70,7 +70,7 @@ public class PlaylistController(IMediator mediator) : ControllerBase
     public async Task<List<PlaylistItemViewModel>> GetPlaylistItems(int id, CancellationToken cancellationToken) =>
         await mediator.Send(new GetPlaylistItems(id), cancellationToken);
 
-    [HttpPost("/api/playlists", Name = "CreatePlaylist")]
+    [HttpPost("/api/playlists", Name = "CreatePlaylistApi")]
     [Tags("Playlists")]
     [EndpointSummary("Create a playlist")]
     public async Task<IActionResult> CreatePlaylist(
