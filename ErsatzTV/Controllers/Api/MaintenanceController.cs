@@ -7,33 +7,41 @@ namespace ErsatzTV.Controllers.Api;
 
 [ApiController]
 [EndpointGroupName("general")]
-public class MaintenanceController(IMediator mediator)
+public class MaintenanceController(IMediator mediator) : ControllerBase
 {
-    [HttpGet("/api/maintenance/gc")]
+    [HttpPost("/api/maintenance/gc", Name = "GarbageCollection")]
     [Tags("Maintenance")]
     [EndpointSummary("Garbage collect")]
     public async Task<IActionResult> GarbageCollection([FromQuery] bool force = false)
     {
         await mediator.Send(new ReleaseMemory(force));
-        return new OkResult();
+        return Ok();
     }
 
-    [HttpPost("/api/maintenance/empty_trash")]
+    [HttpPost("/api/maintenance/empty-trash", Name = "EmptyTrash")]
     [Tags("Maintenance")]
     [EndpointSummary("Empty trash")]
     public async Task<IActionResult> EmptyTrash()
     {
         Either<BaseError, Unit> result = await mediator.Send(new EmptyTrash());
-        foreach (BaseError error in result.LeftToSeq())
-        {
-            return new ContentResult
-            {
-                StatusCode = StatusCodes.Status500InternalServerError,
-                Content = error.ToString(),
-                ContentType = "text/plain"
-            };
-        }
+        return result.Match<IActionResult>(_ => Ok(), error => Problem(error.ToString()));
+    }
 
-        return new OkResult();
+    [HttpPost("/api/maintenance/delete-orphaned-artwork", Name = "DeleteOrphanedArtwork")]
+    [Tags("Maintenance")]
+    [EndpointSummary("Delete orphaned artwork")]
+    public async Task<IActionResult> DeleteOrphanedArtwork()
+    {
+        Either<BaseError, Unit> result = await mediator.Send(new DeleteOrphanedArtwork());
+        return result.Match<IActionResult>(_ => Accepted(), error => Problem(error.ToString()));
+    }
+
+    [HttpPost("/api/maintenance/delete-orphaned-subtitles", Name = "DeleteOrphanedSubtitles")]
+    [Tags("Maintenance")]
+    [EndpointSummary("Delete orphaned subtitles")]
+    public async Task<IActionResult> DeleteOrphanedSubtitles()
+    {
+        Either<BaseError, Unit> result = await mediator.Send(new DeleteOrphanedSubtitles());
+        return result.Match<IActionResult>(_ => Accepted(), error => Problem(error.ToString()));
     }
 }
