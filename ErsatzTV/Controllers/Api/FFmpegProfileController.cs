@@ -29,7 +29,7 @@ public class FFmpegProfileController(IMediator mediator) : ControllerBase
         return result.Match<IActionResult>(Ok, () => NotFound());
     }
 
-    [HttpPost("/api/ffmpeg/profiles/new", Name = "CreateFFmpegProfile")]
+    [HttpPost("/api/ffmpeg/profiles", Name = "CreateFFmpegProfile")]
     [Tags("FFmpeg")]
     [EndpointSummary("Create FFmpeg profile")]
     [EndpointGroupName("general")]
@@ -42,7 +42,7 @@ public class FFmpegProfileController(IMediator mediator) : ControllerBase
         return result.Match<IActionResult>(Ok, error => Problem(error.ToString()));
     }
 
-    [HttpPut("/api/ffmpeg/profiles/update", Name = "UpdateFFmpegProfile")]
+    [HttpPut("/api/ffmpeg/profiles", Name = "UpdateFFmpegProfile")]
     [Tags("FFmpeg")]
     [EndpointSummary("Update FFmpeg profile")]
     [EndpointGroupName("general")]
@@ -55,7 +55,7 @@ public class FFmpegProfileController(IMediator mediator) : ControllerBase
         return result.Match<IActionResult>(Ok, error => Problem(error.ToString()));
     }
 
-    [HttpDelete("/api/ffmpeg/delete/{id:int}", Name = "DeleteFFmpegProfile")]
+    [HttpDelete("/api/ffmpeg/profiles/{id:int}", Name = "DeleteFFmpegProfile")]
     [Tags("FFmpeg")]
     [EndpointSummary("Delete FFmpeg profile")]
     [EndpointGroupName("general")]

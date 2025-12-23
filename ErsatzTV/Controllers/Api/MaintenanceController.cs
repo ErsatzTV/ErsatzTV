@@ -9,7 +9,7 @@ namespace ErsatzTV.Controllers.Api;
 
 public class MaintenanceController(IMediator mediator) : ControllerBase
 {
-    [HttpPost("/api/maintenance/gc", Name = "GarbageCollection")]
+    [HttpGet("/api/maintenance/gc", Name = "GarbageCollection")]
     [Tags("Maintenance")]
     [EndpointSummary("Garbage collect")]
     [EndpointGroupName("general")]
@@ -19,7 +19,7 @@ public class MaintenanceController(IMediator mediator) : ControllerBase
         return Ok();
     }
 
-    [HttpPost("/api/maintenance/empty-trash", Name = "EmptyTrash")]
+    [HttpPost("/api/maintenance/empty_trash", Name = "EmptyTrash")]
     [Tags("Maintenance")]
     [EndpointSummary("Empty trash")]
     [EndpointGroupName("general")]
