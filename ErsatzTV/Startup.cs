@@ -151,7 +151,17 @@ public class Startup
 
         services.AddDataProtection().PersistKeysToFileSystem(new DirectoryInfo(FileSystemLayout.DataProtectionFolder));
 
-        services.AddOpenApi("v1", options => { options.ShouldInclude += a => a.GroupName == "general"; });
+        services.AddOpenApi("v1", options =>
+        {
+            options.ShouldInclude += a => a.GroupName == "general";
+
+            // Increase MaxDepth for complex nested types
+            options.CreateSchemaReferenceId = (type) =>
+            {
+                // Use simple type names to reduce schema complexity
+                return type.Type.Name;
+            };
+        });
 
         services.AddOpenApi(
             "scripted-schedule-tagged",
@@ -178,7 +188,11 @@ public class Startup
                 });
             });
 
-        services.ConfigureHttpJsonOptions(o => o.SerializerOptions.NumberHandling = JsonNumberHandling.Strict);
+        services.ConfigureHttpJsonOptions(o =>
+        {
+            o.SerializerOptions.NumberHandling = JsonNumberHandling.Strict;
+            o.SerializerOptions.MaxDepth = 256; // Increased for OpenAPI schema generation with nested types
+        });
 
         OidcHelper.Init(Configuration);
         JwtHelper.Init(Configuration);
@@ -657,10 +671,7 @@ public class Startup
                     endpoints.MapBlazorHub();
                     endpoints.MapFallbackToPage("/_Host");
 
-                    if (CurrentEnvironment.IsDevelopment())
-                    {
-                        endpoints.MapOpenApi();
-                    }
+                    endpoints.MapOpenApi("/api/openapi/{documentName}.json");
 
                     endpoints.MapScalarApiReference("/docs", options =>
                     {
