@@ -16,18 +16,21 @@ using Microsoft.AspNetCore.Mvc;
 namespace ErsatzTV.Controllers.Api;
 
 [ApiController]
-[EndpointGroupName("general")]
 public class ChannelController(ChannelWriter<IBackgroundServiceRequest> workerChannel, IMediator mediator) : ControllerBase
 {
     [HttpGet("/api/channels", Name = "GetAllChannels")]
     [Tags("Channels")]
     [EndpointSummary("Get all channels")]
+    [EndpointGroupName("general")]
+    
     public async Task<List<ChannelResponseModel>> GetAll(CancellationToken cancellationToken) =>
         await mediator.Send(new GetAllChannelsForApi(), cancellationToken);
 
     [HttpGet("/api/channels/{id:int}", Name = "GetChannelById")]
     [Tags("Channels")]
     [EndpointSummary("Get channel by ID")]
+    [EndpointGroupName("general")]
+    
     public async Task<IActionResult> GetChannelById(int id, CancellationToken cancellationToken)
     {
         Option<ChannelViewModel> result = await mediator.Send(new GetChannelById(id), cancellationToken);
@@ -37,6 +40,7 @@ public class ChannelController(ChannelWriter<IBackgroundServiceRequest> workerCh
     [HttpGet("/api/channels/by-number/{channelNumber}", Name = "GetChannelByNumber")]
     [Tags("Channels")]
     [EndpointSummary("Get channel by number")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> GetChannelByNumber(string channelNumber, CancellationToken cancellationToken)
     {
         Option<ChannelViewModel> result = await mediator.Send(new GetChannelByNumber(channelNumber), cancellationToken);
@@ -46,6 +50,7 @@ public class ChannelController(ChannelWriter<IBackgroundServiceRequest> workerCh
     [HttpPost("/api/channels", Name = "CreateChannel")]
     [Tags("Channels")]
     [EndpointSummary("Create a channel")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> CreateChannel(
         [Required] [FromBody] CreateChannelRequest request,
         CancellationToken cancellationToken)
@@ -89,6 +94,7 @@ public class ChannelController(ChannelWriter<IBackgroundServiceRequest> workerCh
     [HttpPut("/api/channels/{id:int}", Name = "UpdateChannel")]
     [Tags("Channels")]
     [EndpointSummary("Update a channel")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> UpdateChannel(
         int id,
         [Required] [FromBody] UpdateChannelRequest request,
@@ -134,6 +140,7 @@ public class ChannelController(ChannelWriter<IBackgroundServiceRequest> workerCh
     [HttpDelete("/api/channels/{id:int}", Name = "DeleteChannel")]
     [Tags("Channels")]
     [EndpointSummary("Delete a channel")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> DeleteChannel(int id, CancellationToken cancellationToken)
     {
         Either<BaseError, Unit> result = await mediator.Send(new DeleteChannel(id), cancellationToken);
@@ -143,6 +150,7 @@ public class ChannelController(ChannelWriter<IBackgroundServiceRequest> workerCh
     [HttpPost("/api/channels/{channelNumber}/playout/reset", Name = "ResetChannelPlayout")]
     [Tags("Channels")]
     [EndpointSummary("Reset channel playout")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> ResetPlayout(string channelNumber)
     {
         Option<int> maybePlayoutId = await mediator.Send(new GetPlayoutIdByChannelNumber(channelNumber));
@@ -158,6 +166,7 @@ public class ChannelController(ChannelWriter<IBackgroundServiceRequest> workerCh
     [HttpPost("/api/channels/{channelNumber}/playout/build", Name = "BuildChannelPlayout")]
     [Tags("Channels")]
     [EndpointSummary("Build channel playout")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> BuildPlayout(string channelNumber)
     {
         Option<int> maybePlayoutId = await mediator.Send(new GetPlayoutIdByChannelNumber(channelNumber));

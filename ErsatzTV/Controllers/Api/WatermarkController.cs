@@ -12,18 +12,20 @@ using Microsoft.AspNetCore.Mvc;
 namespace ErsatzTV.Controllers.Api;
 
 [ApiController]
-[EndpointGroupName("general")]
+
 public class WatermarkController(IMediator mediator) : ControllerBase
 {
     [HttpGet("/api/watermarks", Name = "GetAllWatermarks")]
     [Tags("Watermarks")]
     [EndpointSummary("Get all watermarks")]
+    [EndpointGroupName("general")]
     public async Task<List<WatermarkViewModel>> GetAllWatermarks(CancellationToken cancellationToken) =>
         await mediator.Send(new GetAllWatermarks(), cancellationToken);
 
     [HttpGet("/api/watermarks/{id:int}", Name = "GetWatermarkById")]
     [Tags("Watermarks")]
     [EndpointSummary("Get watermark by ID")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> GetWatermarkById(int id, CancellationToken cancellationToken)
     {
         Option<WatermarkViewModel> result = await mediator.Send(new GetWatermarkById(id), cancellationToken);
@@ -33,6 +35,7 @@ public class WatermarkController(IMediator mediator) : ControllerBase
     [HttpPost("/api/watermarks", Name = "CreateWatermark")]
     [Tags("Watermarks")]
     [EndpointSummary("Create a watermark")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> CreateWatermark(
         [Required] [FromBody] CreateWatermarkRequest request,
         CancellationToken cancellationToken)
@@ -65,6 +68,7 @@ public class WatermarkController(IMediator mediator) : ControllerBase
     [HttpPut("/api/watermarks/{id:int}", Name = "UpdateWatermark")]
     [Tags("Watermarks")]
     [EndpointSummary("Update a watermark")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> UpdateWatermark(
         int id,
         [Required] [FromBody] UpdateWatermarkRequest request,
@@ -99,6 +103,7 @@ public class WatermarkController(IMediator mediator) : ControllerBase
     [HttpDelete("/api/watermarks/{id:int}", Name = "DeleteWatermark")]
     [Tags("Watermarks")]
     [EndpointSummary("Delete a watermark")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> DeleteWatermark(int id, CancellationToken cancellationToken)
     {
         Either<BaseError, Unit> result = await mediator.Send(new DeleteWatermark(id), cancellationToken);
@@ -108,6 +113,7 @@ public class WatermarkController(IMediator mediator) : ControllerBase
     [HttpPost("/api/watermarks/{id:int}/copy", Name = "CopyWatermark")]
     [Tags("Watermarks")]
     [EndpointSummary("Copy a watermark")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> CopyWatermark(
         int id,
         [Required] [FromBody] CopyWatermarkRequest request,

@@ -11,12 +11,13 @@ using Microsoft.AspNetCore.Mvc;
 namespace ErsatzTV.Controllers.Api;
 
 [ApiController]
-[EndpointGroupName("general")]
+
 public class FillerController(IMediator mediator) : ControllerBase
 {
     [HttpGet("/api/filler/presets", Name = "GetFillerPresets")]
     [Tags("Filler")]
     [EndpointSummary("Get all filler presets (paginated)")]
+    [EndpointGroupName("general")]
     public async Task<PagedFillerPresetsViewModel> GetFillerPresets(
         [FromQuery] int pageNumber = 0,
         [FromQuery] int pageSize = 50,
@@ -26,12 +27,14 @@ public class FillerController(IMediator mediator) : ControllerBase
     [HttpGet("/api/filler/presets/all", Name = "GetAllFillerPresets")]
     [Tags("Filler")]
     [EndpointSummary("Get all filler presets")]
+    [EndpointGroupName("general")]
     public async Task<List<FillerPresetViewModel>> GetAllFillerPresets(CancellationToken cancellationToken) =>
         await mediator.Send(new GetAllFillerPresets(), cancellationToken);
 
     [HttpGet("/api/filler/presets/{id:int}", Name = "GetFillerPresetById")]
     [Tags("Filler")]
     [EndpointSummary("Get filler preset by ID")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> GetFillerPresetById(int id, CancellationToken cancellationToken)
     {
         Option<FillerPresetViewModel> result = await mediator.Send(new GetFillerPresetById(id), cancellationToken);
@@ -41,6 +44,7 @@ public class FillerController(IMediator mediator) : ControllerBase
     [HttpPost("/api/filler/presets", Name = "CreateFillerPreset")]
     [Tags("Filler")]
     [EndpointSummary("Create a filler preset")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> CreateFillerPreset(
         [Required] [FromBody] CreateFillerPresetRequest request,
         CancellationToken cancellationToken)
@@ -69,6 +73,7 @@ public class FillerController(IMediator mediator) : ControllerBase
     [HttpPut("/api/filler/presets/{id:int}", Name = "UpdateFillerPreset")]
     [Tags("Filler")]
     [EndpointSummary("Update a filler preset")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> UpdateFillerPreset(
         int id,
         [Required] [FromBody] UpdateFillerPresetRequest request,
@@ -99,6 +104,7 @@ public class FillerController(IMediator mediator) : ControllerBase
     [HttpDelete("/api/filler/presets/{id:int}", Name = "DeleteFillerPreset")]
     [Tags("Filler")]
     [EndpointSummary("Delete a filler preset")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> DeleteFillerPreset(int id, CancellationToken cancellationToken)
     {
         Either<BaseError, Unit> result = await mediator.Send(new DeleteFillerPreset(id), cancellationToken);

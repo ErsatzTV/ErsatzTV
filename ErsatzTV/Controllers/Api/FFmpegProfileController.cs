@@ -9,18 +9,20 @@ using Microsoft.AspNetCore.Mvc;
 namespace ErsatzTV.Controllers.Api;
 
 [ApiController]
-[EndpointGroupName("general")]
+
 public class FFmpegProfileController(IMediator mediator) : ControllerBase
 {
     [HttpGet("/api/ffmpeg/profiles", Name = "GetFFmpegProfiles")]
     [Tags("FFmpeg")]
     [EndpointSummary("Get all FFmpeg profiles")]
+    [EndpointGroupName("general")]
     public async Task<List<FFmpegFullProfileResponseModel>> GetAll(CancellationToken cancellationToken) =>
         await mediator.Send(new GetAllFFmpegProfilesForApi(), cancellationToken);
 
     [HttpGet("/api/ffmpeg/profiles/{id:int}", Name = "GetFFmpegProfileById")]
     [Tags("FFmpeg")]
     [EndpointSummary("Get FFmpeg profile by ID")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> GetFFmpegProfileById(int id, CancellationToken cancellationToken)
     {
         Option<FFmpegProfileViewModel> result = await mediator.Send(new GetFFmpegProfileById(id), cancellationToken);
@@ -30,6 +32,7 @@ public class FFmpegProfileController(IMediator mediator) : ControllerBase
     [HttpPost("/api/ffmpeg/profiles/new", Name = "CreateFFmpegProfile")]
     [Tags("FFmpeg")]
     [EndpointSummary("Create FFmpeg profile")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> AddOne(
         [Required] [FromBody]
         CreateFFmpegProfile request,
@@ -42,6 +45,7 @@ public class FFmpegProfileController(IMediator mediator) : ControllerBase
     [HttpPut("/api/ffmpeg/profiles/update", Name = "UpdateFFmpegProfile")]
     [Tags("FFmpeg")]
     [EndpointSummary("Update FFmpeg profile")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> UpdateOne(
         [Required] [FromBody]
         UpdateFFmpegProfile request,
@@ -54,6 +58,7 @@ public class FFmpegProfileController(IMediator mediator) : ControllerBase
     [HttpDelete("/api/ffmpeg/delete/{id:int}", Name = "DeleteFFmpegProfile")]
     [Tags("FFmpeg")]
     [EndpointSummary("Delete FFmpeg profile")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> DeleteProfileAsync(int id, CancellationToken cancellationToken)
     {
         Either<BaseError, Unit> result = await mediator.Send(new DeleteFFmpegProfile(id), cancellationToken);
@@ -63,6 +68,7 @@ public class FFmpegProfileController(IMediator mediator) : ControllerBase
     [HttpPost("/api/ffmpeg/profiles/{id:int}/copy", Name = "CopyFFmpegProfile")]
     [Tags("FFmpeg")]
     [EndpointSummary("Copy FFmpeg profile")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> CopyFFmpegProfile(
         int id,
         [Required] [FromBody] CopyFFmpegProfileRequest request,
@@ -76,12 +82,14 @@ public class FFmpegProfileController(IMediator mediator) : ControllerBase
     [HttpGet("/api/ffmpeg/settings", Name = "GetFFmpegSettings")]
     [Tags("FFmpeg")]
     [EndpointSummary("Get FFmpeg settings")]
+    [EndpointGroupName("general")]
     public async Task<FFmpegSettingsViewModel> GetFFmpegSettings(CancellationToken cancellationToken) =>
         await mediator.Send(new GetFFmpegSettings(), cancellationToken);
 
     [HttpPut("/api/ffmpeg/settings", Name = "UpdateFFmpegSettings")]
     [Tags("FFmpeg")]
     [EndpointSummary("Update FFmpeg settings")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> UpdateFFmpegSettings(
         [Required] [FromBody] FFmpegSettingsViewModel settings,
         CancellationToken cancellationToken)

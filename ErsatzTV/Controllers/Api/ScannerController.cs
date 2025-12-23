@@ -15,6 +15,7 @@ public class ScannerController(
 {
     [HttpPost("progress")]
     [EndpointSummary("Scanner progress update")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> Progress(Guid scanId, [FromBody] decimal percentComplete)
     {
         await scannerProxyService.Progress(scanId, percentComplete);
@@ -23,6 +24,7 @@ public class ScannerController(
 
     [HttpPost("items/reindex")]
     [EndpointSummary("Scanner reindex items in search index")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> UpdateItems(
         Guid scanId,
         [FromBody] List<int> itemsToUpdate,
@@ -38,6 +40,7 @@ public class ScannerController(
 
     [HttpPost("items/remove")]
     [EndpointSummary("Scanner remove items from search index")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> RemoveItems(
         Guid scanId,
         [FromBody] List<int> itemsToRemove,

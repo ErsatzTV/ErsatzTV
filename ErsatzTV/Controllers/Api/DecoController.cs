@@ -1,7 +1,11 @@
 #nullable enable
 using System.ComponentModel.DataAnnotations;
+using ErsatzTV.Application.Graphics;
+using ErsatzTV.Application.MediaCollections;
+using ErsatzTV.Application.MediaItems;
 using ErsatzTV.Application.Scheduling;
 using ErsatzTV.Application.Tree;
+using ErsatzTV.Application.Watermarks;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Scheduling;
@@ -12,19 +16,99 @@ using Microsoft.AspNetCore.Mvc;
 namespace ErsatzTV.Controllers.Api;
 
 [ApiController]
-[EndpointGroupName("general")]
 public class DecoController(IMediator mediator) : ControllerBase
 {
+    private static CollectionApiResponse? ToApiResponse(MediaCollectionViewModel? c) =>
+        c == null ? null : new(c.Id, c.Name, c.CollectionType, c.UseCustomPlaybackOrder, c.State);
+
+    private static SmartCollectionApiResponse? ToApiResponse(SmartCollectionViewModel? s) =>
+        s == null ? null : new(s.Id, s.Name, s.Query);
+
+    private static MultiCollectionApiResponse? ToApiResponse(MultiCollectionViewModel? mc) =>
+        mc == null ? null : new(
+            mc.Id,
+            mc.Name,
+            mc.Items?.Select(i => new MultiCollectionItemApiResponse(
+                i.MultiCollectionId,
+                i.Collection?.Id ?? 0,
+                i.Collection?.Name ?? "",
+                i.Collection?.CollectionType ?? CollectionType.Collection,
+                i.Collection?.UseCustomPlaybackOrder ?? false,
+                i.Collection?.State ?? MediaItemState.Normal,
+                i.ScheduleAsGroup,
+                i.PlaybackOrder)).ToList() ?? [],
+            mc.SmartItems?.Select(s => new MultiCollectionSmartItemApiResponse(
+                s.MultiCollectionId,
+                s.SmartCollection?.Id ?? 0,
+                s.SmartCollection?.Name ?? "",
+                s.SmartCollection?.Query ?? "",
+                s.ScheduleAsGroup,
+                s.PlaybackOrder)).ToList() ?? []);
+
+    private static MediaItemApiResponse? ToMediaItemApiResponse(NamedMediaItemViewModel? m) =>
+        m == null ? null : new(m.MediaItemId, m.Name);
+
+    private static PlaylistApiResponse? ToApiResponse(PlaylistViewModel? p) =>
+        p == null ? null : new(p.Id, p.PlaylistGroupId, p.Name, p.IsSystem);
+
+    private static WatermarkApiResponse ToApiResponse(WatermarkViewModel w) =>
+        new(w.Id, w.Name, w.Image?.Path, w.Mode, w.ImageSource, w.Location, w.Size, w.Width,
+            w.HorizontalMargin, w.VerticalMargin, w.FrequencyMinutes, w.DurationSeconds,
+            w.Opacity, w.PlaceWithinSourceContent, w.OpacityExpression, w.ZIndex);
+
+    private static GraphicsElementApiResponse ToApiResponse(GraphicsElementViewModel g) =>
+        new(g.Id, g.Name, g.FileName);
+
+    private static DecoApiResponse ToApiResponse(DecoViewModel deco) =>
+        new(
+            deco.Id,
+            deco.DecoGroupId,
+            deco.DecoGroupName,
+            deco.Name,
+            deco.WatermarkMode,
+            deco.Watermarks?.Select(ToApiResponse).ToList() ?? [],
+            deco.UseWatermarkDuringFiller,
+            deco.GraphicsElementsMode,
+            deco.GraphicsElements?.Select(ToApiResponse).ToList() ?? [],
+            deco.UseGraphicsElementsDuringFiller,
+            deco.BreakContentMode,
+            deco.BreakContent?.Select(ToApiResponse).ToList() ?? [],
+            deco.DefaultFillerMode,
+            deco.DefaultFillerCollectionType,
+            ToApiResponse(deco.DefaultFillerCollection),
+            ToMediaItemApiResponse(deco.DefaultFillerMediaItem),
+            ToApiResponse(deco.DefaultFillerMultiCollection),
+            ToApiResponse(deco.DefaultFillerSmartCollection),
+            deco.DefaultFillerTrimToFit,
+            deco.DeadAirFallbackMode,
+            deco.DeadAirFallbackCollectionType,
+            ToApiResponse(deco.DeadAirFallbackCollection),
+            ToMediaItemApiResponse(deco.DeadAirFallbackMediaItem),
+            ToApiResponse(deco.DeadAirFallbackMultiCollection),
+            ToApiResponse(deco.DeadAirFallbackSmartCollection));
+
+    private static DecoBreakContentApiResponse ToApiResponse(DecoBreakContentViewModel bc) =>
+        new(
+            bc.Id,
+            bc.CollectionType,
+            ToApiResponse(bc.Collection),
+            ToMediaItemApiResponse(bc.MediaItem),
+            ToApiResponse(bc.MultiCollection),
+            ToApiResponse(bc.SmartCollection),
+            ToApiResponse(bc.Playlist),
+            bc.Placement);
     // Deco Groups
     [HttpGet("/api/decos/groups", Name = "GetDecoGroups")]
     [Tags("Decos")]
     [EndpointSummary("Get all deco groups")]
+    [EndpointGroupName("general")]
     public async Task<List<DecoGroupViewModel>> GetDecoGroups(CancellationToken cancellationToken) =>
         await mediator.Send(new GetAllDecoGroups(), cancellationToken);
 
     [HttpPost("/api/decos/groups", Name = "CreateDecoGroup")]
     [Tags("Decos")]
     [EndpointSummary("Create a deco group")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> CreateDecoGroup(
         [Required] [FromBody] CreateDecoGroupRequest request,
         CancellationToken cancellationToken)
@@ -37,6 +121,7 @@ public class DecoController(IMediator mediator) : ControllerBase
     [HttpDelete("/api/decos/groups/{id:int}", Name = "DeleteDecoGroup")]
     [Tags("Decos")]
     [EndpointSummary("Delete a deco group")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> DeleteDecoGroup(int id, CancellationToken cancellationToken)
     {
         Option<BaseError> result = await mediator.Send(new DeleteDecoGroup(id), cancellationToken);
@@ -47,39 +132,47 @@ public class DecoController(IMediator mediator) : ControllerBase
     [HttpGet("/api/decos/groups/{groupId:int}/decos", Name = "GetDecosByGroup")]
     [Tags("Decos")]
     [EndpointSummary("Get decos by group")]
-    public async Task<List<DecoViewModel>> GetDecosByGroup(int groupId, CancellationToken cancellationToken) =>
-        await mediator.Send(new GetDecosByDecoGroupId(groupId), cancellationToken);
+    [EndpointGroupName("general")]
+    public async Task<List<DecoApiResponse>> GetDecosByGroup(int groupId, CancellationToken cancellationToken)
+    {
+        List<DecoViewModel> decos = await mediator.Send(new GetDecosByDecoGroupId(groupId), cancellationToken);
+        return decos.Select(ToApiResponse).ToList();
+    }
 
     [HttpGet("/api/decos/tree", Name = "GetDecoTree")]
     [Tags("Decos")]
     [EndpointSummary("Get deco tree")]
+    [EndpointGroupName("general")]
     public async Task<TreeViewModel> GetDecoTree(CancellationToken cancellationToken) =>
         await mediator.Send(new GetDecoTree(), cancellationToken);
 
     [HttpGet("/api/decos/{id:int}", Name = "GetDecoById")]
     [Tags("Decos")]
     [EndpointSummary("Get deco by ID")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> GetDecoById(int id, CancellationToken cancellationToken)
     {
         Option<DecoViewModel> result = await mediator.Send(new GetDecoById(id), cancellationToken);
-        return result.Match<IActionResult>(Ok, () => NotFound());
+        return result.Match<IActionResult>(d => Ok(ToApiResponse(d)), () => NotFound());
     }
 
     [HttpPost("/api/decos", Name = "CreateDeco")]
     [Tags("Decos")]
     [EndpointSummary("Create a deco")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> CreateDeco(
         [Required] [FromBody] CreateDecoRequest request,
         CancellationToken cancellationToken)
     {
         Either<BaseError, DecoViewModel> result = await mediator.Send(
             new CreateDeco(request.DecoGroupId, request.Name), cancellationToken);
-        return result.Match<IActionResult>(Ok, error => Problem(error.ToString()));
+        return result.Match<IActionResult>(d => Ok(ToApiResponse(d)), error => Problem(error.ToString()));
     }
 
     [HttpPut("/api/decos/{id:int}", Name = "UpdateDeco")]
     [Tags("Decos")]
     [EndpointSummary("Update a deco")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> UpdateDeco(
         int id,
         [Required] [FromBody] UpdateDecoRequest request,
@@ -128,6 +221,7 @@ public class DecoController(IMediator mediator) : ControllerBase
     [HttpDelete("/api/decos/{id:int}", Name = "DeleteDeco")]
     [Tags("Decos")]
     [EndpointSummary("Delete a deco")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> DeleteDeco(int id, CancellationToken cancellationToken)
     {
         Option<BaseError> result = await mediator.Send(new DeleteDeco(id), cancellationToken);
@@ -137,6 +231,7 @@ public class DecoController(IMediator mediator) : ControllerBase
     [HttpPut("/api/playouts/{playoutId:int}/deco", Name = "UpdateDefaultDeco")]
     [Tags("Decos")]
     [EndpointSummary("Update default deco for playout")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> UpdateDefaultDeco(
         int playoutId,
         [Required] [FromBody] UpdateDefaultDecoRequest request,
@@ -151,12 +246,14 @@ public class DecoController(IMediator mediator) : ControllerBase
     [HttpGet("/api/decos/template-groups", Name = "GetDecoTemplateGroups")]
     [Tags("Decos")]
     [EndpointSummary("Get all deco template groups")]
+    [EndpointGroupName("general")]
     public async Task<List<DecoTemplateGroupViewModel>> GetDecoTemplateGroups(CancellationToken cancellationToken) =>
         await mediator.Send(new GetAllDecoTemplateGroups(), cancellationToken);
 
     [HttpPost("/api/decos/template-groups", Name = "CreateDecoTemplateGroup")]
     [Tags("Decos")]
     [EndpointSummary("Create a deco template group")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> CreateDecoTemplateGroup(
         [Required] [FromBody] CreateDecoTemplateGroupRequest request,
         CancellationToken cancellationToken)
@@ -169,6 +266,7 @@ public class DecoController(IMediator mediator) : ControllerBase
     [HttpDelete("/api/decos/template-groups/{id:int}", Name = "DeleteDecoTemplateGroup")]
     [Tags("Decos")]
     [EndpointSummary("Delete a deco template group")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> DeleteDecoTemplateGroup(int id, CancellationToken cancellationToken)
     {
         Option<BaseError> result = await mediator.Send(new DeleteDecoTemplateGroup(id), cancellationToken);
@@ -179,18 +277,21 @@ public class DecoController(IMediator mediator) : ControllerBase
     [HttpGet("/api/decos/template-groups/{groupId:int}/templates", Name = "GetDecoTemplatesByGroup")]
     [Tags("Decos")]
     [EndpointSummary("Get deco templates by group")]
+    [EndpointGroupName("general")]
     public async Task<List<DecoTemplateViewModel>> GetDecoTemplatesByGroup(int groupId, CancellationToken cancellationToken) =>
         await mediator.Send(new GetDecoTemplatesByDecoTemplateGroupId(groupId), cancellationToken);
 
     [HttpGet("/api/decos/templates/tree", Name = "GetDecoTemplateTree")]
     [Tags("Decos")]
     [EndpointSummary("Get deco template tree")]
+    [EndpointGroupName("general")]
     public async Task<TreeViewModel> GetDecoTemplateTree(CancellationToken cancellationToken) =>
         await mediator.Send(new GetDecoTemplateTree(), cancellationToken);
 
     [HttpGet("/api/decos/templates/{id:int}", Name = "GetDecoTemplateById")]
     [Tags("Decos")]
     [EndpointSummary("Get deco template by ID")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> GetDecoTemplateById(int id, CancellationToken cancellationToken)
     {
         Option<DecoTemplateViewModel> result = await mediator.Send(new GetDecoTemplateById(id), cancellationToken);
@@ -200,12 +301,14 @@ public class DecoController(IMediator mediator) : ControllerBase
     [HttpGet("/api/decos/templates/{id:int}/items", Name = "GetDecoTemplateItems")]
     [Tags("Decos")]
     [EndpointSummary("Get deco template items")]
+    [EndpointGroupName("general")]
     public async Task<List<DecoTemplateItemViewModel>> GetDecoTemplateItems(int id, CancellationToken cancellationToken) =>
         await mediator.Send(new GetDecoTemplateItems(id), cancellationToken);
 
     [HttpPost("/api/decos/templates", Name = "CreateDecoTemplate")]
     [Tags("Decos")]
     [EndpointSummary("Create a deco template")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> CreateDecoTemplate(
         [Required] [FromBody] CreateDecoTemplateRequest request,
         CancellationToken cancellationToken)
@@ -218,6 +321,7 @@ public class DecoController(IMediator mediator) : ControllerBase
     [HttpDelete("/api/decos/templates/{id:int}", Name = "DeleteDecoTemplate")]
     [Tags("Decos")]
     [EndpointSummary("Delete a deco template")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> DeleteDecoTemplate(int id, CancellationToken cancellationToken)
     {
         Option<BaseError> result = await mediator.Send(new DeleteDecoTemplate(id), cancellationToken);

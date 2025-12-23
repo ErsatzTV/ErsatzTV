@@ -9,18 +9,20 @@ using Microsoft.AspNetCore.Mvc;
 namespace ErsatzTV.Controllers.Api;
 
 [ApiController]
-[EndpointGroupName("general")]
+
 public class PlexController(IMediator mediator) : ControllerBase
 {
     [HttpGet("/api/plex/sources", Name = "GetPlexMediaSources")]
     [Tags("Plex")]
     [EndpointSummary("Get all Plex media sources")]
+    [EndpointGroupName("general")]
     public async Task<List<PlexMediaSourceViewModel>> GetPlexMediaSources(CancellationToken cancellationToken) =>
         await mediator.Send(new GetAllPlexMediaSources(), cancellationToken);
 
     [HttpGet("/api/plex/sources/{id:int}", Name = "GetPlexMediaSourceById")]
     [Tags("Plex")]
     [EndpointSummary("Get Plex media source by ID")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> GetPlexMediaSourceById(int id, CancellationToken cancellationToken)
     {
         Option<PlexMediaSourceViewModel> result = await mediator.Send(new GetPlexMediaSourceById(id), cancellationToken);
@@ -30,18 +32,21 @@ public class PlexController(IMediator mediator) : ControllerBase
     [HttpGet("/api/plex/sources/{id:int}/libraries", Name = "GetPlexLibraries")]
     [Tags("Plex")]
     [EndpointSummary("Get Plex libraries by source")]
+    [EndpointGroupName("general")]
     public async Task<List<PlexLibraryViewModel>> GetPlexLibraries(int id, CancellationToken cancellationToken) =>
         await mediator.Send(new GetPlexLibrariesBySourceId(id), cancellationToken);
 
     [HttpGet("/api/plex/sources/{id:int}/path-replacements", Name = "GetPlexPathReplacements")]
     [Tags("Plex")]
     [EndpointSummary("Get Plex path replacements by source")]
+    [EndpointGroupName("general")]
     public async Task<List<PlexPathReplacementViewModel>> GetPlexPathReplacements(int id, CancellationToken cancellationToken) =>
         await mediator.Send(new GetPlexPathReplacementsBySourceId(id), cancellationToken);
 
     [HttpPut("/api/plex/sources/{id:int}/path-replacements", Name = "UpdatePlexPathReplacements")]
     [Tags("Plex")]
     [EndpointSummary("Update Plex path replacements")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> UpdatePlexPathReplacements(
         int id,
         [Required] [FromBody] UpdatePlexPathReplacementsRequest request,
@@ -57,6 +62,7 @@ public class PlexController(IMediator mediator) : ControllerBase
     [HttpPut("/api/plex/library-preferences", Name = "UpdatePlexLibraryPreferences")]
     [Tags("Plex")]
     [EndpointSummary("Update Plex library preferences")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> UpdatePlexLibraryPreferences(
         [Required] [FromBody] UpdatePlexLibraryPreferencesRequest request,
         CancellationToken cancellationToken)

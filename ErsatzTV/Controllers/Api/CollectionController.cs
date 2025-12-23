@@ -11,38 +11,70 @@ using Microsoft.AspNetCore.Mvc;
 namespace ErsatzTV.Controllers.Api;
 
 [ApiController]
-[EndpointGroupName("general")]
 public class CollectionController(IMediator mediator) : ControllerBase
 {
+    private static CollectionApiResponse ToApiResponse(MediaCollectionViewModel collection) =>
+        new(collection.Id, collection.Name, collection.CollectionType, collection.UseCustomPlaybackOrder, collection.State);
+
+    private static MultiCollectionApiResponse ToApiResponse(MultiCollectionViewModel multiCollection) =>
+        new(
+            multiCollection.Id,
+            multiCollection.Name,
+            multiCollection.Items?.Select(i => new MultiCollectionItemApiResponse(
+                i.MultiCollectionId,
+                i.Collection?.Id ?? 0,
+                i.Collection?.Name ?? "",
+                i.Collection?.CollectionType ?? CollectionType.Collection,
+                i.Collection?.UseCustomPlaybackOrder ?? false,
+                i.Collection?.State ?? MediaItemState.Normal,
+                i.ScheduleAsGroup,
+                i.PlaybackOrder)).ToList() ?? [],
+            multiCollection.SmartItems?.Select(s => new MultiCollectionSmartItemApiResponse(
+                s.MultiCollectionId,
+                s.SmartCollection?.Id ?? 0,
+                s.SmartCollection?.Name ?? "",
+                s.SmartCollection?.Query ?? "",
+                s.ScheduleAsGroup,
+                s.PlaybackOrder)).ToList() ?? []);
     // Collections
     [HttpGet("/api/collections", Name = "GetCollections")]
     [Tags("Collections")]
     [EndpointSummary("Get all collections (paginated)")]
-    public async Task<PagedMediaCollectionsViewModel> GetCollections(
+    [EndpointGroupName("general")]
+    public async Task<PagedCollectionsApiResponse> GetCollections(
         [FromQuery] string query = "",
         [FromQuery] int pageNumber = 0,
         [FromQuery] int pageSize = 50,
-        CancellationToken cancellationToken = default) =>
-        await mediator.Send(new GetPagedCollections(query, pageNumber, pageSize), cancellationToken);
+        CancellationToken cancellationToken = default)
+    {
+        PagedMediaCollectionsViewModel result = await mediator.Send(new GetPagedCollections(query, pageNumber, pageSize), cancellationToken);
+        return new PagedCollectionsApiResponse(result.TotalCount, result.Page.Select(ToApiResponse).ToList());
+    }
 
     [HttpGet("/api/collections/all", Name = "GetAllCollections")]
     [Tags("Collections")]
     [EndpointSummary("Get all collections")]
-    public async Task<List<MediaCollectionViewModel>> GetAllCollections(CancellationToken cancellationToken) =>
-        await mediator.Send(new GetAllCollections(), cancellationToken);
+    [EndpointGroupName("general")]
+    public async Task<List<CollectionApiResponse>> GetAllCollections(CancellationToken cancellationToken)
+    {
+        List<MediaCollectionViewModel> collections = await mediator.Send(new GetAllCollections(), cancellationToken);
+        return collections.Select(ToApiResponse).ToList();
+    }
 
     [HttpGet("/api/collections/{id:int}", Name = "GetCollectionById")]
     [Tags("Collections")]
     [EndpointSummary("Get collection by ID")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> GetCollectionById(int id, CancellationToken cancellationToken)
     {
         Option<MediaCollectionViewModel> result = await mediator.Send(new GetCollectionById(id), cancellationToken);
-        return result.Match<IActionResult>(Ok, () => NotFound());
+        return result.Match<IActionResult>(c => Ok(ToApiResponse(c)), () => NotFound());
     }
 
     [HttpGet("/api/collections/{id:int}/items", Name = "GetCollectionItems")]
     [Tags("Collections")]
     [EndpointSummary("Get collection items")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> GetCollectionItems(int id, CancellationToken cancellationToken)
     {
         Either<BaseError, CollectionCardResultsViewModel> result = await mediator.Send(new GetCollectionCards(id), cancellationToken);
@@ -52,17 +84,19 @@ public class CollectionController(IMediator mediator) : ControllerBase
     [HttpPost("/api/collections", Name = "CreateCollection")]
     [Tags("Collections")]
     [EndpointSummary("Create a new collection")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> CreateCollection(
         [Required] [FromBody] CreateCollectionRequest request,
         CancellationToken cancellationToken)
     {
         Either<BaseError, MediaCollectionViewModel> result = await mediator.Send(new CreateCollection(request.Name), cancellationToken);
-        return result.Match<IActionResult>(Ok, error => Problem(error.ToString()));
+        return result.Match<IActionResult>(c => Ok(ToApiResponse(c)), error => Problem(error.ToString()));
     }
 
     [HttpPut("/api/collections/{id:int}", Name = "UpdateCollection")]
     [Tags("Collections")]
     [EndpointSummary("Update a collection")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> UpdateCollection(
         int id,
         [Required] [FromBody] UpdateCollectionRequest request,
@@ -75,6 +109,7 @@ public class CollectionController(IMediator mediator) : ControllerBase
     [HttpDelete("/api/collections/{id:int}", Name = "DeleteCollection")]
     [Tags("Collections")]
     [EndpointSummary("Delete a collection")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> DeleteCollection(int id, CancellationToken cancellationToken)
     {
         Either<BaseError, Unit> result = await mediator.Send(new DeleteCollection(id), cancellationToken);
@@ -84,6 +119,7 @@ public class CollectionController(IMediator mediator) : ControllerBase
     [HttpPost("/api/collections/{id:int}/items", Name = "AddItemsToCollection")]
     [Tags("Collections")]
     [EndpointSummary("Add items to a collection")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> AddItemsToCollection(
         int id,
         [Required] [FromBody] AddItemsToCollectionRequest request,
@@ -109,6 +145,7 @@ public class CollectionController(IMediator mediator) : ControllerBase
     [HttpDelete("/api/collections/{id:int}/items", Name = "RemoveItemsFromCollection")]
     [Tags("Collections")]
     [EndpointSummary("Remove items from a collection")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> RemoveItemsFromCollection(
         int id,
         [Required] [FromBody] RemoveItemsFromCollectionRequest request,
@@ -123,21 +160,27 @@ public class CollectionController(IMediator mediator) : ControllerBase
     [HttpGet("/api/collections/multi", Name = "GetMultiCollections")]
     [Tags("Collections")]
     [EndpointSummary("Get all multi-collections")]
-    public async Task<List<MultiCollectionViewModel>> GetMultiCollections(CancellationToken cancellationToken) =>
-        await mediator.Send(new GetAllMultiCollections(), cancellationToken);
+    [EndpointGroupName("general")]
+    public async Task<List<MultiCollectionApiResponse>> GetMultiCollections(CancellationToken cancellationToken)
+    {
+        List<MultiCollectionViewModel> collections = await mediator.Send(new GetAllMultiCollections(), cancellationToken);
+        return collections.Select(ToApiResponse).ToList();
+    }
 
     [HttpGet("/api/collections/multi/{id:int}", Name = "GetMultiCollectionById")]
     [Tags("Collections")]
     [EndpointSummary("Get multi-collection by ID")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> GetMultiCollectionById(int id, CancellationToken cancellationToken)
     {
         Option<MultiCollectionViewModel> result = await mediator.Send(new GetMultiCollectionById(id), cancellationToken);
-        return result.Match<IActionResult>(Ok, () => NotFound());
+        return result.Match<IActionResult>(c => Ok(ToApiResponse(c)), () => NotFound());
     }
 
     [HttpPost("/api/collections/multi", Name = "CreateMultiCollection")]
     [Tags("Collections")]
     [EndpointSummary("Create a multi-collection")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> CreateMultiCollection(
         [Required] [FromBody] CreateMultiCollectionRequest request,
         CancellationToken cancellationToken)
@@ -146,12 +189,13 @@ public class CollectionController(IMediator mediator) : ControllerBase
             i.CollectionId, i.SmartCollectionId, i.ScheduleAsGroup, i.PlaybackOrder)).ToList() ?? [];
         Either<BaseError, MultiCollectionViewModel> result = await mediator.Send(
             new CreateMultiCollection(request.Name, items), cancellationToken);
-        return result.Match<IActionResult>(Ok, error => Problem(error.ToString()));
+        return result.Match<IActionResult>(c => Ok(ToApiResponse(c)), error => Problem(error.ToString()));
     }
 
     [HttpPut("/api/collections/multi/{id:int}", Name = "UpdateMultiCollection")]
     [Tags("Collections")]
     [EndpointSummary("Update a multi-collection")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> UpdateMultiCollection(
         int id,
         [Required] [FromBody] UpdateMultiCollectionRequest request,
@@ -167,6 +211,7 @@ public class CollectionController(IMediator mediator) : ControllerBase
     [HttpDelete("/api/collections/multi/{id:int}", Name = "DeleteMultiCollection")]
     [Tags("Collections")]
     [EndpointSummary("Delete a multi-collection")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> DeleteMultiCollection(int id, CancellationToken cancellationToken)
     {
         Either<BaseError, Unit> result = await mediator.Send(new DeleteMultiCollection(id), cancellationToken);

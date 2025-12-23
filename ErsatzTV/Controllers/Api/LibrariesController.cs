@@ -11,24 +11,27 @@ using Microsoft.AspNetCore.Mvc;
 namespace ErsatzTV.Controllers.Api;
 
 [ApiController]
-[EndpointGroupName("general")]
+
 public class LibrariesController(ITelevisionRepository televisionRepository, IMediator mediator) : ControllerBase
 {
     [HttpGet("/api/libraries", Name = "GetAllLibraries")]
     [Tags("Libraries")]
     [EndpointSummary("Get all configured libraries")]
+    [EndpointGroupName("general")]
     public async Task<List<LibraryViewModel>> GetAllLibraries(CancellationToken cancellationToken) =>
         await mediator.Send(new GetConfiguredLibraries(), cancellationToken);
 
     [HttpGet("/api/libraries/local", Name = "GetLocalLibraries")]
     [Tags("Libraries")]
     [EndpointSummary("Get all local libraries")]
+    [EndpointGroupName("general")]
     public async Task<List<LocalLibraryViewModel>> GetLocalLibraries(CancellationToken cancellationToken) =>
         await mediator.Send(new GetAllLocalLibraries(), cancellationToken);
 
     [HttpGet("/api/libraries/local/{id:int}", Name = "GetLocalLibraryById")]
     [Tags("Libraries")]
     [EndpointSummary("Get local library by ID")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> GetLocalLibraryById(int id, CancellationToken cancellationToken)
     {
         Option<LocalLibraryViewModel> result = await mediator.Send(new GetLocalLibraryById(id), cancellationToken);
@@ -38,12 +41,14 @@ public class LibrariesController(ITelevisionRepository televisionRepository, IMe
     [HttpGet("/api/libraries/local/{id:int}/paths", Name = "GetLocalLibraryPaths")]
     [Tags("Libraries")]
     [EndpointSummary("Get local library paths")]
+    [EndpointGroupName("general")]
     public async Task<List<LocalLibraryPathViewModel>> GetLocalLibraryPaths(int id, CancellationToken cancellationToken) =>
         await mediator.Send(new GetLocalLibraryPaths(id), cancellationToken);
 
     [HttpPost("/api/libraries/local", Name = "CreateLocalLibrary")]
     [Tags("Libraries")]
     [EndpointSummary("Create a local library")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> CreateLocalLibrary(
         [Required] [FromBody] CreateLocalLibraryRequest request,
         CancellationToken cancellationToken)
@@ -56,6 +61,7 @@ public class LibrariesController(ITelevisionRepository televisionRepository, IMe
     [HttpPut("/api/libraries/local/{id:int}", Name = "UpdateLocalLibrary")]
     [Tags("Libraries")]
     [EndpointSummary("Update a local library")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> UpdateLocalLibrary(
         int id,
         [Required] [FromBody] UpdateLocalLibraryRequest request,
@@ -70,6 +76,7 @@ public class LibrariesController(ITelevisionRepository televisionRepository, IMe
     [HttpDelete("/api/libraries/local/{id:int}", Name = "DeleteLocalLibrary")]
     [Tags("Libraries")]
     [EndpointSummary("Delete a local library")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> DeleteLocalLibrary(int id, CancellationToken cancellationToken)
     {
         Either<BaseError, Unit> result = await mediator.Send(new DeleteLocalLibrary(id), cancellationToken);
@@ -79,6 +86,7 @@ public class LibrariesController(ITelevisionRepository televisionRepository, IMe
     [HttpPost("/api/libraries/{id:int}/scan", Name = "ScanLibrary")]
     [Tags("Libraries")]
     [EndpointSummary("Scan library")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> ScanLibrary(int id) =>
         await mediator.Send(new QueueLibraryScanByLibraryId(id))
             ? Ok()
@@ -87,6 +95,7 @@ public class LibrariesController(ITelevisionRepository televisionRepository, IMe
     [HttpPost("/api/libraries/{id:int}/scan-show", Name = "ScanShow")]
     [Tags("Libraries")]
     [EndpointSummary("Scan show")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> ScanShow(int id, [FromBody] ScanShowRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.ShowTitle))
@@ -112,6 +121,7 @@ public class LibrariesController(ITelevisionRepository televisionRepository, IMe
     [HttpGet("/api/libraries/external-collections", Name = "GetExternalCollections")]
     [Tags("Libraries")]
     [EndpointSummary("Get external collections")]
+    [EndpointGroupName("general")]
     public async Task<List<LibraryViewModel>> GetExternalCollections(CancellationToken cancellationToken) =>
         await mediator.Send(new GetExternalCollections(), cancellationToken);
 }

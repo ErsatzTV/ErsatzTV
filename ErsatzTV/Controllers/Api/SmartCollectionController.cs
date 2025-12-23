@@ -8,14 +8,15 @@ using Microsoft.AspNetCore.Mvc;
 namespace ErsatzTV.Controllers.Api;
 
 [ApiController]
-[EndpointGroupName("general")]
 public class SmartCollectionController(IMediator mediator) : ControllerBase
 {
     [HttpGet("/api/collections/smart", Name="GetSmartCollections")]
+    [EndpointGroupName("general")]
     public async Task<List<SmartCollectionResponseModel>> GetAll() =>
         await mediator.Send(new GetAllSmartCollectionsForApi());
 
     [HttpPost("/api/collections/smart/new", Name = "CreateSmartCollection")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> AddOne(
         [Required] [FromBody]
         CreateSmartCollection request)
@@ -26,6 +27,7 @@ public class SmartCollectionController(IMediator mediator) : ControllerBase
     }
 
     [HttpPut("/api/collections/smart/update", Name="UpdateSmartCollection")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> UpdateOne(
         [Required] [FromBody]
         UpdateSmartCollection request)
@@ -35,6 +37,7 @@ public class SmartCollectionController(IMediator mediator) : ControllerBase
     }
 
     [HttpDelete("/api/collections/smart/delete/{id:int}", Name="DeleteSmartCollection")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> DeleteSmartCollection(int id)
     {
         Either<BaseError, Unit> result = await mediator.Send(new DeleteSmartCollection(id));

@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace ErsatzTV.Controllers.Api;
 
 [ApiController]
-[EndpointGroupName("general")]
+
 public class VersionController
 {
     private static readonly CombinedVersion Version;
@@ -19,6 +19,7 @@ public class VersionController
     [HttpGet("/api/version", Name="GetVersion")]
     [Tags("Version")]
     [EndpointSummary("Get version")]
+    [EndpointGroupName("general")]
     public CombinedVersion GetVersion() => Version;
 
     public record CombinedVersion(int ApiVersion, string AppVersion);

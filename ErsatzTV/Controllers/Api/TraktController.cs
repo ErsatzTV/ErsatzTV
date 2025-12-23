@@ -8,12 +8,13 @@ using Microsoft.AspNetCore.Mvc;
 namespace ErsatzTV.Controllers.Api;
 
 [ApiController]
-[EndpointGroupName("general")]
+
 public class TraktController(IMediator mediator) : ControllerBase
 {
     [HttpGet("/api/trakt/lists", Name = "GetTraktLists")]
     [Tags("Trakt")]
     [EndpointSummary("Get all Trakt lists (paginated)")]
+    [EndpointGroupName("general")]
     public async Task<PagedTraktListsViewModel> GetTraktLists(
         [FromQuery] int pageNumber = 0,
         [FromQuery] int pageSize = 50,
@@ -23,6 +24,7 @@ public class TraktController(IMediator mediator) : ControllerBase
     [HttpGet("/api/trakt/lists/{id:int}", Name = "GetTraktListById")]
     [Tags("Trakt")]
     [EndpointSummary("Get Trakt list by ID")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> GetTraktListById(int id, CancellationToken cancellationToken)
     {
         Option<TraktListViewModel> result = await mediator.Send(new GetTraktListById(id), cancellationToken);
@@ -32,6 +34,7 @@ public class TraktController(IMediator mediator) : ControllerBase
     [HttpPut("/api/trakt/lists/{id:int}", Name = "UpdateTraktList")]
     [Tags("Trakt")]
     [EndpointSummary("Update a Trakt list")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> UpdateTraktList(
         int id,
         [Required] [FromBody] UpdateTraktListRequest request,
@@ -45,6 +48,7 @@ public class TraktController(IMediator mediator) : ControllerBase
     [HttpDelete("/api/trakt/lists/{id:int}", Name = "DeleteTraktList")]
     [Tags("Trakt")]
     [EndpointSummary("Delete a Trakt list")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> DeleteTraktList(int id, CancellationToken cancellationToken)
     {
         Either<BaseError, Unit> result = await mediator.Send(new DeleteTraktList(id), cancellationToken);
@@ -54,6 +58,7 @@ public class TraktController(IMediator mediator) : ControllerBase
     [HttpPost("/api/trakt/lists/{id:int}/match", Name = "MatchTraktListItems")]
     [Tags("Trakt")]
     [EndpointSummary("Match Trakt list items")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> MatchTraktListItems(int id, CancellationToken cancellationToken)
     {
         Either<BaseError, Unit> result = await mediator.Send(new MatchTraktListItems(id), cancellationToken);

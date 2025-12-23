@@ -9,13 +9,14 @@ using Microsoft.AspNetCore.Mvc;
 namespace ErsatzTV.Controllers.Api;
 
 [ApiController]
-[EndpointGroupName("general")]
+
 public class MediaController(IMediator mediator) : ControllerBase
 {
     // Movies
     [HttpGet("/api/media/movies/{id:int}", Name = "GetMovieById")]
     [Tags("Media")]
     [EndpointSummary("Get movie by ID")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> GetMovieById(int id, CancellationToken cancellationToken)
     {
         Option<MovieViewModel> result = await mediator.Send(new GetMovieById(id), cancellationToken);
@@ -26,6 +27,7 @@ public class MediaController(IMediator mediator) : ControllerBase
     [HttpGet("/api/media/shows/{id:int}", Name = "GetShowById")]
     [Tags("Media")]
     [EndpointSummary("Get TV show by ID")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> GetShowById(int id, CancellationToken cancellationToken)
     {
         Option<TelevisionShowViewModel> result = await mediator.Send(new GetTelevisionShowById(id), cancellationToken);
@@ -35,6 +37,7 @@ public class MediaController(IMediator mediator) : ControllerBase
     [HttpGet("/api/media/shows/{id:int}/seasons", Name = "GetShowSeasons")]
     [Tags("Media")]
     [EndpointSummary("Get seasons for a TV show")]
+    [EndpointGroupName("general")]
     public async Task<TelevisionSeasonCardResultsViewModel> GetShowSeasons(
         int id,
         [FromQuery] int pageNumber = 0,
@@ -45,6 +48,7 @@ public class MediaController(IMediator mediator) : ControllerBase
     [HttpGet("/api/media/seasons/{id:int}", Name = "GetSeasonById")]
     [Tags("Media")]
     [EndpointSummary("Get season by ID")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> GetSeasonById(int id, CancellationToken cancellationToken)
     {
         Option<TelevisionSeasonViewModel> result = await mediator.Send(new GetTelevisionSeasonById(id), cancellationToken);
@@ -54,6 +58,7 @@ public class MediaController(IMediator mediator) : ControllerBase
     [HttpGet("/api/media/seasons/{id:int}/episodes", Name = "GetSeasonEpisodes")]
     [Tags("Media")]
     [EndpointSummary("Get episodes for a season")]
+    [EndpointGroupName("general")]
     public async Task<TelevisionEpisodeCardResultsViewModel> GetSeasonEpisodes(
         int id,
         [FromQuery] int pageNumber = 0,
@@ -65,6 +70,7 @@ public class MediaController(IMediator mediator) : ControllerBase
     [HttpGet("/api/media/artists/{id:int}", Name = "GetArtistById")]
     [Tags("Media")]
     [EndpointSummary("Get artist by ID")]
+    [EndpointGroupName("general")]
     public async Task<IActionResult> GetArtistById(int id, CancellationToken cancellationToken)
     {
         Option<ArtistViewModel> result = await mediator.Send(new GetArtistById(id), cancellationToken);
