@@ -59,6 +59,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix stream failure when configured fallback filler collection is empty
 - Fix high CPU when errors are displayed; errors will now work ahead before throttling to realtime, similar to primary content
 - Fix startup error caused by duplicate smart collection names (and no longer allow duplicate smart collection names)
+- Fix erroneous downgrade health check failure with some installations that use MariaDB
 
 ### Changed
 - No longer round framerate to nearest integer when normalizing framerate
