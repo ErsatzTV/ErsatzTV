@@ -66,8 +66,77 @@
         "additionalProperties": false
       }
     },
+    "schedules": {
+      "description": "Scheduled playouts for specific date ranges",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": { 
+            "type": "string",
+            "description": "Optional name for this schedule (for debugging/logging)" 
+          },
+          "start_date": { 
+            "type": "string",
+            "description": "Start date in MM-DD (e.g., '01-01') or YYYY-MM-DD format (e.g., '2024-12-25')",
+            "pattern": "^((\\d{4}-)?(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01]))$"
+          },
+          "end_date": { 
+            "type": "string",
+            "description": "End date in MM-DD (e.g., '01-31') or YYYY-MM-DD format (e.g., '2024-12-25'). MM-DD dates recur annually, YYYY-MM-DD dates are one-time events.",
+            "pattern": "^((\\d{4}-)?(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01]))$"
+          },
+          "priority": {
+            "type": "integer",
+            "description": "Priority for schedule matching. Higher values are checked first. Default is 0. Use this when schedules overlap (e.g., a specific date within a broader range).",
+            "default": 0
+          },
+          "reset": {
+            "description": "Reset instructions for this scheduled playout",
+            "type": "array",
+            "items": {
+              "oneOf": [
+                { "$ref": "#/$defs/control/rewindInstruction" },
+                { "$ref": "#/$defs/control/skipItemsInstruction" },
+                { "$ref": "#/$defs/control/skipToItemInstruction" },
+                { "$ref": "#/$defs/control/waitUntilInstruction" }
+              ]
+            }
+          },
+          "playout": {
+            "description": "Playout instructions for this scheduled playout",
+            "type": "array",
+            "items": {
+              "oneOf": [
+                { "$ref": "#/$defs/scheduling/allInstruction" },
+                { "$ref": "#/$defs/scheduling/countInstruction" },
+                { "$ref": "#/$defs/scheduling/durationInstruction" },
+                { "$ref": "#/$defs/scheduling/padToNextInstruction" },
+                { "$ref": "#/$defs/scheduling/padUntilInstruction" },
+                { "$ref": "#/$defs/scheduling/sequenceInstruction" },
+                { "$ref": "#/$defs/control/epgGroupInstruction" },
+                { "$ref": "#/$defs/control/graphicsOnInstruction" },
+                { "$ref": "#/$defs/control/graphicsOffInstruction" },
+                { "$ref": "#/$defs/control/preRollInstruction"},
+                { "$ref": "#/$defs/control/postRollInstruction"},
+                { "$ref": "#/$defs/control/midRollInstruction"},
+                { "$ref": "#/$defs/control/repeatInstruction" },
+                { "$ref": "#/$defs/control/shuffleSequenceInstruction" },
+                { "$ref": "#/$defs/control/skipItemsInstruction" },
+                { "$ref": "#/$defs/control/skipToItemInstruction" },
+                { "$ref": "#/$defs/control/waitUntilInstruction" },
+                { "$ref": "#/$defs/control/watermarkInstruction" }
+              ]
+            },
+            "minItems": 1
+          }
+        },
+        "required": [ "start_date", "end_date", "playout" ],
+        "additionalProperties": false
+      }
+    },
     "reset": {
-      "description": "Reset instructions",
+      "description": "Default reset instructions (used when no schedule matches)",
       "type": "array",
       "items": {
         "oneOf": [
@@ -79,7 +148,7 @@
       }
     },
     "playout": {
-      "description": "Playout instructions",
+      "description": "Default playout instructions (used when no schedule matches)",
       "type": "array",
       "items": {
         "oneOf": [
@@ -102,8 +171,7 @@
           { "$ref": "#/$defs/control/waitUntilInstruction" },
           { "$ref": "#/$defs/control/watermarkInstruction" }
         ]
-      },
-      "minItems": 1
+      }
     }
   },
   "allOf": [
@@ -113,7 +181,12 @@
         { "required": [ "content" ] }
       ]
     },
-    { "required": [ "playout" ] }
+    {
+      "anyOf": [
+        { "required": [ "playout" ] },
+        { "required": [ "schedules" ] }
+      ]
+    }
   ],
   "additionalProperties": false,
   "$defs": {
