@@ -44,6 +44,16 @@
             <div style="flex: 1">
                 <MudText Class="d-none d-md-flex">@Query</MudText>
             </div>
+            @if (SelectAllOnPage is not null)
+            {
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           Disabled="@(CanSelectAllOnPage?.Invoke() != true)"
+                           StartIcon="@Icons.Material.Filled.SelectAll"
+                           OnClick="@(_ => SelectAllOnPage())">
+                    Select All
+                </MudButton>
+            }
             <div>
                 <MudPaper Style="align-items: center; display: flex; justify-content: center;">
                     <MudIconButton Icon="@Icons.Material.Outlined.ChevronLeft"
@@ -98,6 +108,12 @@
 
     [Parameter]
     public Action ClearSelection { get; set; }
+
+    [Parameter]
+    public Func<bool> CanSelectAllOnPage { get; set; }
+
+    [Parameter]
+    public Action SelectAllOnPage { get; set; }
 
     private static MarkupString PaddedString(int value, int maximum)
     {

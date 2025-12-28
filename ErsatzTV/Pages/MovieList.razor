@@ -20,6 +20,8 @@
                         AddSelectionToCollection="@AddSelectionToCollection"
                         AddSelectionToPlaylist="@AddSelectionToPlaylist"
                         ClearSelection="@ClearSelection"
+                        CanSelectAllOnPage="@(() => _data.Cards.Count > 0)"
+                        SelectAllOnPage="@(() => SelectAllPageItems(_data.Cards))"
                         IsSelectMode="@IsSelectMode"
                         SelectionLabel="@SelectionLabel"/>
     </MudPaper>

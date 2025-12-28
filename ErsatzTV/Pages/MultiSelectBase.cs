@@ -38,6 +38,18 @@ public class MultiSelectBase<T> : FragmentNavigationBase
     protected string SelectionLabel() =>
         $"{SelectedItems.Count} {(SelectedItems.Count == 1 ? "Item" : "Items")} Selected";
 
+    protected void SelectAllPageItems(IEnumerable<MediaCardViewModel> cards)
+    {
+        SelectedItems.Clear();
+        foreach (MediaCardViewModel card in cards)
+        {
+            _recentlySelected = card;
+            SelectedItems.Add(card);
+        }
+
+        StateHasChanged();
+    }
+
     protected void ClearSelection()
     {
         SelectedItems.Clear();
