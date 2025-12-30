@@ -42,8 +42,9 @@ public class MultiSelectBase<T> : FragmentNavigationBase
 
     protected void SelectAllPageItems(IEnumerable<MediaCardViewModel> cards)
     {
-        MediaCardViewModel lastSelected = MediaCardSelectionHelper.SelectAllPageItems(SelectedItems, cards);
+        MediaCardViewModel lastSelected = SelectAllPageItems(SelectedItems, cards);
         _recentlySelected = Optional(lastSelected);
+        StateHasChanged();
     }
 
     protected void ClearSelection()
@@ -246,5 +247,17 @@ public class MultiSelectBase<T> : FragmentNavigationBase
                     ClearSelection();
                 });
         }
+    }
+
+    internal static MediaCardViewModel SelectAllPageItems(
+        ISet<MediaCardViewModel> selectedItems,
+        IEnumerable<MediaCardViewModel> cards)
+    {
+        List<MediaCardViewModel> cardList = (cards ?? Enumerable.Empty<MediaCardViewModel>()).ToList();
+
+        selectedItems.Clear();
+        selectedItems.UnionWith(cardList);
+
+        return cardList.LastOrDefault();
     }
 }
