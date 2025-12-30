@@ -364,6 +364,18 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
                     desiredState.CroppedSize.IfNone(desiredState.PaddedSize)));
         }
 
+        // unknown color params can *change* during transcoding,
+        // which can cause ffmpeg to insert an autoscale filter that
+        // cannot accept hardware frames.
+        // this filter isn't actually needed (the encoder accepts the frames just fine) so disable it
+        if (ffmpegState.EncoderHardwareAccelerationMode is HardwareAccelerationMode.Nvenc &&
+            currentState.FrameDataLocation is FrameDataLocation.Hardware &&
+            videoStream.ColorParams.IsUnknown &&
+            (context.HasGraphicsEngine || context.HasSubtitleOverlay || context.HasWatermark))
+        {
+            pipelineSteps.Add(new NoAutoScaleOutputOption());
+        }
+
         return new FilterChain(
             videoInputFile.FilterSteps,
             watermarkInputFile.Map(wm => wm.FilterSteps).IfNone([]),
