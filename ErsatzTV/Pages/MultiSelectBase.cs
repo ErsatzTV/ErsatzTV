@@ -8,6 +8,8 @@ using MediatR;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using MudBlazor;
+using System.Linq;
+using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Pages;
 
@@ -40,12 +42,8 @@ public class MultiSelectBase<T> : FragmentNavigationBase
 
     protected void SelectAllPageItems(IEnumerable<MediaCardViewModel> cards)
     {
-        SelectedItems.Clear();
-        foreach (MediaCardViewModel card in cards)
-        {
-            _recentlySelected = card;
-            SelectedItems.Add(card);
-        }
+        MediaCardViewModel lastSelected = MediaCardSelectionHelper.SelectAllPageItems(SelectedItems, cards);
+        _recentlySelected = Optional(lastSelected);
 
         StateHasChanged();
     }
