@@ -1,8 +1,8 @@
-@page "/settings/pagination"
+@page "/settings/ui"
 @using ErsatzTV.Application.Configuration
 @inject IMediator Mediator
 @inject ISnackbar Snackbar
-@inject ILogger<PaginationSettings> Logger
+@inject ILogger<UISettings> Logger
 @implements IDisposable
 
 <MudForm Style="max-height: 100%">
@@ -11,7 +11,7 @@
     </MudPaper>
     <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
         <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-            <MudText Typo="Typo.h5" Class="mb-2">Pagination</MudText>
+            <MudText Typo="Typo.h5" Class="mb-2">Pagination Settings</MudText>
             <MudDivider Class="mb-6"/>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                 <div class="d-flex">
