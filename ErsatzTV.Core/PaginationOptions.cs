@@ -5,7 +5,7 @@ namespace ErsatzTV.Core;
 public static class PaginationOptions
 {
     public const int DefaultPageSize = 100;
-    public const int MaxPageSize = 5000;
+    public const int MaxPageSize = 1000;
 
     public static int NormalizePageSize(int? requested) =>
         NormalizePageSize(requested, DefaultPageSize, MaxPageSize);
