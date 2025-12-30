@@ -533,6 +533,12 @@ public class LocalMetadataProvider : ILocalMetadataProvider
 
             foreach (RemoteStreamMetadata fallbackMetadata in maybeFallbackMetadata)
             {
+                // title is not required in remote stream definition; use fallback title if missing
+                if (string.IsNullOrWhiteSpace(result.Title))
+                {
+                    result.Title = fallbackMetadata.Title;
+                }
+
                 result.OriginalTitle = fallbackMetadata.OriginalTitle;
 
                 // preserve folder tagging
