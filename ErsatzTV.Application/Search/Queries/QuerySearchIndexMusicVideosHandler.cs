@@ -9,6 +9,7 @@ using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Search;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using ErsatzTV.Core;
 using static ErsatzTV.Application.MediaCards.Mapper;
 
 namespace ErsatzTV.Application.Search;
@@ -27,12 +28,14 @@ public class
         QuerySearchIndexMusicVideos request,
         CancellationToken cancellationToken)
     {
+        int pageSize = PaginationOptions.NormalizePageSize(request.PageSize);
+
         SearchResult searchResult = await searchIndex.Search(
             client,
             request.Query,
             string.Empty,
-            (request.PageNumber - 1) * request.PageSize,
-            request.PageSize,
+            (request.PageNumber - 1) * pageSize,
+            pageSize,
             cancellationToken);
 
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);

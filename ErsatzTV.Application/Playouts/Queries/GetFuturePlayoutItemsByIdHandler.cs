@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Infrastructure.Data;
@@ -14,6 +15,8 @@ public class GetFuturePlayoutItemsByIdHandler(IDbContextFactory<TvContext> dbCon
         GetFuturePlayoutItemsById request,
         CancellationToken cancellationToken)
     {
+        int pageSize = PaginationOptions.NormalizePageSize(request.PageSize);
+
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         DateTime now = DateTimeOffset.Now.UtcDateTime;
@@ -39,8 +42,8 @@ public class GetFuturePlayoutItemsByIdHandler(IDbContextFactory<TvContext> dbCon
 
         List<PlayoutItemViewModel> page = await combined
             .OrderBy(c => c.Start)
-            .Skip(request.PageNum * request.PageSize)
-            .Take(request.PageSize)
+            .Skip(request.PageNum * pageSize)
+            .Take(pageSize)
             .ToListAsync(cancellationToken)
             .Bind(async pageOfCombined =>
             {

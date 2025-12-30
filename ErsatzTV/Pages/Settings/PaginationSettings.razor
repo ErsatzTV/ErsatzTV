@@ -1,0 +1,70 @@
+@page "/settings/pagination"
+@using ErsatzTV.Application.Configuration
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@inject ILogger<PaginationSettings> Logger
+@implements IDisposable
+
+<MudForm Style="max-height: 100%">
+    <MudPaper Square="true" Style="display: flex; height: 64px; min-height: 64px; width: 100%; z-index: 100; align-items: center">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => SavePaginationSettings())" Class="ml-6" StartIcon="@Icons.Material.Filled.Save">Save Settings</MudButton>
+    </MudPaper>
+    <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+            <MudText Typo="Typo.h5" Class="mb-2">Pagination</MudText>
+            <MudDivider Class="mb-6"/>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Items Per Page</MudText>
+                </div>
+                <MudSelect @bind-Value="_settings.DefaultPageSize">
+                    <MudSelectItem Value="25">25</MudSelectItem>
+                    <MudSelectItem Value="50">50</MudSelectItem>
+                    <MudSelectItem Value="100">100</MudSelectItem>
+                    <MudSelectItem Value="200">200</MudSelectItem>
+                    <MudSelectItem Value="500">500</MudSelectItem>
+                </MudSelect>
+            </MudStack>
+        </MudContainer>
+    </div>
+</MudForm>
+
+@code {
+    private CancellationTokenSource _cts;
+    private PaginationSettingsViewModel _settings = new();
+
+    public void Dispose()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
+
+        try
+        {
+            _settings = await Mediator.Send(new GetPaginationSettings(), token);
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
+        }
+    }
+
+    private async Task SavePaginationSettings()
+    {
+        Either<BaseError, Unit> result = await Mediator.Send(new UpdatePaginationSettings(_settings), _cts.Token);
+        result.Match(
+            Left: error =>
+            {
+                Snackbar.Add(error.Value, Severity.Error);
+                Logger.LogError("Unexpected error saving pagination settings: {Error}", error.Value);
+            },
+            Right: _ => Snackbar.Add("Successfully saved pagination settings", Severity.Success));
+    }
+}

@@ -1,4 +1,5 @@
-﻿using ErsatzTV.Core.Domain;
+﻿using ErsatzTV.Core;
+using ErsatzTV.Core.Domain;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using static ErsatzTV.Application.Playouts.Mapper;
@@ -12,6 +13,8 @@ public class GetPagedPlayoutsHandler(IDbContextFactory<TvContext> dbContextFacto
         GetPagedPlayouts request,
         CancellationToken cancellationToken)
     {
+        int pageSize = PaginationOptions.NormalizePageSize(request.PageSize);
+
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         int count = await dbContext.Playouts.CountAsync(cancellationToken);
 
@@ -31,8 +34,8 @@ public class GetPagedPlayoutsHandler(IDbContextFactory<TvContext> dbContextFacto
 
         List<PlayoutNameViewModel> page = await query
             .OrderBy(p => p.Channel.SortNumber)
-            .Skip(request.PageNum * request.PageSize)
-            .Take(request.PageSize)
+            .Skip(request.PageNum * pageSize)
+            .Take(pageSize)
             .ToListAsync(cancellationToken)
             .Map(list => list.Map(ProjectToViewModel).ToList());
 
