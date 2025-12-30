@@ -44,32 +44,33 @@
             <div style="flex: 1">
                 <MudText Class="d-none d-md-flex">@Query</MudText>
             </div>
-            @if (SelectAllOnPage is not null)
-            {
-                <MudButton Variant="Variant.Filled"
-                           Color="Color.Primary"
-                           Disabled="@(CanSelectAllOnPage?.Invoke() != true)"
-                           StartIcon="@Icons.Material.Filled.SelectAll"
-                           OnClick="@(_ => SelectAllOnPage())">
-                    Select All
-                </MudButton>
-            }
-            <div>
-                <MudPaper Style="align-items: center; display: flex; justify-content: center;">
-                    <MudIconButton Icon="@Icons.Material.Outlined.ChevronLeft"
-                                   OnClick="@PrevPage"
-                                   Disabled="@(PageNumber <= 1)">
-                    </MudIconButton>
-                    <MudText Style="flex-grow: 1"
-                             Align="Align.Center">
-                        @PaddedString(Math.Min((PageNumber - 1) * PageSize + 1, TotalCount), TotalCount) - @PaddedString(Math.Min(TotalCount, PageNumber * PageSize), TotalCount) of @TotalCount
-                    </MudText>
-                    <MudIconButton Icon="@Icons.Material.Outlined.ChevronRight"
-                                   OnClick="@NextPage" Disabled="@(PageNumber * PageSize >= TotalCount)">
-                    </MudIconButton>
-                </MudPaper>
+            <div style="display: flex; align-items: center; margin-left: auto; gap: 12px">
+                @if (SelectAllOnPage is not null)
+                {
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               Disabled="@(CanSelectAllOnPage?.Invoke() != true)"
+                               StartIcon="@Icons.Material.Filled.SelectAll"
+                               OnClick="@(_ => SelectAllOnPage())">
+                        Select All
+                    </MudButton>
+                }
+                <div>
+                    <MudPaper Style="align-items: center; display: flex; justify-content: center;">
+                        <MudIconButton Icon="@Icons.Material.Outlined.ChevronLeft"
+                                       OnClick="@PrevPage"
+                                       Disabled="@(PageNumber <= 1)">
+                        </MudIconButton>
+                        <MudText Style="flex-grow: 1"
+                                 Align="Align.Center">
+                            @PaddedString(Math.Min((PageNumber - 1) * PageSize + 1, TotalCount), TotalCount) - @PaddedString(Math.Min(TotalCount, PageNumber * PageSize), TotalCount) of @TotalCount
+                        </MudText>
+                        <MudIconButton Icon="@Icons.Material.Outlined.ChevronRight"
+                                       OnClick="@NextPage" Disabled="@(PageNumber * PageSize >= TotalCount)">
+                        </MudIconButton>
+                    </MudPaper>
+                </div>
             </div>
-            <div style="flex: 1"></div>
         </div>
     }
 </div>
