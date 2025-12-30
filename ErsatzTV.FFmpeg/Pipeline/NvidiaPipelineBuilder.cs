@@ -373,7 +373,10 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
             videoStream.ColorParams.IsUnknown &&
             (context.HasGraphicsEngine || context.HasSubtitleOverlay || context.HasWatermark))
         {
-            pipelineSteps.Add(new NoAutoScaleOutputOption());
+            if (pipelineSteps.All(p => p is not NoAutoScaleOutputOption))
+            {
+                pipelineSteps.Add(new NoAutoScaleOutputOption());
+            }
         }
 
         return new FilterChain(
