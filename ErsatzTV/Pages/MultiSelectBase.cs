@@ -42,8 +42,7 @@ public class MultiSelectBase<T> : FragmentNavigationBase
 
     protected void SelectAllPageItems(IEnumerable<MediaCardViewModel> cards)
     {
-        MediaCardViewModel lastSelected = SelectAllPageItems(SelectedItems, cards);
-        _recentlySelected = Optional(lastSelected);
+        ResetSelectionWithCards(SelectedItems, cards);
         StateHasChanged();
     }
 
@@ -249,7 +248,7 @@ public class MultiSelectBase<T> : FragmentNavigationBase
         }
     }
 
-    internal static MediaCardViewModel SelectAllPageItems(
+    internal static MediaCardViewModel ResetSelectionWithCards(
         ISet<MediaCardViewModel> selectedItems,
         IEnumerable<MediaCardViewModel> cards)
     {
