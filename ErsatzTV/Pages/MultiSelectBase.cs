@@ -248,15 +248,11 @@ public class MultiSelectBase<T> : FragmentNavigationBase
         }
     }
 
-    internal static MediaCardViewModel ResetSelectionWithCards(
+    internal static void ResetSelectionWithCards(
         ISet<MediaCardViewModel> selectedItems,
         IEnumerable<MediaCardViewModel> cards)
     {
-        List<MediaCardViewModel> cardList = (cards ?? Enumerable.Empty<MediaCardViewModel>()).ToList();
-
         selectedItems.Clear();
-        selectedItems.UnionWith(cardList);
-
-        return cardList.LastOrDefault();
+        selectedItems.UnionWith(cards);
     }
 }

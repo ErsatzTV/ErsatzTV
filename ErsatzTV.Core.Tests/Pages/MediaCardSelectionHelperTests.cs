@@ -18,10 +18,9 @@ public class MediaCardSelectionHelperTests
         var first = new MediaCardViewModel(2, "First", "Sub", "First", "", Core.Domain.MediaItemState.Normal, false);
         var second = new MediaCardViewModel(3, "Second", "Sub", "Second", "", Core.Domain.MediaItemState.Normal, false);
 
-        MediaCardViewModel last = MultiSelectBase<Search>.ResetSelectionWithCards(selected, new[] { first, second });
+        MultiSelectBase<Search>.ResetSelectionWithCards(selected, new[] { first, second });
 
         selected.ShouldBe(new[] { first, second }, ignoreOrder: true);
-        last.ShouldBe(second);
     }
 
     [Test]
@@ -30,9 +29,8 @@ public class MediaCardSelectionHelperTests
         var existingCard = new MediaCardViewModel(1, "Existing", "Sub", "Existing", "", Core.Domain.MediaItemState.Normal, false);
         var selected = new HashSet<MediaCardViewModel> { existingCard };
 
-        MediaCardViewModel last = MultiSelectBase<Search>.ResetSelectionWithCards(selected, []);
+        MultiSelectBase<Search>.ResetSelectionWithCards(selected, []);
 
         selected.ShouldBeEmpty();
-        last.ShouldBeNull();
     }
 }
