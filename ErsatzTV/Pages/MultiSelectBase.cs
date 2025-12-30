@@ -44,8 +44,6 @@ public class MultiSelectBase<T> : FragmentNavigationBase
     {
         MediaCardViewModel lastSelected = MediaCardSelectionHelper.SelectAllPageItems(SelectedItems, cards);
         _recentlySelected = Optional(lastSelected);
-
-        StateHasChanged();
     }
 
     protected void ClearSelection()

@@ -10,11 +10,15 @@ public static class MediaCardSelectionHelper
         ISet<MediaCardViewModel> selectedItems,
         IEnumerable<MediaCardViewModel> cards)
     {
-        List<MediaCardViewModel> cardList = (cards ?? Enumerable.Empty<MediaCardViewModel>()).ToList();
-
         selectedItems.Clear();
-        selectedItems.UnionWith(cardList);
 
-        return cardList.LastOrDefault();
+        MediaCardViewModel last = default;
+        foreach (MediaCardViewModel card in cards ?? Enumerable.Empty<MediaCardViewModel>())
+        {
+            last = card;
+            selectedItems.Add(card);
+        }
+
+        return last;
     }
 }
