@@ -20,8 +20,13 @@ public class GetPaginationSettingsHandler : IRequestHandler<GetPaginationSetting
             ConfigElementKey.PagesDefaultPageSize,
             cancellationToken);
 
-        int defaultPageSize = PaginationOptions.NormalizePageSize(
-            maybeElement.Bind<int?>(element => int.TryParse(element.Value, out int value) ? value : null));
+        Option<int> maybePageSize =
+            maybeElement.Bind(element =>
+                int.TryParse(element.Value, out int value)
+                    ? Prelude.Some(value)
+                    : Option<int>.None);
+
+        int defaultPageSize = PaginationOptions.NormalizePageSize(maybePageSize.ToNullable());
 
         return new PaginationSettingsViewModel { DefaultPageSize = defaultPageSize };
     }
