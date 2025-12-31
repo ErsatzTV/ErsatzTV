@@ -294,17 +294,19 @@ public class JellyfinApiClient : IJellyfinApiClient
     {
         IJellyfinApi service = ServiceForAddress(address);
 
-        const int PAGE_SIZE = 10;
-
         int pages = int.MaxValue;
         for (var i = 0; i < pages; i++)
         {
-            int skip = i * PAGE_SIZE;
+            int skip = i * SystemEnvironment.JellyfinPageSize;
 
-            JellyfinLibraryItemsResponse result = await getItems(service, parentId, skip, PAGE_SIZE);
+            JellyfinLibraryItemsResponse result = await getItems(
+                service,
+                parentId,
+                skip,
+                SystemEnvironment.JellyfinPageSize);
 
             // update page count
-            pages = Math.Min(pages, (result.TotalRecordCount - 1) / PAGE_SIZE + 1);
+            pages = Math.Min(pages, (result.TotalRecordCount - 1) / SystemEnvironment.JellyfinPageSize + 1);
 
             foreach (TItem item in result.Items.Map(item => mapper(maybeLibrary, item)).Somes())
             {

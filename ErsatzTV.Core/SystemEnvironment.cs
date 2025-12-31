@@ -38,16 +38,24 @@ public class SystemEnvironment
         MaximumUploadMb = maximumUploadMb;
 
         string slowDbMsVariable = Environment.GetEnvironmentVariable("ETV_SLOW_DB_MS");
-        if (int.TryParse(slowDbMsVariable, out int slowDbMs))
+        if (int.TryParse(slowDbMsVariable, out int slowDbMs) && slowDbMs > 0)
         {
             SlowDbMs = slowDbMs;
         }
 
         string slowApiMsVariable = Environment.GetEnvironmentVariable("ETV_SLOW_API_MS");
-        if (int.TryParse(slowApiMsVariable, out int slowApiMs))
+        if (int.TryParse(slowApiMsVariable, out int slowApiMs) && slowApiMs > 0)
         {
             SlowApiMs = slowApiMs;
         }
+
+        string jellyfinPageSizeVariable = Environment.GetEnvironmentVariable("ETV_JF_PAGE_SIZE");
+        if (!int.TryParse(jellyfinPageSizeVariable, out int jellyfinPageSize))
+        {
+            jellyfinPageSize = 10;
+        }
+
+        JellyfinPageSize = jellyfinPageSize;
     }
 
     public static string BaseUrl { get; }
@@ -59,4 +67,5 @@ public class SystemEnvironment
     public static int MaximumUploadMb { get; }
     public static int? SlowDbMs { get; }
     public static int? SlowApiMs { get; }
+    public static int JellyfinPageSize { get; set; }
 }

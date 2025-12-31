@@ -39,6 +39,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - e.g. if this is set to `1000`, queries taking longer than 1 second will be logged
   - `ETV_SLOW_API_MS` - milliseconds threshold for logging slow API calls (at DEBUG level)
     - This is currently limited to *Jellyfin*
+  - `ETV_JF_PAGE_SIZE` - page size for library scan API calls to Jellyfin; default value is 10
 
 ### Fixed
 - Fix startup on systems unsupported by NvEncSharp
