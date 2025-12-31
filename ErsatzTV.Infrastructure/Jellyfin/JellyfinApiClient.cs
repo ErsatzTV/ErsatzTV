@@ -15,6 +15,7 @@ namespace ErsatzTV.Infrastructure.Jellyfin;
 public class JellyfinApiClient : IJellyfinApiClient
 {
     private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
+    private readonly IHttpClientFactory _httpClientFactory;
     private readonly IJellyfinPathReplacementService _jellyfinPathReplacementService;
     private readonly ILogger<JellyfinApiClient> _logger;
     private readonly IMemoryCache _memoryCache;
@@ -23,11 +24,13 @@ public class JellyfinApiClient : IJellyfinApiClient
         IMemoryCache memoryCache,
         IJellyfinPathReplacementService jellyfinPathReplacementService,
         IFallbackMetadataProvider fallbackMetadataProvider,
+        IHttpClientFactory httpClientFactory,
         ILogger<JellyfinApiClient> logger)
     {
         _memoryCache = memoryCache;
         _jellyfinPathReplacementService = jellyfinPathReplacementService;
         _fallbackMetadataProvider = fallbackMetadataProvider;
+        _httpClientFactory = httpClientFactory;
         _logger = logger;
     }
 
@@ -37,7 +40,7 @@ public class JellyfinApiClient : IJellyfinApiClient
     {
         try
         {
-            IJellyfinApi service = RestService.For<IJellyfinApi>(address);
+            IJellyfinApi service = ServiceForAddress(address);
             var cts = new CancellationTokenSource();
             cts.CancelAfter(TimeSpan.FromSeconds(5));
             return await service.GetSystemInformation(apiKey, cts.Token)
@@ -59,7 +62,7 @@ public class JellyfinApiClient : IJellyfinApiClient
     {
         try
         {
-            IJellyfinApi service = RestService.For<IJellyfinApi>(address);
+            IJellyfinApi service = ServiceForAddress(address);
             List<JellyfinLibraryResponse> libraries = await service.GetLibraries(apiKey);
             return libraries
                 .Map(Project)
@@ -189,7 +192,7 @@ public class JellyfinApiClient : IJellyfinApiClient
     {
         try
         {
-            IJellyfinApi service = RestService.For<IJellyfinApi>(address);
+            IJellyfinApi service = ServiceForAddress(address);
             JellyfinPlaybackInfoResponse playbackInfo = await service.GetPlaybackInfo(apiKey, itemId);
             Option<MediaVersion> maybeVersion = ProjectToMediaVersion(playbackInfo);
             return maybeVersion.ToEither(() => BaseError.New("Unable to locate Jellyfin statistics"));
@@ -209,7 +212,7 @@ public class JellyfinApiClient : IJellyfinApiClient
     {
         try
         {
-            IJellyfinApi service = RestService.For<IJellyfinApi>(address);
+            IJellyfinApi service = ServiceForAddress(address);
             JellyfinLibraryItemsResponse itemsResponse = await service.GetShowLibraryItems(
                 apiKey,
                 parentId: library.ItemId,
@@ -240,7 +243,7 @@ public class JellyfinApiClient : IJellyfinApiClient
     {
         try
         {
-            IJellyfinApi service = RestService.For<IJellyfinApi>(address);
+            IJellyfinApi service = ServiceForAddress(address);
             JellyfinSearchHintsResponse searchResponse = await service.SearchHints(
                 apiKey,
                 showTitle,
@@ -281,7 +284,7 @@ public class JellyfinApiClient : IJellyfinApiClient
         }
     }
 
-    private static async IAsyncEnumerable<Tuple<TItem, int>> GetPagedLibraryItems<TItem>(
+    private async IAsyncEnumerable<Tuple<TItem, int>> GetPagedLibraryItems<TItem>(
         string address,
         Option<JellyfinLibrary> maybeLibrary,
         int mediaSourceId,
@@ -289,19 +292,21 @@ public class JellyfinApiClient : IJellyfinApiClient
         Func<IJellyfinApi, string, int, int, Task<JellyfinLibraryItemsResponse>> getItems,
         Func<Option<JellyfinLibrary>, JellyfinLibraryItemResponse, Option<TItem>> mapper)
     {
-        IJellyfinApi service = RestService.For<IJellyfinApi>(address);
-
-        const int PAGE_SIZE = 10;
+        IJellyfinApi service = ServiceForAddress(address);
 
         int pages = int.MaxValue;
         for (var i = 0; i < pages; i++)
         {
-            int skip = i * PAGE_SIZE;
+            int skip = i * SystemEnvironment.JellyfinPageSize;
 
-            JellyfinLibraryItemsResponse result = await getItems(service, parentId, skip, PAGE_SIZE);
+            JellyfinLibraryItemsResponse result = await getItems(
+                service,
+                parentId,
+                skip,
+                SystemEnvironment.JellyfinPageSize);
 
             // update page count
-            pages = Math.Min(pages, (result.TotalRecordCount - 1) / PAGE_SIZE + 1);
+            pages = Math.Min(pages, (result.TotalRecordCount - 1) / SystemEnvironment.JellyfinPageSize + 1);
 
             foreach (TItem item in result.Items.Map(item => mapper(maybeLibrary, item)).Somes())
             {
@@ -1042,5 +1047,12 @@ public class JellyfinApiClient : IJellyfinApiClient
 
             return version;
         });
+    }
+
+    private IJellyfinApi ServiceForAddress(string address)
+    {
+        var client = _httpClientFactory.CreateClient("RefitCustomClient");
+        client.BaseAddress = new Uri(address);
+        return RestService.For<IJellyfinApi>(client);
     }
 }
