@@ -92,25 +92,37 @@
                     <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#remote_streams")" Style="margin-bottom: auto; margin-top: auto">@_remoteStreams.Count Remote Streams</MudLink>
                 }
                 <div class="flex-grow-1 d-none d-md-flex"></div>
-                <div>
-                    <MudButton Variant="@Variant.Filled"
-                               Color="@Color.Error"
-                               StartIcon="@Icons.Material.Filled.DeleteForever"
-                               OnClick="@(_ => EmptyTrash())">
-                        Empty Trash
-                    </MudButton>
-                </div>
+                <MudButton Variant="@Variant.Filled"
+                           Color="@Color.Primary"
+                           StartIcon="@Icons.Material.Filled.SelectAll"
+                           Disabled="@(!IsNotEmpty)"
+                           OnClick="@(_ => SelectAllPageItems(AllCardsOnPage()))">
+                    Select All
+                </MudButton>
+                <MudButton Class="ml-3"
+                           Variant="@Variant.Filled"
+                           Color="@Color.Error"
+                           StartIcon="@Icons.Material.Filled.DeleteForever"
+                           OnClick="@(_ => EmptyTrash())">
+                    Empty Trash
+                </MudButton>
             </div>
             <div style="align-items: center; display: flex; width: 100%" class="d-md-none">
                 <div class="flex-grow-1"></div>
-                <div>
-                    <MudButton Variant="@Variant.Filled"
-                               Color="@Color.Error"
-                               StartIcon="@Icons.Material.Filled.DeleteForever"
-                               OnClick="@(_ => EmptyTrash())">
-                        Empty Trash
-                    </MudButton>
-                </div>
+                <MudButton Variant="@Variant.Filled"
+                           Color="@Color.Primary"
+                           StartIcon="@Icons.Material.Filled.SelectAll"
+                           Disabled="@(!IsNotEmpty)"
+                           OnClick="@(_ => SelectAllPageItems(AllCardsOnPage()))">
+                    Select All
+                </MudButton>
+                <MudButton Class="ml-2"
+                           Variant="@Variant.Filled"
+                           Color="@Color.Error"
+                           StartIcon="@Icons.Material.Filled.DeleteForever"
+                           OnClick="@(_ => EmptyTrash())">
+                    Empty Trash
+                </MudButton>
             </div>
         }
         else
@@ -509,7 +521,20 @@
     }
 
     private bool IsNotEmpty =>
-        _movies?.Cards.Count > 0 || _shows?.Cards.Count > 0 || _seasons?.Cards.Count > 0 || _episodes?.Cards.Count > 0 || _musicVideos?.Cards.Count > 0 || _otherVideos?.Cards.Count > 0 || _songs?.Cards.Count > 0 || _artists?.Cards.Count > 0 || _images?.Cards.Count > 0;
+        _movies?.Cards.Count > 0 || _shows?.Cards.Count > 0 || _seasons?.Cards.Count > 0 || _episodes?.Cards.Count > 0 || _musicVideos?.Cards.Count > 0 || _otherVideos?.Cards.Count > 0 || _songs?.Cards.Count > 0 || _artists?.Cards.Count > 0 || _images?.Cards.Count > 0 || _remoteStreams?.Cards.Count > 0;
+
+    private IEnumerable<MediaCardViewModel> AllCardsOnPage() =>
+        Enumerable.Empty<MediaCardViewModel>()
+            .Concat(_movies.Cards)
+            .Concat(_shows.Cards)
+            .Concat(_seasons.Cards)
+            .Concat(_episodes.Cards)
+            .Concat(_artists.Cards)
+            .Concat(_musicVideos.Cards)
+            .Concat(_otherVideos.Cards)
+            .Concat(_songs.Cards)
+            .Concat(_images.Cards)
+            .Concat(_remoteStreams.Cards);
 
     private void SelectClicked(MediaCardViewModel card, MouseEventArgs e)
     {

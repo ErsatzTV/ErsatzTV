@@ -44,7 +44,7 @@
             <div style="flex: 1">
                 <MudText Class="d-none d-md-flex">@Query</MudText>
             </div>
-            <div>
+            <div style="display: flex; justify-content: center;">
                 <MudPaper Style="align-items: center; display: flex; justify-content: center;">
                     <MudIconButton Icon="@Icons.Material.Outlined.ChevronLeft"
                                    OnClick="@PrevPage"
@@ -59,7 +59,28 @@
                     </MudIconButton>
                 </MudPaper>
             </div>
-            <div style="flex: 1"></div>
+            <div style="flex: 1; display: flex; justify-content: flex-end;">
+                @if (SelectAllOnPage is not null)
+                {
+                    <div class="d-none d-md-flex" style="margin-left:auto">
+                        <MudButton Variant="Variant.Filled"
+                                Color="Color.Primary"
+                                StartIcon="@Icons.Material.Filled.SelectAll"
+                                Disabled="@(CanSelectAllOnPage is null || !CanSelectAllOnPage())"
+                                OnClick="@(_ => SelectAllOnPage?.Invoke())">
+                            Select All
+                        </MudButton>
+                    </div>
+                    <div class="d-md-none" style="margin-left:auto; display:flex; align-items:center;">
+                        <MudMenu Icon="@Icons.Material.Filled.MoreVert">
+                            <MudMenuItem Icon="@Icons.Material.Filled.SelectAll"
+                                        Label="Select All"
+                                        Disabled="@(CanSelectAllOnPage is null || !CanSelectAllOnPage())"
+                                        OnClick="@(_ => SelectAllOnPage?.Invoke())" />
+                        </MudMenu>
+                    </div>
+                }
+            </div>
         </div>
     }
 </div>
@@ -98,6 +119,12 @@
 
     [Parameter]
     public Action ClearSelection { get; set; }
+
+    [Parameter]
+    public Func<bool> CanSelectAllOnPage { get; set; }
+
+    [Parameter]
+    public Action SelectAllOnPage { get; set; }
 
     private static MarkupString PaddedString(int value, int maximum)
     {
