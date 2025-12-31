@@ -62,13 +62,23 @@
             <div style="flex: 1; display: flex; justify-content: flex-end;">
                 @if (SelectAllOnPage is not null)
                 {
-                    <MudButton Variant="Variant.Filled"
-                               Color="Color.Primary"
-                               Disabled="@(CanSelectAllOnPage?.Invoke() != true)"
-                               StartIcon="@Icons.Material.Filled.SelectAll"
-                               OnClick="@(_ => SelectAllOnPage())">
-                        Select All
-                    </MudButton>
+                    <div class="d-none d-md-flex" style="margin-left:auto">
+                        <MudButton Variant="Variant.Filled"
+                                Color="Color.Primary"
+                                StartIcon="@Icons.Material.Filled.SelectAll"
+                                Disabled="@(CanSelectAllOnPage is null || !CanSelectAllOnPage())"
+                                OnClick="@(_ => SelectAllOnPage?.Invoke())">
+                            Select All
+                        </MudButton>
+                    </div>
+                    <div class="d-md-none" style="margin-left:auto; display:flex; align-items:center;">
+                        <MudMenu Icon="@Icons.Material.Filled.MoreVert">
+                            <MudMenuItem Icon="@Icons.Material.Filled.SelectAll"
+                                        Label="Select All"
+                                        Disabled="@(CanSelectAllOnPage is null || !CanSelectAllOnPage())"
+                                        OnClick="@(_ => SelectAllOnPage?.Invoke())" />
+                        </MudMenu>
+                    </div>
                 }
             </div>
         </div>
