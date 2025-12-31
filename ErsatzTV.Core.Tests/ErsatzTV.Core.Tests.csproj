@@ -30,7 +30,6 @@
         <ProjectReference Include="..\ErsatzTV.Core\ErsatzTV.Core.csproj" />
         <ProjectReference Include="..\ErsatzTV.Infrastructure.Sqlite\ErsatzTV.Infrastructure.Sqlite.csproj" />
         <ProjectReference Include="..\ErsatzTV.Infrastructure\ErsatzTV.Infrastructure.csproj" />
-        <ProjectReference Include="..\ErsatzTV\ErsatzTV.csproj" />
     </ItemGroup>
 
 </Project>
