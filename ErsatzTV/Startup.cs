@@ -409,9 +409,9 @@ public class Startup
         string mySqlConnectionString = Configuration.GetValue<string>("MySql:ConnectionString");
 
         SlowQueryInterceptor interceptor = null;
-        if (SystemEnvironment.SlowQueryMs.HasValue)
+        if (SystemEnvironment.SlowDbMs.HasValue)
         {
-            interceptor = new SlowQueryInterceptor(SystemEnvironment.SlowQueryMs.Value);
+            interceptor = new SlowQueryInterceptor(SystemEnvironment.SlowDbMs.Value);
         }
 
         services.AddDbContext<TvContext>(
@@ -524,6 +524,8 @@ public class Startup
                 c.BaseAddress = new Uri("https://api.trakt.tv");
                 c.DefaultRequestHeaders.Add("User-Agent", $"ErsatzTV/{etvVersion}");
             });
+
+        services.AddHttpClient("RefitCustomClient").AddHttpMessageHandler<SlowApiHandler>();
 
         services.Configure<TraktConfiguration>(Configuration.GetSection("Trakt"));
 
@@ -866,6 +868,8 @@ public class Startup
         services.AddScoped<PlexEtag>();
 
         // services.AddTransient(typeof(IRequestHandler<,>), typeof(GetRecentLogEntriesHandler<>));
+
+        services.AddTransient<SlowApiHandler>();
 
         // run-once/blocking startup services
         services.AddHostedService<EndpointValidatorService>();
