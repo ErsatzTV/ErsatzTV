@@ -1024,15 +1024,21 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Etag")
-                        .HasColumnType("longtext");
+                        .HasMaxLength(36)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(36)");
 
                     b.Property<string>("ItemId")
-                        .HasColumnType("longtext");
+                        .HasMaxLength(36)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(36)");
 
                     b.Property<string>("Name")
                         .HasColumnType("longtext");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ItemId");
 
                     b.ToTable("JellyfinCollection", (string)null);
                 });
@@ -3781,10 +3787,14 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.HasBaseType("ErsatzTV.Core.Domain.Library");
 
                     b.Property<string>("ItemId")
-                        .HasColumnType("longtext");
+                        .HasMaxLength(36)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(36)");
 
                     b.Property<bool>("ShouldSyncItems")
                         .HasColumnType("tinyint(1)");
+
+                    b.HasIndex("ItemId");
 
                     b.ToTable("JellyfinLibrary", (string)null);
                 });
@@ -4053,10 +4063,16 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.HasBaseType("ErsatzTV.Core.Domain.Episode");
 
                     b.Property<string>("Etag")
-                        .HasColumnType("longtext");
+                        .HasMaxLength(36)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(36)");
 
                     b.Property<string>("ItemId")
-                        .HasColumnType("longtext");
+                        .HasMaxLength(36)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(36)");
+
+                    b.HasIndex("ItemId");
 
                     b.ToTable("JellyfinEpisode", (string)null);
                 });
@@ -4092,10 +4108,16 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.HasBaseType("ErsatzTV.Core.Domain.Movie");
 
                     b.Property<string>("Etag")
-                        .HasColumnType("longtext");
+                        .HasMaxLength(36)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(36)");
 
                     b.Property<string>("ItemId")
-                        .HasColumnType("longtext");
+                        .HasMaxLength(36)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(36)");
+
+                    b.HasIndex("ItemId");
 
                     b.ToTable("JellyfinMovie", (string)null);
                 });
@@ -4144,10 +4166,16 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.HasBaseType("ErsatzTV.Core.Domain.Season");
 
                     b.Property<string>("Etag")
-                        .HasColumnType("longtext");
+                        .HasMaxLength(36)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(36)");
 
                     b.Property<string>("ItemId")
-                        .HasColumnType("longtext");
+                        .HasMaxLength(36)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(36)");
+
+                    b.HasIndex("ItemId");
 
                     b.ToTable("JellyfinSeason", (string)null);
                 });
@@ -4183,10 +4211,16 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.HasBaseType("ErsatzTV.Core.Domain.Show");
 
                     b.Property<string>("Etag")
-                        .HasColumnType("longtext");
+                        .HasMaxLength(36)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(36)");
 
                     b.Property<string>("ItemId")
-                        .HasColumnType("longtext");
+                        .HasMaxLength(36)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(36)");
+
+                    b.HasIndex("ItemId");
 
                     b.ToTable("JellyfinShow", (string)null);
                 });
