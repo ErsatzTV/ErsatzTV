@@ -80,6 +80,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Items may still be cut as needed
   - Hardware acceleration will now be used
   - Items can "work ahead" (transcode faster than realtime) when less than 3 minutes in duration
+- Optimize Jellyfin database fields and indexes
 
 ## [25.9.0] - 2025-11-29
 ### Added
