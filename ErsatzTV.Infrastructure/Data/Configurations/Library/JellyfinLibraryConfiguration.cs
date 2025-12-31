@@ -14,10 +14,10 @@ public class JellyfinLibraryConfiguration : IEntityTypeConfiguration<JellyfinLib
             .WithOne()
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.Property(e => e.ItemId)
+        builder.Property(l => l.ItemId)
             .HasMaxLength(36)
             .IsUnicode(false);
 
-        builder.HasIndex(e => e.ItemId);
+        builder.HasIndex(l => l.ItemId);
     }
 }
