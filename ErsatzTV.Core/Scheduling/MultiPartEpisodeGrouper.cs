@@ -40,9 +40,17 @@ public static partial class MultiPartEpisodeGrouper
                 groups.Add(new GroupedMediaItem(item, null));
             }
 
+            // when treating multiple shows as a single "show" - we need to
+            // first sort by release date before looking for part 1, part 2, etc. to group
+            // otherwise, we can simply sort by season, episode number
+            // which does not require release date metadata
+            IComparer<MediaItem> comparer = treatCollectionsAsShows
+                ? new ChronologicalMediaComparer()
+                : new SeasonEpisodeMediaComparer();
+
             IEnumerable<Episode> sortedEpisodes = showId.Match(
                 id => episodes.Filter(e => e.Season.ShowId == id),
-                () => episodes).OrderBy(identity, new ChronologicalMediaComparer());
+                () => episodes).OrderBy(identity, comparer);
 
             foreach (Episode episode in sortedEpisodes)
             {

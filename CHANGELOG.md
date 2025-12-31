@@ -63,6 +63,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix startup error caused by duplicate smart collection names (and no longer allow duplicate smart collection names)
 - Fix erroneous downgrade health check failure with some installations that use MariaDB
 - Sequential schedules: fix `count` instruction validation to accept integer (constant) or string (expression)
+- Fix multi-part episode grouping logic so that it does NOT require release date metadata for episodes within a single show
+  - When **Treat Collections As Shows** is enabled (i.e. for crossover episodes) release date metadata is required for proper grouping
 
 ### Changed
 - No longer round framerate to nearest integer when normalizing framerate
