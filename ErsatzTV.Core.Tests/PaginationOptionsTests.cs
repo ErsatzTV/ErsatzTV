@@ -29,6 +29,6 @@ public class PaginationOptionsTests
     [Test]
     public void NormalizePageSize_Should_Clamp_To_Max()
     {
-        PaginationOptions.NormalizePageSize(1000).Should().Be(PaginationOptions.MaxPageSize);
+        PaginationOptions.NormalizePageSize(100000).Should().Be(PaginationOptions.MaxPageSize);
     }
 }
