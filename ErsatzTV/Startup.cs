@@ -408,6 +408,12 @@ public class Startup
         var sqliteConnectionString = $"Data Source={FileSystemLayout.DatabasePath};foreign keys=true;";
         string mySqlConnectionString = Configuration.GetValue<string>("MySql:ConnectionString");
 
+        SlowQueryInterceptor interceptor = null;
+        if (SystemEnvironment.SlowQueryMs.HasValue)
+        {
+            interceptor = new SlowQueryInterceptor(SystemEnvironment.SlowQueryMs.Value);
+        }
+
         services.AddDbContext<TvContext>(
             options =>
             {
@@ -438,6 +444,11 @@ public class Startup
                         }
                     );
                 }
+
+                if (interceptor != null)
+                {
+                    options.AddInterceptors(interceptor);
+                }
             },
             ServiceLifetime.Scoped,
             ServiceLifetime.Singleton);
@@ -466,6 +477,11 @@ public class Startup
                         o.MigrationsAssembly("ErsatzTV.Infrastructure.MySql");
                     }
                 );
+            }
+
+            if (interceptor != null)
+            {
+                options.AddInterceptors(interceptor);
             }
         });
 

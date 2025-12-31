@@ -36,6 +36,12 @@ public class SystemEnvironment
         }
 
         MaximumUploadMb = maximumUploadMb;
+
+        string slowQueryMsVariable = Environment.GetEnvironmentVariable("ETV_SLOW_QUERY_MS");
+        if (int.TryParse(slowQueryMsVariable, out int slowQueryMs))
+        {
+            SlowQueryMs = slowQueryMs;
+        }
     }
 
     public static string BaseUrl { get; }
@@ -45,4 +51,5 @@ public class SystemEnvironment
     public static int StreamingPort { get; }
     public static bool AllowSharedPlexServers { get; }
     public static int MaximumUploadMb { get; }
+    public static int? SlowQueryMs { get; }
 }

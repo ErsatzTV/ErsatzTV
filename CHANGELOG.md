@@ -34,6 +34,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - This button will extract up to 30 seconds of the media item and zip it
 - Add `Target Loudness` (LUFS/LKFS) to ffmpeg profile when loudness normalization is enabled
   - Default value is `-16`; some sources normalize to a quieter value, e.g. `-24`
+- Add environment variables to help troubleshoot performance
+  - `ETV_SLOW_QUERY_MS` - milliseconds threshold for logging slow database queries (at DEBUG level)
+    - e.g. if this is set to `1000`, queries taking longer than 1 second will be logged
 
 ### Fixed
 - Fix startup on systems unsupported by NvEncSharp
