@@ -4,7 +4,7 @@ namespace ErsatzTV;
 
 using System.Diagnostics;
 
-public class SlowApiHandler : DelegatingHandler
+public class SlowApiHandler(ILogger<SlowApiHandler> logger) : DelegatingHandler
 {
     protected override async Task<HttpResponseMessage> SendAsync(
         HttpRequestMessage request,
@@ -23,7 +23,7 @@ public class SlowApiHandler : DelegatingHandler
                 string uri = request.RequestUri?.ToString() ?? "Unknown URI";
                 string method = request.Method.Method;
 
-                Serilog.Log.Logger.Debug(
+                logger.LogDebug(
                     "[SLOW API] {Method} {Uri} took {Milliseconds}ms",
                     method,
                     uri,

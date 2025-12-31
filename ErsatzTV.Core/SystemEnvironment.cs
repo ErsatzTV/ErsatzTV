@@ -50,7 +50,7 @@ public class SystemEnvironment
         }
 
         string jellyfinPageSizeVariable = Environment.GetEnvironmentVariable("ETV_JF_PAGE_SIZE");
-        if (!int.TryParse(jellyfinPageSizeVariable, out int jellyfinPageSize))
+        if (!int.TryParse(jellyfinPageSizeVariable, out int jellyfinPageSize) || jellyfinPageSize <= 0)
         {
             jellyfinPageSize = 10;
         }
@@ -67,5 +67,5 @@ public class SystemEnvironment
     public static int MaximumUploadMb { get; }
     public static int? SlowDbMs { get; }
     public static int? SlowApiMs { get; }
-    public static int JellyfinPageSize { get; set; }
+    public static int JellyfinPageSize { get; }
 }
