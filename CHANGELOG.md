@@ -34,6 +34,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - This button will extract up to 30 seconds of the media item and zip it
 - Add `Target Loudness` (LUFS/LKFS) to ffmpeg profile when loudness normalization is enabled
   - Default value is `-16`; some sources normalize to a quieter value, e.g. `-24`
+- Add environment variables to help troubleshoot performance
+  - `ETV_SLOW_DB_MS` - milliseconds threshold for logging slow database queries (at DEBUG level)
+    - e.g. if this is set to `1000`, queries taking longer than 1 second will be logged
+  - `ETV_SLOW_API_MS` - milliseconds threshold for logging slow API calls (at DEBUG level)
+    - This is currently limited to *Jellyfin*
+  - `ETV_JF_PAGE_SIZE` - page size for library scan API calls to Jellyfin; default value is 10
 
 ### Fixed
 - Fix startup on systems unsupported by NvEncSharp
@@ -55,11 +61,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Automatically kill playback troubleshooting ffmpeg process if it hasn't completed after two minutes
 - Fix playback of certain BT.2020 content
 - Use playlist item count when using a playlist as filler (instead of a fixed count of 1 for each playlist item)
-- NVIDIA: fix stream failure with certain content that should decode in hardware but falls back to software
+- NVIDIA:
+  - Fix stream failure with certain content that should decode in hardware but falls back to software
+  - Fix stream failure with content that changes color metadata mid-stream
 - Fix stream failure when configured fallback filler collection is empty
 - Fix high CPU when errors are displayed; errors will now work ahead before throttling to realtime, similar to primary content
 - Fix startup error caused by duplicate smart collection names (and no longer allow duplicate smart collection names)
 - Fix erroneous downgrade health check failure with some installations that use MariaDB
+- Sequential schedules: fix `count` instruction validation to accept integer (constant) or string (expression)
+- Fix multi-part episode grouping logic so that it does NOT require release date metadata for episodes within a single show
+  - When **Treat Collections As Shows** is enabled (i.e. for crossover episodes) release date metadata is required for proper grouping
 
 ### Changed
 - No longer round framerate to nearest integer when normalizing framerate
@@ -69,6 +80,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Items may still be cut as needed
   - Hardware acceleration will now be used
   - Items can "work ahead" (transcode faster than realtime) when less than 3 minutes in duration
+- Optimize Jellyfin database fields and indexes
 
 ## [25.9.0] - 2025-11-29
 ### Added

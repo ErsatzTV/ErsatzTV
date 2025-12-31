@@ -13,5 +13,11 @@ public class JellyfinLibraryConfiguration : IEntityTypeConfiguration<JellyfinLib
         builder.HasMany(l => l.PathInfos)
             .WithOne()
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Property(l => l.ItemId)
+            .HasMaxLength(36)
+            .IsUnicode(false);
+
+        builder.HasIndex(l => l.ItemId);
     }
 }

@@ -43,7 +43,7 @@ public class YamlPlayoutCountHandler(EnumeratorCache enumeratorCache) : YamlPlay
                 e.Result = name switch
                 {
                     "count" => enumeratorCount,
-                    "random" => random.Next() % enumeratorCount,
+                    "random" => enumeratorCount > 0 ? random.Next() % enumeratorCount : 0,
                     _ => e.Result
                 };
             };

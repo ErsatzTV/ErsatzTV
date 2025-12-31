@@ -3,6 +3,7 @@ using System;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ErsatzTV.Infrastructure.Sqlite.Migrations
 {
     [DbContext(typeof(TvContext))]
-    partial class TvContextModelSnapshot : ModelSnapshot
+    [Migration("20251230132715_Fix_RemoteStreamMetadataTitle")]
+    partial class Fix_RemoteStreamMetadataTitle
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.11");
@@ -981,21 +984,15 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Etag")
-                        .HasMaxLength(36)
-                        .IsUnicode(false)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("ItemId")
-                        .HasMaxLength(36)
-                        .IsUnicode(false)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("ItemId");
 
                     b.ToTable("JellyfinCollection", (string)null);
                 });
@@ -3614,14 +3611,10 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.HasBaseType("ErsatzTV.Core.Domain.Library");
 
                     b.Property<string>("ItemId")
-                        .HasMaxLength(36)
-                        .IsUnicode(false)
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("ShouldSyncItems")
                         .HasColumnType("INTEGER");
-
-                    b.HasIndex("ItemId");
 
                     b.ToTable("JellyfinLibrary", (string)null);
                 });
@@ -3890,16 +3883,10 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.HasBaseType("ErsatzTV.Core.Domain.Episode");
 
                     b.Property<string>("Etag")
-                        .HasMaxLength(36)
-                        .IsUnicode(false)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("ItemId")
-                        .HasMaxLength(36)
-                        .IsUnicode(false)
                         .HasColumnType("TEXT");
-
-                    b.HasIndex("ItemId");
 
                     b.ToTable("JellyfinEpisode", (string)null);
                 });
@@ -3935,16 +3922,10 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.HasBaseType("ErsatzTV.Core.Domain.Movie");
 
                     b.Property<string>("Etag")
-                        .HasMaxLength(36)
-                        .IsUnicode(false)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("ItemId")
-                        .HasMaxLength(36)
-                        .IsUnicode(false)
                         .HasColumnType("TEXT");
-
-                    b.HasIndex("ItemId");
 
                     b.ToTable("JellyfinMovie", (string)null);
                 });
@@ -3993,16 +3974,10 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.HasBaseType("ErsatzTV.Core.Domain.Season");
 
                     b.Property<string>("Etag")
-                        .HasMaxLength(36)
-                        .IsUnicode(false)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("ItemId")
-                        .HasMaxLength(36)
-                        .IsUnicode(false)
                         .HasColumnType("TEXT");
-
-                    b.HasIndex("ItemId");
 
                     b.ToTable("JellyfinSeason", (string)null);
                 });
@@ -4038,16 +4013,10 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.HasBaseType("ErsatzTV.Core.Domain.Show");
 
                     b.Property<string>("Etag")
-                        .HasMaxLength(36)
-                        .IsUnicode(false)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("ItemId")
-                        .HasMaxLength(36)
-                        .IsUnicode(false)
                         .HasColumnType("TEXT");
-
-                    b.HasIndex("ItemId");
 
                     b.ToTable("JellyfinShow", (string)null);
                 });

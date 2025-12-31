@@ -408,6 +408,12 @@ public class Startup
         var sqliteConnectionString = $"Data Source={FileSystemLayout.DatabasePath};foreign keys=true;";
         string mySqlConnectionString = Configuration.GetValue<string>("MySql:ConnectionString");
 
+        SlowQueryInterceptor interceptor = null;
+        if (SystemEnvironment.SlowDbMs.HasValue)
+        {
+            interceptor = new SlowQueryInterceptor(SystemEnvironment.SlowDbMs.Value);
+        }
+
         services.AddDbContext<TvContext>(
             options =>
             {
@@ -438,6 +444,11 @@ public class Startup
                         }
                     );
                 }
+
+                if (interceptor != null)
+                {
+                    options.AddInterceptors(interceptor);
+                }
             },
             ServiceLifetime.Scoped,
             ServiceLifetime.Singleton);
@@ -466,6 +477,11 @@ public class Startup
                         o.MigrationsAssembly("ErsatzTV.Infrastructure.MySql");
                     }
                 );
+            }
+
+            if (interceptor != null)
+            {
+                options.AddInterceptors(interceptor);
             }
         });
 
@@ -508,6 +524,8 @@ public class Startup
                 c.BaseAddress = new Uri("https://api.trakt.tv");
                 c.DefaultRequestHeaders.Add("User-Agent", $"ErsatzTV/{etvVersion}");
             });
+
+        services.AddHttpClient("RefitCustomClient").AddHttpMessageHandler<SlowApiHandler>();
 
         services.Configure<TraktConfiguration>(Configuration.GetSection("Trakt"));
 
@@ -850,6 +868,8 @@ public class Startup
         services.AddScoped<PlexEtag>();
 
         // services.AddTransient(typeof(IRequestHandler<,>), typeof(GetRecentLogEntriesHandler<>));
+
+        services.AddTransient<SlowApiHandler>();
 
         // run-once/blocking startup services
         services.AddHostedService<EndpointValidatorService>();
