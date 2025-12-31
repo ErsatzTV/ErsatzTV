@@ -62,6 +62,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix high CPU when errors are displayed; errors will now work ahead before throttling to realtime, similar to primary content
 - Fix startup error caused by duplicate smart collection names (and no longer allow duplicate smart collection names)
 - Fix erroneous downgrade health check failure with some installations that use MariaDB
+- Sequential schedules: fix `count` instruction validation to accept integer (constant) or string (expression)
 
 ### Changed
 - No longer round framerate to nearest integer when normalizing framerate
