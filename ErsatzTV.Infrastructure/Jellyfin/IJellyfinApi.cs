@@ -43,6 +43,26 @@ public interface IJellyfinApi
         int limit = 0);
 
     [Get("/Items?sortOrder=Ascending&sortBy=SortName")]
+    Task<JellyfinLibraryItemsResponse> GetShowLibraryItemsWithoutPeople(
+        [Header("X-Emby-Token")]
+        string apiKey,
+        [Query]
+        string parentId,
+        [Query]
+        string fields =
+            "Path,Genres,Tags,DateCreated,Etag,Overview,Taglines,Studios,OfficialRating,ProviderIds",
+        [Query]
+        string includeItemTypes = "Series",
+        [Query]
+        bool recursive = true,
+        [Query]
+        int startIndex = 0,
+        [Query]
+        int limit = 0,
+        [Query]
+        string ids = null);
+
+    [Get("/Items?sortOrder=Ascending&sortBy=SortName")]
     Task<JellyfinLibraryItemsResponse> GetShowLibraryItems(
         [Header("X-Emby-Token")]
         string apiKey,
@@ -87,6 +107,25 @@ public interface IJellyfinApi
         string parentId,
         [Query]
         string fields = "Path,Genres,Tags,DateCreated,Etag,Overview,ProviderIds,People,Chapters",
+        [Query]
+        string includeItemTypes = "Episode",
+        [Query]
+        bool recursive = true,
+        [Query]
+        int startIndex = 0,
+        [Query]
+        int limit = 0,
+        [Query]
+        string ids = null);
+
+    [Get("/Items?sortOrder=Ascending&sortBy=SortName")]
+    Task<JellyfinLibraryItemsResponse> GetEpisodeLibraryItemsWithoutPeople(
+        [Header("X-Emby-Token")]
+        string apiKey,
+        [Query]
+        string parentId,
+        [Query]
+        string fields = "Path,Genres,Tags,DateCreated,Etag,Overview,ProviderIds,Chapters",
         [Query]
         string includeItemTypes = "Episode",
         [Query]

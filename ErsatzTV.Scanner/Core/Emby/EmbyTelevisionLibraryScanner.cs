@@ -158,7 +158,8 @@ public class EmbyTelevisionLibraryScanner : MediaServerTelevisionLibraryScanner<
         EmbyLibrary library,
         EmbyConnectionParameters connectionParameters,
         EmbyShow show,
-        EmbySeason season) =>
+        EmbySeason season,
+        bool isNewSeason) =>
         _embyApiClient.GetEpisodeLibraryItems(
             connectionParameters.Address,
             connectionParameters.ApiKey,

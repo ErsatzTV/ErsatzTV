@@ -92,7 +92,7 @@ public class JellyfinApiClient : IJellyfinApiClient
                 limit: pageSize),
             (maybeLibrary, item) => maybeLibrary.Map(lib => ProjectToMovie(lib, item)).Flatten());
 
-    public IAsyncEnumerable<Tuple<JellyfinShow, int>> GetShowLibraryItems(
+    public IAsyncEnumerable<Tuple<JellyfinShow, int>> GetShowLibraryItemsWithoutPeople(
         string address,
         string apiKey,
         JellyfinLibrary library) =>
@@ -101,7 +101,7 @@ public class JellyfinApiClient : IJellyfinApiClient
             library,
             library.MediaSourceId,
             library.ItemId,
-            (service, itemId, skip, pageSize) => service.GetShowLibraryItems(
+            (service, itemId, skip, pageSize) => service.GetShowLibraryItemsWithoutPeople(
                 apiKey,
                 itemId,
                 startIndex: skip,
@@ -136,6 +136,23 @@ public class JellyfinApiClient : IJellyfinApiClient
             library.MediaSourceId,
             seasonId,
             (service, _, skip, pageSize) => service.GetEpisodeLibraryItems(
+                apiKey,
+                seasonId,
+                startIndex: skip,
+                limit: pageSize),
+            (maybeLibrary, item) => maybeLibrary.Map(lib => ProjectToEpisode(lib, item)).Flatten());
+
+    public IAsyncEnumerable<Tuple<JellyfinEpisode, int>> GetEpisodeLibraryItemsWithoutPeople(
+        string address,
+        string apiKey,
+        JellyfinLibrary library,
+        string seasonId) =>
+        GetPagedLibraryItems(
+            address,
+            library,
+            library.MediaSourceId,
+            seasonId,
+            (service, _, skip, pageSize) => service.GetEpisodeLibraryItemsWithoutPeople(
                 apiKey,
                 seasonId,
                 startIndex: skip,
@@ -280,6 +297,38 @@ public class JellyfinApiClient : IJellyfinApiClient
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error searching Jellyfin shows by title");
+            return BaseError.New(ex.Message);
+        }
+    }
+
+    public async Task<Either<BaseError, Option<JellyfinEpisode>>> GetSingleEpisode(
+        string address,
+        string apiKey,
+        JellyfinLibrary library,
+        string seasonId,
+        string episodeId)
+    {
+        try
+        {
+            IJellyfinApi service = ServiceForAddress(address);
+            JellyfinLibraryItemsResponse itemsResponse = await service.GetEpisodeLibraryItems(
+                apiKey,
+                parentId: seasonId,
+                recursive: false,
+                startIndex: 0,
+                limit: 1,
+                ids: episodeId);
+
+            foreach (JellyfinLibraryItemResponse item in itemsResponse.Items)
+            {
+                return ProjectToEpisode(library, item);
+            }
+
+            return BaseError.New($"Unable to locate episode with id {episodeId}");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error searching Jellyfin episodes by id");
             return BaseError.New(ex.Message);
         }
     }

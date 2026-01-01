@@ -13,7 +13,7 @@ public interface IJellyfinApiClient
         string apiKey,
         JellyfinLibrary library);
 
-    IAsyncEnumerable<Tuple<JellyfinShow, int>> GetShowLibraryItems(
+    IAsyncEnumerable<Tuple<JellyfinShow, int>> GetShowLibraryItemsWithoutPeople(
         string address,
         string apiKey,
         JellyfinLibrary library);
@@ -25,6 +25,12 @@ public interface IJellyfinApiClient
         string showId);
 
     IAsyncEnumerable<Tuple<JellyfinEpisode, int>> GetEpisodeLibraryItems(
+        string address,
+        string apiKey,
+        JellyfinLibrary library,
+        string seasonId);
+
+    IAsyncEnumerable<Tuple<JellyfinEpisode, int>> GetEpisodeLibraryItemsWithoutPeople(
         string address,
         string apiKey,
         JellyfinLibrary library,
@@ -58,4 +64,12 @@ public interface IJellyfinApiClient
         string apiKey,
         JellyfinLibrary library,
         string showTitle);
+
+    Task<Either<BaseError, Option<JellyfinEpisode>>> GetSingleEpisode(
+        string address,
+        string apiKey,
+        JellyfinLibrary library,
+        string seasonId,
+        string episodeId);
+
 }

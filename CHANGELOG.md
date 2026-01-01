@@ -82,6 +82,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Hardware acceleration will now be used
   - Items can "work ahead" (transcode faster than realtime) when less than 3 minutes in duration
 - Optimize Jellyfin database fields and indexes
+- Optimize Jellyfin show library scans by only requesting `People` (actors, directors, writers) when etags don't match
+  - This should significantly speed up periodic library scans, particularly against Jellyfin 10.11.x
 
 ## [25.9.0] - 2025-11-29
 ### Added
