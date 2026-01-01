@@ -202,8 +202,23 @@ public class SequentialPlayoutBuilder(
                 cancellationToken);
         }
 
+        // load alternate schedules
+        // sort by priority, then by index
+        IOrderedEnumerable<(YamlPlayoutSchedule schedule, int index)> sortedSchedules = playoutDefinition.Schedules
+            .Select((schedule, index) => (schedule, index))
+            .OrderByDescending(x => x.schedule.Priority)
+            .ThenBy(x => x.index);
+
+        // parse once
+        var parsedSchedules = sortedSchedules
+            .Select((s, i) => new YamlPlayoutParsedSchedule(s.schedule, i))
+            .ToList();
+
         // Determine which schedule to use based on the start date
-        Option<YamlPlayoutSchedule> maybeActiveSchedule = GetActiveSchedule(playoutDefinition, start);
+        Option<YamlPlayoutSchedule> maybeActiveSchedule = AlternateScheduleSelector
+            .GetScheduleForDate(parsedSchedules, start)
+            .Map(s => s.Schedule);
+
         List<YamlPlayoutInstruction> resetInstructions = [];
         List<YamlPlayoutInstruction> playoutInstructions = [];
 
@@ -305,7 +320,10 @@ public class SequentialPlayoutBuilder(
         while (context.CurrentTime < finish)
         {
             // Check if we've crossed into a different schedule
-            Option<YamlPlayoutSchedule> maybeNewSchedule = GetActiveSchedule(playoutDefinition, context.CurrentTime);
+            Option<YamlPlayoutSchedule> maybeNewSchedule = AlternateScheduleSelector
+                .GetScheduleForDate(parsedSchedules, context.CurrentTime)
+                .Map(s => s.Schedule);
+
             if (currentSchedule != maybeNewSchedule)
             {
                 string oldName = currentSchedule.Match(cs => string.IsNullOrWhiteSpace(cs.Name) ? "Unnamed" : cs.Name, () => "Default");
@@ -736,20 +754,5 @@ public class SequentialPlayoutBuilder(
         }
 
         return result;
-    }
-
-    /// <summary>
-    /// Finds the active schedule for the given date, or returns None if no schedule matches.
-    /// Schedules are checked by definition order.
-    /// </summary>
-    private static Option<YamlPlayoutSchedule> GetActiveSchedule(YamlPlayoutDefinition definition, DateTimeOffset date)
-    {
-        if (definition.Schedules.Count == 0)
-        {
-            return Option<YamlPlayoutSchedule>.None;
-        }
-
-        var parsedSchedules = definition.Schedules.Select((s, i) => new YamlPlayoutParsedSchedule(s, i)).ToList();
-        return AlternateScheduleSelector.GetScheduleForDate(parsedSchedules, date).Map(s => s.Schedule);
     }
 }
