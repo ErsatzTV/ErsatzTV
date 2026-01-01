@@ -1,9 +1,11 @@
 using System.Data.Common;
+using ErsatzTV.Core;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.Extensions.Logging;
 
-namespace ErsatzTV;
+namespace ErsatzTV.Infrastructure;
 
-public class SlowQueryInterceptor(int threshold) : DbCommandInterceptor
+public class SlowQueryInterceptor(ILogger<SlowQueryInterceptor> logger) : DbCommandInterceptor
 {
     public override ValueTask<DbDataReader> ReaderExecutedAsync(
         DbCommand command,
@@ -11,9 +13,9 @@ public class SlowQueryInterceptor(int threshold) : DbCommandInterceptor
         DbDataReader result,
         CancellationToken cancellationToken = default)
     {
-        if (eventData.Duration.TotalMilliseconds > threshold)
+        if (SystemEnvironment.SlowDbMs > 0 && eventData.Duration.TotalMilliseconds > SystemEnvironment.SlowDbMs)
         {
-            Serilog.Log.Logger.Debug(
+            logger.LogDebug(
                 "[SLOW QUERY] ({Milliseconds}ms): {Command}",
                 eventData.Duration.TotalMilliseconds,
                 command.CommandText);

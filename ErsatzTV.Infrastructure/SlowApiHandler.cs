@@ -1,6 +1,7 @@
 using ErsatzTV.Core;
+using Microsoft.Extensions.Logging;
 
-namespace ErsatzTV;
+namespace ErsatzTV.Infrastructure;
 
 using System.Diagnostics;
 

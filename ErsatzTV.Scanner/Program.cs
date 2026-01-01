@@ -19,6 +19,7 @@ using ErsatzTV.Core.Plex;
 using ErsatzTV.Core.Search;
 using ErsatzTV.FFmpeg.Capabilities;
 using ErsatzTV.FFmpeg.Runtime;
+using ErsatzTV.Infrastructure;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Data.Repositories;
 using ErsatzTV.Infrastructure.Emby;
@@ -171,6 +172,8 @@ public class Program
 
                 services.AddHttpClient();
 
+                services.AddHttpClient("RefitCustomClient").AddHttpMessageHandler<SlowApiHandler>();
+
                 services.AddScoped<IConfigElementRepository, ConfigElementRepository>();
                 services.AddScoped<IMetadataRepository, MetadataRepository>();
                 services.AddScoped<IMediaSourceRepository, MediaSourceRepository>();
@@ -255,6 +258,9 @@ public class Program
                 services.AddSingleton<ILanguageCodeCache, LanguageCodeCache>();
 
                 services.AddSingleton<IFileSystem, RealFileSystem>();
+
+                services.AddTransient<SlowApiHandler>();
+                services.AddTransient<SlowQueryInterceptor>();
 
                 services.AddMediatR(config => config.RegisterServicesFromAssemblyContaining<Worker>());
                 services.AddMemoryCache();

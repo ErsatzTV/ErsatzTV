@@ -15,6 +15,7 @@ public class SearchRepository(IDbContextFactory<TvContext> dbContextFactory) : I
 
         var baseItem = await dbContext.MediaItems
             .AsNoTracking()
+            .TagWithCallSite()
             .SingleOrDefaultAsync(mi => mi.Id == id, cancellationToken);
 
         if (baseItem is null)
@@ -27,60 +28,70 @@ public class SearchRepository(IDbContextFactory<TvContext> dbContextFactory) : I
             case Movie:
                 return await dbContext.Movies
                     .AsNoTracking()
+                    .TagWithCallSite()
                     .IncludeForSearch()
                     .AsSplitQuery()
                     .SingleOrDefaultAsync(mi => mi.Id == id, cancellationToken);
             case Episode:
                 return await dbContext.Episodes
                     .AsNoTracking()
+                    .TagWithCallSite()
                     .IncludeForSearch()
                     .AsSplitQuery()
                     .SingleOrDefaultAsync(mi => mi.Id == id, cancellationToken);
             case Season:
                 return await dbContext.Seasons
                     .AsNoTracking()
+                    .TagWithCallSite()
                     .IncludeForSearch()
                     .AsSplitQuery()
                     .SingleOrDefaultAsync(mi => mi.Id == id, cancellationToken);
             case Show:
                 return await dbContext.Shows
                     .AsNoTracking()
+                    .TagWithCallSite()
                     .IncludeForSearch()
                     .AsSplitQuery()
                     .SingleOrDefaultAsync(mi => mi.Id == id, cancellationToken);
             case MusicVideo:
                 return await dbContext.MusicVideos
                     .AsNoTracking()
+                    .TagWithCallSite()
                     .IncludeForSearch()
                     .AsSplitQuery()
                     .SingleOrDefaultAsync(mi => mi.Id == id, cancellationToken);
             case Artist:
                 return await dbContext.Artists
                     .AsNoTracking()
+                    .TagWithCallSite()
                     .IncludeForSearch()
                     .AsSplitQuery()
                     .SingleOrDefaultAsync(mi => mi.Id == id, cancellationToken);
             case OtherVideo:
                 return await dbContext.OtherVideos
                     .AsNoTracking()
+                    .TagWithCallSite()
                     .IncludeForSearch()
                     .AsSplitQuery()
                     .SingleOrDefaultAsync(mi => mi.Id == id, cancellationToken);
             case Song:
                 return await dbContext.Songs
                     .AsNoTracking()
+                    .TagWithCallSite()
                     .IncludeForSearch()
                     .AsSplitQuery()
                     .SingleOrDefaultAsync(mi => mi.Id == id, cancellationToken);
             case Image:
                 return await dbContext.Images
                     .AsNoTracking()
+                    .TagWithCallSite()
                     .IncludeForSearch()
                     .AsSplitQuery()
                     .SingleOrDefaultAsync(mi => mi.Id == id, cancellationToken);
             case RemoteStream:
                 return await dbContext.RemoteStreams
                     .AsNoTracking()
+                    .TagWithCallSite()
                     .IncludeForSearch()
                     .AsSplitQuery()
                     .SingleOrDefaultAsync(mi => mi.Id == id, cancellationToken);
@@ -225,6 +236,7 @@ public class SearchRepository(IDbContextFactory<TvContext> dbContextFactory) : I
 
         ConfiguredCancelableAsyncEnumerable<Movie> movies = dbContext.Movies
             .AsNoTracking()
+            .TagWithCallSite()
             .IncludeForSearch()
             .AsSplitQuery()
             .AsAsyncEnumerable()
@@ -242,6 +254,7 @@ public class SearchRepository(IDbContextFactory<TvContext> dbContextFactory) : I
 
         ConfiguredCancelableAsyncEnumerable<Show> shows = dbContext.Shows
             .AsNoTracking()
+            .TagWithCallSite()
             .IncludeForSearch()
             .AsSplitQuery()
             .AsAsyncEnumerable()
@@ -259,6 +272,7 @@ public class SearchRepository(IDbContextFactory<TvContext> dbContextFactory) : I
 
         ConfiguredCancelableAsyncEnumerable<Season> seasons = dbContext.Seasons
             .AsNoTracking()
+            .TagWithCallSite()
             .IncludeForSearch()
             .AsSplitQuery()
             .AsAsyncEnumerable()
@@ -276,6 +290,7 @@ public class SearchRepository(IDbContextFactory<TvContext> dbContextFactory) : I
 
         ConfiguredCancelableAsyncEnumerable<Episode> episodes = dbContext.Episodes
             .AsNoTracking()
+            .TagWithCallSite()
             .IncludeForSearch()
             .AsSplitQuery()
             .AsAsyncEnumerable()
@@ -294,6 +309,7 @@ public class SearchRepository(IDbContextFactory<TvContext> dbContextFactory) : I
 
         ConfiguredCancelableAsyncEnumerable<MusicVideo> musicVideos = dbContext.MusicVideos
             .AsNoTracking()
+            .TagWithCallSite()
             .IncludeForSearch()
             .AsSplitQuery()
             .AsAsyncEnumerable()
@@ -311,6 +327,7 @@ public class SearchRepository(IDbContextFactory<TvContext> dbContextFactory) : I
 
         ConfiguredCancelableAsyncEnumerable<Artist> artists = dbContext.Artists
             .AsNoTracking()
+            .TagWithCallSite()
             .IncludeForSearch()
             .AsSplitQuery()
             .AsAsyncEnumerable()
@@ -329,6 +346,7 @@ public class SearchRepository(IDbContextFactory<TvContext> dbContextFactory) : I
 
         ConfiguredCancelableAsyncEnumerable<OtherVideo> otherVideos = dbContext.OtherVideos
             .AsNoTracking()
+            .TagWithCallSite()
             .IncludeForSearch()
             .AsSplitQuery()
             .AsAsyncEnumerable()
@@ -346,6 +364,7 @@ public class SearchRepository(IDbContextFactory<TvContext> dbContextFactory) : I
 
         ConfiguredCancelableAsyncEnumerable<Song> songs = dbContext.Songs
             .AsNoTracking()
+            .TagWithCallSite()
             .IncludeForSearch()
             .AsSplitQuery()
             .AsAsyncEnumerable()
@@ -363,6 +382,7 @@ public class SearchRepository(IDbContextFactory<TvContext> dbContextFactory) : I
 
         ConfiguredCancelableAsyncEnumerable<Image> images = dbContext.Images
             .AsNoTracking()
+            .TagWithCallSite()
             .IncludeForSearch()
             .AsSplitQuery()
             .AsAsyncEnumerable()
@@ -381,6 +401,7 @@ public class SearchRepository(IDbContextFactory<TvContext> dbContextFactory) : I
 
         ConfiguredCancelableAsyncEnumerable<RemoteStream> remoteStreams = dbContext.RemoteStreams
             .AsNoTracking()
+            .TagWithCallSite()
             .IncludeForSearch()
             .AsSplitQuery()
             .AsAsyncEnumerable()
