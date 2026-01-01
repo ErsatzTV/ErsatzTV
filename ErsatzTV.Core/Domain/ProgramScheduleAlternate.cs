@@ -13,13 +13,11 @@ public class ProgramScheduleAlternate : IAlternateScheduleItem
     public ICollection<DayOfWeek> DaysOfWeek { get; set; }
     public ICollection<int> DaysOfMonth { get; set; }
     public ICollection<int> MonthsOfYear { get; set; }
-
-    // placeholder data; migration will be added later
-    public bool LimitToDateRange => false;
-    public int StartMonth => 0;
-    public int StartDay => 0;
-    public int? StartYear => null;
-    public int EndMonth => 0;
-    public int EndDay => 0;
-    public int? EndYear => null;
+    public bool LimitToDateRange { get; set; }
+    public int StartMonth { get; set; }
+    public int StartDay { get; set; }
+    public int? StartYear { get; set; }
+    public int EndMonth { get; set; }
+    public int EndDay { get; set; }
+    public int? EndYear { get; set; }
 }

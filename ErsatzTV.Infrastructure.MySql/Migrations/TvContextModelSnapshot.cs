@@ -2321,8 +2321,20 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<string>("DaysOfWeek")
                         .HasColumnType("longtext");
 
+                    b.Property<int>("EndDay")
+                        .HasColumnType("int");
+
+                    b.Property<int>("EndMonth")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("EndYear")
+                        .HasColumnType("int");
+
                     b.Property<int>("Index")
                         .HasColumnType("int");
+
+                    b.Property<bool>("LimitToDateRange")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<string>("MonthsOfYear")
                         .HasColumnType("longtext");
@@ -2331,6 +2343,15 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .HasColumnType("int");
 
                     b.Property<int>("ProgramScheduleId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("StartDay")
+                        .HasColumnType("int");
+
+                    b.Property<int>("StartMonth")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("StartYear")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -3056,6 +3077,9 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<int>("EndMonth")
                         .HasColumnType("int");
 
+                    b.Property<int?>("EndYear")
+                        .HasColumnType("int");
+
                     b.Property<int>("Index")
                         .HasColumnType("int");
 
@@ -3072,6 +3096,9 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .HasColumnType("int");
 
                     b.Property<int>("StartMonth")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("StartYear")
                         .HasColumnType("int");
 
                     b.Property<int>("TemplateId")
