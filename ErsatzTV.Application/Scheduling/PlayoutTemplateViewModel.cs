@@ -11,5 +11,7 @@ public record PlayoutTemplateViewModel(
     bool LimitToDateRange,
     int StartMonth,
     int StartDay,
+    int? StartYear,
     int EndMonth,
-    int EndDay);
+    int EndDay,
+    int? EndYear);

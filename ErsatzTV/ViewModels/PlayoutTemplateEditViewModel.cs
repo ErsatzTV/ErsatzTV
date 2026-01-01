@@ -35,6 +35,8 @@ public class PlayoutTemplateEditViewModel
         set => _startDay = value;
     }
 
+    public int? StartYear { get; set; }
+
     public int EndMonth
     {
         get => _endMonth == 0 ? 12 : _endMonth;
@@ -46,6 +48,8 @@ public class PlayoutTemplateEditViewModel
         get => _endDay == 0 ? 31 : _endDay;
         set => _endDay = value;
     }
+
+    public int? EndYear { get; set; }
 
     public bool AppliesToDate(DateTime date)
     {
@@ -59,8 +63,10 @@ public class PlayoutTemplateEditViewModel
             LimitToDateRange = LimitToDateRange,
             StartMonth = StartMonth,
             StartDay = StartDay,
+            StartYear = StartYear,
             EndMonth = EndMonth,
-            EndDay = EndDay
+            EndDay = EndDay,
+            EndYear = EndYear
         };
 
         TimeSpan offset = TimeZoneInfo.Local.GetUtcOffset(
