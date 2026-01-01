@@ -40,7 +40,14 @@ public class GetPlayoutAlternateSchedulesHandler(IDbContextFactory<TvContext> db
                 Index = result.Map(i => i.Index).DefaultIfEmpty().Max() + 1,
                 DaysOfMonth = AlternateScheduleSelector.AllDaysOfMonth(),
                 DaysOfWeek = AlternateScheduleSelector.AllDaysOfWeek(),
-                MonthsOfYear = AlternateScheduleSelector.AllMonthsOfYear()
+                MonthsOfYear = AlternateScheduleSelector.AllMonthsOfYear(),
+                LimitToDateRange = false,
+                StartMonth = 1,
+                StartDay = 1,
+                StartYear = null,
+                EndMonth = 1,
+                EndDay = 1,
+                EndYear = null
             };
 
             result.Add(ProjectToViewModel(psa));

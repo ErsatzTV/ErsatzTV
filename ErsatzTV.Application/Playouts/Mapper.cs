@@ -33,7 +33,14 @@ internal static class Mapper
             programScheduleAlternate.ProgramScheduleId,
             programScheduleAlternate.DaysOfWeek,
             programScheduleAlternate.DaysOfMonth,
-            programScheduleAlternate.MonthsOfYear);
+            programScheduleAlternate.MonthsOfYear,
+            programScheduleAlternate.LimitToDateRange,
+            programScheduleAlternate.StartMonth,
+            programScheduleAlternate.StartDay,
+            programScheduleAlternate.StartYear,
+            programScheduleAlternate.EndMonth,
+            programScheduleAlternate.EndDay,
+            programScheduleAlternate.EndYear);
 
     internal static PlayoutHistoryViewModel ProjectToViewModel(PlayoutHistory playoutHistory) =>
         new(
