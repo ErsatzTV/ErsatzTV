@@ -203,11 +203,18 @@ public class SequentialPlayoutBuilder(
         }
 
         // Determine which schedule to use based on the start date
-        YamlPlayoutSchedule activeSchedule = GetActiveSchedule(playoutDefinition, start);
-        List<YamlPlayoutInstruction> resetInstructions;
-        List<YamlPlayoutInstruction> playoutInstructions;
+        Option<YamlPlayoutSchedule> maybeActiveSchedule = GetActiveSchedule(playoutDefinition, start);
+        List<YamlPlayoutInstruction> resetInstructions = [];
+        List<YamlPlayoutInstruction> playoutInstructions = [];
 
-        if (activeSchedule != null)
+        if (maybeActiveSchedule.IsNone)
+        {
+            logger.LogDebug("Using default playout for date {Date}", start.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+            resetInstructions = playoutDefinition.Reset;
+            playoutInstructions = playoutDefinition.Playout;
+        }
+
+        foreach (YamlPlayoutSchedule activeSchedule in maybeActiveSchedule)
         {
             logger.LogInformation(
                 "Using scheduled playout '{Name}' for date {Date}",
@@ -216,12 +223,6 @@ public class SequentialPlayoutBuilder(
             // Use schedule-specific reset if provided, otherwise use root reset
             resetInstructions = activeSchedule.Reset.Count > 0 ? activeSchedule.Reset : playoutDefinition.Reset;
             playoutInstructions = activeSchedule.Playout;
-        }
-        else
-        {
-            logger.LogDebug("Using default playout for date {Date}", start.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
-            resetInstructions = playoutDefinition.Reset;
-            playoutInstructions = playoutDefinition.Playout;
         }
 
         if (playoutInstructions.Count == 0)
@@ -300,15 +301,15 @@ public class SequentialPlayoutBuilder(
         }
 
         // handle all playout instructions
-        YamlPlayoutSchedule currentSchedule = activeSchedule;
+        Option<YamlPlayoutSchedule> currentSchedule = maybeActiveSchedule;
         while (context.CurrentTime < finish)
         {
             // Check if we've crossed into a different schedule
-            YamlPlayoutSchedule newSchedule = GetActiveSchedule(playoutDefinition, context.CurrentTime);
-            if (!ReferenceEquals(currentSchedule, newSchedule))
+            Option<YamlPlayoutSchedule> maybeNewSchedule = GetActiveSchedule(playoutDefinition, context.CurrentTime);
+            if (currentSchedule != maybeNewSchedule)
             {
-                string oldName = currentSchedule != null ? (string.IsNullOrWhiteSpace(currentSchedule.Name) ? "Unnamed" : currentSchedule.Name) : "Default";
-                string newName = newSchedule != null ? (string.IsNullOrWhiteSpace(newSchedule.Name) ? "Unnamed" : newSchedule.Name) : "Default";
+                string oldName = currentSchedule.Match(cs => string.IsNullOrWhiteSpace(cs.Name) ? "Unnamed" : cs.Name, () => "Default");
+                string newName = maybeNewSchedule.Match(ns => string.IsNullOrWhiteSpace(ns.Name) ? "Unnamed" : ns.Name, () => "Default");
                 logger.LogInformation(
                     "Schedule changed from '{OldSchedule}' to '{NewSchedule}' at {Time}",
                     oldName,
@@ -316,17 +317,13 @@ public class SequentialPlayoutBuilder(
                     context.CurrentTime.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture));
 
                 // Switch to the new schedule
-                currentSchedule = newSchedule;
+                currentSchedule = maybeActiveSchedule;
 
                 // Get the new schedule's instructions
-                List<YamlPlayoutInstruction> newPlayoutInstructions;
-                if (newSchedule != null)
+                List<YamlPlayoutInstruction> newPlayoutInstructions = playoutDefinition.Playout;
+                foreach (var newSchedule in maybeNewSchedule)
                 {
                     newPlayoutInstructions = newSchedule.Playout;
-                }
-                else
-                {
-                    newPlayoutInstructions = playoutDefinition.Playout;
                 }
 
                 if (newPlayoutInstructions.Count == 0)
@@ -341,7 +338,7 @@ public class SequentialPlayoutBuilder(
                     Import = playoutDefinition.Import,
                     Content = playoutDefinition.Content,
                     Sequence = playoutDefinition.Sequence,
-                    Reset = newSchedule != null && newSchedule.Reset.Count > 0 ? newSchedule.Reset : playoutDefinition.Reset,
+                    Reset = maybeNewSchedule.Match(ns => ns.Reset.Count > 0 ? ns.Reset : playoutDefinition.Reset, () => playoutDefinition.Reset),
                     Playout = newPlayoutInstructions
                 };
 
@@ -742,103 +739,17 @@ public class SequentialPlayoutBuilder(
     }
 
     /// <summary>
-    /// Finds the active schedule for the given date, or returns null if no schedule matches.
-    /// Schedules are checked in priority order (highest first), then by definition order.
+    /// Finds the active schedule for the given date, or returns None if no schedule matches.
+    /// Schedules are checked by definition order.
     /// </summary>
-    private static YamlPlayoutSchedule GetActiveSchedule(YamlPlayoutDefinition definition, DateTimeOffset date)
+    private static Option<YamlPlayoutSchedule> GetActiveSchedule(YamlPlayoutDefinition definition, DateTimeOffset date)
     {
         if (definition.Schedules.Count == 0)
         {
-            return null;
+            return Option<YamlPlayoutSchedule>.None;
         }
 
-        // Sort by priority (descending), then by original order
-        var sortedSchedules = definition.Schedules
-            .Select((schedule, index) => (schedule, index))
-            .OrderByDescending(x => x.schedule.Priority)
-            .ThenBy(x => x.index);
-
-        foreach ((YamlPlayoutSchedule schedule, int _) in sortedSchedules)
-        {
-            if (IsDateInSchedule(schedule, date))
-            {
-                return schedule;
-            }
-        }
-
-        return null;
-    }
-
-    /// <summary>
-    /// Determines if a date falls within a scheduled playout's date range.
-    /// </summary>
-    private static bool IsDateInSchedule(YamlPlayoutSchedule schedule, DateTimeOffset date)
-    {
-        if (string.IsNullOrWhiteSpace(schedule.StartDate) || string.IsNullOrWhiteSpace(schedule.EndDate))
-        {
-            return false;
-        }
-
-        (int startMonth, int startDay, int? startYear) = ParseDate(schedule.StartDate);
-        (int endMonth, int endDay, int? endYear) = ParseDate(schedule.EndDate);
-
-        int currentYear = date.Year;
-        int currentMonth = date.Month;
-        int currentDay = date.Day;
-
-        // Handle year-specific dates (YYYY-MM-DD format)
-        if (startYear.HasValue && endYear.HasValue)
-        {
-            // Dates with years are always non-recurring (one-time events)
-            var startDate = new DateTime(startYear.Value, startMonth, startDay);
-            var endDate = new DateTime(endYear.Value, endMonth, endDay);
-            var currentDate = new DateTime(currentYear, currentMonth, currentDay);
-
-            return currentDate >= startDate && currentDate <= endDate;
-        }
-
-        if (startYear.HasValue || endYear.HasValue)
-        {
-            // Mixed format - not supported
-            return false;
-        }
-
-        // Both dates are MM-DD format - always recurring
-        var currentDayOfYear = new DateTime(currentYear, currentMonth, currentDay).DayOfYear;
-        var startDayOfYear = new DateTime(currentYear, startMonth, startDay).DayOfYear;
-        var endDayOfYear = new DateTime(currentYear, endMonth, endDay).DayOfYear;
-
-        // Handle date ranges that span across the new year
-        if (startDayOfYear <= endDayOfYear)
-        {
-            // Normal range (e.g., Jan 1 - March 31)
-            return currentDayOfYear >= startDayOfYear && currentDayOfYear <= endDayOfYear;
-        }
-
-        // Range wraps around the year (e.g., Dec 1 - Jan 31)
-        return currentDayOfYear >= startDayOfYear || currentDayOfYear <= endDayOfYear;
-    }
-
-    /// <summary>
-    /// Parses a date string in MM-DD or YYYY-MM-DD format.
-    /// Returns (month, day, year) where year is null for MM-DD format.
-    /// </summary>
-    private static (int month, int day, int? year) ParseDate(string dateStr)
-    {
-        string[] parts = dateStr.Split('-');
-
-        if (parts.Length == 2)
-        {
-            // MM-DD format
-            return (int.Parse(parts[0], CultureInfo.InvariantCulture), int.Parse(parts[1], CultureInfo.InvariantCulture), null);
-        }
-
-        if (parts.Length == 3)
-        {
-            // YYYY-MM-DD format
-            return (int.Parse(parts[1], CultureInfo.InvariantCulture), int.Parse(parts[2], CultureInfo.InvariantCulture), int.Parse(parts[0], CultureInfo.InvariantCulture));
-        }
-
-        throw new FormatException($"Invalid date format: {dateStr}. Expected MM-DD or YYYY-MM-DD.");
+        var parsedSchedules = definition.Schedules.Select((s, i) => new YamlPlayoutParsedSchedule(s, i)).ToList();
+        return AlternateScheduleSelector.GetScheduleForDate(parsedSchedules, date).Map(s => s.Schedule);
     }
 }
