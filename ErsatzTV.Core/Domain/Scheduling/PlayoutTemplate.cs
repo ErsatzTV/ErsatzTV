@@ -21,4 +21,8 @@ public class PlayoutTemplate : IAlternateScheduleItem
 
     public DateTime DateUpdated { get; set; }
     //public ICollection<DateTimeOffset> AdditionalDays { get; set; }
+
+    // placeholder data; migration will be added later
+    public int? StartYear => null;
+    public int? EndYear => null;
 }

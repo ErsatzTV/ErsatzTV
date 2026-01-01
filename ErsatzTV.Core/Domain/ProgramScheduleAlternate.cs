@@ -18,6 +18,8 @@ public class ProgramScheduleAlternate : IAlternateScheduleItem
     public bool LimitToDateRange => false;
     public int StartMonth => 0;
     public int StartDay => 0;
+    public int? StartYear => null;
     public int EndMonth => 0;
     public int EndDay => 0;
+    public int? EndYear => null;
 }

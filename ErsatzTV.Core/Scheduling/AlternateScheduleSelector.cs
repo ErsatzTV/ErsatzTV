@@ -2,7 +2,7 @@ using ErsatzTV.Core.Domain.Scheduling;
 
 namespace ErsatzTV.Core.Scheduling;
 
-public class AlternateScheduleSelector
+public static class AlternateScheduleSelector
 {
     public static List<DayOfWeek> AllDaysOfWeek() =>
     [
@@ -29,33 +29,42 @@ public class AlternateScheduleSelector
                 bool reverse = item.StartMonth * 100 + item.StartDay >
                                item.EndMonth * 100 + item.EndDay;
 
-                int year = date.LocalDateTime.Year;
+                int startYear = date.LocalDateTime.Year;
+                int endYear = date.LocalDateTime.Year;
+
+                if (item.StartYear.HasValue && item.EndYear.HasValue)
+                {
+                    startYear = item.StartYear.Value;
+                    endYear = item.EndYear.Value;
+                    reverse = false;
+                }
+
                 DateTime start;
                 DateTime end;
 
                 try
                 {
-                    start = new DateTime(year, item.StartMonth, item.StartDay, 0, 0, 0, DateTimeKind.Local);
+                    start = new DateTime(startYear, item.StartMonth, item.StartDay, 0, 0, 0, DateTimeKind.Local);
                 }
                 catch (ArgumentOutOfRangeException)
                 {
                     // this should only happen with days that are greater than the actual days in the month,
                     // so roll over to the 1st of the next month
-                    start = new DateTime(year, item.StartMonth + 1, 1, 0, 0, 0, DateTimeKind.Local);
+                    start = new DateTime(startYear, item.StartMonth + 1, 1, 0, 0, 0, DateTimeKind.Local);
                 }
 
                 try
                 {
-                    end = new DateTime(year, item.EndMonth, item.EndDay, 0, 0, 0, DateTimeKind.Local);
+                    end = new DateTime(endYear, item.EndMonth, item.EndDay, 0, 0, 0, DateTimeKind.Local);
                 }
                 catch (ArgumentOutOfRangeException)
                 {
                     // this should only happen with days that are greater than the actual days in the month,
                     // so reduce to the max days in the month
                     end = new DateTime(
-                        year,
+                        endYear,
                         item.EndMonth,
-                        DateTime.DaysInMonth(year, item.EndMonth),
+                        DateTime.DaysInMonth(endYear, item.EndMonth),
                         0,
                         0,
                         0,

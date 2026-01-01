@@ -9,6 +9,8 @@ public interface IAlternateScheduleItem
     bool LimitToDateRange { get; }
     int StartMonth { get; }
     int StartDay { get; }
+    int? StartYear { get; }
     int EndMonth { get; }
     int EndDay { get; }
+    int? EndYear { get; }
 }
