@@ -1,6 +1,8 @@
+using ErsatzTV.Core.Domain.Scheduling;
+
 namespace ErsatzTV.Core.Domain;
 
-public class ProgramScheduleAlternate
+public class ProgramScheduleAlternate : IAlternateScheduleItem
 {
     public int Id { get; set; }
     public int PlayoutId { get; set; }
@@ -12,17 +14,10 @@ public class ProgramScheduleAlternate
     public ICollection<int> DaysOfMonth { get; set; }
     public ICollection<int> MonthsOfYear { get; set; }
 
-    public static List<DayOfWeek> AllDaysOfWeek() => new()
-    {
-        DayOfWeek.Monday,
-        DayOfWeek.Tuesday,
-        DayOfWeek.Wednesday,
-        DayOfWeek.Thursday,
-        DayOfWeek.Friday,
-        DayOfWeek.Saturday,
-        DayOfWeek.Sunday
-    };
-
-    public static List<int> AllDaysOfMonth() => Enumerable.Range(1, 31).ToList();
-    public static List<int> AllMonthsOfYear() => Enumerable.Range(1, 12).ToList();
+    // placeholder data; migration will be added later
+    public bool LimitToDateRange => false;
+    public int StartMonth => 0;
+    public int StartDay => 0;
+    public int EndMonth => 0;
+    public int EndDay => 0;
 }

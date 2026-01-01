@@ -4,6 +4,7 @@
 @using ErsatzTV.Application.Channels
 @using ErsatzTV.Application.Playouts
 @using ErsatzTV.Application.ProgramSchedules
+@using ErsatzTV.Core.Scheduling
 @implements IDisposable
 @inject NavigationManager NavigationManager
 @inject ILogger<ScheduleItemsEditor> Logger
@@ -243,9 +244,9 @@
         {
             Index = _items.Map(i => i.Index).DefaultIfEmpty().Max() + 1,
             ProgramSchedule = _schedules.Head(),
-            DaysOfWeek = ProgramScheduleAlternate.AllDaysOfWeek(),
-            DaysOfMonth = ProgramScheduleAlternate.AllDaysOfMonth(),
-            MonthsOfYear = ProgramScheduleAlternate.AllMonthsOfYear()
+            DaysOfWeek = AlternateScheduleSelector.AllDaysOfWeek(),
+            DaysOfMonth = AlternateScheduleSelector.AllDaysOfMonth(),
+            MonthsOfYear = AlternateScheduleSelector.AllMonthsOfYear()
         };
 
         _items.Add(item);

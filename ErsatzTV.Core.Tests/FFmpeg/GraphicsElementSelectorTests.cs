@@ -2,6 +2,7 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Domain.Scheduling;
 using ErsatzTV.Core.FFmpeg;
+using ErsatzTV.Core.Scheduling;
 using Microsoft.Extensions.Logging;
 using NUnit.Framework;
 using Serilog;
@@ -138,9 +139,9 @@ public class GraphicsElementSelectorTests
             [
                 new PlayoutTemplate
                 {
-                    DaysOfWeek = PlayoutTemplate.AllDaysOfWeek(),
-                    DaysOfMonth = PlayoutTemplate.AllDaysOfMonth(),
-                    MonthsOfYear = PlayoutTemplate.AllMonthsOfYear(),
+                    DaysOfWeek = AlternateScheduleSelector.AllDaysOfWeek(),
+                    DaysOfMonth = AlternateScheduleSelector.AllDaysOfMonth(),
+                    MonthsOfYear = AlternateScheduleSelector.AllMonthsOfYear(),
                     DecoTemplate = decoWithInherit
                 }
             ]
@@ -152,9 +153,9 @@ public class GraphicsElementSelectorTests
             [
                 new PlayoutTemplate
                 {
-                    DaysOfWeek = PlayoutTemplate.AllDaysOfWeek(),
-                    DaysOfMonth = PlayoutTemplate.AllDaysOfMonth(),
-                    MonthsOfYear = PlayoutTemplate.AllMonthsOfYear(),
+                    DaysOfWeek = AlternateScheduleSelector.AllDaysOfWeek(),
+                    DaysOfMonth = AlternateScheduleSelector.AllDaysOfMonth(),
+                    MonthsOfYear = AlternateScheduleSelector.AllMonthsOfYear(),
                     DecoTemplate = decoWithDisable
                 }
             ]
@@ -166,9 +167,9 @@ public class GraphicsElementSelectorTests
             [
                 new PlayoutTemplate
                 {
-                    DaysOfWeek = PlayoutTemplate.AllDaysOfWeek(),
-                    DaysOfMonth = PlayoutTemplate.AllDaysOfMonth(),
-                    MonthsOfYear = PlayoutTemplate.AllMonthsOfYear(),
+                    DaysOfWeek = AlternateScheduleSelector.AllDaysOfWeek(),
+                    DaysOfMonth = AlternateScheduleSelector.AllDaysOfMonth(),
+                    MonthsOfYear = AlternateScheduleSelector.AllMonthsOfYear(),
                     DecoTemplate = decoWithOverride
                 }
             ]
@@ -180,9 +181,9 @@ public class GraphicsElementSelectorTests
             [
                 new PlayoutTemplate
                 {
-                    DaysOfWeek = PlayoutTemplate.AllDaysOfWeek(),
-                    DaysOfMonth = PlayoutTemplate.AllDaysOfMonth(),
-                    MonthsOfYear = PlayoutTemplate.AllMonthsOfYear(),
+                    DaysOfWeek = AlternateScheduleSelector.AllDaysOfWeek(),
+                    DaysOfMonth = AlternateScheduleSelector.AllDaysOfMonth(),
+                    MonthsOfYear = AlternateScheduleSelector.AllMonthsOfYear(),
                     DecoTemplate = decoWithMerge
                 }
             ]
@@ -194,9 +195,9 @@ public class GraphicsElementSelectorTests
             [
                 new PlayoutTemplate
                 {
-                    DaysOfWeek = PlayoutTemplate.AllDaysOfWeek(),
-                    DaysOfMonth = PlayoutTemplate.AllDaysOfMonth(),
-                    MonthsOfYear = PlayoutTemplate.AllMonthsOfYear(),
+                    DaysOfWeek = AlternateScheduleSelector.AllDaysOfWeek(),
+                    DaysOfMonth = AlternateScheduleSelector.AllDaysOfMonth(),
+                    MonthsOfYear = AlternateScheduleSelector.AllMonthsOfYear(),
                     DecoTemplate = decoWithMergeFillerDisabled
                 }
             ]
@@ -247,9 +248,9 @@ public class GraphicsElementSelectorTests
             [
                 new PlayoutTemplate
                 {
-                    DaysOfWeek = PlayoutTemplate.AllDaysOfWeek(),
-                    DaysOfMonth = PlayoutTemplate.AllDaysOfMonth(),
-                    MonthsOfYear = PlayoutTemplate.AllMonthsOfYear(),
+                    DaysOfWeek = AlternateScheduleSelector.AllDaysOfWeek(),
+                    DaysOfMonth = AlternateScheduleSelector.AllDaysOfMonth(),
+                    MonthsOfYear = AlternateScheduleSelector.AllMonthsOfYear(),
                     DecoTemplate = decoWithInherit
                 }
             ],
@@ -265,9 +266,9 @@ public class GraphicsElementSelectorTests
             [
                 new PlayoutTemplate
                 {
-                    DaysOfWeek = PlayoutTemplate.AllDaysOfWeek(),
-                    DaysOfMonth = PlayoutTemplate.AllDaysOfMonth(),
-                    MonthsOfYear = PlayoutTemplate.AllMonthsOfYear(),
+                    DaysOfWeek = AlternateScheduleSelector.AllDaysOfWeek(),
+                    DaysOfMonth = AlternateScheduleSelector.AllDaysOfMonth(),
+                    MonthsOfYear = AlternateScheduleSelector.AllMonthsOfYear(),
                     DecoTemplate = decoWithMerge
                 }
             ],
@@ -283,9 +284,9 @@ public class GraphicsElementSelectorTests
             [
                 new PlayoutTemplate
                 {
-                    DaysOfWeek = PlayoutTemplate.AllDaysOfWeek(),
-                    DaysOfMonth = PlayoutTemplate.AllDaysOfMonth(),
-                    MonthsOfYear = PlayoutTemplate.AllMonthsOfYear(),
+                    DaysOfWeek = AlternateScheduleSelector.AllDaysOfWeek(),
+                    DaysOfMonth = AlternateScheduleSelector.AllDaysOfMonth(),
+                    MonthsOfYear = AlternateScheduleSelector.AllMonthsOfYear(),
                     DecoTemplate = decoWithMerge
                 }
             ],
@@ -301,9 +302,9 @@ public class GraphicsElementSelectorTests
             [
                 new PlayoutTemplate
                 {
-                    DaysOfWeek = PlayoutTemplate.AllDaysOfWeek(),
-                    DaysOfMonth = PlayoutTemplate.AllDaysOfMonth(),
-                    MonthsOfYear = PlayoutTemplate.AllMonthsOfYear(),
+                    DaysOfWeek = AlternateScheduleSelector.AllDaysOfWeek(),
+                    DaysOfMonth = AlternateScheduleSelector.AllDaysOfMonth(),
+                    MonthsOfYear = AlternateScheduleSelector.AllMonthsOfYear(),
                     DecoTemplate = decoWithOverride
                 }
             ],

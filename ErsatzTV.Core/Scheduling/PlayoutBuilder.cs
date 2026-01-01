@@ -570,10 +570,9 @@ public class PlayoutBuilder : IPlayoutBuilder
     {
         var random = new Random(playout.Seed);
 
-        ProgramSchedule activeSchedule = PlayoutScheduleSelector.GetProgramScheduleFor(
-            referenceData.ProgramSchedule,
-            referenceData.ProgramScheduleAlternates,
-            playoutStart);
+        ProgramSchedule activeSchedule = AlternateScheduleSelector
+            .GetScheduleForDate(referenceData.ProgramScheduleAlternates, playoutStart)
+            .Match(s => s.ProgramSchedule, referenceData.ProgramSchedule);
 
         if (activeSchedule.Items.Count == 0)
         {
@@ -959,10 +958,9 @@ public class PlayoutBuilder : IPlayoutBuilder
             }
         }
 
-        ProgramSchedule activeScheduleAtAnchor = PlayoutScheduleSelector.GetProgramScheduleFor(
-            referenceData.ProgramSchedule,
-            referenceData.ProgramScheduleAlternates,
-            playoutBuilderState.CurrentTime);
+        ProgramSchedule activeScheduleAtAnchor = AlternateScheduleSelector
+            .GetScheduleForDate(referenceData.ProgramScheduleAlternates, playoutBuilderState.CurrentTime)
+            .Match(s => s.ProgramSchedule, referenceData.ProgramSchedule);
 
         // if we ended in a different alternate schedule, fix the anchor data
         if (playoutBuilderState.CurrentTime >= playoutFinish && activeScheduleAtAnchor.Id != activeSchedule.Id &&

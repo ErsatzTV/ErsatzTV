@@ -5,10 +5,10 @@ using Shouldly;
 
 namespace ErsatzTV.Core.Tests.Scheduling;
 
-public static class PlayoutTemplateSelectorTests
+public static class AlternateScheduleSelectorTests
 {
     [TestFixture]
-    public class GetPlayoutTemplateFor
+    public class GetScheduleForDate
     {
         private static readonly TimeSpan Offset = TimeSpan.FromHours(-5);
 
@@ -17,9 +17,9 @@ public static class PlayoutTemplateSelectorTests
         {
             var template = new PlayoutTemplate
             {
-                DaysOfWeek = PlayoutTemplate.AllDaysOfWeek(),
-                DaysOfMonth = PlayoutTemplate.AllDaysOfMonth(),
-                MonthsOfYear = PlayoutTemplate.AllMonthsOfYear(),
+                DaysOfWeek = AlternateScheduleSelector.AllDaysOfWeek(),
+                DaysOfMonth = AlternateScheduleSelector.AllDaysOfMonth(),
+                MonthsOfYear = AlternateScheduleSelector.AllMonthsOfYear(),
                 LimitToDateRange = true,
                 StartMonth = 4,
                 StartDay = 1,
@@ -27,7 +27,7 @@ public static class PlayoutTemplateSelectorTests
                 EndDay = 15
             };
 
-            Option<PlayoutTemplate> result = PlayoutTemplateSelector.GetPlayoutTemplateFor(
+            Option<PlayoutTemplate> result = AlternateScheduleSelector.GetScheduleForDate(
                 new List<PlayoutTemplate> { template },
                 new DateTimeOffset(2024, 3, 31, 0, 0, 0, Offset));
 
@@ -39,9 +39,9 @@ public static class PlayoutTemplateSelectorTests
         {
             var template = new PlayoutTemplate
             {
-                DaysOfWeek = PlayoutTemplate.AllDaysOfWeek(),
-                DaysOfMonth = PlayoutTemplate.AllDaysOfMonth(),
-                MonthsOfYear = PlayoutTemplate.AllMonthsOfYear(),
+                DaysOfWeek = AlternateScheduleSelector.AllDaysOfWeek(),
+                DaysOfMonth = AlternateScheduleSelector.AllDaysOfMonth(),
+                MonthsOfYear = AlternateScheduleSelector.AllMonthsOfYear(),
                 LimitToDateRange = true,
                 StartMonth = 4,
                 StartDay = 1,
@@ -49,7 +49,7 @@ public static class PlayoutTemplateSelectorTests
                 EndDay = 15
             };
 
-            Option<PlayoutTemplate> result = PlayoutTemplateSelector.GetPlayoutTemplateFor(
+            Option<PlayoutTemplate> result = AlternateScheduleSelector.GetScheduleForDate(
                 new List<PlayoutTemplate> { template },
                 new DateTimeOffset(2024, 4, 1, 0, 0, 0, Offset));
 
@@ -61,9 +61,9 @@ public static class PlayoutTemplateSelectorTests
         {
             var template = new PlayoutTemplate
             {
-                DaysOfWeek = PlayoutTemplate.AllDaysOfWeek(),
-                DaysOfMonth = PlayoutTemplate.AllDaysOfMonth(),
-                MonthsOfYear = PlayoutTemplate.AllMonthsOfYear(),
+                DaysOfWeek = AlternateScheduleSelector.AllDaysOfWeek(),
+                DaysOfMonth = AlternateScheduleSelector.AllDaysOfMonth(),
+                MonthsOfYear = AlternateScheduleSelector.AllMonthsOfYear(),
                 LimitToDateRange = true,
                 StartMonth = 4,
                 StartDay = 1,
@@ -71,7 +71,7 @@ public static class PlayoutTemplateSelectorTests
                 EndDay = 15
             };
 
-            Option<PlayoutTemplate> result = PlayoutTemplateSelector.GetPlayoutTemplateFor(
+            Option<PlayoutTemplate> result = AlternateScheduleSelector.GetScheduleForDate(
                 new List<PlayoutTemplate> { template },
                 new DateTimeOffset(2024, 4, 20, 0, 0, 0, Offset));
 
@@ -83,9 +83,9 @@ public static class PlayoutTemplateSelectorTests
         {
             var template = new PlayoutTemplate
             {
-                DaysOfWeek = PlayoutTemplate.AllDaysOfWeek(),
-                DaysOfMonth = PlayoutTemplate.AllDaysOfMonth(),
-                MonthsOfYear = PlayoutTemplate.AllMonthsOfYear(),
+                DaysOfWeek = AlternateScheduleSelector.AllDaysOfWeek(),
+                DaysOfMonth = AlternateScheduleSelector.AllDaysOfMonth(),
+                MonthsOfYear = AlternateScheduleSelector.AllMonthsOfYear(),
                 LimitToDateRange = true,
                 StartMonth = 4,
                 StartDay = 1,
@@ -93,7 +93,7 @@ public static class PlayoutTemplateSelectorTests
                 EndDay = 15
             };
 
-            Option<PlayoutTemplate> result = PlayoutTemplateSelector.GetPlayoutTemplateFor(
+            Option<PlayoutTemplate> result = AlternateScheduleSelector.GetScheduleForDate(
                 new List<PlayoutTemplate> { template },
                 new DateTimeOffset(2024, 6, 15, 0, 0, 0, Offset));
 
@@ -105,9 +105,9 @@ public static class PlayoutTemplateSelectorTests
         {
             var template = new PlayoutTemplate
             {
-                DaysOfWeek = PlayoutTemplate.AllDaysOfWeek(),
-                DaysOfMonth = PlayoutTemplate.AllDaysOfMonth(),
-                MonthsOfYear = PlayoutTemplate.AllMonthsOfYear(),
+                DaysOfWeek = AlternateScheduleSelector.AllDaysOfWeek(),
+                DaysOfMonth = AlternateScheduleSelector.AllDaysOfMonth(),
+                MonthsOfYear = AlternateScheduleSelector.AllMonthsOfYear(),
                 LimitToDateRange = true,
                 StartMonth = 4,
                 StartDay = 1,
@@ -115,7 +115,7 @@ public static class PlayoutTemplateSelectorTests
                 EndDay = 15
             };
 
-            Option<PlayoutTemplate> result = PlayoutTemplateSelector.GetPlayoutTemplateFor(
+            Option<PlayoutTemplate> result = AlternateScheduleSelector.GetScheduleForDate(
                 new List<PlayoutTemplate> { template },
                 new DateTimeOffset(2024, 6, 16, 0, 0, 0, Offset));
 
@@ -127,9 +127,9 @@ public static class PlayoutTemplateSelectorTests
         {
             var template = new PlayoutTemplate
             {
-                DaysOfWeek = PlayoutTemplate.AllDaysOfWeek(),
-                DaysOfMonth = PlayoutTemplate.AllDaysOfMonth(),
-                MonthsOfYear = PlayoutTemplate.AllMonthsOfYear(),
+                DaysOfWeek = AlternateScheduleSelector.AllDaysOfWeek(),
+                DaysOfMonth = AlternateScheduleSelector.AllDaysOfMonth(),
+                MonthsOfYear = AlternateScheduleSelector.AllMonthsOfYear(),
                 LimitToDateRange = true,
                 StartMonth = 2,
                 StartDay = 29,
@@ -137,7 +137,7 @@ public static class PlayoutTemplateSelectorTests
                 EndDay = 15
             };
 
-            Option<PlayoutTemplate> result = PlayoutTemplateSelector.GetPlayoutTemplateFor(
+            Option<PlayoutTemplate> result = AlternateScheduleSelector.GetScheduleForDate(
                 new List<PlayoutTemplate> { template },
                 new DateTimeOffset(2023, 2, 28, 0, 0, 0, Offset));
 
@@ -149,9 +149,9 @@ public static class PlayoutTemplateSelectorTests
         {
             var template = new PlayoutTemplate
             {
-                DaysOfWeek = PlayoutTemplate.AllDaysOfWeek(),
-                DaysOfMonth = PlayoutTemplate.AllDaysOfMonth(),
-                MonthsOfYear = PlayoutTemplate.AllMonthsOfYear(),
+                DaysOfWeek = AlternateScheduleSelector.AllDaysOfWeek(),
+                DaysOfMonth = AlternateScheduleSelector.AllDaysOfMonth(),
+                MonthsOfYear = AlternateScheduleSelector.AllMonthsOfYear(),
                 LimitToDateRange = true,
                 StartMonth = 2,
                 StartDay = 29,
@@ -159,7 +159,7 @@ public static class PlayoutTemplateSelectorTests
                 EndDay = 15
             };
 
-            Option<PlayoutTemplate> result = PlayoutTemplateSelector.GetPlayoutTemplateFor(
+            Option<PlayoutTemplate> result = AlternateScheduleSelector.GetScheduleForDate(
                 new List<PlayoutTemplate> { template },
                 new DateTimeOffset(2023, 3, 1, 0, 0, 0, Offset));
 
@@ -171,9 +171,9 @@ public static class PlayoutTemplateSelectorTests
         {
             var template = new PlayoutTemplate
             {
-                DaysOfWeek = PlayoutTemplate.AllDaysOfWeek(),
-                DaysOfMonth = PlayoutTemplate.AllDaysOfMonth(),
-                MonthsOfYear = PlayoutTemplate.AllMonthsOfYear(),
+                DaysOfWeek = AlternateScheduleSelector.AllDaysOfWeek(),
+                DaysOfMonth = AlternateScheduleSelector.AllDaysOfMonth(),
+                MonthsOfYear = AlternateScheduleSelector.AllMonthsOfYear(),
                 LimitToDateRange = true,
                 StartMonth = 1,
                 StartDay = 1,
@@ -181,7 +181,7 @@ public static class PlayoutTemplateSelectorTests
                 EndDay = 29
             };
 
-            Option<PlayoutTemplate> result = PlayoutTemplateSelector.GetPlayoutTemplateFor(
+            Option<PlayoutTemplate> result = AlternateScheduleSelector.GetScheduleForDate(
                 new List<PlayoutTemplate> { template },
                 new DateTimeOffset(2023, 2, 28, 0, 0, 0, Offset));
 
@@ -193,9 +193,9 @@ public static class PlayoutTemplateSelectorTests
         {
             var template = new PlayoutTemplate
             {
-                DaysOfWeek = PlayoutTemplate.AllDaysOfWeek(),
-                DaysOfMonth = PlayoutTemplate.AllDaysOfMonth(),
-                MonthsOfYear = PlayoutTemplate.AllMonthsOfYear(),
+                DaysOfWeek = AlternateScheduleSelector.AllDaysOfWeek(),
+                DaysOfMonth = AlternateScheduleSelector.AllDaysOfMonth(),
+                MonthsOfYear = AlternateScheduleSelector.AllMonthsOfYear(),
                 LimitToDateRange = true,
                 StartMonth = 1,
                 StartDay = 1,
@@ -203,7 +203,7 @@ public static class PlayoutTemplateSelectorTests
                 EndDay = 29
             };
 
-            Option<PlayoutTemplate> result = PlayoutTemplateSelector.GetPlayoutTemplateFor(
+            Option<PlayoutTemplate> result = AlternateScheduleSelector.GetScheduleForDate(
                 new List<PlayoutTemplate> { template },
                 new DateTimeOffset(2023, 3, 1, 0, 0, 0, Offset));
 
@@ -215,9 +215,9 @@ public static class PlayoutTemplateSelectorTests
         {
             var template = new PlayoutTemplate
             {
-                DaysOfWeek = PlayoutTemplate.AllDaysOfWeek(),
-                DaysOfMonth = PlayoutTemplate.AllDaysOfMonth(),
-                MonthsOfYear = PlayoutTemplate.AllMonthsOfYear(),
+                DaysOfWeek = AlternateScheduleSelector.AllDaysOfWeek(),
+                DaysOfMonth = AlternateScheduleSelector.AllDaysOfMonth(),
+                MonthsOfYear = AlternateScheduleSelector.AllMonthsOfYear(),
                 LimitToDateRange = true,
                 StartMonth = 6,
                 StartDay = 15,
@@ -225,7 +225,7 @@ public static class PlayoutTemplateSelectorTests
                 EndDay = 1
             };
 
-            Option<PlayoutTemplate> result = PlayoutTemplateSelector.GetPlayoutTemplateFor(
+            Option<PlayoutTemplate> result = AlternateScheduleSelector.GetScheduleForDate(
                 new List<PlayoutTemplate> { template },
                 new DateTimeOffset(2024, 6, 14, 0, 0, 0, Offset));
 
@@ -237,9 +237,9 @@ public static class PlayoutTemplateSelectorTests
         {
             var template = new PlayoutTemplate
             {
-                DaysOfWeek = PlayoutTemplate.AllDaysOfWeek(),
-                DaysOfMonth = PlayoutTemplate.AllDaysOfMonth(),
-                MonthsOfYear = PlayoutTemplate.AllMonthsOfYear(),
+                DaysOfWeek = AlternateScheduleSelector.AllDaysOfWeek(),
+                DaysOfMonth = AlternateScheduleSelector.AllDaysOfMonth(),
+                MonthsOfYear = AlternateScheduleSelector.AllMonthsOfYear(),
                 LimitToDateRange = true,
                 StartMonth = 6,
                 StartDay = 15,
@@ -247,7 +247,7 @@ public static class PlayoutTemplateSelectorTests
                 EndDay = 1
             };
 
-            Option<PlayoutTemplate> result = PlayoutTemplateSelector.GetPlayoutTemplateFor(
+            Option<PlayoutTemplate> result = AlternateScheduleSelector.GetScheduleForDate(
                 new List<PlayoutTemplate> { template },
                 new DateTimeOffset(2024, 6, 15, 0, 0, 0, Offset));
 
@@ -259,9 +259,9 @@ public static class PlayoutTemplateSelectorTests
         {
             var template = new PlayoutTemplate
             {
-                DaysOfWeek = PlayoutTemplate.AllDaysOfWeek(),
-                DaysOfMonth = PlayoutTemplate.AllDaysOfMonth(),
-                MonthsOfYear = PlayoutTemplate.AllMonthsOfYear(),
+                DaysOfWeek = AlternateScheduleSelector.AllDaysOfWeek(),
+                DaysOfMonth = AlternateScheduleSelector.AllDaysOfMonth(),
+                MonthsOfYear = AlternateScheduleSelector.AllMonthsOfYear(),
                 LimitToDateRange = true,
                 StartMonth = 6,
                 StartDay = 15,
@@ -269,7 +269,7 @@ public static class PlayoutTemplateSelectorTests
                 EndDay = 1
             };
 
-            Option<PlayoutTemplate> result = PlayoutTemplateSelector.GetPlayoutTemplateFor(
+            Option<PlayoutTemplate> result = AlternateScheduleSelector.GetScheduleForDate(
                 new List<PlayoutTemplate> { template },
                 new DateTimeOffset(2024, 7, 20, 0, 0, 0, Offset));
 
@@ -281,9 +281,9 @@ public static class PlayoutTemplateSelectorTests
         {
             var template = new PlayoutTemplate
             {
-                DaysOfWeek = PlayoutTemplate.AllDaysOfWeek(),
-                DaysOfMonth = PlayoutTemplate.AllDaysOfMonth(),
-                MonthsOfYear = PlayoutTemplate.AllMonthsOfYear(),
+                DaysOfWeek = AlternateScheduleSelector.AllDaysOfWeek(),
+                DaysOfMonth = AlternateScheduleSelector.AllDaysOfMonth(),
+                MonthsOfYear = AlternateScheduleSelector.AllMonthsOfYear(),
                 LimitToDateRange = true,
                 StartMonth = 6,
                 StartDay = 15,
@@ -291,7 +291,7 @@ public static class PlayoutTemplateSelectorTests
                 EndDay = 1
             };
 
-            Option<PlayoutTemplate> result = PlayoutTemplateSelector.GetPlayoutTemplateFor(
+            Option<PlayoutTemplate> result = AlternateScheduleSelector.GetScheduleForDate(
                 new List<PlayoutTemplate> { template },
                 new DateTimeOffset(2024, 4, 1, 0, 0, 0, Offset));
 
@@ -303,9 +303,9 @@ public static class PlayoutTemplateSelectorTests
         {
             var template = new PlayoutTemplate
             {
-                DaysOfWeek = PlayoutTemplate.AllDaysOfWeek(),
-                DaysOfMonth = PlayoutTemplate.AllDaysOfMonth(),
-                MonthsOfYear = PlayoutTemplate.AllMonthsOfYear(),
+                DaysOfWeek = AlternateScheduleSelector.AllDaysOfWeek(),
+                DaysOfMonth = AlternateScheduleSelector.AllDaysOfMonth(),
+                MonthsOfYear = AlternateScheduleSelector.AllMonthsOfYear(),
                 LimitToDateRange = true,
                 StartMonth = 6,
                 StartDay = 15,
@@ -313,7 +313,7 @@ public static class PlayoutTemplateSelectorTests
                 EndDay = 1
             };
 
-            Option<PlayoutTemplate> result = PlayoutTemplateSelector.GetPlayoutTemplateFor(
+            Option<PlayoutTemplate> result = AlternateScheduleSelector.GetScheduleForDate(
                 new List<PlayoutTemplate> { template },
                 new DateTimeOffset(2024, 4, 2, 0, 0, 0, Offset));
 
@@ -325,9 +325,9 @@ public static class PlayoutTemplateSelectorTests
         {
             var template = new PlayoutTemplate
             {
-                DaysOfWeek = PlayoutTemplate.AllDaysOfWeek(),
-                DaysOfMonth = PlayoutTemplate.AllDaysOfMonth(),
-                MonthsOfYear = PlayoutTemplate.AllMonthsOfYear(),
+                DaysOfWeek = AlternateScheduleSelector.AllDaysOfWeek(),
+                DaysOfMonth = AlternateScheduleSelector.AllDaysOfMonth(),
+                MonthsOfYear = AlternateScheduleSelector.AllMonthsOfYear(),
                 LimitToDateRange = true,
                 StartMonth = 2,
                 StartDay = 29,
@@ -335,7 +335,7 @@ public static class PlayoutTemplateSelectorTests
                 EndDay = 1
             };
 
-            Option<PlayoutTemplate> result = PlayoutTemplateSelector.GetPlayoutTemplateFor(
+            Option<PlayoutTemplate> result = AlternateScheduleSelector.GetScheduleForDate(
                 new List<PlayoutTemplate> { template },
                 new DateTimeOffset(2023, 2, 28, 0, 0, 0, Offset));
 
@@ -347,9 +347,9 @@ public static class PlayoutTemplateSelectorTests
         {
             var template = new PlayoutTemplate
             {
-                DaysOfWeek = PlayoutTemplate.AllDaysOfWeek(),
-                DaysOfMonth = PlayoutTemplate.AllDaysOfMonth(),
-                MonthsOfYear = PlayoutTemplate.AllMonthsOfYear(),
+                DaysOfWeek = AlternateScheduleSelector.AllDaysOfWeek(),
+                DaysOfMonth = AlternateScheduleSelector.AllDaysOfMonth(),
+                MonthsOfYear = AlternateScheduleSelector.AllMonthsOfYear(),
                 LimitToDateRange = true,
                 StartMonth = 2,
                 StartDay = 29,
@@ -357,7 +357,7 @@ public static class PlayoutTemplateSelectorTests
                 EndDay = 1
             };
 
-            Option<PlayoutTemplate> result = PlayoutTemplateSelector.GetPlayoutTemplateFor(
+            Option<PlayoutTemplate> result = AlternateScheduleSelector.GetScheduleForDate(
                 new List<PlayoutTemplate> { template },
                 new DateTimeOffset(2023, 3, 1, 0, 0, 0, Offset));
 
@@ -369,9 +369,9 @@ public static class PlayoutTemplateSelectorTests
         {
             var template = new PlayoutTemplate
             {
-                DaysOfWeek = PlayoutTemplate.AllDaysOfWeek(),
-                DaysOfMonth = PlayoutTemplate.AllDaysOfMonth(),
-                MonthsOfYear = PlayoutTemplate.AllMonthsOfYear(),
+                DaysOfWeek = AlternateScheduleSelector.AllDaysOfWeek(),
+                DaysOfMonth = AlternateScheduleSelector.AllDaysOfMonth(),
+                MonthsOfYear = AlternateScheduleSelector.AllMonthsOfYear(),
                 LimitToDateRange = true,
                 StartMonth = 5,
                 StartDay = 1,
@@ -379,7 +379,7 @@ public static class PlayoutTemplateSelectorTests
                 EndDay = 29
             };
 
-            Option<PlayoutTemplate> result = PlayoutTemplateSelector.GetPlayoutTemplateFor(
+            Option<PlayoutTemplate> result = AlternateScheduleSelector.GetScheduleForDate(
                 new List<PlayoutTemplate> { template },
                 new DateTimeOffset(2023, 2, 28, 0, 0, 0, Offset));
 
@@ -391,9 +391,9 @@ public static class PlayoutTemplateSelectorTests
         {
             var template = new PlayoutTemplate
             {
-                DaysOfWeek = PlayoutTemplate.AllDaysOfWeek(),
-                DaysOfMonth = PlayoutTemplate.AllDaysOfMonth(),
-                MonthsOfYear = PlayoutTemplate.AllMonthsOfYear(),
+                DaysOfWeek = AlternateScheduleSelector.AllDaysOfWeek(),
+                DaysOfMonth = AlternateScheduleSelector.AllDaysOfMonth(),
+                MonthsOfYear = AlternateScheduleSelector.AllMonthsOfYear(),
                 LimitToDateRange = true,
                 StartMonth = 5,
                 StartDay = 1,
@@ -401,7 +401,7 @@ public static class PlayoutTemplateSelectorTests
                 EndDay = 29
             };
 
-            Option<PlayoutTemplate> result = PlayoutTemplateSelector.GetPlayoutTemplateFor(
+            Option<PlayoutTemplate> result = AlternateScheduleSelector.GetScheduleForDate(
                 new List<PlayoutTemplate> { template },
                 new DateTimeOffset(2023, 3, 1, 0, 0, 0, Offset));
 

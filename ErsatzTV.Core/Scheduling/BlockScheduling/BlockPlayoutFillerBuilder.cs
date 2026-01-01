@@ -483,7 +483,7 @@ public class BlockPlayoutFillerBuilder(
     private static Option<Deco> GetDecoFor(PlayoutReferenceData referenceData, DateTimeOffset start)
     {
         Option<PlayoutTemplate> maybeTemplate =
-            PlayoutTemplateSelector.GetPlayoutTemplateFor(referenceData.PlayoutTemplates, start);
+            AlternateScheduleSelector.GetScheduleForDate(referenceData.PlayoutTemplates, start);
         foreach (PlayoutTemplate template in maybeTemplate)
         {
             if (template.DecoTemplate is not null)

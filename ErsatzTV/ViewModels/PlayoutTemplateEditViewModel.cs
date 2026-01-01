@@ -67,8 +67,8 @@ public class PlayoutTemplateEditViewModel
             new DateTime(date.Year, date.Month, date.Day, 0, 0, 0, DateTimeKind.Local));
 
         Option<PlayoutTemplate> result =
-            PlayoutTemplateSelector.GetPlayoutTemplateFor(
-                new[] { template },
+            AlternateScheduleSelector.GetScheduleForDate(
+                [template],
                 new DateTimeOffset(
                     date.Year,
                     date.Month,

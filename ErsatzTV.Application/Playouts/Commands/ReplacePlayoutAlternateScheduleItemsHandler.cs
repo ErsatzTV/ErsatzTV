@@ -62,10 +62,9 @@ public class ReplacePlayoutAlternateScheduleItemsHandler :
 
                     foreach (DateTimeOffset dayToCheck in daysToCheck)
                     {
-                        ProgramSchedule schedule = PlayoutScheduleSelector.GetProgramScheduleFor(
-                            playout.ProgramSchedule,
-                            playout.ProgramScheduleAlternates,
-                            dayToCheck);
+                        ProgramSchedule schedule = AlternateScheduleSelector
+                            .GetScheduleForDate(playout.ProgramScheduleAlternates, dayToCheck)
+                            .Match(s => s.ProgramSchedule, playout.ProgramSchedule);
 
                         existingScheduleMap.Add(dayToCheck, schedule);
                     }
@@ -136,10 +135,9 @@ public class ReplacePlayoutAlternateScheduleItemsHandler :
                 {
                     foreach (DateTimeOffset dayToCheck in daysToCheck)
                     {
-                        ProgramSchedule schedule = PlayoutScheduleSelector.GetProgramScheduleFor(
-                            playout.ProgramSchedule,
-                            playout.ProgramScheduleAlternates,
-                            dayToCheck);
+                        ProgramSchedule schedule = AlternateScheduleSelector
+                            .GetScheduleForDate(playout.ProgramScheduleAlternates, dayToCheck)
+                            .Match(s => s.ProgramSchedule, playout.ProgramSchedule);
 
                         if (existingScheduleMap.TryGetValue(dayToCheck, out ProgramSchedule existingValue) &&
                             existingValue.Id != schedule.Id)

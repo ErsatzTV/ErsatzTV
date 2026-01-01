@@ -1,6 +1,7 @@
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Scheduling;
 using ErsatzTV.Core.FFmpeg;
+using ErsatzTV.Core.Scheduling;
 using Microsoft.Extensions.Logging;
 using NUnit.Framework;
 using Serilog;
@@ -51,9 +52,9 @@ public class DecoSelectorTests
             Id = 1,
             Template = new Template { Id = 1, Name = "Test Template" },
             DecoTemplate = decoTemplate,
-            DaysOfWeek = PlayoutTemplate.AllDaysOfWeek(),
-            DaysOfMonth = PlayoutTemplate.AllDaysOfMonth(),
-            MonthsOfYear = PlayoutTemplate.AllMonthsOfYear()
+            DaysOfWeek = AlternateScheduleSelector.AllDaysOfWeek(),
+            DaysOfMonth = AlternateScheduleSelector.AllDaysOfMonth(),
+            MonthsOfYear = AlternateScheduleSelector.AllMonthsOfYear()
         };
 
         var playout = new Playout
@@ -105,9 +106,9 @@ public class DecoSelectorTests
             Id = 1,
             Template = new Template { Id = 1, Name = "Test Template" },
             DecoTemplate = decoTemplate,
-            DaysOfWeek = PlayoutTemplate.AllDaysOfWeek(),
-            DaysOfMonth = PlayoutTemplate.AllDaysOfMonth(),
-            MonthsOfYear = PlayoutTemplate.AllMonthsOfYear()
+            DaysOfWeek = AlternateScheduleSelector.AllDaysOfWeek(),
+            DaysOfMonth = AlternateScheduleSelector.AllDaysOfMonth(),
+            MonthsOfYear = AlternateScheduleSelector.AllMonthsOfYear()
         };
 
         var playout = new Playout

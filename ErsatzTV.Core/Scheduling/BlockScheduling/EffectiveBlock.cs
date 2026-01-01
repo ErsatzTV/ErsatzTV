@@ -16,7 +16,7 @@ internal record EffectiveBlock(Block Block, BlockKey BlockKey, DateTimeOffset St
         DateTimeOffset current = new DateTimeOffset(start.Year, start.Month, start.Day, 0, 0, 0, start.Offset);
         while (current < finish)
         {
-            Option<PlayoutTemplate> maybeTemplate = PlayoutTemplateSelector.GetPlayoutTemplateFor(templates, current);
+            Option<PlayoutTemplate> maybeTemplate = AlternateScheduleSelector.GetScheduleForDate(templates, current);
             foreach (PlayoutTemplate playoutTemplate in maybeTemplate)
             {
                 // logger.LogDebug(
