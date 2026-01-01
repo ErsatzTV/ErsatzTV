@@ -220,7 +220,8 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
         TLibrary library,
         TConnectionParameters connectionParameters,
         TShow show,
-        TSeason season);
+        TSeason season,
+        bool isNewSeason);
 
     protected abstract Task<Option<ShowMetadata>> GetFullMetadata(
         TConnectionParameters connectionParameters,
@@ -321,7 +322,7 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
                     showIsUpdated,
                     result.Item,
                     connectionParameters,
-                    GetEpisodeLibraryItems(library, connectionParameters, show, result.Item),
+                    GetEpisodeLibraryItems(library, connectionParameters, show, result.Item, result.IsAdded),
                     deepScan,
                     cancellationToken);
 

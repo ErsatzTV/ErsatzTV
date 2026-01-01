@@ -88,6 +88,7 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Option<JellyfinShow> maybeExisting = await dbContext.JellyfinShows
+            .TagWithCallSite()
             .Include(m => m.LibraryPath)
             .ThenInclude(lp => lp.Library)
             .Include(m => m.ShowMetadata)
@@ -128,6 +129,7 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Option<JellyfinSeason> maybeExisting = await dbContext.JellyfinSeasons
+            .TagWithCallSite()
             .Include(m => m.LibraryPath)
             .Include(m => m.SeasonMetadata)
             .ThenInclude(mm => mm.Artwork)
@@ -158,6 +160,7 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Option<JellyfinEpisode> maybeExisting = await dbContext.JellyfinEpisodes
+            .TagWithCallSite()
             .Include(m => m.LibraryPath)
             .ThenInclude(lp => lp.Library)
             .Include(m => m.MediaVersions)
@@ -511,6 +514,8 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         Option<JellyfinShow> maybeShow = await dbContext.JellyfinShows
+            .AsNoTracking()
+            .TagWithCallSite()
             .Where(s => s.Id == showId)
             .Where(s => s.LibraryPath.LibraryId == libraryId)
             .Include(s => s.ShowMetadata)

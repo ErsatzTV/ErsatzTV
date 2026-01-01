@@ -10,10 +10,17 @@ namespace ErsatzTV.Infrastructure.Data;
 public class TvContext : DbContext
 {
     private readonly ILoggerFactory _loggerFactory;
+    private readonly SlowQueryInterceptor _slowQueryInterceptor;
 
-    public TvContext(DbContextOptions<TvContext> options, ILoggerFactory loggerFactory)
-        : base(options) =>
+    public TvContext(
+        DbContextOptions<TvContext> options,
+        ILoggerFactory loggerFactory,
+        SlowQueryInterceptor slowQueryInterceptor)
+        : base(options)
+    {
         _loggerFactory = loggerFactory;
+        _slowQueryInterceptor = slowQueryInterceptor;
+    }
 
     public static string LastInsertedRowId { get; set; } = "last_insert_rowid()";
     public static string CaseInsensitiveCollation { get; set; } = "NOCASE";
@@ -119,8 +126,11 @@ public class TvContext : DbContext
     public DbSet<Subtitle> Subtitles { get; set; }
     public DbSet<GraphicsElement> GraphicsElements { get; set; }
 
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) =>
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
         optionsBuilder.UseLoggerFactory(_loggerFactory);
+        optionsBuilder.AddInterceptors(_slowQueryInterceptor);
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

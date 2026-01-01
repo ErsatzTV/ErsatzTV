@@ -51,6 +51,7 @@ using ErsatzTV.FFmpeg.Pipeline;
 using ErsatzTV.FFmpeg.Runtime;
 using ErsatzTV.Filters;
 using ErsatzTV.Formatters;
+using ErsatzTV.Infrastructure;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Data.Repositories;
 using ErsatzTV.Infrastructure.Database;
@@ -408,12 +409,6 @@ public class Startup
         var sqliteConnectionString = $"Data Source={FileSystemLayout.DatabasePath};foreign keys=true;";
         string mySqlConnectionString = Configuration.GetValue<string>("MySql:ConnectionString");
 
-        SlowQueryInterceptor interceptor = null;
-        if (SystemEnvironment.SlowDbMs.HasValue)
-        {
-            interceptor = new SlowQueryInterceptor(SystemEnvironment.SlowDbMs.Value);
-        }
-
         services.AddDbContext<TvContext>(
             options =>
             {
@@ -444,11 +439,6 @@ public class Startup
                         }
                     );
                 }
-
-                if (interceptor != null)
-                {
-                    options.AddInterceptors(interceptor);
-                }
             },
             ServiceLifetime.Scoped,
             ServiceLifetime.Singleton);
@@ -477,11 +467,6 @@ public class Startup
                         o.MigrationsAssembly("ErsatzTV.Infrastructure.MySql");
                     }
                 );
-            }
-
-            if (interceptor != null)
-            {
-                options.AddInterceptors(interceptor);
             }
         });
 
@@ -870,6 +855,7 @@ public class Startup
         // services.AddTransient(typeof(IRequestHandler<,>), typeof(GetRecentLogEntriesHandler<>));
 
         services.AddTransient<SlowApiHandler>();
+        services.AddTransient<SlowQueryInterceptor>();
 
         // run-once/blocking startup services
         services.AddHostedService<EndpointValidatorService>();

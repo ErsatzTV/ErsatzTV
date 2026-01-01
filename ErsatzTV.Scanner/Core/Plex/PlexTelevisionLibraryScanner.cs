@@ -252,7 +252,8 @@ public partial class PlexTelevisionLibraryScanner :
         PlexLibrary library,
         PlexConnectionParameters connectionParameters,
         PlexShow show,
-        PlexSeason season) =>
+        PlexSeason season,
+        bool isNewSeason) =>
         _plexServerApiClient.GetSeasonEpisodes(
             library,
             season,

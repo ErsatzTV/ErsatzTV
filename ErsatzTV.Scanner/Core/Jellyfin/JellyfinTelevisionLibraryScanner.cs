@@ -23,13 +23,16 @@ public class JellyfinTelevisionLibraryScanner : MediaServerTelevisionLibraryScan
     private readonly ILogger<JellyfinTelevisionLibraryScanner> _logger;
     private readonly IMediaSourceRepository _mediaSourceRepository;
     private readonly IJellyfinPathReplacementService _pathReplacementService;
-    private readonly IJellyfinTelevisionRepository _televisionRepository;
+    private readonly IMetadataRepository _metadataRepository;
+    private readonly IJellyfinTelevisionRepository _jellyfinTelevisionRepository;
+    private readonly ITelevisionRepository _televisionRepository;
 
     public JellyfinTelevisionLibraryScanner(
         IScannerProxy scannerProxy,
         IJellyfinApiClient jellyfinApiClient,
         IMediaSourceRepository mediaSourceRepository,
-        IJellyfinTelevisionRepository televisionRepository,
+        IJellyfinTelevisionRepository jellyfinTelevisionRepository,
+        ITelevisionRepository televisionRepository,
         IJellyfinPathReplacementService pathReplacementService,
         IFileSystem fileSystem,
         ILocalChaptersProvider localChaptersProvider,
@@ -44,8 +47,10 @@ public class JellyfinTelevisionLibraryScanner : MediaServerTelevisionLibraryScan
     {
         _jellyfinApiClient = jellyfinApiClient;
         _mediaSourceRepository = mediaSourceRepository;
+        _jellyfinTelevisionRepository = jellyfinTelevisionRepository;
         _televisionRepository = televisionRepository;
         _pathReplacementService = pathReplacementService;
+        _metadataRepository = metadataRepository;
         _logger = logger;
     }
 
@@ -70,7 +75,7 @@ public class JellyfinTelevisionLibraryScanner : MediaServerTelevisionLibraryScan
         }
 
         return await ScanLibrary(
-            _televisionRepository,
+            _jellyfinTelevisionRepository,
             new JellyfinConnectionParameters(address, apiKey, library.MediaSourceId),
             library,
             GetLocalPath,
@@ -116,7 +121,7 @@ public class JellyfinTelevisionLibraryScanner : MediaServerTelevisionLibraryScan
                         show.ItemId);
 
                     return await ScanSingleShowInternal(
-                        _televisionRepository,
+                        _jellyfinTelevisionRepository,
                         new JellyfinConnectionParameters(address, apiKey, library.MediaSourceId),
                         library,
                         show,
@@ -135,7 +140,10 @@ public class JellyfinTelevisionLibraryScanner : MediaServerTelevisionLibraryScan
     protected override IAsyncEnumerable<Tuple<JellyfinShow, int>> GetShowLibraryItems(
         JellyfinConnectionParameters connectionParameters,
         JellyfinLibrary library) =>
-        _jellyfinApiClient.GetShowLibraryItems(connectionParameters.Address, connectionParameters.ApiKey, library);
+        _jellyfinApiClient.GetShowLibraryItemsWithoutPeople(
+            connectionParameters.Address,
+            connectionParameters.ApiKey,
+            library);
 
     protected override string MediaServerItemId(JellyfinShow show) => show.ItemId;
     protected override string MediaServerItemId(JellyfinSeason season) => season.ItemId;
@@ -159,20 +167,56 @@ public class JellyfinTelevisionLibraryScanner : MediaServerTelevisionLibraryScan
         JellyfinLibrary library,
         JellyfinConnectionParameters connectionParameters,
         JellyfinShow show,
-        JellyfinSeason season) =>
-        _jellyfinApiClient.GetEpisodeLibraryItems(
+        JellyfinSeason season,
+        bool isNewSeason)
+    {
+        if (isNewSeason)
+        {
+            return _jellyfinApiClient.GetEpisodeLibraryItems(
+                connectionParameters.Address,
+                connectionParameters.ApiKey,
+                library,
+                season.ItemId);
+        }
+
+        return _jellyfinApiClient.GetEpisodeLibraryItemsWithoutPeople(
             connectionParameters.Address,
             connectionParameters.ApiKey,
             library,
             season.ItemId);
+    }
 
-    protected override Task<Option<ShowMetadata>> GetFullMetadata(
+    protected override async Task<Option<ShowMetadata>> GetFullMetadata(
         JellyfinConnectionParameters connectionParameters,
         JellyfinLibrary library,
         MediaItemScanResult<JellyfinShow> result,
         JellyfinShow incoming,
-        bool deepScan) =>
-        Task.FromResult(Option<ShowMetadata>.None);
+        bool deepScan)
+    {
+        if (result.IsAdded || result.Item.Etag != incoming.Etag || deepScan)
+        {
+            Either<BaseError, Option<JellyfinShow>> maybeShowResult = await _jellyfinApiClient.GetSingleShow(
+                connectionParameters.Address,
+                connectionParameters.ApiKey,
+                library,
+                incoming.ItemId);
+
+            foreach (BaseError error in maybeShowResult.LeftToSeq())
+            {
+                _logger.LogWarning("Failed to get show metadata from Jellyfin: {Error}", error.ToString());
+            }
+
+            foreach (Option<JellyfinShow> maybeShow in maybeShowResult.RightToSeq())
+            {
+                foreach (JellyfinShow show in maybeShow)
+                {
+                    return show.ShowMetadata.HeadOrNone();
+                }
+            }
+        }
+
+        return None;
+    }
 
     protected override Task<Option<SeasonMetadata>> GetFullMetadata(
         JellyfinConnectionParameters connectionParameters,
@@ -182,13 +226,39 @@ public class JellyfinTelevisionLibraryScanner : MediaServerTelevisionLibraryScan
         bool deepScan) =>
         Task.FromResult(Option<SeasonMetadata>.None);
 
-    protected override Task<Option<EpisodeMetadata>> GetFullMetadata(
+    protected override async Task<Option<EpisodeMetadata>> GetFullMetadata(
         JellyfinConnectionParameters connectionParameters,
         JellyfinLibrary library,
         MediaItemScanResult<JellyfinEpisode> result,
         JellyfinEpisode incoming,
-        bool deepScan) =>
-        Task.FromResult(Option<EpisodeMetadata>.None);
+        bool deepScan)
+    {
+        if (result.Item.Season is JellyfinSeason jellyfinSeason &&
+            (result.IsAdded || result.Item.Etag != incoming.Etag || deepScan))
+        {
+            Either<BaseError, Option<JellyfinEpisode>> maybeEpisodeResult = await _jellyfinApiClient.GetSingleEpisode(
+                connectionParameters.Address,
+                connectionParameters.ApiKey,
+                library,
+                jellyfinSeason.ItemId,
+                incoming.ItemId);
+
+            foreach (BaseError error in maybeEpisodeResult.LeftToSeq())
+            {
+                _logger.LogWarning("Failed to get episode metadata from Jellyfin: {Error}", error.ToString());
+            }
+
+            foreach (Option<JellyfinEpisode> maybeEpisode in maybeEpisodeResult.RightToSeq())
+            {
+                foreach (JellyfinEpisode episode in maybeEpisode)
+                {
+                    return episode.EpisodeMetadata.HeadOrNone();
+                }
+            }
+        }
+
+        return None;
+    }
 
     protected override Task<Option<Tuple<EpisodeMetadata, MediaVersion>>> GetFullMetadataAndStatistics(
         JellyfinConnectionParameters connectionParameters,
@@ -225,21 +295,131 @@ public class JellyfinTelevisionLibraryScanner : MediaServerTelevisionLibraryScan
         return maybeVersion.ToOption();
     }
 
-    protected override Task<Either<BaseError, MediaItemScanResult<JellyfinShow>>> UpdateMetadata(
+    protected override async Task<Either<BaseError, MediaItemScanResult<JellyfinShow>>> UpdateMetadata(
         MediaItemScanResult<JellyfinShow> result,
-        ShowMetadata fullMetadata) =>
-        Task.FromResult<Either<BaseError, MediaItemScanResult<JellyfinShow>>>(result);
+        ShowMetadata fullMetadata)
+    {
+        JellyfinShow existing = result.Item;
+        ShowMetadata existingMetadata = existing.ShowMetadata.Head();
+
+        foreach (Actor actor in existingMetadata.Actors
+                     .Filter(a =>
+                         fullMetadata.Actors.All(a2 => a2.Name != a.Name || a.Artwork == null && a2.Artwork != null))
+                     .ToList())
+        {
+            existingMetadata.Actors.Remove(actor);
+            if (await _metadataRepository.RemoveActor(actor))
+            {
+                result.IsUpdated = true;
+            }
+        }
+
+        foreach (Actor actor in fullMetadata.Actors
+                     .Filter(a => existingMetadata.Actors.All(a2 => a2.Name != a.Name))
+                     .ToList())
+        {
+            existingMetadata.Actors.Add(actor);
+            if (await _televisionRepository.AddActor(existingMetadata, actor))
+            {
+                result.IsUpdated = true;
+            }
+        }
+
+        if (result.IsUpdated)
+        {
+            await _metadataRepository.MarkAsUpdated(existingMetadata, fullMetadata.DateUpdated);
+        }
+
+        return result;
+    }
 
     protected override Task<Either<BaseError, MediaItemScanResult<JellyfinSeason>>> UpdateMetadata(
         MediaItemScanResult<JellyfinSeason> result,
         SeasonMetadata fullMetadata) =>
         Task.FromResult<Either<BaseError, MediaItemScanResult<JellyfinSeason>>>(result);
 
-    protected override Task<Either<BaseError, MediaItemScanResult<JellyfinEpisode>>> UpdateMetadata(
+    protected override async Task<Either<BaseError, MediaItemScanResult<JellyfinEpisode>>> UpdateMetadata(
         MediaItemScanResult<JellyfinEpisode> result,
         EpisodeMetadata fullMetadata,
-        CancellationToken cancellationToken) =>
-        Task.FromResult<Either<BaseError, MediaItemScanResult<JellyfinEpisode>>>(result);
+        CancellationToken cancellationToken)
+    {
+        JellyfinEpisode existing = result.Item;
+        EpisodeMetadata existingMetadata = existing.EpisodeMetadata.Head();
+
+        foreach (Actor actor in existingMetadata.Actors
+                     .Filter(a =>
+                         fullMetadata.Actors.All(a2 => a2.Name != a.Name || a.Artwork == null && a2.Artwork != null))
+                     .ToList())
+        {
+            existingMetadata.Actors.Remove(actor);
+            if (await _metadataRepository.RemoveActor(actor))
+            {
+                result.IsUpdated = true;
+            }
+        }
+
+        foreach (Actor actor in fullMetadata.Actors
+                     .Filter(a => existingMetadata.Actors.All(a2 => a2.Name != a.Name))
+                     .ToList())
+        {
+            existingMetadata.Actors.Add(actor);
+            if (await _televisionRepository.AddActor(existingMetadata, actor))
+            {
+                result.IsUpdated = true;
+            }
+        }
+
+        foreach (Director director in existingMetadata.Directors
+                     .Filter(g => fullMetadata.Directors.All(g2 => g2.Name != g.Name))
+                     .ToList())
+        {
+            existingMetadata.Directors.Remove(director);
+            if (await _metadataRepository.RemoveDirector(director))
+            {
+                result.IsUpdated = true;
+            }
+        }
+
+        foreach (Director director in fullMetadata.Directors
+                     .Filter(g => existingMetadata.Directors.All(g2 => g2.Name != g.Name))
+                     .ToList())
+        {
+            existingMetadata.Directors.Add(director);
+            if (await _televisionRepository.AddDirector(existingMetadata, director))
+            {
+                result.IsUpdated = true;
+            }
+        }
+
+        foreach (Writer writer in existingMetadata.Writers
+                     .Filter(g => fullMetadata.Writers.All(g2 => g2.Name != g.Name))
+                     .ToList())
+        {
+            existingMetadata.Writers.Remove(writer);
+            if (await _metadataRepository.RemoveWriter(writer))
+            {
+                result.IsUpdated = true;
+            }
+        }
+
+        foreach (Writer writer in fullMetadata.Writers
+                     .Filter(g => existingMetadata.Writers.All(g2 => g2.Name != g.Name))
+                     .ToList())
+        {
+            existingMetadata.Writers.Add(writer);
+            if (await _televisionRepository.AddWriter(existingMetadata, writer))
+            {
+                result.IsUpdated = true;
+            }
+        }
+
+        if (result.IsUpdated)
+        {
+            await _metadataRepository.MarkAsUpdated(existingMetadata, fullMetadata.DateUpdated);
+        }
+
+        return result;
+    }
 
     private async Task<Either<BaseError, Unit>> ScanSingleShowInternal(
         IJellyfinTelevisionRepository televisionRepository,
