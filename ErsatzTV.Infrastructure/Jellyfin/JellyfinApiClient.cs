@@ -81,6 +81,7 @@ public class JellyfinApiClient : IJellyfinApiClient
         string apiKey,
         JellyfinLibrary library) =>
         GetPagedLibraryItems(
+            "JF Movies",
             address,
             library,
             library.MediaSourceId,
@@ -97,6 +98,7 @@ public class JellyfinApiClient : IJellyfinApiClient
         string apiKey,
         JellyfinLibrary library) =>
         GetPagedLibraryItems(
+            "JF Shows",
             address,
             library,
             library.MediaSourceId,
@@ -114,6 +116,7 @@ public class JellyfinApiClient : IJellyfinApiClient
         JellyfinLibrary library,
         string showId) =>
         GetPagedLibraryItems(
+            "JF Seasons",
             address,
             library,
             library.MediaSourceId,
@@ -131,6 +134,7 @@ public class JellyfinApiClient : IJellyfinApiClient
         JellyfinLibrary library,
         string seasonId) =>
         GetPagedLibraryItems(
+            "JF Episodes*",
             address,
             library,
             library.MediaSourceId,
@@ -148,6 +152,7 @@ public class JellyfinApiClient : IJellyfinApiClient
         JellyfinLibrary library,
         string seasonId) =>
         GetPagedLibraryItems(
+            "JF Episodes",
             address,
             library,
             library.MediaSourceId,
@@ -169,6 +174,7 @@ public class JellyfinApiClient : IJellyfinApiClient
         if (_memoryCache.TryGetValue("jellyfin_collections_library_item_id", out string itemId))
         {
             return GetPagedLibraryItems(
+                "JF Collections",
                 address,
                 None,
                 mediaSourceId,
@@ -190,6 +196,7 @@ public class JellyfinApiClient : IJellyfinApiClient
         int mediaSourceId,
         string collectionId) =>
         GetPagedLibraryItems(
+            "JF Collection Items",
             address,
             None,
             mediaSourceId,
@@ -209,10 +216,13 @@ public class JellyfinApiClient : IJellyfinApiClient
     {
         try
         {
-            IJellyfinApi service = ServiceForAddress(address);
-            JellyfinPlaybackInfoResponse playbackInfo = await service.GetPlaybackInfo(apiKey, itemId);
-            Option<MediaVersion> maybeVersion = ProjectToMediaVersion(playbackInfo);
-            return maybeVersion.ToEither(() => BaseError.New("Unable to locate Jellyfin statistics"));
+            using (ScanProfiler.Measure("JF Playback Info"))
+            {
+                IJellyfinApi service = ServiceForAddress(address);
+                JellyfinPlaybackInfoResponse playbackInfo = await service.GetPlaybackInfo(apiKey, itemId);
+                Option<MediaVersion> maybeVersion = ProjectToMediaVersion(playbackInfo);
+                return maybeVersion.ToEither(() => BaseError.New("Unable to locate Jellyfin statistics"));
+            }
         }
         catch (Exception ex)
         {
@@ -229,21 +239,24 @@ public class JellyfinApiClient : IJellyfinApiClient
     {
         try
         {
-            IJellyfinApi service = ServiceForAddress(address);
-            JellyfinLibraryItemsResponse itemsResponse = await service.GetShowLibraryItems(
-                apiKey,
-                parentId: library.ItemId,
-                recursive: false,
-                startIndex: 0,
-                limit: 1,
-                ids: showId);
-
-            foreach (JellyfinLibraryItemResponse item in itemsResponse.Items)
+            using (ScanProfiler.Measure("JF Single Show"))
             {
-                return ProjectToShow(item);
-            }
+                IJellyfinApi service = ServiceForAddress(address);
+                JellyfinLibraryItemsResponse itemsResponse = await service.GetShowLibraryItems(
+                    apiKey,
+                    parentId: library.ItemId,
+                    recursive: false,
+                    startIndex: 0,
+                    limit: 1,
+                    ids: showId);
 
-            return BaseError.New($"Unable to locate show with id {showId}");
+                foreach (JellyfinLibraryItemResponse item in itemsResponse.Items)
+                {
+                    return ProjectToShow(item);
+                }
+
+                return BaseError.New($"Unable to locate show with id {showId}");
+            }
         }
         catch (Exception ex)
         {
@@ -310,21 +323,24 @@ public class JellyfinApiClient : IJellyfinApiClient
     {
         try
         {
-            IJellyfinApi service = ServiceForAddress(address);
-            JellyfinLibraryItemsResponse itemsResponse = await service.GetEpisodeLibraryItems(
-                apiKey,
-                parentId: seasonId,
-                recursive: false,
-                startIndex: 0,
-                limit: 1,
-                ids: episodeId);
-
-            foreach (JellyfinLibraryItemResponse item in itemsResponse.Items)
+            using (ScanProfiler.Measure("JF Single Episode"))
             {
-                return ProjectToEpisode(library, item);
-            }
+                IJellyfinApi service = ServiceForAddress(address);
+                JellyfinLibraryItemsResponse itemsResponse = await service.GetEpisodeLibraryItems(
+                    apiKey,
+                    parentId: seasonId,
+                    recursive: false,
+                    startIndex: 0,
+                    limit: 1,
+                    ids: episodeId);
 
-            return BaseError.New($"Unable to locate episode with id {episodeId}");
+                foreach (JellyfinLibraryItemResponse item in itemsResponse.Items)
+                {
+                    return ProjectToEpisode(library, item);
+                }
+
+                return BaseError.New($"Unable to locate episode with id {episodeId}");
+            }
         }
         catch (Exception ex)
         {
@@ -334,6 +350,7 @@ public class JellyfinApiClient : IJellyfinApiClient
     }
 
     private async IAsyncEnumerable<Tuple<TItem, int>> GetPagedLibraryItems<TItem>(
+        string pageDescription,
         string address,
         Option<JellyfinLibrary> maybeLibrary,
         int mediaSourceId,
@@ -348,11 +365,16 @@ public class JellyfinApiClient : IJellyfinApiClient
         {
             int skip = i * SystemEnvironment.JellyfinPageSize;
 
-            JellyfinLibraryItemsResponse result = await getItems(
-                service,
-                parentId,
-                skip,
-                SystemEnvironment.JellyfinPageSize);
+            JellyfinLibraryItemsResponse result;
+
+            using (ScanProfiler.Measure(pageDescription))
+            {
+                result = await getItems(
+                    service,
+                    parentId,
+                    skip,
+                    SystemEnvironment.JellyfinPageSize);
+            }
 
             // update page count
             pages = Math.Min(pages, (result.TotalRecordCount - 1) / SystemEnvironment.JellyfinPageSize + 1);
