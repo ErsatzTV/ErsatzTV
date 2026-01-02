@@ -464,7 +464,7 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
                             incoming,
                             deepScan,
                             None))
-                        .BindT(existing => UpdateSubtitles(existing, cancellationToken))
+                        .BindT(existing => UpdateSubtitles(existing, incoming, deepScan, cancellationToken))
                         .BindT(existing => UpdateChapters(existing, cancellationToken));
                 }
 
@@ -831,29 +831,37 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
 
     private async Task<Either<BaseError, MediaItemScanResult<TEpisode>>> UpdateSubtitles(
         MediaItemScanResult<TEpisode> existing,
+        TEpisode incoming,
+        bool deepScan,
         CancellationToken cancellationToken)
     {
         try
         {
-            using (ScanProfiler.Measure("Update Episode Subtitles"))
+            if (deepScan || existing.IsAdded || MediaServerEtag(existing.Item) != MediaServerEtag(incoming))
             {
-                MediaVersion version = existing.Item.GetHeadVersion();
-                Option<EpisodeMetadata> maybeMetadata = existing.Item.EpisodeMetadata.HeadOrNone();
-                foreach (EpisodeMetadata metadata in maybeMetadata)
+                using (ScanProfiler.Measure("Update Episode Subtitles"))
                 {
-                    List<Subtitle> subtitles = version.Streams
-                        .Filter(s => s.MediaStreamKind is MediaStreamKind.Subtitle or MediaStreamKind.ExternalSubtitle)
-                        .Map(Subtitle.FromMediaStream)
-                        .ToList();
-
-                    if (await _metadataRepository.UpdateSubtitles(metadata, subtitles, cancellationToken))
+                    MediaVersion version = existing.Item.GetHeadVersion();
+                    Option<EpisodeMetadata> maybeMetadata = existing.Item.EpisodeMetadata.HeadOrNone();
+                    foreach (EpisodeMetadata metadata in maybeMetadata)
                     {
-                        return existing;
-                    }
-                }
+                        List<Subtitle> subtitles = version.Streams
+                            .Filter(s =>
+                                s.MediaStreamKind is MediaStreamKind.Subtitle or MediaStreamKind.ExternalSubtitle)
+                            .Map(Subtitle.FromMediaStream)
+                            .ToList();
 
-                return BaseError.New("Failed to update media server subtitles");
+                        if (await _metadataRepository.UpdateSubtitles(metadata, subtitles, cancellationToken))
+                        {
+                            return existing;
+                        }
+                    }
+
+                    return BaseError.New("Failed to update media server subtitles");
+                }
             }
+
+            return existing;
         }
         catch (Exception ex)
         {
