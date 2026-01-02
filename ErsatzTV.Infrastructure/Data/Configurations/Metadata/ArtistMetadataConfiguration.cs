@@ -10,39 +10,41 @@ public class ArtistMetadataConfiguration : IEntityTypeConfiguration<ArtistMetada
     {
         builder.ToTable("ArtistMetadata");
 
-        builder.HasMany(sm => sm.Artwork)
+        builder.HasIndex(am => am.Title);
+
+        builder.HasMany(am => am.Artwork)
             .WithOne()
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasMany(sm => sm.Genres)
+        builder.HasMany(am => am.Genres)
             .WithOne()
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasMany(sm => sm.Tags)
+        builder.HasMany(am => am.Tags)
             .WithOne()
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasMany(sm => sm.Studios)
+        builder.HasMany(am => am.Studios)
             .WithOne()
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasMany(sm => sm.Actors)
+        builder.HasMany(am => am.Actors)
             .WithOne()
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasMany(mm => mm.Guids)
+        builder.HasMany(am => am.Guids)
             .WithOne()
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasMany(mm => mm.Subtitles)
+        builder.HasMany(am => am.Subtitles)
             .WithOne()
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasMany(sm => sm.Styles)
+        builder.HasMany(am => am.Styles)
             .WithOne()
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasMany(sm => sm.Moods)
+        builder.HasMany(am => am.Moods)
             .WithOne()
             .OnDelete(DeleteBehavior.Cascade);
     }

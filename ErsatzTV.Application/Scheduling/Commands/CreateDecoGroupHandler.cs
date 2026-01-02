@@ -34,12 +34,12 @@ public class CreateDecoGroupHandler(IDbContextFactory<TvContext> dbContextFactor
         Validation<BaseError, string> result1 = createDecoGroup.NotEmpty(c => c.Name)
             .Bind(_ => createDecoGroup.NotLongerThan(50)(c => c.Name));
 
-        int duplicateNameCount = await dbContext.DecoGroups
-            .CountAsync(ps => ps.Name == createDecoGroup.Name);
+        bool duplicateName = await dbContext.DecoGroups
+            .AnyAsync(ps => ps.Name == createDecoGroup.Name);
 
-        var result2 = Optional(duplicateNameCount)
-            .Where(count => count == 0)
-            .ToValidation<BaseError>("Deco group name must be unique");
+        Validation<BaseError, Unit> result2 = duplicateName
+            ? Fail<BaseError, Unit>("Deco group name must be unique")
+            : Success<BaseError, Unit>(Unit.Default);
 
         return (result1, result2).Apply((_, _) => createDecoGroup.Name);
     }

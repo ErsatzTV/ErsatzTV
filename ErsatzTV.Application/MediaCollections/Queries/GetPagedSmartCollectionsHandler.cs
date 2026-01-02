@@ -19,13 +19,11 @@ public class GetPagedSmartCollectionsHandler(IDbContextFactory<TvContext> dbCont
 
         if (!string.IsNullOrWhiteSpace(request.Query))
         {
-            query = query.Where(s => EF.Functions.Like(
-                EF.Functions.Collate(s.Name, TvContext.CaseInsensitiveCollation),
-                $"%{request.Query}%"));
+            query = query.Where(sc => EF.Functions.Like(sc.Name, $"%{request.Query}%"));
         }
 
         List<SmartCollectionViewModel> page = await query
-            .OrderBy(s => EF.Functions.Collate(s.Name, TvContext.CaseInsensitiveCollation))
+            .OrderBy(s => s.Name)
             .Skip(request.PageNum * request.PageSize)
             .Take(request.PageSize)
             .ToListAsync(cancellationToken)

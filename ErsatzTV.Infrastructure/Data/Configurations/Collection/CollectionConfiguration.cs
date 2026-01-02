@@ -10,6 +10,13 @@ public class CollectionConfiguration : IEntityTypeConfiguration<Collection>
     {
         builder.ToTable("Collection");
 
+        builder.Property(c => c.Name)
+            .HasMaxLength(50)
+            .HasColumnType("varchar(50)");
+
+        builder.HasIndex(c => c.Name)
+            .IsUnique();
+
         builder.HasMany(c => c.MediaItems)
             .WithMany(m => m.Collections)
             .UsingEntity<CollectionItem>(

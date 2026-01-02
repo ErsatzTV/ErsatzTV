@@ -10,6 +10,10 @@ public class BlockConfiguration : IEntityTypeConfiguration<Block>
     {
         builder.ToTable("Block");
 
+        builder.Property(b => b.Name)
+            .HasMaxLength(50)
+            .HasColumnType("varchar(50)");
+
         builder.HasIndex(b => new { b.BlockGroupId, b.Name })
             .IsUnique();
 

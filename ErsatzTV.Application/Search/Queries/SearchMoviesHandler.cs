@@ -14,11 +14,9 @@ public class SearchMoviesHandler(IDbContextFactory<TvContext> dbContextFactory)
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await dbContext.MovieMetadata
             .AsNoTracking()
-            .Where(s => EF.Functions.Like(
-                EF.Functions.Collate(s.Title + " " + s.Year, TvContext.CaseInsensitiveCollation),
-                $"%{request.Query}%"))
-            .OrderBy(a => EF.Functions.Collate(a.Title, TvContext.CaseInsensitiveCollation))
-            .ThenBy(s => s.Year)
+            .Where(m => EF.Functions.Like(m.Title + " " + m.Year, $"%{request.Query}%"))
+            .OrderBy(m => m.Title)
+            .ThenBy(m => m.Year)
             .Take(10)
             .ToListAsync(cancellationToken)
             .Map(list => list.Map(ToNamedMediaItem).ToList());

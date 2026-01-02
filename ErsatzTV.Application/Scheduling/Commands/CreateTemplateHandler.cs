@@ -41,11 +41,10 @@ public class CreateTemplateHandler(IDbContextFactory<TvContext> dbContextFactory
             return BaseError.New($"Template name \"{request.Name}\" is invalid");
         }
 
-        Option<Template> maybeExisting = await dbContext.Templates
-            .FirstOrDefaultAsync(r => r.TemplateGroupId == request.TemplateGroupId && r.Name == request.Name)
-            .Map(Optional);
+        bool duplicateName = await dbContext.Templates
+            .AnyAsync(r => r.TemplateGroupId == request.TemplateGroupId && r.Name == request.Name);
 
-        return maybeExisting.IsSome
+        return duplicateName
             ? BaseError.New($"A template named \"{request.Name}\" already exists in that template group")
             : Success<BaseError, string>(request.Name);
     }

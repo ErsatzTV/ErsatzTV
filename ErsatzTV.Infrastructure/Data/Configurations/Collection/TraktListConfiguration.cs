@@ -10,6 +10,8 @@ public class TraktListConfiguration : IEntityTypeConfiguration<TraktList>
     {
         builder.ToTable("TraktList");
 
+        builder.HasIndex(l => l.Name);
+
         builder.HasMany(l => l.Items)
             .WithOne(i => i.TraktList)
             .HasForeignKey(i => i.TraktListId)

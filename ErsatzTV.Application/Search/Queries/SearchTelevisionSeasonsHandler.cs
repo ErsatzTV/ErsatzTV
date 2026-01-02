@@ -20,8 +20,7 @@ public class SearchTelevisionSeasonsHandler(IDbContextFactory<TvContext> dbConte
                 join showMetadata in dbContext.Set<ShowMetadata>()
                     on season.ShowId equals showMetadata.ShowId
                 where EF.Functions.Like(showMetadata.Title + " " + seasonMetadata.Title, $"%{request.Query}%")
-                orderby EF.Functions.Collate(showMetadata.Title, TvContext.CaseInsensitiveCollation), season
-                    .SeasonNumber
+                orderby showMetadata.Title, season.SeasonNumber
                 select new TelevisionSeason(season.Id, showMetadata.Title, showMetadata.Year, season.SeasonNumber))
             .Take(20)
             .ToListAsync(cancellationToken)

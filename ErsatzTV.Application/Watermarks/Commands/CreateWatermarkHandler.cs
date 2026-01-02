@@ -22,7 +22,7 @@ public class CreateWatermarkHandler : IRequestHandler<CreateWatermark, Either<Ba
         CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        Validation<BaseError, ChannelWatermark> validation = Validate(request);
+        Validation<BaseError, ChannelWatermark> validation = await Validate(dbContext, request);
         return await validation.Apply(profile => PersistChannelWatermark(dbContext, profile));
     }
 
@@ -36,8 +36,10 @@ public class CreateWatermarkHandler : IRequestHandler<CreateWatermark, Either<Ba
         return new CreateWatermarkResult(watermark.Id);
     }
 
-    private static Validation<BaseError, ChannelWatermark> Validate(CreateWatermark request) =>
-        ValidateName(request)
+    private static async Task<Validation<BaseError, ChannelWatermark>> Validate(
+        TvContext dbContext,
+        CreateWatermark request) =>
+        await ValidateName(dbContext, request)
             .Map(_ =>
             {
                 var watermark = new ChannelWatermark
@@ -69,7 +71,18 @@ public class CreateWatermarkHandler : IRequestHandler<CreateWatermark, Either<Ba
                 return watermark;
             });
 
-    private static Validation<BaseError, string> ValidateName(CreateWatermark request) =>
-        request.NotEmpty(x => x.Name)
-            .Bind(_ => request.NotLongerThan(50)(x => x.Name));
+    private static async Task<Validation<BaseError, string>> ValidateName(TvContext dbContext, CreateWatermark request)
+    {
+        Validation<BaseError, string> result1 = request.NotEmpty(c => c.Name)
+            .Bind(_ => request.NotLongerThan(50)(c => c.Name));
+
+        bool duplicateName = await dbContext.ChannelWatermarks
+            .AnyAsync(wm => wm.Name == request.Name);
+
+        Validation<BaseError, Unit> result2 = duplicateName
+            ? Fail<BaseError, Unit>("ChannelWatermark name must be unique")
+            : Success<BaseError, Unit>(Unit.Default);
+
+        return (result1, result2).Apply((_, _) => request.Name);
+    }
 }

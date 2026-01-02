@@ -10,6 +10,13 @@ public class FillerPresetConfiguration : IEntityTypeConfiguration<FillerPreset>
     {
         builder.ToTable("FillerPreset");
 
+        builder.Property(mc => mc.Name)
+            .HasMaxLength(50)
+            .HasColumnType("varchar(50)");
+
+        builder.HasIndex(c => c.Name)
+            .IsUnique();
+
         builder.HasOne(i => i.Collection)
             .WithMany()
             .HasForeignKey(i => i.CollectionId)

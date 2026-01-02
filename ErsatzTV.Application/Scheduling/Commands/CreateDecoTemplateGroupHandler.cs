@@ -38,12 +38,12 @@ public class CreateDecoTemplateGroupHandler(IDbContextFactory<TvContext> dbConte
         Validation<BaseError, string> result1 = createDecoTemplateGroup.NotEmpty(c => c.Name)
             .Bind(_ => createDecoTemplateGroup.NotLongerThan(50)(c => c.Name));
 
-        int duplicateNameCount = await dbContext.DecoTemplateGroups
-            .CountAsync(ps => ps.Name == createDecoTemplateGroup.Name);
+        bool duplicateName = await dbContext.DecoTemplateGroups
+            .AnyAsync(ps => ps.Name == createDecoTemplateGroup.Name);
 
-        var result2 = Optional(duplicateNameCount)
-            .Where(count => count == 0)
-            .ToValidation<BaseError>("Deco template group name must be unique");
+        Validation<BaseError, Unit> result2 = duplicateName
+            ? Fail<BaseError, Unit>("Deco template group name must be unique")
+            : Success<BaseError, Unit>(Unit.Default);
 
         return (result1, result2).Apply((_, _) => createDecoTemplateGroup.Name);
     }

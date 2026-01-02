@@ -19,13 +19,11 @@ public class GetPagedRerunCollectionsHandler(IDbContextFactory<TvContext> dbCont
 
         if (!string.IsNullOrWhiteSpace(request.Query))
         {
-            query = query.Where(s => EF.Functions.Like(
-                EF.Functions.Collate(s.Name, TvContext.CaseInsensitiveCollation),
-                $"%{request.Query}%"));
+            query = query.Where(rc => EF.Functions.Like(rc.Name, $"%{request.Query}%"));
         }
 
         List<RerunCollectionViewModel> page = await query
-            .OrderBy(f => EF.Functions.Collate(f.Name, TvContext.CaseInsensitiveCollation))
+            .OrderBy(rc => rc.Name)
             .Skip(request.PageNum * request.PageSize)
             .Take(request.PageSize)
             .ToListAsync(cancellationToken)

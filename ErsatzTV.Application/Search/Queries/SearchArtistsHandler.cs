@@ -13,10 +13,8 @@ public class SearchArtistsHandler(IDbContextFactory<TvContext> dbContextFactory)
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await dbContext.ArtistMetadata
             .AsNoTracking()
-            .Where(a => EF.Functions.Like(
-                EF.Functions.Collate(a.Title, TvContext.CaseInsensitiveCollation),
-                $"%{request.Query}%"))
-            .OrderBy(a => EF.Functions.Collate(a.Title, TvContext.CaseInsensitiveCollation))
+            .Where(a => EF.Functions.Like(a.Title, $"%{request.Query}%"))
+            .OrderBy(a => a.Title)
             .Take(10)
             .ToListAsync(cancellationToken)
             .Map(list => list.Bind(a => ToNamedMediaItem(a)).ToList());

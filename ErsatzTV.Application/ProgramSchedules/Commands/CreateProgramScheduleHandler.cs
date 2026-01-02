@@ -51,12 +51,12 @@ public class CreateProgramScheduleHandler(IDbContextFactory<TvContext> dbContext
         Validation<BaseError, string> result1 = createProgramSchedule.NotEmpty(c => c.Name)
             .Bind(_ => createProgramSchedule.NotLongerThan(50)(c => c.Name));
 
-        int duplicateNameCount = await dbContext.ProgramSchedules
-            .CountAsync(ps => ps.Name == createProgramSchedule.Name);
+        bool duplicateName = await dbContext.ProgramSchedules
+            .AnyAsync(ps => ps.Name == createProgramSchedule.Name);
 
-        var result2 = Optional(duplicateNameCount)
-            .Where(count => count == 0)
-            .ToValidation<BaseError>("Schedule name must be unique");
+        Validation<BaseError, Unit> result2 = duplicateName
+            ? Fail<BaseError, Unit>("Schedule name must be unique")
+            : Success<BaseError, Unit>(Unit.Default);
 
         return (result1, result2).Apply((_, _) => createProgramSchedule.Name);
     }

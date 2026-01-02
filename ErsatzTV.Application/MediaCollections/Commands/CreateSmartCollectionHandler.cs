@@ -59,16 +59,15 @@ public class CreateSmartCollectionHandler :
         TvContext dbContext,
         CreateSmartCollection createSmartCollection)
     {
-        List<string> allNames = await dbContext.SmartCollections
-            .Map(c => c.Name)
-            .ToListAsync();
+        bool duplicateName = await dbContext.SmartCollections
+            .AnyAsync(c => c.Name == createSmartCollection.Name);
+
+        Validation<BaseError, Unit> result2 = duplicateName
+            ? Fail<BaseError, Unit>("SmartCollection name must be unique")
+            : Success<BaseError, Unit>(Unit.Default);
 
         Validation<BaseError, string> result1 = createSmartCollection.NotEmpty(c => c.Name)
             .Bind(_ => createSmartCollection.NotLongerThan(50)(c => c.Name));
-
-        var result2 = Optional(createSmartCollection.Name)
-            .Where(name => !allNames.Contains(name, StringComparer.OrdinalIgnoreCase))
-            .ToValidation<BaseError>("SmartCollection name must be unique");
 
         return (result1, result2).Apply((_, _) => createSmartCollection.Name);
     }

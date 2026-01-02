@@ -15,10 +15,8 @@ public class SearchSmartCollectionsHandler(IDbContextFactory<TvContext> dbContex
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await dbContext.SmartCollections
             .AsNoTracking()
-            .Where(c => EF.Functions.Like(
-                EF.Functions.Collate(c.Name, TvContext.CaseInsensitiveCollation),
-                $"%{request.Query}%"))
-            .OrderBy(c => EF.Functions.Collate(c.Name, TvContext.CaseInsensitiveCollation))
+            .Where(sc => EF.Functions.Like(sc.Name, $"%{request.Query}%"))
+            .OrderBy(sc => sc.Name)
             .Take(10)
             .ToListAsync(cancellationToken)
             .Map(list => list.Map(ProjectToViewModel).ToList());

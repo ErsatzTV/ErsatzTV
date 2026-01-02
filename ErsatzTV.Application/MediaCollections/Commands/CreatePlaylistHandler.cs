@@ -40,11 +40,10 @@ public class CreatePlaylistHandler(IDbContextFactory<TvContext> dbContextFactory
             return BaseError.New($"Playlist name \"{request.Name}\" is invalid");
         }
 
-        Option<Playlist> maybeExisting = await dbContext.Playlists
-            .FirstOrDefaultAsync(r => r.PlaylistGroupId == request.PlaylistGroupId && r.Name == request.Name)
-            .Map(Optional);
+        bool duplicate = await dbContext.Playlists
+            .AnyAsync(r => r.PlaylistGroupId == request.PlaylistGroupId && r.Name == request.Name);
 
-        return maybeExisting.IsSome
+        return duplicate
             ? BaseError.New($"A playlist named \"{request.Name}\" already exists in that playlist group")
             : Success<BaseError, string>(request.Name);
     }

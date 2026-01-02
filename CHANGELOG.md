@@ -72,6 +72,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Sequential schedules: fix `count` instruction validation to accept integer (constant) or string (expression)
 - Fix multi-part episode grouping logic so that it does NOT require release date metadata for episodes within a single show
   - When **Treat Collections As Shows** is enabled (i.e. for crossover episodes) release date metadata is required for proper grouping
+- Fix *many* cases of duplicate names; enforce case-insensitive unique names at the schema level
 
 ### Changed
 - No longer round framerate to nearest integer when normalizing framerate

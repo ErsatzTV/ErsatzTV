@@ -88,17 +88,15 @@ public class
         TvContext dbContext,
         UpdateSmartCollection updateCollection)
     {
-        List<string> allNames = await dbContext.SmartCollections
-            .Where(c => c.Id != updateCollection.Id)
-            .Map(c => c.Name)
-            .ToListAsync();
-
         Validation<BaseError, string> result1 = updateCollection.NotEmpty(c => c.Name)
             .Bind(_ => updateCollection.NotLongerThan(50)(c => c.Name));
 
-        var result2 = Optional(updateCollection.Name)
-            .Where(name => !allNames.Contains(name, StringComparer.OrdinalIgnoreCase))
-            .ToValidation<BaseError>("SmartCollection name must be unique");
+        bool duplicateName = await dbContext.SmartCollections
+            .AnyAsync(c => c.Id != updateCollection.Id && c.Name == updateCollection.Name);
+
+        Validation<BaseError, Unit> result2 = duplicateName
+            ? Fail<BaseError, Unit>("SmartCollection name must be unique")
+            : Success<BaseError, Unit>(Unit.Default);
 
         return (result1, result2).Apply((_, _) => updateCollection.Name);
     }

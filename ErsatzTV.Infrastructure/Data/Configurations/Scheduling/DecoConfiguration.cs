@@ -11,6 +11,10 @@ public class DecoConfiguration : IEntityTypeConfiguration<Deco>
     {
         builder.ToTable("Deco");
 
+        builder.Property(d => d.Name)
+            .HasMaxLength(50)
+            .HasColumnType("varchar(50)");
+
         builder.HasIndex(d => new { d.DecoGroupId, d.Name })
             .IsUnique();
 

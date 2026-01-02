@@ -65,7 +65,7 @@ public class UpdateWatermarkHandler : IRequestHandler<UpdateWatermark, Either<Ba
         TvContext dbContext,
         UpdateWatermark request,
         CancellationToken cancellationToken) =>
-        (await WatermarkMustExist(dbContext, request, cancellationToken), ValidateName(request))
+        (await WatermarkMustExist(dbContext, request, cancellationToken), await ValidateName(dbContext, request))
         .Apply((watermark, _) => watermark);
 
     private static Task<Validation<BaseError, ChannelWatermark>> WatermarkMustExist(
@@ -76,7 +76,20 @@ public class UpdateWatermarkHandler : IRequestHandler<UpdateWatermark, Either<Ba
             .SelectOneAsync(p => p.Id, p => p.Id == updateWatermark.Id, cancellationToken)
             .Map(o => o.ToValidation<BaseError>("Watermark does not exist."));
 
-    private static Validation<BaseError, string> ValidateName(UpdateWatermark updateWatermark) =>
-        updateWatermark.NotEmpty(x => x.Name)
-            .Bind(_ => updateWatermark.NotLongerThan(50)(x => x.Name));
+    private static async Task<Validation<BaseError, string>> ValidateName(
+        TvContext dbContext,
+        UpdateWatermark updateWatermark)
+    {
+        bool duplicateName = await dbContext.ChannelWatermarks
+            .AnyAsync(wm => wm.Id != updateWatermark.Id && wm.Name == updateWatermark.Name);
+
+        Validation<BaseError, Unit> result2 = duplicateName
+            ? Fail<BaseError, Unit>("ChannelWatermark name must be unique")
+            : Success<BaseError, Unit>(Unit.Default);
+
+        Validation<BaseError, string> result1 = updateWatermark.NotEmpty(c => c.Name)
+            .Bind(_ => updateWatermark.NotLongerThan(50)(c => c.Name));
+
+        return (result1, result2).Apply((_, _) => updateWatermark.Name);
+    }
 }

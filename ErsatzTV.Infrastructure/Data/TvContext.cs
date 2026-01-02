@@ -136,18 +136,46 @@ public class TvContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
+        string collation = null;
+
         // mysql-specific configuration
         if ((Database.ProviderName ?? string.Empty).Contains("MySql", StringComparison.InvariantCultureIgnoreCase))
         {
             modelBuilder.Entity<MediaFile>().Property(mf => mf.Path).HasColumnType("longtext");
-
-            modelBuilder.Entity<SmartCollection>().Property(mc => mc.Name).UseCollation("utf8mb4_general_ci");
+            collation = "utf8mb4_general_ci";
         }
 
         // sqlite-specific configuration
         if ((Database.ProviderName ?? string.Empty).Contains("Sqlite", StringComparison.InvariantCultureIgnoreCase))
         {
-            modelBuilder.Entity<SmartCollection>().Property(sc => sc.Name).UseCollation("NOCASE");
+            collation = "NOCASE";
+        }
+
+        // case-insensitive columns
+        if (!string.IsNullOrEmpty(collation))
+        {
+            modelBuilder.Entity<ArtistMetadata>().Property(b => b.Title).UseCollation(collation);
+            modelBuilder.Entity<Block>().Property(b => b.Name).UseCollation(collation);
+            modelBuilder.Entity<BlockGroup>().Property(b => b.Name).UseCollation(collation);
+            modelBuilder.Entity<Channel>().Property(c => c.Name).UseCollation(collation);
+            modelBuilder.Entity<ChannelWatermark>().Property(c => c.Name).UseCollation(collation);
+            modelBuilder.Entity<Collection>().Property(c => c.Name).UseCollation(collation);
+            modelBuilder.Entity<Deco>().Property(d => d.Name).UseCollation(collation);
+            modelBuilder.Entity<DecoGroup>().Property(d => d.Name).UseCollation(collation);
+            modelBuilder.Entity<DecoTemplate>().Property(d => d.Name).UseCollation(collation);
+            modelBuilder.Entity<DecoTemplateGroup>().Property(d => d.Name).UseCollation(collation);
+            modelBuilder.Entity<FillerPreset>().Property(fp => fp.Name).UseCollation(collation);
+            modelBuilder.Entity<MetadataGuid>().Property(mg => mg.Guid).UseCollation(collation);
+            modelBuilder.Entity<MovieMetadata>().Property(mm => mm.Title).UseCollation(collation);
+            modelBuilder.Entity<MultiCollection>().Property(mc => mc.Name).UseCollation(collation);
+            modelBuilder.Entity<Playlist>().Property(p => p.Name).UseCollation(collation);
+            modelBuilder.Entity<ProgramSchedule>().Property(ps => ps.Name).UseCollation(collation);
+            modelBuilder.Entity<RerunCollection>().Property(rc => rc.Name).UseCollation(collation);
+            modelBuilder.Entity<ShowMetadata>().Property(sm => sm.Title).UseCollation(collation);
+            modelBuilder.Entity<SmartCollection>().Property(sc => sc.Name).UseCollation(collation);
+            modelBuilder.Entity<Template>().Property(t => t.Name).UseCollation(collation);
+            modelBuilder.Entity<TemplateGroup>().Property(t => t.Name).UseCollation(collation);
+            modelBuilder.Entity<TraktList>().Property(t => t.Name).UseCollation(collation);
         }
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(TvContext).Assembly);

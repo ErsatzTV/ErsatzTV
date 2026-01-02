@@ -10,6 +10,10 @@ public class ProgramScheduleConfiguration : IEntityTypeConfiguration<ProgramSche
     {
         builder.ToTable("ProgramSchedule");
 
+        builder.Property(p => p.Name)
+            .HasMaxLength(50)
+            .HasColumnType("varchar(50)");
+
         builder.HasIndex(ps => ps.Name)
             .IsUnique();
 

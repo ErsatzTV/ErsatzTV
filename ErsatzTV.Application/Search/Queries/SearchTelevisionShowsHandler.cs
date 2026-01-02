@@ -16,10 +16,8 @@ public class SearchTelevisionShowsHandler(IDbContextFactory<TvContext> dbContext
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await dbContext.ShowMetadata
             .AsNoTracking()
-            .Where(s => EF.Functions.Like(
-                EF.Functions.Collate(s.Title + " " + s.Year, TvContext.CaseInsensitiveCollation),
-                $"%{request.Query}%"))
-            .OrderBy(s => EF.Functions.Collate(s.Title, TvContext.CaseInsensitiveCollation))
+            .Where(s => EF.Functions.Like(s.Title + " " + s.Year, $"%{request.Query}%"))
+            .OrderBy(s => s.Title)
             .ThenBy(s => s.Year)
             .Take(10)
             .ToListAsync(cancellationToken)
