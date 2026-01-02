@@ -86,40 +86,43 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
         JellyfinShow item,
         CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        Option<JellyfinShow> maybeExisting = await dbContext.JellyfinShows
-            .TagWithCallSite()
-            .Include(m => m.LibraryPath)
-            .ThenInclude(lp => lp.Library)
-            .Include(m => m.ShowMetadata)
-            .ThenInclude(mm => mm.Genres)
-            .Include(m => m.ShowMetadata)
-            .ThenInclude(mm => mm.Tags)
-            .Include(m => m.ShowMetadata)
-            .ThenInclude(mm => mm.Studios)
-            .Include(m => m.ShowMetadata)
-            .ThenInclude(mm => mm.Actors)
-            .Include(m => m.ShowMetadata)
-            .ThenInclude(mm => mm.Artwork)
-            .Include(m => m.ShowMetadata)
-            .ThenInclude(mm => mm.Guids)
-            .Include(m => m.TraktListItems)
-            .ThenInclude(tli => tli.TraktList)
-            .SelectOneAsync(s => s.ItemId, s => s.ItemId == item.ItemId, cancellationToken);
-
-        foreach (JellyfinShow jellyfinShow in maybeExisting)
+        using (ScanProfiler.Measure("DB Ins/Upd Show"))
         {
-            var result = new MediaItemScanResult<JellyfinShow>(jellyfinShow) { IsAdded = false };
-            if (jellyfinShow.Etag != item.Etag)
+            await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+            Option<JellyfinShow> maybeExisting = await dbContext.JellyfinShows
+                .TagWithCallSite()
+                .Include(m => m.LibraryPath)
+                .ThenInclude(lp => lp.Library)
+                .Include(m => m.ShowMetadata)
+                .ThenInclude(mm => mm.Genres)
+                .Include(m => m.ShowMetadata)
+                .ThenInclude(mm => mm.Tags)
+                .Include(m => m.ShowMetadata)
+                .ThenInclude(mm => mm.Studios)
+                .Include(m => m.ShowMetadata)
+                .ThenInclude(mm => mm.Actors)
+                .Include(m => m.ShowMetadata)
+                .ThenInclude(mm => mm.Artwork)
+                .Include(m => m.ShowMetadata)
+                .ThenInclude(mm => mm.Guids)
+                .Include(m => m.TraktListItems)
+                .ThenInclude(tli => tli.TraktList)
+                .SelectOneAsync(s => s.ItemId, s => s.ItemId == item.ItemId, cancellationToken);
+
+            foreach (JellyfinShow jellyfinShow in maybeExisting)
             {
-                await UpdateShow(dbContext, jellyfinShow, item, cancellationToken);
-                result.IsUpdated = true;
+                var result = new MediaItemScanResult<JellyfinShow>(jellyfinShow) { IsAdded = false };
+                if (jellyfinShow.Etag != item.Etag)
+                {
+                    await UpdateShow(dbContext, jellyfinShow, item, cancellationToken);
+                    result.IsUpdated = true;
+                }
+
+                return result;
             }
 
-            return result;
+            return await AddShow(dbContext, library, item, cancellationToken);
         }
-
-        return await AddShow(dbContext, library, item, cancellationToken);
     }
 
     public async Task<Either<BaseError, MediaItemScanResult<JellyfinSeason>>> GetOrAdd(
@@ -127,29 +130,32 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
         JellyfinSeason item,
         CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        Option<JellyfinSeason> maybeExisting = await dbContext.JellyfinSeasons
-            .TagWithCallSite()
-            .Include(m => m.LibraryPath)
-            .Include(m => m.SeasonMetadata)
-            .ThenInclude(mm => mm.Artwork)
-            .Include(m => m.SeasonMetadata)
-            .ThenInclude(mm => mm.Guids)
-            .SelectOneAsync(s => s.ItemId, s => s.ItemId == item.ItemId, cancellationToken);
-
-        foreach (JellyfinSeason jellyfinSeason in maybeExisting)
+        using (ScanProfiler.Measure("DB Ins/Upd Season"))
         {
-            var result = new MediaItemScanResult<JellyfinSeason>(jellyfinSeason) { IsAdded = false };
-            if (jellyfinSeason.Etag != item.Etag)
+            await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+            Option<JellyfinSeason> maybeExisting = await dbContext.JellyfinSeasons
+                .TagWithCallSite()
+                .Include(m => m.LibraryPath)
+                .Include(m => m.SeasonMetadata)
+                .ThenInclude(mm => mm.Artwork)
+                .Include(m => m.SeasonMetadata)
+                .ThenInclude(mm => mm.Guids)
+                .SelectOneAsync(s => s.ItemId, s => s.ItemId == item.ItemId, cancellationToken);
+
+            foreach (JellyfinSeason jellyfinSeason in maybeExisting)
             {
-                await UpdateSeason(dbContext, jellyfinSeason, item, cancellationToken);
-                result.IsUpdated = true;
+                var result = new MediaItemScanResult<JellyfinSeason>(jellyfinSeason) { IsAdded = false };
+                if (jellyfinSeason.Etag != item.Etag)
+                {
+                    await UpdateSeason(dbContext, jellyfinSeason, item, cancellationToken);
+                    result.IsUpdated = true;
+                }
+
+                return result;
             }
 
-            return result;
+            return await AddSeason(dbContext, library, item, cancellationToken);
         }
-
-        return await AddSeason(dbContext, library, item, cancellationToken);
     }
 
     public async Task<Either<BaseError, MediaItemScanResult<JellyfinEpisode>>> GetOrAdd(
@@ -158,51 +164,54 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
         bool deepScan,
         CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        Option<JellyfinEpisode> maybeExisting = await dbContext.JellyfinEpisodes
-            .TagWithCallSite()
-            .Include(m => m.LibraryPath)
-            .ThenInclude(lp => lp.Library)
-            .Include(m => m.MediaVersions)
-            .ThenInclude(mv => mv.MediaFiles)
-            .Include(m => m.MediaVersions)
-            .ThenInclude(mv => mv.Streams)
-            .Include(m => m.MediaVersions)
-            .ThenInclude(mv => mv.Chapters)
-            .Include(m => m.EpisodeMetadata)
-            .ThenInclude(mm => mm.Artwork)
-            .Include(m => m.EpisodeMetadata)
-            .ThenInclude(mm => mm.Guids)
-            .Include(m => m.EpisodeMetadata)
-            .ThenInclude(mm => mm.Genres)
-            .Include(m => m.EpisodeMetadata)
-            .ThenInclude(mm => mm.Tags)
-            .Include(m => m.EpisodeMetadata)
-            .ThenInclude(mm => mm.Studios)
-            .Include(m => m.EpisodeMetadata)
-            .ThenInclude(mm => mm.Actors)
-            .Include(m => m.EpisodeMetadata)
-            .ThenInclude(mm => mm.Directors)
-            .Include(m => m.EpisodeMetadata)
-            .ThenInclude(mm => mm.Writers)
-            .Include(m => m.Season)
-            .Include(m => m.TraktListItems)
-            .ThenInclude(tli => tli.TraktList)
-            .SelectOneAsync(s => s.ItemId, s => s.ItemId == item.ItemId, cancellationToken);
-
-        foreach (JellyfinEpisode jellyfinEpisode in maybeExisting)
+        using (ScanProfiler.Measure("DB Ins/Upd Episode"))
         {
-            var result = new MediaItemScanResult<JellyfinEpisode>(jellyfinEpisode) { IsAdded = false };
-            if (jellyfinEpisode.Etag != item.Etag || deepScan)
+            await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+            Option<JellyfinEpisode> maybeExisting = await dbContext.JellyfinEpisodes
+                .TagWithCallSite()
+                .Include(m => m.LibraryPath)
+                .ThenInclude(lp => lp.Library)
+                .Include(m => m.MediaVersions)
+                .ThenInclude(mv => mv.MediaFiles)
+                .Include(m => m.MediaVersions)
+                .ThenInclude(mv => mv.Streams)
+                .Include(m => m.MediaVersions)
+                .ThenInclude(mv => mv.Chapters)
+                .Include(m => m.EpisodeMetadata)
+                .ThenInclude(mm => mm.Artwork)
+                .Include(m => m.EpisodeMetadata)
+                .ThenInclude(mm => mm.Guids)
+                .Include(m => m.EpisodeMetadata)
+                .ThenInclude(mm => mm.Genres)
+                .Include(m => m.EpisodeMetadata)
+                .ThenInclude(mm => mm.Tags)
+                .Include(m => m.EpisodeMetadata)
+                .ThenInclude(mm => mm.Studios)
+                .Include(m => m.EpisodeMetadata)
+                .ThenInclude(mm => mm.Actors)
+                .Include(m => m.EpisodeMetadata)
+                .ThenInclude(mm => mm.Directors)
+                .Include(m => m.EpisodeMetadata)
+                .ThenInclude(mm => mm.Writers)
+                .Include(m => m.Season)
+                .Include(m => m.TraktListItems)
+                .ThenInclude(tli => tli.TraktList)
+                .SelectOneAsync(s => s.ItemId, s => s.ItemId == item.ItemId, cancellationToken);
+
+            foreach (JellyfinEpisode jellyfinEpisode in maybeExisting)
             {
-                await UpdateEpisode(dbContext, jellyfinEpisode, item, cancellationToken);
-                result.IsUpdated = true;
+                var result = new MediaItemScanResult<JellyfinEpisode>(jellyfinEpisode) { IsAdded = false };
+                if (jellyfinEpisode.Etag != item.Etag || deepScan)
+                {
+                    await UpdateEpisode(dbContext, jellyfinEpisode, item, cancellationToken);
+                    result.IsUpdated = true;
+                }
+
+                return result;
             }
 
-            return result;
+            return await AddEpisode(dbContext, library, item, cancellationToken);
         }
-
-        return await AddEpisode(dbContext, library, item, cancellationToken);
     }
 
     public async Task<Unit> SetEtag(JellyfinShow show, string etag, CancellationToken cancellationToken)
