@@ -35,7 +35,10 @@ public static class ScanProfiler
             double avg = times.Average();
             long min = times.Min();
             long max = times.Max();
-            long p99 = times[(int)(times.Count * 0.99)];
+            int n = times.Count;
+            int idx = (int)Math.Ceiling(0.99 * n) - 1;
+            idx = Math.Clamp(idx, 0, n - 1);
+            long p99 = times[idx];
             double totalSec = times.Sum() / 1000.0;
 
             sb.AppendLine(FormattableString.Invariant($"{key,-25} | {times.Count,-6} | {avg,-8:F1} | {min,-6} | {max,-6} | {p99,-6} | {totalSec,-8:F2}"));
