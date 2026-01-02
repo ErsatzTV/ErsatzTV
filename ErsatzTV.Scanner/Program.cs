@@ -62,6 +62,7 @@ public class Program
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Debug()
             .MinimumLevel.Override("Microsoft", LogEventLevel.Error)
+            .MinimumLevel.Override("System.Net.Http.HttpClient", LogEventLevel.Warning)
             .Enrich.FromLogContext()
             .WriteTo.Console(new CompactJsonFormatter(), standardErrorFromLevel: LogEventLevel.Debug)
             .CreateLogger();
