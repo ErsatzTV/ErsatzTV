@@ -44,11 +44,10 @@ public class CreateDecoHandler(IDbContextFactory<TvContext> dbContextFactory)
             return BaseError.New($"Deco name \"{request.Name}\" is invalid");
         }
 
-        Option<Deco> maybeExisting = await dbContext.Decos
-            .FirstOrDefaultAsync(r => r.DecoGroupId == request.DecoGroupId && r.Name == request.Name)
-            .Map(Optional);
+        bool duplicateName = await dbContext.Decos
+            .AnyAsync(r => r.DecoGroupId == request.DecoGroupId && r.Name == request.Name);
 
-        return maybeExisting.IsSome
+        return duplicateName
             ? BaseError.New($"A deco named \"{request.Name}\" already exists in that deco group")
             : Success<BaseError, string>(request.Name);
     }

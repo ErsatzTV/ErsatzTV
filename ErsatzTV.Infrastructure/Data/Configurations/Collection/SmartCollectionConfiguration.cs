@@ -10,6 +10,10 @@ public class SmartCollectionConfiguration : IEntityTypeConfiguration<SmartCollec
     {
         builder.ToTable("SmartCollection");
 
+        builder.Property(sc => sc.Name)
+            .HasMaxLength(50)
+            .HasColumnType("varchar(50)");
+
         builder.HasIndex(sc => sc.Name)
             .IsUnique();
     }

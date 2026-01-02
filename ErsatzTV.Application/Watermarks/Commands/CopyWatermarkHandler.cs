@@ -45,12 +45,23 @@ public class CopyWatermarkHandler(IDbContextFactory<TvContext> dbContextFactory,
         TvContext dbContext,
         CopyWatermark request,
         CancellationToken cancellationToken) =>
-        (ValidateName(request), await WatermarkMustExist(dbContext, request, cancellationToken))
+        (await ValidateName(dbContext, request), await WatermarkMustExist(dbContext, request, cancellationToken))
         .Apply((name, watermark) => new CopyWatermarkParameters(name, watermark));
 
-    private static Validation<BaseError, string> ValidateName(CopyWatermark request) =>
-        request.NotEmpty(x => x.Name)
-            .Bind(_ => request.NotLongerThan(50)(x => x.Name));
+    private static async Task<Validation<BaseError, string>> ValidateName(TvContext dbContext, CopyWatermark request)
+    {
+        Validation<BaseError, string> result1 = request.NotEmpty(c => c.Name)
+            .Bind(_ => request.NotLongerThan(50)(c => c.Name));
+
+        bool duplicateName = await dbContext.ChannelWatermarks
+            .AnyAsync(wm => wm.Name == request.Name);
+
+        Validation<BaseError, Unit> result2 = duplicateName
+            ? Fail<BaseError, Unit>("ChannelWatermark name must be unique")
+            : Success<BaseError, Unit>(Unit.Default);
+
+        return (result1, result2).Apply((_, _) => request.Name);
+    }
 
     private static Task<Validation<BaseError, ChannelWatermark>> WatermarkMustExist(
         TvContext dbContext,

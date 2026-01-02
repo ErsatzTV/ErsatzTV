@@ -49,16 +49,15 @@ public class CreateCollectionHandler :
         TvContext dbContext,
         CreateCollection createCollection)
     {
-        List<string> allNames = await dbContext.Collections
-            .Map(c => c.Name)
-            .ToListAsync();
-
         Validation<BaseError, string> result1 = createCollection.NotEmpty(c => c.Name)
             .Bind(_ => createCollection.NotLongerThan(50)(c => c.Name));
 
-        var result2 = Optional(createCollection.Name)
-            .Where(name => !allNames.Contains(name))
-            .ToValidation<BaseError>("Collection name must be unique");
+        bool duplicateName = await dbContext.Collections
+            .AnyAsync(c => c.Name == createCollection.Name);
+
+        Validation<BaseError, Unit> result2 = duplicateName
+            ? Fail<BaseError, Unit>("Collection name must be unique")
+            : Success<BaseError, Unit>(Unit.Default);
 
         return (result1, result2).Apply((_, _) => createCollection.Name);
     }

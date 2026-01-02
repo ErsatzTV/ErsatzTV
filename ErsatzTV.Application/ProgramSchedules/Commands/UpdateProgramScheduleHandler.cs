@@ -9,25 +9,17 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Application.ProgramSchedules;
 
-public class UpdateProgramScheduleHandler :
-    IRequestHandler<UpdateProgramSchedule, Either<BaseError, UpdateProgramScheduleResult>>
+public class UpdateProgramScheduleHandler(
+    IDbContextFactory<TvContext> dbContextFactory,
+    ChannelWriter<IBackgroundServiceRequest> channel)
+    :
+        IRequestHandler<UpdateProgramSchedule, Either<BaseError, UpdateProgramScheduleResult>>
 {
-    private readonly ChannelWriter<IBackgroundServiceRequest> _channel;
-    private readonly IDbContextFactory<TvContext> _dbContextFactory;
-
-    public UpdateProgramScheduleHandler(
-        IDbContextFactory<TvContext> dbContextFactory,
-        ChannelWriter<IBackgroundServiceRequest> channel)
-    {
-        _dbContextFactory = dbContextFactory;
-        _channel = channel;
-    }
-
     public async Task<Either<BaseError, UpdateProgramScheduleResult>> Handle(
         UpdateProgramSchedule request,
         CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, ProgramSchedule> validation = await Validate(dbContext, request, cancellationToken);
         return await validation.Apply(ps => ApplyUpdateRequest(dbContext, ps, request));
     }
@@ -64,7 +56,7 @@ public class UpdateProgramScheduleHandler :
 
             foreach (int playoutId in playoutIds)
             {
-                await _channel.WriteAsync(new BuildPlayout(playoutId, PlayoutBuildMode.Refresh));
+                await channel.WriteAsync(new BuildPlayout(playoutId, PlayoutBuildMode.Refresh));
             }
         }
 
@@ -75,7 +67,7 @@ public class UpdateProgramScheduleHandler :
         TvContext dbContext,
         UpdateProgramSchedule request,
         CancellationToken cancellationToken) =>
-        (await ProgramScheduleMustExist(dbContext, request, cancellationToken), ValidateName(request))
+        (await ProgramScheduleMustExist(dbContext, request, cancellationToken), await ValidateName(dbContext, request, cancellationToken))
         .Apply((programSchedule, _) => programSchedule);
 
     private static Task<Validation<BaseError, ProgramSchedule>> ProgramScheduleMustExist(
@@ -84,9 +76,23 @@ public class UpdateProgramScheduleHandler :
         CancellationToken cancellationToken) =>
         dbContext.ProgramSchedules
             .SelectOneAsync(ps => ps.Id, ps => ps.Id == request.ProgramScheduleId, cancellationToken)
-            .Map(o => o.ToValidation<BaseError>("ProgramSchedule does not exist"));
+            .Map(o => o.ToValidation<BaseError>("Schedule does not exist"));
 
-    private static Validation<BaseError, string> ValidateName(UpdateProgramSchedule request) =>
-        request.NotEmpty(c => c.Name)
+    private static async Task<Validation<BaseError, string>> ValidateName(
+        TvContext dbContext,
+        UpdateProgramSchedule request,
+        CancellationToken cancellationToken)
+    {
+        Validation<BaseError, string> result1 = request.NotEmpty(c => c.Name)
             .Bind(_ => request.NotLongerThan(50)(c => c.Name));
+
+        bool duplicateName = await dbContext.ProgramSchedules
+            .AnyAsync(c => c.Id != request.ProgramScheduleId && c.Name == request.Name, cancellationToken);
+
+        Validation<BaseError, Unit> result2 = duplicateName
+            ? Fail<BaseError, Unit>("Schedule name must be unique")
+            : Success<BaseError, Unit>(Unit.Default);
+
+        return (result1, result2).Apply((_, _) => request.Name);
+    }
 }

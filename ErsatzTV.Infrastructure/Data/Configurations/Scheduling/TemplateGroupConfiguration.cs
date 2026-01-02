@@ -10,6 +10,10 @@ public class TemplateGroupConfiguration : IEntityTypeConfiguration<TemplateGroup
     {
         builder.ToTable("TemplateGroup");
 
+        builder.Property(t => t.Name)
+            .HasMaxLength(50)
+            .HasColumnType("varchar(50)");
+
         builder.HasIndex(b => b.Name)
             .IsUnique();
 

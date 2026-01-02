@@ -10,23 +10,25 @@ public class MovieMetadataConfiguration : IEntityTypeConfiguration<MovieMetadata
     {
         builder.ToTable("MovieMetadata");
 
-        builder.HasMany(sm => sm.Artwork)
+        builder.HasIndex(mm => mm.Title);
+
+        builder.HasMany(mm => mm.Artwork)
             .WithOne()
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasMany(sm => sm.Genres)
+        builder.HasMany(mm => mm.Genres)
             .WithOne()
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasMany(sm => sm.Tags)
+        builder.HasMany(mm => mm.Tags)
             .WithOne()
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasMany(sm => sm.Studios)
+        builder.HasMany(mm => mm.Studios)
             .WithOne()
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasMany(sm => sm.Actors)
+        builder.HasMany(mm => mm.Actors)
             .WithOne()
             .OnDelete(DeleteBehavior.Cascade);
 

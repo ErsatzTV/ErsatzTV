@@ -34,12 +34,12 @@ public class CreateBlockGroupHandler(IDbContextFactory<TvContext> dbContextFacto
         Validation<BaseError, string> result1 = createBlockGroup.NotEmpty(c => c.Name)
             .Bind(_ => createBlockGroup.NotLongerThan(50)(c => c.Name));
 
-        int duplicateNameCount = await dbContext.BlockGroups
-            .CountAsync(ps => ps.Name == createBlockGroup.Name);
+        bool duplicateName = await dbContext.BlockGroups
+            .AnyAsync(bg => bg.Name == createBlockGroup.Name);
 
-        var result2 = Optional(duplicateNameCount)
-            .Where(count => count == 0)
-            .ToValidation<BaseError>("Block group name must be unique");
+        Validation<BaseError, Unit> result2 = duplicateName
+            ? Fail<BaseError, Unit>("Block group name must be unique")
+            : Success<BaseError, Unit>(Unit.Default);
 
         return (result1, result2).Apply((_, _) => createBlockGroup.Name);
     }

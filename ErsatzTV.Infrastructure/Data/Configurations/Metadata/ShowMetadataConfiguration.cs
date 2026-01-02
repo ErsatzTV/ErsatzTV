@@ -10,6 +10,8 @@ public class ShowMetadataConfiguration : IEntityTypeConfiguration<ShowMetadata>
     {
         builder.ToTable("ShowMetadata");
 
+        builder.HasIndex(sm => sm.Title);
+
         builder.HasMany(sm => sm.Artwork)
             .WithOne()
             .OnDelete(DeleteBehavior.Cascade);

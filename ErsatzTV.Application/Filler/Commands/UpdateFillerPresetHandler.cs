@@ -6,27 +6,21 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Application.Filler;
 
-public class UpdateFillerPresetHandler : IRequestHandler<UpdateFillerPreset, Either<BaseError, Unit>>
+public class UpdateFillerPresetHandler(IDbContextFactory<TvContext> dbContextFactory)
+    : IRequestHandler<UpdateFillerPreset, Either<BaseError, Unit>>
 {
-    private readonly IDbContextFactory<TvContext> _dbContextFactory;
-
-    public UpdateFillerPresetHandler(IDbContextFactory<TvContext> dbContextFactory) =>
-        _dbContextFactory = dbContextFactory;
-
     public async Task<Either<BaseError, Unit>> Handle(UpdateFillerPreset request, CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        Validation<BaseError, FillerPreset> validation = await FillerPresetMustExist(
-            dbContext,
-            request,
-            cancellationToken);
-        return await validation.Apply(ps => ApplyUpdateRequest(dbContext, ps, request));
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        Validation<BaseError, FillerPreset> validation = await Validate(dbContext, request, cancellationToken);
+        return await validation.Apply(ps => ApplyUpdateRequest(dbContext, ps, request, cancellationToken));
     }
 
     private static async Task<Unit> ApplyUpdateRequest(
         TvContext dbContext,
         FillerPreset existing,
-        UpdateFillerPreset request)
+        UpdateFillerPreset request,
+        CancellationToken cancellationToken)
     {
         existing.Name = request.Name;
         existing.FillerKind = request.FillerKind;
@@ -45,10 +39,17 @@ public class UpdateFillerPresetHandler : IRequestHandler<UpdateFillerPreset, Eit
         existing.UseChaptersAsMediaItems =
             request.FillerKind is not FillerKind.Fallback && request.UseChaptersAsMediaItems;
 
-        await dbContext.SaveChangesAsync();
+        await dbContext.SaveChangesAsync(cancellationToken);
 
         return Unit.Default;
     }
+
+    private static async Task<Validation<BaseError, FillerPreset>> Validate(
+        TvContext dbContext,
+        UpdateFillerPreset request,
+        CancellationToken cancellationToken) =>
+        (await FillerPresetMustExist(dbContext, request, cancellationToken), await ValidateName(dbContext, request))
+        .Apply((collectionToUpdate, _) => collectionToUpdate);
 
     private static Task<Validation<BaseError, FillerPreset>> FillerPresetMustExist(
         TvContext dbContext,
@@ -56,5 +57,22 @@ public class UpdateFillerPresetHandler : IRequestHandler<UpdateFillerPreset, Eit
         CancellationToken cancellationToken) =>
         dbContext.FillerPresets
             .SelectOneAsync(ps => ps.Id, ps => ps.Id == request.Id, cancellationToken)
-            .Map(o => o.ToValidation<BaseError>("FillerPreset does not exist"));
+            .Map(o => o.ToValidation<BaseError>("Filler preset does not exist"));
+
+    private static async Task<Validation<BaseError, string>> ValidateName(
+        TvContext dbContext,
+        UpdateFillerPreset request)
+    {
+        Validation<BaseError, string> result1 = request.NotEmpty(fp => fp.Name)
+            .Bind(_ => request.NotLongerThan(50)(fp => fp.Name));
+
+        bool duplicateName = await dbContext.FillerPresets
+            .AnyAsync(c => c.Id != request.Id && c.Name == request.Name);
+
+        Validation<BaseError, Unit> result2 = duplicateName
+            ? Fail<BaseError, Unit>("Filler preset name must be unique")
+            : Success<BaseError, Unit>(Unit.Default);
+
+        return (result1, result2).Apply((_, _) => request.Name);
+    }
 }

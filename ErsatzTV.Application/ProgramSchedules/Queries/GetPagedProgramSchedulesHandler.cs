@@ -19,13 +19,11 @@ public class GetPagedProgramSchedulesHandler(IDbContextFactory<TvContext> dbCont
 
         if (!string.IsNullOrWhiteSpace(request.Query))
         {
-            query = query.Where(s => EF.Functions.Like(
-                EF.Functions.Collate(s.Name, TvContext.CaseInsensitiveCollation),
-                $"%{request.Query}%"));
+            query = query.Where(ps => EF.Functions.Like(ps.Name, $"%{request.Query}%"));
         }
 
         List<ProgramScheduleViewModel> page = await query
-            .OrderBy(s => EF.Functions.Collate(s.Name, TvContext.CaseInsensitiveCollation))
+            .OrderBy(ps => ps.Name)
             .Skip(request.PageNum * request.PageSize)
             .Take(request.PageSize)
             .ToListAsync(cancellationToken)

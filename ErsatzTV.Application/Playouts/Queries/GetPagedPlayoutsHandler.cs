@@ -24,9 +24,7 @@ public class GetPagedPlayoutsHandler(IDbContextFactory<TvContext> dbContextFacto
 
         if (!string.IsNullOrWhiteSpace(request.Query))
         {
-            query = query.Where(p => EF.Functions.Like(
-                EF.Functions.Collate(p.Channel.Name, TvContext.CaseInsensitiveCollation),
-                $"%{request.Query}%"));
+            query = query.Where(p => EF.Functions.Like(p.Channel.Name, $"%{request.Query}%"));
         }
 
         List<PlayoutNameViewModel> page = await query

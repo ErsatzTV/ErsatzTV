@@ -19,13 +19,11 @@ public class GetPagedMultiCollectionsHandler(IDbContextFactory<TvContext> dbCont
 
         if (!string.IsNullOrWhiteSpace(request.Query))
         {
-            query = query.Where(s => EF.Functions.Like(
-                EF.Functions.Collate(s.Name, TvContext.CaseInsensitiveCollation),
-                $"%{request.Query}%"));
+            query = query.Where(mc => EF.Functions.Like(mc.Name, $"%{request.Query}%"));
         }
 
         List<MultiCollectionViewModel> page = await query
-            .OrderBy(f => EF.Functions.Collate(f.Name, TvContext.CaseInsensitiveCollation))
+            .OrderBy(mc => mc.Name)
             .Skip(request.PageNum * request.PageSize)
             .Take(request.PageSize)
             .Include(mc => mc.MultiCollectionItems)

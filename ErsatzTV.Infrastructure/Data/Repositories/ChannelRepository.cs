@@ -51,9 +51,7 @@ public class ChannelRepository(IDbContextFactory<TvContext> dbContextFactory) : 
 
         List<ChannelWatermark> maybeWatermarks = await dbContext.ChannelWatermarks
             .AsNoTracking()
-            .Where(cw => EF.Functions.Like(
-                EF.Functions.Collate(cw.Name, TvContext.CaseInsensitiveCollation),
-                $"%{name}%"))
+            .Where(cw => EF.Functions.Like(cw.Name, $"%{name}%"))
             .ToListAsync();
 
         return maybeWatermarks.HeadOrNone();

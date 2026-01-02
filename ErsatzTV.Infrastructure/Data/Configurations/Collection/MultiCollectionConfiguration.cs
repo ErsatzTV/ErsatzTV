@@ -10,6 +10,13 @@ public class MultiCollectionConfiguration : IEntityTypeConfiguration<MultiCollec
     {
         builder.ToTable("MultiCollection");
 
+        builder.Property(mc => mc.Name)
+            .HasMaxLength(50)
+            .HasColumnType("varchar(50)");
+
+        builder.HasIndex(mc => mc.Name)
+            .IsUnique();
+
         builder.HasMany(m => m.Collections)
             .WithMany(m => m.MultiCollections)
             .UsingEntity<MultiCollectionItem>(

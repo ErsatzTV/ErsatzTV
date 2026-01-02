@@ -43,11 +43,10 @@ public class CreateDecoTemplateHandler(IDbContextFactory<TvContext> dbContextFac
             return BaseError.New($"Deco template name \"{request.Name}\" is invalid");
         }
 
-        Option<DecoTemplate> maybeExisting = await dbContext.DecoTemplates
-            .FirstOrDefaultAsync(r => r.DecoTemplateGroupId == request.DecoTemplateGroupId && r.Name == request.Name)
-            .Map(Optional);
+        bool duplicateName = await dbContext.DecoTemplates
+            .AnyAsync(r => r.DecoTemplateGroupId == request.DecoTemplateGroupId && r.Name == request.Name);
 
-        return maybeExisting.IsSome
+        return duplicateName
             ? BaseError.New($"A deco template named \"{request.Name}\" already exists in that deco template group")
             : Success<BaseError, string>(request.Name);
     }

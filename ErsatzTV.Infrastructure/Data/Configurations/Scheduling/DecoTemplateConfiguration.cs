@@ -10,6 +10,10 @@ public class DecoTemplateConfiguration : IEntityTypeConfiguration<DecoTemplate>
     {
         builder.ToTable("DecoTemplate");
 
+        builder.Property(d => d.Name)
+            .HasMaxLength(50)
+            .HasColumnType("varchar(50)");
+
         builder.HasIndex(d => new { d.DecoTemplateGroupId, d.Name })
             .IsUnique();
 

@@ -86,9 +86,7 @@ public class TelevisionRepository : ITelevisionRepository
         return await dbContext.ShowMetadata
             .AsNoTracking()
             .Where(sm => sm.Show.LibraryPath.LibraryId == libraryId)
-            .Where(sm => EF.Functions.Like(
-                EF.Functions.Collate(sm.Title, TvContext.CaseInsensitiveCollation),
-                $"%{title}%"))
+            .Where(sm => EF.Functions.Like(sm.Title, $"%{title}%"))
             .Map(sm => sm.ShowId)
             .FirstOrDefaultAsync()
             .Map(showId => showId > 0 ? Option<int>.Some(showId) : Option<int>.None);
@@ -223,9 +221,8 @@ public class TelevisionRepository : ITelevisionRepository
         if (maybeId.IsNone)
         {
             List<int> maybeShowIds = await dbContext.Episodes
-                .Where(e => e.MediaVersions.Any(mv => mv.MediaFiles.Any(mf => EF.Functions.Like(
-                    EF.Functions.Collate(mf.Path, TvContext.CaseInsensitiveCollation),
-                    $"{showFolder}%"))))
+                .Where(e => e.MediaVersions.Any(mv =>
+                    mv.MediaFiles.Any(mf => EF.Functions.Like(mf.Path, $"{showFolder}%"))))
                 .Map(e => e.Season.ShowId)
                 .Distinct()
                 .ToListAsync();

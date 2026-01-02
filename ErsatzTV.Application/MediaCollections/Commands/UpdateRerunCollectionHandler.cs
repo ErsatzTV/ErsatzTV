@@ -54,10 +54,12 @@ public class UpdateRerunCollectionHandler(
         return Unit.Default;
     }
 
-    private static Task<Validation<BaseError, RerunCollection>> Validate(
+    private static async Task<Validation<BaseError, RerunCollection>> Validate(
         TvContext dbContext,
         UpdateRerunCollection request,
-        CancellationToken cancellationToken) => RerunCollectionMustExist(dbContext, request, cancellationToken);
+        CancellationToken cancellationToken) =>
+        (await RerunCollectionMustExist(dbContext, request, cancellationToken), await ValidateName(dbContext, request))
+        .Apply((collectionToUpdate, _) => collectionToUpdate);
 
     private static Task<Validation<BaseError, RerunCollection>> RerunCollectionMustExist(
         TvContext dbContext,
@@ -66,4 +68,21 @@ public class UpdateRerunCollectionHandler(
         dbContext.RerunCollections
             .SelectOneAsync(c => c.Id, c => c.Id == updateCollection.RerunCollectionId, cancellationToken)
             .Map(o => o.ToValidation<BaseError>("Rerun collection does not exist."));
+
+    private static async Task<Validation<BaseError, string>> ValidateName(
+        TvContext dbContext,
+        UpdateRerunCollection updateCollection)
+    {
+        Validation<BaseError, string> result1 = updateCollection.NotEmpty(c => c.Name)
+            .Bind(_ => updateCollection.NotLongerThan(50)(c => c.Name));
+
+        bool duplicateName = await dbContext.RerunCollections
+            .AnyAsync(c => c.Id != updateCollection.RerunCollectionId && c.Name == updateCollection.Name);
+
+        Validation<BaseError, Unit> result2 = duplicateName
+            ? Fail<BaseError, Unit>("Rerun collection name must be unique")
+            : Success<BaseError, Unit>(Unit.Default);
+
+        return (result1, result2).Apply((_, _) => updateCollection.Name);
+    }
 }

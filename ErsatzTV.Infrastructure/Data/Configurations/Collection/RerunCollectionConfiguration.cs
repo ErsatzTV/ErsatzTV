@@ -10,6 +10,13 @@ public class RerunCollectionConfiguration : IEntityTypeConfiguration<RerunCollec
     {
         builder.ToTable("RerunCollection");
 
+        builder.Property(rc => rc.Name)
+            .HasMaxLength(50)
+            .HasColumnType("varchar(50)");
+
+        builder.HasIndex(rc => rc.Name)
+            .IsUnique();
+
         builder.HasOne(i => i.Collection)
             .WithMany()
             .HasForeignKey(i => i.CollectionId)

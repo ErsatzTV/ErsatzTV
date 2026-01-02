@@ -92,17 +92,15 @@ public class CopyBlockHandler(IDbContextFactory<TvContext> dbContextFactory)
 
     private static async Task<Validation<BaseError, string>> ValidateName(TvContext dbContext, CopyBlock request)
     {
-        List<string> allNames = await dbContext.Blocks
-            .Where(b => b.BlockGroupId == request.NewBlockGroupId)
-            .Map(ps => ps.Name)
-            .ToListAsync();
-
         Validation<BaseError, string> result1 = request.NotEmpty(c => c.NewBlockName)
             .Bind(_ => request.NotLongerThan(50)(c => c.NewBlockName));
 
-        var result2 = Optional(request.NewBlockName)
-            .Where(name => !allNames.Contains(name))
-            .ToValidation<BaseError>("Block name must be unique within the block group.");
+        bool duplicateName = await dbContext.Blocks
+            .AnyAsync(b => b.BlockGroupId == request.NewBlockGroupId && b.Name == request.NewBlockName);
+
+        Validation<BaseError, Unit> result2 = duplicateName
+            ? Fail<BaseError, Unit>("Block name must be unique within the block group")
+            : Success<BaseError, Unit>(Unit.Default);
 
         return (result1, result2).Apply((_, _) => request.NewBlockName);
     }

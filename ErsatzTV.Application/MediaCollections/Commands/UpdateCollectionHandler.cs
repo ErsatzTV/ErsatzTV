@@ -70,7 +70,7 @@ public class UpdateCollectionHandler : IRequestHandler<UpdateCollection, Either<
         TvContext dbContext,
         UpdateCollection request,
         CancellationToken cancellationToken) =>
-        (await CollectionMustExist(dbContext, request, cancellationToken), ValidateName(request))
+        (await CollectionMustExist(dbContext, request, cancellationToken), await ValidateName(dbContext, request))
         .Apply((collectionToUpdate, _) => collectionToUpdate);
 
     private static Task<Validation<BaseError, Collection>> CollectionMustExist(
@@ -81,7 +81,20 @@ public class UpdateCollectionHandler : IRequestHandler<UpdateCollection, Either<
             .SelectOneAsync(c => c.Id, c => c.Id == updateCollection.CollectionId, cancellationToken)
             .Map(o => o.ToValidation<BaseError>("Collection does not exist."));
 
-    private static Validation<BaseError, string> ValidateName(UpdateCollection updateSimpleMediaCollection) =>
-        updateSimpleMediaCollection.NotEmpty(c => c.Name)
-            .Bind(_ => updateSimpleMediaCollection.NotLongerThan(50)(c => c.Name));
+    private static async Task<Validation<BaseError, string>> ValidateName(
+        TvContext dbContext,
+        UpdateCollection updateCollection)
+    {
+        Validation<BaseError, string> result1 = updateCollection.NotEmpty(c => c.Name)
+            .Bind(_ => updateCollection.NotLongerThan(50)(c => c.Name));
+
+        bool duplicateName = await dbContext.Collections
+            .AnyAsync(c => c.Id != updateCollection.CollectionId && c.Name == updateCollection.Name);
+
+        Validation<BaseError, Unit> result2 = duplicateName
+            ? Fail<BaseError, Unit>("Collection name must be unique")
+            : Success<BaseError, Unit>(Unit.Default);
+
+        return (result1, result2).Apply((_, _) => updateCollection.Name);
+    }
 }

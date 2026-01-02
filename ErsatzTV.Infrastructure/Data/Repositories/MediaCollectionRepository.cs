@@ -176,10 +176,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
         Option<Playlist> maybePlaylist = await dbContext.Playlists
             .AsNoTracking()
-            .SelectOneAsync(
-                p => p.Name,
-                p => EF.Functions.Collate(p.Name, TvContext.CaseInsensitiveCollation) == name,
-                cancellationToken);
+            .SingleOrDefaultAsync(p => p.Name == name, cancellationToken);
 
         foreach (Playlist playlist in maybePlaylist)
         {
@@ -360,10 +357,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
         Option<Collection> maybeCollection = await dbContext.Collections
             .AsNoTracking()
-            .SelectOneAsync(
-                c => c.Name,
-                c => EF.Functions.Collate(c.Name, TvContext.CaseInsensitiveCollation) == name,
-                cancellationToken);
+            .SingleOrDefaultAsync(c => c.Name == name, cancellationToken);
 
         foreach (Collection collection in maybeCollection)
         {
@@ -416,10 +410,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
         Option<MultiCollection> maybeCollection = await dbContext.MultiCollections
             .AsNoTracking()
-            .SelectOneAsync(
-                mc => mc.Name,
-                mc => EF.Functions.Collate(mc.Name, TvContext.CaseInsensitiveCollation) == name,
-                cancellationToken);
+            .SingleOrDefaultAsync(mc => mc.Name == name, cancellationToken);
 
         foreach (MultiCollection collection in maybeCollection)
         {
@@ -451,10 +442,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
         Option<SmartCollection> maybeCollection = await dbContext.SmartCollections
             .AsNoTracking()
-            .SelectOneAsync(
-                sc => sc.Name,
-                sc => EF.Functions.Collate(sc.Name, TvContext.CaseInsensitiveCollation) == name,
-                cancellationToken);
+            .SingleOrDefaultAsync(sc => sc.Name == name, cancellationToken);
 
         foreach (SmartCollection collection in maybeCollection)
         {
@@ -694,8 +682,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
             List<int> nextIds = await dbContext.ShowMetadata
                 .AsNoTracking()
-                .Filter(sm =>
-                    sm.Guids.Any(g => EF.Functions.Collate(g.Guid, TvContext.CaseInsensitiveCollation) == guid))
+                .Filter(sm => sm.Guids.Any(g => g.Guid == guid))
                 .Map(sm => sm.ShowId)
                 .ToListAsync();
 

@@ -155,17 +155,15 @@ public class UpdateMultiCollectionHandler : IRequestHandler<UpdateMultiCollectio
         TvContext dbContext,
         UpdateMultiCollection updateMultiCollection)
     {
-        List<string> allNames = await dbContext.MultiCollections
-            .Filter(mc => mc.Id != updateMultiCollection.MultiCollectionId)
-            .Map(c => c.Name)
-            .ToListAsync();
-
         Validation<BaseError, string> result1 = updateMultiCollection.NotEmpty(c => c.Name)
             .Bind(_ => updateMultiCollection.NotLongerThan(50)(c => c.Name));
 
-        var result2 = Optional(updateMultiCollection.Name)
-            .Where(name => !allNames.Contains(name))
-            .ToValidation<BaseError>("MultiCollection name must be unique");
+        bool duplicateName = await dbContext.MultiCollections
+            .AnyAsync(c => c.Id != updateMultiCollection.MultiCollectionId && c.Name == updateMultiCollection.Name);
+
+        Validation<BaseError, Unit> result2 = duplicateName
+            ? Fail<BaseError, Unit>("MultiCollection name must be unique")
+            : Success<BaseError, Unit>(Unit.Default);
 
         return (result1, result2).Apply((_, _) => updateMultiCollection.Name);
     }

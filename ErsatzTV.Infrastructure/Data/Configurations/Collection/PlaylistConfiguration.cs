@@ -10,7 +10,11 @@ public class PlaylistConfiguration : IEntityTypeConfiguration<Playlist>
     {
         builder.ToTable("Playlist");
 
-        builder.HasIndex(d => new { d.PlaylistGroupId, d.Name })
+        builder.Property(p => p.Name)
+            .HasMaxLength(50)
+            .HasColumnType("varchar(50)");
+
+        builder.HasIndex(p => new { p.PlaylistGroupId, p.Name })
             .IsUnique();
 
         builder.HasMany(p => p.Items)

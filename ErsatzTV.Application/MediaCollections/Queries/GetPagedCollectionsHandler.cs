@@ -19,13 +19,11 @@ public class GetPagedCollectionsHandler(IDbContextFactory<TvContext> dbContextFa
 
         if (!string.IsNullOrWhiteSpace(request.Query))
         {
-            query = query.Where(s => EF.Functions.Like(
-                EF.Functions.Collate(s.Name, TvContext.CaseInsensitiveCollation),
-                $"%{request.Query}%"));
+            query = query.Where(c => EF.Functions.Like(c.Name, $"%{request.Query}%"));
         }
 
         List<MediaCollectionViewModel> page = await query
-            .OrderBy(c => EF.Functions.Collate(c.Name, TvContext.CaseInsensitiveCollation))
+            .OrderBy(c => c.Name)
             .Skip(request.PageNum * request.PageSize)
             .Take(request.PageSize)
             .ToListAsync(cancellationToken)

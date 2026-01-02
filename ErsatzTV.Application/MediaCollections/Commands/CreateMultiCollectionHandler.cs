@@ -92,16 +92,15 @@ public class CreateMultiCollectionHandler :
         TvContext dbContext,
         CreateMultiCollection createMultiCollection)
     {
-        List<string> allNames = await dbContext.MultiCollections
-            .Map(c => c.Name)
-            .ToListAsync();
-
         Validation<BaseError, string> result1 = createMultiCollection.NotEmpty(c => c.Name)
             .Bind(_ => createMultiCollection.NotLongerThan(50)(c => c.Name));
 
-        var result2 = Optional(createMultiCollection.Name)
-            .Where(name => !allNames.Contains(name))
-            .ToValidation<BaseError>("MultiCollection name must be unique");
+        bool duplicateName = await dbContext.MultiCollections
+            .AnyAsync(c => c.Name == createMultiCollection.Name);
+
+        Validation<BaseError, Unit> result2 = duplicateName
+            ? Fail<BaseError, Unit>("MultiCollection name must be unique")
+            : Success<BaseError, Unit>(Unit.Default);
 
         return (result1, result2).Apply((_, _) => createMultiCollection.Name);
     }

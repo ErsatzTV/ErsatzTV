@@ -38,12 +38,12 @@ public class CreateTemplateGroupHandler(IDbContextFactory<TvContext> dbContextFa
         Validation<BaseError, string> result1 = createTemplateGroup.NotEmpty(c => c.Name)
             .Bind(_ => createTemplateGroup.NotLongerThan(50)(c => c.Name));
 
-        int duplicateNameCount = await dbContext.TemplateGroups
-            .CountAsync(ps => ps.Name == createTemplateGroup.Name);
+        bool duplicateName = await dbContext.TemplateGroups
+            .AnyAsync(ps => ps.Name == createTemplateGroup.Name);
 
-        var result2 = Optional(duplicateNameCount)
-            .Where(count => count == 0)
-            .ToValidation<BaseError>("Template group name must be unique");
+        Validation<BaseError, Unit> result2 = duplicateName
+            ? Fail<BaseError, Unit>("Template group name must be unique")
+            : Success<BaseError, Unit>(Unit.Default);
 
         return (result1, result2).Apply((_, _) => createTemplateGroup.Name);
     }
