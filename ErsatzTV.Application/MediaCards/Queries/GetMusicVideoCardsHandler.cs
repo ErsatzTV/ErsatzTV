@@ -4,6 +4,7 @@ using ErsatzTV.Core.Interfaces.Emby;
 using ErsatzTV.Core.Interfaces.Jellyfin;
 using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core;
 using static ErsatzTV.Application.MediaCards.Mapper;
 
 namespace ErsatzTV.Application.MediaCards;
@@ -31,10 +32,12 @@ public class GetMusicVideoCardsHandler : IRequestHandler<GetMusicVideoCards, Mus
         GetMusicVideoCards request,
         CancellationToken cancellationToken)
     {
+        int pageSize = PaginationOptions.NormalizePageSize(request.PageSize);
+
         int count = await _musicVideoRepository.GetMusicVideoCount(request.ArtistId);
 
         List<MusicVideoMetadata> musicVideos = await _musicVideoRepository
-            .GetPagedMusicVideos(request.ArtistId, request.PageNumber, request.PageSize);
+            .GetPagedMusicVideos(request.ArtistId, request.PageNumber, pageSize);
 
         var results = new List<MusicVideoCardViewModel>();
 

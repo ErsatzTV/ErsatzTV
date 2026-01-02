@@ -189,7 +189,7 @@
     private List<string> _sortedGenres = [];
     private List<string> _sortedTags = [];
 
-    private static int PageSize => 100;
+    private int _pageSize = PaginationOptions.DefaultPageSize;
     private const int PageNumber = 1;
 
     private TelevisionSeasonCardResultsViewModel _data = new(0, [], null);
@@ -209,6 +209,8 @@
 
         try
         {
+            _pageSize = await Mediator.GetDefaultPageSize(token);
+
             Option<TelevisionShowViewModel> maybeShow = await Mediator.Send(new GetTelevisionShowById(ShowId), token);
             foreach (TelevisionShowViewModel show in maybeShow)
             {
@@ -221,7 +223,7 @@
                 _sortedNetworks = _show.Networks.OrderBy(n => n).ToList();
             }
 
-            _data = await Mediator.Send(new GetTelevisionSeasonCards(ShowId, PageNumber, PageSize), token);
+            _data = await Mediator.Send(new GetTelevisionSeasonCards(ShowId, PageNumber, _pageSize), token);
         }
         catch (OperationCanceledException)
         {

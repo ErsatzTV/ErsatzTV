@@ -1,4 +1,5 @@
-﻿using ErsatzTV.Core.Domain;
+﻿using ErsatzTV.Core;
+using ErsatzTV.Core.Domain;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using static ErsatzTV.Application.ProgramSchedules.Mapper;
@@ -12,6 +13,8 @@ public class GetPagedProgramSchedulesHandler(IDbContextFactory<TvContext> dbCont
         GetPagedProgramSchedules request,
         CancellationToken cancellationToken)
     {
+        int pageSize = PaginationOptions.NormalizePageSize(request.PageSize);
+
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         int count = await dbContext.ProgramSchedules.CountAsync(cancellationToken);
 
@@ -26,8 +29,8 @@ public class GetPagedProgramSchedulesHandler(IDbContextFactory<TvContext> dbCont
 
         List<ProgramScheduleViewModel> page = await query
             .OrderBy(s => EF.Functions.Collate(s.Name, TvContext.CaseInsensitiveCollation))
-            .Skip(request.PageNum * request.PageSize)
-            .Take(request.PageSize)
+            .Skip(request.PageNum * pageSize)
+            .Take(pageSize)
             .ToListAsync(cancellationToken)
             .Map(list => list.Map(ProjectToViewModel).ToList());
 

@@ -253,6 +253,7 @@
     private List<string> _sortedGenres = [];
     private List<string> _sortedStyles = [];
     private List<string> _sortedMoods = [];
+    private int _pageSize = PaginationOptions.DefaultPageSize;
     private MusicVideoCardResultsViewModel _musicVideos = new(0, [], new SearchPageMap([]));
 
     public void Dispose()
@@ -270,6 +271,7 @@
 
         try
         {
+            _pageSize = await Mediator.GetDefaultPageSize(token);
             await Mediator.Send(new GetArtistById(ArtistId), token).IfSomeAsync(vm =>
             {
                 _artist = vm;
@@ -279,7 +281,7 @@
                 _sortedMoods = _artist.Moods.OrderBy(m => m).ToList();
             });
 
-            _musicVideos = await Mediator.Send(new GetMusicVideoCards(ArtistId, 1, 100), token);
+            _musicVideos = await Mediator.Send(new GetMusicVideoCards(ArtistId, 1, _pageSize), token);
         }
         catch (OperationCanceledException)
         {

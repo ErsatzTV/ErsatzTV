@@ -2,6 +2,7 @@
 using ErsatzTV.Application.MediaCards;
 using ErsatzTV.Application.MediaCollections;
 using ErsatzTV.Core;
+using ErsatzTV.Extensions;
 using ErsatzTV.Shared;
 using LanguageExt.UnsafeValueAccess;
 using MediatR;
@@ -14,6 +15,7 @@ namespace ErsatzTV.Pages;
 public class MultiSelectBase<T> : FragmentNavigationBase
 {
     private Option<MediaCardViewModel> _recentlySelected = None;
+    protected int PageSize { get; private set; } = PaginationOptions.DefaultPageSize;
 
     [Inject]
     protected IDialogService Dialog { get; set; }
@@ -28,6 +30,9 @@ public class MultiSelectBase<T> : FragmentNavigationBase
     protected IMediator Mediator { get; set; }
 
     protected System.Collections.Generic.HashSet<MediaCardViewModel> SelectedItems { get; } = [];
+
+    protected async Task InitializePageSize(CancellationToken cancellationToken) =>
+        PageSize = await Mediator.GetDefaultPageSize(cancellationToken);
 
     protected bool IsSelected(MediaCardViewModel card) =>
         SelectedItems.Contains(card);

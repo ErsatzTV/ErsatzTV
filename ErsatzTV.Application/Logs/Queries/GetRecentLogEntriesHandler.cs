@@ -14,6 +14,8 @@ public class GetRecentLogEntriesHandler : IRequestHandler<GetRecentLogEntries, P
         GetRecentLogEntries request,
         CancellationToken cancellationToken)
     {
+        int pageSize = PaginationOptions.NormalizePageSize(request.PageSize);
+
         // get most recent file
         string logFileName = _localFileSystem.ListFiles(FileSystemLayout.LogsFolder)
             .OrderDescending()
@@ -41,8 +43,8 @@ public class GetRecentLogEntriesHandler : IRequestHandler<GetRecentLogEntries, P
                 () => entries.OrderByDescending(le => le.Timestamp));
 
             var page = ordered
-                .Skip(request.PageNum * request.PageSize)
-                .Take(request.PageSize)
+                .Skip(request.PageNum * pageSize)
+                .Take(pageSize)
                 .ToList();
 
             return new PagedLogEntriesViewModel(count, page).AsTask();

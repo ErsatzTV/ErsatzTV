@@ -1,4 +1,5 @@
-﻿using ErsatzTV.Core.Domain;
+﻿using ErsatzTV.Core;
+using ErsatzTV.Core.Domain;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using static ErsatzTV.Application.MediaCollections.Mapper;
@@ -12,6 +13,8 @@ public class GetPagedCollectionsHandler(IDbContextFactory<TvContext> dbContextFa
         GetPagedCollections request,
         CancellationToken cancellationToken)
     {
+        int pageSize = PaginationOptions.NormalizePageSize(request.PageSize);
+
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         int count = await dbContext.Collections.CountAsync(cancellationToken);
 
@@ -26,8 +29,8 @@ public class GetPagedCollectionsHandler(IDbContextFactory<TvContext> dbContextFa
 
         List<MediaCollectionViewModel> page = await query
             .OrderBy(c => EF.Functions.Collate(c.Name, TvContext.CaseInsensitiveCollation))
-            .Skip(request.PageNum * request.PageSize)
-            .Take(request.PageSize)
+            .Skip(request.PageNum * pageSize)
+            .Take(pageSize)
             .ToListAsync(cancellationToken)
             .Map(list => list.Map(ProjectToViewModel).ToList());
 

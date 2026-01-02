@@ -1,3 +1,4 @@
+using ErsatzTV.Core;
 using ErsatzTV.Core.Domain.Scheduling;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -11,6 +12,8 @@ public class GetBlockPlayoutHistoryHandler(IDbContextFactory<TvContext> dbContex
         GetBlockPlayoutHistory request,
         CancellationToken cancellationToken)
     {
+        int pageSize = PaginationOptions.NormalizePageSize(request.PageSize);
+
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         IQueryable<PlayoutHistory> query = dbContext.PlayoutHistory
@@ -21,8 +24,8 @@ public class GetBlockPlayoutHistoryHandler(IDbContextFactory<TvContext> dbContex
 
         List<PlayoutHistory> allHistory = await query
             .OrderBy(ph => ph.Id)
-            .Skip(request.PageNum * request.PageSize)
-            .Take(request.PageSize)
+            .Skip(request.PageNum * pageSize)
+            .Take(pageSize)
             .ToListAsync(cancellationToken);
 
         return new PagedPlayoutHistoryViewModel(totalCount, allHistory.Map(Mapper.ProjectToViewModel).ToList());

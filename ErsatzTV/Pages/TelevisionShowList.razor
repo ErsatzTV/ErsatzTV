@@ -48,7 +48,6 @@
 }
 
 @code {
-    private static int PageSize => 100;
 
     [Parameter]
     public int PageNumber { get; set; }
@@ -67,6 +66,8 @@
 
     protected override async Task OnParametersSetAsync()
     {
+        await InitializePageSize(CancellationToken);
+
         if (PageNumber == 0)
         {
             PageNumber = 1;

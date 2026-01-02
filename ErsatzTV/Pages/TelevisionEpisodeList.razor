@@ -188,7 +188,7 @@
 
     private TelevisionSeasonViewModel _season;
 
-    private static int PageSize => 100;
+    private int _pageSize = PaginationOptions.DefaultPageSize;
     private const int PageNumber = 1;
 
     private TelevisionEpisodeCardResultsViewModel _data = new(0, new List<TelevisionEpisodeCardViewModel>(), null);
@@ -223,8 +223,9 @@
 
         try
         {
+            _pageSize = await Mediator.GetDefaultPageSize(token);
             await Mediator.Send(new GetTelevisionSeasonById(SeasonId), token).IfSomeAsync(vm => _season = vm);
-            _data = await Mediator.Send(new GetTelevisionEpisodeCards(SeasonId, PageNumber, PageSize), token);
+            _data = await Mediator.Send(new GetTelevisionEpisodeCards(SeasonId, PageNumber, _pageSize), token);
         }
         catch (OperationCanceledException)
         {

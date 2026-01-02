@@ -1,4 +1,5 @@
-﻿using ErsatzTV.Core.Domain;
+﻿using ErsatzTV.Core;
+using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 using static ErsatzTV.Application.MediaCards.Mapper;
 
@@ -23,6 +24,8 @@ public class
         GetTelevisionSeasonCards request,
         CancellationToken cancellationToken)
     {
+        int pageSize = PaginationOptions.NormalizePageSize(request.PageSize);
+
         int count = await _televisionRepository.GetSeasonCount(request.TelevisionShowId);
 
         Option<JellyfinMediaSource> maybeJellyfin = await _mediaSourceRepository.GetAllJellyfin(cancellationToken)
@@ -32,7 +35,7 @@ public class
             .Map(list => list.HeadOrNone());
 
         List<TelevisionSeasonCardViewModel> results = await _televisionRepository
-            .GetPagedSeasons(request.TelevisionShowId, request.PageNumber, request.PageSize, cancellationToken)
+            .GetPagedSeasons(request.TelevisionShowId, request.PageNumber, pageSize, cancellationToken)
             .Map(list => list.Map(s => ProjectToViewModel(s, maybeJellyfin, maybeEmby)).ToList());
 
         return new TelevisionSeasonCardResultsViewModel(count, results, null);
