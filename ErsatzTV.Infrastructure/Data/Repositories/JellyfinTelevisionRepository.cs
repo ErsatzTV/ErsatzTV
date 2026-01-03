@@ -175,26 +175,32 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
                 MediaItemScanResult<JellyfinEpisode> result;
                 if (existingState.Etag != item.Etag || deepScan)
                 {
-                    JellyfinEpisode existing = await dbContext.JellyfinEpisodes
-                        .TagWithCallSite()
-                        .Include(e => e.EpisodeMetadata).ThenInclude(em => em.Artwork)
-                        .Include(e => e.EpisodeMetadata).ThenInclude(em => em.Guids)
-                        .Include(e => e.EpisodeMetadata).ThenInclude(em => em.Genres)
-                        .Include(e => e.EpisodeMetadata).ThenInclude(em => em.Tags)
-                        .Include(e => e.EpisodeMetadata).ThenInclude(em => em.Actors).ThenInclude(a => a.Artwork)
-                        .Include(e => e.EpisodeMetadata).ThenInclude(em => em.Directors)
-                        .Include(e => e.EpisodeMetadata).ThenInclude(em => em.Writers)
-                        .Include(e => e.MediaVersions).ThenInclude(mv => mv.MediaFiles)
-                        .Include(e => e.MediaVersions).ThenInclude(mv => mv.Streams)
-                        .Include(e => e.MediaVersions).ThenInclude(mv => mv.Chapters)
-                        .AsSplitQuery()
-                        .SingleAsync(s => s.Id == existingId, cancellationToken);
+                    JellyfinEpisode existing;
 
-                    await dbContext.Entry(existing).Reference(e => e.Season).LoadAsync(cancellationToken);
+                    using (ScanProfiler.Measure("DB Ep Upd Load"))
+                    {
+                        existing = await dbContext.JellyfinEpisodes
+                            .TagWithCallSite()
+                            .Include(e => e.EpisodeMetadata).ThenInclude(em => em.Artwork)
+                            .Include(e => e.EpisodeMetadata).ThenInclude(em => em.Guids)
+                            .Include(e => e.EpisodeMetadata).ThenInclude(em => em.Genres)
+                            .Include(e => e.EpisodeMetadata).ThenInclude(em => em.Tags)
+                            .Include(e => e.EpisodeMetadata).ThenInclude(em => em.Actors).ThenInclude(a => a.Artwork)
+                            .Include(e => e.EpisodeMetadata).ThenInclude(em => em.Directors)
+                            .Include(e => e.EpisodeMetadata).ThenInclude(em => em.Writers)
+                            .Include(e => e.MediaVersions).ThenInclude(mv => mv.MediaFiles)
+                            .Include(e => e.MediaVersions).ThenInclude(mv => mv.Streams)
+                            .Include(e => e.MediaVersions).ThenInclude(mv => mv.Chapters)
+                            .AsSplitQuery()
+                            .SingleAsync(s => s.Id == existingId, cancellationToken);
+
+                        await dbContext.Entry(existing).Reference(e => e.Season).LoadAsync(cancellationToken);
+                    }
 
                     await UpdateEpisode(dbContext, existing, item, cancellationToken);
 
-                    result = new MediaItemScanResult<JellyfinEpisode>(existing) { IsAdded = false, IsUpdated = true };
+                    result = new MediaItemScanResult<JellyfinEpisode>(existing)
+                        { IsAdded = false, IsUpdated = true };
                 }
                 else
                 {
@@ -800,137 +806,140 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
         JellyfinEpisode incoming,
         CancellationToken cancellationToken)
     {
-        // library path is used for search indexing later
-        incoming.LibraryPathId = existing.LibraryPathId;
-        incoming.Id = existing.Id;
-
-        // metadata
-        // TODO: multiple metadata?
-        EpisodeMetadata metadata = existing.EpisodeMetadata.Head();
-        EpisodeMetadata incomingMetadata = incoming.EpisodeMetadata.Head();
-        metadata.Title = incomingMetadata.Title;
-        metadata.SortTitle = incomingMetadata.SortTitle;
-        metadata.Plot = incomingMetadata.Plot;
-        metadata.Year = incomingMetadata.Year;
-        metadata.DateAdded = incomingMetadata.DateAdded;
-        metadata.DateUpdated = DateTime.UtcNow;
-        metadata.ReleaseDate = incomingMetadata.ReleaseDate;
-        metadata.EpisodeNumber = incomingMetadata.EpisodeNumber;
-
-        // thumbnail
-        Artwork incomingThumbnail =
-            incomingMetadata.Artwork.FirstOrDefault(a => a.ArtworkKind == ArtworkKind.Thumbnail);
-        if (incomingThumbnail != null)
+        using (ScanProfiler.Measure("DB Ep Upd Save"))
         {
-            Artwork thumbnail = metadata.Artwork.FirstOrDefault(a => a.ArtworkKind == ArtworkKind.Thumbnail);
-            if (thumbnail == null)
+            // library path is used for search indexing later
+            incoming.LibraryPathId = existing.LibraryPathId;
+            incoming.Id = existing.Id;
+
+            // metadata
+            // TODO: multiple metadata?
+            EpisodeMetadata metadata = existing.EpisodeMetadata.Head();
+            EpisodeMetadata incomingMetadata = incoming.EpisodeMetadata.Head();
+            metadata.Title = incomingMetadata.Title;
+            metadata.SortTitle = incomingMetadata.SortTitle;
+            metadata.Plot = incomingMetadata.Plot;
+            metadata.Year = incomingMetadata.Year;
+            metadata.DateAdded = incomingMetadata.DateAdded;
+            metadata.DateUpdated = DateTime.UtcNow;
+            metadata.ReleaseDate = incomingMetadata.ReleaseDate;
+            metadata.EpisodeNumber = incomingMetadata.EpisodeNumber;
+
+            // thumbnail
+            Artwork incomingThumbnail =
+                incomingMetadata.Artwork.FirstOrDefault(a => a.ArtworkKind == ArtworkKind.Thumbnail);
+            if (incomingThumbnail != null)
             {
-                thumbnail = new Artwork { ArtworkKind = ArtworkKind.Thumbnail };
-                metadata.Artwork.Add(thumbnail);
+                Artwork thumbnail = metadata.Artwork.FirstOrDefault(a => a.ArtworkKind == ArtworkKind.Thumbnail);
+                if (thumbnail == null)
+                {
+                    thumbnail = new Artwork { ArtworkKind = ArtworkKind.Thumbnail };
+                    metadata.Artwork.Add(thumbnail);
+                }
+
+                thumbnail.Path = incomingThumbnail.Path;
+                thumbnail.DateAdded = incomingThumbnail.DateAdded;
+                thumbnail.DateUpdated = incomingThumbnail.DateUpdated;
             }
 
-            thumbnail.Path = incomingThumbnail.Path;
-            thumbnail.DateAdded = incomingThumbnail.DateAdded;
-            thumbnail.DateUpdated = incomingThumbnail.DateUpdated;
+            // directors
+            foreach (Director director in metadata.Directors
+                         .Filter(d => incomingMetadata.Directors.All(d2 => d2.Name != d.Name))
+                         .ToList())
+            {
+                metadata.Directors.Remove(director);
+            }
+
+            foreach (Director director in incomingMetadata.Directors
+                         .Filter(d => metadata.Directors.All(d2 => d2.Name != d.Name))
+                         .ToList())
+            {
+                metadata.Directors.Add(director);
+            }
+
+            // writers
+            foreach (Writer writer in metadata.Writers
+                         .Filter(w => incomingMetadata.Writers.All(w2 => w2.Name != w.Name))
+                         .ToList())
+            {
+                metadata.Writers.Remove(writer);
+            }
+
+            foreach (Writer writer in incomingMetadata.Writers
+                         .Filter(w => metadata.Writers.All(w2 => w2.Name != w.Name))
+                         .ToList())
+            {
+                metadata.Writers.Add(writer);
+            }
+
+            // guids
+            foreach (MetadataGuid guid in metadata.Guids
+                         .Filter(g => incomingMetadata.Guids.All(g2 => g2.Guid != g.Guid))
+                         .ToList())
+            {
+                metadata.Guids.Remove(guid);
+            }
+
+            foreach (MetadataGuid guid in incomingMetadata.Guids
+                         .Filter(g => metadata.Guids.All(g2 => g2.Guid != g.Guid))
+                         .ToList())
+            {
+                metadata.Guids.Add(guid);
+            }
+
+            // genres
+            foreach (Genre genre in metadata.Genres
+                         .Filter(g => incomingMetadata.Genres.All(g2 => g2.Name != g.Name))
+                         .ToList())
+            {
+                metadata.Genres.Remove(genre);
+            }
+
+            foreach (Genre genre in incomingMetadata.Genres
+                         .Filter(g => metadata.Genres.All(g2 => g2.Name != g.Name))
+                         .ToList())
+            {
+                metadata.Genres.Add(genre);
+            }
+
+            // tags
+            foreach (Tag tag in metadata.Tags
+                         .Filter(g => incomingMetadata.Tags.All(g2 => g2.Name != g.Name))
+                         .Filter(g => g.ExternalCollectionId is null)
+                         .ToList())
+            {
+                metadata.Tags.Remove(tag);
+            }
+
+            foreach (Tag tag in incomingMetadata.Tags
+                         .Filter(g => metadata.Tags.All(g2 => g2.Name != g.Name))
+                         .ToList())
+            {
+                metadata.Tags.Add(tag);
+            }
+
+            var paths = incomingMetadata.Artwork.Map(a => a.Path).ToList();
+            foreach (Artwork artworkToRemove in metadata.Artwork
+                         .Filter(a => !paths.Contains(a.Path))
+                         .ToList())
+            {
+                metadata.Artwork.Remove(artworkToRemove);
+            }
+
+            // version
+            MediaVersion version = existing.MediaVersions.Head();
+            MediaVersion incomingVersion = incoming.MediaVersions.Head();
+            version.Name = incomingVersion.Name;
+            version.DateAdded = incomingVersion.DateAdded;
+            version.Chapters = incomingVersion.Chapters;
+
+            // media file
+            MediaFile file = version.MediaFiles.Head();
+            MediaFile incomingFile = incomingVersion.MediaFiles.Head();
+            file.Path = incomingFile.Path;
+
+            await dbContext.SaveChangesAsync(cancellationToken);
         }
-
-        // directors
-        foreach (Director director in metadata.Directors
-                     .Filter(d => incomingMetadata.Directors.All(d2 => d2.Name != d.Name))
-                     .ToList())
-        {
-            metadata.Directors.Remove(director);
-        }
-
-        foreach (Director director in incomingMetadata.Directors
-                     .Filter(d => metadata.Directors.All(d2 => d2.Name != d.Name))
-                     .ToList())
-        {
-            metadata.Directors.Add(director);
-        }
-
-        // writers
-        foreach (Writer writer in metadata.Writers
-                     .Filter(w => incomingMetadata.Writers.All(w2 => w2.Name != w.Name))
-                     .ToList())
-        {
-            metadata.Writers.Remove(writer);
-        }
-
-        foreach (Writer writer in incomingMetadata.Writers
-                     .Filter(w => metadata.Writers.All(w2 => w2.Name != w.Name))
-                     .ToList())
-        {
-            metadata.Writers.Add(writer);
-        }
-
-        // guids
-        foreach (MetadataGuid guid in metadata.Guids
-                     .Filter(g => incomingMetadata.Guids.All(g2 => g2.Guid != g.Guid))
-                     .ToList())
-        {
-            metadata.Guids.Remove(guid);
-        }
-
-        foreach (MetadataGuid guid in incomingMetadata.Guids
-                     .Filter(g => metadata.Guids.All(g2 => g2.Guid != g.Guid))
-                     .ToList())
-        {
-            metadata.Guids.Add(guid);
-        }
-
-        // genres
-        foreach (Genre genre in metadata.Genres
-                     .Filter(g => incomingMetadata.Genres.All(g2 => g2.Name != g.Name))
-                     .ToList())
-        {
-            metadata.Genres.Remove(genre);
-        }
-
-        foreach (Genre genre in incomingMetadata.Genres
-                     .Filter(g => metadata.Genres.All(g2 => g2.Name != g.Name))
-                     .ToList())
-        {
-            metadata.Genres.Add(genre);
-        }
-
-        // tags
-        foreach (Tag tag in metadata.Tags
-                     .Filter(g => incomingMetadata.Tags.All(g2 => g2.Name != g.Name))
-                     .Filter(g => g.ExternalCollectionId is null)
-                     .ToList())
-        {
-            metadata.Tags.Remove(tag);
-        }
-
-        foreach (Tag tag in incomingMetadata.Tags
-                     .Filter(g => metadata.Tags.All(g2 => g2.Name != g.Name))
-                     .ToList())
-        {
-            metadata.Tags.Add(tag);
-        }
-
-        var paths = incomingMetadata.Artwork.Map(a => a.Path).ToList();
-        foreach (Artwork artworkToRemove in metadata.Artwork
-                     .Filter(a => !paths.Contains(a.Path))
-                     .ToList())
-        {
-            metadata.Artwork.Remove(artworkToRemove);
-        }
-
-        // version
-        MediaVersion version = existing.MediaVersions.Head();
-        MediaVersion incomingVersion = incoming.MediaVersions.Head();
-        version.Name = incomingVersion.Name;
-        version.DateAdded = incomingVersion.DateAdded;
-        version.Chapters = incomingVersion.Chapters;
-
-        // media file
-        MediaFile file = version.MediaFiles.Head();
-        MediaFile incomingFile = incomingVersion.MediaFiles.Head();
-        file.Path = incomingFile.Path;
-
-        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
     private static async Task<Either<BaseError, MediaItemScanResult<JellyfinShow>>> AddShow(
