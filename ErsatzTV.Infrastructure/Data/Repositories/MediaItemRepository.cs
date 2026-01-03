@@ -210,7 +210,7 @@ public class MediaItemRepository(
                     };
 
                     string libraryName = mediaItem.LibraryPath.Library.Name;
-                    logger.LogDebug(
+                    logger.LogWarning(
                         "Unable to add media item to {IncomingLibraryType} '{IncomingLibraryName}'; {LibraryType} '{LibraryName}' already contains path {Path}",
                         incomingLibraryType,
                         incomingLibrary.Name,
