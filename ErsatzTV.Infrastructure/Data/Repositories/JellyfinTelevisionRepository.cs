@@ -928,6 +928,8 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
             version.Name = incomingVersion.Name;
             version.DateAdded = incomingVersion.DateAdded;
 
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+
             // delete old chapters
             await dbContext.MediaChapters
                 .Where(c => c.MediaVersionId == version.Id)
@@ -947,6 +949,8 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
                 .ExecuteUpdateAsync(mf => mf.SetProperty(f => f.Path, incomingFile.Path), cancellationToken);
 
             await dbContext.SaveChangesAsync(cancellationToken);
+
+            await transaction.CommitAsync(cancellationToken);
         }
     }
 
