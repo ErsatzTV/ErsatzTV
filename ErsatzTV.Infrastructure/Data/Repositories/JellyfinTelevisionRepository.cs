@@ -188,9 +188,7 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
                             .Include(e => e.EpisodeMetadata).ThenInclude(em => em.Actors).ThenInclude(a => a.Artwork)
                             .Include(e => e.EpisodeMetadata).ThenInclude(em => em.Directors)
                             .Include(e => e.EpisodeMetadata).ThenInclude(em => em.Writers)
-                            .Include(e => e.MediaVersions).ThenInclude(mv => mv.MediaFiles)
                             .Include(e => e.MediaVersions).ThenInclude(mv => mv.Streams)
-                            .Include(e => e.MediaVersions).ThenInclude(mv => mv.Chapters)
                             .AsSplitQuery()
                             .SingleAsync(s => s.Id == existingId, cancellationToken);
 
@@ -210,9 +208,7 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
                         .Include(e => e.EpisodeMetadata).ThenInclude(em => em.Actors)
                         .Include(e => e.EpisodeMetadata).ThenInclude(em => em.Directors)
                         .Include(e => e.EpisodeMetadata).ThenInclude(em => em.Writers)
-                        .Include(e => e.MediaVersions).ThenInclude(mv => mv.MediaFiles)
                         .Include(e => e.MediaVersions).ThenInclude(mv => mv.Streams)
-                        .Include(e => e.MediaVersions).ThenInclude(mv => mv.Chapters)
                         .AsSplitQuery()
                         .SingleAsync(s => s.Id == existingId, cancellationToken);
 
@@ -931,12 +927,24 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
             MediaVersion incomingVersion = incoming.MediaVersions.Head();
             version.Name = incomingVersion.Name;
             version.DateAdded = incomingVersion.DateAdded;
-            version.Chapters = incomingVersion.Chapters;
 
-            // media file
-            MediaFile file = version.MediaFiles.Head();
+            // delete old chapters
+            await dbContext.MediaChapters
+                .Where(c => c.MediaVersionId == version.Id)
+                .ExecuteDeleteAsync(cancellationToken);
+
+            // replace with new chapters
+            version.Chapters = incomingVersion.Chapters;
+            foreach (var ch in version.Chapters)
+            {
+                ch.MediaVersionId = version.Id;
+            }
+
+            // always update media file path
             MediaFile incomingFile = incomingVersion.MediaFiles.Head();
-            file.Path = incomingFile.Path;
+            await dbContext.MediaFiles
+                .Where(mf => mf.MediaVersionId == version.Id)
+                .ExecuteUpdateAsync(mf => mf.SetProperty(f => f.Path, incomingFile.Path), cancellationToken);
 
             await dbContext.SaveChangesAsync(cancellationToken);
         }
