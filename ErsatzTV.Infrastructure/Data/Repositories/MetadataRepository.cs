@@ -118,12 +118,11 @@ public class MetadataRepository(IDbContextFactory<TvContext> dbContextFactory) :
 
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
         Option<MediaVersion> maybeVersion = await dbContext.MediaVersions
+            .TagWithCallSite()
             .Include(v => v.Streams)
             .Include(v => v.Chapters)
-            .Include(v => v.MediaFiles)
             .OrderBy(v => v.Id)
-            .SingleOrDefaultAsync(v => v.Id == mediaVersionId)
-            .Map(Optional);
+            .SingleOrDefaultAsync(v => v.Id == mediaVersionId);
 
         return await maybeVersion.Match(
             async existing =>

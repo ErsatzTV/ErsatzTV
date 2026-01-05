@@ -895,6 +895,7 @@ public class EmbyTelevisionRepository(
         MediaFile file = version.MediaFiles.Head();
         MediaFile incomingFile = incomingVersion.MediaFiles.Head();
         file.Path = incomingFile.Path;
+        file.PathHash = PathUtils.GetPathHash(incomingFile.Path);
 
         await dbContext.SaveChangesAsync(cancellationToken);
     }

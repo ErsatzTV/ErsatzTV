@@ -932,6 +932,7 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
 
             // delete old chapters
             await dbContext.MediaChapters
+                .TagWithCallSite()
                 .Where(c => c.MediaVersionId == version.Id)
                 .ExecuteDeleteAsync(cancellationToken);
 
@@ -942,11 +943,15 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
                 ch.MediaVersionId = version.Id;
             }
 
-            // always update media file path
+            // always update media file path (and hash)
             MediaFile incomingFile = incomingVersion.MediaFiles.Head();
             await dbContext.MediaFiles
+                .TagWithCallSite()
                 .Where(mf => mf.MediaVersionId == version.Id)
-                .ExecuteUpdateAsync(mf => mf.SetProperty(f => f.Path, incomingFile.Path), cancellationToken);
+                .ExecuteUpdateAsync(
+                    mf => mf.SetProperty(f => f.Path, incomingFile.Path)
+                        .SetProperty(f => f.PathHash, PathUtils.GetPathHash(incomingFile.Path)),
+                    cancellationToken);
 
             await dbContext.SaveChangesAsync(cancellationToken);
 
