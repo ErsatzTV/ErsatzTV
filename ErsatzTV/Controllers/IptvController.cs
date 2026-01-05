@@ -292,7 +292,7 @@ public class IptvController : StreamingControllerBase
     private async Task<string> GetMultiVariantPlaylist(string channelNumber)
     {
         var variantPlaylist =
-            $"{Request.Scheme}://{Request.Host}/iptv/session/{channelNumber}/hls.m3u8{AccessTokenQuery()}";
+            $"{Request.Scheme}://{Request.Host}{Request.PathBase}/iptv/session/{channelNumber}/hls.m3u8{AccessTokenQuery()}";
 
         Option<ChannelStreamingSpecsViewModel> maybeStreamingSpecs =
             await _mediator.Send(new GetChannelStreamingSpecs(channelNumber));
