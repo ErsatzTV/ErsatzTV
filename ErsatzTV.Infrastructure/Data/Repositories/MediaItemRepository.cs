@@ -171,8 +171,8 @@ public class MediaItemRepository(
                 @"select coalesce(EpisodeId, MovieId, MusicVideoId, OtherVideoId, SongId, ImageId, RemoteStreamId) as MediaItemId
                      from MediaVersion MV
                      inner join MediaFile MF on MV.Id = MF.MediaVersionId
-                     where MF.Path = @Path",
-                new { Path = path })
+                     where MF.PathHash = @PathHash",
+                new { PathHash = PathUtils.GetPathHash(path) })
             .Map(Optional);
 
         foreach (int mediaItemId in maybeMediaItemId)
