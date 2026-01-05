@@ -527,6 +527,18 @@ public class Startup
             try
             {
                 app.UsePathBase(baseUrl);
+
+                // for testing - make path base required
+                // app.Use(async (context, next) =>
+                // {
+                //     if (context.Request.PathBase != baseUrl)
+                //     {
+                //         context.Response.StatusCode = 404;
+                //         return;
+                //     }
+                //
+                //     await next(context);
+                // });
             }
             catch (Exception ex)
             {
