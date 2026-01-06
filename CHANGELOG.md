@@ -88,6 +88,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Optimize Jellyfin show library scans by only requesting `People` (actors, directors, writers) when etags don't match
   - This should significantly speed up periodic library scans, particularly against Jellyfin 10.11.x
 - Lazy load media item images in UI
+- Align alternate schedule and template handling (between classic schedules and block schedules)
+  - Both systems now support limiting to a date range
+  - This date range can be repeating (when year is not specified for start or end dates)
+  - This date range can be exact (when year is specified for start and end dates)
 
 ## [25.9.0] - 2025-11-29
 ### Added
