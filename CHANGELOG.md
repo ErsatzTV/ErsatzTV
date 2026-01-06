@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [26.1.0] - 2026-01-06
 ### Added
 - Graphics Engine:
   - Add `script` graphics element type
@@ -3079,7 +3081,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/ErsatzTV/ErsatzTV/compare/v25.9.0...HEAD
+[Unreleased]: https://github.com/ErsatzTV/ErsatzTV/compare/v26.1.0...HEAD
+[26.1.0]: https://github.com/ErsatzTV/ErsatzTV/compare/v25.9.0...v26.1.0
 [25.9.0]: https://github.com/ErsatzTV/ErsatzTV/compare/v25.8.0...v25.9.0
 [25.8.0]: https://github.com/ErsatzTV/ErsatzTV/compare/v25.7.1...v25.8.0
 [25.7.1]: https://github.com/ErsatzTV/ErsatzTV/compare/v25.7.0...v25.7.1
