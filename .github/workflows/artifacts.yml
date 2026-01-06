@@ -259,7 +259,7 @@ jobs:
         uses: suisei-cn/actions-download-file@v1.3.0
         with:
           url: "https://github.com/ErsatzTV/ErsatzTV-Windows/releases/download/v1.0.0/ErsatzTV-Windows.exe"
-          path: rust-build
+          target: rust-build/
 
       - name: Download ffmpeg
         uses: suisei-cn/actions-download-file@v1.3.0
