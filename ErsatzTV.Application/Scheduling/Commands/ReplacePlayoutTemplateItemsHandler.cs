@@ -59,8 +59,10 @@ public class ReplacePlayoutTemplateItemsHandler(
                             LimitToDateRange = add.LimitToDateRange,
                             StartMonth = add.StartMonth,
                             StartDay = add.StartDay,
+                            StartYear = add.StartYear,
                             EndMonth = add.EndMonth,
                             EndDay = add.EndDay,
+                            EndYear = add.EndYear,
                             DateUpdated = now
                         });
                 }
@@ -78,8 +80,10 @@ public class ReplacePlayoutTemplateItemsHandler(
                         ex.LimitToDateRange = update.LimitToDateRange;
                         ex.StartMonth = update.StartMonth;
                         ex.StartDay = update.StartDay;
+                        ex.StartYear = update.StartYear;
                         ex.EndMonth = update.EndMonth;
                         ex.EndDay = update.EndDay;
+                        ex.EndYear = update.EndYear;
                         ex.DateUpdated = now;
                     }
                 }

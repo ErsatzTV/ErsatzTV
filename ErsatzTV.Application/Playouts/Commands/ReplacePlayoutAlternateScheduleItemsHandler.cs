@@ -9,23 +9,13 @@ using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Application.Playouts;
 
-public class ReplacePlayoutAlternateScheduleItemsHandler :
-    IRequestHandler<ReplacePlayoutAlternateScheduleItems, Either<BaseError, Unit>>
+public class ReplacePlayoutAlternateScheduleItemsHandler(
+    IDbContextFactory<TvContext> dbContextFactory,
+    ChannelWriter<IBackgroundServiceRequest> channel,
+    ILogger<ReplacePlayoutAlternateScheduleItemsHandler> logger)
+    :
+        IRequestHandler<ReplacePlayoutAlternateScheduleItems, Either<BaseError, Unit>>
 {
-    private readonly ChannelWriter<IBackgroundServiceRequest> _channel;
-    private readonly IDbContextFactory<TvContext> _dbContextFactory;
-    private readonly ILogger<ReplacePlayoutAlternateScheduleItemsHandler> _logger;
-
-    public ReplacePlayoutAlternateScheduleItemsHandler(
-        IDbContextFactory<TvContext> dbContextFactory,
-        ChannelWriter<IBackgroundServiceRequest> channel,
-        ILogger<ReplacePlayoutAlternateScheduleItemsHandler> logger)
-    {
-        _dbContextFactory = dbContextFactory;
-        _channel = channel;
-        _logger = logger;
-    }
-
     public async Task<Either<BaseError, Unit>> Handle(
         ReplacePlayoutAlternateScheduleItems request,
         CancellationToken cancellationToken)
@@ -34,7 +24,7 @@ public class ReplacePlayoutAlternateScheduleItemsHandler :
 
         try
         {
-            await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+            await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
             Option<Playout> maybePlayout = await dbContext.Playouts
                 .Include(p => p.ProgramSchedule)
@@ -62,10 +52,9 @@ public class ReplacePlayoutAlternateScheduleItemsHandler :
 
                     foreach (DateTimeOffset dayToCheck in daysToCheck)
                     {
-                        ProgramSchedule schedule = PlayoutScheduleSelector.GetProgramScheduleFor(
-                            playout.ProgramSchedule,
-                            playout.ProgramScheduleAlternates,
-                            dayToCheck);
+                        ProgramSchedule schedule = AlternateScheduleSelector
+                            .GetScheduleForDate(playout.ProgramScheduleAlternates, dayToCheck)
+                            .Match(s => s.ProgramSchedule, playout.ProgramSchedule);
 
                         existingScheduleMap.Add(dayToCheck, schedule);
                     }
@@ -77,7 +66,7 @@ public class ReplacePlayoutAlternateScheduleItemsHandler :
 
                 ProgramScheduleAlternate[] existing = playout.ProgramScheduleAlternates.ToArray();
 
-                var incoming = request.Items.Except(new[] { highest }).ToList();
+                var incoming = request.Items.Except([highest]).ToList();
 
                 var toAdd = incoming.Filter(x => existing.All(e => e.Id != x.Id)).ToList();
                 var toRemove = existing.Filter(e => incoming.All(m => m.Id != e.Id)).ToList();
@@ -95,7 +84,14 @@ public class ReplacePlayoutAlternateScheduleItemsHandler :
                             ProgramScheduleId = add.ProgramScheduleId,
                             DaysOfWeek = add.DaysOfWeek,
                             DaysOfMonth = add.DaysOfMonth,
-                            MonthsOfYear = add.MonthsOfYear
+                            MonthsOfYear = add.MonthsOfYear,
+                            LimitToDateRange = add.LimitToDateRange,
+                            StartMonth = add.StartMonth,
+                            StartDay = add.StartDay,
+                            StartYear = add.StartYear,
+                            EndMonth = add.EndMonth,
+                            EndDay = add.EndDay,
+                            EndYear = add.EndYear
                         });
                 }
 
@@ -108,6 +104,13 @@ public class ReplacePlayoutAlternateScheduleItemsHandler :
                         ex.DaysOfWeek = update.DaysOfWeek;
                         ex.DaysOfMonth = update.DaysOfMonth;
                         ex.MonthsOfYear = update.MonthsOfYear;
+                        ex.LimitToDateRange = update.LimitToDateRange;
+                        ex.StartMonth = update.StartMonth;
+                        ex.StartDay = update.StartDay;
+                        ex.StartYear = update.StartYear;
+                        ex.EndMonth = update.EndMonth;
+                        ex.EndDay = update.EndDay;
+                        ex.EndYear = update.EndYear;
                     }
                 }
 
@@ -136,21 +139,20 @@ public class ReplacePlayoutAlternateScheduleItemsHandler :
                 {
                     foreach (DateTimeOffset dayToCheck in daysToCheck)
                     {
-                        ProgramSchedule schedule = PlayoutScheduleSelector.GetProgramScheduleFor(
-                            playout.ProgramSchedule,
-                            playout.ProgramScheduleAlternates,
-                            dayToCheck);
+                        ProgramSchedule schedule = AlternateScheduleSelector
+                            .GetScheduleForDate(playout.ProgramScheduleAlternates, dayToCheck)
+                            .Match(s => s.ProgramSchedule, playout.ProgramSchedule);
 
                         if (existingScheduleMap.TryGetValue(dayToCheck, out ProgramSchedule existingValue) &&
                             existingValue.Id != schedule.Id)
                         {
-                            _logger.LogInformation(
+                            logger.LogInformation(
                                 "Alternate schedule change detected for day {Day}, schedule {One} => {Two}; will refresh playout",
                                 dayToCheck,
                                 existingValue.Name,
                                 schedule.Name);
 
-                            await _channel.WriteAsync(
+                            await channel.WriteAsync(
                                 new BuildPlayout(request.PlayoutId, PlayoutBuildMode.Refresh),
                                 cancellationToken);
 
@@ -164,7 +166,7 @@ public class ReplacePlayoutAlternateScheduleItemsHandler :
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error saving alternate schedule items");
+            logger.LogError(ex, "Error saving alternate schedule items");
             return BaseError.New(ex.Message);
         }
     }

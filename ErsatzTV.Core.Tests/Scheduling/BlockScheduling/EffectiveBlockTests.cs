@@ -1,4 +1,5 @@
 using ErsatzTV.Core.Domain.Scheduling;
+using ErsatzTV.Core.Scheduling;
 using ErsatzTV.Core.Scheduling.BlockScheduling;
 using NUnit.Framework;
 using Shouldly;
@@ -54,8 +55,8 @@ public class EffectiveBlockTests
                 {
                     Index = 1,
                     DaysOfWeek = [DayOfWeek.Sunday],
-                    DaysOfMonth = PlayoutTemplate.AllDaysOfMonth(),
-                    MonthsOfYear = PlayoutTemplate.AllMonthsOfYear(),
+                    DaysOfMonth = AlternateScheduleSelector.AllDaysOfMonth(),
+                    MonthsOfYear = AlternateScheduleSelector.AllMonthsOfYear(),
                     Template = SingleBlockTemplate(now),
                     DateUpdated = now.UtcDateTime
                 }
@@ -80,8 +81,8 @@ public class EffectiveBlockTests
                 {
                     Index = 1,
                     DaysOfWeek = [DayOfWeek.Monday, DayOfWeek.Wednesday, DayOfWeek.Friday],
-                    DaysOfMonth = PlayoutTemplate.AllDaysOfMonth(),
-                    MonthsOfYear = PlayoutTemplate.AllMonthsOfYear(),
+                    DaysOfMonth = AlternateScheduleSelector.AllDaysOfMonth(),
+                    MonthsOfYear = AlternateScheduleSelector.AllMonthsOfYear(),
                     Template = SingleBlockTemplate(now),
                     DateUpdated = now.UtcDateTime
                 }
@@ -114,9 +115,9 @@ public class EffectiveBlockTests
                 new()
                 {
                     Index = 1,
-                    DaysOfWeek = PlayoutTemplate.AllDaysOfWeek(),
-                    DaysOfMonth = PlayoutTemplate.AllDaysOfMonth(),
-                    MonthsOfYear = PlayoutTemplate.AllMonthsOfYear(),
+                    DaysOfWeek = AlternateScheduleSelector.AllDaysOfWeek(),
+                    DaysOfMonth = AlternateScheduleSelector.AllDaysOfMonth(),
+                    MonthsOfYear = AlternateScheduleSelector.AllMonthsOfYear(),
                     Template = SingleBlockTemplate(now), // 9am block
                     DateUpdated = now.UtcDateTime
                 }
@@ -153,9 +154,9 @@ public class EffectiveBlockTests
                 new()
                 {
                     Index = 1,
-                    DaysOfWeek = PlayoutTemplate.AllDaysOfWeek(),
-                    DaysOfMonth = PlayoutTemplate.AllDaysOfMonth(),
-                    MonthsOfYear = PlayoutTemplate.AllMonthsOfYear(),
+                    DaysOfWeek = AlternateScheduleSelector.AllDaysOfWeek(),
+                    DaysOfMonth = AlternateScheduleSelector.AllDaysOfMonth(),
+                    MonthsOfYear = AlternateScheduleSelector.AllMonthsOfYear(),
                     Template = SingleBlockTemplate(now), // 9am block
                     DateUpdated = now.UtcDateTime
                 }

@@ -4,6 +4,7 @@
 @using ErsatzTV.Application.Channels
 @using ErsatzTV.Application.Playouts
 @using ErsatzTV.Application.ProgramSchedules
+@using ErsatzTV.Core.Scheduling
 @implements IDisposable
 @inject NavigationManager NavigationManager
 @inject ILogger<ScheduleItemsEditor> Logger
@@ -103,6 +104,70 @@
                         @foreach (ProgramScheduleViewModel schedule in _schedules)
                         {
                             <MudSelectItem Value="@schedule">@schedule.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudStack>
+                <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                    <div class="d-flex">
+                        <MudText>Limit to Date Range</MudText>
+                    </div>
+                    <MudCheckBox T="bool" @bind-Value="_selectedItem.LimitToDateRange" Dense="true"/>
+                </MudStack>
+                <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                    <div class="d-flex">
+                        <MudText>Start Day</MudText>
+                    </div>
+                    <MudSelect T="int" @bind-Value="_selectedItem.StartMonth" Disabled="@(!_selectedItem.LimitToDateRange)">
+                        @foreach (int month in Enumerable.Range(1, 12))
+                        {
+                            <MudSelectItem Value="@month">@_dtf.GetMonthName(month)</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudStack>
+                <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                    <div class="d-flex"></div>
+                    <MudSelect T="int" @bind-Value="_selectedItem.StartDay" Disabled="@(!_selectedItem.LimitToDateRange)">
+                        @foreach (int day in Enumerable.Range(1, 31))
+                        {
+                            <MudSelectItem Value="@day">@day.ToString()</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudStack>
+                <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                    <div class="d-flex"></div>
+                    <MudSelect T="int?" @bind-Value="_selectedItem.StartYear" Disabled="@(!_selectedItem.LimitToDateRange)" Clearable="true">
+                        @foreach (int year in Enumerable.Range(DateTime.Today.Year, 50))
+                        {
+                            <MudSelectItem T="int?" Value="@year">@year.ToString()</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudStack>
+                <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                    <div class="d-flex">
+                        <MudText>End Day</MudText>
+                    </div>
+                    <MudSelect T="int" @bind-Value="_selectedItem.EndMonth" Disabled="@(!_selectedItem.LimitToDateRange)">
+                        @foreach (int month in Enumerable.Range(1, 12))
+                        {
+                            <MudSelectItem Value="@month">@_dtf.GetMonthName(month)</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudStack>
+                <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                    <div class="d-flex"></div>
+                    <MudSelect T="int" @bind-Value="_selectedItem.EndDay" Disabled="@(!_selectedItem.LimitToDateRange)">
+                        @foreach (int day in Enumerable.Range(1, 31))
+                        {
+                            <MudSelectItem Value="@day">@day.ToString()</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudStack>
+                <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                    <div class="d-flex"></div>
+                    <MudSelect T="int?" @bind-Value="_selectedItem.EndYear" Disabled="@(!_selectedItem.LimitToDateRange)" Clearable="true">
+                        @foreach (int year in Enumerable.Range(DateTime.Today.Year, 50))
+                        {
+                            <MudSelectItem T="int?" Value="@year">@year.ToString()</MudSelectItem>
                         }
                     </MudSelect>
                 </MudStack>
@@ -211,7 +276,14 @@
             ProgramSchedule = _schedules.Find(vm => vm.Id == item.ProgramScheduleId),
             DaysOfWeek = item.DaysOfWeek.OrderBy(x => ((int)x + 6) % 7).ToList(),
             DaysOfMonth = item.DaysOfMonth.ToList(),
-            MonthsOfYear = item.MonthsOfYear.ToList()
+            MonthsOfYear = item.MonthsOfYear.ToList(),
+            LimitToDateRange = item.LimitToDateRange,
+            StartMonth = item.StartMonth,
+            StartDay = item.StartDay,
+            StartYear = item.StartYear,
+            EndMonth = item.EndMonth,
+            EndDay = item.EndDay,
+            EndYear = item.EndYear
         };
 
     private void SelectWeekdays()
@@ -243,9 +315,16 @@
         {
             Index = _items.Map(i => i.Index).DefaultIfEmpty().Max() + 1,
             ProgramSchedule = _schedules.Head(),
-            DaysOfWeek = ProgramScheduleAlternate.AllDaysOfWeek(),
-            DaysOfMonth = ProgramScheduleAlternate.AllDaysOfMonth(),
-            MonthsOfYear = ProgramScheduleAlternate.AllMonthsOfYear()
+            DaysOfWeek = AlternateScheduleSelector.AllDaysOfWeek(),
+            DaysOfMonth = AlternateScheduleSelector.AllDaysOfMonth(),
+            MonthsOfYear = AlternateScheduleSelector.AllMonthsOfYear(),
+            LimitToDateRange = false,
+            StartMonth = 1,
+            StartDay = 1,
+            StartYear = null,
+            EndMonth = 1,
+            EndDay = 1,
+            EndYear = null
         };
 
         _items.Add(item);
@@ -280,7 +359,14 @@
             item.ProgramSchedule.Id,
             item.DaysOfWeek,
             item.DaysOfMonth,
-            item.MonthsOfYear)).ToList();
+            item.MonthsOfYear,
+            item.LimitToDateRange,
+            item.StartMonth,
+            item.StartDay,
+            item.StartYear,
+            item.EndMonth,
+            item.EndDay,
+            item.EndYear)).ToList();
 
         Seq<BaseError> errorMessages = await Mediator.Send(new ReplacePlayoutAlternateScheduleItems(Id, items), _cts.Token)
             .Map(e => e.LeftToSeq());

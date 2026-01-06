@@ -121,6 +121,7 @@ public class MetadataRepository(IDbContextFactory<TvContext> dbContextFactory) :
             .TagWithCallSite()
             .Include(v => v.Streams)
             .Include(v => v.Chapters)
+            .Include(v => v.MediaFiles)
             .OrderBy(v => v.Id)
             .SingleOrDefaultAsync(v => v.Id == mediaVersionId);
 

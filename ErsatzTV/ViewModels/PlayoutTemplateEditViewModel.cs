@@ -7,10 +7,6 @@ namespace ErsatzTV.ViewModels;
 
 public class PlayoutTemplateEditViewModel
 {
-    private int _endDay;
-    private int _endMonth;
-    private int _startDay;
-    private int _startMonth;
     public int Id { get; set; }
     public int Index { get; set; }
     public TemplateViewModel Template { get; set; }
@@ -25,27 +21,31 @@ public class PlayoutTemplateEditViewModel
 
     public int StartMonth
     {
-        get => _startMonth == 0 ? 1 : _startMonth;
-        set => _startMonth = value;
+        get => field == 0 ? 1 : field;
+        set;
     }
 
     public int StartDay
     {
-        get => _startDay == 0 ? 1 : _startDay;
-        set => _startDay = value;
+        get => field == 0 ? 1 : field;
+        set;
     }
+
+    public int? StartYear { get; set; }
 
     public int EndMonth
     {
-        get => _endMonth == 0 ? 12 : _endMonth;
-        set => _endMonth = value;
+        get => field == 0 ? 12 : field;
+        set;
     }
 
     public int EndDay
     {
-        get => _endDay == 0 ? 31 : _endDay;
-        set => _endDay = value;
+        get => field == 0 ? 31 : field;
+        set;
     }
+
+    public int? EndYear { get; set; }
 
     public bool AppliesToDate(DateTime date)
     {
@@ -59,16 +59,18 @@ public class PlayoutTemplateEditViewModel
             LimitToDateRange = LimitToDateRange,
             StartMonth = StartMonth,
             StartDay = StartDay,
+            StartYear = StartYear,
             EndMonth = EndMonth,
-            EndDay = EndDay
+            EndDay = EndDay,
+            EndYear = EndYear
         };
 
         TimeSpan offset = TimeZoneInfo.Local.GetUtcOffset(
             new DateTime(date.Year, date.Month, date.Day, 0, 0, 0, DateTimeKind.Local));
 
         Option<PlayoutTemplate> result =
-            PlayoutTemplateSelector.GetPlayoutTemplateFor(
-                new[] { template },
+            AlternateScheduleSelector.GetScheduleForDate(
+                [template],
                 new DateTimeOffset(
                     date.Year,
                     date.Month,

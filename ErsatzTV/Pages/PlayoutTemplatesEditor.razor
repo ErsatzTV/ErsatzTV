@@ -3,7 +3,7 @@
 @using System.Text
 @using ErsatzTV.Application.Channels
 @using ErsatzTV.Application.Scheduling
-@using ErsatzTV.Core.Domain.Scheduling
+@using ErsatzTV.Core.Scheduling
 @implements IDisposable
 @inject NavigationManager NavigationManager
 @inject ILogger<PlayoutTemplatesEditor> Logger
@@ -38,7 +38,7 @@
         <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
             <MudText Typo="Typo.h5" Class="mb-2">@_channelName - Templates</MudText>
             <MudDivider Class="mb-6"/>
-            <MudText Typo="Typo.body2" Class="mb-6">In priority order from top to bottom. The bottom entry will *always* match all days and all months, as a catch-all.</MudText>
+            <MudText Typo="Typo.body2" Class="mb-6">In priority order from top to bottom.</MudText>
             <MudTable T="PlayoutTemplateEditViewModel" Class="mt-4" Hover="true" Items="_items.OrderBy(i => i.Index)" Dense="true" SelectedItem="@_selectedItem" SelectedItemChanged="@(vm => SelectedItemChanged(vm))" RowClassFunc="@SelectedRowClassFunc">
                 <ColGroup>
                     <MudHidden Breakpoint="Breakpoint.Xs">
@@ -173,6 +173,15 @@
                     </MudSelect>
                 </MudStack>
                 <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                    <div class="d-flex"></div>
+                    <MudSelect T="int?" @bind-Value="_selectedItem.StartYear" Disabled="@(!_selectedItem.LimitToDateRange)" Clearable="true">
+                        @foreach (int year in Enumerable.Range(DateTime.Today.Year, 50))
+                        {
+                            <MudSelectItem T="int?" Value="@year">@year.ToString()</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudStack>
+                <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                     <div class="d-flex">
                         <MudText>End Day</MudText>
                     </div>
@@ -189,6 +198,15 @@
                         @foreach (int day in Enumerable.Range(1, 31))
                         {
                             <MudSelectItem Value="@day">@day.ToString()</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudStack>
+                <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                    <div class="d-flex"></div>
+                    <MudSelect T="int?" @bind-Value="_selectedItem.EndYear" Disabled="@(!_selectedItem.LimitToDateRange)" Clearable="true">
+                        @foreach (int year in Enumerable.Range(DateTime.Today.Year, 50))
+                        {
+                            <MudSelectItem T="int?" Value="@year">@year.ToString()</MudSelectItem>
                         }
                     </MudSelect>
                 </MudStack>
@@ -322,8 +340,10 @@
             LimitToDateRange = item.LimitToDateRange,
             StartMonth = item.StartMonth,
             StartDay = item.StartDay,
+            StartYear = item.StartYear,
             EndMonth = item.EndMonth,
-            EndDay = item.EndDay
+            EndDay = item.EndDay,
+            EndYear = item.EndYear
         };
 
     private async Task UpdateTemplateGroupItems(TemplateGroupViewModel templateGroup)
@@ -385,9 +405,9 @@
         var item = new PlayoutTemplateEditViewModel
         {
             Index = _items.Map(i => i.Index).DefaultIfEmpty().Max() + 1,
-            DaysOfWeek = PlayoutTemplate.AllDaysOfWeek(),
-            DaysOfMonth = PlayoutTemplate.AllDaysOfMonth(),
-            MonthsOfYear = PlayoutTemplate.AllMonthsOfYear()
+            DaysOfWeek = AlternateScheduleSelector.AllDaysOfWeek(),
+            DaysOfMonth = AlternateScheduleSelector.AllDaysOfMonth(),
+            MonthsOfYear = AlternateScheduleSelector.AllMonthsOfYear()
         };
 
         _items.Add(item);
@@ -433,8 +453,10 @@
             item.LimitToDateRange,
             item.StartMonth,
             item.StartDay,
+            item.StartYear,
             item.EndMonth,
-            item.EndDay)).ToList();
+            item.EndDay,
+            item.EndYear)).ToList();
 
         Option<BaseError> maybeError = await Mediator.Send(new ReplacePlayoutTemplateItems(Id, items), _cts.Token);
 

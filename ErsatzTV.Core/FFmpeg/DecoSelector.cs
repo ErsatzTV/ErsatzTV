@@ -21,7 +21,7 @@ public class DecoSelector(ILogger<DecoSelector> logger) : IDecoSelector
         Option<Deco> maybeTemplateDeco = Option<Deco>.None;
 
         Option<PlayoutTemplate> maybeActiveTemplate =
-            PlayoutTemplateSelector.GetPlayoutTemplateFor(playout.Templates, now);
+            AlternateScheduleSelector.GetScheduleForDate(playout.Templates, now);
 
         foreach (PlayoutTemplate activeTemplate in maybeActiveTemplate)
         {

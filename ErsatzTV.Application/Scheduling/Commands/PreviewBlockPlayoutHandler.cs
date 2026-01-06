@@ -49,9 +49,9 @@ public class PreviewBlockPlayoutHandler(
             [
                 new PlayoutTemplate
                 {
-                    DaysOfWeek = PlayoutTemplate.AllDaysOfWeek(),
-                    DaysOfMonth = PlayoutTemplate.AllDaysOfMonth(),
-                    MonthsOfYear = PlayoutTemplate.AllMonthsOfYear(),
+                    DaysOfWeek = AlternateScheduleSelector.AllDaysOfWeek(),
+                    DaysOfMonth = AlternateScheduleSelector.AllDaysOfMonth(),
+                    MonthsOfYear = AlternateScheduleSelector.AllMonthsOfYear(),
                     Template = template
                 }
             ],

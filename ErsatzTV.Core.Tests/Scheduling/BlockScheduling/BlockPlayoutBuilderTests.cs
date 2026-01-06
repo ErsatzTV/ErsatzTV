@@ -87,9 +87,9 @@ public class BlockPlayoutBuilderTests
                 Index = 1,
                 Template = template,
                 TemplateId = template.Id,
-                DaysOfMonth = PlayoutTemplate.AllDaysOfMonth(),
-                DaysOfWeek = PlayoutTemplate.AllDaysOfWeek(),
-                MonthsOfYear = PlayoutTemplate.AllMonthsOfYear()
+                DaysOfMonth = AlternateScheduleSelector.AllDaysOfMonth(),
+                DaysOfWeek = AlternateScheduleSelector.AllDaysOfWeek(),
+                MonthsOfYear = AlternateScheduleSelector.AllMonthsOfYear()
             };
 
             var playout = new Playout
@@ -221,9 +221,9 @@ public class BlockPlayoutBuilderTests
                 Index = 1,
                 Template = template,
                 TemplateId = template.Id,
-                DaysOfMonth = PlayoutTemplate.AllDaysOfMonth(),
-                DaysOfWeek = PlayoutTemplate.AllDaysOfWeek(),
-                MonthsOfYear = PlayoutTemplate.AllMonthsOfYear()
+                DaysOfMonth = AlternateScheduleSelector.AllDaysOfMonth(),
+                DaysOfWeek = AlternateScheduleSelector.AllDaysOfWeek(),
+                MonthsOfYear = AlternateScheduleSelector.AllMonthsOfYear()
             };
 
             var playout = new Playout
@@ -383,9 +383,9 @@ public class BlockPlayoutBuilderTests
                 Index = 1,
                 Template = template,
                 TemplateId = template.Id,
-                DaysOfMonth = PlayoutTemplate.AllDaysOfMonth(),
-                DaysOfWeek = PlayoutTemplate.AllDaysOfWeek(),
-                MonthsOfYear = PlayoutTemplate.AllMonthsOfYear()
+                DaysOfMonth = AlternateScheduleSelector.AllDaysOfMonth(),
+                DaysOfWeek = AlternateScheduleSelector.AllDaysOfWeek(),
+                MonthsOfYear = AlternateScheduleSelector.AllMonthsOfYear()
             };
 
             var playout = new Playout
@@ -553,9 +553,9 @@ public class BlockPlayoutBuilderTests
                 Index = 1,
                 Template = template,
                 TemplateId = template.Id,
-                DaysOfMonth = PlayoutTemplate.AllDaysOfMonth(),
-                DaysOfWeek = PlayoutTemplate.AllDaysOfWeek(),
-                MonthsOfYear = PlayoutTemplate.AllMonthsOfYear()
+                DaysOfMonth = AlternateScheduleSelector.AllDaysOfMonth(),
+                DaysOfWeek = AlternateScheduleSelector.AllDaysOfWeek(),
+                MonthsOfYear = AlternateScheduleSelector.AllMonthsOfYear()
             };
 
             var playout = new Playout

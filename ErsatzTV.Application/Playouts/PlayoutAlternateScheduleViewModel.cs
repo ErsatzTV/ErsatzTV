@@ -6,4 +6,11 @@ public record PlayoutAlternateScheduleViewModel(
     int ProgramScheduleId,
     ICollection<DayOfWeek> DaysOfWeek,
     ICollection<int> DaysOfMonth,
-    ICollection<int> MonthsOfYear);
+    ICollection<int> MonthsOfYear,
+    bool LimitToDateRange,
+    int StartMonth,
+    int StartDay,
+    int? StartYear,
+    int EndMonth,
+    int EndDay,
+    int? EndYear);
