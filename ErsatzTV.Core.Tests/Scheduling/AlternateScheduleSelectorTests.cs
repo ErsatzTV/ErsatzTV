@@ -839,5 +839,29 @@ public static class AlternateScheduleSelectorTests
 
             result.IsNone.ShouldBeTrue();
         }
+
+        [Test]
+        public void LimitToDateRange_December_32nd_Should_Not_Crash()
+        {
+            var template = new PlayoutTemplate
+            {
+                DaysOfWeek = AlternateScheduleSelector.AllDaysOfWeek(),
+                DaysOfMonth = AlternateScheduleSelector.AllDaysOfMonth(),
+                MonthsOfYear = AlternateScheduleSelector.AllMonthsOfYear(),
+                LimitToDateRange = true,
+                StartMonth = 12,
+                StartDay = 32,
+                StartYear = 2022,
+                EndMonth = 12,
+                EndDay = 32,
+                EndYear = 2023
+            };
+
+            Option<PlayoutTemplate> result = AlternateScheduleSelector.GetScheduleForDate(
+                new List<PlayoutTemplate> { template },
+                new DateTimeOffset(2023, 3, 1, 0, 0, 0, Offset));
+
+            result.IsNone.ShouldBeFalse();
+        }
     }
 }

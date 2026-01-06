@@ -45,8 +45,8 @@ public class GetPlayoutAlternateSchedulesHandler(IDbContextFactory<TvContext> db
                 StartMonth = 1,
                 StartDay = 1,
                 StartYear = null,
-                EndMonth = 1,
-                EndDay = 1,
+                EndMonth = 12,
+                EndDay = 31,
                 EndYear = null
             };
 

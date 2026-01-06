@@ -50,7 +50,7 @@ public static class AlternateScheduleSelector
                 {
                     // this should only happen with days that are greater than the actual days in the month,
                     // so roll over to the 1st of the next month
-                    start = new DateTime(startYear, item.StartMonth + 1, 1, 0, 0, 0, DateTimeKind.Local);
+                    start = new DateTime(startYear, item.StartMonth, 1, 0, 0, 0, DateTimeKind.Local).AddMonths(1);
                 }
 
                 try
