@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using ErsatzTV.Core;
 
 namespace ErsatzTV.Infrastructure;
 
@@ -16,7 +17,7 @@ public static class ScanProfiler
 
     public static void LogStatistics(Action<string> logAction)
     {
-        if (Measurements.IsEmpty)
+        if (!SystemEnvironment.JellyfinEnableStats || Measurements.IsEmpty)
         {
             return;
         }
