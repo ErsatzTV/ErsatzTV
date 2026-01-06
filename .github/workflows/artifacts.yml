@@ -244,28 +244,10 @@ jobs:
             main/
           retention-days: 1
 
-  build_rust_windows:
-    name: Build rust for Windows
-    runs-on: windows-latest
-    steps:
-      - name: Get the sources
-        uses: actions/checkout@v4
-
-      - name: Build Windows Launcher
-        shell: bash
-        run: cargo build --manifest-path=ErsatzTV-Windows/Cargo.toml --release --all-features
-
-      - name: Upload Rust Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: rust-windows-build
-          path: ErsatzTV-Windows/target/release/ersatztv_windows.exe
-          retention-days: 1
-
   package_and_upload_windows:
     name: Package & Upload Windows
     runs-on: ubuntu-latest
-    needs: [build_dotnet_windows, build_rust_windows]
+    needs: build_dotnet_windows
     steps:
       - name: Download dotnet artifacts
         uses: actions/download-artifact@v4
@@ -273,10 +255,10 @@ jobs:
           name: dotnet-windows-build
           path: dotnet-build
 
-      - name: Download rust artifacts
-        uses: actions/download-artifact@v4
+      - name: Download rust launcher
+        uses: suisei-cn/actions-download-file@v1.3.0
         with:
-          name: rust-windows-build
+          url: "https://github.com/ErsatzTV/ErsatzTV-Windows/releases/download/v1.0.0/ErsatzTV-Windows.exe"
           path: rust-build
 
       - name: Download ffmpeg
@@ -299,7 +281,7 @@ jobs:
           # dotnet shouldn't copy the resources here, but it does
           rm -rf "$release_name/Resources"
 
-          mv rust-build/ersatztv_windows.exe "$release_name/ErsatzTV-Windows.exe"
+          mv rust-build/ErsatzTV-Windows.exe "$release_name/ErsatzTV-Windows.exe"
           7z e "ffmpeg/${{ steps.downloadffmpeg.outputs.filename }}" -o"$release_name" '*.exe' -r
           rm -f "$release_name/ffplay.exe"
 
