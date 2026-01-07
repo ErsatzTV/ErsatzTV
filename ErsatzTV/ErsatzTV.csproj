@@ -28,6 +28,7 @@
     </Target>
 
     <ItemGroup>
+        <!-- <PackageReference Include="EntityFrameworkProfiler.Appender" Version="6.0.6049" /> -->
         <PackageReference Include="Blazored.FluentValidation" Version="2.2.0" />
         <PackageReference Include="BlazorSortable" Version="5.2.1" />
         <PackageReference Include="Bugsnag.AspNet.Core" Version="4.1.0" />

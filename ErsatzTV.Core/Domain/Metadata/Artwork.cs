@@ -12,6 +12,7 @@ public class Artwork
     public ArtworkKind ArtworkKind { get; set; }
     public DateTime DateAdded { get; set; }
     public DateTime DateUpdated { get; set; }
+    public bool? IsMetadataOrphan { get; set; }
 
     public bool IsExternalUrl() => IsExternalUrl(Path);
 

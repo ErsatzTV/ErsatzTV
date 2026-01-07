@@ -192,6 +192,11 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<int?>("ImageMetadataId")
                         .HasColumnType("int");
 
+                    b.Property<bool?>("IsMetadataOrphan")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("tinyint(1)")
+                        .HasComputedColumnSql("CASE WHEN COALESCE(ArtistMetadataId, ChannelId, EpisodeMetadataId, MovieMetadataId, MusicVideoMetadataId, OtherVideoMetadataId, SeasonMetadataId, ShowMetadataId, SongMetadataId, ImageMetadataId, RemoteStreamMetadataId) IS NULL THEN 1 ELSE NULL END", false);
+
                     b.Property<int?>("MovieMetadataId")
                         .HasColumnType("int");
 
@@ -231,6 +236,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.HasIndex("EpisodeMetadataId");
 
                     b.HasIndex("ImageMetadataId");
+
+                    b.HasIndex("IsMetadataOrphan");
 
                     b.HasIndex("MovieMetadataId");
 

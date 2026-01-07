@@ -55,6 +55,7 @@ public class TvContext : DbContext
     public DbSet<MovieMetadata> MovieMetadata { get; set; }
     public DbSet<Artwork> Artwork { get; set; }
     public DbSet<Artist> Artists { get; set; }
+    public DbSet<Actor> Actors { get; set; }
     public DbSet<ArtistMetadata> ArtistMetadata { get; set; }
     public DbSet<MusicVideo> MusicVideos { get; set; }
     public DbSet<MusicVideoMetadata> MusicVideoMetadata { get; set; }

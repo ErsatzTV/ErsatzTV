@@ -1,34 +1,26 @@
 ﻿using Dapper;
-using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Infrastructure.Data.Repositories;
 
-public class ArtworkRepository : IArtworkRepository
+public class ArtworkRepository(IDbContextFactory<TvContext> dbContextFactory) : IArtworkRepository
 {
-    private readonly IDbContextFactory<TvContext> _dbContextFactory;
-
-    public ArtworkRepository(IDbContextFactory<TvContext> dbContextFactory) => _dbContextFactory = dbContextFactory;
-
-    public async Task<List<Artwork>> GetOrphanedArtwork()
+    public async Task<List<int>> GetOrphanedArtworkIds()
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
-        return await dbContext.Connection.QueryAsync<Artwork>(
-                @"SELECT A.Id, A.Path FROM Artwork A
-                      WHERE A.ArtistMetadataId IS NULL AND A.EpisodeMetadataId IS NULL
-                      AND A.MovieMetadataId IS NULL AND A.MusicVideoMetadataId IS NULL
-                      AND A.SeasonMetadataId IS NULL AND A.ShowMetadataId IS NULL
-                      AND A.SongMetadataId IS NULL AND A.ChannelId IS NULL
-                      AND A.OtherVideoMetadataId IS NULL AND A.RemoteStreamMetadataId IS NULL
-                      AND NOT EXISTS (SELECT * FROM Actor WHERE Actor.ArtworkId = A.Id)")
-            .Map(result => result.ToList());
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Artwork
+            .TagWithCallSite()
+            .Where(a => a.IsMetadataOrphan == true)
+            .Where(a => !dbContext.Actors.Any(actor => actor.ArtworkId == a.Id))
+            .Select(a => a.Id)
+            .ToListAsync();
     }
 
-    public async Task<Unit> Delete(List<Artwork> artwork)
+    public async Task<Unit> Delete(List<int> artworkIds)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
-        IEnumerable<List<int>> chunks = Chunk(artwork.Map(a => a.Id), 100);
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
+        IEnumerable<List<int>> chunks = Chunk(artworkIds, 100);
         foreach (List<int> chunk in chunks)
         {
             await dbContext.Connection.ExecuteAsync(
