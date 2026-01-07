@@ -130,6 +130,8 @@ public class Program
 
             IHost host = CreateHostBuilder(args).Build();
 
+            //HibernatingRhinos.Profiler.Appender.EntityFramework.EntityFrameworkProfiler.Initialize();
+
             // run environment validation and exit on failure
             var validator = host.Services.GetRequiredService<IEnvironmentValidator>();
             if (!await validator.Validate())
