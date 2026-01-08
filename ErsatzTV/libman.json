@@ -1,0 +1,36 @@
+{
+  "version": "3.0",
+  "defaultProvider": "cdnjs",
+  "libraries": [
+    {
+      "library": "hls.js@1.6.13",
+      "destination": "wwwroot/lib/hls.js",
+      "files": [
+        "hls.min.js"
+      ]
+    },
+    {
+      "provider": "jsdelivr",
+      "library": "sortablejs@1.15.6",
+      "destination": "wwwroot/lib/sortablejs",
+      "files": [
+        "Sortable.js"
+      ]
+    },
+    {
+      "library": "jqueryui@1.14.1",
+      "destination": "wwwroot/lib/jqueryui",
+      "files": [
+        "themes/base/jquery-ui.css",
+        "jquery-ui.min.js"
+      ]
+    },
+    {
+      "library": "jquery@3.7.1",
+      "destination": "wwwroot/lib/jquery",
+      "files": [
+        "jquery.min.js"
+      ]
+    }
+  ]
+}

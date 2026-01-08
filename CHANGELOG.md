@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 ### Changed
 - Optimize database check for orphaned artwork
+- Include web resources (CSS, JS) locally instead of relying on CDNs
 
 ## [26.1.0] - 2026-01-06
 ### Added
