@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [26.1.1] - 2026-01-08
+### Fixed
+- Use code signing on Windows launcher (`ErsatzTV-Windows.exe`) to avoid antivirus false positive
+
 ### Changed
 - Optimize database check for orphaned artwork
 - Include web resources (CSS, JS) locally instead of relying on CDNs
@@ -3084,7 +3089,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/ErsatzTV/ErsatzTV/compare/v26.1.0...HEAD
+[Unreleased]: https://github.com/ErsatzTV/ErsatzTV/compare/v26.1.1...HEAD
+[26.1.0]: https://github.com/ErsatzTV/ErsatzTV/compare/v26.1.0...v26.1.1
 [26.1.0]: https://github.com/ErsatzTV/ErsatzTV/compare/v25.9.0...v26.1.0
 [25.9.0]: https://github.com/ErsatzTV/ErsatzTV/compare/v25.8.0...v25.9.0
 [25.8.0]: https://github.com/ErsatzTV/ErsatzTV/compare/v25.7.1...v25.8.0
