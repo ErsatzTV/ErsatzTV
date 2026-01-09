@@ -21,6 +21,8 @@ public partial class TextElement(
     private Option<Expression> _maybeOpacityExpression;
     private float _opacity;
 
+    public override int ZIndex { get; } = textElement.ZIndex ?? 0;
+
     public void Dispose()
     {
         GC.SuppressFinalize(this);
@@ -43,8 +45,6 @@ public partial class TextElement(
             {
                 _opacity = (textElement.OpacityPercent ?? 100) / 100.0f;
             }
-
-            ZIndex = textElement.ZIndex ?? 0;
 
             if (!string.IsNullOrWhiteSpace(textElement.IncludeFontsFrom))
             {

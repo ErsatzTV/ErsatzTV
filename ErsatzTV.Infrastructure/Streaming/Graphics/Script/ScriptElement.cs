@@ -27,6 +27,8 @@ public class ScriptElement(ScriptGraphicsElement scriptElement, ILogger logger)
     private int _repeatCount;
     private long _totalBytes;
 
+    public override int ZIndex { get; } = scriptElement.ZIndex ?? 0;
+
     public void Dispose()
     {
         logger.LogDebug(
