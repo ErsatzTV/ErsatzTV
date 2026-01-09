@@ -33,6 +33,7 @@ on:
         required: true
 permissions:
   id-token: write
+  contents: write
 jobs:
   build_and_upload_mac:
     name: Mac Build & Upload
@@ -314,7 +315,7 @@ jobs:
           7z e "ffmpeg/${{ steps.downloadffmpeg.outputs.filename }}" -o"$release_name" '*.exe' -r
           rm -f "$release_name/ffplay.exe"
 
-          (cd "${release_name}" && zip -r "../${release_name}.zip" .)
+          (cd "${release_name}" && 7z a "../${release_name}.zip" .)
 
       - name: Delete old release assets
         uses: mknejp/delete-release-assets@v1
