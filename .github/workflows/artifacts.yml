@@ -265,7 +265,8 @@ jobs:
           trusted-signing-account-name: ArtifactSigning
           certificate-profile-name: ErsatzTV
           files-folder: ${{ github.workspace }}/dotnet-build
-          files-folder-filter: main/ErsatzTV.exe,scanner/ErsatzTV.Scanner.exe
+          files-folder-recurse: true
+          files-folder-filter: ErsatzTV.exe,ErsatzTV.Scanner.exe
           file-digest: SHA256
           timestamp-rfc3161: http://timestamp.acs.microsoft.com
           timestamp-digest: SHA256
