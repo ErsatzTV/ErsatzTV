@@ -29,6 +29,8 @@ public class WatermarkElement : ImageElementBase
 
     public bool IsValid => _imagePath != null && _watermark != null;
 
+    public override int ZIndex { get; }
+
     public override async Task InitializeAsync(GraphicsEngineContext context, CancellationToken cancellationToken)
     {
         try

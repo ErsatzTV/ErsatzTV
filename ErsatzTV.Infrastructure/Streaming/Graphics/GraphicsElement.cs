@@ -7,7 +7,7 @@ namespace ErsatzTV.Infrastructure.Streaming.Graphics;
 
 public abstract class GraphicsElement : IGraphicsElement
 {
-    public int ZIndex { get; protected set; }
+    public abstract int ZIndex { get; }
 
     public bool IsFinished { get; set; }
 

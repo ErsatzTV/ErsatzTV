@@ -30,6 +30,8 @@ public class MotionElement(
     private TimeSpan _endTime;
     private MotionElementState _state;
 
+    public override int ZIndex { get; } = motionElement.ZIndex ?? 0;
+
     public void Dispose()
     {
         GC.SuppressFinalize(this);

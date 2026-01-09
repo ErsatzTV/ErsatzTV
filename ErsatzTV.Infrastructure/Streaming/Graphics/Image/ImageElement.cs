@@ -11,6 +11,8 @@ public class ImageElement(ImageGraphicsElement imageGraphicsElement, ILogger log
     private Option<Expression> _maybeOpacityExpression;
     private float _opacity;
 
+    public override int ZIndex { get; } = imageGraphicsElement.ZIndex ?? 0;
+
     public override async Task InitializeAsync(GraphicsEngineContext context, CancellationToken cancellationToken)
     {
         try
@@ -25,8 +27,6 @@ public class ImageElement(ImageGraphicsElement imageGraphicsElement, ILogger log
             {
                 _opacity = (imageGraphicsElement.OpacityPercent ?? 100) / 100.0f;
             }
-
-            ZIndex = imageGraphicsElement.ZIndex ?? 0;
 
             foreach (Expression expression in _maybeOpacityExpression)
             {

@@ -30,6 +30,8 @@ public class SubtitleElement(
     private SKBitmap _videoFrame;
     private bool _isFinished;
 
+    public override int ZIndex { get; } = subtitleElement.ZIndex ?? 0;
+
     public void Dispose()
     {
         GC.SuppressFinalize(this);
