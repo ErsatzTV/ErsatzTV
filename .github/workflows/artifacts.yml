@@ -25,6 +25,12 @@ on:
         required: true
       gh_token:
         required: true
+      azure_client_id:
+        required: true
+      azure_tenant_id:
+        required: true
+      azure_subscription_id:
+        required: true
 permissions:
   id-token: write
   contents: read
