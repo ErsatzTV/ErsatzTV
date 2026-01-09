@@ -246,7 +246,7 @@ jobs:
 
   package_and_upload_windows:
     name: Package & Upload Windows
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     needs: build_dotnet_windows
     steps:
       - name: Download dotnet artifacts
@@ -254,6 +254,21 @@ jobs:
         with:
           name: dotnet-windows-build
           path: dotnet-build
+
+      - name: Sign dotnet artifacts
+        uses: azure/trusted-signing-action@v0
+        with:
+          azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          azure-client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+          endpoint: https://eus.codesigning.azure.net/
+          trusted-signing-account-name: ArtifactSigning
+          certificate-profile-name: ErsatzTV
+          files-folder: ${{ github.workspace }}/dotnet-build
+          files-folder-filter: main/ErsatzTV.exe,scanner/ErsatzTV.Scanner.exe
+          file-digest: SHA256
+          timestamp-rfc3161: http://timestamp.acs.microsoft.com
+          timestamp-digest: SHA256
 
       - name: Download rust launcher
         uses: suisei-cn/actions-download-file@v1.3.0
