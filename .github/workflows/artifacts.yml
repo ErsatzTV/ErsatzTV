@@ -31,6 +31,8 @@ on:
         required: true
       azure_subscription_id:
         required: true
+permissions:
+  id-token: write
 jobs:
   build_and_upload_mac:
     name: Mac Build & Upload
