@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.IO.Abstractions;
 using System.IO.Enumeration;
 using ErsatzTV.Core.Domain;
@@ -316,6 +317,7 @@ public class CustomStreamSelector(IFileSystem fileSystem, ILogger<CustomStreamSe
                 "channel_number" => channel.Number,
                 "channel_name" => channel.Name,
                 "time_of_day_seconds" => contentStartTime.LocalDateTime.TimeOfDay.TotalSeconds,
+                "day_of_week" => GetLocalizedDayOfWeekIndex(contentStartTime),
                 _ => e.Result
             };
         };
@@ -340,5 +342,12 @@ public class CustomStreamSelector(IFileSystem fileSystem, ILogger<CustomStreamSe
             logger.LogWarning(ex, "Error loading YAML stream selector");
             throw;
         }
+    }
+
+    private static int GetLocalizedDayOfWeekIndex(DateTimeOffset date)
+    {
+        DayOfWeek first = CultureInfo.CurrentCulture.DateTimeFormat.FirstDayOfWeek;
+        DayOfWeek current = date.DayOfWeek;
+        return ((int)current - (int)first + 7) % 7;
     }
 }

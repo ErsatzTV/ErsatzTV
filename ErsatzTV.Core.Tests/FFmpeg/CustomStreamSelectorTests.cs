@@ -7,6 +7,7 @@ using NUnit.Framework;
 using Serilog;
 using Shouldly;
 using Testably.Abstractions.Testing;
+using TimeZoneConverter;
 
 namespace ErsatzTV.Core.Tests.FFmpeg;
 
@@ -551,6 +552,289 @@ public class CustomStreamSelectorTests
                 DateTimeOffset.Now.LocalDateTime.Date.AddHours(11).AddMinutes(59), // 11:59 AM
                 _audioVersion,
                 _subtitles);
+
+            result.AudioStream.IsSome.ShouldBeTrue();
+
+            foreach (MediaStream audioStream in result.AudioStream)
+            {
+                audioStream.Index.ShouldBe(0);
+                audioStream.Language.ShouldBe("ja");
+            }
+
+            result.Subtitle.IsSome.ShouldBeTrue();
+
+            foreach (Subtitle subtitle in result.Subtitle)
+            {
+                subtitle.Id.ShouldBe(2);
+                subtitle.Language.ShouldBe("eng");
+            }
+        }
+
+        [Test]
+        public async Task Should_Select_English_Audio_No_Subtitles_Day_Of_Week_Content_Condition_Fail()
+        {
+            const string YAML =
+                """
+                ---
+                items:
+                  - audio_language: ["ja"]
+                    subtitle_language: ["eng"]
+                    content_condition: "day_of_week = 1"
+
+                  - audio_language: ["eng"]
+                    disable_subtitles: true
+                """;
+
+            var fileSystem = new MockFileSystem();
+            fileSystem.Initialize()
+                .WithFile(TestFileName).Which(f => f.HasStringContent(YAML));
+            var streamSelector = new CustomStreamSelector(fileSystem, _logger);
+
+            var tz = TZConvert.GetTimeZoneInfo("America/Chicago");
+            var start = new DateTime(2026, 1, 11, 0, 0, 0, DateTimeKind.Unspecified); // sunday
+            var dto = new DateTimeOffset(start, tz.GetUtcOffset(start));
+
+            StreamSelectorResult result = await streamSelector.SelectStreams(_channel, dto, _audioVersion, _subtitles);
+
+            result.AudioStream.IsSome.ShouldBeTrue();
+
+            foreach (MediaStream audioStream in result.AudioStream)
+            {
+                audioStream.Index.ShouldBe(1);
+                audioStream.Language.ShouldBe("eng");
+            }
+
+            result.Subtitle.IsSome.ShouldBeFalse();
+        }
+
+        [Test]
+        public async Task Should_Select_English_Audio_No_Subtitles_Day_Of_Week_Content_Condition_Match()
+        {
+            const string YAML =
+                """
+                ---
+                items:
+                  - audio_language: ["ja"]
+                    subtitle_language: ["eng"]
+                    content_condition: "day_of_week = 0"
+
+                  - audio_language: ["eng"]
+                    disable_subtitles: true
+                """;
+
+            var fileSystem = new MockFileSystem();
+            fileSystem.Initialize()
+                .WithFile(TestFileName).Which(f => f.HasStringContent(YAML));
+            var streamSelector = new CustomStreamSelector(fileSystem, _logger);
+
+            var tz = TZConvert.GetTimeZoneInfo("America/Chicago");
+            var start = new DateTime(2026, 1, 11, 0, 0, 0, DateTimeKind.Unspecified); // sunday
+            var dto = new DateTimeOffset(start, tz.GetUtcOffset(start));
+
+            StreamSelectorResult result = await streamSelector.SelectStreams(_channel, dto, _audioVersion, _subtitles);
+
+            result.AudioStream.IsSome.ShouldBeTrue();
+
+            foreach (MediaStream audioStream in result.AudioStream)
+            {
+                audioStream.Index.ShouldBe(0);
+                audioStream.Language.ShouldBe("ja");
+            }
+
+            result.Subtitle.IsSome.ShouldBeTrue();
+
+            foreach (Subtitle subtitle in result.Subtitle)
+            {
+                subtitle.Id.ShouldBe(2);
+                subtitle.Language.ShouldBe("eng");
+            }
+        }
+
+        [Test]
+        public async Task Should_Select_English_Audio_No_Subtitles_Day_Of_Week_Time_Of_Day_Content_Condition_Fail_Before()
+        {
+            // saturday from 9pm-11pm
+            const string YAML =
+                """
+                ---
+                items:
+                  - audio_language: ["ja"]
+                    subtitle_language: ["eng"]
+                    content_condition: "day_of_week = 6 and (time_of_day_seconds >= 75600 and time_of_day_seconds < 82800)"
+
+                  - audio_language: ["eng"]
+                    disable_subtitles: true
+                """;
+
+            var fileSystem = new MockFileSystem();
+            fileSystem.Initialize()
+                .WithFile(TestFileName).Which(f => f.HasStringContent(YAML));
+            var streamSelector = new CustomStreamSelector(fileSystem, _logger);
+
+            var tz = TZConvert.GetTimeZoneInfo("America/Chicago");
+            var start = new DateTime(2026, 1, 10, 20, 59, 59, DateTimeKind.Unspecified); // saturday at 8:59:59pm
+            var dto = new DateTimeOffset(start, tz.GetUtcOffset(start));
+
+            StreamSelectorResult result = await streamSelector.SelectStreams(_channel, dto, _audioVersion, _subtitles);
+
+            result.AudioStream.IsSome.ShouldBeTrue();
+
+            foreach (MediaStream audioStream in result.AudioStream)
+            {
+                audioStream.Index.ShouldBe(1);
+                audioStream.Language.ShouldBe("eng");
+            }
+
+            result.Subtitle.IsSome.ShouldBeFalse();
+        }
+
+        [Test]
+        public async Task Should_Select_English_Audio_No_Subtitles_Day_Of_Week_Time_Of_Day_Content_Condition_Fail_After()
+        {
+            // saturday from 9pm-11pm
+            const string YAML =
+                """
+                ---
+                items:
+                  - audio_language: ["ja"]
+                    subtitle_language: ["eng"]
+                    content_condition: "day_of_week = 6 and (time_of_day_seconds >= 75600 and time_of_day_seconds < 82800)"
+
+                  - audio_language: ["eng"]
+                    disable_subtitles: true
+                """;
+
+            var fileSystem = new MockFileSystem();
+            fileSystem.Initialize()
+                .WithFile(TestFileName).Which(f => f.HasStringContent(YAML));
+            var streamSelector = new CustomStreamSelector(fileSystem, _logger);
+
+            var tz = TZConvert.GetTimeZoneInfo("America/Chicago");
+            var start = new DateTime(2026, 1, 10, 23, 0, 0, DateTimeKind.Unspecified); // saturday at 11:00pm
+            var dto = new DateTimeOffset(start, tz.GetUtcOffset(start));
+
+            StreamSelectorResult result = await streamSelector.SelectStreams(_channel, dto, _audioVersion, _subtitles);
+
+            result.AudioStream.IsSome.ShouldBeTrue();
+
+            foreach (MediaStream audioStream in result.AudioStream)
+            {
+                audioStream.Index.ShouldBe(1);
+                audioStream.Language.ShouldBe("eng");
+            }
+
+            result.Subtitle.IsSome.ShouldBeFalse();
+        }
+
+        [Test]
+        public async Task Should_Select_English_Audio_No_Subtitles_Day_Of_Week_Time_Of_Day_Content_Condition_Fail_Wrong_Day()
+        {
+            // saturday from 9pm-11pm
+            const string YAML =
+                """
+                ---
+                items:
+                  - audio_language: ["ja"]
+                    subtitle_language: ["eng"]
+                    content_condition: "day_of_week = 6 and (time_of_day_seconds >= 75600 and time_of_day_seconds < 82800)"
+
+                  - audio_language: ["eng"]
+                    disable_subtitles: true
+                """;
+
+            var fileSystem = new MockFileSystem();
+            fileSystem.Initialize()
+                .WithFile(TestFileName).Which(f => f.HasStringContent(YAML));
+            var streamSelector = new CustomStreamSelector(fileSystem, _logger);
+
+            var tz = TZConvert.GetTimeZoneInfo("America/Chicago");
+            var start = new DateTime(2026, 1, 11, 22, 0, 0, DateTimeKind.Unspecified); // sunday at 10:00pm
+            var dto = new DateTimeOffset(start, tz.GetUtcOffset(start));
+
+            StreamSelectorResult result = await streamSelector.SelectStreams(_channel, dto, _audioVersion, _subtitles);
+
+            result.AudioStream.IsSome.ShouldBeTrue();
+
+            foreach (MediaStream audioStream in result.AudioStream)
+            {
+                audioStream.Index.ShouldBe(1);
+                audioStream.Language.ShouldBe("eng");
+            }
+
+            result.Subtitle.IsSome.ShouldBeFalse();
+        }
+
+        [Test]
+        public async Task Should_Select_English_Audio_No_Subtitles_Day_Of_Week_Time_Of_Day_Content_Condition_Match()
+        {
+            // saturday from 9pm-11pm
+            const string YAML =
+                """
+                ---
+                items:
+                  - audio_language: ["ja"]
+                    subtitle_language: ["eng"]
+                    content_condition: "day_of_week = 6 and (time_of_day_seconds >= 75600 and time_of_day_seconds < 82800)"
+
+                  - audio_language: ["eng"]
+                    disable_subtitles: true
+                """;
+
+            var fileSystem = new MockFileSystem();
+            fileSystem.Initialize()
+                .WithFile(TestFileName).Which(f => f.HasStringContent(YAML));
+            var streamSelector = new CustomStreamSelector(fileSystem, _logger);
+
+            var tz = TZConvert.GetTimeZoneInfo("America/Chicago");
+            var start = new DateTime(2026, 1, 10, 22, 0, 0, DateTimeKind.Unspecified); // saturday at 10:00pm
+            var dto = new DateTimeOffset(start, tz.GetUtcOffset(start));
+
+            StreamSelectorResult result = await streamSelector.SelectStreams(_channel, dto, _audioVersion, _subtitles);
+
+            result.AudioStream.IsSome.ShouldBeTrue();
+
+            foreach (MediaStream audioStream in result.AudioStream)
+            {
+                audioStream.Index.ShouldBe(0);
+                audioStream.Language.ShouldBe("ja");
+            }
+
+            result.Subtitle.IsSome.ShouldBeTrue();
+
+            foreach (Subtitle subtitle in result.Subtitle)
+            {
+                subtitle.Id.ShouldBe(2);
+                subtitle.Language.ShouldBe("eng");
+            }
+        }
+
+        [Test]
+        [SetCulture("fr-FR")]
+        public async Task Should_Select_English_Audio_No_Subtitles_Day_Of_Week_Time_Of_Day_Content_Condition_Match_France()
+        {
+            // saturday from 9pm-11pm
+            const string YAML =
+                """
+                ---
+                items:
+                  - audio_language: ["ja"]
+                    subtitle_language: ["eng"]
+                    content_condition: "day_of_week = 5 and (time_of_day_seconds >= 75600 and time_of_day_seconds < 82800)"
+
+                  - audio_language: ["eng"]
+                    disable_subtitles: true
+                """;
+
+            var fileSystem = new MockFileSystem();
+            fileSystem.Initialize()
+                .WithFile(TestFileName).Which(f => f.HasStringContent(YAML));
+            var streamSelector = new CustomStreamSelector(fileSystem, _logger);
+
+            var tz = TZConvert.GetTimeZoneInfo("America/Chicago");
+            var start = new DateTime(2026, 1, 10, 22, 0, 0, DateTimeKind.Unspecified); // saturday at 10:00pm
+            var dto = new DateTimeOffset(start, tz.GetUtcOffset(start));
+
+            StreamSelectorResult result = await streamSelector.SelectStreams(_channel, dto, _audioVersion, _subtitles);
 
             result.AudioStream.IsSome.ShouldBeTrue();
 
