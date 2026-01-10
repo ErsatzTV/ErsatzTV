@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Added
+- Channel stream selector: add zero-based culture-specific `day_of_week` to `content_condition`, for example:
+  - en-US can match sunday using `day_of_week = 0`
+  - fr-FR can match sunday using `day_of_week = 6`
+  - As a complete example, to match Saturday from 9pm (inclusive) to 11pm (exclusive), based on content start time
+    - `content_condition: day_of_week = 6 and (time_of_day_seconds >= 75600 and time_of_day_seconds < 82800)`
+
 ### Fixed
 - Use code signing on all Windows executables (`ErsatzTV-Windows.exe`, `ErsatzTV.exe`, `ErsatzTV.Scanner.exe`)
 - Respect `z_index` (draw order) on all graphics element types
