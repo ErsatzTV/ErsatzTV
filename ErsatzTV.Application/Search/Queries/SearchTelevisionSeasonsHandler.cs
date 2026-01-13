@@ -1,30 +1,45 @@
+using System.Collections.Immutable;
 using System.Globalization;
+using Bugsnag;
 using ErsatzTV.Application.MediaItems;
-using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Infrastructure.Data;
+using ErsatzTV.Infrastructure.Search;
 using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Application.Search;
 
-public class SearchTelevisionSeasonsHandler(IDbContextFactory<TvContext> dbContextFactory)
-    : IRequestHandler<SearchTelevisionSeasons, List<NamedMediaItemViewModel>>
+public class SearchTelevisionSeasonsHandler(
+    IClient client,
+    ISearchIndex searchIndex,
+    IDbContextFactory<TvContext> dbContextFactory)
+    : SearchUsingSearchIndexHandler(client, searchIndex),
+        IRequestHandler<SearchTelevisionSeasons, List<NamedMediaItemViewModel>>
 {
     public async Task<List<NamedMediaItemViewModel>> Handle(
         SearchTelevisionSeasons request,
         CancellationToken cancellationToken)
     {
+        ImmutableHashSet<int> ids = await Search(LuceneSearchIndex.SeasonType, request.Query, cancellationToken);
+
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
-        return await (from season in dbContext.Set<Season>()
-                join seasonMetadata in dbContext.Set<SeasonMetadata>()
-                    on season.Id equals seasonMetadata.SeasonId
-                join showMetadata in dbContext.Set<ShowMetadata>()
-                    on season.ShowId equals showMetadata.ShowId
-                where EF.Functions.Like(showMetadata.Title + " " + seasonMetadata.Title, $"%{request.Query}%")
-                orderby showMetadata.Title, season.SeasonNumber
-                select new TelevisionSeason(season.Id, showMetadata.Title, showMetadata.Year, season.SeasonNumber))
-            .Take(20)
+        return await dbContext.SeasonMetadata
+            .TagWithCallSite()
+            .AsNoTracking()
+            .Include(s => s.Season)
+            .ThenInclude(s => s.Show)
+            .ThenInclude(s => s.ShowMetadata)
+            .Where(sm => ids.Contains(sm.SeasonId))
             .ToListAsync(cancellationToken)
-            .Map(list => list.Map(ToNamedMediaItem).ToList());
+            .Map(list => list.Map(sm => new TelevisionSeason(
+                    sm.SeasonId,
+                    sm.Season.Show.ShowMetadata.HeadOrNone().Match(s => s.Title, string.Empty),
+                    sm.Year,
+                    sm.Season.SeasonNumber))
+                .OrderBy(s => s.Title)
+                .ThenBy(s => s.SeasonNumber)
+                .Map(ToNamedMediaItem)
+                .ToList());
     }
 
     private static NamedMediaItemViewModel ToNamedMediaItem(TelevisionSeason season) =>

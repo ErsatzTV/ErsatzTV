@@ -19,6 +19,9 @@ public class ElasticSearchItem : MinimalElasticSearchItem
     [JsonPropertyName(LuceneSearchIndex.TitleAndYearField)]
     public string TitleAndYear { get; set; }
 
+    [JsonPropertyName(LuceneSearchIndex.TitleAndYearSearchField)]
+    public string TitleAndYearSearch { get; set; }
+
     [JsonPropertyName(LuceneSearchIndex.StateField)]
     public string State { get; set; }
 

@@ -45,5 +45,14 @@ public interface ISearchIndex : IDisposable
         int limit,
         CancellationToken cancellationToken);
 
+    Task<SearchResult> Search(
+        IClient client,
+        string query,
+        string smartCollectionName,
+        int skip,
+        int limit,
+        List<string> defaultFields,
+        CancellationToken cancellationToken);
+
     void Commit();
 }

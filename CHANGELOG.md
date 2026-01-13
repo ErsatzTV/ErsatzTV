@@ -15,6 +15,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Use code signing on all Windows executables (`ErsatzTV-Windows.exe`, `ErsatzTV.exe`, `ErsatzTV.Scanner.exe`)
 - Respect `z_index` (draw order) on all graphics element types
 - Restore default UI font that was erroneously removed in v26.1.1
+- Use configured searching log level on startup, instead of the default log level of `Information`
+- MySql: fix searching for shows and seasons in schedule items editor
 
 ## [26.1.1] - 2026-01-08
 ### Fixed
