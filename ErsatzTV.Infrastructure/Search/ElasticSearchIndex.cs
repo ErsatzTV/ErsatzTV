@@ -48,7 +48,7 @@ public class ElasticSearchIndex : ISearchIndex
         return exists.IsValidResponse;
     }
 
-    public int Version => 48;
+    public int Version => 49;
 
     public async Task<bool> Initialize(
         ILocalFileSystem localFileSystem,
@@ -167,18 +167,38 @@ public class ElasticSearchIndex : ISearchIndex
         return deleteResponse.IsValidResponse;
     }
 
+    public Task<SearchResult> Search(
+        IClient client,
+        string query,
+        string smartCollectionName,
+        int skip,
+        int limit,
+        CancellationToken cancellationToken) => Search(
+        client,
+        query,
+        smartCollectionName,
+        skip,
+        limit,
+        [LuceneSearchIndex.TitleField],
+        cancellationToken);
+
     public async Task<SearchResult> Search(
         IClient client,
         string query,
         string smartCollectionName,
         int skip,
         int limit,
+        List<string> defaultFields,
         CancellationToken cancellationToken)
     {
         var items = new List<MinimalElasticSearchItem>();
         var totalCount = 0;
 
-        Query parsedQuery = await _searchQueryParser.ParseQuery(query, smartCollectionName, cancellationToken);
+        Query parsedQuery = await _searchQueryParser.ParseQuery(
+            query,
+            smartCollectionName,
+            defaultFields,
+            cancellationToken);
 
         ES.SearchResponse<MinimalElasticSearchItem> response = await _client.SearchAsync<MinimalElasticSearchItem>(
             s => s.Indices(IndexName)
@@ -225,6 +245,7 @@ public class ElasticSearchIndex : ISearchIndex
                 .Text(t => t.LibraryName, t => t.Store(false))
                 .Keyword(t => t.LibraryId, t => t.Store(false))
                 .Keyword(t => t.TitleAndYear, t => t.Store(false))
+                .Text(t => t.TitleAndYearSearch, t => t.Store(false))
                 .Keyword(t => t.JumpLetter, t => t.Store())
                 .Keyword(t => t.State, t => t.Store(false))
                 .Text(t => t.MetadataKind, t => t.Store(false))
@@ -315,6 +336,7 @@ public class ElasticSearchIndex : ISearchIndex
                     LibraryName = movie.LibraryPath.Library.Name,
                     LibraryId = movie.LibraryPath.Library.Id,
                     TitleAndYear = LuceneSearchIndex.GetTitleAndYear(metadata),
+                    TitleAndYearSearch = LuceneSearchIndex.GetTitleAndYearSearch(metadata),
                     JumpLetter = LuceneSearchIndex.GetJumpLetter(metadata),
                     State = movie.State.ToString(),
                     MetadataKind = metadata.MetadataKind.ToString(),
@@ -374,6 +396,7 @@ public class ElasticSearchIndex : ISearchIndex
                     LibraryName = show.LibraryPath.Library.Name,
                     LibraryId = show.LibraryPath.Library.Id,
                     TitleAndYear = LuceneSearchIndex.GetTitleAndYear(metadata),
+                    TitleAndYearSearch = LuceneSearchIndex.GetTitleAndYearSearch(metadata),
                     JumpLetter = LuceneSearchIndex.GetJumpLetter(metadata),
                     State = show.State.ToString(),
                     MetadataKind = metadata.MetadataKind.ToString(),
@@ -440,6 +463,7 @@ public class ElasticSearchIndex : ISearchIndex
                     LibraryName = season.LibraryPath.Library.Name,
                     LibraryId = season.LibraryPath.Library.Id,
                     TitleAndYear = titleAndYear,
+                    TitleAndYearSearch = LuceneSearchIndex.GetTitleAndYearSearch(metadata),
                     JumpLetter = LuceneSearchIndex.GetJumpLetter(showMetadata),
                     State = season.State.ToString(),
                     SeasonNumber = season.SeasonNumber,
@@ -498,6 +522,7 @@ public class ElasticSearchIndex : ISearchIndex
                     LibraryName = artist.LibraryPath.Library.Name,
                     LibraryId = artist.LibraryPath.Library.Id,
                     TitleAndYear = LuceneSearchIndex.GetTitleAndYear(metadata),
+                    TitleAndYearSearch = LuceneSearchIndex.GetTitleAndYearSearch(metadata),
                     JumpLetter = LuceneSearchIndex.GetJumpLetter(metadata),
                     State = artist.State.ToString(),
                     MetadataKind = metadata.MetadataKind.ToString(),
@@ -545,6 +570,7 @@ public class ElasticSearchIndex : ISearchIndex
                     LibraryName = musicVideo.LibraryPath.Library.Name,
                     LibraryId = musicVideo.LibraryPath.Library.Id,
                     TitleAndYear = LuceneSearchIndex.GetTitleAndYear(metadata),
+                    TitleAndYearSearch = LuceneSearchIndex.GetTitleAndYearSearch(metadata),
                     JumpLetter = LuceneSearchIndex.GetJumpLetter(metadata),
                     State = musicVideo.State.ToString(),
                     MetadataKind = metadata.MetadataKind.ToString(),
@@ -626,6 +652,7 @@ public class ElasticSearchIndex : ISearchIndex
                     LibraryName = episode.LibraryPath.Library.Name,
                     LibraryId = episode.LibraryPath.Library.Id,
                     TitleAndYear = LuceneSearchIndex.GetTitleAndYear(metadata),
+                    TitleAndYearSearch = LuceneSearchIndex.GetTitleAndYearSearch(metadata),
                     JumpLetter = LuceneSearchIndex.GetJumpLetter(metadata),
                     State = episode.State.ToString(),
                     MetadataKind = metadata.MetadataKind.ToString(),
@@ -695,6 +722,7 @@ public class ElasticSearchIndex : ISearchIndex
                     LibraryName = otherVideo.LibraryPath.Library.Name,
                     LibraryId = otherVideo.LibraryPath.Library.Id,
                     TitleAndYear = LuceneSearchIndex.GetTitleAndYear(metadata),
+                    TitleAndYearSearch = LuceneSearchIndex.GetTitleAndYearSearch(metadata),
                     JumpLetter = LuceneSearchIndex.GetJumpLetter(metadata),
                     State = otherVideo.State.ToString(),
                     MetadataKind = metadata.MetadataKind.ToString(),
@@ -751,6 +779,7 @@ public class ElasticSearchIndex : ISearchIndex
                     LibraryName = song.LibraryPath.Library.Name,
                     LibraryId = song.LibraryPath.Library.Id,
                     TitleAndYear = LuceneSearchIndex.GetTitleAndYear(metadata),
+                    TitleAndYearSearch = LuceneSearchIndex.GetTitleAndYearSearch(metadata),
                     JumpLetter = LuceneSearchIndex.GetJumpLetter(metadata),
                     State = song.State.ToString(),
                     MetadataKind = metadata.MetadataKind.ToString(),
@@ -800,6 +829,7 @@ public class ElasticSearchIndex : ISearchIndex
                     LibraryName = image.LibraryPath.Library.Name,
                     LibraryId = image.LibraryPath.Library.Id,
                     TitleAndYear = LuceneSearchIndex.GetTitleAndYear(metadata),
+                    TitleAndYearSearch = LuceneSearchIndex.GetTitleAndYearSearch(metadata),
                     JumpLetter = LuceneSearchIndex.GetJumpLetter(metadata),
                     State = image.State.ToString(),
                     MetadataKind = metadata.MetadataKind.ToString(),

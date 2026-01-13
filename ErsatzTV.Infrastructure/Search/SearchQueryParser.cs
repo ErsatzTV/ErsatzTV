@@ -41,6 +41,7 @@ public partial class SearchQueryParser(ISmartCollectionCache smartCollectionCach
             { LuceneSearchIndex.TagFullField, keywordAnalyzer },
 
             { LuceneSearchIndex.CollectionField, lowercaseKeywordAnalyzer },
+            { LuceneSearchIndex.TitleAndYearSearchField, lowercaseKeywordAnalyzer },
 
             { LuceneSearchIndex.PlotField, new StandardAnalyzer(LuceneSearchIndex.AppLuceneVersion) }
         };
@@ -48,7 +49,11 @@ public partial class SearchQueryParser(ISmartCollectionCache smartCollectionCach
         return new PerFieldAnalyzerWrapper(defaultAnalyzer, customAnalyzers);
     }
 
-    public async Task<Query> ParseQuery(string query, string smartCollectionName, CancellationToken cancellationToken)
+    public async Task<Query> ParseQuery(
+        string query,
+        string smartCollectionName,
+        List<string> defaultFields,
+        CancellationToken cancellationToken)
     {
         string parsedQuery = query;
 
@@ -92,7 +97,7 @@ public partial class SearchQueryParser(ISmartCollectionCache smartCollectionCach
 
         var parser = new CustomMultiFieldQueryParser(
             LuceneSearchIndex.AppLuceneVersion,
-            [LuceneSearchIndex.TitleField],
+            defaultFields.ToArray(),
             analyzerWrapper)
         {
             AllowLeadingWildcard = true

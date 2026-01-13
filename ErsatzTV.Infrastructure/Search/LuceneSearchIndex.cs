@@ -90,6 +90,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
     public const string SongType = "song";
     public const string ImageType = "image";
     public const string RemoteStreamType = "remote_stream";
+    public const string TitleAndYearSearchField = "title_and_year_search";
     private readonly string _cleanShutdownPath;
 
     private readonly List<CultureInfo> _cultureInfos;
@@ -118,7 +119,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
         return Task.FromResult(directoryExists && fileExists);
     }
 
-    public int Version => 49;
+    public int Version => 50;
 
     public async Task<bool> Initialize(
         ILocalFileSystem localFileSystem,
@@ -209,12 +210,29 @@ public sealed class LuceneSearchIndex : ISearchIndex
         return Task.FromResult(true);
     }
 
+    // default to title field only
+    public Task<SearchResult> Search(
+        IClient client,
+        string query,
+        string smartCollectionName,
+        int skip,
+        int limit,
+        CancellationToken cancellationToken) => Search(
+        client,
+        query,
+        smartCollectionName,
+        skip,
+        limit,
+        [TitleField],
+        cancellationToken);
+
     public async Task<SearchResult> Search(
         IClient client,
         string query,
         string smartCollectionName,
         int skip,
         int limit,
+        List<string> defaultFields,
         CancellationToken cancellationToken)
     {
         var metadata = new Dictionary<string, string>
@@ -237,7 +255,11 @@ public sealed class LuceneSearchIndex : ISearchIndex
         using DirectoryReader reader = _writer.GetReader(true);
         var searcher = new IndexSearcher(reader);
         int hitsLimit = limit == 0 ? searcher.IndexReader.MaxDoc : skip + limit;
-        Query parsedQuery = await _searchQueryParser.ParseQuery(query, smartCollectionName, cancellationToken);
+        Query parsedQuery = await _searchQueryParser.ParseQuery(
+            query,
+            smartCollectionName,
+            defaultFields,
+            cancellationToken);
         // TODO: figure out if this is actually needed
         // var filter = new DuplicateFilter(TitleAndYearField);
         var sort = new Sort(new SortField(SortTitleField, SortFieldType.STRING));
@@ -445,6 +467,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
                         movie.LibraryPath.Library.Id.ToString(CultureInfo.InvariantCulture),
                         Field.Store.NO),
                     new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO),
+                    new TextField(TitleAndYearSearchField, GetTitleAndYearSearch(metadata), Field.Store.NO),
                     new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES),
                     new StringField(StateField, movie.State.ToString(), Field.Store.NO),
                     new TextField(MetadataKindField, metadata.MetadataKind.ToString(), Field.Store.NO)
@@ -642,6 +665,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
                         show.LibraryPath.Library.Id.ToString(CultureInfo.InvariantCulture),
                         Field.Store.NO),
                     new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO),
+                    new TextField(TitleAndYearSearchField, GetTitleAndYearSearch(metadata), Field.Store.NO),
                     new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES),
                     new StringField(StateField, show.State.ToString(), Field.Store.NO),
                     new TextField(MetadataKindField, metadata.MetadataKind.ToString(), Field.Store.NO)
@@ -765,6 +789,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
                         season.LibraryPath.Library.Id.ToString(CultureInfo.InvariantCulture),
                         Field.Store.NO),
                     new StringField(TitleAndYearField, titleAndYear, Field.Store.NO),
+                    new TextField(TitleAndYearSearchField, GetTitleAndYearSearch(metadata), Field.Store.NO),
                     new StringField(JumpLetterField, GetJumpLetter(showMetadata), Field.Store.YES),
                     new StringField(StateField, season.State.ToString(), Field.Store.NO),
                     new Int32Field(SeasonNumberField, season.SeasonNumber, Field.Store.NO),
@@ -879,6 +904,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
                         artist.LibraryPath.Library.Id.ToString(CultureInfo.InvariantCulture),
                         Field.Store.NO),
                     new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO),
+                    new TextField(TitleAndYearSearchField, GetTitleAndYearSearch(metadata), Field.Store.NO),
                     new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES),
                     new TextField(MetadataKindField, metadata.MetadataKind.ToString(), Field.Store.NO)
                 };
@@ -948,6 +974,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
                         musicVideo.LibraryPath.Library.Id.ToString(CultureInfo.InvariantCulture),
                         Field.Store.NO),
                     new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO),
+                    new TextField(TitleAndYearSearchField, GetTitleAndYearSearch(metadata), Field.Store.NO),
                     new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES),
                     new StringField(StateField, musicVideo.State.ToString(), Field.Store.NO),
                     new TextField(MetadataKindField, metadata.MetadataKind.ToString(), Field.Store.NO)
@@ -1061,6 +1088,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
                         episode.LibraryPath.Library.Id.ToString(CultureInfo.InvariantCulture),
                         Field.Store.NO),
                     new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO),
+                    new TextField(TitleAndYearSearchField, GetTitleAndYearSearch(metadata), Field.Store.NO),
                     new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES),
                     new StringField(StateField, episode.State.ToString(), Field.Store.NO),
                     new Int32Field(SeasonNumberField, episode.Season?.SeasonNumber ?? 0, Field.Store.NO),
@@ -1213,6 +1241,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
                         otherVideo.LibraryPath.Library.Id.ToString(CultureInfo.InvariantCulture),
                         Field.Store.NO),
                     new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO),
+                    new TextField(TitleAndYearSearchField, GetTitleAndYearSearch(metadata), Field.Store.NO),
                     new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES),
                     new StringField(StateField, otherVideo.State.ToString(), Field.Store.NO),
                     new TextField(MetadataKindField, metadata.MetadataKind.ToString(), Field.Store.NO)
@@ -1317,6 +1346,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
                         song.LibraryPath.Library.Id.ToString(CultureInfo.InvariantCulture),
                         Field.Store.NO),
                     new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO),
+                    new TextField(TitleAndYearSearchField, GetTitleAndYearSearch(metadata), Field.Store.NO),
                     new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES),
                     new StringField(StateField, song.State.ToString(), Field.Store.NO),
                     new TextField(MetadataKindField, metadata.MetadataKind.ToString(), Field.Store.NO)
@@ -1392,6 +1422,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
                         image.LibraryPath.Library.Id.ToString(CultureInfo.InvariantCulture),
                         Field.Store.NO),
                     new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO),
+                    new TextField(TitleAndYearSearchField, GetTitleAndYearSearch(metadata), Field.Store.NO),
                     new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES),
                     new StringField(StateField, image.State.ToString(), Field.Store.NO),
                     new TextField(MetadataKindField, metadata.MetadataKind.ToString(), Field.Store.NO)
@@ -1465,6 +1496,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
                         remoteStream.LibraryPath.Library.Id.ToString(CultureInfo.InvariantCulture),
                         Field.Store.NO),
                     new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO),
+                    new TextField(TitleAndYearSearchField, GetTitleAndYearSearch(metadata), Field.Store.NO),
                     new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES),
                     new StringField(StateField, remoteStream.State.ToString(), Field.Store.NO),
                     new TextField(MetadataKindField, metadata.MetadataKind.ToString(), Field.Store.NO)
@@ -1606,6 +1638,17 @@ public sealed class LuceneSearchIndex : ISearchIndex
             SeasonMetadata sm => $"{Title(sm)}_{sm.Year}_{sm.Season.State}".ToLowerInvariant(),
             ShowMetadata sm => $"{Title(sm)}_{sm.Year}_{sm.Show.State}".ToLowerInvariant(),
             _ => $"{Title(metadata)}_{metadata.Year}".ToLowerInvariant()
+        };
+
+    internal static string GetTitleAndYearSearch(Core.Domain.Metadata metadata) =>
+        metadata switch
+        {
+            MovieMetadata mm => $"{mm.Title ?? string.Empty} {mm.Year}".ToLowerInvariant(),
+            SeasonMetadata sm =>
+                $"{sm.Season.Show.ShowMetadata.Head().Title ?? string.Empty} {sm.Season.SeasonMetadata.Head().Title}"
+                    .ToLowerInvariant(),
+            ShowMetadata sm => $"{sm.Title ?? string.Empty} {sm.Year}".ToLowerInvariant(),
+            _ => $"{metadata.Title ?? string.Empty} {metadata.Year}".ToLowerInvariant()
         };
 
     private static string Title(Core.Domain.Metadata metadata) =>
