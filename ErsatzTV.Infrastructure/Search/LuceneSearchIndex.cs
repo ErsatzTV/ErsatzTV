@@ -1644,9 +1644,8 @@ public sealed class LuceneSearchIndex : ISearchIndex
         metadata switch
         {
             MovieMetadata mm => $"{mm.Title ?? string.Empty} {mm.Year}".ToLowerInvariant(),
-            SeasonMetadata sm =>
-                $"{sm.Season.Show.ShowMetadata.Head().Title ?? string.Empty} {sm.Season.SeasonMetadata.Head().Title}"
-                    .ToLowerInvariant(),
+            SeasonMetadata sm => $"{sm.Season.Show.ShowMetadata.Head().Title ?? string.Empty} {sm.Title}"
+                .ToLowerInvariant(),
             ShowMetadata sm => $"{sm.Title ?? string.Empty} {sm.Year}".ToLowerInvariant(),
             _ => $"{metadata.Title ?? string.Empty} {metadata.Year}".ToLowerInvariant()
         };
