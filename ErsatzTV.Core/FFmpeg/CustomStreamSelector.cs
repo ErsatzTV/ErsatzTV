@@ -316,7 +316,7 @@ public class CustomStreamSelector(IFileSystem fileSystem, ILogger<CustomStreamSe
             {
                 "channel_number" => channel.Number,
                 "channel_name" => channel.Name,
-                "time_of_day_seconds" => contentStartTime.LocalDateTime.TimeOfDay.TotalSeconds,
+                "time_of_day_seconds" => contentStartTime.TimeOfDay.TotalSeconds,
                 "day_of_week" => GetLocalizedDayOfWeekIndex(contentStartTime),
                 _ => e.Result
             };
