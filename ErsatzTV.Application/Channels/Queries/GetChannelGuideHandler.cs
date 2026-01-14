@@ -44,7 +44,7 @@ public partial class GetChannelGuideHandler(
             accessTokenUri += $"&amp;access_token={request.AccessToken}";
         }
 
-        string channelsFragment = await SharedReadAllText(channelsFile, cancellationToken);
+        string channelsFragment = await ReadAllTextShared(channelsFile, cancellationToken);
 
         // TODO: is regex faster?
         channelsFragment = channelsFragment
@@ -67,7 +67,7 @@ public partial class GetChannelGuideHandler(
 
             try
             {
-                string channelDataFragment = await SharedReadAllText(fileName, cancellationToken);
+                string channelDataFragment = await ReadAllTextShared(fileName, cancellationToken);
 
                 channelDataFragment = channelDataFragment
                     .Replace("{RequestBase}", $"{request.Scheme}://{request.Host}{request.BaseUrl}")
@@ -90,14 +90,14 @@ public partial class GetChannelGuideHandler(
         return new ChannelGuide(recyclableMemoryStreamManager, channelsFragment, channelDataFragments);
     }
 
-    private async Task<string> SharedReadAllText(string fileName, CancellationToken cancellationToken)
+    private async Task<string> ReadAllTextShared(string fileName, CancellationToken cancellationToken)
     {
         await using var stream = fileSystem.FileStream.New(
             fileName,
             FileMode.Open,
             FileAccess.Read,
             FileShare.ReadWrite);
-        using var reader = new StreamReader(stream, Encoding.UTF8);
+        using var reader = new StreamReader(stream, Encoding.UTF8, leaveOpen: true);
         return await reader.ReadToEndAsync(cancellationToken);
     }
 
