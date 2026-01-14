@@ -18,6 +18,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Use configured searching log level on startup, instead of the default log level of `Information`
 - MySql: fix searching for shows and seasons in schedule items editor
 - Fix 500 errors when serving XMLTV due to concurrent file reads and writes
+- Fix playback of AC3 audio when targeting stereo output and input layout changes mid-stream
 
 ## [26.1.1] - 2026-01-08
 ### Fixed
