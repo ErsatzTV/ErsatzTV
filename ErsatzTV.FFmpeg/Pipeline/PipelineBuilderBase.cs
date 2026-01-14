@@ -466,6 +466,18 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
             }
         }
 
+        // workaround for ac3 audio layout changes
+        // downmix from decoder so filter doesn't need to reinit (it can't, it will fail)
+        // this only really works when the desired output format matches the minimal input format
+        foreach (var audioInputStream in audioInputFile.Streams.OfType<AudioStream>()
+                     .Where(s => s.Codec == AudioFormat.Ac3).HeadOrNone())
+        {
+            foreach (int desiredAudioChannels in audioInputFile.DesiredState.AudioChannels)
+            {
+                audioInputFile.AddOption(new DecoderAc3Downmix(audioInputStream.Channels, desiredAudioChannels));
+            }
+        }
+
         // always need to specify audio codec so ffmpeg doesn't default to a codec we don't want
         foreach (IEncoder step in AvailableEncoders.ForAudioFormat(ffmpegState, audioInputFile.DesiredState, _logger))
         {
