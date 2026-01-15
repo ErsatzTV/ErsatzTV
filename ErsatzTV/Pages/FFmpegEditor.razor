@@ -57,6 +57,18 @@
                 <MudSelectItem Value="@ScalingBehavior.Crop">Crop</MudSelectItem>
             </MudSelect>
         </MudStack>
+        <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+            <div class="d-flex">
+                <MudText>Pad Mode</MudText>
+            </div>
+            <MudSelect @bind-Value="_model.PadMode"
+                       For="@(() => _model.PadMode)"
+                       Disabled="_model.HardwareAcceleration is not HardwareAccelerationKind.Vaapi"
+                       HelperText="If hardware padding is green, software padding should be used instead">
+                <MudSelectItem Value="@FilterMode.HardwareIfPossible">Hardware If Possible</MudSelectItem>
+                <MudSelectItem Value="@FilterMode.Software">Software</MudSelectItem>
+            </MudSelect>
+        </MudStack>
         <MudText Typo="Typo.h5" Class="mt-10 mb-2">Video</MudText>
         <MudDivider Class="mb-6"/>
         <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">

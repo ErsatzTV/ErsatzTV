@@ -1,6 +1,7 @@
 ﻿using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Search;
+using ErsatzTV.FFmpeg.Pipeline;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
@@ -54,6 +55,15 @@ public class CreateFFmpegProfileHandler :
             QsvExtraHardwareFrames = request.QsvExtraHardwareFrames,
             ResolutionId = resolutionId,
             ScalingBehavior = request.ScalingBehavior,
+
+            // only allow customization with VAAPI accel
+            PadMode = request.HardwareAcceleration switch
+            {
+                HardwareAccelerationKind.None => FilterMode.Software,
+                HardwareAccelerationKind.Vaapi => request.PadMode,
+                _ => FilterMode.HardwareIfPossible
+            },
+
             VideoFormat = request.VideoFormat,
             VideoProfile = request.VideoProfile,
             VideoPreset = request.VideoPreset,

@@ -7,9 +7,6 @@ namespace ErsatzTV.ViewModels;
 
 public class FFmpegProfileEditViewModel
 {
-    private string _videoProfile;
-    private NormalizeLoudnessMode _normalizeLoudnessMode;
-
     public FFmpegProfileEditViewModel()
     {
     }
@@ -29,6 +26,7 @@ public class FFmpegProfileEditViewModel
         DeinterlaceVideo = viewModel.DeinterlaceVideo;
         Resolution = viewModel.Resolution;
         ScalingBehavior = viewModel.ScalingBehavior;
+        PadMode = viewModel.PadMode;
         ThreadCount = viewModel.ThreadCount;
         HardwareAcceleration = viewModel.HardwareAcceleration;
         VaapiDisplay = viewModel.VaapiDisplay;
@@ -53,13 +51,14 @@ public class FFmpegProfileEditViewModel
 
     public NormalizeLoudnessMode NormalizeLoudnessMode
     {
-        get => _normalizeLoudnessMode;
+        get;
+
         set
         {
-            if (_normalizeLoudnessMode != value)
+            if (field != value)
             {
-                _normalizeLoudnessMode = value;
-                if (_normalizeLoudnessMode is NormalizeLoudnessMode.LoudNorm)
+                field = value;
+                if (field is NormalizeLoudnessMode.LoudNorm)
                 {
                     TargetLoudness = -16;
                 }
@@ -78,6 +77,20 @@ public class FFmpegProfileEditViewModel
     public bool DeinterlaceVideo { get; set; }
     public ResolutionViewModel Resolution { get; set; }
     public ScalingBehavior ScalingBehavior { get; set; }
+
+    public FilterMode PadMode
+    {
+        // only allow customization with VAAPI accel
+        get => HardwareAcceleration switch
+        {
+            HardwareAccelerationKind.None => FilterMode.Software,
+            HardwareAccelerationKind.Vaapi => field,
+            _ => FilterMode.HardwareIfPossible
+        };
+
+        set;
+    }
+
     public int ThreadCount { get; set; }
     public HardwareAccelerationKind HardwareAcceleration { get; set; }
     public string VaapiDisplay { get; set; }
@@ -95,10 +108,11 @@ public class FFmpegProfileEditViewModel
             {
                 (HardwareAccelerationKind.Nvenc, FFmpegProfileVideoFormat.H264, FFmpegProfileBitDepth.TenBit) => FFmpeg
                     .Format.VideoProfile.High444p,
-                (_, FFmpegProfileVideoFormat.H264, _) => _videoProfile,
+                (_, FFmpegProfileVideoFormat.H264, _) => field,
                 _ => string.Empty
             };
-        set => _videoProfile = value;
+
+        set;
     }
 
     public string VideoPreset { get; set; }
@@ -117,6 +131,7 @@ public class FFmpegProfileEditViewModel
             QsvExtraHardwareFrames,
             Resolution.Id,
             ScalingBehavior,
+            PadMode,
             VideoFormat,
             VideoProfile,
             VideoPreset,
@@ -148,6 +163,7 @@ public class FFmpegProfileEditViewModel
             QsvExtraHardwareFrames,
             Resolution.Id,
             ScalingBehavior,
+            PadMode,
             VideoFormat,
             VideoProfile,
             VideoPreset,

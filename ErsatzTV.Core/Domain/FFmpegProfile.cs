@@ -15,6 +15,7 @@ public record FFmpegProfile
     public int ResolutionId { get; set; }
     public Resolution Resolution { get; set; }
     public ScalingBehavior ScalingBehavior { get; set; }
+    public FilterMode PadMode { get; set; }
     public FFmpegProfileVideoFormat VideoFormat { get; set; }
     public string VideoProfile { get; set; }
     public string VideoPreset { get; set; }
@@ -40,6 +41,8 @@ public record FFmpegProfile
             ThreadCount = 0,
             ResolutionId = resolution.Id,
             Resolution = resolution,
+            ScalingBehavior = ScalingBehavior.ScaleAndPad,
+            PadMode = FilterMode.Software,
             VideoFormat = FFmpegProfileVideoFormat.H264,
             VideoProfile = "high",
             VideoPreset = ErsatzTV.FFmpeg.Preset.VideoPreset.Unset,

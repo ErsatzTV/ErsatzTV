@@ -10,6 +10,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - fr-FR can match sunday using `day_of_week = 6`
   - As a complete example, to match Saturday from 9pm (inclusive) to 11pm (exclusive), based on content start time
     - `content_condition: day_of_week = 6 and (time_of_day_seconds >= 75600 and time_of_day_seconds < 82800)`
+- Add `Pad Mode` to ffmpeg profile. Options are:
+  - `Hardware If Possible` - default/existing behavior when hardware acceleration is properly configured
+  - `Software` - force software padding
+    - This can be used to work around buggy GPU driver behavior where padding is green instead of black
+    - This is most often seen with VAAPI acceleration (radeonsi or i965 drivers)
 
 ### Fixed
 - Use code signing on all Windows executables (`ErsatzTV-Windows.exe`, `ErsatzTV.exe`, `ErsatzTV.Scanner.exe`)

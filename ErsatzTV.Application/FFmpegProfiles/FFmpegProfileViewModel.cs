@@ -15,6 +15,7 @@ public record FFmpegProfileViewModel(
     int? QsvExtraHardwareFrames,
     ResolutionViewModel Resolution,
     ScalingBehavior ScalingBehavior,
+    FilterMode PadMode,
     FFmpegProfileVideoFormat VideoFormat,
     string VideoProfile,
     string VideoPreset,

@@ -765,6 +765,9 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<int>("NormalizeLoudnessMode")
                         .HasColumnType("int");
 
+                    b.Property<int>("PadMode")
+                        .HasColumnType("int");
+
                     b.Property<int?>("QsvExtraHardwareFrames")
                         .HasColumnType("int");
 
