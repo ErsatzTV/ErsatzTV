@@ -14,7 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - `Hardware If Possible` - default/existing behavior when hardware acceleration is properly configured
   - `Software` - force software padding
     - This can be used to work around buggy GPU driver behavior where padding is green instead of black
-    - This is most often seen with AMD GPUs when using VAAPI acceleration
+    - This is most often seen with VAAPI acceleration (radeonsi or i965 drivers)
 
 ### Fixed
 - Use code signing on all Windows executables (`ErsatzTV-Windows.exe`, `ErsatzTV.exe`, `ErsatzTV.Scanner.exe`)
