@@ -17,6 +17,7 @@ internal static class Mapper
             profile.QsvExtraHardwareFrames,
             Resolutions.Mapper.ProjectToViewModel(profile.Resolution),
             profile.ScalingBehavior,
+            profile.PadMode,
             profile.VideoFormat,
             profile.VideoProfile,
             profile.VideoPreset ?? string.Empty,

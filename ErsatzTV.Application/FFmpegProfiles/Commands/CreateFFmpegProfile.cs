@@ -14,6 +14,7 @@ public record CreateFFmpegProfile(
     int? QsvExtraHardwareFrames,
     int ResolutionId,
     ScalingBehavior ScalingBehavior,
+    FilterMode PadMode,
     FFmpegProfileVideoFormat VideoFormat,
     string VideoProfile,
     string VideoPreset,

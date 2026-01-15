@@ -13,6 +13,7 @@ public record FrameState(
     FrameSize ScaledSize,
     FrameSize PaddedSize,
     Option<FrameSize> CroppedSize,
+    FFmpegFilterMode PadMode,
     bool IsAnamorphic,
     Option<FrameRate> FrameRate,
     Option<int> VideoBitrate,

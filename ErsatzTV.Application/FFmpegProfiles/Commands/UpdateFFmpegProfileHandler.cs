@@ -36,6 +36,7 @@ public class UpdateFFmpegProfileHandler(IDbContextFactory<TvContext> dbContextFa
         p.QsvExtraHardwareFrames = update.QsvExtraHardwareFrames;
         p.ResolutionId = update.ResolutionId;
         p.ScalingBehavior = update.ScalingBehavior;
+        p.PadMode = update.PadMode;
         p.VideoFormat = update.VideoFormat;
         p.VideoProfile = update.VideoProfile;
         p.VideoPreset = update.VideoPreset;
@@ -51,6 +52,16 @@ public class UpdateFFmpegProfileHandler(IDbContextFactory<TvContext> dbContextFa
             p.VideoFormat is FFmpegProfileVideoFormat.Av1)
         {
             p.VideoFormat = FFmpegProfileVideoFormat.Hevc;
+        }
+
+        // only allow customization with VAAPI accel
+        if (p.HardwareAcceleration is HardwareAccelerationKind.None)
+        {
+            p.PadMode = FilterMode.Software;
+        }
+        else if (p.HardwareAcceleration is not HardwareAccelerationKind.Vaapi)
+        {
+            p.PadMode = FilterMode.HardwareIfPossible;
         }
 
         p.VideoBitrate = update.VideoBitrate;

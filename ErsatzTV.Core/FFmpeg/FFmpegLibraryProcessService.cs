@@ -509,7 +509,10 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             scaledSize,
             paddedSize,
             cropSize,
-            false,
+            channel.FFmpegProfile.PadMode is FilterMode.HardwareIfPossible
+                ? FFmpegFilterMode.HardwareIfPossible
+                : FFmpegFilterMode.Software,
+            IsAnamorphic: false,
             playbackSettings.FrameRate,
             playbackSettings.VideoBitrate,
             playbackSettings.VideoBufferSize,
@@ -711,7 +714,10 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             new FrameSize(desiredResolution.Width, desiredResolution.Height),
             new FrameSize(desiredResolution.Width, desiredResolution.Height),
             Option<FrameSize>.None,
-            false,
+            channel.FFmpegProfile.PadMode is FilterMode.HardwareIfPossible
+                ? FFmpegFilterMode.HardwareIfPossible
+                : FFmpegFilterMode.Software,
+            IsAnamorphic: false,
             playbackSettings.FrameRate,
             playbackSettings.VideoBitrate,
             playbackSettings.VideoBufferSize,
