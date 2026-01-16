@@ -46,6 +46,8 @@ public class OtherVideoRepository : IOtherVideoRepository
             .ThenInclude(ovm => ovm.Directors)
             .Include(i => i.OtherVideoMetadata)
             .ThenInclude(ovm => ovm.Writers)
+            .Include(i => i.OtherVideoMetadata)
+            .ThenInclude(ovm => ovm.Artwork)
             .Include(ov => ov.LibraryPath)
             .ThenInclude(lp => lp.Library)
             .Include(ov => ov.MediaVersions)
@@ -171,6 +173,15 @@ public class OtherVideoRepository : IOtherVideoRepository
         return await dbContext.Connection.ExecuteAsync(
             "INSERT INTO Writer (Name, OtherVideoMetadataId) VALUES (@Name, @MetadataId)",
             new { writer.Name, MetadataId = metadata.Id }).Map(result => result > 0);
+    }
+
+    public async Task<bool> RemoveArtwork(OtherVideoMetadata metadata, ArtworkKind artworkKind)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        var ids = metadata.Artwork.Where(a => a.ArtworkKind == artworkKind).Select(a => a.Id).ToHashSet();
+        return await dbContext.Artwork
+            .Where(a => ids.Contains(a.Id))
+            .ExecuteDeleteAsync() > 0;
     }
 
     private async Task<Either<BaseError, MediaItemScanResult<OtherVideo>>> AddOtherVideo(

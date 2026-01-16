@@ -24,6 +24,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - MySql: fix searching for shows and seasons in schedule items editor
 - Fix 500 errors when serving XMLTV due to concurrent file reads and writes
 - Fix playback of AC3 audio when targeting stereo output and input layout changes mid-stream
+- Use other video artwork in XMLTV template
+- Remove artwork from other videos when artwork has been removed from disk
 
 ## [26.1.1] - 2026-01-08
 ### Fixed

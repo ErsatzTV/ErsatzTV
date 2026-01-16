@@ -19,4 +19,5 @@ public interface IOtherVideoRepository
     Task<bool> AddActor(OtherVideoMetadata metadata, Actor actor);
     Task<bool> AddDirector(OtherVideoMetadata metadata, Director director);
     Task<bool> AddWriter(OtherVideoMetadata metadata, Writer writer);
+    Task<bool> RemoveArtwork(OtherVideoMetadata metadata, ArtworkKind artworkKind);
 }
