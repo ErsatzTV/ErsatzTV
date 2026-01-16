@@ -1,3 +1,4 @@
+using System.IO.Abstractions;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Domain.Scheduling;
@@ -8,7 +9,11 @@ using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Core.FFmpeg;
 
-public class WatermarkSelector(IImageCache imageCache, IDecoSelector decoSelector, ILogger<WatermarkSelector> logger)
+public class WatermarkSelector(
+    IFileSystem fileSystem,
+    IImageCache imageCache,
+    IDecoSelector decoSelector,
+    ILogger<WatermarkSelector> logger)
     : IWatermarkSelector
 {
     public List<WatermarkOptions> SelectWatermarks(
@@ -170,10 +175,18 @@ public class WatermarkSelector(IImageCache imageCache, IDecoSelector decoSelecto
             {
                 // used for song progress overlay
                 case ChannelWatermarkImageSource.Resource:
-                    return new WatermarkOptions(
-                        watermark,
-                        Path.Combine(FileSystemLayout.ResourcesCacheFolder, watermark.Image),
-                        Option<int>.None);
+                    string resourcePath = fileSystem.Path.Combine(
+                        FileSystemLayout.ResourcesCacheFolder,
+                        watermark.Image);
+                    if (fileSystem.File.Exists(resourcePath))
+                    {
+                        return new WatermarkOptions(watermark, resourcePath, Option<int>.None);
+                    }
+
+                    logger.LogWarning(
+                        "Watermark resource no longer exists at {Path} and will be ignored",
+                        resourcePath);
+                    return None;
                 case ChannelWatermarkImageSource.Custom:
                     // bad form validation makes this possible
                     if (string.IsNullOrWhiteSpace(watermark.Image))
@@ -190,10 +203,16 @@ public class WatermarkSelector(IImageCache imageCache, IDecoSelector decoSelecto
                         watermark.Image,
                         ArtworkKind.Watermark,
                         Option<int>.None);
-                    return new WatermarkOptions(
-                        watermark,
-                        customPath,
-                        None);
+
+                    if (fileSystem.File.Exists(customPath))
+                    {
+                        return new WatermarkOptions(watermark, customPath, None);
+                    }
+
+                    logger.LogWarning(
+                        "Custom watermark no longer exists at {Path} and will be ignored",
+                        customPath);
+                    return None;
                 case ChannelWatermarkImageSource.ChannelLogo:
                     logger.LogDebug("Watermark will come from playout item (channel logo)");
 
@@ -207,7 +226,15 @@ public class WatermarkSelector(IImageCache imageCache, IDecoSelector decoSelecto
                             : imageCache.GetPathForImage(logoArtwork.Path, ArtworkKind.Logo, Option<int>.None);
                     }
 
-                    return new WatermarkOptions(watermark, channelPath, None);
+                    if (fileSystem.File.Exists(channelPath))
+                    {
+                        return new WatermarkOptions(watermark, channelPath, None);
+                    }
+
+                    logger.LogWarning(
+                        "Channel logo no longer exists at {Path} and will be ignored",
+                        channelPath);
+                    return None;
                 default:
                     throw new NotSupportedException("Unsupported watermark image source");
             }
@@ -225,10 +252,16 @@ public class WatermarkSelector(IImageCache imageCache, IDecoSelector decoSelecto
                         channel.Watermark.Image,
                         ArtworkKind.Watermark,
                         Option<int>.None);
-                    return new WatermarkOptions(
-                        channel.Watermark,
-                        customPath,
-                        None);
+
+                    if (fileSystem.File.Exists(customPath))
+                    {
+                        return new WatermarkOptions(channel.Watermark, customPath, None);
+                    }
+
+                    logger.LogWarning(
+                        "Custom watermark no longer exists at {Path} and will be ignored",
+                        customPath);
+                    return None;
                 case ChannelWatermarkImageSource.ChannelLogo:
                     logger.LogDebug("Watermark will come from channel (channel logo)");
 
@@ -242,7 +275,15 @@ public class WatermarkSelector(IImageCache imageCache, IDecoSelector decoSelecto
                             : imageCache.GetPathForImage(logoArtwork.Path, ArtworkKind.Logo, Option<int>.None);
                     }
 
-                    return new WatermarkOptions(channel.Watermark, channelPath, None);
+                    if (fileSystem.File.Exists(channelPath))
+                    {
+                        return new WatermarkOptions(channel.Watermark, channelPath, None);
+                    }
+
+                    logger.LogWarning(
+                        "Channel logo no longer exists at {Path} and will be ignored",
+                        channelPath);
+                    return None;
                 default:
                     throw new NotSupportedException("Unsupported watermark image source");
             }
@@ -260,10 +301,16 @@ public class WatermarkSelector(IImageCache imageCache, IDecoSelector decoSelecto
                         watermark.Image,
                         ArtworkKind.Watermark,
                         Option<int>.None);
-                    return new WatermarkOptions(
-                        watermark,
-                        customPath,
-                        None);
+
+                    if (fileSystem.File.Exists(customPath))
+                    {
+                        return new WatermarkOptions(watermark, customPath, None);
+                    }
+
+                    logger.LogWarning(
+                        "Custom watermark no longer exists at {Path} and will be ignored",
+                        customPath);
+                    return None;
                 case ChannelWatermarkImageSource.ChannelLogo:
                     logger.LogDebug("Watermark will come from global (channel logo)");
 
@@ -277,7 +324,15 @@ public class WatermarkSelector(IImageCache imageCache, IDecoSelector decoSelecto
                             : imageCache.GetPathForImage(logoArtwork.Path, ArtworkKind.Logo, Option<int>.None);
                     }
 
-                    return new WatermarkOptions(watermark, channelPath, None);
+                    if (fileSystem.File.Exists(channelPath))
+                    {
+                        return new WatermarkOptions(watermark, channelPath, None);
+                    }
+
+                    logger.LogWarning(
+                        "Channel logo no longer exists at {Path} and will be ignored",
+                        channelPath);
+                    return None;
                 default:
                     throw new NotSupportedException("Unsupported watermark image source");
             }

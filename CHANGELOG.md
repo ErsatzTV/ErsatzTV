@@ -15,6 +15,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - `Software` - force software padding
     - This can be used to work around buggy GPU driver behavior where padding is green instead of black
     - This is most often seen with VAAPI acceleration (radeonsi or i965 drivers)
+- Add API endpoint to clean artwork cache folder (on demand)
+  - POST `/api/maintenance/clean_artwork`
+
+### Changed
+- Disable automatic artwork database cleanup
+  - This will be re-enabled at some point in the future (after more testing)
+  - For now, the API should be used to clean as needed
 
 ### Fixed
 - Use code signing on all Windows executables (`ErsatzTV-Windows.exe`, `ErsatzTV.exe`, `ErsatzTV.Scanner.exe`)

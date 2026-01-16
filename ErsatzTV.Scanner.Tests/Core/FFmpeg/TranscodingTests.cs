@@ -34,6 +34,7 @@ using NSubstitute;
 using NUnit.Framework;
 using Serilog;
 using Shouldly;
+using Testably.Abstractions;
 using Testably.Abstractions.Testing;
 using MediaStream = ErsatzTV.Core.Domain.MediaStream;
 
@@ -236,7 +237,7 @@ public class TranscodingTests
         StreamingMode streamingMode)
     {
         var localFileSystem = new LocalFileSystem(
-            new MockFileSystem(),
+            new RealFileSystem(),
             Substitute.For<IClient>(),
             LoggerFactory.CreateLogger<LocalFileSystem>());
         var fileSystem = new MockFileSystem();
@@ -367,6 +368,7 @@ public class TranscodingTests
         DateTimeOffset now = DateTimeOffset.Now;
 
         WatermarkSelector watermarkSelector = new WatermarkSelector(
+            new MockFileSystem(),
             mockImageCache,
             new DecoSelector(LoggerFactory.CreateLogger<DecoSelector>()),
             LoggerFactory.CreateLogger<WatermarkSelector>());
@@ -696,6 +698,7 @@ public class TranscodingTests
             .Returns(Path.Combine(TestContext.CurrentContext.TestDirectory, "Resources", "ErsatzTV.png"));
 
         WatermarkSelector watermarkSelector = new WatermarkSelector(
+            new RealFileSystem(),
             mockImageCache,
             new DecoSelector(LoggerFactory.CreateLogger<DecoSelector>()),
             LoggerFactory.CreateLogger<WatermarkSelector>());

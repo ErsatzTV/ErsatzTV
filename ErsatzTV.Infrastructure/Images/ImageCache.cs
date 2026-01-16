@@ -22,6 +22,12 @@ public class ImageCache(IFileSystem fileSystem, ILocalFileSystem localFileSystem
 
     static ImageCache() => Crypto = SHA1.Create();
 
+    public static string GetBlurHashFileName(string blurHash)
+    {
+        byte[] bytes = Encoding.UTF8.GetBytes(blurHash);
+        return Convert.ToBase64String(bytes).Replace("+", "_").Replace("/", "-").Replace("=", "");
+    }
+
     public async Task<Either<BaseError, string>> SaveArtworkToCache(Stream stream, ArtworkKind artworkKind)
     {
         try
@@ -149,8 +155,7 @@ public class ImageCache(IFileSystem fileSystem, ILocalFileSystem localFileSystem
 
     public Task<string> WriteBlurHash(string blurHash, IDisplaySize targetSize)
     {
-        byte[] bytes = Encoding.UTF8.GetBytes(blurHash);
-        string base64 = Convert.ToBase64String(bytes).Replace("+", "_").Replace("/", "-").Replace("=", "");
+        string base64 = GetBlurHashFileName(blurHash);
         string targetFile = GetPathForImage(base64, ArtworkKind.Poster, targetSize.Height) ?? string.Empty;
         if (!fileSystem.File.Exists(targetFile))
         {
