@@ -16,6 +16,7 @@ public interface IMetadataRepository
     Task<bool> UpdateStatistics(MediaItem mediaItem, MediaVersion incoming, bool updateVersion = true);
     Task<Unit> UpdateArtworkPath(Artwork artwork);
     Task<Unit> AddArtwork(Domain.Metadata metadata, Artwork artwork);
+    Task<bool> RemoveArtworkWithKind(Domain.Metadata metadata, ArtworkKind artworkKind);
 
     Task<bool> CloneArtwork(
         Domain.Metadata metadata,

@@ -309,6 +309,15 @@ public class MetadataRepository(IDbContextFactory<TvContext> dbContextFactory) :
         };
     }
 
+    public async Task<bool> RemoveArtworkWithKind(Core.Domain.Metadata metadata, ArtworkKind artworkKind)
+    {
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
+        var ids = metadata.Artwork.Where(a => a.ArtworkKind == artworkKind).Select(a => a.Id).ToHashSet();
+        return await dbContext.Artwork
+            .Where(a => ids.Contains(a.Id))
+            .ExecuteDeleteAsync() > 0;
+    }
+
     public async Task<bool> CloneArtwork(
         Core.Domain.Metadata metadata,
         Option<Artwork> maybeArtwork,

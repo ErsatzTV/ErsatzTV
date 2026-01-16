@@ -22,6 +22,7 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
     private readonly IClient _client;
     private readonly ILibraryRepository _libraryRepository;
     private readonly ILocalChaptersProvider _localChaptersProvider;
+    private readonly IMetadataRepository _metadataRepository;
     private readonly IScannerProxy _scannerProxy;
     private readonly IFileSystem _fileSystem;
     private readonly ILocalFileSystem _localFileSystem;
@@ -64,6 +65,7 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
         _localMetadataProvider = localMetadataProvider;
         _localSubtitlesProvider = localSubtitlesProvider;
         _localChaptersProvider = localChaptersProvider;
+        _metadataRepository = metadataRepository;
         _otherVideoRepository = otherVideoRepository;
         _libraryRepository = libraryRepository;
         _mediaItemRepository = mediaItemRepository;
@@ -369,7 +371,7 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
 
                 if (maybeThumbnail.IsNone && metadata.Artwork.Any(a => a.ArtworkKind is ArtworkKind.Thumbnail))
                 {
-                    await _otherVideoRepository.RemoveArtwork(metadata, ArtworkKind.Thumbnail);
+                    await _metadataRepository.RemoveArtworkWithKind(metadata, ArtworkKind.Thumbnail);
                 }
             }
 

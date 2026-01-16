@@ -27,6 +27,7 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
     private readonly IFileSystem _fileSystem;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalMetadataProvider _localMetadataProvider;
+    private readonly IMetadataRepository _metadataRepository;
     private readonly ILocalSubtitlesProvider _localSubtitlesProvider;
     private readonly ILogger<MovieFolderScanner> _logger;
     private readonly IMediaItemRepository _mediaItemRepository;
@@ -67,6 +68,7 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
         _localSubtitlesProvider = localSubtitlesProvider;
         _localChaptersProvider = localChaptersProvider;
         _localMetadataProvider = localMetadataProvider;
+        _metadataRepository = metadataRepository;
         _libraryRepository = libraryRepository;
         _mediaItemRepository = mediaItemRepository;
         _client = client;
@@ -312,11 +314,18 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
         try
         {
             Movie movie = result.Item;
-            Option<string> maybeArtwork = LocateArtwork(movie, artworkKind);
-            foreach (string posterFile in maybeArtwork)
+            foreach (var metadata in movie.MovieMetadata.HeadOrNone())
             {
-                MovieMetadata metadata = movie.MovieMetadata.Head();
-                await RefreshArtwork(posterFile, metadata, artworkKind, None, None, cancellationToken);
+                Option<string> maybeArtwork = LocateArtwork(movie, artworkKind);
+                foreach (string posterFile in maybeArtwork)
+                {
+                    await RefreshArtwork(posterFile, metadata, artworkKind, None, None, cancellationToken);
+                }
+
+                if (maybeArtwork.IsNone && metadata.Artwork.Any(a => a.ArtworkKind == artworkKind))
+                {
+                    await _metadataRepository.RemoveArtworkWithKind(metadata, artworkKind);
+                }
             }
 
             return result;
