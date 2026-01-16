@@ -1,3 +1,5 @@
+using System.Threading.Channels;
+using ErsatzTV.Application;
 using ErsatzTV.Application.Maintenance;
 using ErsatzTV.Core;
 using MediatR;
@@ -7,7 +9,7 @@ namespace ErsatzTV.Controllers.Api;
 
 [ApiController]
 [EndpointGroupName("general")]
-public class MaintenanceController(IMediator mediator)
+public class MaintenanceController(IMediator mediator, ChannelWriter<IBackgroundServiceRequest> workerChannel)
 {
     [HttpGet("/api/maintenance/gc")]
     [Tags("Maintenance")]
@@ -34,6 +36,15 @@ public class MaintenanceController(IMediator mediator)
             };
         }
 
+        return new OkResult();
+    }
+
+    [HttpPost("/api/maintenance/clean_artwork")]
+    [Tags("Maintenance")]
+    [EndpointSummary("Clean artwork cache")]
+    public async Task<IActionResult> CleanArtwork(CancellationToken cancellationToken)
+    {
+        await workerChannel.WriteAsync(new DeleteOrphanedArtwork(), cancellationToken);
         return new OkResult();
     }
 }
