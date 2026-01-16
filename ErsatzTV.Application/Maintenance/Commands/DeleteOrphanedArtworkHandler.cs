@@ -49,6 +49,17 @@ public class DeleteOrphanedArtworkHandler(
 
         System.Collections.Generic.HashSet<string> validFiles = [];
 
+        List<string> watermarks = await dbContext.ChannelWatermarks
+            .TagWithCallSite()
+            .AsNoTracking()
+            .Select(c => c.Image)
+            .ToListAsync(cancellationToken);
+
+        foreach (string watermark in watermarks.Where(w => !string.IsNullOrWhiteSpace(w)))
+        {
+            validFiles.Add(watermark);
+        }
+
         var lastId = 0;
         while (true)
         {
@@ -142,7 +153,12 @@ public class DeleteOrphanedArtworkHandler(
         {
             try
             {
-                fileSystem.Directory.Delete(path);
+                // don't delete direct children of artwork cache folder
+                var parent = fileSystem.Directory.GetParent(path);
+                if (parent != null && parent.FullName != FileSystemLayout.ArtworkCacheFolder)
+                {
+                    fileSystem.Directory.Delete(path);
+                }
             }
             catch (Exception ex)
             {
