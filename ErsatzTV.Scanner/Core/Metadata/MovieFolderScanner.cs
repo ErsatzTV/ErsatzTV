@@ -314,7 +314,7 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
         try
         {
             Movie movie = result.Item;
-            foreach (var metadata in movie.MovieMetadata.HeadOrNone())
+            foreach (MovieMetadata metadata in movie.MovieMetadata.HeadOrNone())
             {
                 Option<string> maybeArtwork = LocateArtwork(movie, artworkKind);
                 foreach (string posterFile in maybeArtwork)

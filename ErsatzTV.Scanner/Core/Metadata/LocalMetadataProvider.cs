@@ -335,7 +335,8 @@ public class LocalMetadataProvider : ILocalMetadataProvider
                     Genres = nfo.Genres.Map(g => new Genre { Name = g }).ToList(),
                     Tags = nfo.Tags.Map(t => new Tag { Name = t }).ToList(),
                     Studios = nfo.Studios.Map(s => new Studio { Name = s }).ToList(),
-                    Directors = nfo.Directors.Map(s => new Director { Name = s }).ToList()
+                    Directors = nfo.Directors.Map(s => new Director { Name = s }).ToList(),
+                    Artwork = []
                 };
             }
 
@@ -949,7 +950,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
             ? SortTitle.GetSortTitle(metadata.Title)
             : metadata.SortTitle;
         metadata.ArtistId = artist.Id;
-        artist.ArtistMetadata = new List<ArtistMetadata> { metadata };
+        artist.ArtistMetadata = [metadata];
 
         return await _metadataRepository.Add(metadata);
     }
@@ -1355,7 +1356,8 @@ public class LocalMetadataProvider : ILocalMetadataProvider
                     Biography = nfo.Biography,
                     Genres = nfo.Genres.Map(g => new Genre { Name = g }).ToList(),
                     Styles = nfo.Styles.Map(s => new Style { Name = s }).ToList(),
-                    Moods = nfo.Moods.Map(m => new Mood { Name = m }).ToList()
+                    Moods = nfo.Moods.Map(m => new Mood { Name = m }).ToList(),
+                    Artwork = []
                 };
             }
 

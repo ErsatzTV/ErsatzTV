@@ -361,7 +361,7 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
         {
             OtherVideo otherVideo = result.Item;
 
-            foreach (var metadata in otherVideo.OtherVideoMetadata.HeadOrNone())
+            foreach (OtherVideoMetadata metadata in otherVideo.OtherVideoMetadata.HeadOrNone())
             {
                 Option<string> maybeThumbnail = LocateThumbnail(otherVideo);
                 foreach (string thumbnailFile in maybeThumbnail)

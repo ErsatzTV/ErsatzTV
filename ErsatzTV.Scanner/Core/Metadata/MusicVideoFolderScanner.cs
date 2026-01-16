@@ -23,6 +23,7 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
     private readonly IClient _client;
     private readonly ILibraryRepository _libraryRepository;
     private readonly ILocalChaptersProvider _localChaptersProvider;
+    private readonly IMetadataRepository _metadataRepository;
     private readonly IScannerProxy _scannerProxy;
     private readonly IFileSystem _fileSystem;
     private readonly ILocalFileSystem _localFileSystem;
@@ -66,6 +67,7 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
         _localMetadataProvider = localMetadataProvider;
         _localSubtitlesProvider = localSubtitlesProvider;
         _localChaptersProvider = localChaptersProvider;
+        _metadataRepository = metadataRepository;
         _artistRepository = artistRepository;
         _musicVideoRepository = musicVideoRepository;
         _libraryRepository = libraryRepository;
@@ -279,11 +281,19 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
         try
         {
             Artist artist = result.Item;
-            await LocateArtworkForArtist(artistFolder, artworkKind).IfSomeAsync(async artworkFile =>
+            foreach (ArtistMetadata metadata in artist.ArtistMetadata.HeadOrNone())
             {
-                ArtistMetadata metadata = artist.ArtistMetadata.Head();
-                await RefreshArtwork(artworkFile, metadata, artworkKind, None, None, cancellationToken);
-            });
+                Option<string> maybeArtwork = LocateArtworkForArtist(artistFolder, artworkKind);
+                foreach (string artworkFile in maybeArtwork)
+                {
+                    await RefreshArtwork(artworkFile, metadata, artworkKind, None, None, cancellationToken);
+                }
+
+                if (maybeArtwork.IsNone && metadata.Artwork.Any(a => a.ArtworkKind == artworkKind))
+                {
+                    await _metadataRepository.RemoveArtworkWithKind(metadata, artworkKind);
+                }
+            }
 
             return result;
         }
@@ -425,7 +435,7 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
             {
                 if (!Optional(musicVideo.MusicVideoMetadata).Flatten().Any())
                 {
-                    musicVideo.MusicVideoMetadata ??= new List<MusicVideoMetadata>();
+                    musicVideo.MusicVideoMetadata ??= [];
 
                     string path = musicVideo.MediaVersions.Head().MediaFiles.Head().Path;
                     _logger.LogDebug("Refreshing {Attribute} for {Path}", "Fallback Metadata", path);
@@ -497,11 +507,18 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
         {
             MusicVideo musicVideo = result.Item;
 
-            Option<string> maybeThumbnail = LocateThumbnail(musicVideo);
-            foreach (string thumbnailFile in maybeThumbnail)
+            foreach (MusicVideoMetadata metadata in musicVideo.MusicVideoMetadata.HeadOrNone())
             {
-                MusicVideoMetadata metadata = musicVideo.MusicVideoMetadata.Head();
-                await RefreshArtwork(thumbnailFile, metadata, ArtworkKind.Thumbnail, None, None, cancellationToken);
+                Option<string> maybeThumbnail = LocateThumbnail(musicVideo);
+                foreach (string thumbnailFile in maybeThumbnail)
+                {
+                    await RefreshArtwork(thumbnailFile, metadata, ArtworkKind.Thumbnail, None, None, cancellationToken);
+                }
+
+                if (maybeThumbnail.IsNone && metadata.Artwork.Any(a => a.ArtworkKind is ArtworkKind.Thumbnail))
+                {
+                    await _metadataRepository.RemoveArtworkWithKind(metadata, ArtworkKind.Thumbnail);
+                }
             }
 
             return result;

@@ -57,7 +57,11 @@ public partial class FallbackMetadataProvider(IClient client) : IFallbackMetadat
     {
         string fileName = Path.GetFileName(artistFolder);
         return new ArtistMetadata
-            { MetadataKind = MetadataKind.Fallback, Title = fileName ?? artistFolder };
+        {
+            MetadataKind = MetadataKind.Fallback,
+            Title = fileName ?? artistFolder,
+            Artwork = []
+        };
     }
 
     public List<EpisodeMetadata> GetFallbackMetadata(Episode episode)
@@ -112,7 +116,8 @@ public partial class FallbackMetadataProvider(IClient client) : IFallbackMetadat
         var metadata = new MusicVideoMetadata
         {
             MetadataKind = MetadataKind.Fallback,
-            Title = fileName ?? path
+            Title = fileName ?? path,
+            Artwork = []
         };
 
         return GetMusicVideoMetadata(fileName, metadata);
@@ -148,7 +153,8 @@ public partial class FallbackMetadataProvider(IClient client) : IFallbackMetadat
         {
             MetadataKind = MetadataKind.Fallback,
             Title = fileName ?? path,
-            Song = song
+            Song = song,
+            Artwork = []
         };
 
         return GetSongMetadata(path, metadata);
