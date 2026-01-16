@@ -1,8 +1,10 @@
-﻿using System.IO.Abstractions;
+﻿using System.Globalization;
+using System.IO.Abstractions;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Images;
+using Humanizer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -93,6 +95,7 @@ public class DeleteOrphanedArtworkHandler(
         logger.LogDebug("Loaded {Count} artwork hashes (valid file names)", validFiles.Count);
 
         var deleted = 0;
+        long bytes = 0;
         foreach (string file in fileSystem.Directory.EnumerateFiles(
                      FileSystemLayout.ArtworkCacheFolder,
                      "*.*",
@@ -103,6 +106,8 @@ public class DeleteOrphanedArtworkHandler(
             {
                 try
                 {
+                    bytes += fileSystem.FileInfo.New(file).Length;
+
                     fileSystem.File.Delete(file);
                     deleted++;
                 }
@@ -113,7 +118,10 @@ public class DeleteOrphanedArtworkHandler(
             }
         }
 
-        logger.LogDebug("Deleted {Count} unused artwork cache files", deleted);
+        logger.LogDebug(
+            "Deleted {Count} unused artwork cache files totaling {Size}",
+            deleted,
+            bytes.Bytes().Humanize(CultureInfo.CurrentCulture));
 
         DeleteEmptySubfolders(FileSystemLayout.ArtworkCacheFolder);
     }
