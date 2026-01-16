@@ -28,6 +28,7 @@ public class RemoteStreamFolderScanner : LocalFolderScanner, IRemoteStreamFolder
     private readonly IFileSystem _fileSystem;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalMetadataProvider _localMetadataProvider;
+    private readonly IMetadataRepository _metadataRepository;
     private readonly ILogger<RemoteStreamFolderScanner> _logger;
     private readonly IMediaItemRepository _mediaItemRepository;
     private readonly IRemoteStreamRepository _remoteStreamRepository;
@@ -61,6 +62,7 @@ public class RemoteStreamFolderScanner : LocalFolderScanner, IRemoteStreamFolder
         _fileSystem = fileSystem;
         _localFileSystem = localFileSystem;
         _localMetadataProvider = localMetadataProvider;
+        _metadataRepository = metadataRepository;
         _remoteStreamRepository = remoteStreamRepository;
         _libraryRepository = libraryRepository;
         _mediaItemRepository = mediaItemRepository;
@@ -386,11 +388,18 @@ public class RemoteStreamFolderScanner : LocalFolderScanner, IRemoteStreamFolder
         {
             RemoteStream remoteStream = result.Item;
 
-            Option<string> maybeThumbnail = LocateThumbnail(remoteStream);
-            foreach (string thumbnailFile in maybeThumbnail)
+            foreach (RemoteStreamMetadata metadata in remoteStream.RemoteStreamMetadata.HeadOrNone())
             {
-                RemoteStreamMetadata metadata = remoteStream.RemoteStreamMetadata.Head();
-                await RefreshArtwork(thumbnailFile, metadata, ArtworkKind.Thumbnail, None, None, cancellationToken);
+                Option<string> maybeThumbnail = LocateThumbnail(remoteStream);
+                foreach (string thumbnailFile in maybeThumbnail)
+                {
+                    await RefreshArtwork(thumbnailFile, metadata, ArtworkKind.Thumbnail, None, None, cancellationToken);
+                }
+
+                if (maybeThumbnail.IsNone && metadata.Artwork.Any(a => a.ArtworkKind is ArtworkKind.Thumbnail))
+                {
+                    await _metadataRepository.RemoveArtworkWithKind(metadata, ArtworkKind.Thumbnail);
+                }
             }
 
             return result;
