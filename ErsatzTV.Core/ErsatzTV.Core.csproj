@@ -11,16 +11,16 @@
 
     <ItemGroup>
         <PackageReference Include="Bugsnag" Version="4.1.0" />
-        <PackageReference Include="Destructurama.Attributed" Version="5.1.0" />
+        <PackageReference Include="Destructurama.Attributed" Version="5.2.0" />
         <PackageReference Include="Flurl" Version="4.0.0" />
         <PackageReference Include="Humanizer.Core" Version="3.0.1" />
         <PackageReference Include="LanguageExt.Core" Version="4.4.9" />
         <PackageReference Include="LanguageExt.Transformers" Version="4.4.8" />
         <PackageReference Include="MediatR" Version="[12.5.0]" />
-        <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="10.0.1" />
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.1" />
-        <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.1" />
-        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.1" />
+        <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="10.0.2" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.2" />
+        <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.2" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.2" />
         <PackageReference Include="Microsoft.IO.RecyclableMemoryStream" Version="3.0.1" />
         <PackageReference Include="NCalcSync" Version="5.11.0" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
@@ -28,7 +28,7 @@
         <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
         <PackageReference Include="SkiaSharp" Version="3.119.1" />
         <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.119.1" />
-        <PackageReference Include="System.CommandLine" Version="2.0.1" />
+        <PackageReference Include="System.CommandLine" Version="2.0.2" />
         <PackageReference Include="Testably.Abstractions" Version="10.0.0" />
         <PackageReference Include="TimeSpanParserUtil" Version="1.2.0" />
         <PackageReference Include="YamlDotNet" Version="16.3.0" />
