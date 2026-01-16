@@ -2,6 +2,7 @@
 using ErsatzTV.Core;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Infrastructure.Data;
+using ErsatzTV.Infrastructure.Images;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -47,8 +48,7 @@ public class DeleteOrphanedArtworkHandler(
         System.Collections.Generic.HashSet<string> validFiles = [];
 
         var lastId = 0;
-        var hasMoreRows = true;
-        while (hasMoreRows)
+        while (true)
         {
             List<MinimalArtwork> result = await dbContext.Artwork
                 .TagWithCallSite()
@@ -59,38 +59,35 @@ public class DeleteOrphanedArtworkHandler(
                 .Select(a => new MinimalArtwork(a.Id, a.Path, a.BlurHash43, a.BlurHash54, a.BlurHash64))
                 .ToListAsync(cancellationToken);
 
-            int newLastId = lastId;
+            if (result.Count == 0)
+            {
+                break;
+            }
+
             foreach (MinimalArtwork artwork in result)
             {
-                newLastId = artwork.Id;
-
-                if (!artwork.Path.Contains('/'))
+                if (!string.IsNullOrWhiteSpace(artwork.Path) && !artwork.Path.Contains('/'))
                 {
                     validFiles.Add(artwork.Path);
                 }
 
                 if (!string.IsNullOrWhiteSpace(artwork.BlurHash43))
                 {
-                    validFiles.Add(artwork.BlurHash43);
+                    validFiles.Add(ImageCache.GetBlurHashFileName(artwork.BlurHash43));
                 }
 
                 if (!string.IsNullOrWhiteSpace(artwork.BlurHash54))
                 {
-                    validFiles.Add(artwork.BlurHash54);
+                    validFiles.Add(ImageCache.GetBlurHashFileName(artwork.BlurHash54));
                 }
 
                 if (!string.IsNullOrWhiteSpace(artwork.BlurHash64))
                 {
-                    validFiles.Add(artwork.BlurHash64);
+                    validFiles.Add(ImageCache.GetBlurHashFileName(artwork.BlurHash64));
                 }
             }
 
-            if (lastId == newLastId)
-            {
-                hasMoreRows = false;
-            }
-
-            lastId = newLastId;
+            lastId = result.Last().Id;
         }
 
         logger.LogDebug("Loaded {Count} artwork hashes (valid file names)", validFiles.Count);
