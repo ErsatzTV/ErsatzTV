@@ -8,6 +8,7 @@ using NSubstitute;
 using NUnit.Framework;
 using Serilog;
 using Shouldly;
+using Testably.Abstractions.Testing;
 
 namespace ErsatzTV.Core.Tests.FFmpeg;
 
@@ -65,8 +66,18 @@ public class WatermarkSelectorTests
 
         var loggerFactory = new LoggerFactory().AddSerilog(Log.Logger);
 
+        // watermarks should always exist; effectively ignoring filesystem checks for now
+        var mockFileSystem = new MockFileSystem();
+        mockFileSystem.Initialize()
+            .WithFile("/tmp/watermark");
+
+        var fakeImageCache = Substitute.For<IImageCache>();
+        fakeImageCache.GetPathForImage(Arg.Any<string>(), Arg.Is(ArtworkKind.Watermark), Arg.Any<Option<int>>())
+            .Returns(_ => "/tmp/watermark");
+
         WatermarkSelector = new WatermarkSelector(
-            Substitute.For<IImageCache>(),
+            mockFileSystem,
+            fakeImageCache,
             new DecoSelector(loggerFactory.CreateLogger<DecoSelector>()),
             loggerFactory.CreateLogger<WatermarkSelector>());
 
