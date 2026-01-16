@@ -27,6 +27,7 @@ public partial class PlexTelevisionLibraryScanner :
     private readonly IPlexPathReplacementService _plexPathReplacementService;
     private readonly IPlexServerApiClient _plexServerApiClient;
     private readonly IPlexTelevisionRepository _plexTelevisionRepository;
+    private readonly IPlexMetadataRepository _plexMetadataRepository;
     private readonly ITelevisionRepository _televisionRepository;
 
     public PlexTelevisionLibraryScanner(
@@ -37,6 +38,7 @@ public partial class PlexTelevisionLibraryScanner :
         IMediaSourceRepository mediaSourceRepository,
         IPlexPathReplacementService plexPathReplacementService,
         IPlexTelevisionRepository plexTelevisionRepository,
+        IPlexMetadataRepository plexMetadataRepository,
         IFileSystem fileSystem,
         ILocalChaptersProvider localChaptersProvider,
         ILogger<PlexTelevisionLibraryScanner> logger)
@@ -53,6 +55,7 @@ public partial class PlexTelevisionLibraryScanner :
         _mediaSourceRepository = mediaSourceRepository;
         _plexPathReplacementService = plexPathReplacementService;
         _plexTelevisionRepository = plexTelevisionRepository;
+        _plexMetadataRepository = plexMetadataRepository;
         _logger = logger;
     }
 
@@ -719,9 +722,9 @@ public partial class PlexTelevisionLibraryScanner :
 
             if (maybeIncomingArtwork.IsNone)
             {
-                existingMetadata.Artwork ??= new List<Artwork>();
+                existingMetadata.Artwork ??= [];
                 existingMetadata.Artwork.RemoveAll(a => a.ArtworkKind == artworkKind);
-                await _metadataRepository.RemoveArtwork(existingMetadata, artworkKind);
+                await _plexMetadataRepository.RemoveArtwork(existingMetadata, artworkKind);
             }
 
             foreach (Artwork incomingArtwork in maybeIncomingArtwork)
@@ -733,7 +736,7 @@ public partial class PlexTelevisionLibraryScanner :
 
                 if (maybeExistingArtwork.IsNone)
                 {
-                    existingMetadata.Artwork ??= new List<Artwork>();
+                    existingMetadata.Artwork ??= [];
                     existingMetadata.Artwork.Add(incomingArtwork);
                     await _metadataRepository.AddArtwork(existingMetadata, incomingArtwork);
                 }
