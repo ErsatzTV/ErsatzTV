@@ -563,7 +563,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
     {
         var updated = false;
 
-        episode.EpisodeMetadata ??= new List<EpisodeMetadata>();
+        episode.EpisodeMetadata ??= [];
 
         var toUpdate = episode.EpisodeMetadata
             .Where(em => episodeMetadata.Any(em2 => em2.EpisodeNumber == em.EpisodeNumber))
@@ -1317,7 +1317,8 @@ public class LocalMetadataProvider : ILocalMetadataProvider
                     Actors = Actors(nfo.Actors, dateAdded, dateUpdated),
                     Guids = nfo.UniqueIds
                         .Map(id => new MetadataGuid { Guid = $"{id.Type}://{id.Guid}" })
-                        .ToList()
+                        .ToList(),
+                    Artwork = []
                 };
             }
 
@@ -1409,8 +1410,8 @@ public class LocalMetadataProvider : ILocalMetadataProvider
                     Writers = nfo.Writers.Map(w => new Writer { Name = w }).ToList(),
                     Genres = nfo.Genres.Map(g => new Genre { Name = g }).ToList(),
                     Tags = nfo.Tags.Map(t => new Tag { Name = t }).ToList(),
-                    Studios = new List<Studio>(),
-                    Artwork = new List<Artwork>()
+                    Studios = [],
+                    Artwork = []
                 };
 
                 result.Add(metadata);

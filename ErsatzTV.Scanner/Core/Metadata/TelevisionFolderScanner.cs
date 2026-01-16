@@ -248,17 +248,15 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
                 maybeParentFolder,
                 seasonFolder);
 
-            // skip folder if etag matches
-            if (knownFolder.Etag == etag)
+            // cache etag match for later checking
+            // we still need to scan the season folder in case season artwork has changed
+            bool etagMatch = knownFolder.Etag == etag;
+            if (etagMatch)
             {
                 if (allTrashedItems.Any(f => f.StartsWith(seasonFolder, StringComparison.OrdinalIgnoreCase)))
                 {
                     _logger.LogDebug("Previously trashed items are now present in folder {Folder}", seasonFolder);
-                }
-                else
-                {
-                    // etag matches and no trashed items are now present, continue to next folder
-                    continue;
+                    etagMatch = false;
                 }
             }
 
@@ -280,6 +278,12 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
 
                 foreach (Season season in maybeSeason.RightToSeq())
                 {
+                    // skip scanning episodes when season folder etag matches
+                    if (etagMatch)
+                    {
+                        continue;
+                    }
+
                     Either<BaseError, Unit> scanResult = await ScanEpisodes(
                         libraryPath,
                         knownFolder,
@@ -410,7 +414,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
 
     private async Task<Either<BaseError, Season>> EnsureMetadataExists(Season season)
     {
-        season.SeasonMetadata ??= new List<SeasonMetadata>();
+        season.SeasonMetadata ??= [];
 
         if (season.SeasonMetadata.Count == 0)
         {
@@ -419,8 +423,9 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
                 SeasonId = season.Id,
                 Season = season,
                 DateAdded = DateTime.UtcNow,
-                Guids = new List<MetadataGuid>(),
-                Tags = new List<Tag>()
+                Guids = [],
+                Tags = [],
+                Artwork = []
             };
 
             season.SeasonMetadata.Add(metadata);
@@ -492,11 +497,18 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
         try
         {
             Show show = result.Item;
-            Option<string> maybeArtwork = LocateArtworkForShow(showFolder, artworkKind);
-            foreach (string artworkFile in maybeArtwork)
+            foreach (ShowMetadata metadata in show.ShowMetadata.HeadOrNone())
             {
-                ShowMetadata metadata = show.ShowMetadata.Head();
-                await RefreshArtwork(artworkFile, metadata, artworkKind, None, None, cancellationToken);
+                Option<string> maybeArtwork = LocateArtworkForShow(showFolder, artworkKind);
+                foreach (string artworkFile in maybeArtwork)
+                {
+                    await RefreshArtwork(artworkFile, metadata, artworkKind, None, None, cancellationToken);
+                }
+
+                if (maybeArtwork.IsNone && metadata.Artwork.Any(a => a.ArtworkKind == artworkKind))
+                {
+                    await _metadataRepository.RemoveArtworkWithKind(metadata, artworkKind);
+                }
             }
 
             return result;
@@ -515,11 +527,18 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
     {
         try
         {
-            Option<string> maybePoster = LocatePoster(season, seasonFolder);
-            foreach (string posterFile in maybePoster)
+            foreach (SeasonMetadata metadata in season.SeasonMetadata.HeadOrNone())
             {
-                SeasonMetadata metadata = season.SeasonMetadata.Head();
-                await RefreshArtwork(posterFile, metadata, ArtworkKind.Poster, None, None, cancellationToken);
+                Option<string> maybePoster = LocatePoster(season, seasonFolder);
+                foreach (string posterFile in maybePoster)
+                {
+                    await RefreshArtwork(posterFile, metadata, ArtworkKind.Poster, None, None, cancellationToken);
+                }
+
+                if (maybePoster.IsNone && metadata.Artwork.Any(a => a.ArtworkKind is ArtworkKind.Poster))
+                {
+                    await _metadataRepository.RemoveArtworkWithKind(metadata, ArtworkKind.Poster);
+                }
             }
 
             return season;
@@ -535,10 +554,10 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
     {
         try
         {
-            Option<string> maybeThumbnail = LocateThumbnail(episode);
-            foreach (string thumbnailFile in maybeThumbnail)
+            foreach (EpisodeMetadata metadata in episode.EpisodeMetadata)
             {
-                foreach (EpisodeMetadata metadata in episode.EpisodeMetadata)
+                Option<string> maybeThumbnail = LocateThumbnail(episode);
+                foreach (string thumbnailFile in maybeThumbnail)
                 {
                     await RefreshArtwork(
                         thumbnailFile,
@@ -547,6 +566,11 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
                         None,
                         None,
                         cancellationToken);
+                }
+
+                if (maybeThumbnail.IsNone && metadata.Artwork.Any(a => a.ArtworkKind is ArtworkKind.Thumbnail))
+                {
+                    await _metadataRepository.RemoveArtworkWithKind(metadata, ArtworkKind.Thumbnail);
                 }
             }
 
