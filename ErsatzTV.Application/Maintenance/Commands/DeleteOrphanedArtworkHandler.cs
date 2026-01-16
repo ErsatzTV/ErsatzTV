@@ -153,11 +153,14 @@ public class DeleteOrphanedArtworkHandler(
         {
             try
             {
-                // don't delete direct children of artwork cache folder
-                var parent = fileSystem.Directory.GetParent(path);
-                if (parent != null && parent.FullName != FileSystemLayout.ArtworkCacheFolder)
+                // don't delete artwork cache folder or its direct children
+                if (path != FileSystemLayout.ArtworkCacheFolder)
                 {
-                    fileSystem.Directory.Delete(path);
+                    var parent = fileSystem.Directory.GetParent(path);
+                    if (parent?.FullName != FileSystemLayout.ArtworkCacheFolder)
+                    {
+                        fileSystem.Directory.Delete(path);
+                    }
                 }
             }
             catch (Exception ex)
