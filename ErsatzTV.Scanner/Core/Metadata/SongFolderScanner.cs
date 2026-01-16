@@ -25,6 +25,7 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
     private readonly IFileSystem _fileSystem;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalMetadataProvider _localMetadataProvider;
+    private readonly IMetadataRepository _metadataRepository;
     private readonly ILogger<SongFolderScanner> _logger;
     private readonly IMediaItemRepository _mediaItemRepository;
     private readonly ISongRepository _songRepository;
@@ -58,6 +59,7 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
         _fileSystem = fileSystem;
         _localFileSystem = localFileSystem;
         _localMetadataProvider = localMetadataProvider;
+        _metadataRepository = metadataRepository;
         _songRepository = songRepository;
         _libraryRepository = libraryRepository;
         _mediaItemRepository = mediaItemRepository;
@@ -263,7 +265,7 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
 
             if (shouldUpdate)
             {
-                song.SongMetadata ??= new List<SongMetadata>();
+                song.SongMetadata ??= [];
 
                 _logger.LogDebug("Refreshing {Attribute} for {Path}", "Metadata", path);
                 if (await _localMetadataProvider.RefreshTagMetadata(song))
@@ -302,23 +304,28 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
             }
 
             Song song = result.Item;
-            Option<string> maybeThumbnail = LocateThumbnail(song);
-            if (maybeThumbnail.IsNone)
-            {
-                await ExtractEmbeddedArtwork(song, ffmpegPath, cancellationToken);
-            }
 
-
-            foreach (string thumbnailFile in maybeThumbnail)
+            foreach (SongMetadata metadata in song.SongMetadata.HeadOrNone())
             {
-                SongMetadata metadata = song.SongMetadata.Head();
-                await RefreshArtwork(
-                    thumbnailFile,
-                    metadata,
-                    ArtworkKind.Thumbnail,
-                    ffmpegPath,
-                    None,
-                    cancellationToken);
+                Option<string> maybeThumbnail = LocateThumbnail(song);
+                if (maybeThumbnail.IsNone && !await ExtractEmbeddedArtwork(song, ffmpegPath, cancellationToken))
+                {
+                    if (metadata.Artwork.Any(a => a.ArtworkKind is ArtworkKind.Thumbnail))
+                    {
+                        await _metadataRepository.RemoveArtworkWithKind(metadata, ArtworkKind.Thumbnail);
+                    }
+                }
+
+                foreach (string thumbnailFile in maybeThumbnail)
+                {
+                    await RefreshArtwork(
+                        thumbnailFile,
+                        metadata,
+                        ArtworkKind.Thumbnail,
+                        ffmpegPath,
+                        None,
+                        cancellationToken);
+                }
             }
 
             return result;
@@ -345,12 +352,12 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
         }).Flatten();
     }
 
-    private async Task ExtractEmbeddedArtwork(Song song, string ffmpegPath, CancellationToken cancellationToken)
+    private async Task<bool> ExtractEmbeddedArtwork(Song song, string ffmpegPath, CancellationToken cancellationToken)
     {
         Option<MediaStream> maybeArtworkStream = Optional(song.GetHeadVersion().Streams.Find(ms => ms.AttachedPic));
         foreach (MediaStream artworkStream in maybeArtworkStream)
         {
-            await RefreshArtwork(
+            return await RefreshArtwork(
                 song.GetHeadVersion().MediaFiles.Head().Path,
                 song.SongMetadata.Head(),
                 ArtworkKind.Thumbnail,
@@ -358,5 +365,7 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
                 artworkStream.Index,
                 cancellationToken);
         }
+
+        return false;
     }
 }
