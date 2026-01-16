@@ -13,6 +13,8 @@ Available values:
   - other_video_plot
   - other_video_has_year
   - other_video_year
+  - other_video_has_artwork
+  - other_video_artwork_url
   - other_video_genres
   - other_video_has_content_rating
   - other_video_content_rating
@@ -35,8 +37,8 @@ The resulting XML will be minified by ErsatzTV - so feel free to keep things nic
       {{ for genre in other_video_genres }}
         <category lang="en">{{ genre }}</category>
       {{ end }}
-      {{ if movie_has_artwork }}
-        <icon src="{{ movie_artwork_url }}" />
+      {{ if other_video_has_artwork }}
+        <icon src="{{ other_video_artwork_url }}" />
       {{ end }}
   {{ end }}
   {{ if other_video_has_content_rating }}

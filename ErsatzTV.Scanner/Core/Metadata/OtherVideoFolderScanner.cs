@@ -359,11 +359,18 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
         {
             OtherVideo otherVideo = result.Item;
 
-            Option<string> maybeThumbnail = LocateThumbnail(otherVideo);
-            foreach (string thumbnailFile in maybeThumbnail)
+            foreach (var metadata in otherVideo.OtherVideoMetadata.HeadOrNone())
             {
-                OtherVideoMetadata metadata = otherVideo.OtherVideoMetadata.Head();
-                await RefreshArtwork(thumbnailFile, metadata, ArtworkKind.Thumbnail, None, None, cancellationToken);
+                Option<string> maybeThumbnail = LocateThumbnail(otherVideo);
+                foreach (string thumbnailFile in maybeThumbnail)
+                {
+                    await RefreshArtwork(thumbnailFile, metadata, ArtworkKind.Thumbnail, None, None, cancellationToken);
+                }
+
+                if (maybeThumbnail.IsNone && metadata.Artwork.Any(a => a.ArtworkKind is ArtworkKind.Thumbnail))
+                {
+                    await _otherVideoRepository.RemoveArtwork(metadata, ArtworkKind.Thumbnail);
+                }
             }
 
             return result;

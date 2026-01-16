@@ -883,6 +883,8 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
             metadata.Genres ??= [];
             metadata.Guids ??= [];
 
+            string artworkPath = GetPrioritizedArtworkPath(metadata);
+
             var data = new
             {
                 ProgrammeStart = start,
@@ -897,6 +899,8 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
                 OtherVideoPlot = metadata.Plot,
                 OtherVideoHasYear = metadata.Year.HasValue,
                 OtherVideoYear = metadata.Year,
+                OtherVideoHasArtwork = !string.IsNullOrWhiteSpace(artworkPath),
+                OtherVideoArtworkUrl = artworkPath,
                 OtherVideoGenres = metadata.Genres.Map(g => g.Name).OrderBy(n => n),
                 OtherVideoHasContentRating = !string.IsNullOrWhiteSpace(metadata.ContentRating),
                 OtherVideoContentRating = metadata.ContentRating
