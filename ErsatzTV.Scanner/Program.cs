@@ -224,6 +224,7 @@ public class Program
                 services.AddScoped<IPlexMovieRepository, PlexMovieRepository>();
                 services.AddScoped<IPlexOtherVideoRepository, PlexOtherVideoRepository>();
                 services.AddScoped<IPlexTelevisionRepository, PlexTelevisionRepository>();
+                services.AddScoped<IPlexMetadataRepository, PlexMetadataRepository>();
                 services.AddScoped<IPlexPathReplacementService, PlexPathReplacementService>();
                 services.AddScoped<PlexEtag>();
 

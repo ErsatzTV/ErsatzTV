@@ -44,10 +44,11 @@ public partial class FallbackMetadataProvider(IClient client) : IFallbackMetadat
         {
             MetadataKind = MetadataKind.Fallback,
             Title = fileName ?? showFolder,
-            Genres = new List<Genre>(),
-            Tags = new List<Tag>(),
-            Studios = new List<Studio>(),
-            Actors = new List<Actor>()
+            Genres = [],
+            Tags = [],
+            Studios = [],
+            Actors = [],
+            Artwork = []
         };
         return GetTelevisionShowMetadata(fileName, metadata);
     }
@@ -56,7 +57,11 @@ public partial class FallbackMetadataProvider(IClient client) : IFallbackMetadat
     {
         string fileName = Path.GetFileName(artistFolder);
         return new ArtistMetadata
-            { MetadataKind = MetadataKind.Fallback, Title = fileName ?? artistFolder };
+        {
+            MetadataKind = MetadataKind.Fallback,
+            Title = fileName ?? artistFolder,
+            Artwork = []
+        };
     }
 
     public List<EpisodeMetadata> GetFallbackMetadata(Episode episode)
@@ -69,18 +74,18 @@ public partial class FallbackMetadataProvider(IClient client) : IFallbackMetadat
             Title = Path.GetFileNameWithoutExtension(path) ?? path,
             DateAdded = DateTime.UtcNow,
             EpisodeNumber = 0,
-            Actors = new List<Actor>(),
-            Artwork = new List<Artwork>(),
-            Directors = new List<Director>(),
-            Genres = new List<Genre>(),
-            Guids = new List<MetadataGuid>(),
-            Studios = new List<Studio>(),
-            Tags = new List<Tag>(),
-            Writers = new List<Writer>()
+            Actors = [],
+            Artwork = [],
+            Directors = [],
+            Genres = [],
+            Guids = [],
+            Studios = [],
+            Tags = [],
+            Writers = []
         };
         return fileName != null
             ? GetEpisodeMetadata(fileName, baseMetadata)
-            : new List<EpisodeMetadata> { baseMetadata };
+            : [baseMetadata];
     }
 
     public MovieMetadata GetFallbackMetadata(Movie movie)
@@ -91,13 +96,14 @@ public partial class FallbackMetadataProvider(IClient client) : IFallbackMetadat
         {
             MetadataKind = MetadataKind.Fallback,
             Title = Path.GetFileNameWithoutExtension(path) ?? path,
-            Genres = new List<Genre>(),
-            Tags = new List<Tag>(),
-            Studios = new List<Studio>(),
-            Actors = new List<Actor>(),
-            Directors = new List<Director>(),
-            Writers = new List<Writer>(),
-            Guids = new List<MetadataGuid>()
+            Artwork = [],
+            Genres = [],
+            Tags = [],
+            Studios = [],
+            Actors = [],
+            Directors = [],
+            Writers = [],
+            Guids = []
         };
 
         return fileName != null ? GetMovieMetadata(fileName, metadata) : metadata;
@@ -110,7 +116,8 @@ public partial class FallbackMetadataProvider(IClient client) : IFallbackMetadat
         var metadata = new MusicVideoMetadata
         {
             MetadataKind = MetadataKind.Fallback,
-            Title = fileName ?? path
+            Title = fileName ?? path,
+            Artwork = []
         };
 
         return GetMusicVideoMetadata(fileName, metadata);
@@ -125,13 +132,14 @@ public partial class FallbackMetadataProvider(IClient client) : IFallbackMetadat
             MetadataKind = MetadataKind.Fallback,
             Title = fileName ?? path,
             OtherVideo = otherVideo,
-            Genres = new List<Genre>(),
-            Tags = new List<Tag>(),
-            Studios = new List<Studio>(),
-            Actors = new List<Actor>(),
-            Directors = new List<Director>(),
-            Writers = new List<Writer>(),
-            Guids = new List<MetadataGuid>()
+            Artwork = [],
+            Genres = [],
+            Tags = [],
+            Studios = [],
+            Actors = [],
+            Directors = [],
+            Writers = [],
+            Guids = []
         };
 
         return GetOtherVideoMetadata(path, metadata);
@@ -145,7 +153,8 @@ public partial class FallbackMetadataProvider(IClient client) : IFallbackMetadat
         {
             MetadataKind = MetadataKind.Fallback,
             Title = fileName ?? path,
-            Song = song
+            Song = song,
+            Artwork = []
         };
 
         return GetSongMetadata(path, metadata);
@@ -160,6 +169,7 @@ public partial class FallbackMetadataProvider(IClient client) : IFallbackMetadat
             MetadataKind = MetadataKind.Fallback,
             Title = fileName ?? path,
             Image = image,
+            Artwork = [],
             Genres = [],
             Tags = [],
             Studios = [],
@@ -179,6 +189,7 @@ public partial class FallbackMetadataProvider(IClient client) : IFallbackMetadat
             MetadataKind = MetadataKind.Fallback,
             Title = fileName ?? path,
             RemoteStream = remoteStream,
+            Artwork = [],
             Genres = [],
             Tags = [],
             Studios = [],
@@ -232,14 +243,14 @@ public partial class FallbackMetadataProvider(IClient client) : IFallbackMetadat
                                 DateAdded = baseMetadata.DateAdded,
                                 DateUpdated = baseMetadata.DateAdded,
                                 Title = baseMetadata.Title,
-                                Actors = new List<Actor>(),
-                                Artwork = new List<Artwork>(),
-                                Directors = new List<Director>(),
-                                Genres = new List<Genre>(),
-                                Guids = new List<MetadataGuid>(),
-                                Studios = new List<Studio>(),
-                                Tags = new List<Tag>(),
-                                Writers = new List<Writer>()
+                                Actors = [],
+                                Artwork = [],
+                                Directors = [],
+                                Genres = [],
+                                Guids = [],
+                                Studios = [],
+                                Tags = [],
+                                Writers = []
                             };
 
                             result.Add(metadata);
@@ -290,6 +301,7 @@ public partial class FallbackMetadataProvider(IClient client) : IFallbackMetadat
                 ? match.Groups[2].Value.Trim()
                 : Path.GetFileNameWithoutExtension(fileName);
             metadata.Artists = [];
+            metadata.Artwork = [];
             metadata.Genres = [];
             metadata.Tags = [];
             metadata.Studios = [];
@@ -326,11 +338,11 @@ public partial class FallbackMetadataProvider(IClient client) : IFallbackMetadat
                 .Map(t => new Tag { Name = t })
                 .ToList();
 
-            metadata.Artwork = new List<Artwork>();
-            metadata.Actors = new List<Actor>();
-            metadata.Genres = new List<Genre>();
+            metadata.Actors = [];
+            metadata.Artwork = [];
+            metadata.Genres = [];
             metadata.Tags = tags;
-            metadata.Studios = new List<Studio>();
+            metadata.Studios = [];
             metadata.DateUpdated = DateTime.UtcNow;
             metadata.OriginalTitle = Path.GetRelativePath(libraryPath, path);
 
@@ -364,8 +376,8 @@ public partial class FallbackMetadataProvider(IClient client) : IFallbackMetadat
                 .Map(t => new Tag { Name = t })
                 .ToList();
 
-            metadata.Artwork = [];
             metadata.Actors = [];
+            metadata.Artwork = [];
             metadata.Genres = [];
             metadata.Tags = tags;
             metadata.Studios = [];
@@ -402,8 +414,8 @@ public partial class FallbackMetadataProvider(IClient client) : IFallbackMetadat
                 .Map(t => new Tag { Name = t })
                 .ToList();
 
-            metadata.Artwork = [];
             metadata.Actors = [];
+            metadata.Artwork = [];
             metadata.Genres = [];
             metadata.Tags = tags;
             metadata.Studios = [];
@@ -440,11 +452,11 @@ public partial class FallbackMetadataProvider(IClient client) : IFallbackMetadat
                 .Map(t => new Tag { Name = t })
                 .ToList();
 
-            metadata.Artwork = new List<Artwork>();
-            metadata.Actors = new List<Actor>();
-            metadata.Genres = new List<Genre>();
+            metadata.Actors = [];
+            metadata.Artwork = [];
+            metadata.Genres = [];
             metadata.Tags = tags;
-            metadata.Studios = new List<Studio>();
+            metadata.Studios = [];
             metadata.DateUpdated = DateTime.UtcNow;
             metadata.OriginalTitle = Path.GetRelativePath(libraryPath, path);
 

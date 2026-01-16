@@ -812,6 +812,7 @@ public class Startup
         services.AddScoped<IPlexMovieRepository, PlexMovieRepository>();
         services.AddScoped<IPlexTelevisionRepository, PlexTelevisionRepository>();
         services.AddScoped<IPlexCollectionRepository, PlexCollectionRepository>();
+        services.AddScoped<IPlexMetadataRepository, PlexMetadataRepository>();
         services.AddScoped<IJellyfinApiClient, JellyfinApiClient>();
         services.AddScoped<IJellyfinPathReplacementService, JellyfinPathReplacementService>();
         services.AddScoped<IJellyfinTelevisionRepository, JellyfinTelevisionRepository>();

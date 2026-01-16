@@ -175,15 +175,6 @@ public class OtherVideoRepository : IOtherVideoRepository
             new { writer.Name, MetadataId = metadata.Id }).Map(result => result > 0);
     }
 
-    public async Task<bool> RemoveArtwork(OtherVideoMetadata metadata, ArtworkKind artworkKind)
-    {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
-        var ids = metadata.Artwork.Where(a => a.ArtworkKind == artworkKind).Select(a => a.Id).ToHashSet();
-        return await dbContext.Artwork
-            .Where(a => ids.Contains(a.Id))
-            .ExecuteDeleteAsync() > 0;
-    }
-
     private async Task<Either<BaseError, MediaItemScanResult<OtherVideo>>> AddOtherVideo(
         TvContext dbContext,
         int libraryPathId,

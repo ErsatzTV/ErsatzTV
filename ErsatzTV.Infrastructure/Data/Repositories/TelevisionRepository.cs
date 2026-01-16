@@ -271,17 +271,18 @@ public class TelevisionRepository : ITelevisionRepository
         try
         {
             metadata.DateAdded = DateTime.UtcNow;
-            metadata.Genres ??= new List<Genre>();
-            metadata.Tags ??= new List<Tag>();
-            metadata.Studios ??= new List<Studio>();
-            metadata.Actors ??= new List<Actor>();
-            metadata.Guids ??= new List<MetadataGuid>();
+            metadata.Genres ??= [];
+            metadata.Tags ??= [];
+            metadata.Studios ??= [];
+            metadata.Actors ??= [];
+            metadata.Guids ??= [];
+            metadata.Artwork ??= [];
             var show = new Show
             {
                 LibraryPathId = libraryPathId,
-                ShowMetadata = new List<ShowMetadata> { metadata },
-                Seasons = new List<Season>(),
-                TraktListItems = new List<TraktListItem>()
+                ShowMetadata = [metadata],
+                Seasons = [],
+                TraktListItems = []
             };
 
             await dbContext.Shows.AddAsync(show);
@@ -670,17 +671,18 @@ public class TelevisionRepository : ITelevisionRepository
                 LibraryPathId = libraryPathId,
                 ShowId = show.Id,
                 SeasonNumber = seasonNumber,
-                Episodes = new List<Episode>(),
-                SeasonMetadata = new List<SeasonMetadata>
-                {
-                    new()
+                Episodes = [],
+                SeasonMetadata =
+                [
+                    new SeasonMetadata
                     {
                         DateAdded = DateTime.UtcNow,
-                        Guids = new List<MetadataGuid>(),
-                        Tags = new List<Tag>()
+                        Guids = [],
+                        Tags = [],
+                        Artwork = []
                     }
-                },
-                TraktListItems = new List<TraktListItem>()
+                ],
+                TraktListItems = []
             };
             await dbContext.Seasons.AddAsync(season);
             await dbContext.SaveChangesAsync();

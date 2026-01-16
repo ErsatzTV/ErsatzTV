@@ -309,14 +309,13 @@ public class MetadataRepository(IDbContextFactory<TvContext> dbContextFactory) :
         };
     }
 
-    public async Task<Unit> RemoveArtwork(Core.Domain.Metadata metadata, ArtworkKind artworkKind)
+    public async Task<bool> RemoveArtworkWithKind(Core.Domain.Metadata metadata, ArtworkKind artworkKind)
     {
-        // this is only used by plex, so only needs to support plex media kinds (movie, show, season, episode, other video)
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
-        return await dbContext.Connection.ExecuteAsync(
-            @"DELETE FROM Artwork WHERE ArtworkKind = @ArtworkKind AND (MovieMetadataId = @Id
-                OR ShowMetadataId = @Id OR SeasonMetadataId = @Id OR EpisodeMetadataId = @Id OR OtherVideoMetadataId = @Id)",
-            new { ArtworkKind = artworkKind, metadata.Id }).ToUnit();
+        var ids = metadata.Artwork.Where(a => a.ArtworkKind == artworkKind).Select(a => a.Id).ToHashSet();
+        return await dbContext.Artwork
+            .Where(a => ids.Contains(a.Id))
+            .ExecuteDeleteAsync() > 0;
     }
 
     public async Task<bool> CloneArtwork(
