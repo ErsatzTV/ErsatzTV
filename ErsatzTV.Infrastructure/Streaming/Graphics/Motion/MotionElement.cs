@@ -32,6 +32,8 @@ public class MotionElement(
 
     public override int ZIndex { get; } = motionElement.ZIndex ?? 0;
 
+    public override string DebugKey { get; } = $"Motion {motionElement.DebugName()}";
+
     public void Dispose()
     {
         GC.SuppressFinalize(this);

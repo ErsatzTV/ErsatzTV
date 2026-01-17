@@ -13,6 +13,8 @@ public class ImageElement(ImageGraphicsElement imageGraphicsElement, ILogger log
 
     public override int ZIndex { get; } = imageGraphicsElement.ZIndex ?? 0;
 
+    public override string DebugKey { get; } = $"Image {imageGraphicsElement.DebugName()}";
+
     public override async Task InitializeAsync(GraphicsEngineContext context, CancellationToken cancellationToken)
     {
         try

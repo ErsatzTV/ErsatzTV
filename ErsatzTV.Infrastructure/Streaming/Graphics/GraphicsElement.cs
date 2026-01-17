@@ -9,6 +9,8 @@ public abstract class GraphicsElement : IGraphicsElement
 {
     public abstract int ZIndex { get; }
 
+    public abstract string DebugKey { get; }
+
     public bool IsFinished { get; set; }
 
     public abstract Task InitializeAsync(GraphicsEngineContext context, CancellationToken cancellationToken);

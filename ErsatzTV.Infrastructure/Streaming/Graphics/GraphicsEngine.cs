@@ -99,6 +99,14 @@ public class GraphicsEngine(
 
         var prepareTasks = new List<Task<Option<PreparedElementImage>>>(elements.Count);
 
+        foreach (IGraphicsElement element in elements.OrderBy(e => e.ZIndex))
+        {
+            logger.LogDebug(
+                "Graphics element {Element} will draw with ZIndex {ZIndex}",
+                element.DebugKey,
+                element.ZIndex);
+        }
+
         try
         {
             // `content_total_seconds` - the total number of seconds in the content
