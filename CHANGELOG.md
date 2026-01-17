@@ -33,7 +33,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix playback of AC3 audio when targeting stereo output and input layout changes mid-stream
 - Use other video artwork in XMLTV template
 - Properly update (add or remove) artwork for all local media libraries when files have changed
-- Sync plex library name changes
+- Sync Plex library name changes
+- Sync Jellyfin and Emby library name and type changes
+  - Library type (movies, shows) can only be changed when synchronization is *disabled* for the library in ETV
 
 ## [26.1.1] - 2026-01-08
 ### Fixed
