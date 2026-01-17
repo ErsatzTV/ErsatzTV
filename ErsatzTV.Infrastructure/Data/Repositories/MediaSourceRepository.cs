@@ -171,9 +171,10 @@ public class MediaSourceRepository(IDbContextFactory<TvContext> dbContextFactory
         foreach (PlexLibrary incoming in toUpdate)
         {
             Option<PlexLibrary> maybeExisting = await dbContext.PlexLibraries
-                .Where(pl => pl.MediaSourceId == plexMediaSourceId)
                 .Include(l => l.Paths)
-                .SingleOrDefaultAsync(l => l.Key == incoming.Key, cancellationToken);
+                .SingleOrDefaultAsync(
+                    l => l.Key == incoming.Key && l.MediaSourceId == plexMediaSourceId,
+                    cancellationToken);
 
             foreach (PlexLibrary existingLibrary in maybeExisting)
             {
@@ -242,10 +243,29 @@ public class MediaSourceRepository(IDbContextFactory<TvContext> dbContextFactory
         {
             Option<JellyfinLibrary> maybeExisting = await dbContext.JellyfinLibraries
                 .Include(l => l.PathInfos)
-                .SelectOneAsync(l => l.ItemId, l => l.ItemId == incoming.ItemId, cancellationToken);
+                .SingleOrDefaultAsync(
+                    l => l.ItemId == incoming.ItemId && l.MediaSourceId == jellyfinMediaSourceId,
+                    cancellationToken);
 
             foreach (JellyfinLibrary existing in maybeExisting)
             {
+                // update library type, but only if not synchronized
+                if (incoming.MediaKind != existing.MediaKind)
+                {
+                    if (existing.ShouldSyncItems)
+                    {
+                        logger.LogWarning(
+                            "Jellyfin library \"{Name}\" should be type {NewType} (currently {OldType}) but cannot be updated while synchronization is enabled for this library.",
+                            incoming.Name,
+                            incoming.MediaKind,
+                            existing.MediaKind);
+                    }
+                    else
+                    {
+                        existing.MediaKind = incoming.MediaKind;
+                    }
+                }
+
                 // remove paths that are not on the incoming version
                 existing.PathInfos.RemoveAll(pi => incoming.PathInfos.All(upi => upi.Path != pi.Path));
 
@@ -265,6 +285,8 @@ public class MediaSourceRepository(IDbContextFactory<TvContext> dbContextFactory
                 {
                     existing.PathInfos.Add(incomingPathInfo);
                 }
+
+                existing.Name = incoming.Name;
             }
         }
 
@@ -303,10 +325,29 @@ public class MediaSourceRepository(IDbContextFactory<TvContext> dbContextFactory
         {
             Option<EmbyLibrary> maybeExisting = await dbContext.EmbyLibraries
                 .Include(l => l.PathInfos)
-                .SelectOneAsync(l => l.ItemId, l => l.ItemId == incoming.ItemId, cancellationToken);
+                .SingleOrDefaultAsync(
+                    l => l.ItemId == incoming.ItemId && l.MediaSourceId == embyMediaSourceId,
+                    cancellationToken);
 
             foreach (EmbyLibrary existing in maybeExisting)
             {
+                // update library type, but only if not synchronized
+                if (incoming.MediaKind != existing.MediaKind)
+                {
+                    if (existing.ShouldSyncItems)
+                    {
+                        logger.LogWarning(
+                            "Emby library \"{Name}\" should be type {NewType} (currently {OldType}) but cannot be updated while synchronization is enabled for this library.",
+                            incoming.Name,
+                            incoming.MediaKind,
+                            existing.MediaKind);
+                    }
+                    else
+                    {
+                        existing.MediaKind = incoming.MediaKind;
+                    }
+                }
+
                 // remove paths that are not on the incoming version
                 existing.PathInfos.RemoveAll(pi => incoming.PathInfos.All(upi => upi.Path != pi.Path));
 
@@ -326,6 +367,8 @@ public class MediaSourceRepository(IDbContextFactory<TvContext> dbContextFactory
                 {
                     existing.PathInfos.Add(incomingPathInfo);
                 }
+
+                existing.Name = incoming.Name;
             }
         }
 
