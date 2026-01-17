@@ -171,6 +171,7 @@ public class MediaSourceRepository(IDbContextFactory<TvContext> dbContextFactory
         foreach (PlexLibrary incoming in toUpdate)
         {
             Option<PlexLibrary> maybeExisting = await dbContext.PlexLibraries
+                .Where(pl => pl.MediaSourceId == plexMediaSourceId)
                 .Include(l => l.Paths)
                 .SingleOrDefaultAsync(l => l.Key == incoming.Key, cancellationToken);
 
