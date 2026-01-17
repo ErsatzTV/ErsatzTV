@@ -171,8 +171,9 @@ public class MediaSourceRepository(IDbContextFactory<TvContext> dbContextFactory
         foreach (PlexLibrary incoming in toUpdate)
         {
             Option<PlexLibrary> maybeExisting = await dbContext.PlexLibraries
+                .Where(pl => pl.MediaSourceId == plexMediaSourceId)
                 .Include(l => l.Paths)
-                .SelectOneAsync(l => l.Key, l => l.Key == incoming.Key, cancellationToken);
+                .SingleOrDefaultAsync(l => l.Key == incoming.Key, cancellationToken);
 
             foreach (PlexLibrary existingLibrary in maybeExisting)
             {
@@ -201,6 +202,8 @@ public class MediaSourceRepository(IDbContextFactory<TvContext> dbContextFactory
                         existing.Path = path.Path;
                     }
                 }
+
+                existingLibrary.Name = incoming.Name;
             }
         }
 
