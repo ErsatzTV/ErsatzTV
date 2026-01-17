@@ -29,6 +29,8 @@ public class ScriptElement(ScriptGraphicsElement scriptElement, ILogger logger)
 
     public override int ZIndex { get; } = scriptElement.ZIndex ?? 0;
 
+    public override string DebugKey { get; } = $"Script {scriptElement.DebugName()}";
+
     public void Dispose()
     {
         logger.LogDebug(

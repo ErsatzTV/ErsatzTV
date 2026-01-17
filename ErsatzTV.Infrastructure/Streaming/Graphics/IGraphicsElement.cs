@@ -1,4 +1,3 @@
-using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Streaming;
 
 namespace ErsatzTV.Infrastructure.Streaming.Graphics;
@@ -6,6 +5,8 @@ namespace ErsatzTV.Infrastructure.Streaming.Graphics;
 public interface IGraphicsElement
 {
     int ZIndex { get; }
+
+    string DebugKey { get; }
 
     bool IsFinished { get; set; }
 

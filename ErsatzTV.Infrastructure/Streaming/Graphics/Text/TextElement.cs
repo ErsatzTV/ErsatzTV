@@ -23,6 +23,8 @@ public partial class TextElement(
 
     public override int ZIndex { get; } = textElement.ZIndex ?? 0;
 
+    public override string DebugKey { get; } = $"Text {textElement.DebugName()}";
+
     public void Dispose()
     {
         GC.SuppressFinalize(this);

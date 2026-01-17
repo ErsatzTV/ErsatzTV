@@ -24,12 +24,16 @@ public class WatermarkElement : ImageElementBase
 
         _imagePath = watermarkOptions.ImagePath;
         _watermark = watermarkOptions.Watermark;
+
         ZIndex = watermarkOptions.Watermark.ZIndex;
+        DebugKey = $"Watermark {watermarkOptions.Watermark.Name}";
     }
 
     public bool IsValid => _imagePath != null && _watermark != null;
 
     public override int ZIndex { get; }
+
+    public override string DebugKey { get; }
 
     public override async Task InitializeAsync(GraphicsEngineContext context, CancellationToken cancellationToken)
     {

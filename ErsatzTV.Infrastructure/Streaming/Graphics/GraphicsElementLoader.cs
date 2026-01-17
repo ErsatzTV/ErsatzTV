@@ -281,7 +281,7 @@ public partial class GraphicsElementLoader(
         return result;
     }
 
-    private async Task<Option<string>> GetTemplatedYaml(string fileName, Dictionary<string, object> variables)
+    private async Task<Option<TemplatedYaml>> GetTemplatedYaml(string fileName, Dictionary<string, object> variables)
     {
         string yaml = await fileSystem.File.ReadAllTextAsync(fileName);
         try
@@ -295,16 +295,18 @@ public partial class GraphicsElementLoader(
 
             var context = new TemplateContext { MemberRenamer = member => member.Name };
             context.PushGlobal(scriptObject);
-            return await Template.Parse(yaml).RenderAsync(context);
+            return new TemplatedYaml(
+                fileSystem.Path.GetFileName(fileName),
+                await Template.Parse(yaml).RenderAsync(context));
         }
         catch (Exception ex)
         {
             logger.LogWarning(ex, "Failed to render graphics element YAML definition as scriban template");
-            return Option<string>.None;
+            return Option<TemplatedYaml>.None;
         }
     }
 
-    private Option<T> FromYaml<T>(string yaml)
+    private Option<T> FromYaml<T>(TemplatedYaml yaml) where T : BaseGraphicsElement
     {
         try
         {
@@ -318,7 +320,9 @@ public partial class GraphicsElementLoader(
                 .WithNamingConvention(CamelCaseNamingConvention.Instance)
                 .Build();
 
-            return deserializer.Deserialize<T>(yaml);
+            var result = deserializer.Deserialize<T>(yaml.Yaml);
+            result.SourceFileName = yaml.SourceFileName;
+            return result;
         }
         catch (Exception ex)
         {
@@ -346,4 +350,6 @@ public partial class GraphicsElementLoader(
 
     [GeneratedRegex(@"epg_entries:\s*(\d+)")]
     private static partial Regex EpgEntriesRegex();
+
+    private record TemplatedYaml(string SourceFileName, string Yaml);
 }

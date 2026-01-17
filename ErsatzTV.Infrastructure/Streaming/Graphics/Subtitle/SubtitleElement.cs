@@ -32,6 +32,8 @@ public class SubtitleElement(
 
     public override int ZIndex { get; } = subtitleElement.ZIndex ?? 0;
 
+    public override string DebugKey { get; } = $"Subtitle {subtitleElement.DebugName()}";
+
     public void Dispose()
     {
         GC.SuppressFinalize(this);
