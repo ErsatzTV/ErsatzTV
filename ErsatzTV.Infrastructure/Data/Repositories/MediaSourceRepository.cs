@@ -172,7 +172,7 @@ public class MediaSourceRepository(IDbContextFactory<TvContext> dbContextFactory
         {
             Option<PlexLibrary> maybeExisting = await dbContext.PlexLibraries
                 .Include(l => l.Paths)
-                .SelectOneAsync(l => l.Key, l => l.Key == incoming.Key, cancellationToken);
+                .SingleOrDefaultAsync(l => l.Key == incoming.Key, cancellationToken);
 
             foreach (PlexLibrary existingLibrary in maybeExisting)
             {
@@ -201,6 +201,8 @@ public class MediaSourceRepository(IDbContextFactory<TvContext> dbContextFactory
                         existing.Path = path.Path;
                     }
                 }
+
+                existingLibrary.Name = incoming.Name;
             }
         }
 
