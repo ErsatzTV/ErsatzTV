@@ -156,7 +156,7 @@ public class GraphicsEngine(
                     }
                 }
 
-                preparedElementImages.Sort((a, _) => a.ZIndex);
+                preparedElementImages.Sort((a, b) => a.ZIndex.CompareTo(b.ZIndex));
 
                 Memory<byte> memory = pipeWriter.GetMemory(frameBufferSize);
 
