@@ -532,7 +532,8 @@
         </div>
         <MudTextField @bind-Value="@_selectedItem.MultipleCount"
                       For="@(() => _selectedItem.MultipleCount)"
-                      Disabled="@(_selectedItem.PlayoutMode is not PlayoutMode.Multiple || _selectedItem.MultipleMode is not MultipleMode.Count)"/>
+                      Disabled="@(_selectedItem.PlayoutMode is not PlayoutMode.Multiple || _selectedItem.MultipleMode is not MultipleMode.Count)"
+                      HelperText="Can be an expression with 'count' (collection size) and 'random' (0 to count-1)"/>
     </MudStack>
     <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
         <div class="d-flex">

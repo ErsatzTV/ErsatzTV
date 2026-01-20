@@ -25,11 +25,22 @@ public static class CountExpression
             };
         };
 
-        object expressionResult = expression.Evaluate(cancellationToken);
+        object expressionResult = 0;
+        try
+        {
+            expressionResult = expression.Evaluate(cancellationToken);
+        }
+        catch (Exception)
+        {
+            // do nothing
+        }
+
         return expressionResult switch
         {
+            double d when double.IsInfinity(d) || double.IsNaN(d) => 0,
             double doubleResult => (int)Math.Floor(doubleResult),
             int intResult => intResult,
+            long longResult => (int)longResult,
             _ => 0
         };
     }
