@@ -5,7 +5,6 @@ using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using ErsatzTV.Core.Scheduling.YamlScheduling.Models;
 using Microsoft.Extensions.Logging;
-using NCalc;
 
 namespace ErsatzTV.Core.Scheduling.YamlScheduling.Handlers;
 
@@ -34,27 +33,7 @@ public class YamlPlayoutCountHandler(EnumeratorCache enumeratorCache) : YamlPlay
         {
             int seed = context.Playout.Seed + context.InstructionIndex + context.CurrentTime.DayOfYear;
             var random = new Random(seed);
-            int enumeratorCount = enumerator is PlaylistEnumerator playlistEnumerator
-                ? playlistEnumerator.CountForRandom
-                : enumerator.Count;
-            var expression = new Expression(count.Count);
-            expression.EvaluateParameter += (name, e) =>
-            {
-                e.Result = name switch
-                {
-                    "count" => enumeratorCount,
-                    "random" => enumeratorCount > 0 ? random.Next() % enumeratorCount : 0,
-                    _ => e.Result
-                };
-            };
-
-            object expressionResult = expression.Evaluate(cancellationToken);
-            int countValue = expressionResult switch
-            {
-                double doubleResult => (int)Math.Floor(doubleResult),
-                int intResult => intResult,
-                _ => 0
-            };
+            int countValue = CountExpression.Evaluate(count.Count, enumerator, random, cancellationToken);
 
             for (var i = 0; i < countValue; i++)
             {

@@ -12,9 +12,14 @@ namespace ErsatzTV.Core.Tests.Scheduling;
 public class PlayoutModeSchedulerMultipleTests : SchedulerTestBase
 {
     [SetUp]
-    public void SetUp() => _cancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(10)).Token;
+    public void SetUp()
+    {
+        _cancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(10)).Token;
+        _random = new Random();
+    }
 
     private CancellationToken _cancellationToken;
+    private Random _random;
 
     [Test]
     public void Should_Respect_Fixed_Start_Time()
@@ -32,7 +37,7 @@ public class PlayoutModeSchedulerMultipleTests : SchedulerTestBase
             PlaybackOrder = PlaybackOrder.Chronological,
             TailFiller = null,
             FallbackFiller = null,
-            Count = 0,
+            Count = "0",
             MultipleMode = MultipleMode.CollectionSize,
             CustomTitle = "CustomTitle"
         };
@@ -59,6 +64,7 @@ public class PlayoutModeSchedulerMultipleTests : SchedulerTestBase
             scheduleItem,
             NextScheduleItem,
             HardStop(scheduleItemsEnumerator),
+            _random,
             _cancellationToken);
 
         playoutBuilderState.CurrentTime.ShouldBe(startState.CurrentTime.AddHours(3));
@@ -134,7 +140,7 @@ public class PlayoutModeSchedulerMultipleTests : SchedulerTestBase
             PlaybackOrder = PlaybackOrder.Chronological,
             TailFiller = null,
             FallbackFiller = null,
-            Count = 0,
+            Count = "0",
             MultipleMode = MultipleMode.MultiEpisodeGroupSize,
             CustomTitle = "CustomTitle"
         };
@@ -161,6 +167,7 @@ public class PlayoutModeSchedulerMultipleTests : SchedulerTestBase
             scheduleItem,
             NextScheduleItem,
             HardStop(scheduleItemsEnumerator),
+            _random,
             _cancellationToken);
 
         playoutBuilderState.CurrentTime.ShouldBe(startState.CurrentTime.AddHours(3));
@@ -206,7 +213,7 @@ public class PlayoutModeSchedulerMultipleTests : SchedulerTestBase
             PlaybackOrder = PlaybackOrder.Chronological,
             TailFiller = null,
             FallbackFiller = null,
-            Count = 3,
+            Count = "3",
             CustomTitle = "CustomTitle"
         };
 
@@ -232,6 +239,7 @@ public class PlayoutModeSchedulerMultipleTests : SchedulerTestBase
             scheduleItem,
             NextScheduleItem,
             HardStop(scheduleItemsEnumerator),
+            _random,
             _cancellationToken);
 
         playoutBuilderState.CurrentTime.ShouldBe(startState.CurrentTime.AddHours(3));
@@ -282,7 +290,7 @@ public class PlayoutModeSchedulerMultipleTests : SchedulerTestBase
             PlaybackOrder = PlaybackOrder.Chronological,
             TailFiller = null,
             FallbackFiller = null,
-            Count = 3
+            Count = "3"
         };
 
         var scheduleItemsEnumerator = new OrderedScheduleItemsEnumerator(
@@ -307,6 +315,7 @@ public class PlayoutModeSchedulerMultipleTests : SchedulerTestBase
             scheduleItem,
             NextScheduleItem,
             HardStop(scheduleItemsEnumerator),
+            _random,
             _cancellationToken);
 
         playoutBuilderState.CurrentTime.ShouldBe(startState.CurrentTime.Add(new TimeSpan(2, 45, 0)));
@@ -360,7 +369,7 @@ public class PlayoutModeSchedulerMultipleTests : SchedulerTestBase
                 CollectionId = collectionTwo.Id
             },
             FallbackFiller = null,
-            Count = 3
+            Count = "3"
         };
 
         var scheduleItemsEnumerator = new OrderedScheduleItemsEnumerator(
@@ -390,6 +399,7 @@ public class PlayoutModeSchedulerMultipleTests : SchedulerTestBase
             scheduleItem,
             NextScheduleItem,
             HardStop(scheduleItemsEnumerator),
+            _random,
             _cancellationToken);
 
         playoutBuilderState.CurrentTime.ShouldBe(startState.CurrentTime.AddHours(3));
@@ -459,7 +469,7 @@ public class PlayoutModeSchedulerMultipleTests : SchedulerTestBase
                 Collection = collectionTwo,
                 CollectionId = collectionTwo.Id
             },
-            Count = 3
+            Count = "3"
         };
 
         var scheduleItemsEnumerator = new OrderedScheduleItemsEnumerator(
@@ -489,6 +499,7 @@ public class PlayoutModeSchedulerMultipleTests : SchedulerTestBase
             scheduleItem,
             NextScheduleItem,
             HardStop(scheduleItemsEnumerator),
+            _random,
             _cancellationToken);
 
         playoutBuilderState.CurrentTime.ShouldBe(startState.CurrentTime.AddHours(3));
@@ -548,7 +559,7 @@ public class PlayoutModeSchedulerMultipleTests : SchedulerTestBase
                 CollectionId = collectionTwo.Id
             },
             FallbackFiller = null,
-            Count = 3
+            Count = "3"
         };
 
         var scheduleItemsEnumerator = new OrderedScheduleItemsEnumerator(
@@ -578,6 +589,7 @@ public class PlayoutModeSchedulerMultipleTests : SchedulerTestBase
             scheduleItem,
             NextScheduleItem,
             HardStop(scheduleItemsEnumerator),
+            _random,
             _cancellationToken);
 
         playoutBuilderState.CurrentTime.ShouldBe(startState.CurrentTime.Add(new TimeSpan(2, 57, 0)));
@@ -653,7 +665,7 @@ public class PlayoutModeSchedulerMultipleTests : SchedulerTestBase
                 Collection = collectionThree,
                 CollectionId = collectionThree.Id
             },
-            Count = 3
+            Count = "3"
         };
 
         var scheduleItemsEnumerator = new OrderedScheduleItemsEnumerator(
@@ -694,6 +706,7 @@ public class PlayoutModeSchedulerMultipleTests : SchedulerTestBase
             scheduleItem,
             NextScheduleItem,
             HardStop(scheduleItemsEnumerator),
+            _random,
             _cancellationToken);
 
         playoutBuilderState.CurrentTime.ShouldBe(startState.CurrentTime.AddHours(3));
@@ -775,7 +788,7 @@ public class PlayoutModeSchedulerMultipleTests : SchedulerTestBase
                 Collection = collectionThree,
                 CollectionId = collectionThree.Id
             },
-            Count = 3
+            Count = "3"
         };
 
         var scheduleItemsEnumerator = new OrderedScheduleItemsEnumerator(
@@ -816,6 +829,7 @@ public class PlayoutModeSchedulerMultipleTests : SchedulerTestBase
             scheduleItem,
             NextScheduleItem,
             HardStop(scheduleItemsEnumerator),
+            _random,
             _cancellationToken);
 
         playoutBuilderState.CurrentTime.ShouldBe(startState.CurrentTime.AddHours(3));
@@ -865,7 +879,7 @@ public class PlayoutModeSchedulerMultipleTests : SchedulerTestBase
             PlaybackOrder = PlaybackOrder.Chronological,
             TailFiller = null,
             FallbackFiller = null,
-            Count = 2
+            Count = "2"
         };
 
         var enumerator = new ChronologicalMediaCollectionEnumerator(
@@ -896,6 +910,7 @@ public class PlayoutModeSchedulerMultipleTests : SchedulerTestBase
             scheduleItem,
             NextScheduleItem,
             HardStop(scheduleItemsEnumerator),
+            _random,
             _cancellationToken);
 
         playoutItems.ShouldBeEmpty();

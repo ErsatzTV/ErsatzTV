@@ -16,7 +16,7 @@ public class ProgramScheduleItemEditViewModel : INotifyPropertyChanged
     private CollectionType _collectionType;
     private int? _discardToFillAttempts;
     private FixedStartTimeBehavior? _fixedStartTimeBehavior;
-    private int? _multipleCount;
+    private string _multipleCount;
     private PlaybackOrder _playbackOrder;
     private TimeSpan? _playoutDuration;
     private int _playoutDurationHours;
@@ -171,7 +171,7 @@ public class ProgramScheduleItemEditViewModel : INotifyPropertyChanged
 
     public MultipleMode MultipleMode { get; set; }
 
-    public int? MultipleCount
+    public string MultipleCount
     {
         get => PlayoutMode == PlayoutMode.Multiple ? _multipleCount : null;
         set => _multipleCount = value;

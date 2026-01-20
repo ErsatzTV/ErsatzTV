@@ -24,7 +24,7 @@ public interface IProgramScheduleItemRequest
     int? MarathonBatchSize { get; }
     FillWithGroupMode FillWithGroupMode { get; }
     MultipleMode MultipleMode { get; }
-    int? MultipleCount { get; }
+    string MultipleCount { get; }
     TimeSpan? PlayoutDuration { get; }
     TailMode TailMode { get; }
     int? DiscardToFillAttempts { get; }

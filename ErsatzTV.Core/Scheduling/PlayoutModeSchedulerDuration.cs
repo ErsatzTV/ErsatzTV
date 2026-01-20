@@ -16,6 +16,7 @@ public class PlayoutModeSchedulerDuration(ILogger logger)
         ProgramScheduleItemDuration scheduleItem,
         ProgramScheduleItem nextScheduleItem,
         DateTimeOffset hardStop,
+        Random random,
         CancellationToken cancellationToken)
     {
         var warnings = new PlayoutBuildWarnings();

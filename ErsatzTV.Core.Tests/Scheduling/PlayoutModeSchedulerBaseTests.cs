@@ -796,6 +796,7 @@ public class PlayoutModeSchedulerBaseTests : SchedulerTestBase
             ProgramScheduleItem scheduleItem,
             ProgramScheduleItem nextScheduleItem,
             DateTimeOffset hardStop,
+            Random random,
             CancellationToken cancellationToken) =>
             throw new NotSupportedException();
     }

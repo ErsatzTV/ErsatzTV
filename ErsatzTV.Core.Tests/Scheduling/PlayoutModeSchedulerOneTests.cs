@@ -12,9 +12,14 @@ namespace ErsatzTV.Core.Tests.Scheduling;
 public class PlayoutModeSchedulerOneTests : SchedulerTestBase
 {
     [SetUp]
-    public void SetUp() => _cancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(10)).Token;
+    public void SetUp()
+    {
+        _cancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(10)).Token;
+        _random = new Random();
+    }
 
     private CancellationToken _cancellationToken;
+    private Random _random;
 
     [Test]
     public void Should_Have_Gap_With_No_Tail_No_Fallback()
@@ -51,6 +56,7 @@ public class PlayoutModeSchedulerOneTests : SchedulerTestBase
             scheduleItem,
             NextScheduleItem,
             HardStop(scheduleItemsEnumerator),
+            _random,
             _cancellationToken);
 
         playoutBuilderState.CurrentTime.ShouldBe(startState.CurrentTime.AddHours(1));
@@ -134,6 +140,7 @@ public class PlayoutModeSchedulerOneTests : SchedulerTestBase
             scheduleItem,
             NextScheduleItem,
             HardStop(scheduleItemsEnumerator),
+            _random,
             _cancellationToken);
 
         playoutBuilderState.CurrentTime.ShouldBe(startState.CurrentTime.AddHours(1));
@@ -202,6 +209,7 @@ public class PlayoutModeSchedulerOneTests : SchedulerTestBase
             scheduleItem,
             NextScheduleItem,
             HardStop(scheduleItemsEnumerator),
+            _random,
             _cancellationToken);
 
         playoutBuilderState.CurrentTime.ShouldBe(startState.CurrentTime.AddHours(3));
@@ -284,6 +292,7 @@ public class PlayoutModeSchedulerOneTests : SchedulerTestBase
             scheduleItem,
             NextScheduleItem,
             HardStop(scheduleItemsEnumerator),
+            _random,
             _cancellationToken);
 
         playoutBuilderState.CurrentTime.ShouldBe(startState.CurrentTime.AddHours(3));
@@ -356,6 +365,7 @@ public class PlayoutModeSchedulerOneTests : SchedulerTestBase
             scheduleItem,
             NextScheduleItem,
             HardStop(scheduleItemsEnumerator),
+            _random,
             _cancellationToken);
 
         playoutBuilderState.CurrentTime.ShouldBe(startState.CurrentTime.Add(new TimeSpan(2, 57, 0)));
@@ -454,6 +464,7 @@ public class PlayoutModeSchedulerOneTests : SchedulerTestBase
             scheduleItem,
             NextScheduleItem,
             HardStop(scheduleItemsEnumerator),
+            _random,
             _cancellationToken);
 
         playoutBuilderState.CurrentTime.ShouldBe(startState.CurrentTime.AddHours(3));
@@ -558,6 +569,7 @@ public class PlayoutModeSchedulerOneTests : SchedulerTestBase
             scheduleItem,
             NextScheduleItem,
             HardStop(scheduleItemsEnumerator),
+            _random,
             _cancellationToken);
 
         playoutBuilderState.CurrentTime.ShouldBe(startState.CurrentTime.AddHours(3));
@@ -644,6 +656,7 @@ public class PlayoutModeSchedulerOneTests : SchedulerTestBase
             scheduleItem,
             NextScheduleItem,
             HardStop(scheduleItemsEnumerator),
+            _random,
             _cancellationToken);
 
         playoutBuilderState.CurrentTime.ShouldBe(startState.CurrentTime.AddHours(3));
@@ -744,6 +757,7 @@ public class PlayoutModeSchedulerOneTests : SchedulerTestBase
             scheduleItem,
             NextScheduleItem,
             HardStop(scheduleItemsEnumerator),
+            _random,
             _cancellationToken);
 
         playoutBuilderState.CurrentTime.ShouldBe(startState.CurrentTime.AddHours(3));
@@ -823,6 +837,7 @@ public class PlayoutModeSchedulerOneTests : SchedulerTestBase
             scheduleItem,
             NextScheduleItem,
             HardStop(scheduleItemsEnumerator),
+            _random,
             _cancellationToken);
 
         playoutItems.ShouldBeEmpty();

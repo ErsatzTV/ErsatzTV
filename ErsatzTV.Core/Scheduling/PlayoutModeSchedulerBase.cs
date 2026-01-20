@@ -23,6 +23,7 @@ public abstract class PlayoutModeSchedulerBase<T>(ILogger logger) : IPlayoutMode
         T scheduleItem,
         ProgramScheduleItem nextScheduleItem,
         DateTimeOffset hardStop,
+        Random random,
         CancellationToken cancellationToken);
 
     public static DateTimeOffset GetFillerStartTimeAfter(

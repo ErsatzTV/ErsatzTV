@@ -14,6 +14,7 @@ public class PlayoutModeSchedulerOne(ILogger logger) : PlayoutModeSchedulerBase<
         ProgramScheduleItemOne scheduleItem,
         ProgramScheduleItem nextScheduleItem,
         DateTimeOffset hardStop,
+        Random random,
         CancellationToken cancellationToken)
     {
         var warnings = new PlayoutBuildWarnings();

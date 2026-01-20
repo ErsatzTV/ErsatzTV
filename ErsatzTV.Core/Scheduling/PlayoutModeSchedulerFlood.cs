@@ -15,6 +15,7 @@ public class PlayoutModeSchedulerFlood(ILogger logger) : PlayoutModeSchedulerBas
         ProgramScheduleItemFlood scheduleItem,
         ProgramScheduleItem nextScheduleItem,
         DateTimeOffset hardStop,
+        Random random,
         CancellationToken cancellationToken)
     {
         var warnings = new PlayoutBuildWarnings();

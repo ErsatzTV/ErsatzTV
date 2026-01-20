@@ -852,7 +852,7 @@ public class NewPlayoutTests : PlayoutBuilderTestBase
                 Collection = fixedCollection,
                 CollectionId = fixedCollection.Id,
                 StartTime = TimeSpan.FromHours(3),
-                Count = 2,
+                Count = "2",
                 PlaybackOrder = PlaybackOrder.Chronological
             }
         };
@@ -981,7 +981,7 @@ public class NewPlayoutTests : PlayoutBuilderTestBase
                 Collection = fixedCollection,
                 CollectionId = fixedCollection.Id,
                 StartTime = TimeSpan.FromHours(3),
-                Count = 2,
+                Count = "2",
                 PlaybackOrder = PlaybackOrder.Chronological
             }
         };
@@ -1361,7 +1361,7 @@ public class NewPlayoutTests : PlayoutBuilderTestBase
                 Collection = multipleCollection,
                 CollectionId = multipleCollection.Id,
                 StartTime = null,
-                Count = 2,
+                Count = "2",
                 PlaybackOrder = PlaybackOrder.Chronological
             },
             new ProgramScheduleItemDuration
@@ -1494,7 +1494,7 @@ public class NewPlayoutTests : PlayoutBuilderTestBase
                 Collection = collectionOne,
                 CollectionId = collectionOne.Id,
                 StartTime = null,
-                Count = 0,
+                Count = "0",
                 MultipleMode = MultipleMode.CollectionSize,
                 PlaybackOrder = PlaybackOrder.Chronological
             },
@@ -1505,7 +1505,7 @@ public class NewPlayoutTests : PlayoutBuilderTestBase
                 Collection = collectionTwo,
                 CollectionId = collectionTwo.Id,
                 StartTime = null,
-                Count = 0,
+                Count = "0",
                 MultipleMode = MultipleMode.CollectionSize,
                 PlaybackOrder = PlaybackOrder.Chronological
             }
@@ -1777,7 +1777,7 @@ public class NewPlayoutTests : PlayoutBuilderTestBase
                 Collection = collectionOne,
                 CollectionId = collectionOne.Id,
                 StartTime = null,
-                Count = 1,
+                Count = "1",
                 PlaybackOrder = PlaybackOrder.Chronological,
                 PostRollFiller = new FillerPreset
                 {

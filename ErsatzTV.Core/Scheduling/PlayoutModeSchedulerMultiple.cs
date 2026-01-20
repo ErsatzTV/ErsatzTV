@@ -16,6 +16,7 @@ public class PlayoutModeSchedulerMultiple(Map<CollectionKey, int> collectionItem
         ProgramScheduleItemMultiple scheduleItem,
         ProgramScheduleItem nextScheduleItem,
         DateTimeOffset hardStop,
+        Random random,
         CancellationToken cancellationToken)
     {
         var warnings = new PlayoutBuildWarnings();
@@ -28,14 +29,15 @@ public class PlayoutModeSchedulerMultiple(Map<CollectionKey, int> collectionItem
             return new PlayoutSchedulerResult(playoutBuilderState, playoutItems, warnings);
         }
 
+        IMediaCollectionEnumerator contentEnumerator =
+            collectionEnumerators[CollectionKey.ForScheduleItem(scheduleItem)];
+
         PlayoutBuilderState nextState = playoutBuilderState with
         {
             CurrentTime = firstStart,
-            MultipleRemaining = playoutBuilderState.MultipleRemaining.IfNone(scheduleItem.Count)
+            MultipleRemaining = playoutBuilderState.MultipleRemaining.IfNone(
+                CountExpression.Evaluate(scheduleItem.Count, contentEnumerator, random, cancellationToken))
         };
-
-        IMediaCollectionEnumerator contentEnumerator =
-            collectionEnumerators[CollectionKey.ForScheduleItem(scheduleItem)];
 
         if (nextState.MultipleRemaining == 0)
         {

@@ -666,7 +666,7 @@ public class ContinuePlayoutTests : PlayoutBuilderTestBase
                 Collection = collectionOne,
                 CollectionId = collectionOne.Id,
                 StartTime = null,
-                Count = 3,
+                Count = "3",
                 PlaybackOrder = PlaybackOrder.Chronological
             },
             new ProgramScheduleItemMultiple
@@ -676,7 +676,7 @@ public class ContinuePlayoutTests : PlayoutBuilderTestBase
                 Collection = collectionTwo,
                 CollectionId = collectionTwo.Id,
                 StartTime = null,
-                Count = 3,
+                Count = "3",
                 PlaybackOrder = PlaybackOrder.Chronological
             }
         };
