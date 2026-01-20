@@ -26,7 +26,7 @@ public record AddProgramScheduleItem(
     int? MarathonBatchSize,
     FillWithGroupMode FillWithGroupMode,
     MultipleMode MultipleMode,
-    int? MultipleCount,
+    string MultipleCount,
     TimeSpan? PlayoutDuration,
     TailMode TailMode,
     int? DiscardToFillAttempts,

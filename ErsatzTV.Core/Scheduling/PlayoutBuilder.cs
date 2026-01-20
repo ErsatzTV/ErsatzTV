@@ -857,6 +857,7 @@ public class PlayoutBuilder : IPlayoutBuilder
                     multiple,
                     nextScheduleItem,
                     playoutFinish,
+                    random,
                     cancellationToken),
                 ProgramScheduleItemDuration duration => schedulerDuration.Schedule(
                     playoutBuilderState,
@@ -864,6 +865,7 @@ public class PlayoutBuilder : IPlayoutBuilder
                     duration,
                     nextScheduleItem,
                     playoutFinish,
+                    random,
                     cancellationToken),
                 ProgramScheduleItemFlood flood => schedulerFlood.Schedule(
                     playoutBuilderState,
@@ -871,6 +873,7 @@ public class PlayoutBuilder : IPlayoutBuilder
                     flood,
                     nextScheduleItem,
                     playoutFinish,
+                    random,
                     cancellationToken),
                 ProgramScheduleItemOne one => schedulerOne.Schedule(
                     playoutBuilderState,
@@ -878,6 +881,7 @@ public class PlayoutBuilder : IPlayoutBuilder
                     one,
                     nextScheduleItem,
                     playoutFinish,
+                    random,
                     cancellationToken),
                 _ => throw new NotSupportedException(nameof(scheduleItem))
             };

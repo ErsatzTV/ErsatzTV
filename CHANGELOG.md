@@ -22,6 +22,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Disable automatic artwork database cleanup
   - This will be re-enabled at some point in the future (after more testing)
   - For now, the API should be used to clean as needed
+- Classic Schedules: make multiple `count` an expression
+  - The following parameters can be used:
+    - `count`: the total number of items in the collection
+    - `random`: a random number between zero and (count - 1)
+  - For example:
+    - `count / 2` will play half of the items in the collection
+    - `random % 4 + 1` will play between 1 and 4 items
+    - `2` (similar to before this change) will play exactly two items
 
 ### Fixed
 - Use code signing on all Windows executables (`ErsatzTV-Windows.exe`, `ErsatzTV.exe`, `ErsatzTV.Scanner.exe`)
@@ -760,13 +768,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - `random` will start at a random point in the content
     - `2` (similar to before this change) will skip the first two items in the content
 - YAML playout: make `count` an expression
-    - The following parameters can be used:
-        - `count`: the total number of items in the content
-        - `random`: a random number between zero and (count - 1)
-    - For example:
-        - `count / 2` will play half of the items in the content
-        - `random % 4 + 1` will play between 1 and 4 items
-        - `2` (similar to before this change) will play exactly two items
+  - The following parameters can be used:
+    - `count`: the total number of items in the content
+    - `random`: a random number between zero and (count - 1)
+  - For example:
+    - `count / 2` will play half of the items in the content
+    - `random % 4 + 1` will play between 1 and 4 items
+    - `2` (similar to before this change) will play exactly two items
 - YAML playout: add `disable_watermarks` property to all content instructions
   - This property defaults to `false` (meaning watermarks are allowed by default)
   - Setting to `true` will prevent watermarks from ever appearing over the content

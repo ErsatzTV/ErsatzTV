@@ -79,10 +79,10 @@ public abstract class ProgramScheduleItemCommandBase
                         "[MultipleMode] cannot be [PlaylistItemSize] when collection is not a playlist");
                 }
 
-                if (item.MultipleMode is MultipleMode.Count && item.MultipleCount.GetValueOrDefault() < 1)
+                if (item.MultipleMode is MultipleMode.Count && string.IsNullOrWhiteSpace(item.MultipleCount))
                 {
                     return BaseError.New(
-                        "[MultipleCount] must be greater than 0 for playout mode 'multiple / count'");
+                        "[MultipleCount] must be valid for playout mode 'multiple / count'");
                 }
 
                 break;
@@ -298,7 +298,7 @@ public abstract class ProgramScheduleItemCommandBase
                 MarathonBatchSize = item.MarathonBatchSize,
                 FillWithGroupMode = item.FillWithGroupMode,
                 MultipleMode = item.MultipleMode,
-                Count = item.MultipleMode is MultipleMode.Count ? item.MultipleCount.GetValueOrDefault() : 0,
+                Count = item.MultipleMode is MultipleMode.Count ? item.MultipleCount ?? "0" : "0",
                 CustomTitle = item.CustomTitle,
                 GuideMode = item.GuideMode,
                 PreRollFillerId = item.PreRollFillerId,

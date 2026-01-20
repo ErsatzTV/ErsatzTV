@@ -15,7 +15,7 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "9.0.11");
+            modelBuilder.HasAnnotation("ProductVersion", "9.0.12");
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.Actor", b =>
                 {
@@ -3957,8 +3957,8 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                 {
                     b.HasBaseType("ErsatzTV.Core.Domain.ProgramScheduleItem");
 
-                    b.Property<int>("Count")
-                        .HasColumnType("INTEGER");
+                    b.Property<string>("Count")
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("MultipleMode")
                         .HasColumnType("INTEGER");

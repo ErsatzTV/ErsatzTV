@@ -11,5 +11,6 @@ public interface IPlayoutModeScheduler<in T> where T : ProgramScheduleItem
         T scheduleItem,
         ProgramScheduleItem nextScheduleItem,
         DateTimeOffset hardStop,
+        Random random,
         CancellationToken cancellationToken);
 }

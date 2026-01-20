@@ -32,7 +32,7 @@ public record ProgramScheduleItemMultipleViewModel : ProgramScheduleItemViewMode
         int? marathonBatchSize,
         FillWithGroupMode fillWithGroupMode,
         MultipleMode multipleMode,
-        int count,
+        string count,
         string customTitle,
         GuideMode guideMode,
         FillerPresetViewModel preRollFiller,
@@ -87,5 +87,5 @@ public record ProgramScheduleItemMultipleViewModel : ProgramScheduleItemViewMode
 
     public MultipleMode MultipleMode { get; set; }
 
-    public int Count { get; }
+    public string Count { get; }
 }
