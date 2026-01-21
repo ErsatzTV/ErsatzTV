@@ -357,7 +357,7 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
             var result = new MediaItemScanResult<PlexEpisode>(plexEpisode) { IsAdded = false };
             if (plexEpisode.Etag != item.Etag || deepScan)
             {
-                foreach (BaseError error in await UpdateEpisodePath(dbContext, plexEpisode, item, cancellationToken))
+                foreach (BaseError error in await UpdateEpisode(dbContext, plexEpisode, item, cancellationToken))
                 {
                     return error;
                 }
@@ -720,7 +720,7 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
         }
     }
 
-    private async Task<Option<BaseError>> UpdateEpisodePath(
+    private async Task<Option<BaseError>> UpdateEpisode(
         TvContext dbContext,
         PlexEpisode existing,
         PlexEpisode incoming,
@@ -739,7 +739,6 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
             version.DateAdded = incomingVersion.DateAdded;
 
             // media file
-
             if (version.MediaFiles.Head() is PlexMediaFile file &&
                 incomingVersion.MediaFiles.Head() is PlexMediaFile incomingFile)
             {
@@ -771,6 +770,34 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
                         @"UPDATE PlexMediaFile SET `Key` = @Key WHERE Id = @Id",
                         parameters: new { file.Key, file.Id },
                         cancellationToken: cancellationToken));
+            }
+
+            // metadata
+            foreach (EpisodeMetadata metadata in existing.EpisodeMetadata.HeadOrNone())
+            {
+                foreach (EpisodeMetadata incomingMetadata in incoming.EpisodeMetadata.HeadOrNone())
+                {
+                    if (metadata.Title != incomingMetadata.Title ||
+                        metadata.Plot != incomingMetadata.Plot ||
+                        metadata.Year != incomingMetadata.Year ||
+                        metadata.DateAdded != incomingMetadata.DateAdded ||
+                        metadata.ReleaseDate != incomingMetadata.ReleaseDate ||
+                        metadata.EpisodeNumber != incomingMetadata.EpisodeNumber)
+                    {
+                        await dbContext.EpisodeMetadata
+                            .Where(em => em.Id == metadata.Id)
+                            .ExecuteUpdateAsync(
+                                setters => setters
+                                    .SetProperty(em => em.Title, incomingMetadata.Title)
+                                    .SetProperty(em => em.SortTitle, incomingMetadata.SortTitle)
+                                    .SetProperty(em => em.Plot, incomingMetadata.Plot)
+                                    .SetProperty(em => em.Year, incomingMetadata.Year)
+                                    .SetProperty(em => em.DateAdded, incomingMetadata.DateAdded)
+                                    .SetProperty(em => em.ReleaseDate, incomingMetadata.ReleaseDate)
+                                    .SetProperty(em => em.EpisodeNumber, incomingMetadata.EpisodeNumber),
+                                cancellationToken);
+                    }
+                }
             }
 
             return Option<BaseError>.None;

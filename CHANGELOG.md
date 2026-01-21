@@ -44,6 +44,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Use other video artwork in XMLTV template
 - Properly update (add or remove) artwork for all local media libraries when files have changed
 - Sync Plex library name changes
+- Sync Plex episode title, plot, year, date added, release date, episode number changes
 - Sync Jellyfin and Emby library name and type changes
   - Library type (movies, shows) can only be changed when synchronization is *disabled* for the library in ETV
 
