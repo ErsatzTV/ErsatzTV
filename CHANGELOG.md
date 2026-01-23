@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - This is most often seen with VAAPI acceleration (radeonsi or i965 drivers)
 - Add API endpoint to clean artwork cache folder (on demand)
   - POST `/api/maintenance/clean_artwork`
+- Add health check to warn about unsupported empty (classic) schedules
 
 ### Changed
 - Disable automatic artwork database cleanup

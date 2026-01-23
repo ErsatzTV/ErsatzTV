@@ -29,6 +29,7 @@ public class HealthCheckService : IHealthCheckService
         IErrorReportsHealthCheck errorReportsHealthCheck,
         IUnifiedDockerHealthCheck unifiedDockerHealthCheck,
         IDowngradeHealthCheck downgradeHealthCheck,
+        IEmptyScheduleHealthCheck emptyScheduleHealthCheck,
         IMemoryCache memoryCache,
         IMediator mediator,
         ILogger<HealthCheckService> logger)
@@ -49,6 +50,7 @@ public class HealthCheckService : IHealthCheckService
             zeroDurationHealthCheck,
             fileNotFoundHealthCheck,
             unavailableHealthCheck,
+            emptyScheduleHealthCheck,
             vaapiDriverHealthCheck,
             errorReportsHealthCheck
         ];
