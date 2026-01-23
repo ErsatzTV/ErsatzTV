@@ -772,6 +772,7 @@ public class Startup
         services.AddScoped<IErrorReportsHealthCheck, ErrorReportsHealthCheck>();
         services.AddScoped<IUnifiedDockerHealthCheck, UnifiedDockerHealthCheck>();
         services.AddScoped<IDowngradeHealthCheck, DowngradeHealthCheck>();
+        services.AddScoped<IEmptyScheduleHealthCheck, EmptyScheduleHealthCheck>();
         services.AddScoped<IHealthCheckService, HealthCheckService>();
 
         services.AddScoped<IChannelRepository, ChannelRepository>();
