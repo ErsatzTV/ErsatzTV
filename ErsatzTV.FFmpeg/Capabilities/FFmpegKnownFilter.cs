@@ -16,7 +16,7 @@ public record FFmpegKnownFilter
     public static readonly FFmpegKnownFilter Fps = new("fps");
     public static readonly FFmpegKnownFilter FrameRate = new("framerate");
     public static readonly FFmpegKnownFilter Loop = new("loop");
-    public static readonly FFmpegKnownFilter NormalizeLoudness = new("loop");
+    public static readonly FFmpegKnownFilter NormalizeLoudness = new("loudnorm");
     public static readonly FFmpegKnownFilter Overlay = new("overlay");
     public static readonly FFmpegKnownFilter Pad = new("pad");
     public static readonly FFmpegKnownFilter Realtime = new("realtime");
