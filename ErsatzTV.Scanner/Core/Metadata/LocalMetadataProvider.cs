@@ -1574,7 +1574,8 @@ public class LocalMetadataProvider : ILocalMetadataProvider
                     Writers = nfo.Writers.Map(w => new Writer { Name = w }).ToList(),
                     Guids = nfo.UniqueIds
                         .Map(id => new MetadataGuid { Guid = $"{id.Type}://{id.Guid}" })
-                        .ToList()
+                        .ToList(),
+                    Artwork = []
                 };
             }
         }
