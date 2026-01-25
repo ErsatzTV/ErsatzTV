@@ -761,6 +761,7 @@ public class Startup
 
         services.AddScoped<IMacOsConfigFolderHealthCheck, MacOsConfigFolderHealthCheck>();
         services.AddScoped<IFFmpegVersionHealthCheck, FFmpegVersionHealthCheck>();
+        services.AddScoped<IFFmpegCapabilitiesHealthCheck, FFmpegCapabilitiesHealthCheck>();
         services.AddScoped<IFFmpegReportsHealthCheck, FFmpegReportsHealthCheck>();
         services.AddScoped<IHardwareAccelerationHealthCheck, HardwareAccelerationHealthCheck>();
         services.AddScoped<IMovieMetadataHealthCheck, MovieMetadataHealthCheck>();

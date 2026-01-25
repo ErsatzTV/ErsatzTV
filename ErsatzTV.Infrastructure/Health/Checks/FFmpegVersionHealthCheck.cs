@@ -6,18 +6,14 @@ using ErsatzTV.Core.Interfaces.Repositories;
 
 namespace ErsatzTV.Infrastructure.Health.Checks;
 
-public class FFmpegVersionHealthCheck : BaseHealthCheck, IFFmpegVersionHealthCheck
+public class FFmpegVersionHealthCheck(IConfigElementRepository configElementRepository)
+    : BaseHealthCheck, IFFmpegVersionHealthCheck
 {
     private const string BundledVersion = "7.1.1";
     private const string BundledVersionVaapi = "7.1.1";
     private const string WindowsVersionPrefix = "n7.1.1";
 
     private static readonly string[] FFmpegVersionArguments = { "-version" };
-
-    private readonly IConfigElementRepository _configElementRepository;
-
-    public FFmpegVersionHealthCheck(IConfigElementRepository configElementRepository) =>
-        _configElementRepository = configElementRepository;
 
     public override string Title => "FFmpeg Version";
 
@@ -26,14 +22,14 @@ public class FFmpegVersionHealthCheck : BaseHealthCheck, IFFmpegVersionHealthChe
         var link = new HealthCheckLink("https://github.com/ErsatzTV/ErsatzTV-ffmpeg/releases/tag/7.1.1");
 
         Option<ConfigElement> maybeFFmpegPath =
-            await _configElementRepository.GetConfigElement(ConfigElementKey.FFmpegPath, cancellationToken);
+            await configElementRepository.GetConfigElement(ConfigElementKey.FFmpegPath, cancellationToken);
         if (maybeFFmpegPath.IsNone)
         {
             return FailResult("Unable to locate ffmpeg", "Unable to locate ffmpeg", link);
         }
 
         Option<ConfigElement> maybeFFprobePath =
-            await _configElementRepository.GetConfigElement(ConfigElementKey.FFprobePath, cancellationToken);
+            await configElementRepository.GetConfigElement(ConfigElementKey.FFprobePath, cancellationToken);
         if (maybeFFprobePath.IsNone)
         {
             return FailResult("Unable to locate ffprobe", "Unable to locate ffprobe", link);
