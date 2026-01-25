@@ -41,6 +41,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Respect `z_index` (draw order) on all graphics element types
   - Fix bug with `z_index` sorting
 - Restore default UI font that was erroneously removed in v26.1.1
+- Classic schedules: fix building playouts when `Fill With Group Mode` schedule items also have graphics elements
 - Use configured searching log level on startup, instead of the default log level of `Information`
 - MySql: fix searching for shows and seasons in schedule items editor
 - Fix 500 errors when serving XMLTV due to concurrent file reads and writes

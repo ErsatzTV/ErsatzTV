@@ -1,5 +1,4 @@
 ﻿using System.IO.Abstractions;
-using System.Reflection;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Errors;
@@ -673,13 +672,6 @@ public class PlayoutBuilder : IPlayoutBuilder
                 .Filter(c => c.ShowId > 0 || c.ArtistId > 0 || !string.IsNullOrWhiteSpace(c.Key))
                 .ToList();
             List<ProgramScheduleItem> fakeScheduleItems = [];
-
-            // this will be used to clone a schedule item
-            MethodInfo generic = typeof(JsonConvert).GetMethods()
-                .FirstOrDefault(x => x.Name.Equals("DeserializeObject", StringComparison.OrdinalIgnoreCase) &&
-                                     x.IsGenericMethod &&
-                                     x.GetParameters().Length == 1)?.MakeGenericMethod(scheduleItem.GetType());
-
             foreach (CollectionWithItems fakeCollection in fakeCollections)
             {
                 CollectionKey key = (fakeCollection.ShowId, fakeCollection.ArtistId, fakeCollection.Key) switch
@@ -709,8 +701,7 @@ public class PlayoutBuilder : IPlayoutBuilder
                     continue;
                 }
 
-                string serialized = JsonConvert.SerializeObject(scheduleItem);
-                var copyScheduleItem = generic.Invoke(this, [serialized]) as ProgramScheduleItem;
+                var copyScheduleItem = scheduleItem.DeepCopy();
                 copyScheduleItem.CollectionType = key.CollectionType;
                 copyScheduleItem.MediaItemId = key.MediaItemId;
                 copyScheduleItem.FakeCollectionKey = key.FakeCollectionKey;
