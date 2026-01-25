@@ -16,6 +16,103 @@ namespace ErsatzTV.Core.Tests.Scheduling.ClassicScheduling;
 public class NewPlayoutTests : PlayoutBuilderTestBase
 {
     [Test]
+    public async Task FillWithGroupMode_Should_Not_Fail()
+    {
+        var collection = new Collection
+        {
+            Id = 1,
+            Name = "Multiple Items",
+            MediaItems =
+            [
+                TestMovie(1, TimeSpan.FromHours(1), new DateTime(2020, 1, 1)),
+                TestMovie(2, TimeSpan.FromHours(1), new DateTime(2020, 2, 1))
+            ]
+        };
+
+        var fakeRepository = new FakeMediaCollectionRepository(
+            Map((collection.Id, collection.MediaItems.ToList())));
+
+        var items = new List<ProgramScheduleItem>
+        {
+            new ProgramScheduleItemMultiple
+            {
+                Id = 1,
+                Index = 1,
+                //Collection = collection,
+                CollectionId = collection.Id,
+                StartTime = null,
+                PlaybackOrder = PlaybackOrder.Chronological,
+                MultipleMode = MultipleMode.Count,
+                Count = "2",
+                FillWithGroupMode = FillWithGroupMode.FillWithShuffledGroups,
+                ProgramScheduleItemGraphicsElements = []
+            }
+        };
+
+        // having a graphics element reference the schedule item triggers the bug
+        items[0].ProgramScheduleItemGraphicsElements.Add(new ProgramScheduleItemGraphicsElement
+        {
+            GraphicsElementId = 1,
+            ProgramScheduleItem = items[0],
+            ProgramScheduleItemId = items[0].Id
+        });
+
+        var playout = new Playout
+        {
+            ProgramSchedule = new ProgramSchedule
+            {
+                Items = items
+            },
+            Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" },
+            ProgramScheduleAnchors = [],
+            Items = [],
+            ProgramScheduleAlternates = [],
+            FillGroupIndices = []
+        };
+
+        var referenceData =
+            new PlayoutReferenceData(
+                playout.Channel,
+                Option<Deco>.None,
+                [],
+                [],
+                playout.ProgramSchedule,
+                [],
+                [],
+                TimeSpan.Zero);
+
+        IConfigElementRepository configRepo = Substitute.For<IConfigElementRepository>();
+        var televisionRepo = new FakeTelevisionRepository();
+        IArtistRepository artistRepo = Substitute.For<IArtistRepository>();
+        IMultiEpisodeShuffleCollectionEnumeratorFactory factory =
+            Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
+        IRerunHelper rerunHelper = Substitute.For<IRerunHelper>();
+        var builder = new PlayoutBuilder(
+            configRepo,
+            fakeRepository,
+            televisionRepo,
+            artistRepo,
+            factory,
+            new MockFileSystem(),
+            rerunHelper,
+            Logger);
+
+        DateTimeOffset start = HoursAfterMidnight(0);
+        DateTimeOffset finish = start + TimeSpan.FromHours(6);
+
+        Either<BaseError, PlayoutBuildResult> buildResult = await builder.Build(
+            playout,
+            referenceData,
+            PlayoutBuildResult.Empty,
+            PlayoutBuildMode.Reset,
+            start,
+            finish,
+            CancellationToken);
+
+        buildResult.IsRight.ShouldBeTrue();
+    }
+
+    [Test]
     public async Task OnlyZeroDurationItem_Should_Abort()
     {
         var mediaItems = new List<MediaItem>
