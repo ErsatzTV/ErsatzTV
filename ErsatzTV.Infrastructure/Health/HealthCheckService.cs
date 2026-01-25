@@ -18,6 +18,7 @@ public class HealthCheckService : IHealthCheckService
     public HealthCheckService(
         IMacOsConfigFolderHealthCheck macOsConfigFolderHealthCheck,
         IFFmpegVersionHealthCheck ffmpegVersionHealthCheck,
+        IFFmpegCapabilitiesHealthCheck ffmpegCapabilitiesHealthCheck,
         IFFmpegReportsHealthCheck ffmpegReportsHealthCheck,
         IHardwareAccelerationHealthCheck hardwareAccelerationHealthCheck,
         IMovieMetadataHealthCheck movieMetadataHealthCheck,
@@ -43,6 +44,7 @@ public class HealthCheckService : IHealthCheckService
             macOsConfigFolderHealthCheck,
             unifiedDockerHealthCheck,
             ffmpegVersionHealthCheck,
+            ffmpegCapabilitiesHealthCheck,
             ffmpegReportsHealthCheck,
             hardwareAccelerationHealthCheck,
             movieMetadataHealthCheck,

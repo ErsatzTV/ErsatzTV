@@ -18,6 +18,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Add API endpoint to clean artwork cache folder (on demand)
   - POST `/api/maintenance/clean_artwork`
 - Add health check to warn about unsupported empty (classic) schedules
+- Add health check to warn about incompatible ffmpeg due to missing filters
+  - This is directly applicable to homebrew `ffmpeg` on MacOS, which is no longer compatible with ErsatzTV
+    - `ffmpeg@7` or `ffmpeg-full` should be used instead
 
 ### Changed
 - Disable automatic artwork database cleanup

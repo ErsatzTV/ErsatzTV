@@ -66,8 +66,10 @@ public partial class HardwareCapabilitiesFactory(
         IReadOnlySet<string> ffmpegDecoders = await GetFFmpegCapabilities(ffmpegPath, "decoders", ParseFFmpegLine)
             .Map(set => set.Intersect(FFmpegKnownDecoder.AllDecoders).ToImmutableHashSet());
 
+        IEnumerable<string> allFilterNames =
+            FFmpegKnownFilter.AllFilters.Union(FFmpegKnownFilter.RequiredFilters.Select(f => f.Name));
         IReadOnlySet<string> ffmpegFilters = await GetFFmpegCapabilities(ffmpegPath, "filters", ParseFFmpegLine)
-            .Map(set => set.Intersect(FFmpegKnownFilter.AllFilters).ToImmutableHashSet());
+            .Map(set => set.Intersect(allFilterNames).ToImmutableHashSet());
 
         IReadOnlySet<string> ffmpegEncoders = await GetFFmpegCapabilities(ffmpegPath, "encoders", ParseFFmpegLine)
             .Map(set => set.Intersect(FFmpegKnownEncoder.AllEncoders).ToImmutableHashSet());
