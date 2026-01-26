@@ -31,7 +31,11 @@ public class YamlPlayoutAllHandler(EnumeratorCache enumeratorCache) : YamlPlayou
 
         foreach (IMediaCollectionEnumerator enumerator in maybeEnumerator)
         {
-            for (var i = 0; i < enumerator.Count; i++)
+            int enumeratorCount = enumerator is PlaylistEnumerator playlistEnumerator
+                ? playlistEnumerator.CountForFiller
+                : enumerator.Count;
+
+            for (var i = 0; i < enumeratorCount; i++)
             {
                 foreach (string preRollSequence in context.GetPreRollSequence())
                 {

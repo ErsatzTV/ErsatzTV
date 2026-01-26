@@ -444,9 +444,13 @@ public class SchedulingEngine(
             return false;
         }
 
+        int enumeratorCount = enumeratorDetails.Enumerator is PlaylistEnumerator playlistEnumerator
+            ? playlistEnumerator.CountForFiller
+            : enumeratorDetails.Enumerator.Count;
+
         return AddCountInternal(
             enumeratorDetails,
-            enumeratorDetails.Enumerator.Count,
+            enumeratorCount,
             fillerKind,
             customTitle,
             disableWatermarks);

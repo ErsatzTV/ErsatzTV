@@ -55,6 +55,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Sync Plex episode title, plot, year, date added, release date, episode number changes
 - Sync Jellyfin and Emby library name and type changes
   - Library type (movies, shows) can only be changed when synchronization is *disabled* for the library in ETV
+- Fix some sequential and scripted playout build failures when using playlists or marathons
 
 ## [26.1.1] - 2026-01-08
 ### Fixed
