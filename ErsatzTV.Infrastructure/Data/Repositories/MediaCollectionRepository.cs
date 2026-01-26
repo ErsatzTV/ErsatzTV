@@ -1229,9 +1229,12 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
     private static Task<List<Movie>> GetMovieItems(TvContext dbContext, IEnumerable<int> movieIds) =>
         dbContext.Movies
+            .TagWithCallSite()
             .AsNoTracking()
             .Include(m => m.MovieMetadata)
             .ThenInclude(mm => mm.Subtitles)
+            .Include(m => m.MovieMetadata)
+            .ThenInclude(mm => mm.Directors)
             .Include(m => m.MediaVersions)
             .ThenInclude(mv => mv.Chapters)
             .Include(m => m.MediaVersions)
@@ -1291,6 +1294,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
     private static Task<List<MusicVideo>> GetMusicVideoItems(TvContext dbContext, IEnumerable<int> musicVideoIds) =>
         dbContext.MusicVideos
+            .TagWithCallSite()
             .AsNoTracking()
             .Include(m => m.Artist)
             .ThenInclude(a => a.ArtistMetadata)
@@ -1298,6 +1302,8 @@ public class MediaCollectionRepository : IMediaCollectionRepository
             .ThenInclude(mvm => mvm.Subtitles)
             .Include(m => m.MusicVideoMetadata)
             .ThenInclude(mvm => mvm.Artists)
+            .Include(m => m.MusicVideoMetadata)
+            .ThenInclude(mvm => mvm.Directors)
             .Include(m => m.MediaVersions)
             .ThenInclude(mv => mv.Chapters)
             .Include(m => m.MediaVersions)
@@ -1318,9 +1324,12 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
     private static Task<List<OtherVideo>> GetOtherVideoItems(TvContext dbContext, IEnumerable<int> otherVideoIds) =>
         dbContext.OtherVideos
+            .TagWithCallSite()
             .AsNoTracking()
             .Include(m => m.OtherVideoMetadata)
             .ThenInclude(ovm => ovm.Subtitles)
+            .Include(m => m.OtherVideoMetadata)
+            .ThenInclude(ovm => ovm.Directors)
             .Include(m => m.MediaVersions)
             .ThenInclude(mv => mv.Chapters)
             .Include(m => m.MediaVersions)
@@ -1492,9 +1501,12 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
     private static Task<List<Episode>> GetEpisodeItems(TvContext dbContext, IEnumerable<int> episodeIds) =>
         dbContext.Episodes
+            .TagWithCallSite()
             .AsNoTracking()
             .Include(e => e.EpisodeMetadata)
             .ThenInclude(em => em.Subtitles)
+            .Include(e => e.EpisodeMetadata)
+            .ThenInclude(em => em.Directors)
             .Include(e => e.MediaVersions)
             .ThenInclude(mv => mv.Chapters)
             .Include(m => m.MediaVersions)
