@@ -21,6 +21,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Add health check to warn about incompatible ffmpeg due to missing filters
   - This is directly applicable to homebrew `ffmpeg` on MacOS, which is no longer compatible with ErsatzTV
     - `ffmpeg@7` or `ffmpeg-full` should be used instead
+- Add `Marathon Group By` option `Director`
+  - This groups the *first* director on Movies, Episodes, Music Videos and Other Videos
+  - This is supported in classic schedules and sequential schedules
 
 ### Changed
 - Disable automatic artwork database cleanup

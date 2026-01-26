@@ -39,6 +39,10 @@ public class MarathonHelper(IMediaCollectionRepository mediaCollectionRepository
                 groups.AddRange(mediaItems.GroupBy(MediaItemKeyByAlbum));
                 itemPlaybackOrder = marathonShuffleItems ? PlaybackOrder.Shuffle : PlaybackOrder.Chronological;
                 break;
+            case MarathonGroupBy.Director:
+                groups.AddRange(mediaItems.GroupBy(MediaItemKeyByDirector));
+                itemPlaybackOrder = marathonShuffleItems ? PlaybackOrder.Shuffle : PlaybackOrder.Chronological;
+                break;
             default:
                 return Option<PlaylistEnumerator>.None;
         }
@@ -110,6 +114,11 @@ public class MarathonHelper(IMediaCollectionRepository mediaCollectionRepository
         else if (string.Equals(groupBy, "album", StringComparison.OrdinalIgnoreCase))
         {
             groups.AddRange(allMediaItems.GroupBy(MediaItemKeyByAlbum));
+        }
+        // group by (first) director
+        else if (string.Equals(groupBy, "director", StringComparison.OrdinalIgnoreCase))
+        {
+            groups.AddRange(allMediaItems.GroupBy(MediaItemKeyByDirector));
         }
 
         Dictionary<PlaylistItem, List<MediaItem>> itemMap = [];
@@ -188,6 +197,39 @@ public class MarathonHelper(IMediaCollectionRepository mediaCollectionRepository
                 null),
             _ => new GroupKey(CollectionType.Collection, 0, null, null, null)
         };
+
+    private static GroupKey MediaItemKeyByDirector(MediaItem mediaItem) =>
+        mediaItem switch
+        {
+            Movie m => new GroupKey(
+                CollectionType.Collection,
+                m.MovieMetadata.HeadOrNone().Map(mm => FirstDirectorHashCode(mm.Directors)).IfNone(0),
+                null,
+                null,
+                null),
+            Episode e => new GroupKey(
+                CollectionType.Collection,
+                e.EpisodeMetadata.HeadOrNone().Map(em => FirstDirectorHashCode(em.Directors)).IfNone(0),
+                null,
+                null,
+                null),
+            MusicVideo mv => new GroupKey(
+                CollectionType.Collection,
+                mv.MusicVideoMetadata.HeadOrNone().Map(mvm => FirstDirectorHashCode(mvm.Directors)).IfNone(0),
+                null,
+                null,
+                null),
+            OtherVideo ov => new GroupKey(
+                CollectionType.Collection,
+                ov.OtherVideoMetadata.HeadOrNone().Map(ovm => FirstDirectorHashCode(ovm.Directors)).IfNone(0),
+                null,
+                null,
+                null),
+            _ => new GroupKey(CollectionType.Collection, 0, null, null, null)
+        };
+
+    private static int FirstDirectorHashCode(List<Director> directors) =>
+        directors.HeadOrNone().Select(director => director.Name.GetStableHashCode()).FirstOrDefault();
 
     private static PlaylistItem GroupToPlaylistItem(
         int index,

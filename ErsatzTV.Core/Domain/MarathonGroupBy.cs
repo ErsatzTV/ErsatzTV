@@ -6,5 +6,6 @@ public enum MarathonGroupBy
     Show = 1,
     Season = 2,
     Artist = 3,
-    Album = 4
+    Album = 4,
+    Director = 5
 }
