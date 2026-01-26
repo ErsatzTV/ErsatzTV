@@ -40,7 +40,12 @@ public class YamlPlayoutSkipToItemHandler(EnumeratorCache enumeratorCache) : IYa
         foreach (IMediaCollectionEnumerator enumerator in maybeEnumerator)
         {
             var done = false;
-            for (var index = 0; index < enumerator.Count; index++)
+
+            int enumeratorCount = enumerator is PlaylistEnumerator playlistEnumerator
+                ? playlistEnumerator.CountForFiller
+                : enumerator.Count;
+
+            for (var index = 0; index < enumeratorCount; index++)
             {
                 if (done)
                 {

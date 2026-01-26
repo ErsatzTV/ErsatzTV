@@ -32,7 +32,7 @@ public class YamlPlayoutSkipItemsHandler(EnumeratorCache enumeratorCache) : IYam
             int seed = context.Playout.Seed + context.InstructionIndex + context.CurrentTime.DayOfYear;
             var random = new Random(seed);
             int enumeratorCount = enumerator is PlaylistEnumerator playlistEnumerator
-                ? playlistEnumerator.CountForRandom
+                ? playlistEnumerator.CountForFiller
                 : enumerator.Count;
             var expression = new Expression(skipItems.SkipItems);
             expression.EvaluateParameter += (name, e) =>
@@ -53,7 +53,7 @@ public class YamlPlayoutSkipItemsHandler(EnumeratorCache enumeratorCache) : IYam
                 _ => 0
             };
 
-            skipCount %= enumerator.Count;
+            skipCount %= enumeratorCount;
 
             if (skipCount < 0)
             {
