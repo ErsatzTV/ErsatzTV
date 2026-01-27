@@ -15,7 +15,7 @@ public static class FillerExpression
             return effectiveChapters;
         }
 
-        var chapterPoints = effectiveChapters.Map(c => c.EndTime).SkipLast().ToList();
+        var candidateChapters = effectiveChapters.SkipLast().ToList();
 
         var newChapters = new List<MediaChapter>();
 
@@ -26,10 +26,11 @@ public static class FillerExpression
         double contentDuration = (playoutItem.FinishOffset - playoutItem.StartOffset).TotalSeconds;
         var matches = 0;
 
-        for (var index = 0; index < chapterPoints.Count; index++)
+        for (var index = 0; index < candidateChapters.Count; index++)
         {
-            TimeSpan chapterPoint = chapterPoints[index];
-            var expression = new Expression(fillerExpression);
+            MediaChapter chapter = candidateChapters[index];
+            TimeSpan chapterPoint = chapter.EndTime;
+            var expression = new Expression(fillerExpression, ExpressionOptions.CaseInsensitiveStringComparer);
             int chapterNum = index + 1;
             double sinceLastFiller = chapterPoint.TotalSeconds - lastFiller;
             int matchedPoints = matches;
@@ -45,6 +46,7 @@ public static class FillerExpression
                     "matched_points" => matchedPoints,
                     "point" => chapterPoint.TotalSeconds,
                     "num" => chapterNum,
+                    "title" => chapter.Title ?? string.Empty,
                     _ => e.Result
                 };
             };
