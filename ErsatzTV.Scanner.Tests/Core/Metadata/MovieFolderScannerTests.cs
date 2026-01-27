@@ -79,7 +79,7 @@ public class MovieFolderScannerTests
             _localMetadataProvider.RefreshFallbackMetadata(Arg.Any<Movie>())
                 .Returns(arg =>
                 {
-                    ((Movie)arg.Arg<MediaItem>()).MovieMetadata = new List<MovieMetadata> { new() };
+                    ((Movie)arg.Arg<MediaItem>()).MovieMetadata = [new MovieMetadata { Artwork = [] }];
                     return Task.FromResult(true);
                 });
 
@@ -455,6 +455,256 @@ public class MovieFolderScannerTests
                 Arg.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath));
 
             await _imageCache.Received(1).CopyArtworkToCache(posterPath, ArtworkKind.Poster);
+        }
+
+        [Test]
+        public async Task NewMovie_Statistics_And_FallbackMetadata_And_FanArt(
+            [ValueSource(typeof(LocalFolderScanner), nameof(LocalFolderScanner.VideoFileExtensions))]
+            string videoExtension,
+            [ValueSource(typeof(LocalFolderScanner), nameof(LocalFolderScanner.ImageFileExtensions))]
+            string imageExtension)
+        {
+            string moviePath = Path.Combine(
+                FakeRoot,
+                Path.Combine("Movie (2020)", $"Movie (2020){videoExtension}"));
+
+            string fanArtPath = Path.Combine(
+                Path.GetDirectoryName(moviePath) ?? string.Empty,
+                $"fanart.{imageExtension}");
+
+            MovieFolderScanner service = GetService(
+                new FakeFileEntry(moviePath) { LastWriteTime = DateTime.Now },
+                new FakeFileEntry(fanArtPath) { LastWriteTime = DateTime.Now }
+            );
+            var libraryPath = new LibraryPath
+                { Id = 1, Path = FakeRoot, LibraryFolders = new List<LibraryFolder>() };
+
+            Either<BaseError, Unit> result = await service.ScanFolder(
+                libraryPath,
+                FFmpegPath,
+                FFprobePath,
+                0,
+                1,
+                CancellationToken.None);
+
+            result.IsRight.ShouldBeTrue();
+
+            await _movieRepository.Received(1).GetOrAdd(
+                Arg.Any<LibraryPath>(),
+                Arg.Any<LibraryFolder>(),
+                Arg.Any<string>(),
+                Arg.Any<CancellationToken>());
+            await _movieRepository.Received(1).GetOrAdd(
+                libraryPath,
+                Arg.Any<LibraryFolder>(),
+                moviePath,
+                Arg.Any<CancellationToken>());
+
+            await _localStatisticsProvider.Received(1).RefreshStatistics(
+                FFmpegPath,
+                FFprobePath,
+                Arg.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath));
+
+            await _localMetadataProvider.Received(1).RefreshFallbackMetadata(
+                Arg.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath));
+
+            await _imageCache.Received(1).CopyArtworkToCache(fanArtPath, ArtworkKind.FanArt);
+        }
+
+        [Test]
+        public async Task NewMovie_Statistics_And_FallbackMetadata_And_MovieNameFanArt(
+            [ValueSource(typeof(LocalFolderScanner), nameof(LocalFolderScanner.VideoFileExtensions))]
+            string videoExtension,
+            [ValueSource(typeof(LocalFolderScanner), nameof(LocalFolderScanner.ImageFileExtensions))]
+            string imageExtension)
+        {
+            string moviePath = Path.Combine(
+                FakeRoot,
+                Path.Combine("Movie (2020)", $"Movie (2020){videoExtension}"));
+
+            string fanArtPath = Path.Combine(
+                Path.GetDirectoryName(moviePath) ?? string.Empty,
+                $"Movie (2020)-fanart.{imageExtension}");
+
+            MovieFolderScanner service = GetService(
+                new FakeFileEntry(moviePath) { LastWriteTime = DateTime.Now },
+                new FakeFileEntry(fanArtPath) { LastWriteTime = DateTime.Now }
+            );
+            var libraryPath = new LibraryPath
+                { Id = 1, Path = FakeRoot, LibraryFolders = new List<LibraryFolder>() };
+
+            Either<BaseError, Unit> result = await service.ScanFolder(
+                libraryPath,
+                FFmpegPath,
+                FFprobePath,
+                0,
+                1,
+                CancellationToken.None);
+
+            result.IsRight.ShouldBeTrue();
+
+            await _movieRepository.Received(1).GetOrAdd(
+                Arg.Any<LibraryPath>(),
+                Arg.Any<LibraryFolder>(),
+                Arg.Any<string>(),
+                Arg.Any<CancellationToken>());
+            await _movieRepository.Received(1).GetOrAdd(
+                libraryPath,
+                Arg.Any<LibraryFolder>(),
+                moviePath,
+                Arg.Any<CancellationToken>());
+
+            await _localStatisticsProvider.Received(1).RefreshStatistics(
+                FFmpegPath,
+                FFprobePath,
+                Arg.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath));
+
+            await _localMetadataProvider.Received(1).RefreshFallbackMetadata(
+                Arg.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath));
+
+            await _imageCache.Received(1).CopyArtworkToCache(fanArtPath, ArtworkKind.FanArt);
+        }
+
+        [Test]
+        public async Task NewMovie_Statistics_And_FallbackMetadata_FanArt_Ignores_Folder_Image(
+            [ValueSource(typeof(LocalFolderScanner), nameof(LocalFolderScanner.VideoFileExtensions))]
+            string videoExtension,
+            [ValueSource(typeof(LocalFolderScanner), nameof(LocalFolderScanner.ImageFileExtensions))]
+            string imageExtension)
+        {
+            string moviePath = Path.Combine(
+                FakeRoot,
+                Path.Combine("Movie (2020)", $"Movie (2020){videoExtension}"));
+
+            string folderImagePath = Path.Combine(
+                Path.GetDirectoryName(moviePath) ?? string.Empty,
+                $"folder.{imageExtension}");
+
+            MovieFolderScanner service = GetService(
+                new FakeFileEntry(moviePath) { LastWriteTime = DateTime.Now },
+                new FakeFileEntry(folderImagePath) { LastWriteTime = DateTime.Now }
+            );
+            var libraryPath = new LibraryPath
+                { Id = 1, Path = FakeRoot, LibraryFolders = new List<LibraryFolder>() };
+
+            Either<BaseError, Unit> result = await service.ScanFolder(
+                libraryPath,
+                FFmpegPath,
+                FFprobePath,
+                0,
+                1,
+                CancellationToken.None);
+
+            result.IsRight.ShouldBeTrue();
+
+            await _movieRepository.Received(1).GetOrAdd(
+                Arg.Any<LibraryPath>(),
+                Arg.Any<LibraryFolder>(),
+                Arg.Any<string>(),
+                Arg.Any<CancellationToken>());
+            await _movieRepository.Received(1).GetOrAdd(
+                libraryPath,
+                Arg.Any<LibraryFolder>(),
+                moviePath,
+                Arg.Any<CancellationToken>());
+
+            await _localStatisticsProvider.Received(1).RefreshStatistics(
+                FFmpegPath,
+                FFprobePath,
+                Arg.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath));
+
+            await _localMetadataProvider.Received(1).RefreshFallbackMetadata(
+                Arg.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath));
+
+            // Should receive Poster call (as folder.ext is valid for poster)
+            await _imageCache.Received(1).CopyArtworkToCache(folderImagePath, ArtworkKind.Poster);
+
+            // Should NOT receive FanArt call
+            await _imageCache.DidNotReceive().CopyArtworkToCache(Arg.Any<string>(), ArtworkKind.FanArt);
+        }
+
+        [Test]
+        public async Task NewMovie_Statistics_And_FallbackMetadata_Poster_Priority(
+            [ValueSource(typeof(LocalFolderScanner), nameof(LocalFolderScanner.VideoFileExtensions))]
+            string videoExtension,
+            [ValueSource(typeof(LocalFolderScanner), nameof(LocalFolderScanner.ImageFileExtensions))]
+            string imageExtension)
+        {
+            string moviePath = Path.Combine(
+                FakeRoot,
+                Path.Combine("Movie (2020)", $"Movie (2020){videoExtension}"));
+
+            string posterPath = Path.Combine(
+                Path.GetDirectoryName(moviePath) ?? string.Empty,
+                $"poster.{imageExtension}");
+
+            string moviePosterPath = Path.Combine(
+                Path.GetDirectoryName(moviePath) ?? string.Empty,
+                $"Movie (2020)-poster.{imageExtension}");
+
+            MovieFolderScanner service = GetService(
+                new FakeFileEntry(moviePath) { LastWriteTime = DateTime.Now },
+                new FakeFileEntry(posterPath) { LastWriteTime = DateTime.Now },
+                new FakeFileEntry(moviePosterPath) { LastWriteTime = DateTime.Now }
+            );
+            var libraryPath = new LibraryPath
+                { Id = 1, Path = FakeRoot, LibraryFolders = new List<LibraryFolder>() };
+
+            Either<BaseError, Unit> result = await service.ScanFolder(
+                libraryPath,
+                FFmpegPath,
+                FFprobePath,
+                0,
+                1,
+                CancellationToken.None);
+
+            result.IsRight.ShouldBeTrue();
+
+            // Should prefer "poster.ext" over "MovieName-poster.ext"
+            await _imageCache.Received(1).CopyArtworkToCache(posterPath, ArtworkKind.Poster);
+            await _imageCache.DidNotReceive().CopyArtworkToCache(moviePosterPath, ArtworkKind.Poster);
+        }
+
+        [Test]
+        public async Task NewMovie_Statistics_And_FallbackMetadata_FanArt_Priority(
+            [ValueSource(typeof(LocalFolderScanner), nameof(LocalFolderScanner.VideoFileExtensions))]
+            string videoExtension,
+            [ValueSource(typeof(LocalFolderScanner), nameof(LocalFolderScanner.ImageFileExtensions))]
+            string imageExtension)
+        {
+            string moviePath = Path.Combine(
+                FakeRoot,
+                Path.Combine("Movie (2020)", $"Movie (2020){videoExtension}"));
+
+            string fanArtPath = Path.Combine(
+                Path.GetDirectoryName(moviePath) ?? string.Empty,
+                $"fanart.{imageExtension}");
+
+            string movieFanArtPath = Path.Combine(
+                Path.GetDirectoryName(moviePath) ?? string.Empty,
+                $"Movie (2020)-fanart.{imageExtension}");
+
+            MovieFolderScanner service = GetService(
+                new FakeFileEntry(moviePath) { LastWriteTime = DateTime.Now },
+                new FakeFileEntry(fanArtPath) { LastWriteTime = DateTime.Now },
+                new FakeFileEntry(movieFanArtPath) { LastWriteTime = DateTime.Now }
+            );
+            var libraryPath = new LibraryPath
+                { Id = 1, Path = FakeRoot, LibraryFolders = new List<LibraryFolder>() };
+
+            Either<BaseError, Unit> result = await service.ScanFolder(
+                libraryPath,
+                FFmpegPath,
+                FFprobePath,
+                0,
+                1,
+                CancellationToken.None);
+
+            result.IsRight.ShouldBeTrue();
+
+            // Should prefer "fanart.ext" over "MovieName-fanart.ext"
+            await _imageCache.Received(1).CopyArtworkToCache(fanArtPath, ArtworkKind.FanArt);
+            await _imageCache.DidNotReceive().CopyArtworkToCache(movieFanArtPath, ArtworkKind.FanArt);
         }
 
         [Test]
