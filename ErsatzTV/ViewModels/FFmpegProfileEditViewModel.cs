@@ -49,7 +49,22 @@ public class FFmpegProfileEditViewModel
     public int AudioBitrate { get; set; }
     public int AudioBufferSize { get; set; }
     public int AudioChannels { get; set; }
-    public FFmpegProfileAudioFormat AudioFormat { get; set; }
+
+    public FFmpegProfileAudioFormat AudioFormat
+    {
+        get
+        {
+            if (field == FFmpegProfileAudioFormat.Copy && NormalizeAudio)
+            {
+                return FFmpegProfileAudioFormat.Aac;
+            }
+
+            return field;
+        }
+
+        set;
+    }
+
     public int AudioSampleRate { get; set; }
 
     public NormalizeLoudnessMode NormalizeLoudnessMode
@@ -105,7 +120,21 @@ public class FFmpegProfileEditViewModel
     public int? QsvExtraHardwareFrames { get; set; }
     public int VideoBitrate { get; set; }
     public int VideoBufferSize { get; set; }
-    public FFmpegProfileVideoFormat VideoFormat { get; set; }
+
+    public FFmpegProfileVideoFormat VideoFormat
+    {
+        get
+        {
+            if (field == FFmpegProfileVideoFormat.Copy && NormalizeVideo)
+            {
+                return FFmpegProfileVideoFormat.H264;
+            }
+
+            return field;
+        }
+
+        set;
+    }
 
     public string VideoProfile
     {

@@ -73,7 +73,7 @@ public class UpdateFFmpegProfileHandler(IDbContextFactory<TvContext> dbContextFa
         p.VideoBitrate = update.VideoBitrate;
         p.VideoBufferSize = update.VideoBufferSize;
         p.TonemapAlgorithm = update.TonemapAlgorithm;
-        p.AudioFormat = update.AudioFormat;
+        p.AudioFormat = update.NormalizeAudio ? update.AudioFormat : FFmpegProfileAudioFormat.Copy;
         p.AudioBitrate = update.AudioBitrate;
         p.AudioBufferSize = update.AudioBufferSize;
 

@@ -1,7 +1,6 @@
 ﻿using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Search;
-using ErsatzTV.FFmpeg.Pipeline;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
@@ -87,7 +86,7 @@ public class CreateFFmpegProfileHandler :
                 VideoBitrate = request.VideoBitrate,
                 VideoBufferSize = request.VideoBufferSize,
                 TonemapAlgorithm = request.TonemapAlgorithm,
-                AudioFormat = request.AudioFormat,
+                AudioFormat = request.NormalizeAudio ? request.AudioFormat : FFmpegProfileAudioFormat.Copy,
                 AudioBitrate = request.AudioBitrate,
                 AudioBufferSize = request.AudioBufferSize,
 
