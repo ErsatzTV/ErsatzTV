@@ -7,6 +7,8 @@ namespace ErsatzTV.Application.FFmpegProfiles;
 public record CreateFFmpegProfile(
     string Name,
     int ThreadCount,
+    bool NormalizeAudio,
+    bool NormalizeVideo,
     HardwareAccelerationKind HardwareAcceleration,
     string VaapiDisplay,
     VaapiDriver VaapiDriver,
@@ -31,4 +33,5 @@ public record CreateFFmpegProfile(
     int AudioChannels,
     int AudioSampleRate,
     bool NormalizeFramerate,
+    bool NormalizeColors,
     bool DeinterlaceVideo) : IRequest<Either<BaseError, CreateFFmpegProfileResult>>;

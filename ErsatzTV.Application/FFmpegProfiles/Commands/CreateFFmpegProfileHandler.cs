@@ -45,51 +45,63 @@ public class CreateFFmpegProfileHandler :
         CancellationToken cancellationToken) =>
         (ValidateName(request), ValidateThreadCount(request),
             await ResolutionMustExist(dbContext, request, cancellationToken))
-        .Apply((name, threadCount, resolutionId) => new FFmpegProfile
+        .Apply((name, threadCount, resolutionId) =>
         {
-            Name = name,
-            ThreadCount = threadCount,
-            HardwareAcceleration = request.HardwareAcceleration,
-            VaapiDriver = request.VaapiDriver,
-            VaapiDevice = request.VaapiDevice,
-            QsvExtraHardwareFrames = request.QsvExtraHardwareFrames,
-            ResolutionId = resolutionId,
-            ScalingBehavior = request.ScalingBehavior,
+            var hwAccel = request.NormalizeVideo
+                ? request.HardwareAcceleration
+                : HardwareAccelerationKind.None;
 
-            // only allow customization with VAAPI accel
-            PadMode = request.HardwareAcceleration switch
+            return new FFmpegProfile
             {
-                HardwareAccelerationKind.None => FilterMode.Software,
-                HardwareAccelerationKind.Vaapi => request.PadMode,
-                _ => FilterMode.HardwareIfPossible
-            },
+                Name = name,
+                ThreadCount = threadCount,
 
-            VideoFormat = request.VideoFormat,
-            VideoProfile = request.VideoProfile,
-            VideoPreset = request.VideoPreset,
-            AllowBFrames = request.AllowBFrames,
+                NormalizeAudio = request.NormalizeAudio,
+                NormalizeVideo = request.NormalizeVideo,
 
-            // mpeg2video only supports 8-bit content
-            BitDepth = request.VideoFormat is FFmpegProfileVideoFormat.Mpeg2Video
-                ? FFmpegProfileBitDepth.EightBit
-                : request.BitDepth,
+                HardwareAcceleration = hwAccel,
+                VaapiDriver = request.VaapiDriver,
+                VaapiDevice = request.VaapiDevice,
+                QsvExtraHardwareFrames = request.QsvExtraHardwareFrames,
+                ResolutionId = resolutionId,
+                ScalingBehavior = request.ScalingBehavior,
 
-            VideoBitrate = request.VideoBitrate,
-            VideoBufferSize = request.VideoBufferSize,
-            TonemapAlgorithm = request.TonemapAlgorithm,
-            AudioFormat = request.AudioFormat,
-            AudioBitrate = request.AudioBitrate,
-            AudioBufferSize = request.AudioBufferSize,
+                // only allow customization with VAAPI accel
+                PadMode = hwAccel switch
+                {
+                    HardwareAccelerationKind.None => FilterMode.Software,
+                    HardwareAccelerationKind.Vaapi => request.PadMode,
+                    _ => FilterMode.HardwareIfPossible
+                },
 
-            NormalizeLoudnessMode = request.NormalizeLoudnessMode,
-            TargetLoudness = request.NormalizeLoudnessMode is NormalizeLoudnessMode.LoudNorm
-                ? request.TargetLoudness
-                : null,
+                VideoFormat = request.NormalizeVideo ? request.VideoFormat : FFmpegProfileVideoFormat.Copy,
+                VideoProfile = request.VideoProfile,
+                VideoPreset = request.VideoPreset,
+                AllowBFrames = request.AllowBFrames,
 
-            AudioChannels = request.AudioChannels,
-            AudioSampleRate = request.AudioSampleRate,
-            NormalizeFramerate = request.NormalizeFramerate,
-            DeinterlaceVideo = request.DeinterlaceVideo
+                // mpeg2video only supports 8-bit content
+                BitDepth = request.VideoFormat is FFmpegProfileVideoFormat.Mpeg2Video
+                    ? FFmpegProfileBitDepth.EightBit
+                    : request.BitDepth,
+
+                VideoBitrate = request.VideoBitrate,
+                VideoBufferSize = request.VideoBufferSize,
+                TonemapAlgorithm = request.TonemapAlgorithm,
+                AudioFormat = request.AudioFormat,
+                AudioBitrate = request.AudioBitrate,
+                AudioBufferSize = request.AudioBufferSize,
+
+                NormalizeLoudnessMode = request.NormalizeLoudnessMode,
+                TargetLoudness = request.NormalizeLoudnessMode is NormalizeLoudnessMode.LoudNorm
+                    ? request.TargetLoudness
+                    : null,
+
+                AudioChannels = request.AudioChannels,
+                AudioSampleRate = request.AudioSampleRate,
+                NormalizeFramerate = request.NormalizeFramerate,
+                NormalizeColors = request.NormalizeColors,
+                DeinterlaceVideo = request.DeinterlaceVideo
+            };
         });
 
     private static Validation<BaseError, string> ValidateName(CreateFFmpegProfile createFFmpegProfile) =>
