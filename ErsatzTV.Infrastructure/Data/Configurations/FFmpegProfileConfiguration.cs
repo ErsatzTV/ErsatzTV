@@ -15,5 +15,14 @@ public class FFmpegProfileConfiguration : IEntityTypeConfiguration<FFmpegProfile
 
         builder.Property(p => p.DeinterlaceVideo)
             .HasDefaultValue(true);
+
+        builder.Property(p => p.NormalizeAudio)
+            .HasDefaultValue(true);
+
+        builder.Property(p => p.NormalizeVideo)
+            .HasDefaultValue(true);
+
+        builder.Property(p => p.NormalizeColors)
+            .HasDefaultValue(true);
     }
 }
