@@ -29,6 +29,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - `Normalize Video` (default: true) - normalizes video streams, or stream copies when disabled
   - `Normalize Colors` (default: true) - normalizes color parameters when enabled
   - Disabling any of these options may have a significant performance benefit *at the expense of stream stability*
+- Add chapter `title` to filler expression
+  - This can be used to include or exclude chapters with specific (case-insensitive) titles
+  - E.g. `title == 'here'`, `title != 'not here'`, `title like '%here%'`
 
 ### Changed
 - Disable automatic artwork database cleanup

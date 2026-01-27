@@ -692,7 +692,8 @@ public class TranscodingTests
                 AudioFormat = FFmpegProfileAudioFormat.Aac,
                 DeinterlaceVideo = true,
                 BitDepth = profileBitDepth,
-                ScalingBehavior = scalingBehavior
+                ScalingBehavior = scalingBehavior,
+                NormalizeColors = profileNormalizeColors
             },
             StreamingMode = streamingMode,
             SubtitleMode = subtitleMode
