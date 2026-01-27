@@ -347,7 +347,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
 
         List<IPipelineFilterStep> pixelFormatFilterSteps = SetPixelFormat(
             videoStream,
-            desiredState.PixelFormat,
+            desiredState,
             ffmpegState,
             currentState,
             context,
@@ -392,7 +392,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
 
     private List<IPipelineFilterStep> SetPixelFormat(
         VideoStream videoStream,
-        Option<IPixelFormat> desiredPixelFormat,
+        FrameState desiredState,
         FFmpegState ffmpegState,
         FrameState currentState,
         PipelineContext context,
@@ -400,7 +400,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
     {
         var result = new List<IPipelineFilterStep>();
 
-        foreach (IPixelFormat pixelFormat in desiredPixelFormat)
+        foreach (IPixelFormat pixelFormat in desiredState.PixelFormat)
         {
             IPixelFormat format = pixelFormat;
 
@@ -419,7 +419,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
                 videoStream.ResetColorParams(ColorParams.Unknown);
             }
 
-            if (!videoStream.ColorParams.IsBt709)
+            if (desiredState.ColorsAreBt709 && !videoStream.ColorParams.IsBt709)
             {
                 // _logger.LogDebug("Adding colorspace filter");
                 var colorspace = new ColorspaceFilter(currentState, videoStream, format);

@@ -19,6 +19,7 @@ public record FrameState(
     Option<int> VideoBitrate,
     Option<int> VideoBufferSize,
     Option<int> VideoTrackTimeScale,
+    bool ColorsAreBt709,
     bool Deinterlaced,
     FrameDataLocation FrameDataLocation = FrameDataLocation.Unknown)
 {

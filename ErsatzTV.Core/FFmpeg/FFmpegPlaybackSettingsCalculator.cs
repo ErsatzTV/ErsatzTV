@@ -118,6 +118,11 @@ public static class FFmpegPlaybackSettingsCalculator
                     result.FrameRate = targetFramerate;
                 }
 
+                if (ffmpegProfile.NormalizeColors)
+                {
+                    result.NormalizeColors = true;
+                }
+
                 result.VideoTrackTimeScale = 90000;
 
                 foreach (MediaStream stream in videoStream.Where(s => !s.AttachedPic))

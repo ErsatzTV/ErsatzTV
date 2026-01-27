@@ -286,7 +286,7 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
 
         List<IPipelineFilterStep> pixelFormatFilterSteps = SetPixelFormat(
             videoStream,
-            desiredState.PixelFormat,
+            desiredState,
             ffmpegState,
             currentState,
             pipelineSteps);
@@ -313,14 +313,14 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
 
     private List<IPipelineFilterStep> SetPixelFormat(
         VideoStream videoStream,
-        Option<IPixelFormat> desiredPixelFormat,
+        FrameState desiredState,
         FFmpegState ffmpegState,
         FrameState currentState,
         ICollection<IPipelineStep> pipelineSteps)
     {
         var result = new List<IPipelineFilterStep>();
 
-        foreach (IPixelFormat pixelFormat in desiredPixelFormat)
+        foreach (IPixelFormat pixelFormat in desiredState.PixelFormat)
         {
             IPixelFormat format = pixelFormat;
 
@@ -332,7 +332,7 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
                 }
             }
 
-            if (!videoStream.ColorParams.IsBt709)
+            if (desiredState.ColorsAreBt709 && !videoStream.ColorParams.IsBt709)
             {
                 // _logger.LogDebug("Adding colorspace filter");
                 var colorspace = new ColorspaceFilter(
@@ -352,12 +352,12 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
                     _logger.LogDebug(
                         "FrameDataLocation == FrameDataLocation.Hardware, {CurrentPixelFormat} bit => {DesiredPixelFormat}",
                         currentState.PixelFormat,
-                        desiredPixelFormat);
+                        desiredState.PixelFormat);
 
                     // don't try to download from 8-bit to 10-bit, or 10-bit to 8-bit
                     HardwareDownloadFilter hardwareDownload =
-                        currentState.BitDepth == 8 && desiredPixelFormat.Map(pf => pf.BitDepth).IfNone(8) == 10 ||
-                        currentState.BitDepth == 10 && desiredPixelFormat.Map(pf => pf.BitDepth).IfNone(10) == 8
+                        currentState.BitDepth == 8 && desiredState.PixelFormat.Map(pf => pf.BitDepth).IfNone(8) == 10 ||
+                        currentState.BitDepth == 10 && desiredState.PixelFormat.Map(pf => pf.BitDepth).IfNone(10) == 8
                             ? new HardwareDownloadFilter(currentState)
                             : new HardwareDownloadFilter(currentState with { PixelFormat = Some(format) });
 

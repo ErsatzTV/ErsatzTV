@@ -517,6 +517,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             playbackSettings.VideoBitrate,
             playbackSettings.VideoBufferSize,
             playbackSettings.VideoTrackTimeScale,
+            playbackSettings.NormalizeColors,
             playbackSettings.Deinterlace);
 
         // only use graphics engine when we have elements, and are normalizing video
@@ -722,6 +723,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             playbackSettings.VideoBitrate,
             playbackSettings.VideoBufferSize,
             playbackSettings.VideoTrackTimeScale,
+            playbackSettings.NormalizeColors,
             playbackSettings.Deinterlace);
 
         OutputFormatKind outputFormat = OutputFormatKind.MpegTs;
