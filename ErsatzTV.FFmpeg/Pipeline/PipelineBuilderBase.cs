@@ -214,9 +214,13 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
             new LoglevelErrorOption(),
             new StandardFormatFlags(),
             new NoDemuxDecodeDelayOutputOption(),
-            outputOption,
-            new ClosedGopOutputOption()
+            outputOption
         };
+
+        if (desiredState.VideoFormat != VideoFormat.Copy)
+        {
+            pipelineSteps.Add(new ClosedGopOutputOption());
+        }
 
         if (desiredState.VideoFormat != VideoFormat.Copy && !desiredState.AllowBFrames)
         {
@@ -512,6 +516,11 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
 
     private void SetAudioLoudness(AudioInputFile audioInputFile)
     {
+        if (audioInputFile.DesiredState.AudioFormat == AudioFormat.Copy)
+        {
+            return;
+        }
+
         if (audioInputFile.DesiredState.NormalizeLoudnessFilter is not AudioFilter.None)
         {
             var filter = new NormalizeLoudnessFilter(
@@ -525,6 +534,11 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
 
     private static void SetAudioSampleRate(AudioInputFile audioInputFile, List<IPipelineStep> pipelineSteps)
     {
+        if (audioInputFile.DesiredState.AudioFormat == AudioFormat.Copy)
+        {
+            return;
+        }
+
         foreach (int desiredSampleRate in audioInputFile.DesiredState.AudioSampleRate)
         {
             pipelineSteps.Add(new AudioSampleRateOutputOption(desiredSampleRate));
@@ -533,6 +547,11 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
 
     private static void SetAudioBufferSize(AudioInputFile audioInputFile, List<IPipelineStep> pipelineSteps)
     {
+        if (audioInputFile.DesiredState.AudioFormat == AudioFormat.Copy)
+        {
+            return;
+        }
+
         foreach (int desiredBufferSize in audioInputFile.DesiredState.AudioBufferSize)
         {
             pipelineSteps.Add(new AudioBufferSizeOutputOption(desiredBufferSize));
@@ -541,6 +560,11 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
 
     private static void SetAudioBitrate(AudioInputFile audioInputFile, List<IPipelineStep> pipelineSteps)
     {
+        if (audioInputFile.DesiredState.AudioFormat == AudioFormat.Copy)
+        {
+            return;
+        }
+
         foreach (int desiredBitrate in audioInputFile.DesiredState.AudioBitrate)
         {
             pipelineSteps.Add(new AudioBitrateOutputOption(desiredBitrate));
@@ -549,6 +573,11 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
 
     private static void SetAudioChannels(AudioInputFile audioInputFile, List<IPipelineStep> pipelineSteps)
     {
+        if (audioInputFile.DesiredState.AudioFormat == AudioFormat.Copy)
+        {
+            return;
+        }
+
         foreach (AudioStream audioStream in audioInputFile.AudioStreams.HeadOrNone())
         {
             foreach (int desiredAudioChannels in audioInputFile.DesiredState.AudioChannels)
@@ -878,6 +907,11 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         FrameState desiredState,
         List<IPipelineStep> pipelineSteps)
     {
+        if (desiredState.VideoFormat == VideoFormat.Copy)
+        {
+            return;
+        }
+
         // -sc_threshold 0 is unsupported with mpeg2video
         if (videoStream.Codec == VideoFormat.Mpeg2Video || desiredState.VideoFormat == VideoFormat.Mpeg2Video ||
             ffmpegState.DecoderHardwareAccelerationMode == HardwareAccelerationMode.VideoToolbox)

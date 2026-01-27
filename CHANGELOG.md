@@ -24,6 +24,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Add `Marathon Group By` option `Director`
   - This groups the *first* director on Movies, Episodes, Music Videos and Other Videos
   - This is supported in classic schedules and sequential schedules
+- Add FFmpeg Profile options:
+  - `Normalize Audio` (default: true) - normalizes audio streams, or stream copies when disabled
+  - `Normalize Video` (default: true) - normalizes video streams, or stream copies when disabled
+  - `Normalize Colors` (default: true) - normalizes color parameters when enabled
+  - Disabling any of these options may have a significant performance benefit *at the expense of stream stability*
 
 ### Changed
 - Disable automatic artwork database cleanup

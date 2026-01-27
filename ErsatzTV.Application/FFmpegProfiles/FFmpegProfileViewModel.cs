@@ -8,6 +8,8 @@ public record FFmpegProfileViewModel(
     int Id,
     string Name,
     int ThreadCount,
+    bool NormalizeAudio,
+    bool NormalizeVideo,
     HardwareAccelerationKind HardwareAcceleration,
     string VaapiDisplay,
     VaapiDriver VaapiDriver,
@@ -32,4 +34,5 @@ public record FFmpegProfileViewModel(
     int AudioChannels,
     int AudioSampleRate,
     bool NormalizeFramerate,
+    bool NormalizeColors,
     bool DeinterlaceVideo);

@@ -23,11 +23,14 @@ public class FFmpegProfileEditViewModel
         Id = viewModel.Id;
         Name = viewModel.Name;
         NormalizeFramerate = viewModel.NormalizeFramerate;
+        NormalizeColors = viewModel.NormalizeColors;
         DeinterlaceVideo = viewModel.DeinterlaceVideo;
         Resolution = viewModel.Resolution;
         ScalingBehavior = viewModel.ScalingBehavior;
         PadMode = viewModel.PadMode;
         ThreadCount = viewModel.ThreadCount;
+        NormalizeAudio = viewModel.NormalizeAudio;
+        NormalizeVideo = viewModel.NormalizeVideo;
         HardwareAcceleration = viewModel.HardwareAcceleration;
         VaapiDisplay = viewModel.VaapiDisplay;
         VaapiDriver = viewModel.VaapiDriver;
@@ -46,7 +49,22 @@ public class FFmpegProfileEditViewModel
     public int AudioBitrate { get; set; }
     public int AudioBufferSize { get; set; }
     public int AudioChannels { get; set; }
-    public FFmpegProfileAudioFormat AudioFormat { get; set; }
+
+    public FFmpegProfileAudioFormat AudioFormat
+    {
+        get
+        {
+            if (field == FFmpegProfileAudioFormat.Copy && NormalizeAudio)
+            {
+                return FFmpegProfileAudioFormat.Aac;
+            }
+
+            return field;
+        }
+
+        set;
+    }
+
     public int AudioSampleRate { get; set; }
 
     public NormalizeLoudnessMode NormalizeLoudnessMode
@@ -74,6 +92,7 @@ public class FFmpegProfileEditViewModel
     public int Id { get; set; }
     public string Name { get; set; }
     public bool NormalizeFramerate { get; set; }
+    public bool NormalizeColors { get; set; }
     public bool DeinterlaceVideo { get; set; }
     public ResolutionViewModel Resolution { get; set; }
     public ScalingBehavior ScalingBehavior { get; set; }
@@ -92,6 +111,8 @@ public class FFmpegProfileEditViewModel
     }
 
     public int ThreadCount { get; set; }
+    public bool NormalizeAudio { get; set; }
+    public bool NormalizeVideo { get; set; }
     public HardwareAccelerationKind HardwareAcceleration { get; set; }
     public string VaapiDisplay { get; set; }
     public VaapiDriver VaapiDriver { get; set; }
@@ -99,7 +120,21 @@ public class FFmpegProfileEditViewModel
     public int? QsvExtraHardwareFrames { get; set; }
     public int VideoBitrate { get; set; }
     public int VideoBufferSize { get; set; }
-    public FFmpegProfileVideoFormat VideoFormat { get; set; }
+
+    public FFmpegProfileVideoFormat VideoFormat
+    {
+        get
+        {
+            if (field == FFmpegProfileVideoFormat.Copy && NormalizeVideo)
+            {
+                return FFmpegProfileVideoFormat.H264;
+            }
+
+            return field;
+        }
+
+        set;
+    }
 
     public string VideoProfile
     {
@@ -124,6 +159,8 @@ public class FFmpegProfileEditViewModel
         new(
             Name,
             ThreadCount,
+            NormalizeAudio,
+            NormalizeVideo,
             HardwareAcceleration,
             VaapiDisplay,
             VaapiDriver,
@@ -148,6 +185,7 @@ public class FFmpegProfileEditViewModel
             AudioChannels,
             AudioSampleRate,
             NormalizeFramerate,
+            NormalizeColors,
             DeinterlaceVideo
         );
 
@@ -156,6 +194,8 @@ public class FFmpegProfileEditViewModel
             Id,
             Name,
             ThreadCount,
+            NormalizeAudio,
+            NormalizeVideo,
             HardwareAcceleration,
             VaapiDisplay,
             VaapiDriver,
@@ -180,6 +220,7 @@ public class FFmpegProfileEditViewModel
             AudioChannels,
             AudioSampleRate,
             NormalizeFramerate,
+            NormalizeColors,
             DeinterlaceVideo
         );
 }

@@ -517,10 +517,11 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             playbackSettings.VideoBitrate,
             playbackSettings.VideoBufferSize,
             playbackSettings.VideoTrackTimeScale,
+            playbackSettings.NormalizeColors,
             playbackSettings.Deinterlace);
 
-        // only use graphics engine when we have elements
-        if (graphicsElementContexts.Count > 0 || graphicsElements.Count > 0)
+        // only use graphics engine when we have elements, and are normalizing video
+        if (videoFormat != VideoFormat.Copy && (graphicsElementContexts.Count > 0 || graphicsElements.Count > 0))
         {
             FrameSize targetSize = await desiredState.CroppedSize.IfNoneAsync(desiredState.ScaledSize);
 
@@ -722,6 +723,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             playbackSettings.VideoBitrate,
             playbackSettings.VideoBufferSize,
             playbackSettings.VideoTrackTimeScale,
+            playbackSettings.NormalizeColors,
             playbackSettings.Deinterlace);
 
         OutputFormatKind outputFormat = OutputFormatKind.MpegTs;

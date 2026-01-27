@@ -27,9 +27,15 @@ public class UpdateFFmpegProfileHandler(IDbContextFactory<TvContext> dbContextFa
         UpdateFFmpegProfile update,
         CancellationToken cancellationToken)
     {
+        var hwAccel = update.NormalizeVideo
+            ? update.HardwareAcceleration
+            : HardwareAccelerationKind.None;
+
         p.Name = update.Name;
         p.ThreadCount = update.ThreadCount;
-        p.HardwareAcceleration = update.HardwareAcceleration;
+        p.NormalizeAudio = update.NormalizeAudio;
+        p.NormalizeVideo = update.NormalizeVideo;
+        p.HardwareAcceleration = hwAccel;
         p.VaapiDisplay = update.VaapiDisplay;
         p.VaapiDriver = update.VaapiDriver;
         p.VaapiDevice = update.VaapiDevice;
@@ -37,7 +43,7 @@ public class UpdateFFmpegProfileHandler(IDbContextFactory<TvContext> dbContextFa
         p.ResolutionId = update.ResolutionId;
         p.ScalingBehavior = update.ScalingBehavior;
         p.PadMode = update.PadMode;
-        p.VideoFormat = update.VideoFormat;
+        p.VideoFormat = update.NormalizeVideo ? update.VideoFormat : FFmpegProfileVideoFormat.Copy;
         p.VideoProfile = update.VideoProfile;
         p.VideoPreset = update.VideoPreset;
         p.AllowBFrames = update.AllowBFrames;
@@ -67,7 +73,7 @@ public class UpdateFFmpegProfileHandler(IDbContextFactory<TvContext> dbContextFa
         p.VideoBitrate = update.VideoBitrate;
         p.VideoBufferSize = update.VideoBufferSize;
         p.TonemapAlgorithm = update.TonemapAlgorithm;
-        p.AudioFormat = update.AudioFormat;
+        p.AudioFormat = update.NormalizeAudio ? update.AudioFormat : FFmpegProfileAudioFormat.Copy;
         p.AudioBitrate = update.AudioBitrate;
         p.AudioBufferSize = update.AudioBufferSize;
 
@@ -79,6 +85,7 @@ public class UpdateFFmpegProfileHandler(IDbContextFactory<TvContext> dbContextFa
         p.AudioChannels = update.AudioChannels;
         p.AudioSampleRate = update.AudioSampleRate;
         p.NormalizeFramerate = update.NormalizeFramerate;
+        p.NormalizeColors = update.NormalizeColors;
         p.DeinterlaceVideo = update.DeinterlaceVideo;
 
         // don't save invalid preset

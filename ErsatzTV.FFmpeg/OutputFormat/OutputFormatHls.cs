@@ -1,4 +1,5 @@
 ﻿using ErsatzTV.FFmpeg.Environment;
+using ErsatzTV.FFmpeg.Format;
 
 namespace ErsatzTV.FFmpeg.OutputFormat;
 
@@ -56,18 +57,27 @@ public class OutputFormatHls : IPipelineStep
                 ? (int)Math.Round(frameRate.ParsedFrameRate)
                 : (int)Math.Round(frameRate.ParsedFrameRate * SegmentSeconds);
 
-            List<string> result =
+            List<string> result = [];
+
+            if (_desiredState.VideoFormat != VideoFormat.Copy)
+            {
+                result.AddRange(
+                [
+                    "-g", $"{gop}",
+                    "-keyint_min", $"{(int)Math.Round(frameRate.ParsedFrameRate * SegmentSeconds)}",
+                    "-force_key_frames", $"expr:gte(t,n_forced*{SegmentSeconds})"
+                ]);
+            }
+
+            result.AddRange(
             [
-                "-g", $"{gop}",
-                "-keyint_min", $"{(int)Math.Round(frameRate.ParsedFrameRate * SegmentSeconds)}",
-                "-force_key_frames", $"expr:gte(t,n_forced*{SegmentSeconds})",
                 "-f", "hls",
                 "-hls_time", $"{SegmentSeconds}",
                 "-hls_list_size", "0",
                 "-segment_list_flags", "+live",
                 "-hls_segment_filename",
                 _segmentTemplate
-            ];
+            ]);
 
             var independentSegments = "+independent_segments";
 

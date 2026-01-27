@@ -203,9 +203,9 @@ public class TranscodingTests
         public static HardwareAccelerationKind[] TestAccelerations =
         [
             HardwareAccelerationKind.None,
-            //HardwareAccelerationKind.Nvenc
-            HardwareAccelerationKind.Vaapi,
-            HardwareAccelerationKind.Qsv,
+            HardwareAccelerationKind.Nvenc,
+            //HardwareAccelerationKind.Vaapi,
+            //HardwareAccelerationKind.Qsv,
             // HardwareAccelerationKind.VideoToolbox,
             // HardwareAccelerationKind.Amf
         ];
@@ -215,6 +215,12 @@ public class TranscodingTests
             StreamingMode.TransportStream
             //StreamingMode.HttpLiveStreamingSegmenter,
             //StreamingMode.HttpLiveStreamingSegmenterV2
+        ];
+
+        public static bool[] NormalizeColors =
+        [
+            false,
+            true
         ];
 
         public static string[] FilesToTest => [string.Empty];
@@ -234,7 +240,9 @@ public class TranscodingTests
         [ValueSource(typeof(TestData), nameof(TestData.TestAccelerations))]
         HardwareAccelerationKind profileAcceleration,
         [ValueSource(typeof(TestData), nameof(TestData.StreamingModes))]
-        StreamingMode streamingMode)
+        StreamingMode streamingMode,
+        [ValueSource(typeof(TestData), nameof(TestData.NormalizeColors))]
+        bool profileNormalizeColors)
     {
         var localFileSystem = new LocalFileSystem(
             new RealFileSystem(),
@@ -303,7 +311,8 @@ public class TranscodingTests
                 VideoFormat = profileVideoFormat,
                 AudioFormat = FFmpegProfileAudioFormat.Aac,
                 DeinterlaceVideo = true,
-                BitDepth = profileBitDepth
+                BitDepth = profileBitDepth,
+                NormalizeColors = profileNormalizeColors
             },
             StreamingMode = streamingMode,
             SubtitleMode = ChannelSubtitleMode.None
@@ -423,6 +432,7 @@ public class TranscodingTests
             profileBitDepth,
             profileVideoFormat,
             profileAcceleration,
+            profileNormalizeColors,
             VaapiDriver.iHD,
             localStatisticsProvider,
             streamingMode,
@@ -455,7 +465,9 @@ public class TranscodingTests
         [ValueSource(typeof(TestData), nameof(TestData.TestAccelerations))]
         HardwareAccelerationKind profileAcceleration,
         [ValueSource(typeof(TestData), nameof(TestData.StreamingModes))]
-        StreamingMode streamingMode)
+        StreamingMode streamingMode,
+        [ValueSource(typeof(TestData), nameof(TestData.NormalizeColors))]
+        bool profileNormalizeColors)
     {
         try
         {
@@ -755,6 +767,7 @@ public class TranscodingTests
             profileBitDepth,
             profileVideoFormat,
             profileAcceleration,
+            profileNormalizeColors,
             VaapiDriver.iHD,
             localStatisticsProvider,
             streamingMode,
@@ -1026,6 +1039,7 @@ public class TranscodingTests
         FFmpegProfileBitDepth profileBitDepth,
         FFmpegProfileVideoFormat profileVideoFormat,
         HardwareAccelerationKind profileAcceleration,
+        bool profileNormalizeColors,
         VaapiDriver vaapiDriver,
         ILocalStatisticsProvider localStatisticsProvider,
         StreamingMode streamingMode,
@@ -1133,6 +1147,11 @@ public class TranscodingTests
                 };
 
                 videoStream.PixelFormat.ShouldBe(expectedPixelFormat);
+
+                if (!profileNormalizeColors)
+                {
+                    continue;
+                }
 
                 // verify colors
                 var colorParams = new ColorParams(

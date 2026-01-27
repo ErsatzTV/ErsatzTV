@@ -7,6 +7,8 @@ public record FFmpegProfile
     public int Id { get; set; }
     public string Name { get; set; }
     public int ThreadCount { get; set; }
+    public bool NormalizeAudio { get; set; }
+    public bool NormalizeVideo { get; set; }
     public HardwareAccelerationKind HardwareAcceleration { get; set; }
     public string VaapiDisplay { get; set; }
     public VaapiDriver VaapiDriver { get; set; }
@@ -32,6 +34,7 @@ public record FFmpegProfile
     public int AudioChannels { get; set; }
     public int AudioSampleRate { get; set; }
     public bool NormalizeFramerate { get; set; }
+    public bool NormalizeColors { get; set; }
     public bool? DeinterlaceVideo { get; set; }
 
     public static FFmpegProfile New(string name, Resolution resolution) =>
@@ -59,6 +62,9 @@ public record FFmpegProfile
             DeinterlaceVideo = true,
             NormalizeFramerate = false,
             HardwareAcceleration = HardwareAccelerationKind.None,
-            QsvExtraHardwareFrames = 64
+            QsvExtraHardwareFrames = 64,
+            NormalizeAudio = true,
+            NormalizeVideo = true,
+            NormalizeColors = true
         };
 }

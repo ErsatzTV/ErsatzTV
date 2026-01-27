@@ -31,4 +31,5 @@ public class FFmpegPlaybackSettings
     public NormalizeLoudnessMode NormalizeLoudnessMode { get; set; }
     public Option<double> TargetLoudness { get; set; }
     public Option<FrameRate> FrameRate { get; set; }
+    public bool NormalizeColors { get; set; }
 }

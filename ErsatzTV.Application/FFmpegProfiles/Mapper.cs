@@ -10,6 +10,8 @@ internal static class Mapper
             profile.Id,
             profile.Name,
             profile.ThreadCount,
+            profile.NormalizeAudio,
+            profile.NormalizeVideo,
             profile.HardwareAcceleration,
             profile.VaapiDisplay ?? "drm",
             profile.VaapiDriver,
@@ -34,6 +36,7 @@ internal static class Mapper
             profile.AudioChannels,
             profile.AudioSampleRate,
             profile.NormalizeFramerate,
+            profile.NormalizeColors,
             profile.DeinterlaceVideo == true);
 
     internal static FFmpegProfileResponseModel ProjectToResponseModel(FFmpegProfile ffmpegProfile) =>

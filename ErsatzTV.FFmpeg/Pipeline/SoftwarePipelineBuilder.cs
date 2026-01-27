@@ -152,7 +152,7 @@ public class SoftwarePipelineBuilder : PipelineBuilderBase
 
         List<IPipelineFilterStep> pixelFormatFilterSteps = SetPixelFormat(
             videoStream,
-            desiredState.PixelFormat,
+            desiredState,
             currentState,
             pipelineSteps);
 
@@ -169,15 +169,15 @@ public class SoftwarePipelineBuilder : PipelineBuilderBase
 
     protected virtual List<IPipelineFilterStep> SetPixelFormat(
         VideoStream videoStream,
-        Option<IPixelFormat> desiredPixelFormat,
+        FrameState desiredState,
         FrameState currentState,
         ICollection<IPipelineStep> pipelineSteps)
     {
         var result = new List<IPipelineFilterStep>();
 
-        foreach (IPixelFormat pixelFormat in desiredPixelFormat)
+        foreach (IPixelFormat pixelFormat in desiredState.PixelFormat)
         {
-            if (!videoStream.ColorParams.IsBt709)
+            if (desiredState.ColorsAreBt709 && !videoStream.ColorParams.IsBt709)
             {
                 // _logger.LogDebug("Adding colorspace filter");
                 var colorspace = new ColorspaceFilter(currentState, videoStream, pixelFormat);

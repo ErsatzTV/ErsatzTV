@@ -726,6 +726,16 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Property<string>("Name")
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("NormalizeAudio")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("NormalizeColors")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(true);
+
                     b.Property<bool>("NormalizeFramerate")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER")
@@ -733,6 +743,11 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
 
                     b.Property<int>("NormalizeLoudnessMode")
                         .HasColumnType("INTEGER");
+
+                    b.Property<bool>("NormalizeVideo")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(true);
 
                     b.Property<int>("PadMode")
                         .HasColumnType("INTEGER");

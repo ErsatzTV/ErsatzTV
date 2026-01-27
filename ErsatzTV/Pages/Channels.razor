@@ -98,11 +98,25 @@
                         <div style="align-items: center; display: flex;">
                             @if (_channelsThatCanPreview.Contains(context.Id))
                             {
-                                <MudTooltip Text="Preview Channel">
-                                    <MudIconButton Icon="@Icons.Material.Filled.PlayCircle"
-                                                   OnClick="@(_ => PreviewChannel(context))">
-                                    </MudIconButton>
-                                </MudTooltip>
+                                Option<FFmpegProfileViewModel> maybeProfile = Optional(_ffmpegProfiles.Find(p => p.Id == context.FFmpegProfileId));
+                                bool notNormalizing = maybeProfile.Any(p => !p.NormalizeVideo || !p.NormalizeAudio);
+                                if (notNormalizing)
+                                {
+                                    <MudTooltip Text="Preview Channel; audio and/or video may not work without normalization">
+                                        <MudIconButton Icon="@Icons.Material.Filled.PlayCircle"
+                                                       OnClick="@(_ => PreviewChannel(context))"
+                                                       Style="color: var(--mud-palette-warning-lighten);">
+                                        </MudIconButton>
+                                    </MudTooltip>
+                                }
+                                else
+                                {
+                                    <MudTooltip Text="Preview Channel">
+                                        <MudIconButton Icon="@Icons.Material.Filled.PlayCircle"
+                                                       OnClick="@(_ => PreviewChannel(context))">
+                                        </MudIconButton>
+                                    </MudTooltip>
+                                }
                             }
                             else if (CanPreviewChannel(context) && _ffmpegProfilesThatCanPreview.ContainsKey(context.FFmpegProfileId) && !_ffmpegProfilesThatCanPreview[context.FFmpegProfileId])
                             {
@@ -271,6 +285,12 @@
             };
 
             //Console.WriteLine($"Checking video format {videoCodec} and audio format {audioCodec}");
+
+            // good luck
+            if (profile.VideoFormat == FFmpegProfileVideoFormat.Copy || profile.AudioFormat == FFmpegProfileAudioFormat.Copy)
+            {
+                return true;
+            }
 
             if (string.IsNullOrWhiteSpace(videoCodec) || string.IsNullOrWhiteSpace(audioCodec))
             {

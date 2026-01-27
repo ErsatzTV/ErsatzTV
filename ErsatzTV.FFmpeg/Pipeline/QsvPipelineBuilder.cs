@@ -259,7 +259,7 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
         List<IPipelineFilterStep> pixelFormatFilterSteps = SetPixelFormat(
             videoInputFile,
             videoStream,
-            desiredState.PixelFormat,
+            desiredState,
             ffmpegState,
             currentState,
             context,
@@ -279,7 +279,7 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
     private List<IPipelineFilterStep> SetPixelFormat(
         VideoInputFile videoInputFile,
         VideoStream videoStream,
-        Option<IPixelFormat> desiredPixelFormat,
+        FrameState desiredState,
         FFmpegState ffmpegState,
         FrameState currentState,
         PipelineContext context,
@@ -287,7 +287,7 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
     {
         var result = new List<IPipelineFilterStep>();
 
-        foreach (IPixelFormat pixelFormat in desiredPixelFormat)
+        foreach (IPixelFormat pixelFormat in desiredState.PixelFormat)
         {
             IPixelFormat format = pixelFormat;
 
@@ -352,7 +352,7 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
                 }
             }
 
-            if (!videoStream.ColorParams.IsBt709 || usesVppQsv)
+            if (desiredState.ColorsAreBt709 && (!videoStream.ColorParams.IsBt709 || usesVppQsv))
             {
                 // _logger.LogDebug("Adding colorspace filter");
 
