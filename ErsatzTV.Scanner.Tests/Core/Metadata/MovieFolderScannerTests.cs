@@ -512,6 +512,60 @@ public class MovieFolderScannerTests
         }
 
         [Test]
+        public async Task NewMovie_Statistics_And_FallbackMetadata_And_FanArt_Backdrop(
+            [ValueSource(typeof(LocalFolderScanner), nameof(LocalFolderScanner.VideoFileExtensions))]
+            string videoExtension,
+            [ValueSource(typeof(LocalFolderScanner), nameof(LocalFolderScanner.ImageFileExtensions))]
+            string imageExtension)
+        {
+            string moviePath = Path.Combine(
+                FakeRoot,
+                Path.Combine("Movie (2020)", $"Movie (2020){videoExtension}"));
+
+            string fanArtPath = Path.Combine(
+                Path.GetDirectoryName(moviePath) ?? string.Empty,
+                $"backdrop.{imageExtension}");
+
+            MovieFolderScanner service = GetService(
+                new FakeFileEntry(moviePath) { LastWriteTime = DateTime.Now },
+                new FakeFileEntry(fanArtPath) { LastWriteTime = DateTime.Now }
+            );
+            var libraryPath = new LibraryPath
+                { Id = 1, Path = FakeRoot, LibraryFolders = new List<LibraryFolder>() };
+
+            Either<BaseError, Unit> result = await service.ScanFolder(
+                libraryPath,
+                FFmpegPath,
+                FFprobePath,
+                0,
+                1,
+                CancellationToken.None);
+
+            result.IsRight.ShouldBeTrue();
+
+            await _movieRepository.Received(1).GetOrAdd(
+                Arg.Any<LibraryPath>(),
+                Arg.Any<LibraryFolder>(),
+                Arg.Any<string>(),
+                Arg.Any<CancellationToken>());
+            await _movieRepository.Received(1).GetOrAdd(
+                libraryPath,
+                Arg.Any<LibraryFolder>(),
+                moviePath,
+                Arg.Any<CancellationToken>());
+
+            await _localStatisticsProvider.Received(1).RefreshStatistics(
+                FFmpegPath,
+                FFprobePath,
+                Arg.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath));
+
+            await _localMetadataProvider.Received(1).RefreshFallbackMetadata(
+                Arg.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath));
+
+            await _imageCache.Received(1).CopyArtworkToCache(fanArtPath, ArtworkKind.FanArt);
+        }
+
+        [Test]
         public async Task NewMovie_Statistics_And_FallbackMetadata_And_MovieNameFanArt(
             [ValueSource(typeof(LocalFolderScanner), nameof(LocalFolderScanner.VideoFileExtensions))]
             string videoExtension,
