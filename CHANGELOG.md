@@ -32,6 +32,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Add chapter `title` to filler expression
   - This can be used to include or exclude chapters with specific (case-insensitive) titles
   - E.g. `title == 'here'`, `title != 'not here'`, `title like '%here%'`
+- Local movie libraries: load fanart from `backdrop` files (created by Jellyfin)
 
 ### Changed
 - Disable automatic artwork database cleanup

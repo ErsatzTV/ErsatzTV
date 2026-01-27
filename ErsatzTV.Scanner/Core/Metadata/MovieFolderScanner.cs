@@ -381,26 +381,22 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
 
     private Option<string> LocateArtwork(Movie movie, ArtworkKind artworkKind)
     {
-        string segment = artworkKind switch
+        string path = movie.MediaVersions.Head().MediaFiles.Head().Path;
+        string fileName = Path.GetFileNameWithoutExtension(path);
+        string folder = Path.GetDirectoryName(path) ?? string.Empty;
+
+        string[] segments = artworkKind switch
         {
-            ArtworkKind.Poster => "poster",
-            ArtworkKind.FanArt => "fanart",
+            ArtworkKind.Poster => ["poster", $"{fileName}-poster", "folder"],
+            ArtworkKind.FanArt => ["fanart", $"{fileName}-fanart", "backdrop"],
             _ => throw new ArgumentOutOfRangeException(nameof(artworkKind))
         };
 
-        string path = movie.MediaVersions.Head().MediaFiles.Head().Path;
-        string folder = Path.GetDirectoryName(path) ?? string.Empty;
-        IEnumerable<string> possibleMoviePosters = ImageFileExtensions.Collect(ext =>
-                new[] { $"{segment}.{ext}", Path.GetFileNameWithoutExtension(path) + $"-{segment}.{ext}" })
-            .Map(f => Path.Combine(folder, f));
-        Option<string> result = possibleMoviePosters.Filter(p => _fileSystem.File.Exists(p)).HeadOrNone();
-        if (result.IsNone && artworkKind == ArtworkKind.Poster)
-        {
-            IEnumerable<string> possibleFolderPosters = ImageFileExtensions.Collect(ext => new[] { $"folder.{ext}" })
-                .Map(f => Path.Combine(folder, f));
-            result = possibleFolderPosters.Filter(p => _fileSystem.File.Exists(p)).HeadOrNone();
-        }
-
-        return result;
+        return ImageFileExtensions
+            .Map(ext => segments.Map(segment => $"{segment}.{ext}"))
+            .Flatten()
+            .Map(f => Path.Combine(folder, f))
+            .Filter(s => _fileSystem.File.Exists(s))
+            .HeadOrNone();
     }
 }
