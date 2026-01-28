@@ -1,7 +1,5 @@
 using ErsatzTV.Core.Domain;
-using ErsatzTV.Core.Domain.Scheduling;
 using ErsatzTV.Infrastructure.Data;
-using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Application.Scheduling;
@@ -14,39 +12,49 @@ public class ErasePlayoutItemsHandler(IDbContextFactory<TvContext> dbContextFact
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         Option<Playout> maybePlayout = await dbContext.Playouts
-            .Include(p => p.Items)
-            .Include(p => p.PlayoutHistory)
+            .TagWithCallSite()
+            .AsNoTracking()
             .Filter(p => p.ScheduleKind == PlayoutScheduleKind.Block ||
                          p.ScheduleKind == PlayoutScheduleKind.Sequential ||
                          p.ScheduleKind == PlayoutScheduleKind.Scripted)
-            .SelectOneAsync(p => p.Id, p => p.Id == request.PlayoutId, cancellationToken);
+            .SingleOrDefaultAsync(p => p.Id == request.PlayoutId, cancellationToken);
 
         foreach (Playout playout in maybePlayout)
         {
-            // find the earliest item that finishes after "now"
-            Option<PlayoutItem> maybeFirstItem = playout.Items
-                .Filter(i => i.FinishOffset > DateTimeOffset.Now)
-                .OrderBy(i => i.StartOffset)
-                .HeadOrNone();
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
-            // delete all history starting with that item
-            // importantly, do NOT delete earlier history
-            foreach (PlayoutItem item in maybeFirstItem)
+            // find the earliest item that finishes after "now"
+            Option<PlayoutItem> maybeFirstItem = await dbContext.PlayoutItems
+                .TagWithCallSite()
+                .AsNoTracking()
+                .Where(pi => pi.PlayoutId == playout.Id)
+                .Where(pi => pi.Finish > DateTime.UtcNow)
+                .OrderBy(i => i.Start)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            foreach (PlayoutItem firstItem in maybeFirstItem)
             {
-                var toRemove = playout.PlayoutHistory.Filter(h => h.When >= item.Start).ToList();
-                foreach (PlayoutHistory history in toRemove)
-                {
-                    playout.PlayoutHistory.Remove(history);
-                }
+                // delete all history starting with that item
+                // importantly, do NOT delete earlier history
+                await dbContext.PlayoutHistory
+                    .Where(ph => ph.PlayoutId == playout.Id)
+                    .Where(ph => ph.When >= firstItem.Start)
+                    .ExecuteDeleteAsync(cancellationToken);
             }
 
-            // save history changes
-            await dbContext.SaveChangesAsync(cancellationToken);
+            await dbContext.PlayoutItems
+                .Where(pi => pi.PlayoutId == playout.Id)
+                .ExecuteDeleteAsync(cancellationToken);
 
-            // delete all playout items
-            await dbContext.Database.ExecuteSqlAsync(
-                $"DELETE FROM PlayoutItem WHERE PlayoutId = {playout.Id}",
-                cancellationToken);
+            await dbContext.PlayoutGaps
+                .Where(pg => pg.PlayoutId == playout.Id)
+                .ExecuteDeleteAsync(cancellationToken);
+
+            await dbContext.PlayoutBuildStatus
+                .Where(pb => pb.PlayoutId == playout.Id)
+                .ExecuteDeleteAsync(cancellationToken);
+
+            await transaction.CommitAsync(cancellationToken);
         }
     }
 }
