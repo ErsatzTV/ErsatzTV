@@ -47,7 +47,7 @@ public class ErasePlayoutItemsHandler(IDbContextFactory<TvContext> dbContextFact
                 .ExecuteDeleteAsync(cancellationToken);
 
             await dbContext.PlayoutGaps
-                .Where(ph => ph.PlayoutId == playout.Id)
+                .Where(pg => pg.PlayoutId == playout.Id)
                 .ExecuteDeleteAsync(cancellationToken);
 
             await dbContext.PlayoutBuildStatus
