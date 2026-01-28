@@ -65,6 +65,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Sync Jellyfin and Emby library name and type changes
   - Library type (movies, shows) can only be changed when synchronization is *disabled* for the library in ETV
 - Fix some sequential and scripted playout build failures when using playlists or marathons
+- Fix erasing playout items and erasing playout items and history so all related data is also erased
+  - This includes rerun history, unscheduled gaps, build status
 
 ## [26.1.1] - 2026-01-08
 ### Fixed

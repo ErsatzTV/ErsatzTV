@@ -21,27 +21,43 @@ public class ErasePlayoutHistoryHandler(IDbContextFactory<TvContext> dbContextFa
 
         foreach (Playout playout in maybePlayout)
         {
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+
             int nextSeed = new Random().Next();
             playout.Seed = nextSeed;
+
+            // this deletes the owned PlayoutAnchor
             playout.Anchor = null;
+
             playout.OnDemandCheckpoint = null;
+
             await dbContext.SaveChangesAsync(cancellationToken);
 
-            await dbContext.Database.ExecuteSqlAsync(
-                $"DELETE FROM PlayoutItem WHERE PlayoutId = {playout.Id}",
-                cancellationToken);
+            await dbContext.PlayoutItems
+                .Where(pi => pi.PlayoutId == playout.Id)
+                .ExecuteDeleteAsync(cancellationToken);
 
-            await dbContext.Database.ExecuteSqlAsync(
-                $"DELETE FROM PlayoutHistory WHERE PlayoutId = {playout.Id}",
-                cancellationToken);
+            await dbContext.PlayoutHistory
+                .Where(ph => ph.PlayoutId == playout.Id)
+                .ExecuteDeleteAsync(cancellationToken);
 
-            await dbContext.Database.ExecuteSqlAsync(
-                $"DELETE FROM PlayoutAnchor WHERE PlayoutId = {playout.Id}",
-                cancellationToken);
+            await dbContext.PlayoutProgramScheduleItemAnchors
+                .Where(a => a.PlayoutId == playout.Id)
+                .ExecuteDeleteAsync(cancellationToken);
 
-            await dbContext.Database.ExecuteSqlAsync(
-                $"DELETE FROM PlayoutProgramScheduleAnchor WHERE PlayoutId = {playout.Id}",
-                cancellationToken);
+            await dbContext.RerunHistory
+                .Where(rh => rh.PlayoutId == playout.Id)
+                .ExecuteDeleteAsync(cancellationToken);
+
+            await dbContext.PlayoutGaps
+                .Where(pg => pg.PlayoutId == playout.Id)
+                .ExecuteDeleteAsync(cancellationToken);
+
+            await dbContext.PlayoutBuildStatus
+                .Where(pb => pb.PlayoutId == playout.Id)
+                .ExecuteDeleteAsync(cancellationToken);
+
+            await transaction.CommitAsync(cancellationToken);
         }
     }
 }
