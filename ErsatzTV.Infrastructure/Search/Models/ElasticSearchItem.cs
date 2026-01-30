@@ -29,16 +29,16 @@ public class ElasticSearchItem : MinimalElasticSearchItem
     public string MetadataKind { get; set; }
 
     [JsonPropertyName(LuceneSearchIndex.LanguageField)]
-    public List<string> Language { get; set; }
+    public List<string> Language { get; set; } = [];
 
     [JsonPropertyName(LuceneSearchIndex.LanguageTagField)]
-    public List<string> LanguageTag { get; set; }
+    public List<string> LanguageTag { get; set; } = [];
 
     [JsonPropertyName(LuceneSearchIndex.SubLanguageField)]
-    public List<string> SubLanguage { get; set; }
+    public List<string> SubLanguage { get; set; } = [];
 
     [JsonPropertyName(LuceneSearchIndex.SubLanguageTagField)]
-    public List<string> SubLanguageTag { get; set; }
+    public List<string> SubLanguageTag { get; set; } = [];
 
     [JsonPropertyName(LuceneSearchIndex.ChaptersField)]
     public int Chapters { get; set; }
@@ -65,10 +65,10 @@ public class ElasticSearchItem : MinimalElasticSearchItem
     public string VideoDynamicRange { get; set; }
 
     [JsonPropertyName(LuceneSearchIndex.CollectionField)]
-    public List<string> Collection { get; set; }
+    public List<string> Collection { get; set; } = [];
 
     [JsonPropertyName(LuceneSearchIndex.ContentRatingField)]
-    public List<string> ContentRating { get; set; }
+    public List<string> ContentRating { get; set; } = [];
 
     [JsonPropertyName(LuceneSearchIndex.ReleaseDateField)]
     public string ReleaseDate { get; set; }
@@ -80,43 +80,43 @@ public class ElasticSearchItem : MinimalElasticSearchItem
     public string Album { get; set; }
 
     [JsonPropertyName(LuceneSearchIndex.AlbumArtistField)]
-    public List<string> AlbumArtist { get; set; }
+    public List<string> AlbumArtist { get; set; } = [];
 
     [JsonPropertyName(LuceneSearchIndex.PlotField)]
     public string Plot { get; set; }
 
     [JsonPropertyName(LuceneSearchIndex.GenreField)]
-    public List<string> Genre { get; set; }
+    public List<string> Genre { get; set; } = [];
 
     [JsonPropertyName(LuceneSearchIndex.TagField)]
-    public List<string> Tag { get; set; }
+    public List<string> Tag { get; set; } = [];
 
     [JsonPropertyName(LuceneSearchIndex.TagFullField)]
-    public List<string> TagFull { get; set; }
+    public List<string> TagFull { get; set; } = [];
 
     [JsonPropertyName(LuceneSearchIndex.CountryField)]
-    public List<string> Country { get; set; }
+    public List<string> Country { get; set; } = [];
 
     [JsonPropertyName(LuceneSearchIndex.StudioField)]
-    public List<string> Studio { get; set; }
+    public List<string> Studio { get; set; } = [];
 
     [JsonPropertyName(LuceneSearchIndex.NetworkField)]
-    public List<string> Network { get; set; }
+    public List<string> Network { get; set; } = [];
 
     [JsonPropertyName(LuceneSearchIndex.ArtistField)]
-    public List<string> Artist { get; set; }
+    public List<string> Artist { get; set; } = [];
 
     [JsonPropertyName(LuceneSearchIndex.ActorField)]
-    public List<string> Actor { get; set; }
+    public List<string> Actor { get; set; } = [];
 
     [JsonPropertyName(LuceneSearchIndex.DirectorField)]
-    public List<string> Director { get; set; }
+    public List<string> Director { get; set; } = [];
 
     [JsonPropertyName(LuceneSearchIndex.WriterField)]
-    public List<string> Writer { get; set; }
+    public List<string> Writer { get; set; } = [];
 
     [JsonPropertyName(LuceneSearchIndex.TraktListField)]
-    public List<string> TraktList { get; set; }
+    public List<string> TraktList { get; set; } = [];
 
     [JsonPropertyName(LuceneSearchIndex.SeasonNumberField)]
     public int SeasonNumber { get; set; }
@@ -128,25 +128,25 @@ public class ElasticSearchItem : MinimalElasticSearchItem
     public string ShowTitle { get; set; }
 
     [JsonPropertyName(LuceneSearchIndex.ShowGenreField)]
-    public List<string> ShowGenre { get; set; }
+    public List<string> ShowGenre { get; set; } = [];
 
     [JsonPropertyName(LuceneSearchIndex.ShowTagField)]
-    public List<string> ShowTag { get; set; }
+    public List<string> ShowTag { get; set; } = [];
 
     [JsonPropertyName(LuceneSearchIndex.ShowStudioField)]
-    public List<string> ShowStudio { get; set; }
+    public List<string> ShowStudio { get; set; } = [];
 
     [JsonPropertyName(LuceneSearchIndex.ShowNetworkField)]
-    public List<string> ShowNetwork { get; set; }
+    public List<string> ShowNetwork { get; set; } = [];
 
     [JsonPropertyName(LuceneSearchIndex.ShowContentRatingField)]
-    public List<string> ShowContentRating { get; set; }
+    public List<string> ShowContentRating { get; set; } = [];
 
     [JsonPropertyName(LuceneSearchIndex.StyleField)]
-    public List<string> Style { get; set; }
+    public List<string> Style { get; set; } = [];
 
     [JsonPropertyName(LuceneSearchIndex.MoodField)]
-    public List<string> Mood { get; set; }
+    public List<string> Mood { get; set; } = [];
 
     [JsonPropertyName(LuceneSearchIndex.LibraryFolderIdField)]
     public int LibraryFolderId { get; set; }
