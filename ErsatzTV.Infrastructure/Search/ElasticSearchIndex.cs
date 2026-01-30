@@ -1011,6 +1011,8 @@ public class ElasticSearchIndex : ISearchIndex
 
     private static void AddCollections(ElasticSearchItem doc, IEnumerable<Collection> collections)
     {
+        doc.Collection ??= [];
+
         foreach (Collection collection in collections)
         {
             doc.Collection.Add(collection.Name);
