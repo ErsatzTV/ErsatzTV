@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [26.2.0] - 2026-02-02
 ### Added
 - Channel stream selector: add zero-based culture-specific `day_of_week` to `content_condition`, for example:
   - en-US can match sunday using `day_of_week = 0`
@@ -3153,8 +3155,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/ErsatzTV/ErsatzTV/compare/v26.1.1...HEAD
-[26.1.0]: https://github.com/ErsatzTV/ErsatzTV/compare/v26.1.0...v26.1.1
+[Unreleased]: https://github.com/ErsatzTV/ErsatzTV/compare/v26.2.0...HEAD
+[26.2.0]: https://github.com/ErsatzTV/ErsatzTV/compare/v26.1.1...v26.2.0
+[26.1.1]: https://github.com/ErsatzTV/ErsatzTV/compare/v26.1.0...v26.1.1
 [26.1.0]: https://github.com/ErsatzTV/ErsatzTV/compare/v25.9.0...v26.1.0
 [25.9.0]: https://github.com/ErsatzTV/ErsatzTV/compare/v25.8.0...v25.9.0
 [25.8.0]: https://github.com/ErsatzTV/ErsatzTV/compare/v25.7.1...v25.8.0
