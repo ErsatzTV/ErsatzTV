@@ -41,6 +41,9 @@ jobs:
       ac_username: ${{ secrets.AC_USERNAME }}
       ac_password: ${{ secrets.AC_PASSWORD }}
       gh_token: ${{ secrets.GITHUB_TOKEN }}
+      azure_client_id: ${{ secrets.AZURE_CLIENT_ID }}
+      azure_tenant_id: ${{ secrets.AZURE_TENANT_ID }}
+      azure_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
   build_images:
     uses: ersatztv/ersatztv/.github/workflows/docker.yml@main
     needs: calculate_version
