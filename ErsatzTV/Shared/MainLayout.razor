@@ -103,7 +103,6 @@
             <MudTooltip Text="GitHub">
                 <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Primary" Href="https://github.com/ErsatzTV/ErsatzTV" Target="_blank"/>
             </MudTooltip>
-            <MudIconButton Icon="@(DarkLightModeButtonIcon)" Color="Color.Primary" OnClick="@DarkModeToggle"/>
             <AuthorizeView>
                 <form action="/account/logout" method="post">
                     <MudTooltip Text="Logout">
@@ -189,6 +188,7 @@
                     <MudNavLink Href="settings/hdhr">HDHomeRun</MudNavLink>
                     <MudNavLink Href="settings/scanner">Scanner</MudNavLink>
                     <MudNavLink Href="settings/playout">Playout</MudNavLink>
+                    <MudNavLink Href="settings/ui">UI</MudNavLink>
                     <MudNavLink Href="settings/xmltv">XMLTV</MudNavLink>
                 </MudNavGroup>
                 <MudNavGroup Expanded="true">
@@ -286,6 +286,7 @@
 
         Courier.Subscribe<HealthCheckSummary>(HandleHealthCheckSummary);
         Courier.Subscribe<PlayoutUpdatedNotification>(HandlePlayoutUpdated);
+        Courier.Subscribe<ThemeUpdatedNotification>(HandleThemeUpdated);
     }
 
     protected override async Task OnInitializedAsync()
@@ -293,18 +294,6 @@
         await base.OnInitializedAsync();
         await HandleHealthCheckSummary(HealthCheckService.GetHealthCheckSummary(), CancellationToken.None);
     }
-
-    private async Task DarkModeToggle()
-    {
-        _isDarkMode = !_isDarkMode;
-        await Mediator.Send(new SaveConfigElementByKey(ConfigElementKey.PagesIsDarkMode, _isDarkMode.ToString()));
-    }
-
-    public string DarkLightModeButtonIcon => _isDarkMode switch
-    {
-        true => Icons.Material.Rounded.DarkMode,
-        false => Icons.Material.Outlined.LightMode
-    };
 
     public void Dispose()
     {
@@ -314,6 +303,8 @@
         SearchTargets.OnSearchTargetsChanged -= OnSearchTargetsChanged;
 
         Courier.UnSubscribe<HealthCheckSummary>(HandleHealthCheckSummary);
+        Courier.UnSubscribe<PlayoutUpdatedNotification>(HandlePlayoutUpdated);
+        Courier.UnSubscribe<ThemeUpdatedNotification>(HandleThemeUpdated);
 
         _cts?.Cancel();
         _cts?.Dispose();
@@ -521,6 +512,22 @@
         try
         {
             _playoutWarnings = await Mediator.Send(new GetPlayoutWarningsCount(), cancellationToken);
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception)
+        {
+            // do nothing
+        }
+    }
+
+    private async Task HandleThemeUpdated(ThemeUpdatedNotification _, CancellationToken cancellationToken)
+    {
+        try
+        {
+            _isDarkMode = await Mediator.Send(new GetConfigElementByKey(ConfigElementKey.PagesIsDarkMode), cancellationToken)
+                .MapT(result => !bool.TryParse(result.Value, out bool value) || value)
+                .IfNoneAsync(true);
+
             await InvokeAsync(StateHasChanged);
         }
         catch (Exception)

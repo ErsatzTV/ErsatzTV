@@ -1,0 +1,75 @@
+@page "/settings/ui"
+@using ErsatzTV.Application.Configuration
+@using ErsatzTV.Core.Notifications
+@implements IDisposable
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@inject ILogger<UISettings> Logger
+
+<MudForm Style="max-height: 100%">
+    <MudPaper Square="true" Style="display: flex; height: 64px; min-height: 64px; width: 100%; z-index: 100; align-items: center">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => SaveUiSettings())" Class="ml-6" StartIcon="@Icons.Material.Filled.Save">Save Settings</MudButton>
+    </MudPaper>
+    <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+            <MudText Typo="Typo.h5" Class="mb-2">UI</MudText>
+            <MudDivider Class="mb-6"/>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Default Theme</MudText>
+                </div>
+                <MudSelect @bind-Value="_uiSettings.PagesIsDarkMode">
+                    <MudSelectItem Value="@true">Dark</MudSelectItem>
+                    <MudSelectItem Value="@false">Light</MudSelectItem>
+                </MudSelect>
+            </MudStack>
+        </MudContainer>
+    </div>
+</MudForm>
+
+@code {
+    private CancellationTokenSource _cts;
+
+    private UiSettingsViewModel _uiSettings = new();
+
+    public void Dispose()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
+
+        try
+        {
+            _uiSettings = await Mediator.Send(new GetUiSettings(), token);
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing
+        }
+    }
+
+    private async Task SaveUiSettings()
+    {
+        Either<BaseError, Unit> result = await Mediator.Send(new UpdateUiSettings(_uiSettings), _cts.Token);
+
+        foreach (var error in result.LeftToSeq())
+        {
+            Snackbar.Add(error.Value, Severity.Error);
+            Logger.LogError("Unexpected error saving ui settings: {Error}", error.Value);
+        }
+
+        if (result.IsRight)
+        {
+            Snackbar.Add("Successfully saved UI settings", Severity.Success);
+            await Mediator.Publish(new ThemeUpdatedNotification(), _cts.Token);
+        }
+    }
+
+}
