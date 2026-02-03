@@ -2,5 +2,5 @@
 
 public class NoStatsOption : GlobalOption
 {
-    public override string[] GlobalOptions => new[] { "-nostats" };
+    public override string[] GlobalOptions => ["-nostats"];
 }

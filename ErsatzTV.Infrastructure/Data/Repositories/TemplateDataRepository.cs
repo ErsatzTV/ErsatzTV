@@ -34,7 +34,9 @@ public class TemplateDataRepository(IFileSystem fileSystem, IDbContextFactory<Tv
     {
         try
         {
-            if (channelNumber.Equals(".troubleshooting", StringComparison.OrdinalIgnoreCase))
+            if (channelNumber.Equals(
+                    FileSystemLayout.TranscodeTroubleshootingChannel,
+                    StringComparison.OrdinalIgnoreCase))
             {
                 var now = DateTimeOffset.Now;
                 var topOfHour = new DateTimeOffset(now.Year, now.Month, now.Day, now.Hour, 0, 0, now.Offset);

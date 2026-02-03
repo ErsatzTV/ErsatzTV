@@ -528,9 +528,12 @@ public class HlsSessionWorker : IHlsSessionWorker
                             linkedCts.Token);
                     }
 
+                    var progressParser = new FFmpegProgress();
+
                     CommandResult commandResult = await processWithPipe
                         .WithWorkingDirectory(_workingDirectory)
                         .WithStandardErrorPipe(PipeTarget.ToStringBuilder(stdErrBuffer))
+                        .WithStandardOutputPipe(PipeTarget.ToDelegate(progressParser.ParseLine))
                         .WithValidation(CommandResultValidation.None)
                         .ExecuteAsync(linkedCts.Token);
 
@@ -538,12 +541,20 @@ public class HlsSessionWorker : IHlsSessionWorker
                     {
                         _logger.LogDebug("HLS process has completed for channel {Channel}", _channelNumber);
                         _logger.LogDebug(
-                            "Transcoded until: {Until} - Buffer: {Buffer} seconds",
+                            "Transcoded until: {Until} - Buffer: {Buffer} seconds - Speed {Speed}",
                             processModel.Until,
-                            processModel.Until.Subtract(DateTimeOffset.Now).TotalSeconds);
+                            processModel.Until.Subtract(DateTimeOffset.Now).TotalSeconds,
+                            progressParser.Speed);
                         _transcodedUntil = processModel.Until;
                         _state = NextState(_state, processModel);
                         _hasWrittenSegments = true;
+
+                        progressParser.LogSpeed(
+                            processModel.MediaItemId,
+                            processModel.IsWorkingAhead,
+                            _channelNumber,
+                            _logger);
+
                         return true;
                     }
                     else

@@ -185,7 +185,7 @@ public class PrepareTroubleshootingPlaybackHandler(
         {
             Artwork = [],
             Name = "ETV",
-            Number = ".troubleshooting",
+            Number = FileSystemLayout.TranscodeTroubleshootingChannel,
             FFmpegProfile = ffmpegProfile,
             StreamingMode = request.StreamingMode,
             StreamSelectorMode = ChannelStreamSelectorMode.Troubleshooting,

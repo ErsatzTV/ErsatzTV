@@ -220,6 +220,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         if (desiredState.VideoFormat != VideoFormat.Copy)
         {
             pipelineSteps.Add(new ClosedGopOutputOption());
+            pipelineSteps.Add(new ProgressOption());
         }
 
         if (desiredState.VideoFormat != VideoFormat.Copy && !desiredState.AllowBFrames)

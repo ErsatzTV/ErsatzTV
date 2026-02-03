@@ -321,7 +321,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
 
             if (request.IsTroubleshooting)
             {
-                channel.Number = ".troubleshooting";
+                channel.Number = FileSystemLayout.TranscodeTroubleshootingChannel;
             }
 
             if (_isDebugNoSync)
@@ -508,7 +508,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
 
             if (request.IsTroubleshooting)
             {
-                channel.Number = ".troubleshooting";
+                channel.Number = FileSystemLayout.TranscodeTroubleshootingChannel;
 
                 maybeDuration = TimeSpan.FromSeconds(30);
                 finish = now + TimeSpan.FromSeconds(30);
