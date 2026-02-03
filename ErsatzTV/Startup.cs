@@ -87,6 +87,7 @@ using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
@@ -604,9 +605,13 @@ public class Startup
         {
             CultureInfo[] cinfo = CultureInfo.GetCultures(CultureTypes.AllCultures & ~CultureTypes.NeutralCultures);
             string[] supportedCultures = cinfo.Select(t => t.Name).Distinct().ToArray();
+            string[] supportedUiCultures = ["en-us", "pt-br"];
             options.AddSupportedCultures(supportedCultures)
-                .AddSupportedUICultures(supportedCultures)
-                .SetDefaultCulture("en-US");
+                .AddSupportedUICultures(supportedUiCultures)
+                .SetDefaultCulture("en-us");
+            options.AddInitialRequestCultureProvider(
+                new DatabaseRequestCultureProvider(
+                    new AcceptLanguageHeaderRequestCultureProvider()));
         });
 
         app.UseStaticFiles();

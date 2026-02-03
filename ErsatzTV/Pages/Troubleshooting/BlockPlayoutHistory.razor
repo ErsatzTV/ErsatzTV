@@ -91,7 +91,7 @@
     public int? BlockId { get; set; }
 
     private CancellationTokenSource _cts;
-    private readonly DateTimeFormatInfo _dtf = CultureInfo.CurrentUICulture.DateTimeFormat;
+    private readonly DateTimeFormatInfo _dtf = CultureInfo.CurrentCulture.DateTimeFormat;
     private int _rowsPerPage = 10;
     private int? _selectedPlayoutHistoryId;
     private PlayoutHistoryDetailsViewModel _decodedHistory;

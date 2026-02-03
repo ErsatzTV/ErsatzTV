@@ -8,6 +8,7 @@
 @using ErsatzTV.Core.Notifications
 @using ErsatzTV.Extensions
 @using MediatR.Courier
+@using Microsoft.Extensions.Localization
 @implements IDisposable
 @inject NavigationManager NavigationManager
 @inject IMediator Mediator
@@ -15,6 +16,7 @@
 @inject ISearchTargets SearchTargets;
 @inject ICourier Courier
 @inject IHealthCheckService HealthCheckService;
+@inject IStringLocalizer<Resources> StringLocalizer;
 
 <MudThemeProvider Theme="ErsatzTvTheme" IsDarkMode="_isDarkMode"/>
 <MudDialogProvider BackdropClick="false"/>
@@ -103,7 +105,6 @@
             <MudTooltip Text="GitHub">
                 <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Primary" Href="https://github.com/ErsatzTV/ErsatzTV" Target="_blank"/>
             </MudTooltip>
-            <MudIconButton Icon="@(DarkLightModeButtonIcon)" Color="Color.Primary" OnClick="@DarkModeToggle"/>
             <AuthorizeView>
                 <form action="/account/logout" method="post">
                     <MudTooltip Text="Logout">
@@ -117,16 +118,16 @@
     {
         <MudDrawer @bind-Open="@_drawerIsOpen" Elevation="2" ClipMode="DrawerClipMode.Always">
             <MudNavMenu>
-                <MudNavLink Href="channels">Channels</MudNavLink>
-                <MudNavLink Href="ffmpeg">FFmpeg Profiles</MudNavLink>
-                <MudNavLink Href="watermarks">Watermarks</MudNavLink>
-                <MudNavGroup Title="Media Sources">
+                <MudNavLink Href="channels">@StringLocalizer["ButtonMainMenuChannels"]</MudNavLink>
+                <MudNavLink Href="ffmpeg">@StringLocalizer["ButtonMainMenuFFmpegProfiles"]</MudNavLink>
+                <MudNavLink Href="watermarks">@StringLocalizer["ButtonMainMenuWatermarks"]</MudNavLink>
+                <MudNavGroup Title="@StringLocalizer["ButtonMainMenuMediaSources"]">
                     <MudNavLink Href="media/sources/local">Local</MudNavLink>
                     <MudNavLink Href="media/sources/emby">Emby</MudNavLink>
                     <MudNavLink Href="media/sources/jellyfin">Jellyfin</MudNavLink>
                     <MudNavLink Href="media/sources/plex">Plex</MudNavLink>
                 </MudNavGroup>
-                <MudNavGroup Title="Media">
+                <MudNavGroup Title="@StringLocalizer["ButtonMainMenuMedia"]">
                     <MudNavLink Href="media/libraries">Libraries</MudNavLink>
                     <MudNavLink Href="media/trash">Trash</MudNavLink>
                     <MudNavLink Href="media/tv/shows">TV Shows</MudNavLink>
@@ -137,7 +138,7 @@
                     <MudNavLink Href="media/browser/images">Images</MudNavLink>
                     <MudNavLink Href="media/remote/streams">Remote Streams</MudNavLink>
                 </MudNavGroup>
-                <MudNavGroup Title="Lists">
+                <MudNavGroup Title="@StringLocalizer["ButtonMainMenuLists"]">
                     <MudNavLink Href="media/collections">Manual Collections</MudNavLink>
                     <MudNavLink Href="media/smart-collections">Smart Collections</MudNavLink>
                     <MudNavLink Href="media/multi-collections">Multi Collections</MudNavLink>
@@ -183,12 +184,13 @@
                         </MudNavLink>
                     </ChildContent>
                 </MudNavGroup>
-                <MudNavGroup Title="Settings">
+                <MudNavGroup Title="@StringLocalizer["ButtonMainMenuSettings"]">
                     <MudNavLink Href="settings/ffmpeg">FFmpeg</MudNavLink>
                     <MudNavLink Href="settings/logging">Logging</MudNavLink>
                     <MudNavLink Href="settings/hdhr">HDHomeRun</MudNavLink>
                     <MudNavLink Href="settings/scanner">Scanner</MudNavLink>
                     <MudNavLink Href="settings/playout">Playout</MudNavLink>
+                    <MudNavLink Href="settings/ui">UI</MudNavLink>
                     <MudNavLink Href="settings/xmltv">XMLTV</MudNavLink>
                 </MudNavGroup>
                 <MudNavGroup Expanded="true">
@@ -294,18 +296,6 @@
         await HandleHealthCheckSummary(HealthCheckService.GetHealthCheckSummary(), CancellationToken.None);
     }
 
-    private async Task DarkModeToggle()
-    {
-        _isDarkMode = !_isDarkMode;
-        await Mediator.Send(new SaveConfigElementByKey(ConfigElementKey.PagesIsDarkMode, _isDarkMode.ToString()));
-    }
-
-    public string DarkLightModeButtonIcon => _isDarkMode switch
-    {
-        true => Icons.Material.Rounded.DarkMode,
-        false => Icons.Material.Outlined.LightMode
-    };
-
     public void Dispose()
     {
         SystemStartup.OnDatabaseReady -= OnStartupProgress;
@@ -314,6 +304,7 @@
         SearchTargets.OnSearchTargetsChanged -= OnSearchTargetsChanged;
 
         Courier.UnSubscribe<HealthCheckSummary>(HandleHealthCheckSummary);
+        Courier.UnSubscribe<PlayoutUpdatedNotification>(HandlePlayoutUpdated);
 
         _cts?.Cancel();
         _cts?.Dispose();
