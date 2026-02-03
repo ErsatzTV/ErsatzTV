@@ -3,4 +3,22 @@
     <data name="ButtonMainMenuChannels" xml:space="preserve">
         <value>Channels</value>
     </data>
+    <data name="ButtonMainMenuFFmpegProfiles" xml:space="preserve">
+        <value>FFmpeg Profiles</value>
+    </data>
+    <data name="ButtonMainMenuWatermarks" xml:space="preserve">
+        <value>Watermarks</value>
+    </data>
+    <data name="ButtonMainMenuMediaSources" xml:space="preserve">
+        <value>Media Sources</value>
+    </data>
+    <data name="ButtonMainMenuMedia" xml:space="preserve">
+        <value>Media</value>
+    </data>
+    <data name="ButtonMainMenuLists" xml:space="preserve">
+        <value>Lists</value>
+    </data>
+    <data name="ButtonMainMenuSettings" xml:space="preserve">
+        <value>Settings</value>
+    </data>
 </root>

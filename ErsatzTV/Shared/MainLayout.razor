@@ -119,15 +119,15 @@
         <MudDrawer @bind-Open="@_drawerIsOpen" Elevation="2" ClipMode="DrawerClipMode.Always">
             <MudNavMenu>
                 <MudNavLink Href="channels">@StringLocalizer["ButtonMainMenuChannels"]</MudNavLink>
-                <MudNavLink Href="ffmpeg">FFmpeg Profiles</MudNavLink>
-                <MudNavLink Href="watermarks">Watermarks</MudNavLink>
-                <MudNavGroup Title="Media Sources">
+                <MudNavLink Href="ffmpeg">@StringLocalizer["ButtonMainMenuFFmpegProfiles"]</MudNavLink>
+                <MudNavLink Href="watermarks">@StringLocalizer["ButtonMainMenuWatermarks"]</MudNavLink>
+                <MudNavGroup Title="@StringLocalizer["ButtonMainMenuMediaSources"]">
                     <MudNavLink Href="media/sources/local">Local</MudNavLink>
                     <MudNavLink Href="media/sources/emby">Emby</MudNavLink>
                     <MudNavLink Href="media/sources/jellyfin">Jellyfin</MudNavLink>
                     <MudNavLink Href="media/sources/plex">Plex</MudNavLink>
                 </MudNavGroup>
-                <MudNavGroup Title="Media">
+                <MudNavGroup Title="@StringLocalizer["ButtonMainMenuMedia"]">
                     <MudNavLink Href="media/libraries">Libraries</MudNavLink>
                     <MudNavLink Href="media/trash">Trash</MudNavLink>
                     <MudNavLink Href="media/tv/shows">TV Shows</MudNavLink>
@@ -138,7 +138,7 @@
                     <MudNavLink Href="media/browser/images">Images</MudNavLink>
                     <MudNavLink Href="media/remote/streams">Remote Streams</MudNavLink>
                 </MudNavGroup>
-                <MudNavGroup Title="Lists">
+                <MudNavGroup Title="@StringLocalizer["ButtonMainMenuLists"]">
                     <MudNavLink Href="media/collections">Manual Collections</MudNavLink>
                     <MudNavLink Href="media/smart-collections">Smart Collections</MudNavLink>
                     <MudNavLink Href="media/multi-collections">Multi Collections</MudNavLink>
@@ -184,7 +184,7 @@
                         </MudNavLink>
                     </ChildContent>
                 </MudNavGroup>
-                <MudNavGroup Title="Settings">
+                <MudNavGroup Title="@StringLocalizer["ButtonMainMenuSettings"]">
                     <MudNavLink Href="settings/ffmpeg">FFmpeg</MudNavLink>
                     <MudNavLink Href="settings/logging">Logging</MudNavLink>
                     <MudNavLink Href="settings/hdhr">HDHomeRun</MudNavLink>
