@@ -8,6 +8,7 @@
 @using ErsatzTV.Core.Notifications
 @using ErsatzTV.Extensions
 @using MediatR.Courier
+@using Microsoft.Extensions.Localization
 @implements IDisposable
 @inject NavigationManager NavigationManager
 @inject IMediator Mediator
@@ -15,6 +16,7 @@
 @inject ISearchTargets SearchTargets;
 @inject ICourier Courier
 @inject IHealthCheckService HealthCheckService;
+@inject IStringLocalizer<Resources> StringLocalizer;
 
 <MudThemeProvider Theme="ErsatzTvTheme" IsDarkMode="_isDarkMode"/>
 <MudDialogProvider BackdropClick="false"/>
@@ -116,7 +118,7 @@
     {
         <MudDrawer @bind-Open="@_drawerIsOpen" Elevation="2" ClipMode="DrawerClipMode.Always">
             <MudNavMenu>
-                <MudNavLink Href="channels">Channels</MudNavLink>
+                <MudNavLink Href="channels">@StringLocalizer["ButtonMainMenuChannels"]</MudNavLink>
                 <MudNavLink Href="ffmpeg">FFmpeg Profiles</MudNavLink>
                 <MudNavLink Href="watermarks">Watermarks</MudNavLink>
                 <MudNavGroup Title="Media Sources">
@@ -286,7 +288,6 @@
 
         Courier.Subscribe<HealthCheckSummary>(HandleHealthCheckSummary);
         Courier.Subscribe<PlayoutUpdatedNotification>(HandlePlayoutUpdated);
-        Courier.Subscribe<ThemeUpdatedNotification>(HandleThemeUpdated);
     }
 
     protected override async Task OnInitializedAsync()
@@ -304,7 +305,6 @@
 
         Courier.UnSubscribe<HealthCheckSummary>(HandleHealthCheckSummary);
         Courier.UnSubscribe<PlayoutUpdatedNotification>(HandlePlayoutUpdated);
-        Courier.UnSubscribe<ThemeUpdatedNotification>(HandleThemeUpdated);
 
         _cts?.Cancel();
         _cts?.Dispose();
@@ -512,22 +512,6 @@
         try
         {
             _playoutWarnings = await Mediator.Send(new GetPlayoutWarningsCount(), cancellationToken);
-            await InvokeAsync(StateHasChanged);
-        }
-        catch (Exception)
-        {
-            // do nothing
-        }
-    }
-
-    private async Task HandleThemeUpdated(ThemeUpdatedNotification _, CancellationToken cancellationToken)
-    {
-        try
-        {
-            _isDarkMode = await Mediator.Send(new GetConfigElementByKey(ConfigElementKey.PagesIsDarkMode), cancellationToken)
-                .MapT(result => !bool.TryParse(result.Value, out bool value) || value)
-                .IfNoneAsync(true);
-
             await InvokeAsync(StateHasChanged);
         }
         catch (Exception)

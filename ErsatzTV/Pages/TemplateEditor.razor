@@ -61,7 +61,7 @@
                     @foreach (DateTime startTime in _startTimes)
                     {
                         <MudSelectItem Value="@startTime">
-                            @startTime.ToString(CultureInfo.CurrentUICulture.DateTimeFormat.ShortTimePattern)
+                            @startTime.ToString(CultureInfo.CurrentCulture.DateTimeFormat.ShortTimePattern)
                         </MudSelectItem>
                     }
                 </MudSelect>
@@ -104,7 +104,7 @@
                          ShowDatePicker="false"
                          ShowTodayButton="false"
                          DayTimeInterval="CalendarTimeInterval.Minutes10"
-                         Use24HourClock="@(CultureInfo.CurrentUICulture.DateTimeFormat.ShortTimePattern.Contains("H"))"
+                         Use24HourClock="@(CultureInfo.CurrentCulture.DateTimeFormat.ShortTimePattern.Contains("H"))"
                          EnableDragItems="true"
                          EnableResizeItems="false"
                          ItemChanged="@(ci => CalendarItemChanged(ci))"/>

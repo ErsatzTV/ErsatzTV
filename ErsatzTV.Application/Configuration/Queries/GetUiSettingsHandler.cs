@@ -12,9 +12,14 @@ public class GetUiSettingsHandler(IConfigElementRepository configElementReposito
             ConfigElementKey.PagesIsDarkMode,
             cancellationToken);
 
+        Option<string> pagesLanguage = await configElementRepository.GetValue<string>(
+            ConfigElementKey.PagesLanguage,
+            cancellationToken);
+
         return new UiSettingsViewModel
         {
-            PagesIsDarkMode = await pagesIsDarkMode.IfNoneAsync(true)
+            IsDarkMode = await pagesIsDarkMode.IfNoneAsync(true),
+            Language = await pagesLanguage.IfNoneAsync("en")
         };
     }
 }

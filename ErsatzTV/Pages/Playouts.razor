@@ -263,7 +263,7 @@
 @code {
     private CancellationTokenSource _cts;
 
-    private readonly DateTimeFormatInfo _dtf = CultureInfo.CurrentUICulture.DateTimeFormat;
+    private readonly DateTimeFormatInfo _dtf = CultureInfo.CurrentCulture.DateTimeFormat;
 
     private readonly List<PlayoutNameViewModel> _currentPage = [];
     private MudTable<PlayoutNameViewModel> _table;

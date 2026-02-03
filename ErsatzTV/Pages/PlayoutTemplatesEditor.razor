@@ -273,7 +273,7 @@
 @code {
     private CancellationTokenSource _cts;
 
-    private readonly DateTimeFormatInfo _dtf = CultureInfo.CurrentUICulture.DateTimeFormat;
+    private readonly DateTimeFormatInfo _dtf = CultureInfo.CurrentCulture.DateTimeFormat;
 
     [Parameter]
     public int Id { get; set; }

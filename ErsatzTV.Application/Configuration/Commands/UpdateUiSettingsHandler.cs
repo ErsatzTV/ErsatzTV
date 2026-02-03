@@ -18,8 +18,10 @@ public class UpdateUiSettingsHandler(IConfigElementRepository configElementRepos
     {
         await configElementRepository.Upsert(
             ConfigElementKey.PagesIsDarkMode,
-            uiSettings.PagesIsDarkMode,
+            uiSettings.IsDarkMode,
             cancellationToken);
+
+        await configElementRepository.Upsert(ConfigElementKey.PagesLanguage, uiSettings.Language, cancellationToken);
 
         return Unit.Default;
     }

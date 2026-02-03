@@ -4,6 +4,7 @@
 @implements IDisposable
 @inject IMediator Mediator
 @inject ISnackbar Snackbar
+@inject NavigationManager NavigationManager
 @inject ILogger<UISettings> Logger
 
 <MudForm Style="max-height: 100%">
@@ -16,11 +17,20 @@
             <MudDivider Class="mb-6"/>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                 <div class="d-flex">
-                    <MudText>Default Theme</MudText>
+                    <MudText>Theme</MudText>
                 </div>
-                <MudSelect @bind-Value="_uiSettings.PagesIsDarkMode">
+                <MudSelect @bind-Value="_uiSettings.IsDarkMode">
                     <MudSelectItem Value="@true">Dark</MudSelectItem>
                     <MudSelectItem Value="@false">Light</MudSelectItem>
+                </MudSelect>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Language</MudText>
+                </div>
+                <MudSelect @bind-Value="_uiSettings.Language">
+                    <MudSelectItem Value="@("en-us")">English</MudSelectItem>
+                    <MudSelectItem Value="@("pt-br")">Português (Brasil)</MudSelectItem>
                 </MudSelect>
             </MudStack>
         </MudContainer>
@@ -67,8 +77,7 @@
 
         if (result.IsRight)
         {
-            Snackbar.Add("Successfully saved UI settings", Severity.Success);
-            await Mediator.Publish(new ThemeUpdatedNotification(), _cts.Token);
+            NavigationManager.Refresh(true);
         }
     }
 
