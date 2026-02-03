@@ -1,0 +1,59 @@
+<root>
+    <resheader name="resmimetype">
+        <value>text/microsoft-resx</value>
+    </resheader>
+    <resheader name="version">
+        <value>1.3</value>
+    </resheader>
+    <resheader name="reader">
+        <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    </resheader>
+    <resheader name="writer">
+        <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    </resheader>
+    <data name="ButtonChannels" xml:space="preserve">
+        <value>Canais</value>
+    </data>
+    <data name="ButtonFFmpegProfiles" xml:space="preserve">
+        <value>Perfis FFmpeg</value>
+    </data>
+    <data name="ButtonWatermarks" xml:space="preserve">
+        <value>Marcas d'água</value>
+    </data>
+    <data name="ButtonMediaSources" xml:space="preserve">
+        <value>Fontes de mídia</value>
+    </data>
+    <data name="ButtonMedia" xml:space="preserve">
+        <value>Mídias</value>
+    </data>
+    <data name="ButtonLists" xml:space="preserve">
+        <value>Listas</value>
+    </data>
+    <data name="ButtonSettings" xml:space="preserve">
+        <value>Definições</value>
+    </data>
+    <data name="ButtonMediaTvShows" xml:space="preserve">
+        <value>Séries</value>
+    </data>
+    <data name="ButtonMediaTrash" xml:space="preserve">
+        <value>Lixo</value>
+    </data>
+    <data name="ButtonMediaMovies" xml:space="preserve">
+        <value>Filmes</value>
+    </data>
+    <data name="ButtonMediaMusic" xml:space="preserve">
+        <value>Vídeos de música</value>
+    </data>
+    <data name="ButtonMediaLibraries" xml:space="preserve">
+        <value>Bibliotecas</value>
+    </data>
+    <data name="ButtonSchedulingSchedules" xml:space="preserve">
+        <value>Horários</value>
+    </data>
+    <data name="ButtonListsFillerPresets" xml:space="preserve">
+        <value>Predefinições de preenchimento</value>
+    </data>
+    <data name="ButtonListsTraktLists" xml:space="preserve">
+        <value>Listas Trakt</value>
+    </data>
+</root>
