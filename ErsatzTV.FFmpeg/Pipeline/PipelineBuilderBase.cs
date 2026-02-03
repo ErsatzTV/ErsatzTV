@@ -211,6 +211,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
             new NoStandardInputOption(),
             new HideBannerOption(),
             new NoStatsOption(),
+            new ProgressOption(),
             new LoglevelErrorOption(),
             new StandardFormatFlags(),
             new NoDemuxDecodeDelayOutputOption(),

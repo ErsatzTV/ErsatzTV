@@ -2,10 +2,10 @@ using System.IO.Pipelines;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Text.RegularExpressions;
 using CliWrap;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.Locking;
 using ErsatzTV.Core.Interfaces.Streaming;
 using ErsatzTV.Core.Interfaces.Troubleshooting;
@@ -17,7 +17,7 @@ using Serilog.Events;
 
 namespace ErsatzTV.Application.Troubleshooting;
 
-public partial class StartTroubleshootingPlaybackHandler(
+public class StartTroubleshootingPlaybackHandler(
     ITroubleshootingNotifier notifier,
     IMediator mediator,
     IEntityLocker entityLocker,
@@ -138,9 +138,12 @@ public partial class StartTroubleshootingPlaybackHandler(
                         linkedCts.Token);
                 }
 
+                var progressParser = new FFmpegProgressParser();
+
                 CommandResult commandResult = await processWithPipe
                     .WithWorkingDirectory(FileSystemLayout.TranscodeTroubleshootingFolder)
                     .WithStandardErrorPipe(PipeTarget.Null)
+                    .WithStandardOutputPipe(PipeTarget.ToDelegate(progressParser.ParseLine))
                     .WithValidation(CommandResultValidation.None)
                     .ExecuteAsync(linkedCts.Token);
 
@@ -160,26 +163,11 @@ public partial class StartTroubleshootingPlaybackHandler(
                     // do nothing
                 }
 
-                Option<double> maybeSpeed =  Option<double>.None;
-                Option<string> maybeFile = Directory.GetFiles(FileSystemLayout.TranscodeTroubleshootingFolder, "ffmpeg*.log").HeadOrNone();
-                foreach (string file in maybeFile)
-                {
-                    await foreach (string line in File.ReadLinesAsync(file, linkedCts.Token))
-                    {
-                        Match match = FFmpegSpeed().Match(line);
-                        if (match.Success && double.TryParse(match.Groups[1].Value, out double speed))
-                        {
-                            maybeSpeed = speed;
-                            break;
-                        }
-                    }
-                }
-
                 await mediator.Publish(
                     new PlaybackTroubleshootingCompletedNotification(
                         commandResult.ExitCode,
                         Option<Exception>.None,
-                        maybeSpeed),
+                        progressParser.Speed),
                     linkedCts.Token);
 
                 if (commandResult.ExitCode != 0)
@@ -210,7 +198,4 @@ public partial class StartTroubleshootingPlaybackHandler(
             loggingLevelSwitches.StreamingLevelSwitch.MinimumLevel = currentStreamingLevel;
         }
     }
-
-    [GeneratedRegex(@"speed=\s*([\d\.]+)x", RegexOptions.IgnoreCase)]
-    private static partial Regex FFmpegSpeed();
 }
