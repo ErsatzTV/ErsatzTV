@@ -138,7 +138,7 @@ public class StartTroubleshootingPlaybackHandler(
                         linkedCts.Token);
                 }
 
-                var progressParser = new FFmpegProgressParser();
+                var progressParser = new FFmpegProgress();
 
                 CommandResult commandResult = await processWithPipe
                     .WithWorkingDirectory(FileSystemLayout.TranscodeTroubleshootingFolder)
@@ -148,6 +148,12 @@ public class StartTroubleshootingPlaybackHandler(
                     .ExecuteAsync(linkedCts.Token);
 
                 logger.LogDebug("Troubleshooting playback completed with exit code {ExitCode}", commandResult.ExitCode);
+
+                progressParser.LogSpeed(
+                    request.MediaItemInfo.Map(i => i.Id),
+                    true,
+                    FileSystemLayout.TranscodeTroubleshootingChannel,
+                    logger);
 
                 try
                 {
