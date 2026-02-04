@@ -111,6 +111,14 @@
           <Generator>ResXFileCodeGenerator</Generator>
           <LastGenOutput>MainLayout.Designer.cs</LastGenOutput>
         </EmbeddedResource>
+        <EmbeddedResource Update="Locals\Pages\Channels.resx">
+          <Generator>ResXFileCodeGenerator</Generator>
+          <LastGenOutput>Channels.Designer.cs</LastGenOutput>
+        </EmbeddedResource>
+        <EmbeddedResource Update="Locals\Shared\Common.resx">
+          <Generator>ResXFileCodeGenerator</Generator>
+          <LastGenOutput>Common.Designer.cs</LastGenOutput>
+        </EmbeddedResource>
     </ItemGroup>
 
     <ItemGroup>
@@ -137,6 +145,16 @@
         <DesignTime>True</DesignTime>
         <AutoGen>True</AutoGen>
         <DependentUpon>MainLayout.resx</DependentUpon>
+      </Compile>
+      <Compile Update="Locals\Pages\Channels.Designer.cs">
+        <DesignTime>True</DesignTime>
+        <AutoGen>True</AutoGen>
+        <DependentUpon>Channels.resx</DependentUpon>
+      </Compile>
+      <Compile Update="Locals\Shared\Common.Designer.cs">
+        <DesignTime>True</DesignTime>
+        <AutoGen>True</AutoGen>
+        <DependentUpon>Common.resx</DependentUpon>
       </Compile>
     </ItemGroup>
 

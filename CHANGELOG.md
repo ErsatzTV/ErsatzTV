@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Add log warnings when actual transcoding speed is potentially insufficient to support smooth playback
   - Log messages will include media item id, channel number and transcoding speed
 - Add UI language setting to **Settings** > **UI**
-  - A small number of menu translations have been added for `Português (Brasil)`
+  - A small number of translations have been added for `Português (Brasil)` and `Polski`
   - Translation contributions are always welcome!
 
 ### Changed
