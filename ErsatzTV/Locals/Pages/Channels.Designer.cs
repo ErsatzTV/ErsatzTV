@@ -105,12 +105,6 @@ namespace ErsatzTV.Locals.Pages {
             }
         }
         
-        internal static string LabelRowsPerPage {
-            get {
-                return ResourceManager.GetString("LabelRowsPerPage", resourceCulture);
-            }
-        }
-        
         internal static string LabelChannelDisabledHelp {
             get {
                 return ResourceManager.GetString("LabelChannelDisabledHelp", resourceCulture);

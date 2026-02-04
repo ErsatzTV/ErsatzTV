@@ -90,7 +90,7 @@
                     </MudTd>
                     <MudTd DataLabel="@Loc["LabelName"]">@context.Name</MudTd>
                     <MudTd DataLabel="@Loc["LabelLanguage"]">@context.PreferredAudioLanguageCode</MudTd>
-                    <MudTd DataLabel="@Loc["LabelMode"]">@GetStreamingMode(context.StreamingMode)</MudTd>
+                    <MudTd DataLabel="@Loc["LabelStreamingMode"]">@GetStreamingMode(context.StreamingMode)</MudTd>
                     <MudTd DataLabel="@Loc["LabelFFmpegProfile"]">
                         @if (context.StreamingMode != StreamingMode.HttpLiveStreamingDirect)
                         {

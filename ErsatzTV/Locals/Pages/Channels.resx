@@ -48,9 +48,6 @@
     <data name="LabelFFmpegProfile" xml:space="preserve">
         <value>FFmpeg Profile</value>
     </data>
-    <data name="LabelRowsPerPage" xml:space="preserve">
-        <value>Rows per page</value>
-    </data>
     <data name="LabelChannelDisabledHelp" xml:space="preserve">
         <value>Channel is disabled</value>
     </data>
