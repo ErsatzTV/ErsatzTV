@@ -29,9 +29,10 @@
                     <MudText>Language</MudText>
                 </div>
                 <MudSelect @bind-Value="_uiSettings.Language">
-                    <MudSelectItem Value="@("en-us")">English</MudSelectItem>
-                    <MudSelectItem Value="@("pl")">Polski</MudSelectItem>
-                    <MudSelectItem Value="@("pt-br")">Português (Brasil)</MudSelectItem>
+                    @foreach (Localization.CultureLanguage cultureLanguage in Localization.SupportedLanguages)
+                    {
+                        <MudSelectItem Value="@cultureLanguage.Culture">@cultureLanguage.Language</MudSelectItem>
+                    }
                 </MudSelect>
             </MudStack>
         </MudContainer>
