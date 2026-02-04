@@ -1,0 +1,197 @@
+<root>
+    <resheader name="resmimetype">
+        <value>text/microsoft-resx</value>
+    </resheader>
+    <resheader name="version">
+        <value>1.3</value>
+    </resheader>
+    <resheader name="reader">
+        <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    </resheader>
+    <resheader name="writer">
+        <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    </resheader>
+    <data name="ButtonChannels" xml:space="preserve">
+        <value>Kanały</value>
+    </data>
+    <data name="ButtonFFmpegProfiles" xml:space="preserve">
+        <value>Profile FFmpeg</value>
+    </data>
+    <data name="ButtonWatermarks" xml:space="preserve">
+        <value>Znaki wodne</value>
+    </data>
+    <data name="ButtonMediaSources" xml:space="preserve">
+        <value>Źródła multimediów</value>
+    </data>
+    <data name="ButtonMedia" xml:space="preserve">
+        <value>Multimedia</value>
+    </data>
+    <data name="ButtonLists" xml:space="preserve">
+        <value>Listy</value>
+    </data>
+    <data name="ButtonSettings" xml:space="preserve">
+        <value>Ustawienia</value>
+    </data>
+    <data name="ButtonMediaSourcesLocal" xml:space="preserve">
+        <value>Lokalne</value>
+    </data>
+    <data name="ButtonMediaSourcesEmby" xml:space="preserve">
+        <value>Emby</value>
+    </data>
+    <data name="ButtonMediaSourcesJellyfin" xml:space="preserve">
+        <value>Jellyfin</value>
+    </data>
+    <data name="ButtonMediaSourcesPlex" xml:space="preserve">
+        <value>Plex</value>
+    </data>
+    <data name="ButtonMediaLibraries" xml:space="preserve">
+        <value>Biblioteki</value>
+    </data>
+    <data name="ButtonMediaTrash" xml:space="preserve">
+        <value>Kosz</value>
+    </data>
+    <data name="ButtonMediaTvShows" xml:space="preserve">
+        <value>Seriale</value>
+    </data>
+    <data name="ButtonMediaMovies" xml:space="preserve">
+        <value>Filmy</value>
+    </data>
+    <data name="ButtonMediaMusic" xml:space="preserve">
+        <value>Muzyka</value>
+    </data>
+    <data name="ButtonMediaOtherVideos" xml:space="preserve">
+        <value>Inne wideo</value>
+    </data>
+    <data name="ButtonMediaSongs" xml:space="preserve">
+        <value>Utwory</value>
+    </data>
+    <data name="ButtonMediaImages" xml:space="preserve">
+        <value>Obrazy</value>
+    </data>
+    <data name="ButtonMediaRemoteStreams" xml:space="preserve">
+        <value>Strumienie zdalne</value>
+    </data>
+    <data name="ButtonListsManualCollections" xml:space="preserve">
+        <value>Kolekcje ręczne</value>
+    </data>
+    <data name="ButtonListsSmartCollections" xml:space="preserve">
+        <value>Inteligentne kolekcje</value>
+    </data>
+    <data name="ButtonListsMultiCollections" xml:space="preserve">
+        <value>Multikolekcje</value>
+    </data>
+    <data name="ButtonListsRerunCollections" xml:space="preserve">
+        <value>Kolekcje powtórek</value>
+    </data>
+    <data name="ButtonListsPlaylists" xml:space="preserve">
+        <value>Playlisty</value>
+    </data>
+    <data name="ButtonListsTraktLists" xml:space="preserve">
+        <value>Listy Trakt</value>
+    </data>
+    <data name="ButtonListsFillerPresets" xml:space="preserve">
+        <value>Szablony wypełniaczy</value>
+    </data>
+    <data name="ButtonScheduling" xml:space="preserve">
+        <value>Planowanie</value>
+    </data>
+    <data name="ButtonSchedulingSchedules" xml:space="preserve">
+        <value>Harmonogramy</value>
+    </data>
+    <data name="ButtonSchedulingBlocks" xml:space="preserve">
+        <value>Bloki</value>
+    </data>
+    <data name="ButtonSchedulingTemplates" xml:space="preserve">
+        <value>Szablony</value>
+    </data>
+    <data name="ButtonSchedulingDecos" xml:space="preserve">
+        <value>Dekoracje</value>
+    </data>
+    <data name="ButtonSchedulingDecoTemplates" xml:space="preserve">
+        <value>Szablony dekoracji</value>
+    </data>
+    <data name="ButtonSchedulingPlayouts" xml:space="preserve">
+        <value>Plany emisji</value>
+    </data>
+    <data name="ButtonSettingsFFmpeg" xml:space="preserve">
+        <value>FFmpeg</value>
+    </data>
+    <data name="ButtonSettingsLogging" xml:space="preserve">
+        <value>Dzienniki zdarzeń</value>
+    </data>
+    <data name="ButtonSettingsHdHomeRun" xml:space="preserve">
+        <value>HDHomeRun</value>
+    </data>
+    <data name="ButtonSettingsScanner" xml:space="preserve">
+        <value>Skaner</value>
+    </data>
+    <data name="ButtonSettingsPlayout" xml:space="preserve">
+        <value>Emisja</value>
+    </data>
+    <data name="ButtonSettingsUi" xml:space="preserve">
+        <value>Interfejs</value>
+    </data>
+    <data name="ButtonSettingsXmltv" xml:space="preserve">
+        <value>XMLTV</value>
+    </data>
+    <data name="ButtonSupport" xml:space="preserve">
+        <value>Pomoc</value>
+    </data>
+    <data name="ButtonSupportHealthChecks" xml:space="preserve">
+        <value>Diagnostyka</value>
+    </data>
+    <data name="ButtonSupportLogs" xml:space="preserve">
+        <value>Logi</value>
+    </data>
+    <data name="ButtonSupportTroubleshooting" xml:space="preserve">
+        <value>Rozwiązywanie problemów</value>
+    </data>
+    <data name="LabelErsatzTVVersion" xml:space="preserve">
+        <value>Wersja ErsatzTV</value>
+    </data>
+    <data name="LabelSearchTargetChannel" xml:space="preserve">
+        <value>Kanał</value>
+    </data>
+    <data name="LabelSearchTargetFFmpegProfile" xml:space="preserve">
+        <value>Profil FFmpeg</value>
+    </data>
+    <data name="LabelSearchTargetChannelWatermark" xml:space="preserve">
+        <value>Znak wodny kanału</value>
+    </data>
+    <data name="LabelSearchTargetCollection" xml:space="preserve">
+        <value>Kolekcja</value>
+    </data>
+    <data name="LabelSearchTargetMultiCollection" xml:space="preserve">
+        <value>Multikolekcja</value>
+    </data>
+    <data name="LabelSearchTargetSmartCollection" xml:space="preserve">
+        <value>Inteligentna kolekcja</value>
+    </data>
+    <data name="LabelSearchTargetSchedule" xml:space="preserve">
+        <value>Harmonogram</value>
+    </data>
+    <data name="LabelSearchTargetScheduleItems" xml:space="preserve">
+        <value>Pozycje harmonogramu</value>
+    </data>
+    <data name="ButtonM3U" xml:space="preserve">
+        <value>M3U</value>
+    </data>
+    <data name="ButtonXmltv" xml:space="preserve">
+        <value>XMLTV</value>
+    </data>
+    <data name="ButtonApi" xml:space="preserve">
+        <value>API</value>
+    </data>
+    <data name="ButtonDocumentation" xml:space="preserve">
+        <value>Dokumentacja</value>
+    </data>
+    <data name="ButtonDiscord" xml:space="preserve">
+        <value>Discord</value>
+    </data>
+    <data name="ButtonGitHub" xml:space="preserve">
+        <value>GitHub</value>
+    </data>
+    <data name="ButtonLogout" xml:space="preserve">
+        <value>Wyloguj</value>
+    </data>
+</root>
