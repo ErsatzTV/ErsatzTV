@@ -10,19 +10,22 @@
 @inject IMediator Mediator
 @inject NavigationManager NavigationManager
 @inject IFFmpegSegmenterService SegmenterService
+@inject IStringLocalizer<ErsatzTV.Locals.Pages.Channels> Loc;
+@inject IStringLocalizer<ErsatzTV.Locals.Shared.Common> CommonLoc;
+@inject IStringLocalizer<ErsatzTV.Locals.Shared.MainLayout> MainLayoutLoc;
 
 <MudForm Style="max-height: 100%">
     <MudPaper Square="true" Style="display: flex; height: 64px; min-height: 64px; width: 100%; z-index: 100; align-items: center">
         <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-6" StartIcon="@Icons.Material.Filled.Add" Href="channels/add">
-            Add Channel
+            @Loc["ButtonAddChannel"]
         </MudButton>
         <MudButton Variant="Variant.Filled" Color="Color.Secondary" Class="ml-3" StartIcon="@Icons.Material.Filled.Edit" Href="channels/numbers">
-            Edit Channel Numbers
+            @Loc["ButtonEditChannelNumbers"]
         </MudButton>
     </MudPaper>
     <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
         <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-            <MudText Typo="Typo.h5" Class="mb-2">Channels</MudText>
+            <MudText Typo="Typo.h5" Class="mb-2">@MainLayoutLoc["ButtonChannels"]</MudText>
             <MudDivider Class="mb-6"/>
             <MudTable Hover="true"
                       @bind-RowsPerPage="@_rowsPerPage"
@@ -30,7 +33,7 @@
                       @ref="_table"
                       RowClassFunc="ChannelRowClassFunc">
                 <ToolBarContent>
-                    <MudSwitch T="bool" Class="ml-6" @bind-Value="@ShowDisabled" Color="Color.Secondary" Label="Show Disabled"/>
+                    <MudSwitch T="bool" Class="ml-6" @bind-Value="@ShowDisabled" Color="Color.Secondary" Label="@Loc["ButtonShowDisabled"]"/>
                 </ToolBarContent>
                 <ColGroup>
                     <MudHidden Breakpoint="Breakpoint.Xs">
@@ -45,29 +48,29 @@
                 </ColGroup>
                 <HeaderContent>
                     <MudTh>
-                        <MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<ChannelViewModel, object>(x => decimal.Parse(x.Number, CultureInfo.InvariantCulture))">Number</MudTableSortLabel>
+                        <MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<ChannelViewModel, object>(x => decimal.Parse(x.Number, CultureInfo.InvariantCulture))">@Loc["LabelNumber"]</MudTableSortLabel>
                     </MudTh>
-                    <MudTh>Logo</MudTh>
+                    <MudTh>@Loc["LabelLogo"]</MudTh>
                     <MudTh>
-                        <MudTableSortLabel SortBy="new Func<ChannelViewModel, object>(x => x.Name)">Name</MudTableSortLabel>
+                        <MudTableSortLabel SortBy="new Func<ChannelViewModel, object>(x => x.Name)">@Loc["LabelName"]</MudTableSortLabel>
                     </MudTh>
-                    <MudTh>Language</MudTh>
-                    <MudTh>Mode</MudTh>
-                    <MudTh>FFmpeg Profile</MudTh>
+                    <MudTh>@Loc["LabelLanguage"]</MudTh>
+                    <MudTh>@Loc["LabelStreamingMode"]</MudTh>
+                    <MudTh>@Loc["LabelFFmpegProfile"]</MudTh>
                     <MudTh/>
                 </HeaderContent>
                 <RowTemplate>
-                    <MudTd DataLabel="Number">
+                    <MudTd DataLabel="@Loc["LabelNumber"]">
                         @if (!context.IsEnabled)
                         {
-                            <MudTooltip Text="Channel is disabled">
-                                @($"(D) {context.Number}")
+                            <MudTooltip Text="@Loc["LabelChannelDisabledHelp"]">
+                                @($"({Loc["LabelChannelDisabledAbbreviation"]}) {context.Number}")
                             </MudTooltip>
                         }
                         else if (!context.ShowInEpg)
                         {
-                            <MudTooltip Text="Channel is hidden from EPG">
-                                @($"(H) {context.Number}")
+                            <MudTooltip Text="@Loc["LabelChannelHiddenHelp"]">
+                                @($"({Loc["LabelChannelHiddenAbbreviation"]}) {context.Number}")
                             </MudTooltip>
                         }
                         else
@@ -75,7 +78,7 @@
                             @context.Number
                         }
                     </MudTd>
-                    <MudTd DataLabel="Logo">
+                    <MudTd DataLabel="@Loc["LabelLogo"]">
                         @if (!string.IsNullOrWhiteSpace(context.Logo?.Path))
                         {
                             <MudElement HtmlTag="img" src="@context.Logo.UrlWithContentType" Style="max-height: 50px"/>
@@ -85,10 +88,10 @@
                             <MudElement HtmlTag="img" src="@($"iptv/logos/gen?text={context.WebEncodedName}")" Style="max-height: 50px"/>
                         }
                     </MudTd>
-                    <MudTd DataLabel="Name">@context.Name</MudTd>
-                    <MudTd DataLabel="Language">@context.PreferredAudioLanguageCode</MudTd>
-                    <MudTd DataLabel="Mode">@GetStreamingMode(context.StreamingMode)</MudTd>
-                    <MudTd DataLabel="FFmpeg Profile">
+                    <MudTd DataLabel="@Loc["LabelName"]">@context.Name</MudTd>
+                    <MudTd DataLabel="@Loc["LabelLanguage"]">@context.PreferredAudioLanguageCode</MudTd>
+                    <MudTd DataLabel="@Loc["LabelMode"]">@GetStreamingMode(context.StreamingMode)</MudTd>
+                    <MudTd DataLabel="@Loc["LabelFFmpegProfile"]">
                         @if (context.StreamingMode != StreamingMode.HttpLiveStreamingDirect)
                         {
                             @_ffmpegProfiles.Find(p => p.Id == context.FFmpegProfileId)?.Name
@@ -102,7 +105,7 @@
                                 bool notNormalizing = maybeProfile.Any(p => !p.NormalizeVideo || !p.NormalizeAudio);
                                 if (notNormalizing)
                                 {
-                                    <MudTooltip Text="Preview Channel; audio and/or video may not work without normalization">
+                                    <MudTooltip Text="@Loc["ButtonPreviewChannelHelpNormalize"]">
                                         <MudIconButton Icon="@Icons.Material.Filled.PlayCircle"
                                                        OnClick="@(_ => PreviewChannel(context))"
                                                        Style="color: var(--mud-palette-warning-lighten);">
@@ -111,7 +114,7 @@
                                 }
                                 else
                                 {
-                                    <MudTooltip Text="Preview Channel">
+                                    <MudTooltip Text="@Loc["ButtonPreviewChannelHelp"]">
                                         <MudIconButton Icon="@Icons.Material.Filled.PlayCircle"
                                                        OnClick="@(_ => PreviewChannel(context))">
                                         </MudIconButton>
@@ -120,7 +123,7 @@
                             }
                             else if (CanPreviewChannel(context) && _ffmpegProfilesThatCanPreview.ContainsKey(context.FFmpegProfileId) && !_ffmpegProfilesThatCanPreview[context.FFmpegProfileId])
                             {
-                                <MudTooltip Text="Channel preview requires FFmpeg Profile compatible with this browser">
+                                <MudTooltip Text="@Loc["ButtonPreviewChannelHelpBrowser"]">
                                     <div style="height: 48px; width: 48px; align-items: center; display: flex; justify-content: center">
                                         <!--suppress CssUnresolvedCustomProperty -->
                                         <MudIcon Icon="@Icons.Material.Filled.PlayCircle" Style="color: var(--mud-palette-error-lighten);">
@@ -130,14 +133,14 @@
                             }
                             else
                             {
-                                <MudTooltip Text="Channel preview requires playout, MPEG-TS/HLS Segmenter, and compatible FFmpeg Profile">
+                                <MudTooltip Text="@Loc["ButtonPreviewChannelHelpSettings"]">
                                     <MudIconButton Icon="@Icons.Material.Filled.PlayCircle" Disabled="true">
                                     </MudIconButton>
                                 </MudTooltip>
                             }
                             @if (SegmenterService.IsActive(context.Number))
                             {
-                                <MudTooltip Text="Stop Transcode Session">
+                                <MudTooltip Text="@Loc["ButtonStopTranscodeHelp"]">
                                     <MudIconButton Icon="@Icons.Material.Filled.Stop"
                                                    OnClick="@(_ => StopChannel(context))">
                                     </MudIconButton>
@@ -147,14 +150,14 @@
                             {
                                 <div style="width: 48px"></div>
                             }
-                            <MudTooltip Text="Edit Channel">
+                            <MudTooltip Text="@Loc["ButtonEditChannelHelp"]">
                                 <MudIconButton Icon="@Icons.Material.Filled.Edit"
                                                Href="@($"channels/{context.Id}")">
                                 </MudIconButton>
                             </MudTooltip>
                             @if (context.PlayoutCount > 0 && context.IsEnabled)
                             {
-                                <MudTooltip Text="Troubleshoot Channel">
+                                <MudTooltip Text="@Loc["ButtonTroubleshootChannelHelp"]">
                                     <MudIconButton Icon="@Icons.Material.Filled.Troubleshoot"
                                                    Href="@($"system/troubleshooting/playback?channel={context.Id}")">
                                     </MudIconButton>
@@ -164,7 +167,7 @@
                             {
                                 <div style="width: 48px"></div>
                             }
-                            <MudTooltip Text="Delete Channel">
+                            <MudTooltip Text="@Loc["ButtonDeleteChannelHelp"]">
                                 <MudIconButton Icon="@Icons.Material.Filled.Delete"
                                                OnClick="@(_ => DeleteChannelAsync(context))">
                                 </MudIconButton>
@@ -173,7 +176,7 @@
                     </MudTd>
                 </RowTemplate>
                 <PagerContent>
-                    <MudTablePager/>
+                    <MudTablePager RowsPerPageString="@CommonLoc["LabelRowsPerPage"]" />
                 </PagerContent>
             </MudTable>
         </MudContainer>
