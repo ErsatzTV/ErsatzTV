@@ -799,5 +799,7 @@ public class PlayoutModeSchedulerBaseTests : SchedulerTestBase
             Random random,
             CancellationToken cancellationToken) =>
             throw new NotSupportedException();
+
+        protected override string SchedulingContextName => "Test";
     }
 }

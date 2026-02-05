@@ -6,6 +6,7 @@ namespace ErsatzTV.Core.Scheduling;
 
 public class SingleMediaItemEnumerator(MediaItem mediaItem) : IMediaCollectionEnumerator
 {
+    public string SchedulingContextName => "Single";
     public CollectionEnumeratorState State { get; } = new();
     public Option<MediaItem> Current => mediaItem;
     public Option<bool> CurrentIncludeInProgramGuide => Option<bool>.None;

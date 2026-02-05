@@ -4,6 +4,7 @@ namespace ErsatzTV.Core.Interfaces.Scheduling;
 
 public interface IMediaCollectionEnumerator
 {
+    string SchedulingContextName { get; }
     CollectionEnumeratorState State { get; }
     Option<MediaItem> Current { get; }
     Option<bool> CurrentIncludeInProgramGuide { get; }

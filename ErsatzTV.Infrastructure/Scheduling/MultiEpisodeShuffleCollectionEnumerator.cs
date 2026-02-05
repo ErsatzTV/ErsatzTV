@@ -102,6 +102,8 @@ public class MultiEpisodeShuffleCollectionEnumerator : IMediaCollectionEnumerato
         State.Index = state.Index;
     }
 
+    public string SchedulingContextName => "Multi-Episode Shuffle";
+
     public CollectionEnumeratorState State { get; }
 
     public Option<MediaItem> Current => _shuffled.Any() ? _shuffled[State.Index % _mediaItemCount] : None;

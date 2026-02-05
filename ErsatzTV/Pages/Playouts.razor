@@ -243,12 +243,25 @@
                             <MudTh>Finish</MudTh>
                             <MudTh>Media Item</MudTh>
                             <MudTh>Duration</MudTh>
+                            <MudTh />
                         </HeaderContent>
                         <RowTemplate>
                             <MudTd DataLabel="Start">@context.Start.ToString("G", _dtf)</MudTd>
                             <MudTd DataLabel="Finish">@context.Finish.ToString("G", _dtf)</MudTd>
                             <MudTd DataLabel="Media Item">@context.Title</MudTd>
                             <MudTd DataLabel="Duration">@context.Duration</MudTd>
+                            <MudTd>
+                                @if (!string.IsNullOrWhiteSpace(context.SchedulingContext))
+                                {
+                                    <div style="align-items: center; display: flex;">
+                                        <MudTooltip Text="Troubleshoot">
+                                            <MudIconButton Icon="@Icons.Material.Filled.Info"
+                                                           OnClick="@(_ => ShowSchedulingContext(context))">
+                                            </MudIconButton>
+                                        </MudTooltip>
+                                    </div>
+                                }
+                            </MudTd>
                         </RowTemplate>
                         <PagerContent>
                             <MudTablePager/>
@@ -504,6 +517,14 @@
         }
 
         return string.Empty;
+    }
+
+    private async Task ShowSchedulingContext(PlayoutItemViewModel item)
+    {
+        var parameters = new DialogParameters { { "PlayoutItem", item } };
+        var options = new DialogOptions { CloseButton = true, CloseOnEscapeKey = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
+        IDialogReference dialog = await Dialog.ShowAsync<SchedulingContextDialog>(item.Title, parameters, options);
+        DialogResult _ = await dialog.Result;
     }
 
 }

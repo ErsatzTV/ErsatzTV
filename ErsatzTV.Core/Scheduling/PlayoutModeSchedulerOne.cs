@@ -56,7 +56,8 @@ public class PlayoutModeSchedulerOne(ILogger logger) : PlayoutModeSchedulerBase<
                 PreferredSubtitleLanguageCode = scheduleItem.PreferredSubtitleLanguageCode,
                 SubtitleMode = scheduleItem.SubtitleMode,
                 PlayoutItemWatermarks = [],
-                PlayoutItemGraphicsElements = []
+                PlayoutItemGraphicsElements = [],
+                SchedulingContext = GetSchedulingContext(scheduleItem, contentEnumerator)
             };
 
             foreach (ProgramScheduleItemWatermark programScheduleItemWatermark in scheduleItem
@@ -137,4 +138,6 @@ public class PlayoutModeSchedulerOne(ILogger logger) : PlayoutModeSchedulerBase<
 
         return new PlayoutSchedulerResult(playoutBuilderState, [], warnings);
     }
+
+    protected override string SchedulingContextName => "One";
 }

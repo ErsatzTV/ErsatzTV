@@ -107,7 +107,8 @@ public class PlayoutModeSchedulerMultiple(Map<CollectionKey, int> collectionItem
                 PreferredSubtitleLanguageCode = scheduleItem.PreferredSubtitleLanguageCode,
                 SubtitleMode = scheduleItem.SubtitleMode,
                 PlayoutItemWatermarks = [],
-                PlayoutItemGraphicsElements = []
+                PlayoutItemGraphicsElements = [],
+                SchedulingContext = GetSchedulingContext(scheduleItem, contentEnumerator)
             };
 
             foreach (ProgramScheduleItemWatermark programScheduleItemWatermark in scheduleItem
@@ -206,4 +207,6 @@ public class PlayoutModeSchedulerMultiple(Map<CollectionKey, int> collectionItem
 
         return new PlayoutSchedulerResult(nextState, playoutItems, warnings);
     }
+
+    protected override string SchedulingContextName => "Multiple";
 }

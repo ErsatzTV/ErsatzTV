@@ -16,6 +16,8 @@ public class RerunMediaCollectionEnumerator : IMediaCollectionEnumerator
         _rerunHelper = rerunHelper;
     }
 
+    public string SchedulingContextName => "Rerun";
+
     public CollectionEnumeratorState State => _enumerator.State;
     public Option<MediaItem> Current
     {

@@ -35,6 +35,8 @@ public class PlaylistEnumerator : IMediaCollectionEnumerator
         // seed doesn't matter here
         State.Index = state.Index;
 
+    public string SchedulingContextName => "Playlist";
+
     public CollectionEnumeratorState State { get; private set; }
 
     public Option<MediaItem> Current => _sortedEnumerators.Count > 0

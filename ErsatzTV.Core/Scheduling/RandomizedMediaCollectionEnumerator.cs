@@ -41,6 +41,8 @@ public class RandomizedMediaCollectionEnumerator : IMediaCollectionEnumerator
         // seed never changes here, no need to reset
         State.Index = state.Index;
 
+    public string SchedulingContextName => "Random";
+
     public CollectionEnumeratorState State { get; }
 
     public Option<MediaItem> Current => _mediaItems.Any() ? _mediaItems[_index] : None;

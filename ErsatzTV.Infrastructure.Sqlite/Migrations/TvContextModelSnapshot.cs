@@ -1999,6 +1999,9 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Property<string>("PreferredSubtitleLanguageCode")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("SchedulingContext")
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime>("Start")
                         .HasColumnType("TEXT");
 

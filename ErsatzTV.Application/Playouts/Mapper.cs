@@ -23,6 +23,7 @@ internal static class Mapper
             playoutItem.StartOffset,
             playoutItem.FinishOffset,
             playoutItem.GetDisplayDuration(),
+            playoutItem.SchedulingContext,
             Some(playoutItem.FillerKind));
 
     internal static PlayoutAlternateScheduleViewModel ProjectToViewModel(

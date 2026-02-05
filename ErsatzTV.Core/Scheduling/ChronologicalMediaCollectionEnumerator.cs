@@ -40,6 +40,8 @@ public sealed class ChronologicalMediaCollectionEnumerator : IMediaCollectionEnu
         // seed doesn't matter in chronological
         State.Index = state.Index;
 
+    public string SchedulingContextName => "Chronological";
+
     public CollectionEnumeratorState State { get; }
 
     public Option<MediaItem> Current => _sortedMediaItems.Count != 0 ? _sortedMediaItems[State.Index] : None;

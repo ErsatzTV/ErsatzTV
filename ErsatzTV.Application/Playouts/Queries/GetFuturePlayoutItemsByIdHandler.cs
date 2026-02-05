@@ -113,6 +113,7 @@ public class GetFuturePlayoutItemsByIdHandler(IDbContextFactory<TvContext> dbCon
                         TimeSpan.FromSeconds(Math.Round(gapDuration.TotalSeconds)).ToString(
                             gapDuration.TotalHours >= 1 ? @"h\:mm\:ss" : @"mm\:ss",
                             CultureInfo.CurrentCulture.DateTimeFormat),
+                        string.Empty,
                         None
                     );
                 }).ToList();

@@ -10,6 +10,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Add UI language setting to **Settings** > **UI**
   - A small number of translations have been added for `Português (Brasil)` and `Polski`
   - Translation contributions are always welcome!
+- Classic Schedules: add `Troubleshoot` button to playout details table to show info that may be helpful in determining the source of a playout item
+  - Info includes schedule, schedule item, scheduler, playback order, random seed, collection index
+  - E.g. items with the same random seed are part of the same shuffle
 
 ### Changed
 - Move dark/light mode toggle to **Settings** > **UI**

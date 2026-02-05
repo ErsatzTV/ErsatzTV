@@ -1,4 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Extensions;
@@ -13,6 +15,14 @@ namespace ErsatzTV.Core.Scheduling;
 public abstract class PlayoutModeSchedulerBase<T>(ILogger logger) : IPlayoutModeScheduler<T>
     where T : ProgramScheduleItem
 {
+    // ReSharper disable once StaticMemberInGenericType
+    private static readonly JsonSerializerOptions Options = new()
+    {
+        Converters = { new JsonStringEnumConverter() },
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+        WriteIndented = true
+    };
+
     private readonly Random _random = new();
 
     protected ILogger Logger { get; } = logger;
@@ -898,5 +908,20 @@ public abstract class PlayoutModeSchedulerBase<T>(ILogger logger) : IPlayoutMode
         }
 
         return result;
+    }
+
+    protected abstract string SchedulingContextName { get; }
+
+    protected string GetSchedulingContext(ProgramScheduleItem scheduleItem, IMediaCollectionEnumerator enumerator)
+    {
+        var context = new SchedulingContext(
+            SchedulingContextName,
+            scheduleItem.ProgramScheduleId,
+            scheduleItem.Id,
+            enumerator.SchedulingContextName,
+            enumerator.State.Seed,
+            enumerator.State.Index);
+
+        return JsonSerializer.Serialize(context, Options);
     }
 }
