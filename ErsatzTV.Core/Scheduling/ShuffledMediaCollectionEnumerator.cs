@@ -52,6 +52,7 @@ public class ShuffledMediaCollectionEnumerator : IMediaCollectionEnumerator
             _shuffled = Shuffle(_mediaItems, _random);
         }
 
+        State.Seed = state.Seed;
         State.Index = state.Index;
     }
 
@@ -62,6 +63,11 @@ public class ShuffledMediaCollectionEnumerator : IMediaCollectionEnumerator
 
     public void MoveNext(Option<DateTimeOffset> scheduledAt)
     {
+        if (_mediaItemCount == 0)
+        {
+            return;
+        }
+
         if ((State.Index + 1) % _mediaItemCount == 0)
         {
             Option<MediaItem> tail = Current;
@@ -73,14 +79,17 @@ public class ShuffledMediaCollectionEnumerator : IMediaCollectionEnumerator
                 _random = new CloneableRandom(State.Seed);
                 _shuffled = Shuffle(_mediaItems, _random);
             } while (!_cancellationToken.IsCancellationRequested && _mediaItems.Count > 1 &&
-                     Current.Map(x => x.Id) == tail.Map(x => x.Id));
+                     _shuffled.Count > 0 && Current.Map(x => x.Id) == tail.Map(x => x.Id));
         }
         else
         {
             State.Index++;
         }
 
-        State.Index %= _mediaItemCount;
+        if (_mediaItemCount > 0)
+        {
+            State.Index %= _mediaItemCount;
+        }
     }
 
     public Option<TimeSpan> MinimumDuration => _lazyMinimumDuration.Value;

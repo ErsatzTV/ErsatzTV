@@ -14,6 +14,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 - Move dark/light mode toggle to **Settings** > **UI**
 
+### Fixed
+- Improve stability of playback orders `Shuffle` and `Shuffle in Order` over time
+
 ## [26.2.0] - 2026-02-02
 ### Added
 - Channel stream selector: add zero-based culture-specific `day_of_week` to `content_condition`, for example:
