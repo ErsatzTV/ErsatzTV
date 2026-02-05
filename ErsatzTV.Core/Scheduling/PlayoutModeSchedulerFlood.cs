@@ -80,7 +80,8 @@ public class PlayoutModeSchedulerFlood(ILogger logger) : PlayoutModeSchedulerBas
                 PreferredSubtitleLanguageCode = scheduleItem.PreferredSubtitleLanguageCode,
                 SubtitleMode = scheduleItem.SubtitleMode,
                 PlayoutItemWatermarks = [],
-                PlayoutItemGraphicsElements = []
+                PlayoutItemGraphicsElements = [],
+                SchedulingContext = GetSchedulingContext(scheduleItem, contentEnumerator)
             };
 
             foreach (ProgramScheduleItemWatermark programScheduleItemWatermark in scheduleItem
@@ -205,4 +206,6 @@ public class PlayoutModeSchedulerFlood(ILogger logger) : PlayoutModeSchedulerBas
 
         return new PlayoutSchedulerResult(nextState, playoutItems, warnings);
     }
+
+    protected override string SchedulingContextName => "Flood";
 }

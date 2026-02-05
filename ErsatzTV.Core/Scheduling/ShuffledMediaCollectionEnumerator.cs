@@ -56,6 +56,8 @@ public class ShuffledMediaCollectionEnumerator : IMediaCollectionEnumerator
         State.Index = state.Index;
     }
 
+    public string SchedulingContextName => "Shuffle";
+
     public CollectionEnumeratorState State { get; }
 
     public Option<MediaItem> Current => _shuffled.Any() ? _shuffled[State.Index % _mediaItemCount] : None;

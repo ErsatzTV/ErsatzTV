@@ -40,6 +40,8 @@ public class BlockPlayoutShuffledMediaCollectionEnumerator : IMediaCollectionEnu
         }
     }
 
+    public string SchedulingContextName => "Block Shuffle";
+
     public CollectionEnumeratorState State { get; }
 
     public Option<MediaItem> Current => _shuffled.Any() ? _shuffled[State.Index % _mediaItemCount] : None;

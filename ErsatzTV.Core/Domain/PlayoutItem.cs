@@ -37,6 +37,9 @@ public class PlayoutItem
     public DateTimeOffset StartOffset => new DateTimeOffset(Start, TimeSpan.Zero).ToLocalTime();
     public DateTimeOffset FinishOffset => new DateTimeOffset(Finish, TimeSpan.Zero).ToLocalTime();
 
+    // for troubleshooting
+    public string SchedulingContext { get; set; }
+
     public DateTimeOffset? GuideFinishOffset => GuideFinish.HasValue
         ? new DateTimeOffset(GuideFinish.Value, TimeSpan.Zero).ToLocalTime()
         : null;

@@ -39,6 +39,8 @@ public sealed class SeasonEpisodeMediaCollectionEnumerator : IMediaCollectionEnu
         // seed doesn't matter here
         State.Index = state.Index;
 
+    public string SchedulingContextName => "Season, Episode";
+
     public CollectionEnumeratorState State { get; }
 
     public Option<MediaItem> Current => _sortedMediaItems.Count != 0 ? _sortedMediaItems[State.Index] : None;
