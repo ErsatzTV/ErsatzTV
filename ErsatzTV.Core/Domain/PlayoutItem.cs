@@ -84,7 +84,8 @@ public class PlayoutItem
             CollectionKey = CollectionKey,
             CollectionEtag = CollectionEtag,
             PlayoutItemWatermarks = watermarksCopy,
-            PlayoutItemGraphicsElements = graphicsElementsCopy
+            PlayoutItemGraphicsElements = graphicsElementsCopy,
+            SchedulingContext = SchedulingContext
         };
     }
 
@@ -130,7 +131,8 @@ public class PlayoutItem
             CollectionKey = CollectionKey,
             CollectionEtag = CollectionEtag,
             PlayoutItemWatermarks = watermarksCopy,
-            PlayoutItemGraphicsElements = graphicsElementsCopy
+            PlayoutItemGraphicsElements = graphicsElementsCopy,
+            SchedulingContext = SchedulingContext
         };
     }
 
