@@ -11,4 +11,70 @@
     <resheader name="writer">
         <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
     </resheader>
+    <data name="ButtonAddChannel" xml:space="preserve">
+        <value>Dodaj kanał</value>
+    </data>
+    <data name="ButtonEditChannelNumbers" xml:space="preserve">
+        <value>Edytuj numerację kanałów</value>
+    </data>
+    <data name="LabelChannels" xml:space="preserve">
+        <value>Kanały</value>
+    </data>
+    <data name="ButtonShowDisabled" xml:space="preserve">
+        <value>Pokaż wyłączone</value>
+    </data>
+    <data name="LabelNumber" xml:space="preserve">
+        <value>Numer</value>
+    </data>
+    <data name="LabelLogo" xml:space="preserve">
+        <value>Logo</value>
+    </data>
+    <data name="LabelName" xml:space="preserve">
+        <value>Nazwa</value>
+    </data>
+    <data name="LabelLanguage" xml:space="preserve">
+        <value>Język</value>
+    </data>
+    <data name="LabelStreamingMode" xml:space="preserve">
+        <value>Tryb</value>
+    </data>
+    <data name="LabelFFmpegProfile" xml:space="preserve">
+        <value>Profil FFmpeg</value>
+    </data>
+    <data name="LabelChannelDisabledHelp" xml:space="preserve">
+        <value>Kanał jest wyłączony</value>
+    </data>
+    <data name="LabelChannelHiddenHelp" xml:space="preserve">
+        <value>Kanał jest ukryty w EPG</value>
+    </data>
+    <data name="LabelChannelHiddenAbbreviation" xml:space="preserve">
+        <value>U</value>
+    </data>
+    <data name="LabelChannelDisabledAbbreviation" xml:space="preserve">
+        <value>W</value>
+    </data>
+    <data name="ButtonPreviewChannelHelp" xml:space="preserve">
+        <value>Podgląd kanału</value>
+    </data>
+    <data name="ButtonPreviewChannelHelpNormalize" xml:space="preserve">
+        <value>Podgląd kanału; obraz lub dźwięk mogą nie działać poprawnie bez normalizacji</value>
+    </data>
+    <data name="ButtonPreviewChannelHelpBrowser" xml:space="preserve">
+        <value>Podgląd kanału wymaga profilu FFmpeg kompatybilnego z tą przeglądarką</value>
+    </data>
+    <data name="ButtonPreviewChannelHelpSettings" xml:space="preserve">
+        <value>Podgląd kanału wymaga funkcji playout, segmentera MPEG-TS/HLS oraz kompatybilnego profilu FFmpeg</value>
+    </data>
+    <data name="ButtonStopTranscodeHelp" xml:space="preserve">
+        <value>Zatrzymaj transkodowanie</value>
+    </data>
+    <data name="ButtonEditChannelHelp" xml:space="preserve">
+        <value>Edytuj kanał</value>
+    </data>
+    <data name="ButtonTroubleshootChannelHelp" xml:space="preserve">
+        <value>Diagnostyka kanału</value>
+    </data>
+    <data name="ButtonDeleteChannelHelp" xml:space="preserve">
+        <value>Usuń kanał</value>
+    </data>
 </root>
