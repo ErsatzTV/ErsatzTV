@@ -605,10 +605,9 @@ public class Startup
         {
             CultureInfo[] cinfo = CultureInfo.GetCultures(CultureTypes.AllCultures & ~CultureTypes.NeutralCultures);
             string[] supportedCultures = cinfo.Select(t => t.Name).Distinct().ToArray();
-            string[] supportedUiCultures = ["en-us", "pl", "pt-br"];
             options.AddSupportedCultures(supportedCultures)
-                .AddSupportedUICultures(supportedUiCultures)
-                .SetDefaultCulture("en-us");
+                .AddSupportedUICultures(Localization.UiCultures)
+                .SetDefaultCulture(Localization.DefaultCulture);
             options.AddInitialRequestCultureProvider(
                 new DatabaseRequestCultureProvider(
                     new AcceptLanguageHeaderRequestCultureProvider()));
