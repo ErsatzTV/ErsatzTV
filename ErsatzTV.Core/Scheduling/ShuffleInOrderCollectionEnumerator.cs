@@ -55,6 +55,7 @@ public class ShuffleInOrderCollectionEnumerator : IMediaCollectionEnumerator
             _shuffled = Shuffle(_collections, _random);
         }
 
+        State.Seed = state.Seed;
         State.Index = state.Index;
     }
 
@@ -65,6 +66,11 @@ public class ShuffleInOrderCollectionEnumerator : IMediaCollectionEnumerator
 
     public void MoveNext(Option<DateTimeOffset> scheduledAt)
     {
+        if (_shuffled.Length == 0)
+        {
+            return;
+        }
+
         if ((State.Index + 1) % _shuffled.Length == 0)
         {
             Option<MediaItem> tail = Current;
@@ -76,14 +82,17 @@ public class ShuffleInOrderCollectionEnumerator : IMediaCollectionEnumerator
                 _random = new Random(State.Seed);
                 _shuffled = Shuffle(_collections, _random);
             } while (!_cancellationToken.IsCancellationRequested && _collections.Count > 1 &&
-                     Current.Map(x => x.Id) == tail.Map(x => x.Id));
+                     _shuffled.Length > 0 && Current.Map(x => x.Id) == tail.Map(x => x.Id));
         }
         else
         {
             State.Index++;
         }
 
-        State.Index %= _shuffled.Length;
+        if (_shuffled.Length > 0)
+        {
+            State.Index %= _shuffled.Length;
+        }
     }
 
     public Option<TimeSpan> MinimumDuration => _lazyMinimumDuration.Value;
@@ -183,7 +192,7 @@ public class ShuffleInOrderCollectionEnumerator : IMediaCollectionEnumerator
             var index = 0;
             if (_randomStartPoint)
             {
-                index = random.Next(0, ordered.Count - 1);
+                index = random.Next(0, ordered.Count);
             }
 
             result.Add(new OrderedCollection { Index = index, Items = ordered });
