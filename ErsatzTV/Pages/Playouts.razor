@@ -2,6 +2,7 @@
 @using System.Globalization
 @using ErsatzTV.Application.Configuration
 @using ErsatzTV.Application.Playouts
+@using ErsatzTV.Application.ProgramSchedules
 @using ErsatzTV.Core.Notifications
 @using ErsatzTV.Core.Scheduling
 @using MediatR.Courier
@@ -521,10 +522,14 @@
 
     private async Task ShowSchedulingContext(PlayoutItemViewModel item)
     {
-        var parameters = new DialogParameters { { "PlayoutItem", item } };
-        var options = new DialogOptions { CloseButton = true, CloseOnEscapeKey = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
-        IDialogReference dialog = await Dialog.ShowAsync<SchedulingContextDialog>(item.Title, parameters, options);
-        DialogResult _ = await dialog.Result;
+        Option<string> maybeResults = await Mediator.Send(new ProcessSchedulingContext(item.SchedulingContext), _cts.Token);
+        foreach (string result in maybeResults)
+        {
+            var parameters = new DialogParameters { { "Context", result } };
+            var options = new DialogOptions { CloseButton = true, CloseOnEscapeKey = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
+            IDialogReference dialog = await Dialog.ShowAsync<SchedulingContextDialog>(item.Title, parameters, options);
+            DialogResult _ = await dialog.Result;
+        }
     }
 
 }

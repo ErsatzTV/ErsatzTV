@@ -20,7 +20,7 @@ public abstract class PlayoutModeSchedulerBase<T>(ILogger logger) : IPlayoutMode
     {
         Converters = { new JsonStringEnumConverter() },
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-        WriteIndented = true
+        WriteIndented = false
     };
 
     private readonly Random _random = new();
@@ -914,7 +914,7 @@ public abstract class PlayoutModeSchedulerBase<T>(ILogger logger) : IPlayoutMode
 
     protected string GetSchedulingContext(ProgramScheduleItem scheduleItem, IMediaCollectionEnumerator enumerator)
     {
-        var context = new SchedulingContext(
+        var context = new ClassicSchedulingContext(
             SchedulingContextName,
             scheduleItem.ProgramScheduleId,
             scheduleItem.Id,
