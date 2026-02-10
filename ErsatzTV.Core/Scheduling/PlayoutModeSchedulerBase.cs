@@ -176,7 +176,8 @@ public abstract class PlayoutModeSchedulerBase<T>(ILogger logger) : IPlayoutMode
                     FillerKind = FillerKind.Tail,
                     GuideGroup = nextState.NextGuideGroup,
                     DisableWatermarks = !scheduleItem.TailFiller.AllowWatermarks,
-                    ChapterTitle = ChapterTitleForMediaItem(mediaItem)
+                    ChapterTitle = ChapterTitleForMediaItem(mediaItem),
+                    SchedulingContext = GetSchedulingContext(scheduleItem, scheduleItem.TailFillerId, enumerator)
                 };
 
                 newItems.Add(playoutItem);
@@ -221,7 +222,8 @@ public abstract class PlayoutModeSchedulerBase<T>(ILogger logger) : IPlayoutMode
                     OutPoint = TimeSpan.Zero,
                     GuideGroup = nextState.NextGuideGroup,
                     FillerKind = FillerKind.Fallback,
-                    DisableWatermarks = !scheduleItem.FallbackFiller.AllowWatermarks
+                    DisableWatermarks = !scheduleItem.FallbackFiller.AllowWatermarks,
+                    SchedulingContext = GetSchedulingContext(scheduleItem, scheduleItem.FallbackFillerId, enumerator)
                 };
 
                 newItems.Add(playoutItem);
@@ -417,10 +419,12 @@ public abstract class PlayoutModeSchedulerBase<T>(ILogger logger) : IPlayoutMode
                     result.AddRange(
                         AddCountFiller(
                             playoutBuilderState,
+                            scheduleItem,
                             e2,
                             filler.Count.Value,
                             scheduleItem.GuideMode == GuideMode.Filler ? FillerKind.GuideMode : FillerKind.PreRoll,
                             filler.AllowWatermarks,
+                            filler.Id,
                             cancellationToken));
                     break;
                 case FillerMode.RandomCount when filler.Count.HasValue:
@@ -428,10 +432,12 @@ public abstract class PlayoutModeSchedulerBase<T>(ILogger logger) : IPlayoutMode
                     result.AddRange(
                         AddRandomCountFiller(
                             playoutBuilderState,
+                            scheduleItem,
                             e3,
                             filler.Count.Value,
                             scheduleItem.GuideMode == GuideMode.Filler ? FillerKind.GuideMode : FillerKind.PreRoll,
                             filler.AllowWatermarks,
+                            filler.Id,
                             cancellationToken));
                     break;
             }
@@ -489,12 +495,14 @@ public abstract class PlayoutModeSchedulerBase<T>(ILogger logger) : IPlayoutMode
                                 result.AddRange(
                                     AddCountFiller(
                                         playoutBuilderState,
+                                        scheduleItem,
                                         e2,
                                         filler.Count.Value,
                                         scheduleItem.GuideMode == GuideMode.Filler
                                             ? FillerKind.GuideMode
                                             : FillerKind.MidRoll,
                                         filler.AllowWatermarks,
+                                        filler.Id,
                                         cancellationToken));
                             }
                         }
@@ -510,12 +518,14 @@ public abstract class PlayoutModeSchedulerBase<T>(ILogger logger) : IPlayoutMode
                                 result.AddRange(
                                     AddRandomCountFiller(
                                         playoutBuilderState,
+                                        scheduleItem,
                                         e3,
                                         filler.Count.Value,
                                         scheduleItem.GuideMode == GuideMode.Filler
                                             ? FillerKind.GuideMode
                                             : FillerKind.MidRoll,
                                         filler.AllowWatermarks,
+                                        filler.Id,
                                         cancellationToken));
                             }
                         }
@@ -546,10 +556,12 @@ public abstract class PlayoutModeSchedulerBase<T>(ILogger logger) : IPlayoutMode
                     result.AddRange(
                         AddCountFiller(
                             playoutBuilderState,
+                            scheduleItem,
                             e2,
                             filler.Count.Value,
                             scheduleItem.GuideMode == GuideMode.Filler ? FillerKind.GuideMode : FillerKind.PostRoll,
                             filler.AllowWatermarks,
+                            filler.Id,
                             cancellationToken));
                     break;
                 case FillerMode.RandomCount when filler.Count.HasValue:
@@ -557,10 +569,12 @@ public abstract class PlayoutModeSchedulerBase<T>(ILogger logger) : IPlayoutMode
                     result.AddRange(
                         AddRandomCountFiller(
                             playoutBuilderState,
+                            scheduleItem,
                             e3,
                             filler.Count.Value,
                             scheduleItem.GuideMode == GuideMode.Filler ? FillerKind.GuideMode : FillerKind.PostRoll,
                             filler.AllowWatermarks,
+                            filler.Id,
                             cancellationToken));
                     break;
             }
@@ -752,12 +766,14 @@ public abstract class PlayoutModeSchedulerBase<T>(ILogger logger) : IPlayoutMode
         return result;
     }
 
-    private static List<PlayoutItem> AddCountFiller(
+    private List<PlayoutItem> AddCountFiller(
         PlayoutBuilderState playoutBuilderState,
+        ProgramScheduleItem scheduleItem,
         IMediaCollectionEnumerator enumerator,
         int count,
         FillerKind fillerKind,
         bool allowWatermarks,
+        int fillerPresetId,
         CancellationToken cancellationToken)
     {
         var result = new List<PlayoutItem>();
@@ -780,7 +796,8 @@ public abstract class PlayoutModeSchedulerBase<T>(ILogger logger) : IPlayoutMode
                     GuideGroup = playoutBuilderState.NextGuideGroup,
                     FillerKind = fillerKind,
                     DisableWatermarks = !allowWatermarks,
-                    ChapterTitle = ChapterTitleForMediaItem(mediaItem)
+                    ChapterTitle = ChapterTitleForMediaItem(mediaItem),
+                    SchedulingContext = GetSchedulingContext(scheduleItem, fillerPresetId, enumerator)
                 };
 
                 result.Add(playoutItem);
@@ -886,10 +903,12 @@ public abstract class PlayoutModeSchedulerBase<T>(ILogger logger) : IPlayoutMode
 
     private List<PlayoutItem> AddRandomCountFiller(
         PlayoutBuilderState playoutBuilderState,
+        ProgramScheduleItem scheduleItem,
         IMediaCollectionEnumerator enumerator,
         int count,
         FillerKind fillerKind,
         bool allowWatermarks,
+        int fillerPresetId,
         CancellationToken cancellationToken)
     {
         var result = new List<PlayoutItem>();
@@ -900,10 +919,12 @@ public abstract class PlayoutModeSchedulerBase<T>(ILogger logger) : IPlayoutMode
         {
             result = AddCountFiller(
                 playoutBuilderState,
+                scheduleItem,
                 enumerator,
                 randomCount,
                 fillerKind,
                 allowWatermarks,
+                fillerPresetId,
                 cancellationToken);
         }
 
@@ -912,12 +933,16 @@ public abstract class PlayoutModeSchedulerBase<T>(ILogger logger) : IPlayoutMode
 
     protected abstract string SchedulingContextName { get; }
 
-    protected string GetSchedulingContext(ProgramScheduleItem scheduleItem, IMediaCollectionEnumerator enumerator)
+    protected string GetSchedulingContext(
+        ProgramScheduleItem scheduleItem,
+        int? fillerPresetId,
+        IMediaCollectionEnumerator enumerator)
     {
         var context = new ClassicSchedulingContext(
             SchedulingContextName,
             scheduleItem.ProgramScheduleId,
             scheduleItem.Id,
+            fillerPresetId,
             enumerator.SchedulingContextName,
             enumerator.State.Seed,
             enumerator.State.Index);

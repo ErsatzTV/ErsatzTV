@@ -11,7 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - A small number of translations have been added for `Português (Brasil)` and `Polski`
   - Translation contributions are always welcome!
 - Add `Troubleshoot` button to playout details table to show info that may be helpful in determining the source of a playout item
-  - Classic schedule info includes schedule, schedule item, scheduler, playback order, random seed, collection index
+  - Classic schedule info includes schedule, schedule item, scheduler, filler, playback order, random seed, collection index
   - Block schedule info includes block, block item, playback order, random seed, collection index
   - E.g. items with the same random seed are part of the same shuffle
 

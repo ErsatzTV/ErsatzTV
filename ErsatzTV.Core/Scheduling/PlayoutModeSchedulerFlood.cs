@@ -81,7 +81,7 @@ public class PlayoutModeSchedulerFlood(ILogger logger) : PlayoutModeSchedulerBas
                 SubtitleMode = scheduleItem.SubtitleMode,
                 PlayoutItemWatermarks = [],
                 PlayoutItemGraphicsElements = [],
-                SchedulingContext = GetSchedulingContext(scheduleItem, contentEnumerator)
+                SchedulingContext = GetSchedulingContext(scheduleItem, null, contentEnumerator)
             };
 
             foreach (ProgramScheduleItemWatermark programScheduleItemWatermark in scheduleItem

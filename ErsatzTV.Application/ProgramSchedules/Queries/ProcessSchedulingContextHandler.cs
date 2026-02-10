@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Scheduling;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -60,7 +61,43 @@ public class ProcessSchedulingContextHandler(IDbContextFactory<TvContext> dbCont
             .Include(si => si.Playlist)
             .Include(si => si.RerunCollection)
             .Include(si => si.SmartCollection)
-            .SingleOrDefaultAsync(s => s.Id == classicContext.ItemId, cancellationToken);
+            .SingleOrDefaultAsync(si => si.Id == classicContext.ItemId, cancellationToken);
+
+        var name = "Classic";
+        ClassicContextFiller filler = null;
+        if (classicContext.FillerPresetId is > 0)
+        {
+            name = "Classic - Filler";
+
+            var fillerPreset = await dbContext.FillerPresets
+                .AsNoTracking()
+                .AsSplitQuery()
+                .Include(p => p.Collection)
+                .Include(p => p.MultiCollection)
+                .Include(p => p.Playlist)
+                .Include(p => p.SmartCollection)
+                .SingleOrDefaultAsync(p => p.Id == classicContext.FillerPresetId, cancellationToken);
+
+            if (fillerPreset is not null)
+            {
+                string collectionName = fillerPreset.CollectionType switch
+                {
+                    CollectionType.Collection => fillerPreset.Collection.Name,
+                    CollectionType.MultiCollection => fillerPreset.MultiCollection.Name,
+                    CollectionType.Playlist => fillerPreset.Playlist.Name,
+                    CollectionType.SmartCollection => fillerPreset.SmartCollection.Name,
+                    _ => null
+                };
+
+                filler = new ClassicContextFiller(
+                    fillerPreset.Id,
+                    fillerPreset.Name,
+                    fillerPreset.FillerKind,
+                    fillerPreset.FillerMode,
+                    fillerPreset.CollectionType,
+                    collectionName);
+            }
+        }
 
         ClassicContextScheduleItem item;
         if (scheduleItem is not null)
@@ -83,9 +120,10 @@ public class ProcessSchedulingContextHandler(IDbContextFactory<TvContext> dbCont
         }
 
         var context = new ClassicContext(
-            new ContextScheduler("Classic", classicContext.Scheduler),
+            new ContextScheduler(name, classicContext.Scheduler),
             new ClassicContextSchedule(classicContext.ScheduleId, scheduleName ?? string.Empty),
             item,
+            filler,
             new ContextEnumerator(classicContext.Enumerator, classicContext.Seed, classicContext.Index));
 
         return JsonSerializer.Serialize(context, Options);
@@ -96,6 +134,7 @@ public class ProcessSchedulingContextHandler(IDbContextFactory<TvContext> dbCont
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         var block = await dbContext.Blocks
+            .AsNoTracking()
             .Include(b => b.BlockGroup)
             .SingleOrDefaultAsync(s => s.Id == blockContext.BlockId, cancellationToken);
 
@@ -141,6 +180,7 @@ public class ProcessSchedulingContextHandler(IDbContextFactory<TvContext> dbCont
         ContextScheduler Scheduler,
         ClassicContextSchedule Schedule,
         ClassicContextScheduleItem ScheduleItem,
+        ClassicContextFiller Filler,
         ContextEnumerator Enumerator);
 
     private sealed record ContextScheduler(string Type, string Mode);
@@ -148,6 +188,14 @@ public class ProcessSchedulingContextHandler(IDbContextFactory<TvContext> dbCont
     private sealed record ClassicContextSchedule(int Id, string Name);
 
     private sealed record ClassicContextScheduleItem(int Id, CollectionType? CollectionType, string CollectionName);
+
+    private sealed record ClassicContextFiller(
+        int Id,
+        string Name,
+        FillerKind Kind,
+        FillerMode Mode,
+        CollectionType CollectionType,
+        string CollectionName);
 
     private sealed record ContextEnumerator(string Name, int Seed, int Index);
 
