@@ -20,6 +20,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 - Improve stability of playback orders `Shuffle` and `Shuffle in Order` over time
+- Fix Trakt list sync
 
 ## [26.2.0] - 2026-02-02
 ### Added
