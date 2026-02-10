@@ -5,7 +5,6 @@ using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Scheduling;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace ErsatzTV.Application.ProgramSchedules;
@@ -22,21 +21,29 @@ public class ProcessSchedulingContextHandler(IDbContextFactory<TvContext> dbCont
 
     public async Task<Option<string>> Handle(ProcessSchedulingContext request, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrEmpty(request.SerializedContext))
+        try
         {
-            return Option<string>.None;
+            using JsonDocument doc = JsonDocument.Parse(request.SerializedContext);
+            if (doc.RootElement.TryGetProperty(nameof(ClassicSchedulingContext.ScheduleId), out _))
+            {
+                var classicContext = JsonSerializer.Deserialize<ClassicSchedulingContext>(request.SerializedContext, Options);
+                if (classicContext is not null && classicContext.ScheduleId > 0)
+                {
+                    return await GetClassicDetails(classicContext, cancellationToken);
+                }
+            }
+            else if (doc.RootElement.TryGetProperty(nameof(BlockSchedulingContext.BlockId), out _))
+            {
+                var blockContext = JsonSerializer.Deserialize<BlockSchedulingContext>(request.SerializedContext, Options);
+                if (blockContext is not null && blockContext.BlockId > 0)
+                {
+                    return await GetBlockDetails(blockContext, cancellationToken);
+                }
+            }
         }
-
-        var classicContext = JsonConvert.DeserializeObject<ClassicSchedulingContext>(request.SerializedContext);
-        if (classicContext is not null && classicContext.ScheduleId > 0)
+        catch (JsonException)
         {
-            return await GetClassicDetails(classicContext, cancellationToken);
-        }
-
-        var blockContext = JsonConvert.DeserializeObject<BlockSchedulingContext>(request.SerializedContext);
-        if (blockContext is not null && blockContext.BlockId > 0)
-        {
-            return await GetBlockDetails(blockContext, cancellationToken);
+            // not a valid json string, or not a context we can process
         }
 
         return request.SerializedContext;
