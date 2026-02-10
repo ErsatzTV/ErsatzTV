@@ -1,5 +1,4 @@
-﻿@using ErsatzTV.Application.Playouts
-@inject IJSRuntime JsRuntime
+﻿@inject IJSRuntime JsRuntime
 
 <div>
     <MudDialog>
@@ -25,7 +24,7 @@
     IMudDialogInstance MudDialog { get; set; }
 
     [Parameter]
-    public PlayoutItemViewModel PlayoutItem { get; set; }
+    public string Context { get; set; }
 
     private string _info;
     private ElementReference _infoView;
@@ -34,7 +33,7 @@
     {
         try
         {
-            _info = PlayoutItem.SchedulingContext;
+            _info = Context;
         }
         catch (Exception ex)
         {

@@ -1,3 +1,5 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Domain.Scheduling;
@@ -23,6 +25,13 @@ public class BlockPlayoutBuilder(
     private static readonly JsonSerializerSettings JsonSettings = new()
     {
         NullValueHandling = NullValueHandling.Ignore
+    };
+
+    private static readonly JsonSerializerOptions Options = new()
+    {
+        Converters = { new JsonStringEnumConverter() },
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+        WriteIndented = false
     };
 
     protected virtual ILogger Logger => logger;
@@ -262,7 +271,8 @@ public class BlockPlayoutBuilder(
                             CollectionKey = JsonConvert.SerializeObject(collectionKey, JsonSettings),
                             CollectionEtag = collectionEtags[collectionKey],
                             PlayoutItemWatermarks = [],
-                            PlayoutItemGraphicsElements = []
+                            PlayoutItemGraphicsElements = [],
+                            SchedulingContext = GetSchedulingContext(blockItem, enumerator)
                         };
 
                         foreach (BlockItemWatermark blockItemWatermark in blockItem.BlockItemWatermarks ?? [])
@@ -447,5 +457,17 @@ public class BlockPlayoutBuilder(
         }
 
         return result;
+    }
+
+    private static string GetSchedulingContext(BlockItem blockItem, IMediaCollectionEnumerator enumerator)
+    {
+        var context = new BlockSchedulingContext(
+            blockItem.BlockId,
+            blockItem.Id,
+            enumerator.SchedulingContextName,
+            enumerator.State.Seed,
+            enumerator.State.Index);
+
+        return System.Text.Json.JsonSerializer.Serialize(context, Options);
     }
 }
