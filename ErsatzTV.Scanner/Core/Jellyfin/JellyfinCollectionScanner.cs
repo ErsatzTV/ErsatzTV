@@ -92,7 +92,7 @@ public class JellyfinCollectionScanner : IJellyfinCollectionScanner
 
     private async Task<bool> SyncCollectionItems(
         string address,
-        string apiKey,
+        string authorizationHeader,
         int mediaSourceId,
         JellyfinCollection collection)
     {
@@ -101,7 +101,7 @@ public class JellyfinCollectionScanner : IJellyfinCollectionScanner
             // get collection items from JF
             IAsyncEnumerable<Tuple<MediaItem, int>> items = _jellyfinApiClient.GetCollectionItems(
                 address,
-                apiKey,
+                authorizationHeader,
                 mediaSourceId,
                 collection.ItemId);
 
