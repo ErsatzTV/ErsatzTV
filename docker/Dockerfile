@@ -9,7 +9,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # https://hub.docker.com/_/microsoft-dotnet
-FROM mcr.microsoft.com/dotnet/sdk:10.0-noble-amd64 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0.102-noble-amd64 AS build
 RUN apt-get update && apt-get install -y ca-certificates gnupg default-jre-headless python3-pip
 WORKDIR /source
 
