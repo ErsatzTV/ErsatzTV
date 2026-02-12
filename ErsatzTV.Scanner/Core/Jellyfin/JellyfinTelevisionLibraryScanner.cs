@@ -57,8 +57,7 @@ public class JellyfinTelevisionLibraryScanner : MediaServerTelevisionLibraryScan
     protected override bool ServerSupportsRemoteStreaming => true;
 
     public async Task<Either<BaseError, Unit>> ScanLibrary(
-        string address,
-        string apiKey,
+        JellyfinConnectionParameters connectionParameters,
         JellyfinLibrary library,
         bool deepScan,
         CancellationToken cancellationToken)
@@ -76,7 +75,7 @@ public class JellyfinTelevisionLibraryScanner : MediaServerTelevisionLibraryScan
 
         return await ScanLibrary(
             _jellyfinTelevisionRepository,
-            new JellyfinConnectionParameters(address, apiKey, library.MediaSourceId),
+            connectionParameters,
             library,
             GetLocalPath,
             deepScan,
@@ -84,8 +83,7 @@ public class JellyfinTelevisionLibraryScanner : MediaServerTelevisionLibraryScan
     }
 
     public async Task<Either<BaseError, Unit>> ScanSingleShow(
-        string address,
-        string apiKey,
+        JellyfinConnectionParameters connectionParameters,
         JellyfinLibrary library,
         string showId,
         string showTitle,
@@ -105,8 +103,8 @@ public class JellyfinTelevisionLibraryScanner : MediaServerTelevisionLibraryScan
 
         // Search for the specific show
         Either<BaseError, Option<JellyfinShow>> searchResult = await _jellyfinApiClient.GetSingleShow(
-            address,
-            apiKey,
+            connectionParameters.Address,
+            connectionParameters.AuthorizationHeader,
             library,
             showId);
 
@@ -122,7 +120,7 @@ public class JellyfinTelevisionLibraryScanner : MediaServerTelevisionLibraryScan
 
                     return await ScanSingleShowInternal(
                         _jellyfinTelevisionRepository,
-                        new JellyfinConnectionParameters(address, apiKey, library.MediaSourceId),
+                        connectionParameters,
                         library,
                         show,
                         GetLocalPath,
@@ -142,7 +140,7 @@ public class JellyfinTelevisionLibraryScanner : MediaServerTelevisionLibraryScan
         JellyfinLibrary library) =>
         _jellyfinApiClient.GetShowLibraryItemsWithoutPeople(
             connectionParameters.Address,
-            connectionParameters.ApiKey,
+            connectionParameters.AuthorizationHeader,
             library);
 
     protected override string MediaServerItemId(JellyfinShow show) => show.ItemId;
@@ -159,7 +157,7 @@ public class JellyfinTelevisionLibraryScanner : MediaServerTelevisionLibraryScan
         JellyfinShow show) =>
         _jellyfinApiClient.GetSeasonLibraryItems(
             connectionParameters.Address,
-            connectionParameters.ApiKey,
+            connectionParameters.AuthorizationHeader,
             library,
             show.ItemId);
 
@@ -174,14 +172,14 @@ public class JellyfinTelevisionLibraryScanner : MediaServerTelevisionLibraryScan
         {
             return _jellyfinApiClient.GetEpisodeLibraryItems(
                 connectionParameters.Address,
-                connectionParameters.ApiKey,
+                connectionParameters.AuthorizationHeader,
                 library,
                 season.ItemId);
         }
 
         return _jellyfinApiClient.GetEpisodeLibraryItemsWithoutPeople(
             connectionParameters.Address,
-            connectionParameters.ApiKey,
+            connectionParameters.AuthorizationHeader,
             library,
             season.ItemId);
     }
@@ -197,7 +195,7 @@ public class JellyfinTelevisionLibraryScanner : MediaServerTelevisionLibraryScan
         {
             Either<BaseError, Option<JellyfinShow>> maybeShowResult = await _jellyfinApiClient.GetSingleShow(
                 connectionParameters.Address,
-                connectionParameters.ApiKey,
+                connectionParameters.AuthorizationHeader,
                 library,
                 incoming.ItemId);
 
@@ -238,7 +236,7 @@ public class JellyfinTelevisionLibraryScanner : MediaServerTelevisionLibraryScan
         {
             Either<BaseError, Option<JellyfinEpisode>> maybeEpisodeResult = await _jellyfinApiClient.GetSingleEpisode(
                 connectionParameters.Address,
-                connectionParameters.ApiKey,
+                connectionParameters.AuthorizationHeader,
                 library,
                 jellyfinSeason.ItemId,
                 incoming.ItemId);
@@ -277,7 +275,7 @@ public class JellyfinTelevisionLibraryScanner : MediaServerTelevisionLibraryScan
         Either<BaseError, MediaVersion> maybeVersion =
             await _jellyfinApiClient.GetPlaybackInfo(
                 connectionParameters.Address,
-                connectionParameters.ApiKey,
+                connectionParameters.AuthorizationHeader,
                 library,
                 incoming.ItemId);
 

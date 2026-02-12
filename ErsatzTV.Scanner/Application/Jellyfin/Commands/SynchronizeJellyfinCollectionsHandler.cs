@@ -45,13 +45,13 @@ public class
         SynchronizeJellyfinCollections request,
         CancellationToken cancellationToken)
     {
-        Task<Validation<BaseError, ConnectionParameters>> mediaSource = MediaSourceMustExist(request)
+        Task<Validation<BaseError, ConnectionAndSource>> mediaSource = MediaSourceMustExist(request)
             .BindT(MediaSourceMustHaveActiveConnection)
             .BindT(MediaSourceMustHaveApiKey);
 
         return (await mediaSource, await ValidateLibraryRefreshInterval(cancellationToken))
             .Apply((connectionParameters, libraryRefreshInterval) => new RequestParameters(
-                connectionParameters,
+                connectionParameters.ConnectionParameters,
                 connectionParameters.MediaSource,
                 request.ForceScan,
                 request.DeepScan,
@@ -69,21 +69,26 @@ public class
         _mediaSourceRepository.GetJellyfin(request.JellyfinMediaSourceId)
             .Map(o => o.ToValidation<BaseError>("Jellyfin media source does not exist."));
 
-    private static Validation<BaseError, ConnectionParameters> MediaSourceMustHaveActiveConnection(
+    private static Validation<BaseError, ConnectionAndSource> MediaSourceMustHaveActiveConnection(
         JellyfinMediaSource jellyfinMediaSource)
     {
         Option<JellyfinConnection> maybeConnection = jellyfinMediaSource.Connections.HeadOrNone();
-        return maybeConnection.Map(connection => new ConnectionParameters(jellyfinMediaSource, connection))
+        return maybeConnection.Map(connection => new ConnectionAndSource(
+                new JellyfinConnectionParameters(connection.Address, string.Empty, connection.JellyfinMediaSourceId),
+                jellyfinMediaSource))
             .ToValidation<BaseError>("Jellyfin media source requires an active connection");
     }
 
-    private async Task<Validation<BaseError, ConnectionParameters>> MediaSourceMustHaveApiKey(
-        ConnectionParameters connectionParameters)
+    private async Task<Validation<BaseError, ConnectionAndSource>> MediaSourceMustHaveApiKey(
+        ConnectionAndSource connectionAndSource)
     {
         JellyfinSecrets secrets = await _jellyfinSecretStore.ReadSecrets();
-        return Optional(secrets.Address == connectionParameters.ActiveConnection.Address)
+        return Optional(secrets.Address == connectionAndSource.ConnectionParameters.Address)
             .Where(match => match)
-            .Map(_ => connectionParameters with { ApiKey = secrets.ApiKey })
+            .Map(_ => connectionAndSource with
+            {
+                ConnectionParameters = connectionAndSource.ConnectionParameters with { ApiKey = secrets.ApiKey }
+            })
             .ToValidation<BaseError>("Jellyfin media source requires an api key");
     }
 
@@ -98,8 +103,8 @@ public class
         if (parameters.ForceScan || parameters.LibraryRefreshInterval > 0 && nextScan < DateTimeOffset.Now)
         {
             Either<BaseError, Unit> result = await _scanner.ScanCollections(
-                parameters.ConnectionParameters.ActiveConnection.Address,
-                parameters.ConnectionParameters.ApiKey,
+                parameters.ConnectionParameters.Address,
+                parameters.ConnectionParameters.AuthorizationHeader,
                 parameters.MediaSource.Id,
                 parameters.DeepScan);
 
@@ -116,15 +121,14 @@ public class
     }
 
     private record RequestParameters(
-        ConnectionParameters ConnectionParameters,
+        JellyfinConnectionParameters ConnectionParameters,
         JellyfinMediaSource MediaSource,
         bool ForceScan,
         bool DeepScan,
         int LibraryRefreshInterval,
         string BaseUrl);
 
-    private record ConnectionParameters(JellyfinMediaSource MediaSource, JellyfinConnection ActiveConnection)
-    {
-        public string? ApiKey { get; init; }
-    }
+    private sealed record ConnectionAndSource(
+        JellyfinConnectionParameters ConnectionParameters,
+        JellyfinMediaSource MediaSource);
 }

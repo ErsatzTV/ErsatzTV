@@ -36,14 +36,14 @@ public class JellyfinApiClient : IJellyfinApiClient
 
     public async Task<Either<BaseError, JellyfinServerInformation>> GetServerInformation(
         string address,
-        string apiKey)
+        string authorizationHeader)
     {
         try
         {
             IJellyfinApi service = ServiceForAddress(address);
             var cts = new CancellationTokenSource();
             cts.CancelAfter(TimeSpan.FromSeconds(5));
-            return await service.GetSystemInformation(apiKey, cts.Token)
+            return await service.GetSystemInformation(authorizationHeader, cts.Token)
                 .Map(response => new JellyfinServerInformation(response.ServerName, response.OperatingSystem));
         }
         catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
@@ -58,12 +58,12 @@ public class JellyfinApiClient : IJellyfinApiClient
         }
     }
 
-    public async Task<Either<BaseError, List<JellyfinLibrary>>> GetLibraries(string address, string apiKey)
+    public async Task<Either<BaseError, List<JellyfinLibrary>>> GetLibraries(string address, string authorizationHeader)
     {
         try
         {
             IJellyfinApi service = ServiceForAddress(address);
-            List<JellyfinLibraryResponse> libraries = await service.GetLibraries(apiKey);
+            List<JellyfinLibraryResponse> libraries = await service.GetLibraries(authorizationHeader);
             return libraries
                 .Map(Project)
                 .Somes()
@@ -78,7 +78,7 @@ public class JellyfinApiClient : IJellyfinApiClient
 
     public IAsyncEnumerable<Tuple<JellyfinMovie, int>> GetMovieLibraryItems(
         string address,
-        string apiKey,
+        string authorizationHeader,
         JellyfinLibrary library) =>
         GetPagedLibraryItems(
             "JF Movies",
@@ -87,7 +87,7 @@ public class JellyfinApiClient : IJellyfinApiClient
             library.MediaSourceId,
             library.ItemId,
             (service, itemId, skip, pageSize) => service.GetMovieLibraryItems(
-                apiKey,
+                authorizationHeader,
                 itemId,
                 startIndex: skip,
                 limit: pageSize),
@@ -95,7 +95,7 @@ public class JellyfinApiClient : IJellyfinApiClient
 
     public IAsyncEnumerable<Tuple<JellyfinShow, int>> GetShowLibraryItemsWithoutPeople(
         string address,
-        string apiKey,
+        string authorizationHeader,
         JellyfinLibrary library) =>
         GetPagedLibraryItems(
             "JF Shows",
@@ -104,7 +104,7 @@ public class JellyfinApiClient : IJellyfinApiClient
             library.MediaSourceId,
             library.ItemId,
             (service, itemId, skip, pageSize) => service.GetShowLibraryItemsWithoutPeople(
-                apiKey,
+                authorizationHeader,
                 itemId,
                 startIndex: skip,
                 limit: pageSize),
@@ -112,7 +112,7 @@ public class JellyfinApiClient : IJellyfinApiClient
 
     public IAsyncEnumerable<Tuple<JellyfinSeason, int>> GetSeasonLibraryItems(
         string address,
-        string apiKey,
+        string authorizationHeader,
         JellyfinLibrary library,
         string showId) =>
         GetPagedLibraryItems(
@@ -122,7 +122,7 @@ public class JellyfinApiClient : IJellyfinApiClient
             library.MediaSourceId,
             showId,
             (service, _, skip, pageSize) => service.GetSeasonLibraryItems(
-                apiKey,
+                authorizationHeader,
                 showId,
                 startIndex: skip,
                 limit: pageSize),
@@ -130,7 +130,7 @@ public class JellyfinApiClient : IJellyfinApiClient
 
     public IAsyncEnumerable<Tuple<JellyfinEpisode, int>> GetEpisodeLibraryItems(
         string address,
-        string apiKey,
+        string authorizationHeader,
         JellyfinLibrary library,
         string seasonId) =>
         GetPagedLibraryItems(
@@ -140,7 +140,7 @@ public class JellyfinApiClient : IJellyfinApiClient
             library.MediaSourceId,
             seasonId,
             (service, _, skip, pageSize) => service.GetEpisodeLibraryItems(
-                apiKey,
+                authorizationHeader,
                 seasonId,
                 startIndex: skip,
                 limit: pageSize),
@@ -148,7 +148,7 @@ public class JellyfinApiClient : IJellyfinApiClient
 
     public IAsyncEnumerable<Tuple<JellyfinEpisode, int>> GetEpisodeLibraryItemsWithoutPeople(
         string address,
-        string apiKey,
+        string authorizationHeader,
         JellyfinLibrary library,
         string seasonId) =>
         GetPagedLibraryItems(
@@ -158,7 +158,7 @@ public class JellyfinApiClient : IJellyfinApiClient
             library.MediaSourceId,
             seasonId,
             (service, _, skip, pageSize) => service.GetEpisodeLibraryItemsWithoutPeople(
-                apiKey,
+                authorizationHeader,
                 seasonId,
                 startIndex: skip,
                 limit: pageSize),
@@ -166,7 +166,7 @@ public class JellyfinApiClient : IJellyfinApiClient
 
     public IAsyncEnumerable<Tuple<JellyfinCollection, int>> GetCollectionLibraryItems(
         string address,
-        string apiKey,
+        string authorizationHeader,
         int mediaSourceId)
     {
         // TODO: should we enumerate collection libraries here?
@@ -180,7 +180,7 @@ public class JellyfinApiClient : IJellyfinApiClient
                 mediaSourceId,
                 itemId,
                 (service, _, skip, pageSize) => service.GetCollectionLibraryItems(
-                    apiKey,
+                    authorizationHeader,
                     itemId,
                     startIndex: skip,
                     limit: pageSize),
@@ -192,7 +192,7 @@ public class JellyfinApiClient : IJellyfinApiClient
 
     public IAsyncEnumerable<Tuple<MediaItem, int>> GetCollectionItems(
         string address,
-        string apiKey,
+        string authorizationHeader,
         int mediaSourceId,
         string collectionId) =>
         GetPagedLibraryItems(
@@ -202,7 +202,7 @@ public class JellyfinApiClient : IJellyfinApiClient
             mediaSourceId,
             collectionId,
             (service, _, skip, pageSize) => service.GetCollectionItems(
-                apiKey,
+                authorizationHeader,
                 collectionId,
                 startIndex: skip,
                 limit: pageSize),
@@ -210,7 +210,7 @@ public class JellyfinApiClient : IJellyfinApiClient
 
     public async Task<Either<BaseError, MediaVersion>> GetPlaybackInfo(
         string address,
-        string apiKey,
+        string authorizationHeader,
         JellyfinLibrary library,
         string itemId)
     {
@@ -219,7 +219,7 @@ public class JellyfinApiClient : IJellyfinApiClient
             using (ScanProfiler.Measure("JF Playback Info"))
             {
                 IJellyfinApi service = ServiceForAddress(address);
-                JellyfinPlaybackInfoResponse playbackInfo = await service.GetPlaybackInfo(apiKey, itemId);
+                JellyfinPlaybackInfoResponse playbackInfo = await service.GetPlaybackInfo(authorizationHeader, itemId);
                 Option<MediaVersion> maybeVersion = ProjectToMediaVersion(playbackInfo);
                 return maybeVersion.ToEither(() => BaseError.New("Unable to locate Jellyfin statistics"));
             }
@@ -233,7 +233,7 @@ public class JellyfinApiClient : IJellyfinApiClient
 
     public async Task<Either<BaseError, Option<JellyfinShow>>> GetSingleShow(
         string address,
-        string apiKey,
+        string authorizationHeader,
         JellyfinLibrary library,
         string showId)
     {
@@ -243,7 +243,7 @@ public class JellyfinApiClient : IJellyfinApiClient
             {
                 IJellyfinApi service = ServiceForAddress(address);
                 JellyfinLibraryItemsResponse itemsResponse = await service.GetShowLibraryItems(
-                    apiKey,
+                    authorizationHeader,
                     parentId: library.ItemId,
                     recursive: false,
                     startIndex: 0,
@@ -267,7 +267,7 @@ public class JellyfinApiClient : IJellyfinApiClient
 
     public async Task<Either<BaseError, List<JellyfinShow>>> SearchShowsByTitle(
         string address,
-        string apiKey,
+        string authorizationHeader,
         JellyfinLibrary library,
         string showTitle)
     {
@@ -275,7 +275,7 @@ public class JellyfinApiClient : IJellyfinApiClient
         {
             IJellyfinApi service = ServiceForAddress(address);
             JellyfinSearchHintsResponse searchResponse = await service.SearchHints(
-                apiKey,
+                authorizationHeader,
                 showTitle,
                 "Series",
                 library.ItemId);
@@ -288,7 +288,7 @@ public class JellyfinApiClient : IJellyfinApiClient
                     string.Equals(hint.Name, showTitle, StringComparison.OrdinalIgnoreCase))
                 {
                     JellyfinLibraryItemsResponse detailResponse = await service.GetShowLibraryItems(
-                        apiKey,
+                        authorizationHeader,
                         hint.Id,
                         recursive: false,
                         startIndex: 0,
@@ -316,7 +316,7 @@ public class JellyfinApiClient : IJellyfinApiClient
 
     public async Task<Either<BaseError, Option<JellyfinEpisode>>> GetSingleEpisode(
         string address,
-        string apiKey,
+        string authorizationHeader,
         JellyfinLibrary library,
         string seasonId,
         string episodeId)
@@ -327,7 +327,7 @@ public class JellyfinApiClient : IJellyfinApiClient
             {
                 IJellyfinApi service = ServiceForAddress(address);
                 JellyfinLibraryItemsResponse itemsResponse = await service.GetEpisodeLibraryItems(
-                    apiKey,
+                    authorizationHeader,
                     parentId: seasonId,
                     recursive: false,
                     startIndex: 0,

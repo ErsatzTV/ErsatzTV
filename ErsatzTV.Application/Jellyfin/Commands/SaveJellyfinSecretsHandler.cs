@@ -36,8 +36,10 @@ public class SaveJellyfinSecretsHandler : IRequestHandler<SaveJellyfinSecrets, E
 
     private async Task<Validation<BaseError, Parameters>> Validate(SaveJellyfinSecrets request)
     {
+        var connectionParameters = new JellyfinConnectionParameters(request.Secrets.Address, request.Secrets.ApiKey, 0);
+
         Either<BaseError, JellyfinServerInformation> maybeServerInformation = await _jellyfinApiClient
-            .GetServerInformation(request.Secrets.Address, request.Secrets.ApiKey);
+            .GetServerInformation(connectionParameters.Address, connectionParameters.AuthorizationHeader);
 
         return maybeServerInformation.Match(
             info => Validation<BaseError, Parameters>.Success(new Parameters(request.Secrets, info)),

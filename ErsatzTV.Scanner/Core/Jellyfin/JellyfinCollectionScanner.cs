@@ -28,14 +28,14 @@ public class JellyfinCollectionScanner : IJellyfinCollectionScanner
 
     public async Task<Either<BaseError, Unit>> ScanCollections(
         string address,
-        string apiKey,
+        string authorizationHeader,
         int mediaSourceId,
         bool deepScan)
     {
         try
         {
             // need to call get libraries to find library that contains collections (box sets)
-            await _jellyfinApiClient.GetLibraries(address, apiKey);
+            await _jellyfinApiClient.GetLibraries(address, authorizationHeader);
 
             var incomingItemIds = new List<string>();
 
@@ -45,7 +45,7 @@ public class JellyfinCollectionScanner : IJellyfinCollectionScanner
             // loop over collections
             await foreach ((JellyfinCollection collection, int _) in _jellyfinApiClient.GetCollectionLibraryItems(
                                address,
-                               apiKey,
+                               authorizationHeader,
                                mediaSourceId))
             {
                 incomingItemIds.Add(collection.ItemId);
@@ -67,7 +67,7 @@ public class JellyfinCollectionScanner : IJellyfinCollectionScanner
                     await _jellyfinCollectionRepository.AddCollection(collection);
                 }
 
-                if (await SyncCollectionItems(address, apiKey, mediaSourceId, collection))
+                if (await SyncCollectionItems(address, authorizationHeader, mediaSourceId, collection))
                 {
                     // save collection etag
                     await _jellyfinCollectionRepository.SetEtag(collection);

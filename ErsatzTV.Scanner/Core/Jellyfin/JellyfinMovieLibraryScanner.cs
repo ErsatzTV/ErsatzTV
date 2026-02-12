@@ -50,8 +50,7 @@ public class JellyfinMovieLibraryScanner :
     protected override bool ServerSupportsRemoteStreaming => true;
 
     public async Task<Either<BaseError, Unit>> ScanLibrary(
-        string address,
-        string apiKey,
+        JellyfinConnectionParameters connectionParameters,
         JellyfinLibrary library,
         bool deepScan,
         CancellationToken cancellationToken)
@@ -69,7 +68,7 @@ public class JellyfinMovieLibraryScanner :
 
         return await ScanLibrary(
             _jellyfinMovieRepository,
-            new JellyfinConnectionParameters(address, apiKey, library.MediaSourceId),
+            connectionParameters,
             library,
             GetLocalPath,
             deepScan,
@@ -85,7 +84,7 @@ public class JellyfinMovieLibraryScanner :
         JellyfinLibrary library) =>
         _jellyfinApiClient.GetMovieLibraryItems(
             connectionParameters.Address,
-            connectionParameters.ApiKey,
+            connectionParameters.AuthorizationHeader,
             library);
 
     protected override Task<Option<MovieMetadata>> GetFullMetadata(
@@ -113,7 +112,7 @@ public class JellyfinMovieLibraryScanner :
         Either<BaseError, MediaVersion> maybeVersion =
             await _jellyfinApiClient.GetPlaybackInfo(
                 connectionParameters.Address,
-                connectionParameters.ApiKey,
+                connectionParameters.AuthorizationHeader,
                 library,
                 incoming.ItemId);
 

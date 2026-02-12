@@ -8,24 +8,24 @@ public interface IJellyfinApi
 {
     [Get("/System/Info")]
     Task<JellyfinSystemInformationResponse> GetSystemInformation(
-        [Header("X-Emby-Token")]
-        string apiKey,
+        [Header("Authorization")]
+        string authorizationHeader,
         CancellationToken cancellationToken);
 
     [Get("/Users")]
     Task<List<JellyfinUserResponse>> GetUsers(
-        [Header("X-Emby-Token")]
-        string apiKey);
+        [Header("Authorization")]
+        string authorizationHeader);
 
     [Get("/Library/VirtualFolders")]
     Task<List<JellyfinLibraryResponse>> GetLibraries(
-        [Header("X-Emby-Token")]
-        string apiKey);
+        [Header("Authorization")]
+        string authorizationHeader);
 
     [Get("/Items?sortOrder=Ascending&sortBy=SortName")]
     Task<JellyfinLibraryItemsResponse> GetMovieLibraryItems(
-        [Header("X-Emby-Token")]
-        string apiKey,
+        [Header("Authorization")]
+        string authorizationHeader,
         [Query]
         string parentId,
         [Query]
@@ -44,8 +44,8 @@ public interface IJellyfinApi
 
     [Get("/Items?sortOrder=Ascending&sortBy=SortName")]
     Task<JellyfinLibraryItemsResponse> GetShowLibraryItemsWithoutPeople(
-        [Header("X-Emby-Token")]
-        string apiKey,
+        [Header("Authorization")]
+        string authorizationHeader,
         [Query]
         string parentId,
         [Query]
@@ -64,8 +64,8 @@ public interface IJellyfinApi
 
     [Get("/Items?sortOrder=Ascending&sortBy=SortName")]
     Task<JellyfinLibraryItemsResponse> GetShowLibraryItems(
-        [Header("X-Emby-Token")]
-        string apiKey,
+        [Header("Authorization")]
+        string authorizationHeader,
         [Query]
         string parentId,
         [Query]
@@ -84,8 +84,8 @@ public interface IJellyfinApi
 
     [Get("/Items?sortOrder=Ascending&sortBy=SortName")]
     Task<JellyfinLibraryItemsResponse> GetSeasonLibraryItems(
-        [Header("X-Emby-Token")]
-        string apiKey,
+        [Header("Authorization")]
+        string authorizationHeader,
         [Query]
         string parentId,
         [Query]
@@ -101,8 +101,8 @@ public interface IJellyfinApi
 
     [Get("/Items?sortOrder=Ascending&sortBy=SortName")]
     Task<JellyfinLibraryItemsResponse> GetEpisodeLibraryItems(
-        [Header("X-Emby-Token")]
-        string apiKey,
+        [Header("Authorization")]
+        string authorizationHeader,
         [Query]
         string parentId,
         [Query]
@@ -120,8 +120,8 @@ public interface IJellyfinApi
 
     [Get("/Items?sortOrder=Ascending&sortBy=SortName")]
     Task<JellyfinLibraryItemsResponse> GetEpisodeLibraryItemsWithoutPeople(
-        [Header("X-Emby-Token")]
-        string apiKey,
+        [Header("Authorization")]
+        string authorizationHeader,
         [Query]
         string parentId,
         [Query]
@@ -137,8 +137,8 @@ public interface IJellyfinApi
 
     [Get("/Items?sortOrder=Ascending&sortBy=SortName")]
     Task<JellyfinLibraryItemsResponse> GetCollectionLibraryItems(
-        [Header("X-Emby-Token")]
-        string apiKey,
+        [Header("Authorization")]
+        string authorizationHeader,
         [Query]
         string parentId,
         [Query]
@@ -154,8 +154,8 @@ public interface IJellyfinApi
 
     [Get("/Items?sortOrder=Ascending&sortBy=SortName")]
     Task<JellyfinLibraryItemsResponse> GetCollectionItems(
-        [Header("X-Emby-Token")]
-        string apiKey,
+        [Header("Authorization")]
+        string authorizationHeader,
         [Query]
         string parentId,
         [Query]
@@ -171,14 +171,14 @@ public interface IJellyfinApi
 
     [Get("/Items/{itemId}/PlaybackInfo")]
     Task<JellyfinPlaybackInfoResponse> GetPlaybackInfo(
-        [Header("X-Emby-Token")]
-        string apiKey,
+        [Header("Authorization")]
+        string authorizationHeader,
         string itemId);
 
     [Get("/Search/Hints")]
     Task<JellyfinSearchHintsResponse> SearchHints(
-        [Header("X-Emby-Token")]
-        string apiKey,
+        [Header("Authorization")]
+        string authorizationHeader,
         [Query]
         string searchTerm,
         [Query]
