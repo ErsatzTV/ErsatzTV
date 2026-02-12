@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 - Move dark/light mode toggle to **Settings** > **UI**
+- Use latest (non-deprecated) authorization method with Jellyfin API
 
 ### Fixed
 - Improve stability of playback orders `Shuffle` and `Shuffle in Order` over time

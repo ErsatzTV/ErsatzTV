@@ -38,7 +38,7 @@ public class
             .MapT(p => SynchronizeLibraries(p, cancellationToken))
             .Bind(v => v.ToEitherAsync());
 
-    private Task<Validation<BaseError, ConnectionParameters>> Validate(SynchronizeJellyfinLibraries request) =>
+    private Task<Validation<BaseError, ConnectionAndSource>> Validate(SynchronizeJellyfinLibraries request) =>
         MediaSourceMustExist(request)
             .BindT(MediaSourceMustHaveActiveConnection)
             .BindT(MediaSourceMustHaveApiKey);
@@ -48,43 +48,48 @@ public class
         _mediaSourceRepository.GetJellyfin(request.JellyfinMediaSourceId)
             .Map(o => o.ToValidation<BaseError>("Jellyfin media source does not exist."));
 
-    private Validation<BaseError, ConnectionParameters> MediaSourceMustHaveActiveConnection(
+    private Validation<BaseError, ConnectionAndSource> MediaSourceMustHaveActiveConnection(
         JellyfinMediaSource jellyfinMediaSource)
     {
         Option<JellyfinConnection> maybeConnection = jellyfinMediaSource.Connections.HeadOrNone();
-        return maybeConnection.Map(connection => new ConnectionParameters(jellyfinMediaSource, connection))
+        return maybeConnection.Map(connection => new ConnectionAndSource(
+                new JellyfinConnectionParameters(connection.Address, string.Empty, connection.JellyfinMediaSourceId),
+                jellyfinMediaSource))
             .ToValidation<BaseError>("Jellyfin media source requires an active connection");
     }
 
-    private async Task<Validation<BaseError, ConnectionParameters>> MediaSourceMustHaveApiKey(
-        ConnectionParameters connectionParameters)
+    private async Task<Validation<BaseError, ConnectionAndSource>> MediaSourceMustHaveApiKey(
+        ConnectionAndSource connectionAndSource)
     {
         JellyfinSecrets secrets = await _jellyfinSecretStore.ReadSecrets();
-        return Optional(secrets.Address == connectionParameters.ActiveConnection.Address)
+        return Optional(secrets.Address == connectionAndSource.ConnectionParameters.Address)
             .Where(match => match)
-            .Map(_ => connectionParameters with { ApiKey = secrets.ApiKey })
+            .Map(_ => connectionAndSource with
+            {
+                ConnectionParameters = connectionAndSource.ConnectionParameters with { ApiKey = secrets.ApiKey }
+            })
             .ToValidation<BaseError>("Jellyfin media source requires an api key");
     }
 
     private async Task<Unit> SynchronizeLibraries(
-        ConnectionParameters connectionParameters,
+        ConnectionAndSource connectionAndSource,
         CancellationToken cancellationToken)
     {
         Either<BaseError, List<JellyfinLibrary>> maybeLibraries = await _jellyfinApiClient.GetLibraries(
-            connectionParameters.ActiveConnection.Address,
-            connectionParameters.ApiKey);
+            connectionAndSource.ConnectionParameters.Address,
+            connectionAndSource.ConnectionParameters.AuthorizationHeader);
 
         foreach (BaseError error in maybeLibraries.LeftToSeq())
         {
             _logger.LogWarning(
                 "Unable to synchronize libraries from jellyfin server {JellyfinServer}: {Error}",
-                connectionParameters.JellyfinMediaSource.ServerName,
+                connectionAndSource.MediaSource.ServerName,
                 error.Value);
         }
 
         foreach (List<JellyfinLibrary> libraries in maybeLibraries.RightToSeq())
         {
-            var existing = connectionParameters.JellyfinMediaSource.Libraries
+            var existing = connectionAndSource.MediaSource.Libraries
                 .OfType<JellyfinLibrary>()
                 .ToList();
             var toAdd = libraries.Filter(library => existing.All(l => l.ItemId != library.ItemId)).ToList();
@@ -92,7 +97,7 @@ public class
             var toUpdate = libraries
                 .Filter(l => toAdd.All(a => a.ItemId != l.ItemId) && toRemove.All(r => r.ItemId != l.ItemId)).ToList();
             List<int> ids = await _mediaSourceRepository.UpdateLibraries(
-                connectionParameters.JellyfinMediaSource.Id,
+                connectionAndSource.MediaSource.Id,
                 toAdd,
                 toRemove,
                 toUpdate,
@@ -107,10 +112,7 @@ public class
         return Unit.Default;
     }
 
-    private sealed record ConnectionParameters(
-        JellyfinMediaSource JellyfinMediaSource,
-        JellyfinConnection ActiveConnection)
-    {
-        public string ApiKey { get; set; }
-    }
+    private sealed record ConnectionAndSource(
+        JellyfinConnectionParameters ConnectionParameters,
+        JellyfinMediaSource MediaSource);
 }

@@ -61,8 +61,7 @@ public class
             parameters.Library.Name);
 
         Either<BaseError, Unit> result = await _jellyfinTelevisionLibraryScanner.ScanSingleShow(
-            parameters.ConnectionParameters.ActiveConnection.Address,
-            parameters.ConnectionParameters.ApiKey,
+            parameters.ConnectionParameters,
             parameters.Library,
             parameters.ItemId,
             parameters.ShowTitle,
@@ -92,7 +91,7 @@ public class
                 request.BaseUrl
             ));
 
-    private Task<Validation<BaseError, ConnectionParameters>> ValidateConnection(
+    private Task<Validation<BaseError, JellyfinConnectionParameters>> ValidateConnection(
         SynchronizeJellyfinShowById request) =>
         JellyfinMediaSourceMustExist(request)
             .BindT(MediaSourceMustHaveActiveConnection)
@@ -104,19 +103,22 @@ public class
             .Map(v => v.ToValidation<BaseError>(
                 $"Jellyfin media source for library {request.JellyfinLibraryId} does not exist."));
 
-    private Validation<BaseError, ConnectionParameters> MediaSourceMustHaveActiveConnection(
+    private Validation<BaseError, JellyfinConnectionParameters> MediaSourceMustHaveActiveConnection(
         JellyfinMediaSource jellyfinMediaSource)
     {
         Option<JellyfinConnection> maybeConnection = jellyfinMediaSource.Connections.HeadOrNone();
-        return maybeConnection.Map(connection => new ConnectionParameters(connection))
+        return maybeConnection.Map(connection => new JellyfinConnectionParameters(
+                connection.Address,
+                string.Empty,
+                connection.JellyfinMediaSourceId))
             .ToValidation<BaseError>("Jellyfin media source requires an active connection");
     }
 
-    private async Task<Validation<BaseError, ConnectionParameters>> MediaSourceMustHaveApiKey(
-        ConnectionParameters connectionParameters)
+    private async Task<Validation<BaseError, JellyfinConnectionParameters>> MediaSourceMustHaveApiKey(
+        JellyfinConnectionParameters connectionParameters)
     {
         JellyfinSecrets secrets = await _jellyfinSecretStore.ReadSecrets();
-        return Optional(secrets.Address == connectionParameters.ActiveConnection.Address)
+        return Optional(secrets.Address == connectionParameters.Address)
             .Where(match => match)
             .Map(_ => connectionParameters with { ApiKey = secrets.ApiKey })
             .ToValidation<BaseError>("Jellyfin media source requires an api key");
@@ -135,15 +137,10 @@ public class
                 $"Jellyfin show {request.ShowId} does not exist in library {request.JellyfinLibraryId}."));
 
     private record RequestParameters(
-        ConnectionParameters ConnectionParameters,
+        JellyfinConnectionParameters ConnectionParameters,
         JellyfinLibrary Library,
         string ItemId,
         string ShowTitle,
         bool DeepScan,
         string BaseUrl);
-
-    private record ConnectionParameters(JellyfinConnection ActiveConnection)
-    {
-        public string? ApiKey { get; init; }
-    }
 }
