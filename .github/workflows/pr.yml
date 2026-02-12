@@ -14,7 +14,7 @@ jobs:
       - name: Setup dotnet
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '10.0.x'
+          dotnet-version: '10.0.102'
 
       - name: Clean
         run: dotnet clean --configuration Release && dotnet nuget locals all --clear
@@ -36,7 +36,7 @@ jobs:
       - name: Setup dotnet
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '10.0.x'
+          dotnet-version: '10.0.102'
 
       - name: Clean
         run: dotnet clean --configuration Release && dotnet nuget locals all --clear
@@ -72,7 +72,7 @@ jobs:
       - name: Setup dotnet
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '10.0.x'
+          dotnet-version: '10.0.102'
 
       - name: Clean
         run: dotnet clean --configuration Release && dotnet nuget locals all --clear
@@ -100,7 +100,7 @@ jobs:
       - name: Setup dotnet
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '10.0.x'
+          dotnet-version: '10.0.102'
 
       - name: Clean
         run: dotnet clean --configuration Release && dotnet nuget locals all --clear
