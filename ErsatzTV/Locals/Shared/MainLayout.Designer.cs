@@ -393,12 +393,6 @@ namespace ErsatzTV.Locals.Shared {
             }
         }
         
-        internal static string ButtonDiscord {
-            get {
-                return ResourceManager.GetString("ButtonDiscord", resourceCulture);
-            }
-        }
-        
         internal static string ButtonGitHub {
             get {
                 return ResourceManager.GetString("ButtonGitHub", resourceCulture);
@@ -408,6 +402,12 @@ namespace ErsatzTV.Locals.Shared {
         internal static string ButtonLogout {
             get {
                 return ResourceManager.GetString("ButtonLogout", resourceCulture);
+            }
+        }
+        
+        internal static string ButtonContact {
+            get {
+                return ResourceManager.GetString("ButtonContact", resourceCulture);
             }
         }
     }

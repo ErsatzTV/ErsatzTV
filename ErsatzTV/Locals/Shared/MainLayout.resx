@@ -192,13 +192,13 @@
     <data name="ButtonDocumentation" xml:space="preserve">
         <value>Documentation</value>
     </data>
-    <data name="ButtonDiscord" xml:space="preserve">
-        <value>Discord</value>
-    </data>
     <data name="ButtonGitHub" xml:space="preserve">
         <value>GitHub</value>
     </data>
     <data name="ButtonLogout" xml:space="preserve">
         <value>Logout</value>
+    </data>
+    <data name="ButtonContact" xml:space="preserve">
+        <value>Contact</value>
     </data>
 </root>

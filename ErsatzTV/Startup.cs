@@ -363,9 +363,9 @@ public class Startup
         Log.Logger.Information("ErsatzTV version {Version}", etvVersion);
 
         Log.Logger.Warning(
-            "Give feedback at {GitHub} or {Discord}",
+            "Report bugs to {GitHub} or contact us at {Contact}",
             "https://github.com/ErsatzTV/ErsatzTV",
-            "https://discord.ersatztv.org");
+            "https://ersatztv.org/contact");
 
         CopyMacOsConfigFolderIfNeeded();
 
