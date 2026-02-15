@@ -3,9 +3,9 @@ contact_links:
   - name: Feature Requests
     url: https://features.ersatztv.org
     about: Features
-  - name: Discord
-    url: https://discord.ersatztv.org
-    about: Chat
+  - name: Contact
+    url: https://ersatztv.org/contact
+    about: Chat Options
   - name: Community
     url: https://discuss.ersatztv.org
     about: Forum

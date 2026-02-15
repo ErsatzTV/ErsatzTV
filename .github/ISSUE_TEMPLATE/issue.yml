@@ -12,7 +12,7 @@ body:
       label: "This issue respects the following points:"
       description: All conditions are **required**. Failure to comply with any of these conditions may cause your issue to be closed without comment.
       options:
-        - label: This is a **bug**, not a question or a configuration issue; Please visit our [forum](https://discuss.ersatztv.org) or [chat](https://discord.ersatztv.org) first to troubleshoot with volunteers before creating a report.
+        - label: This is a **bug**, not a question or a configuration issue; Please visit our [forum](https://discuss.ersatztv.org) or [chat](https://ersatztv.org/contact) first to troubleshoot with volunteers before creating a report.
           required: true
         - label: This issue is **not** already reported on [GitHub](https://github.com/ErsatzTV/ErsatzTV/issues?q=is%3Aopen+is%3Aissue) _(I've searched it)_.
           required: true
