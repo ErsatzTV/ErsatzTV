@@ -185,9 +185,6 @@
     <data name="ButtonDocumentation" xml:space="preserve">
         <value>Dokumentacja</value>
     </data>
-    <data name="ButtonDiscord" xml:space="preserve">
-        <value>Discord</value>
-    </data>
     <data name="ButtonGitHub" xml:space="preserve">
         <value>GitHub</value>
     </data>
