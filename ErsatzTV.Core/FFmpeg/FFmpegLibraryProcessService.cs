@@ -862,6 +862,191 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         return GetCommand(ffmpegPath, videoInputFile, audioInputFile, None, None, None, pipeline);
     }
 
+    public async Task<Command> Slug(
+        string ffmpegPath,
+        Channel channel,
+        DateTimeOffset now,
+        TimeSpan duration,
+        bool hlsRealtime,
+        TimeSpan ptsOffset)
+    {
+        FFmpegPlaybackSettings playbackSettings = FFmpegPlaybackSettingsCalculator.CalculateErrorSettings(
+            channel.StreamingMode,
+            channel.FFmpegProfile,
+            hlsRealtime);
+
+        Resolution desiredResolution = channel.FFmpegProfile.Resolution;
+
+        string audioFormat = playbackSettings.AudioFormat switch
+        {
+            FFmpegProfileAudioFormat.Ac3 => AudioFormat.Ac3,
+            FFmpegProfileAudioFormat.AacLatm => AudioFormat.AacLatm,
+            _ => AudioFormat.Aac
+        };
+
+        var audioState = new AudioState(
+            audioFormat,
+            playbackSettings.AudioChannels,
+            playbackSettings.AudioBitrate,
+            playbackSettings.AudioBufferSize,
+            playbackSettings.AudioSampleRate,
+            false,
+            AudioFilter.None,
+            playbackSettings.TargetLoudness);
+
+        string videoFormat = GetVideoFormat(playbackSettings);
+
+        var desiredState = new FrameState(
+            playbackSettings.RealtimeOutput,
+            InfiniteLoop: false,
+            videoFormat,
+            GetVideoProfile(videoFormat, channel.FFmpegProfile.VideoProfile),
+            VideoPreset.Unset,
+            channel.FFmpegProfile.AllowBFrames,
+            new PixelFormatYuv420P(),
+            new FrameSize(desiredResolution.Width, desiredResolution.Height),
+            new FrameSize(desiredResolution.Width, desiredResolution.Height),
+            Option<FrameSize>.None,
+            channel.FFmpegProfile.PadMode is FilterMode.HardwareIfPossible
+                ? FFmpegFilterMode.HardwareIfPossible
+                : FFmpegFilterMode.Software,
+            IsAnamorphic: false,
+            playbackSettings.FrameRate,
+            playbackSettings.VideoBitrate,
+            playbackSettings.VideoBufferSize,
+            playbackSettings.VideoTrackTimeScale,
+            playbackSettings.NormalizeColors,
+            playbackSettings.Deinterlace);
+
+        OutputFormatKind outputFormat = OutputFormatKind.MpegTs;
+        switch (channel.StreamingMode)
+        {
+            case StreamingMode.HttpLiveStreamingSegmenter:
+                outputFormat = OutputFormatKind.Hls;
+                break;
+        }
+
+        Option<string> hlsPlaylistPath = outputFormat is OutputFormatKind.Hls or OutputFormatKind.HlsMp4
+            ? Path.Combine(FileSystemLayout.TranscodeFolder, channel.Number, "live.m3u8")
+            : Option<string>.None;
+
+        long nowSeconds = now.ToUnixTimeSeconds();
+
+        Option<string> hlsSegmentTemplate = outputFormat switch
+        {
+            OutputFormatKind.Hls => Path.Combine(FileSystemLayout.TranscodeFolder, channel.Number, "live%06d.ts"),
+            OutputFormatKind.HlsMp4 => Path.Combine(
+                FileSystemLayout.TranscodeFolder,
+                channel.Number,
+                $"live_{nowSeconds}_%06d.m4s"),
+            _ => Option<string>.None
+        };
+
+        Option<string> hlsInitTemplate = outputFormat switch
+        {
+            OutputFormatKind.HlsMp4 => $"{nowSeconds}_init.mp4",
+            _ =>  Option<string>.None
+        };
+
+        Option<string> hlsSegmentOptions = Option<string>.None;
+        if (outputFormat is OutputFormatKind.Hls)
+        {
+            string options = string.Empty;
+
+            if (ptsOffset == TimeSpan.Zero)
+            {
+                options += "+initial_discontinuity";
+            }
+
+            if (audioFormat == AudioFormat.AacLatm)
+            {
+                options += "+latm";
+            }
+
+            if (!string.IsNullOrWhiteSpace(options))
+            {
+                hlsSegmentOptions = $"mpegts_flags={options}";
+            }
+        }
+
+        string videoPath = _localFileSystem.GetCustomOrDefaultFile(
+            FileSystemLayout.ResourcesCacheFolder,
+            "background.png");
+
+        var videoVersion = BackgroundImageMediaVersion.ForPath(videoPath, desiredResolution);
+
+        var frameRate = playbackSettings.FrameRate.IfNone(new FrameRate("24"));
+
+        var ffmpegVideoStream = new VideoStream(
+            0,
+            VideoFormat.GeneratedImage,
+            string.Empty,
+            new PixelFormatUnknown(), // leave this unknown so we convert to desired yuv420p
+            ColorParams.Default,
+            new FrameSize(videoVersion.Width, videoVersion.Height),
+            videoVersion.SampleAspectRatio,
+            videoVersion.DisplayAspectRatio,
+            frameRate,
+            true,
+            ScanKind.Progressive);
+
+        var videoInputFile = new LavfiInputFile(
+            $"color=c=black:s={videoVersion.Width}x{videoVersion.Height}:r={frameRate.FrameRateString}:d={duration.TotalSeconds}",
+            ffmpegVideoStream);
+
+        HardwareAccelerationMode hwAccel = GetHardwareAccelerationMode(playbackSettings);
+
+        var ffmpegState = new FFmpegState(
+            channel.Number == FileSystemLayout.TranscodeTroubleshootingChannel,
+            HardwareAccelerationMode.None, // no hw accel decode since errors loop
+            hwAccel,
+            VaapiDriverName(hwAccel, channel.FFmpegProfile.VaapiDriver),
+            VaapiDeviceName(hwAccel, channel.FFmpegProfile.VaapiDevice),
+            playbackSettings.StreamSeek,
+            duration,
+            channel.StreamingMode != StreamingMode.HttpLiveStreamingDirect,
+            "ErsatzTV",
+            channel.Name,
+            None,
+            None,
+            None,
+            outputFormat,
+            hlsPlaylistPath,
+            hlsSegmentTemplate,
+            hlsInitTemplate,
+            hlsSegmentOptions,
+            ptsOffset,
+            Option<int>.None,
+            Optional(channel.FFmpegProfile.QsvExtraHardwareFrames),
+            false,
+            false,
+            GetTonemapAlgorithm(playbackSettings),
+            channel.Number == FileSystemLayout.TranscodeTroubleshootingChannel);
+
+        var audioInputFile = new NullAudioInputFile(audioState);
+
+        IPipelineBuilder pipelineBuilder = await _pipelineBuilderFactory.GetBuilder(
+            hwAccel,
+            videoInputFile,
+            audioInputFile,
+            Option<WatermarkInputFile>.None,
+            Option<SubtitleInputFile>.None,
+            Option<ConcatInputFile>.None,
+            Option<GraphicsEngineInput>.None,
+            VaapiDisplayName(hwAccel, channel.FFmpegProfile.VaapiDisplay),
+            VaapiDriverName(hwAccel, channel.FFmpegProfile.VaapiDriver),
+            VaapiDeviceName(hwAccel, channel.FFmpegProfile.VaapiDevice),
+            channel.Number == FileSystemLayout.TranscodeTroubleshootingChannel
+                ? FileSystemLayout.TranscodeTroubleshootingFolder
+                : FileSystemLayout.FFmpegReportsFolder,
+            FileSystemLayout.FontsCacheFolder,
+            ffmpegPath);
+
+        FFmpegPipeline pipeline = pipelineBuilder.Build(ffmpegState, desiredState);
+
+        return GetCommand(ffmpegPath, videoInputFile, audioInputFile, None, None, None, pipeline);
+    }
+
     public async Task<Command> ConcatChannel(
         string ffmpegPath,
         bool saveReports,

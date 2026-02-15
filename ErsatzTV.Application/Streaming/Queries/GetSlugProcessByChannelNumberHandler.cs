@@ -1,22 +1,15 @@
-using System.IO.Abstractions;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
-using ErsatzTV.Core.Domain.Filler;
-using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.FFmpeg;
-using ErsatzTV.Core.Interfaces.Metadata;
-using ErsatzTV.FFmpeg;
+using ErsatzTV.Core.Interfaces.Streaming;
 using ErsatzTV.Infrastructure.Data;
-using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Application.Streaming;
 
 public class GetSlugProcessByChannelNumberHandler(
     IDbContextFactory<TvContext> dbContextFactory,
-    IFileSystem fileSystem,
-    IFFmpegProcessService ffmpegProcessService,
-    ILocalStatisticsProvider localStatisticsProvider)
+    IFFmpegProcessService ffmpegProcessService)
     : FFmpegProcessHandler<GetSlugProcessByChannelNumber>(dbContextFactory)
 {
     protected override async Task<Either<BaseError, PlayoutItemProcessModel>> GetProcess(
@@ -27,82 +20,30 @@ public class GetSlugProcessByChannelNumberHandler(
         string ffprobePath,
         CancellationToken cancellationToken)
     {
-        string videoPath = fileSystem.Path.Combine(FileSystemLayout.ResourcesCacheFolder, "slug.mp4");
-
-        bool saveReports = await dbContext.ConfigElements
-            .GetValue<bool>(ConfigElementKey.FFmpegSaveReports, cancellationToken)
-            .Map(result => result.IfNone(false));
-
-        Either<BaseError, MediaVersion> maybeVersion =
-            await localStatisticsProvider.GetStatistics(ffprobePath, videoPath);
-        foreach (var error in maybeVersion.LeftToSeq())
+        var duration = TimeSpan.FromSeconds(await request.SlugSeconds.IfNoneAsync(0));
+        if (duration <= TimeSpan.Zero)
         {
-            return error;
-        }
-
-        var version = maybeVersion.RightToSeq().Head();
-
-        var mediaItem = new OtherVideo
-        {
-            MediaVersions = [version]
-        };
-
-        TimeSpan duration = version.Duration;
-        foreach (double slugSeconds in request.SlugSeconds)
-        {
-            TimeSpan seconds = TimeSpan.FromSeconds(slugSeconds);
-            if (seconds > TimeSpan.Zero && seconds < duration)
-            {
-                duration = seconds;
-            }
+            return BaseError.New("Slug seconds must be non-zero");
         }
 
         DateTimeOffset finish = request.Now.Add(duration);
 
-        PlayoutItemResult playoutItemResult = await ffmpegProcessService.ForPlayoutItem(
+        var playoutItemResult = await ffmpegProcessService.Slug(
             ffmpegPath,
-            ffprobePath,
-            saveReports,
             channel,
-            new MediaItemVideoVersion(mediaItem, version),
-            new MediaItemAudioVersion(mediaItem, version),
-            videoPath,
-            videoPath,
-            _ => Task.FromResult<List<Subtitle>>([]),
-            string.Empty,
-            string.Empty,
-            string.Empty,
-            ChannelSubtitleMode.None,
-            request.Now,
-            finish,
             request.Now,
             duration,
-            [],
-            [],
-            channel.FFmpegProfile.VaapiDisplay,
-            channel.FFmpegProfile.VaapiDriver,
-            channel.FFmpegProfile.VaapiDevice,
-            Optional(channel.FFmpegProfile.QsvExtraHardwareFrames),
             request.HlsRealtime,
-            StreamInputKind.Vod,
-            FillerKind.None,
-            inPoint: TimeSpan.Zero,
-            request.ChannelStartTime,
-            request.PtsOffset,
-            request.TargetFramerate,
-            Option<string>.None,
-            _ => { },
-            canProxy: true,
-            cancellationToken);
+            request.PtsOffset);
 
         var result = new PlayoutItemProcessModel(
-            playoutItemResult.Process,
-            playoutItemResult.GraphicsEngineContext,
+            playoutItemResult,
+            Option<GraphicsEngineContext>.None,
             duration,
             finish,
             isComplete: true,
             request.Now.ToUnixTimeSeconds(),
-            playoutItemResult.MediaItemId,
+            Option<int>.None,
             Optional(channel.PlayoutOffset),
             !request.HlsRealtime);
 
