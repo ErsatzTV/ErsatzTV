@@ -81,22 +81,8 @@ public record VideoInputFile(
 
 public record LavfiInputFile : VideoInputFile
 {
-    public LavfiInputFile(string Parameters, VideoStream VideoStream) : base(Parameters, [VideoStream])
-    {
-        this.Parameters = Parameters;
-        this.VideoStream = VideoStream;
-
-        InputOptions.Add(new LavfiInputOption());
-    }
-
-    public string Parameters { get; init; }
-    public VideoStream VideoStream { get; init; }
-
-    public void Deconstruct(out string parameters, out VideoStream videoStream)
-    {
-        parameters = Parameters;
-        videoStream = VideoStream;
-    }
+    public LavfiInputFile(string parameters, VideoStream videoStream) : base(parameters, [videoStream])
+        => InputOptions.Add(new LavfiInputOption());
 }
 
 public record WatermarkInputFile(string Path, IList<VideoStream> VideoStreams, WatermarkState DesiredState)
