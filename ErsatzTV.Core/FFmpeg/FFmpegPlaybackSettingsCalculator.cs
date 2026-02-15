@@ -181,7 +181,7 @@ public static class FFmpegPlaybackSettingsCalculator
         return result;
     }
 
-    public static FFmpegPlaybackSettings CalculateErrorSettings(
+    public static FFmpegPlaybackSettings CalculateGeneratedImageSettings(
         StreamingMode streamingMode,
         FFmpegProfile ffmpegProfile,
         bool hlsRealtime) =>

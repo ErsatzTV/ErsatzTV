@@ -665,7 +665,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         string vaapiDevice,
         Option<int> qsvExtraHardwareFrames)
     {
-        FFmpegPlaybackSettings playbackSettings = FFmpegPlaybackSettingsCalculator.CalculateErrorSettings(
+        FFmpegPlaybackSettings playbackSettings = FFmpegPlaybackSettingsCalculator.CalculateGeneratedImageSettings(
             channel.StreamingMode,
             channel.FFmpegProfile,
             hlsRealtime);
@@ -726,57 +726,6 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             playbackSettings.NormalizeColors,
             playbackSettings.Deinterlace);
 
-        OutputFormatKind outputFormat = OutputFormatKind.MpegTs;
-        switch (channel.StreamingMode)
-        {
-            case StreamingMode.HttpLiveStreamingSegmenter:
-                outputFormat = OutputFormatKind.Hls;
-                break;
-        }
-
-        Option<string> hlsPlaylistPath = outputFormat is OutputFormatKind.Hls or OutputFormatKind.HlsMp4
-            ? Path.Combine(FileSystemLayout.TranscodeFolder, channel.Number, "live.m3u8")
-            : Option<string>.None;
-
-        long nowSeconds = now.ToUnixTimeSeconds();
-
-        Option<string> hlsSegmentTemplate = outputFormat switch
-        {
-            OutputFormatKind.Hls => Path.Combine(FileSystemLayout.TranscodeFolder, channel.Number, "live%06d.ts"),
-            OutputFormatKind.HlsMp4 => Path.Combine(
-                FileSystemLayout.TranscodeFolder,
-                channel.Number,
-                $"live_{nowSeconds}_%06d.m4s"),
-            _ => Option<string>.None
-        };
-
-        Option<string> hlsInitTemplate = outputFormat switch
-        {
-            OutputFormatKind.HlsMp4 => $"{nowSeconds}_init.mp4",
-            _ =>  Option<string>.None
-        };
-
-        Option<string> hlsSegmentOptions = Option<string>.None;
-        if (outputFormat is OutputFormatKind.Hls)
-        {
-            string options = string.Empty;
-
-            if (ptsOffset == TimeSpan.Zero)
-            {
-                options += "+initial_discontinuity";
-            }
-
-            if (audioFormat == AudioFormat.AacLatm)
-            {
-                options += "+latm";
-            }
-
-            if (!string.IsNullOrWhiteSpace(options))
-            {
-                hlsSegmentOptions = $"mpegts_flags={options}";
-            }
-        }
-
         string videoPath = _localFileSystem.GetCustomOrDefaultFile(
             FileSystemLayout.ResourcesCacheFolder,
             "background.png");
@@ -802,6 +751,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         HardwareAccelerationMode hwAccel = GetHardwareAccelerationMode(playbackSettings);
         _logger.LogDebug("HW accel mode: {HwAccel}", hwAccel);
 
+        var hlsOptions = GetHlsOptions(channel, now, ptsOffset, audioFormat);
+
         var ffmpegState = new FFmpegState(
             channel.Number == FileSystemLayout.TranscodeTroubleshootingChannel,
             HardwareAccelerationMode.None, // no hw accel decode since errors loop
@@ -816,11 +767,11 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             None,
             None,
             None,
-            outputFormat,
-            hlsPlaylistPath,
-            hlsSegmentTemplate,
-            hlsInitTemplate,
-            hlsSegmentOptions,
+            hlsOptions.OutputFormat,
+            hlsOptions.HlsPlaylistPath,
+            hlsOptions.HlsSegmentTemplate,
+            hlsOptions.HlsInitTemplate,
+            hlsOptions.HlsSegmentOptions,
             ptsOffset,
             Option<int>.None,
             qsvExtraHardwareFrames,
@@ -870,7 +821,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         bool hlsRealtime,
         TimeSpan ptsOffset)
     {
-        FFmpegPlaybackSettings playbackSettings = FFmpegPlaybackSettingsCalculator.CalculateErrorSettings(
+        FFmpegPlaybackSettings playbackSettings = FFmpegPlaybackSettingsCalculator.CalculateGeneratedImageSettings(
             channel.StreamingMode,
             channel.FFmpegProfile,
             hlsRealtime);
@@ -911,69 +862,12 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                 ? FFmpegFilterMode.HardwareIfPossible
                 : FFmpegFilterMode.Software,
             IsAnamorphic: false,
-            playbackSettings.FrameRate,
+            Option<FrameRate>.None,
             playbackSettings.VideoBitrate,
             playbackSettings.VideoBufferSize,
             playbackSettings.VideoTrackTimeScale,
             playbackSettings.NormalizeColors,
             playbackSettings.Deinterlace);
-
-        OutputFormatKind outputFormat = OutputFormatKind.MpegTs;
-        switch (channel.StreamingMode)
-        {
-            case StreamingMode.HttpLiveStreamingSegmenter:
-                outputFormat = OutputFormatKind.Hls;
-                break;
-        }
-
-        Option<string> hlsPlaylistPath = outputFormat is OutputFormatKind.Hls or OutputFormatKind.HlsMp4
-            ? Path.Combine(FileSystemLayout.TranscodeFolder, channel.Number, "live.m3u8")
-            : Option<string>.None;
-
-        long nowSeconds = now.ToUnixTimeSeconds();
-
-        Option<string> hlsSegmentTemplate = outputFormat switch
-        {
-            OutputFormatKind.Hls => Path.Combine(FileSystemLayout.TranscodeFolder, channel.Number, "live%06d.ts"),
-            OutputFormatKind.HlsMp4 => Path.Combine(
-                FileSystemLayout.TranscodeFolder,
-                channel.Number,
-                $"live_{nowSeconds}_%06d.m4s"),
-            _ => Option<string>.None
-        };
-
-        Option<string> hlsInitTemplate = outputFormat switch
-        {
-            OutputFormatKind.HlsMp4 => $"{nowSeconds}_init.mp4",
-            _ =>  Option<string>.None
-        };
-
-        Option<string> hlsSegmentOptions = Option<string>.None;
-        if (outputFormat is OutputFormatKind.Hls)
-        {
-            string options = string.Empty;
-
-            if (ptsOffset == TimeSpan.Zero)
-            {
-                options += "+initial_discontinuity";
-            }
-
-            if (audioFormat == AudioFormat.AacLatm)
-            {
-                options += "+latm";
-            }
-
-            if (!string.IsNullOrWhiteSpace(options))
-            {
-                hlsSegmentOptions = $"mpegts_flags={options}";
-            }
-        }
-
-        string videoPath = _localFileSystem.GetCustomOrDefaultFile(
-            FileSystemLayout.ResourcesCacheFolder,
-            "background.png");
-
-        var videoVersion = BackgroundImageMediaVersion.ForPath(videoPath, desiredResolution);
 
         var frameRate = playbackSettings.FrameRate.IfNone(new FrameRate("24"));
 
@@ -983,18 +877,20 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             string.Empty,
             new PixelFormatUnknown(), // leave this unknown so we convert to desired yuv420p
             ColorParams.Default,
-            new FrameSize(videoVersion.Width, videoVersion.Height),
-            videoVersion.SampleAspectRatio,
-            videoVersion.DisplayAspectRatio,
+            desiredState.PaddedSize,
+            MaybeSampleAspectRatio: "1:1",
+            DisplayAspectRatio: string.Empty,
             frameRate,
             true,
             ScanKind.Progressive);
 
         var videoInputFile = new LavfiInputFile(
-            $"color=c=black:s={videoVersion.Width}x{videoVersion.Height}:r={frameRate.FrameRateString}:d={duration.TotalSeconds}",
+            $"color=c=black:s={desiredState.PaddedSize.Width}x{desiredState.PaddedSize.Height}:r={frameRate.FrameRateString}:d={duration.TotalSeconds}",
             ffmpegVideoStream);
 
         HardwareAccelerationMode hwAccel = GetHardwareAccelerationMode(playbackSettings);
+
+        var hlsOptions = GetHlsOptions(channel, now, ptsOffset, audioFormat);
 
         var ffmpegState = new FFmpegState(
             channel.Number == FileSystemLayout.TranscodeTroubleshootingChannel,
@@ -1010,11 +906,11 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             None,
             None,
             None,
-            outputFormat,
-            hlsPlaylistPath,
-            hlsSegmentTemplate,
-            hlsInitTemplate,
-            hlsSegmentOptions,
+            hlsOptions.OutputFormat,
+            hlsOptions.HlsPlaylistPath,
+            hlsOptions.HlsSegmentTemplate,
+            hlsOptions.HlsInitTemplate,
+            hlsOptions.HlsSegmentOptions,
             ptsOffset,
             Option<int>.None,
             Optional(channel.FFmpegProfile.QsvExtraHardwareFrames),
@@ -1445,4 +1341,67 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
 
         return false;
     }
+
+    private static HlsOptions GetHlsOptions(Channel channel, DateTimeOffset now, TimeSpan ptsOffset, string audioFormat)
+    {
+        OutputFormatKind outputFormat = OutputFormatKind.MpegTs;
+        switch (channel.StreamingMode)
+        {
+            case StreamingMode.HttpLiveStreamingSegmenter:
+                outputFormat = OutputFormatKind.Hls;
+                break;
+        }
+
+        Option<string> hlsPlaylistPath = outputFormat is OutputFormatKind.Hls or OutputFormatKind.HlsMp4
+            ? Path.Combine(FileSystemLayout.TranscodeFolder, channel.Number, "live.m3u8")
+            : Option<string>.None;
+
+        long nowSeconds = now.ToUnixTimeSeconds();
+
+        Option<string> hlsSegmentTemplate = outputFormat switch
+        {
+            OutputFormatKind.Hls => Path.Combine(FileSystemLayout.TranscodeFolder, channel.Number, "live%06d.ts"),
+            OutputFormatKind.HlsMp4 => Path.Combine(
+                FileSystemLayout.TranscodeFolder,
+                channel.Number,
+                $"live_{nowSeconds}_%06d.m4s"),
+            _ => Option<string>.None
+        };
+
+        Option<string> hlsInitTemplate = outputFormat switch
+        {
+            OutputFormatKind.HlsMp4 => $"{nowSeconds}_init.mp4",
+            _ => Option<string>.None
+        };
+
+        Option<string> hlsSegmentOptions = Option<string>.None;
+        if (outputFormat is OutputFormatKind.Hls)
+        {
+            string options = string.Empty;
+
+            if (ptsOffset == TimeSpan.Zero)
+            {
+                options += "+initial_discontinuity";
+            }
+
+            if (audioFormat == AudioFormat.AacLatm)
+            {
+                options += "+latm";
+            }
+
+            if (!string.IsNullOrWhiteSpace(options))
+            {
+                hlsSegmentOptions = $"mpegts_flags={options}";
+            }
+        }
+
+        return new HlsOptions(outputFormat, hlsPlaylistPath, hlsSegmentTemplate, hlsInitTemplate, hlsSegmentOptions);
+    }
+
+    private sealed record HlsOptions(
+        OutputFormatKind OutputFormat,
+        Option<string> HlsPlaylistPath,
+        Option<string> HlsSegmentTemplate,
+        Option<string> HlsInitTemplate,
+        Option<string> HlsSegmentOptions);
 }
