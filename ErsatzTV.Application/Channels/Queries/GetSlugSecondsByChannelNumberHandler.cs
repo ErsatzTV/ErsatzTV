@@ -12,6 +12,6 @@ public class GetSlugSecondsByChannelNumberHandler(IDbContextFactory<TvContext> d
         return await dbContext.Channels
             .AsNoTracking()
             .SingleOrDefaultAsync(c => c.Number == request.ChannelNumber, cancellationToken)
-            .Map(c => Optional(c.SlugSeconds));
+            .Map(c => Optional(c?.SlugSeconds));
     }
 }
