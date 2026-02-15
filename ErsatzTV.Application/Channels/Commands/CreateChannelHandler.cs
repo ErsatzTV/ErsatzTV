@@ -80,6 +80,7 @@ public class CreateChannelHandler(
                 Group = request.Group,
                 Categories = request.Categories,
                 FFmpegProfileId = ffmpegProfileId,
+                SlugSeconds = request.SlugSeconds,
                 PlayoutSource = request.PlayoutSource,
                 PlayoutMode = request.PlayoutMode,
                 MirrorSourceChannelId = request.MirrorSourceChannelId,

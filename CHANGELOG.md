@@ -14,6 +14,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Classic schedule info includes schedule, schedule item, scheduler, filler, playback order, random seed, collection index
   - Block schedule info includes block, block item, playback order, random seed, collection index
   - E.g. items with the same random seed are part of the same shuffle
+- Add channel setting `Slug Seconds`
+  - This controls how many (optional) seconds of black video and silent audio to insert between *every* playout item
+  - This will drift playback from the wall clock as slugs are not scheduled in the playout, but are inserted dynamically during playback
+  - If this feature turns out to be popular, methods to correct the drift may be investigated
 
 ### Changed
 - Move dark/light mode toggle to **Settings** > **UI**

@@ -357,6 +357,9 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .HasColumnType("tinyint(1)")
                         .HasDefaultValue(true);
 
+                    b.Property<double?>("SlugSeconds")
+                        .HasColumnType("double");
+
                     b.Property<int>("SongVideoMode")
                         .HasColumnType("int");
 

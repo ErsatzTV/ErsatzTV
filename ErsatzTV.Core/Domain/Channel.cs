@@ -17,6 +17,7 @@ public class Channel
     public string Categories { get; set; }
     public int FFmpegProfileId { get; set; }
     public FFmpegProfile FFmpegProfile { get; set; }
+    public double? SlugSeconds { get; set; }
     public int? WatermarkId { get; set; }
     public ChannelWatermark Watermark { get; set; }
     public int? FallbackFillerId { get; set; }
