@@ -71,7 +71,7 @@ public class FFmpegProcessService
             }
 
             FFmpegPlaybackSettings playbackSettings =
-                FFmpegPlaybackSettingsCalculator.CalculateErrorSettings(
+                FFmpegPlaybackSettingsCalculator.CalculateGeneratedImageSettings(
                     StreamingMode.TransportStream,
                     channel.FFmpegProfile,
                     false);

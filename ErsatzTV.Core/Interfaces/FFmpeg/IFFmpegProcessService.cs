@@ -58,6 +58,14 @@ public interface IFFmpegProcessService
         string vaapiDevice,
         Option<int> qsvExtraHardwareFrames);
 
+    Task<Command> Slug(
+        string ffmpegPath,
+        Channel channel,
+        DateTimeOffset now,
+        TimeSpan duration,
+        bool hlsRealtime,
+        TimeSpan ptsOffset);
+
     Task<Command> ConcatChannel(string ffmpegPath, bool saveReports, Channel channel, string scheme, string host);
 
     Task<Command> WrapSegmenter(

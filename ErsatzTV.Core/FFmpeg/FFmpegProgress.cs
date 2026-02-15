@@ -39,7 +39,7 @@ public partial class FFmpegProgress
                         speed);
                 }
             }
-            else if (speed < 1.0)
+            else if (speed < 0.99)
             {
                 logger.LogWarning(
                     "Media item {MediaItemId} on channel {Channel} transcoded at {Speed}x (throttled) which may not be fast enough to support playback",

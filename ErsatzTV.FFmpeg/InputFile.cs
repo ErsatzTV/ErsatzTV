@@ -60,7 +60,7 @@ public record NullAudioInputFile : AudioInputFile
         DesiredState) =>
         InputOptions.Add(new LavfiInputOption());
 
-    public void Deconstruct(out AudioState DesiredState) => DesiredState = this.DesiredState;
+    public void Deconstruct(out AudioState desiredState) => desiredState = DesiredState;
 }
 
 public record VideoInputFile(
@@ -77,6 +77,12 @@ public record VideoInputFile(
             InputOptions.Add(option);
         }
     }
+}
+
+public record LavfiInputFile : VideoInputFile
+{
+    public LavfiInputFile(string parameters, VideoStream videoStream) : base(parameters, [videoStream])
+        => InputOptions.Add(new LavfiInputOption());
 }
 
 public record WatermarkInputFile(string Path, IList<VideoStream> VideoStreams, WatermarkState DesiredState)

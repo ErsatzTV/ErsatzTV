@@ -393,7 +393,8 @@ public class HlsSessionWorker : IHlsSessionWorker
             HlsSessionState.SlugAndRealtime => HlsSessionState.ZeroAndRealtime,
 
             // after completing the item, insert a slug
-            _ when isComplete && _slugSeconds.IsSome => HlsSessionState.SlugAndWorkAhead,
+            HlsSessionState.ZeroAndWorkAhead or HlsSessionState.SeekAndWorkAhead when isComplete && _slugSeconds.IsSome => HlsSessionState.SlugAndWorkAhead,
+            HlsSessionState.ZeroAndRealtime or HlsSessionState.SeekAndRealtime when isComplete && _slugSeconds.IsSome => HlsSessionState.SlugAndRealtime,
 
             // after seeking and completing the item, start at zero
             HlsSessionState.SeekAndWorkAhead => HlsSessionState.ZeroAndWorkAhead,
@@ -454,6 +455,7 @@ public class HlsSessionWorker : IHlsSessionWorker
                 {
                     HlsSessionState.SeekAndWorkAhead => HlsSessionState.SeekAndRealtime,
                     HlsSessionState.ZeroAndWorkAhead => HlsSessionState.ZeroAndRealtime,
+                    HlsSessionState.SlugAndWorkAhead => HlsSessionState.SlugAndRealtime,
                     _ => _state
                 };
 
