@@ -6,5 +6,7 @@ public enum HlsSessionState
     ZeroAndWorkAhead,
     SeekAndRealtime,
     ZeroAndRealtime,
+    SlugAndWorkAhead,
+    SlugAndRealtime,
     PlayoutUpdated
 }

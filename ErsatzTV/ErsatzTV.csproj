@@ -119,6 +119,7 @@
           <Generator>ResXFileCodeGenerator</Generator>
           <LastGenOutput>Common.Designer.cs</LastGenOutput>
         </EmbeddedResource>
+        <EmbeddedResource Include="Resources\slug.mp4" />
     </ItemGroup>
 
     <ItemGroup>

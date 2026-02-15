@@ -10,6 +10,7 @@ public record CreateChannel(
     string Group,
     string Categories,
     int FFmpegProfileId,
+    double? SlugSeconds,
     ArtworkContentTypeModel Logo,
     ChannelStreamSelectorMode StreamSelectorMode,
     string StreamSelector,

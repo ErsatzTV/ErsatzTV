@@ -11,6 +11,7 @@ public record UpdateChannel(
     string Group,
     string Categories,
     int FFmpegProfileId,
+    double? SlugSeconds,
     ArtworkContentTypeModel Logo,
     ChannelStreamSelectorMode StreamSelectorMode,
     string StreamSelector,

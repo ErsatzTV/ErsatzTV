@@ -52,6 +52,7 @@ public class UpdateChannelHandler(
         c.Group = update.Group;
         c.Categories = update.Categories;
         c.FFmpegProfileId = update.FFmpegProfileId;
+        c.SlugSeconds = update.SlugSeconds;
         c.StreamSelectorMode = update.StreamSelectorMode;
         c.StreamSelector = update.StreamSelector;
         c.PreferredAudioLanguageCode = update.PreferredAudioLanguageCode;

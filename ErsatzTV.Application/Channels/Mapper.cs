@@ -14,6 +14,7 @@ internal static class Mapper
             channel.Group,
             channel.Categories,
             channel.FFmpegProfileId,
+            channel.SlugSeconds,
             GetLogo(channel),
             channel.StreamSelectorMode,
             channel.StreamSelector,

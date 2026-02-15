@@ -8,6 +8,7 @@ using System.Timers;
 using Bugsnag;
 using CliWrap;
 using CliWrap.Buffered;
+using ErsatzTV.Application.Channels;
 using ErsatzTV.Application.Playouts;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
@@ -54,6 +55,7 @@ public class HlsSessionWorker : IHlsSessionWorker
     private Timer _timer;
     private DateTimeOffset _transcodedUntil;
     private string _workingDirectory;
+    private Option<double> _slugSeconds;
 
     public HlsSessionWorker(
         IServiceScopeFactory serviceScopeFactory,
@@ -213,6 +215,10 @@ public class HlsSessionWorker : IHlsSessionWorker
 
             Option<int> maybePlayoutId = await _mediator.Send(
                 new GetPlayoutIdByChannelNumber(_channelNumber),
+                cancellationToken);
+
+            _slugSeconds = await _mediator.Send(
+                new GetSlugSecondsByChannelNumber(_channelNumber),
                 cancellationToken);
 
             // time shift on-demand playout if needed
@@ -382,6 +388,13 @@ public class HlsSessionWorker : IHlsSessionWorker
             // after seeking and NOT completing the item, seek again, transcode method will accelerate if needed
             HlsSessionState.SeekAndWorkAhead when !isComplete => HlsSessionState.SeekAndRealtime,
 
+            // switch back to normal item after slug
+            HlsSessionState.SlugAndWorkAhead => HlsSessionState.ZeroAndWorkAhead,
+            HlsSessionState.SlugAndRealtime => HlsSessionState.ZeroAndRealtime,
+
+            // after completing the item, insert a slug
+            _ when isComplete && _slugSeconds.IsSome => HlsSessionState.SlugAndWorkAhead,
+
             // after seeking and completing the item, start at zero
             HlsSessionState.SeekAndWorkAhead => HlsSessionState.ZeroAndWorkAhead,
 
@@ -456,19 +469,32 @@ public class HlsSessionWorker : IHlsSessionWorker
             _logger.LogDebug("HLS session state: {State}", _state);
 
             DateTimeOffset now = wasSeekAndWorkAhead ? DateTimeOffset.Now : _transcodedUntil;
-            bool startAtZero = _state is HlsSessionState.ZeroAndWorkAhead or HlsSessionState.ZeroAndRealtime;
+            bool startAtZero = _state is HlsSessionState.ZeroAndWorkAhead or HlsSessionState.ZeroAndRealtime
+                or HlsSessionState.SlugAndWorkAhead or HlsSessionState.SlugAndRealtime;
 
-            var request = new GetPlayoutItemProcessByChannelNumber(
-                _channelNumber,
-                StreamingMode.HttpLiveStreamingSegmenter,
-                now,
-                startAtZero,
-                realtime,
-                _channelStart,
-                ptsOffset,
-                _targetFramerate,
-                IsTroubleshooting: false,
-                Option<int>.None);
+            bool isSlug = _state is HlsSessionState.SlugAndWorkAhead or HlsSessionState.SlugAndRealtime;
+
+            FFmpegProcessRequest request = isSlug
+                ? new GetSlugProcessByChannelNumber(
+                    _channelNumber,
+                    StreamingMode.HttpLiveStreamingSegmenter,
+                    now,
+                    realtime,
+                    _channelStart,
+                    ptsOffset,
+                    _targetFramerate,
+                    _slugSeconds)
+                : new GetPlayoutItemProcessByChannelNumber(
+                    _channelNumber,
+                    StreamingMode.HttpLiveStreamingSegmenter,
+                    now,
+                    startAtZero,
+                    realtime,
+                    _channelStart,
+                    ptsOffset,
+                    _targetFramerate,
+                    IsTroubleshooting: false,
+                    Option<int>.None);
 
             // _logger.LogInformation("Request {@Request}", request);
 
