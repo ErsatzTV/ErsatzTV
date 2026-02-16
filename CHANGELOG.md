@@ -27,6 +27,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - Improve stability of playback orders `Shuffle` and `Shuffle in Order` over time
 - Fix Trakt list sync
+- Fix some cases of QSV audio/video desync when *not* seeking by using software decode
+  - This only applies to content that *might* be problematic (using a heuristic)
 
 ## [26.2.0] - 2026-02-02
 ### Added
