@@ -91,6 +91,14 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
             decodeCapability = FFmpegCapability.Software;
         }
 
+        // QSV cannot always decode properly when *not* seeking, so check if software is needed
+        if (decodeCapability == FFmpegCapability.Hardware && ffmpegState.Start.Filter(s => s > TimeSpan.Zero).IsNone &&
+            videoStream.HasMultipleProfiles)
+        {
+            _logger.LogDebug("Forcing software decode when input file uses multiple h264 profiles");
+            decodeCapability = FFmpegCapability.Software;
+        }
+
         // give a bogus value so no cuda devices are visible to ffmpeg
         pipelineSteps.Add(new CudaVisibleDevicesVariable("999"));
 

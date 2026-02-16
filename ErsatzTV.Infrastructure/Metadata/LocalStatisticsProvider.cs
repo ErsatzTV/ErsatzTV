@@ -181,6 +181,24 @@ public partial class LocalStatisticsProvider : ILocalStatisticsProvider
         return Option<double>.None;
     }
 
+    public async Task<Option<int>> GetProfileCount(
+        string ffmpegPath,
+        MediaItem mediaItem,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            string filePath = await PathForMediaItem(mediaItem);
+            return await GetProfileCount(ffmpegPath, filePath);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to check profile count for media item {Id}", mediaItem.Id);
+        }
+
+        return Option<int>.None;
+    }
+
     private async Task<Either<BaseError, bool>> RefreshStatistics(
         string ffmpegPath,
         string ffprobePath,
@@ -335,6 +353,46 @@ public partial class LocalStatisticsProvider : ILocalStatisticsProvider
 
         return stats;
     }
+
+    private async Task<Option<int>> GetProfileCount(string ffmpegPath, string filePath)
+    {
+        string[] arguments =
+        [
+            "-hide_banner",
+            "-i", filePath,
+            "-c", "copy",
+            "-bsf:v", "trace_headers",
+            "-f", "null", "-"
+        ];
+
+        var uniqueProfiles = new System.Collections.Generic.HashSet<string>();
+
+        CommandResult traceHeaders = await Cli.Wrap(ffmpegPath)
+            .WithArguments(arguments)
+            .WithValidation(CommandResultValidation.None)
+            .WithStandardErrorPipe(PipeTarget.ToDelegate(line =>
+            {
+                int idx = line.IndexOf("profile_idc", StringComparison.Ordinal);
+                if (idx >= 0)
+                {
+                    uniqueProfiles.Add(line[idx..]);
+                }
+            }))
+            .ExecuteAsync();
+
+        if (traceHeaders.ExitCode != 0)
+        {
+            _logger.LogInformation(
+                "FFmpeg trace headers with arguments {Arguments} exited with code {ExitCode}",
+                arguments,
+                traceHeaders.ExitCode);
+
+            return Option<int>.None;
+        }
+
+        return uniqueProfiles.Count;
+    }
+
 
     private async Task AnalyzeDuration(string ffmpegPath, string path, MediaVersion version)
     {

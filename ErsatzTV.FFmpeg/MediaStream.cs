@@ -25,7 +25,8 @@ public record VideoStream(
     string DisplayAspectRatio,
     Option<FrameRate> FrameRate,
     bool StillImage,
-    ScanKind ScanKind) : MediaStream(
+    ScanKind ScanKind,
+    bool HasMultipleProfiles) : MediaStream(
     Index,
     Codec,
     StreamKind.Video)
