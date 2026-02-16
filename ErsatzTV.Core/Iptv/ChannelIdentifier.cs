@@ -17,6 +17,6 @@ public static class ChannelIdentifier
             number /= 10;
         }
 
-        return $"C{channelNumber}.{id}.ersatztv.org";
+        return $"C{channelNumber}.{id}.{SystemEnvironment.InstanceID}";
     }
 }
