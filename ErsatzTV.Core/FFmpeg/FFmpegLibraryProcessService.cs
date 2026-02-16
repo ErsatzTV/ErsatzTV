@@ -258,8 +258,10 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             videoVersion.MediaVersion.DisplayAspectRatio,
             new FrameRate(videoVersion.MediaVersion.RFrameRate),
             videoPath != audioPath, // still image when paths are different
-            scanKind,
-            hasMultipleProfiles);
+            scanKind)
+        {
+            HasMultipleProfiles = hasMultipleProfiles
+        };
 
         var videoInputFile = new VideoInputFile(
             videoPath,

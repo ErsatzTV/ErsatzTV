@@ -25,13 +25,14 @@ public record VideoStream(
     string DisplayAspectRatio,
     Option<FrameRate> FrameRate,
     bool StillImage,
-    ScanKind ScanKind,
-    bool HasMultipleProfiles) : MediaStream(
+    ScanKind ScanKind) : MediaStream(
     Index,
     Codec,
     StreamKind.Video)
 {
     public ColorParams ColorParams { get; private set; } = ColorParams;
+
+    public bool HasMultipleProfiles { get; set; }
 
     public int BitDepth => PixelFormat.Map(pf => pf.BitDepth).IfNone(8);
 
