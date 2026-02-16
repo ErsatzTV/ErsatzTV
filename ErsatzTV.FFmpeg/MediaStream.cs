@@ -32,6 +32,8 @@ public record VideoStream(
 {
     public ColorParams ColorParams { get; private set; } = ColorParams;
 
+    public bool HasMultipleProfiles { get; set; }
+
     public int BitDepth => PixelFormat.Map(pf => pf.BitDepth).IfNone(8);
 
     public string SampleAspectRatio
