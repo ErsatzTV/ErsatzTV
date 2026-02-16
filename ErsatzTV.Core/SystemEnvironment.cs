@@ -10,7 +10,7 @@ public class SystemEnvironment
 
         TranscodeFolder = Environment.GetEnvironmentVariable("ETV_TRANSCODE_FOLDER");
 
-        InstanceID = Environment.GetEnvironmentVariable("ETV_INSTANCE_ID");
+        InstanceID = Environment.GetEnvironmentVariable("ETV_INSTANCE_ID") ?? "ersatztv.org";
 
         string uiPortVariable = Environment.GetEnvironmentVariable("ETV_UI_PORT");
         if (!int.TryParse(uiPortVariable, out int uiPort))
