@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Runtime.InteropServices;
 
 namespace ErsatzTV.Core.Iptv;
 
@@ -8,6 +9,7 @@ public static class ChannelIdentifier
 
     public static string FromNumber(string channelNumber)
     {
+        string instanceID = SystemEnvironment.InstanceID;
         // get rid of any decimal (only two are allowed)
         var number = (int)(decimal.Parse(channelNumber, CultureInfo.InvariantCulture) * 100);
         var id = 0;
@@ -17,6 +19,6 @@ public static class ChannelIdentifier
             number /= 10;
         }
 
-        return $"C{channelNumber}.{id}.{SystemEnvironment.InstanceID}";
+        return $"C{channelNumber}.{id}.{instanceID}";
     }
 }
