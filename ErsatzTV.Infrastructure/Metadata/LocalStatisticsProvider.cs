@@ -189,7 +189,7 @@ public partial class LocalStatisticsProvider : ILocalStatisticsProvider
         try
         {
             string filePath = await PathForMediaItem(mediaItem);
-            return await GetProfileCount(ffmpegPath, filePath);
+            return await GetProfileCount(ffmpegPath, filePath, cancellationToken);
         }
         catch (Exception ex)
         {
@@ -354,7 +354,10 @@ public partial class LocalStatisticsProvider : ILocalStatisticsProvider
         return stats;
     }
 
-    private async Task<Option<int>> GetProfileCount(string ffmpegPath, string filePath)
+    private async Task<Option<int>> GetProfileCount(
+        string ffmpegPath,
+        string filePath,
+        CancellationToken cancellationToken)
     {
         string[] arguments =
         [
@@ -370,15 +373,16 @@ public partial class LocalStatisticsProvider : ILocalStatisticsProvider
         CommandResult traceHeaders = await Cli.Wrap(ffmpegPath)
             .WithArguments(arguments)
             .WithValidation(CommandResultValidation.None)
-            .WithStandardErrorPipe(PipeTarget.ToDelegate(line =>
-            {
-                int idx = line.IndexOf("profile_idc", StringComparison.Ordinal);
-                if (idx >= 0)
+            .WithStandardErrorPipe(
+                PipeTarget.ToDelegate(line =>
                 {
-                    uniqueProfiles.Add(line[idx..]);
-                }
-            }))
-            .ExecuteAsync();
+                    int idx = line.IndexOf("profile_idc", StringComparison.Ordinal);
+                    if (idx >= 0)
+                    {
+                        uniqueProfiles.Add(line[idx..]);
+                    }
+                }))
+            .ExecuteAsync(cancellationToken);
 
         if (traceHeaders.ExitCode != 0)
         {
