@@ -18,6 +18,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - This controls how many (optional) seconds of black video and silent audio to insert between *every* playout item
   - This will drift playback from the wall clock as slugs are not scheduled in the playout, but are inserted dynamically during playback
   - If this feature turns out to be popular, methods to correct the drift may be investigated
+- Add `ETV_INSTANCE_ID` environment variable to disambiguate EPG data from multiple ErsatzTV instances
+  - When set, the value will be used in channel identifiers before the final `.ersatztv.org`
 
 ### Changed
 - Move dark/light mode toggle to **Settings** > **UI**

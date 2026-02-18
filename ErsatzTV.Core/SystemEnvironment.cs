@@ -10,6 +10,8 @@ public class SystemEnvironment
 
         TranscodeFolder = Environment.GetEnvironmentVariable("ETV_TRANSCODE_FOLDER");
 
+        InstanceId = Environment.GetEnvironmentVariable("ETV_INSTANCE_ID");
+
         string uiPortVariable = Environment.GetEnvironmentVariable("ETV_UI_PORT");
         if (!int.TryParse(uiPortVariable, out int uiPort))
         {
@@ -63,6 +65,7 @@ public class SystemEnvironment
     public static string BaseUrl { get; }
     public static string ConfigFolder { get; }
     public static string TranscodeFolder { get; }
+    public static string InstanceId { get; }
     public static int UiPort { get; }
     public static int StreamingPort { get; }
     public static bool AllowSharedPlexServers { get; }

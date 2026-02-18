@@ -17,6 +17,9 @@ public static class ChannelIdentifier
             number /= 10;
         }
 
-        return $"C{channelNumber}.{id}.ersatztv.org";
+        string instanceId = SystemEnvironment.InstanceId;
+        return !string.IsNullOrWhiteSpace(instanceId)
+            ? $"C{channelNumber}.{id}.{instanceId}.ersatztv.org"
+            : $"C{channelNumber}.{id}.ersatztv.org";
     }
 }
