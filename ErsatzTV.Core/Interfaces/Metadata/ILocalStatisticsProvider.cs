@@ -14,4 +14,9 @@ public interface ILocalStatisticsProvider
         string ffmpegPath,
         MediaItem mediaItem,
         CancellationToken cancellationToken);
+
+    Task<Option<int>> GetProfileCount(
+        string ffmpegPath,
+        MediaItem mediaItem,
+        CancellationToken cancellationToken);
 }

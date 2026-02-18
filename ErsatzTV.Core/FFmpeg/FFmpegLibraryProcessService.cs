@@ -233,6 +233,16 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             scanKind = await ProbeScanKind(ffmpegPath, videoVersion.MediaItem, cancellationToken);
         }
 
+        HardwareAccelerationMode hwAccel = GetHardwareAccelerationMode(playbackSettings);
+
+        // QSV may have sync issues with h264 files that have multiple profiles
+        // check and flag here so software decoding can be used if needed
+        bool hasMultipleProfiles = false;
+        if (hwAccel is HardwareAccelerationMode.Qsv && videoStream.Codec is VideoFormat.H264)
+        {
+            hasMultipleProfiles = await ProbeHasMultipleProfiles(ffmpegPath, videoVersion.MediaItem, cancellationToken);
+        }
+
         var ffmpegVideoStream = new VideoStream(
             videoStream.Index,
             videoStream.Codec,
@@ -248,7 +258,10 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             videoVersion.MediaVersion.DisplayAspectRatio,
             new FrameRate(videoVersion.MediaVersion.RFrameRate),
             videoPath != audioPath, // still image when paths are different
-            scanKind);
+            scanKind)
+        {
+            HasMultipleProfiles = hasMultipleProfiles
+        };
 
         var videoInputFile = new VideoInputFile(
             videoPath,
@@ -404,8 +417,6 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         {
             graphicsElementContexts.AddRange(watermarks.Map(wm => new WatermarkElementContext(wm)));
         }
-
-        HardwareAccelerationMode hwAccel = GetHardwareAccelerationMode(playbackSettings);
 
         string videoFormat = GetVideoFormat(playbackSettings);
         Option<string> maybeVideoProfile = GetVideoProfile(videoFormat, channel.FFmpegProfile.VideoProfile);
@@ -650,6 +661,19 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             headVersion.InterlacedRatio,
             result);
         return result;
+    }
+
+    private async Task<bool> ProbeHasMultipleProfiles(
+        string ffmpegPath,
+        MediaItem mediaItem,
+        CancellationToken cancellationToken)
+    {
+        _logger.LogDebug("Will probe for h264 profile count");
+
+        Option<int> profileCount =
+            await _localStatisticsProvider.GetProfileCount(ffmpegPath, mediaItem, cancellationToken);
+
+        return await profileCount.IfNoneAsync(1) > 1;
     }
 
     public async Task<Command> ForError(
