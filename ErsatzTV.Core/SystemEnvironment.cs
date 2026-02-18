@@ -65,6 +65,7 @@ public class SystemEnvironment
     public static string BaseUrl { get; }
     public static string ConfigFolder { get; }
     public static string TranscodeFolder { get; }
+    public static string InstanceId { get; }
     public static int UiPort { get; }
     public static int StreamingPort { get; }
     public static bool AllowSharedPlexServers { get; }
@@ -73,5 +74,4 @@ public class SystemEnvironment
     public static int? SlowApiMs { get; }
     public static int JellyfinPageSize { get; }
     public static bool JellyfinEnableStats { get; }
-    public static string InstanceId { get; }
 }
