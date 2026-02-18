@@ -10,7 +10,7 @@ public class SystemEnvironment
 
         TranscodeFolder = Environment.GetEnvironmentVariable("ETV_TRANSCODE_FOLDER");
 
-        InstanceID = Environment.GetEnvironmentVariable("ETV_INSTANCE_ID") ?? "ersatztv.org";
+        InstanceId = Environment.GetEnvironmentVariable("ETV_INSTANCE_ID");
 
         string uiPortVariable = Environment.GetEnvironmentVariable("ETV_UI_PORT");
         if (!int.TryParse(uiPortVariable, out int uiPort))
@@ -73,5 +73,5 @@ public class SystemEnvironment
     public static int? SlowApiMs { get; }
     public static int JellyfinPageSize { get; }
     public static bool JellyfinEnableStats { get; }
-    public static string InstanceID { get; }
+    public static string InstanceId { get; }
 }
