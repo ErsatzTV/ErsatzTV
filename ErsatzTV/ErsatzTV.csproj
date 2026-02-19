@@ -6,7 +6,7 @@
         <TypeScriptToolsVersion>Latest</TypeScriptToolsVersion>
         <IsPackable>false</IsPackable>
         <ImplicitUsings>enable</ImplicitUsings>
-        <NoWarn>VSTHRD200</NoWarn>
+        <NoWarn>VSTHRD200,CA1873</NoWarn>
         <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
         <Configurations>Debug;Release;Debug No Sync</Configurations>
         <Platforms>AnyCPU</Platforms>

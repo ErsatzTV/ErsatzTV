@@ -21,9 +21,9 @@ public class LanguageCodeCache : ILanguageCodeCache
             if (resource != null)
             {
                 using var reader = new StreamReader(resource);
-                while (!reader.EndOfStream)
+                string line;
+                while ((line = await reader.ReadLineAsync(cancellationToken)) is not null)
                 {
-                    string line = await reader.ReadLineAsync(cancellationToken);
                     if (string.IsNullOrWhiteSpace(line))
                     {
                         continue;

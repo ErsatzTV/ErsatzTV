@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <TargetFramework>net10.0</TargetFramework>
-        <NoWarn>VSTHRD200</NoWarn>
+        <NoWarn>VSTHRD200,CA1873</NoWarn>
         <ImplicitUsings>enable</ImplicitUsings>
         <AnalysisLevel>latest-Recommended</AnalysisLevel>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
