@@ -6,6 +6,7 @@ namespace ErsatzTV.FFmpeg.OutputFormat;
 public class OutputFormatHls : IPipelineStep
 {
     public const int SegmentSeconds = 4;
+    public const int KeyframeIntervalSeconds = 2;
 
     private readonly FrameState _desiredState;
     private readonly bool _isFirstTranscode;
@@ -55,7 +56,7 @@ public class OutputFormatHls : IPipelineStep
 
             int gop = _oneSecondGop
                 ? (int)Math.Round(frameRate.ParsedFrameRate)
-                : (int)Math.Round(frameRate.ParsedFrameRate * SegmentSeconds);
+                : (int)Math.Round(frameRate.ParsedFrameRate * KeyframeIntervalSeconds);
 
             List<string> result = [];
 
@@ -64,8 +65,8 @@ public class OutputFormatHls : IPipelineStep
                 result.AddRange(
                 [
                     "-g", $"{gop}",
-                    "-keyint_min", $"{(int)Math.Round(frameRate.ParsedFrameRate * SegmentSeconds)}",
-                    "-force_key_frames", $"expr:gte(t,n_forced*{SegmentSeconds})"
+                    "-keyint_min", $"{(int)Math.Round(frameRate.ParsedFrameRate * KeyframeIntervalSeconds)}",
+                    "-force_key_frames", $"expr:gte(t,n_forced*{KeyframeIntervalSeconds})"
                 ]);
             }
 

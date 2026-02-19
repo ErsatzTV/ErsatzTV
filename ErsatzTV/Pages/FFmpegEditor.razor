@@ -282,8 +282,7 @@
                 <div class="d-flex">
                     <MudText>Format</MudText>
                 </div>
-                <MudSelect @bind-Value="_model.AudioFormat" For="@(() => _model.AudioFormat)">
-                    <MudSelectItem Value="@FFmpegProfileAudioFormat.Aac">aac</MudSelectItem>
+                <MudSelect @bind-Value="_model.AudioFormat" For="@(() => _model.AudioFormat)" HelperText="@(_model.AudioFormat is FFmpegProfileAudioFormat.AacLatm ? "aac (latm) is ONLY intended for DVB-C; anything else should use aac instead which uses ADTS" : string.Empty)">                    <MudSelectItem Value="@FFmpegProfileAudioFormat.Aac">aac</MudSelectItem>
                     <MudSelectItem Value="@FFmpegProfileAudioFormat.Ac3">ac3</MudSelectItem>
                     <MudSelectItem Value="@FFmpegProfileAudioFormat.AacLatm">aac (latm)</MudSelectItem>
                 </MudSelect>

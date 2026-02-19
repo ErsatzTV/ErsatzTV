@@ -48,25 +48,22 @@ public static class DbInitializer
                 if (resource != null)
                 {
                     using var reader = new StreamReader(resource);
-                    while (!reader.EndOfStream)
+                    string line;
+                    while ((line = await reader.ReadLineAsync(cancellationToken)) is not null)
                     {
-                        string line = await reader.ReadLineAsync(cancellationToken);
-                        if (line != null)
+                        string[] split = line.Split("|");
+                        if (split.Length == 5)
                         {
-                            string[] split = line.Split("|");
-                            if (split.Length == 5)
+                            var languageCode = new LanguageCode
                             {
-                                var languageCode = new LanguageCode
-                                {
-                                    ThreeCode1 = split[0],
-                                    ThreeCode2 = split[1],
-                                    TwoCode = split[2],
-                                    EnglishName = split[3],
-                                    FrenchName = split[4]
-                                };
+                                ThreeCode1 = split[0],
+                                ThreeCode2 = split[1],
+                                TwoCode = split[2],
+                                EnglishName = split[3],
+                                FrenchName = split[4]
+                            };
 
-                                await context.LanguageCodes.AddAsync(languageCode, cancellationToken);
-                            }
+                            await context.LanguageCodes.AddAsync(languageCode, cancellationToken);
                         }
                     }
                 }

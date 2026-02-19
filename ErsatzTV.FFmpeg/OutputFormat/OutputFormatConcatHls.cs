@@ -32,8 +32,8 @@ public class OutputFormatConcatHls : IPipelineStep
 
             return
             [
-                "-g", $"{OutputFormatHls.SegmentSeconds}/2",
-                "-force_key_frames", $"expr:gte(t,n_forced*{OutputFormatHls.SegmentSeconds}/2)",
+                "-g", $"{OutputFormatHls.KeyframeIntervalSeconds}",
+                "-force_key_frames", $"expr:gte(t,n_forced*{OutputFormatHls.KeyframeIntervalSeconds})",
                 "-f", "hls",
                 "-hls_segment_type", segmentType,
                 //"-hls_init_time", "2",

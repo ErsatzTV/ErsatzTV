@@ -20,11 +20,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - If this feature turns out to be popular, methods to correct the drift may be investigated
 - Add `ETV_INSTANCE_ID` environment variable to disambiguate EPG data from multiple ErsatzTV instances
   - When set, the value will be used in channel identifiers before the final `.ersatztv.org`
+- Show warning message when selecting audio format `aac (latm)` for general streaming use when it is only intended for DVB-C
 
 ### Changed
 - Move dark/light mode toggle to **Settings** > **UI**
 - Use latest (non-deprecated) authorization method with Jellyfin API
 - Replace direct Discord links with new contact page https://ersatztv.org/contact which also includes other options like Matrix
+- Lower GOP size and keyframe interval from four seconds to two seconds in accordance with HLS2 draft spec recommendations
 
 ### Fixed
 - Improve stability of playback orders `Shuffle` and `Shuffle in Order` over time

@@ -4,7 +4,7 @@ FROM --platform=linux/arm64 ghcr.io/ersatztv/ersatztv-ffmpeg:7.1.1 AS runtime-ba
 COPY --from=dotnet-runtime /usr/share/dotnet /usr/share/dotnet
 
 # https://hub.docker.com/_/microsoft-dotnet
-FROM mcr.microsoft.com/dotnet/sdk:10.0.102-noble-arm64v8 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0-noble-arm64v8 AS build
 RUN apt-get update && apt-get install -y ca-certificates gnupg
 WORKDIR /source
 

@@ -10,6 +10,7 @@
         <UserSecretsId>729e6271-c307-43c8-8e36-1b36c39f6de2</UserSecretsId>
         <AnalysisLevel>latest-Recommended</AnalysisLevel>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <NoWarn>VSTHRD200,CA1873</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>

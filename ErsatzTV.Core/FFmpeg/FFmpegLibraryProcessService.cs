@@ -893,7 +893,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             playbackSettings.NormalizeColors,
             playbackSettings.Deinterlace);
 
-        var frameRate = playbackSettings.FrameRate.IfNone(new FrameRate("24"));
+        var frameRate = await playbackSettings.FrameRate.IfNoneAsync(new FrameRate("24"));
 
         var ffmpegVideoStream = new VideoStream(
             0,
