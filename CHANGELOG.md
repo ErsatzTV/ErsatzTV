@@ -25,6 +25,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Move dark/light mode toggle to **Settings** > **UI**
 - Use latest (non-deprecated) authorization method with Jellyfin API
 - Replace direct Discord links with new contact page https://ersatztv.org/contact which also includes other options like Matrix
+- Lower GOP size and keyframe interval from four seconds to two seconds in accordance with HLS2 draft spec recommendations
 
 ### Fixed
 - Improve stability of playback orders `Shuffle` and `Shuffle in Order` over time
