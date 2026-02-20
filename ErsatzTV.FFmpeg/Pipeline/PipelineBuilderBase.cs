@@ -211,6 +211,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
             new NoStandardInputOption(),
             new HideBannerOption(),
             new NoStatsOption(),
+            new ProgressOption(),
             new LoglevelErrorOption(),
             new StandardFormatFlags(),
             new NoDemuxDecodeDelayOutputOption(),
@@ -220,7 +221,6 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         if (desiredState.VideoFormat != VideoFormat.Copy)
         {
             pipelineSteps.Add(new ClosedGopOutputOption());
-            pipelineSteps.Add(new ProgressOption());
         }
 
         if (desiredState.VideoFormat != VideoFormat.Copy && !desiredState.AllowBFrames)
