@@ -47,6 +47,7 @@ public partial class HardwareCapabilitiesFactory(
 
     public void ClearCache()
     {
+        memoryCache.Remove(FFmpegVersionKey);
         memoryCache.Remove(string.Format(CultureInfo.InvariantCulture, FFmpegCapabilitiesCacheKeyFormat, "hwaccels"));
         memoryCache.Remove(string.Format(CultureInfo.InvariantCulture, FFmpegCapabilitiesCacheKeyFormat, "decoders"));
         memoryCache.Remove(string.Format(CultureInfo.InvariantCulture, FFmpegCapabilitiesCacheKeyFormat, "filters"));

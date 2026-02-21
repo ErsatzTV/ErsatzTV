@@ -39,7 +39,7 @@ public class FFmpegVersionHealthCheck(
         {
             Option<string> maybeVersion =
                 await hardwareCapabilitiesFactory.GetFFmpegVersion(ffmpegPath.Value, cancellationToken);
-            if (maybeVersion.IsNone)
+            if (maybeVersion.IsNone || maybeVersion.Exists(string.IsNullOrWhiteSpace))
             {
                 return WarningResult("Unable to determine ffmpeg version", "Unable to determine ffmpeg version", link);
             }
@@ -57,7 +57,7 @@ public class FFmpegVersionHealthCheck(
         {
             Option<string> maybeVersion =
                 await hardwareCapabilitiesFactory.GetFFmpegVersion(ffprobePath.Value, cancellationToken);
-            if (maybeVersion.IsNone)
+            if (maybeVersion.IsNone || maybeVersion.Exists(string.IsNullOrWhiteSpace))
             {
                 return WarningResult(
                     "Unable to determine ffprobe version",

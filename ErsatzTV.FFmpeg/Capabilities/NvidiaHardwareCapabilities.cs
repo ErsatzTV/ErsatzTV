@@ -60,8 +60,10 @@ public class NvidiaHardwareCapabilities(CudaDevice cudaDevice, IFFmpegCapabiliti
         // 10-bit h264 hardware decode is not supported until ffmpeg 8
         if (isHardware && videoFormat is VideoFormat.H264 && bitDepth == 10)
         {
-            if (!ffmpegCapabilities.Version.StartsWith("8.", StringComparison.OrdinalIgnoreCase) &&
-                !ffmpegCapabilities.Version.StartsWith("n8.", StringComparison.OrdinalIgnoreCase))
+            bool isVersion8OrNewer = int.TryParse(
+                ffmpegCapabilities.Version.Split('.')[0].TrimStart('n', 'N'),
+                out int major) && major >= 8;
+            if (!isVersion8OrNewer)
             {
                 isHardware = false;
             }
