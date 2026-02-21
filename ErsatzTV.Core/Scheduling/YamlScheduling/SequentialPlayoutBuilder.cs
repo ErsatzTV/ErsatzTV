@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using System.Globalization;
 using System.IO.Abstractions;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Scheduling;
@@ -201,10 +202,54 @@ public class SequentialPlayoutBuilder(
                 cancellationToken);
         }
 
+        // load alternate schedules
+        // sort by priority, then by index
+        IOrderedEnumerable<(YamlPlayoutSchedule schedule, int index)> sortedSchedules = playoutDefinition.Schedules
+            .Select((schedule, index) => (schedule, index))
+            .OrderByDescending(x => x.schedule.Priority)
+            .ThenBy(x => x.index);
+
+        // parse once
+        var parsedSchedules = sortedSchedules
+            .Select((s, i) => new YamlPlayoutParsedSchedule(s.schedule, i))
+            .ToList();
+
+        // Determine which schedule to use based on the start date
+        Option<YamlPlayoutSchedule> maybeActiveSchedule = AlternateScheduleSelector
+            .GetScheduleForDate(parsedSchedules, start)
+            .Map(s => s.Schedule);
+
+        List<YamlPlayoutInstruction> resetInstructions = [];
+        List<YamlPlayoutInstruction> playoutInstructions = [];
+
+        if (maybeActiveSchedule.IsNone)
+        {
+            logger.LogDebug("Using default playout for date {Date}", start.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+            resetInstructions = playoutDefinition.Reset;
+            playoutInstructions = playoutDefinition.Playout;
+        }
+
+        foreach (YamlPlayoutSchedule activeSchedule in maybeActiveSchedule)
+        {
+            logger.LogInformation(
+                "Using scheduled playout '{Name}' for date {Date}",
+                string.IsNullOrWhiteSpace(activeSchedule.Name) ? "Unnamed" : activeSchedule.Name,
+                start.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+            // Use schedule-specific reset if provided, otherwise use root reset
+            resetInstructions = activeSchedule.Reset.Count > 0 ? activeSchedule.Reset : playoutDefinition.Reset;
+            playoutInstructions = activeSchedule.Playout;
+        }
+
+        if (playoutInstructions.Count == 0)
+        {
+            logger.LogWarning("No playout instructions found for date {Date}", start.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+            return BaseError.New($"No playout instructions found for date {start:yyyy-MM-dd}");
+        }
+
         if (mode is PlayoutBuildMode.Reset)
         {
             // handle all on-reset instructions
-            foreach (YamlPlayoutInstruction instruction in playoutDefinition.Reset)
+            foreach (YamlPlayoutInstruction instruction in resetInstructions)
             {
                 Option<IYamlPlayoutHandler> maybeHandler = GetHandlerForInstruction(
                     handlers,
@@ -233,6 +278,23 @@ public class SequentialPlayoutBuilder(
             }
         }
 
+        // Create a temporary modified definition with the selected instructions
+        var effectiveDefinition = new YamlPlayoutDefinition
+        {
+            Import = playoutDefinition.Import,
+            Content = playoutDefinition.Content,
+            Sequence = playoutDefinition.Sequence,
+            Reset = resetInstructions,
+            Playout = playoutInstructions
+        };
+
+        // Update context to use the effective definition
+        context = new YamlPlayoutContext(playout, effectiveDefinition, 1)
+        {
+            CurrentTime = context.CurrentTime,
+            InstructionIndex = context.InstructionIndex
+        };
+
         if (DetectCycle(context.Definition))
         {
             logger.LogError("YAML sequence contains a cycle; unable to build playout");
@@ -254,15 +316,123 @@ public class SequentialPlayoutBuilder(
         }
 
         // handle all playout instructions
+        Option<YamlPlayoutSchedule> currentSchedule = maybeActiveSchedule;
         while (context.CurrentTime < finish)
         {
-            if (context.InstructionIndex >= playoutDefinition.Playout.Count)
+            // Check if we've crossed into a different schedule
+            Option<YamlPlayoutSchedule> maybeNewSchedule = AlternateScheduleSelector
+                .GetScheduleForDate(parsedSchedules, context.CurrentTime)
+                .Map(s => s.Schedule);
+
+            if (currentSchedule != maybeNewSchedule)
+            {
+                string oldName = currentSchedule.Match(cs => string.IsNullOrWhiteSpace(cs.Name) ? "Unnamed" : cs.Name, () => "Default");
+                string newName = maybeNewSchedule.Match(ns => string.IsNullOrWhiteSpace(ns.Name) ? "Unnamed" : ns.Name, () => "Default");
+                logger.LogInformation(
+                    "Schedule changed from '{OldSchedule}' to '{NewSchedule}' at {Time}",
+                    oldName,
+                    newName,
+                    context.CurrentTime.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture));
+
+                // Switch to the new schedule
+                currentSchedule = maybeActiveSchedule;
+
+                // Get the new schedule's instructions
+                List<YamlPlayoutInstruction> newPlayoutInstructions = playoutDefinition.Playout;
+                foreach (var newSchedule in maybeNewSchedule)
+                {
+                    newPlayoutInstructions = newSchedule.Playout;
+                }
+
+                if (newPlayoutInstructions.Count == 0)
+                {
+                    logger.LogWarning("No playout instructions found for new schedule");
+                    break;
+                }
+
+                // Create a new effective definition with the new schedule's instructions
+                effectiveDefinition = new YamlPlayoutDefinition
+                {
+                    Import = playoutDefinition.Import,
+                    Content = playoutDefinition.Content,
+                    Sequence = playoutDefinition.Sequence,
+                    Reset = maybeNewSchedule.Match(ns => ns.Reset.Count > 0 ? ns.Reset : playoutDefinition.Reset, () => playoutDefinition.Reset),
+                    Playout = newPlayoutInstructions
+                };
+
+                // Flatten sequences for the new definition
+                if (DetectCycle(effectiveDefinition))
+                {
+                    logger.LogError("YAML sequence contains a cycle in new schedule; unable to build playout");
+                    break;
+                }
+
+                var newFlattenCount = 0;
+                while (effectiveDefinition.Playout.Any(x => x is YamlPlayoutSequenceInstruction))
+                {
+                    if (newFlattenCount > 100)
+                    {
+                        logger.LogError(
+                            "YAML playout definition contains sequence nesting that is too deep in new schedule");
+                        break;
+                    }
+
+                    FlattenSequencesForDefinition(effectiveDefinition);
+                    newFlattenCount++;
+                }
+
+                // Preserve existing state before creating new context
+                var previousAddedItems = context.AddedItems.ToList();
+                var previousAddedHistory = context.AddedHistory.ToList();
+                var previousPreRollSequence = context.GetPreRollSequence();
+                var previousPostRollSequence = context.GetPostRollSequence();
+                var previousMidRollSequence = context.GetMidRollSequence();
+                var previousWatermarkIds = context.GetChannelWatermarkIds();
+                var previousGraphicsElements = context.GetGraphicsElements();
+
+                context = new YamlPlayoutContext(playout, effectiveDefinition, 1)
+                {
+                    CurrentTime = context.CurrentTime,
+                    InstructionIndex = 0  // Start from beginning of new schedule
+                };
+
+                // Restore all preserved state
+                context.AddedItems.AddRange(previousAddedItems);
+                context.AddedHistory.AddRange(previousAddedHistory);
+
+                foreach (string preRoll in previousPreRollSequence)
+                {
+                    context.SetPreRollSequence(preRoll);
+                }
+
+                foreach (string postRoll in previousPostRollSequence)
+                {
+                    context.SetPostRollSequence(postRoll);
+                }
+
+                foreach (var midRoll in previousMidRollSequence)
+                {
+                    context.SetMidRollSequence(midRoll);
+                }
+
+                foreach (int watermarkId in previousWatermarkIds)
+                {
+                    context.SetChannelWatermarkId(watermarkId);
+                }
+
+                foreach (var (graphicsId, variablesJson) in previousGraphicsElements)
+                {
+                    context.SetGraphicsElement(graphicsId, variablesJson);
+                }
+            }
+
+            if (context.InstructionIndex >= effectiveDefinition.Playout.Count)
             {
                 logger.LogInformation("Reached the end of the YAML playout definition; stopping");
                 break;
             }
 
-            YamlPlayoutInstruction instruction = playoutDefinition.Playout[context.InstructionIndex];
+            YamlPlayoutInstruction instruction = effectiveDefinition.Playout[context.InstructionIndex];
             //logger.LogDebug("Current playout instruction: {Instruction}", instruction.GetType().Name);
 
             Option<IYamlPlayoutHandler> maybeHandler = GetHandlerForInstruction(handlers, enumeratorCache, instruction);
@@ -382,17 +552,20 @@ public class SequentialPlayoutBuilder(
             .GetValue<int>(ConfigElementKey.PlayoutDaysToBuild, cancellationToken)
             .IfNoneAsync(2);
 
-    private static void FlattenSequences(YamlPlayoutContext context)
+    private static void FlattenSequences(YamlPlayoutContext context) =>
+        FlattenSequencesForDefinition(context.Definition);
+
+    private static void FlattenSequencesForDefinition(YamlPlayoutDefinition definition)
     {
-        var rawInstructions = context.Definition.Playout.ToImmutableList();
-        context.Definition.Playout.Clear();
+        var rawInstructions = definition.Playout.ToImmutableList();
+        definition.Playout.Clear();
 
         foreach (YamlPlayoutInstruction instruction in rawInstructions)
         {
             switch (instruction)
             {
                 case YamlPlayoutSequenceInstruction sequenceInstruction:
-                    IEnumerable<YamlPlayoutInstruction> sequenceInstructions = context.Definition.Sequence
+                    IEnumerable<YamlPlayoutInstruction> sequenceInstructions = definition.Sequence
                         .Filter(s => s.Key == sequenceInstruction.Sequence)
                         .HeadOrNone()
                         .Map(s => s.Items)
@@ -417,13 +590,13 @@ public class SequentialPlayoutBuilder(
                                 i.CustomTitle = sequenceInstruction.CustomTitle;
                             }
 
-                            context.Definition.Playout.Add(i);
+                            definition.Playout.Add(i);
                         }
                     }
 
                     break;
                 default:
-                    context.Definition.Playout.Add(instruction);
+                    definition.Playout.Add(instruction);
                     break;
             }
         }
