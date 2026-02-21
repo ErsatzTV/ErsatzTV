@@ -122,7 +122,7 @@ public class PipelineBuilderBaseTests
 
         string command = PrintCommand(videoInputFile, audioInputFile, None, None, None, result);
         command.ShouldBe(
-            "-nostdin -hide_banner -nostats -loglevel error -fflags +genpts+discardcorrupt+igndts -progress - -ss 00:00:01 -c:v h264 -readrate 1.05 -i /tmp/whatever.mkv -filter_complex [0:1]aresample=async=1[a] -map 0:0 -map [a] -muxdelay 0 -muxpreload 0 -movflags +faststart -flags cgop -bf 0 -sc_threshold 0 -video_track_timescale 90000 -b:v 2000k -maxrate:v 2000k -bufsize:v 4000k -c:v libx265 -tag:v hvc1 -x265-params log-level=error -c:a aac -b:a 320k -maxrate:a 320k -bufsize:a 640k -ar 48k -f mpegts -mpegts_flags +initial_discontinuity pipe:1");
+            "-nostdin -hide_banner -nostats -progress - -loglevel error -fflags +genpts+discardcorrupt+igndts -ss 00:00:01 -c:v h264 -readrate 1.05 -i /tmp/whatever.mkv -filter_complex [0:1]aresample=async=1[a] -map 0:0 -map [a] -muxdelay 0 -muxpreload 0 -movflags +faststart -flags cgop -bf 0 -sc_threshold 0 -video_track_timescale 90000 -b:v 2000k -maxrate:v 2000k -bufsize:v 4000k -c:v libx265 -tag:v hvc1 -x265-params log-level=error -c:a aac -b:a 320k -maxrate:a 320k -bufsize:a 640k -ar 48k -f mpegts -mpegts_flags +initial_discontinuity pipe:1");
     }
 
     [Test]
@@ -225,7 +225,7 @@ public class PipelineBuilderBaseTests
 
         string command = PrintCommand(videoInputFile, audioInputFile, None, None, None, result);
         command.ShouldBe(
-            "-nostdin -hide_banner -nostats -loglevel error -fflags +genpts+discardcorrupt+igndts -progress - -ss 00:00:01 -c:v h264 -readrate 1.05 -i /tmp/whatever.mkv -filter_complex [0:1]aresample=async=1[a] -map 0:0 -map [a] -muxdelay 0 -muxpreload 0 -movflags +faststart -flags cgop -bf 0 -sc_threshold 0 -video_track_timescale 90000 -b:v 2000k -maxrate:v 2000k -bufsize:v 4000k -c:v libx265 -tag:v hvc1 -x265-params log-level=error -c:a aac -ac 6 -b:a 320k -maxrate:a 320k -bufsize:a 640k -ar 48k -f mpegts -mpegts_flags +initial_discontinuity pipe:1");
+            "-nostdin -hide_banner -nostats -progress - -loglevel error -fflags +genpts+discardcorrupt+igndts -ss 00:00:01 -c:v h264 -readrate 1.05 -i /tmp/whatever.mkv -filter_complex [0:1]aresample=async=1[a] -map 0:0 -map [a] -muxdelay 0 -muxpreload 0 -movflags +faststart -flags cgop -bf 0 -sc_threshold 0 -video_track_timescale 90000 -b:v 2000k -maxrate:v 2000k -bufsize:v 4000k -c:v libx265 -tag:v hvc1 -x265-params log-level=error -c:a aac -ac 6 -b:a 320k -maxrate:a 320k -bufsize:a 640k -ar 48k -f mpegts -mpegts_flags +initial_discontinuity pipe:1");
     }
 
     [Test]
@@ -390,7 +390,7 @@ public class PipelineBuilderBaseTests
 
         // 0.4.0 reference: "-nostdin -threads 1 -hide_banner -loglevel error -nostats -fflags +genpts+discardcorrupt+igndts -re -ss 00:14:33.6195516 -i /tmp/whatever.mkv -map 0:0 -map 0:a -c:v copy -flags cgop -sc_threshold 0 -c:a copy -movflags +faststart -metadata service_provider="ErsatzTV" -metadata service_name="ErsatzTV" -t 00:06:39.6934484 -f mpegts -mpegts_flags +initial_discontinuity pipe:1"
         command.ShouldBe(
-            "-nostdin -hide_banner -nostats -loglevel error -fflags +genpts+discardcorrupt+igndts -readrate 1.0 -i /tmp/whatever.mkv -map 0:0 -map 0:1 -muxdelay 0 -muxpreload 0 -movflags +faststart+frag_keyframe+separate_moof+omit_tfhd_offset+empty_moov+delay_moov -c:v copy -c:a copy -f mp4 pipe:1");
+            "-nostdin -hide_banner -nostats -progress - -loglevel error -fflags +genpts+discardcorrupt+igndts -readrate 1.0 -i /tmp/whatever.mkv -map 0:0 -map 0:1 -muxdelay 0 -muxpreload 0 -movflags +faststart+frag_keyframe+separate_moof+omit_tfhd_offset+empty_moov+delay_moov -c:v copy -c:a copy -f mp4 pipe:1");
     }
 
     [Test]
@@ -484,7 +484,7 @@ public class PipelineBuilderBaseTests
         string command = PrintCommand(videoInputFile, audioInputFile, None, None, None, result);
 
         command.ShouldBe(
-            "-nostdin -hide_banner -nostats -loglevel error -fflags +genpts+discardcorrupt+igndts -readrate 1.0 -i /tmp/whatever.mkv -map 0:0 -map 0:a -muxdelay 0 -muxpreload 0 -movflags +faststart+frag_keyframe+separate_moof+omit_tfhd_offset+empty_moov+delay_moov -c:v copy -c:a copy -f mp4 pipe:1");
+            "-nostdin -hide_banner -nostats -progress - -loglevel error -fflags +genpts+discardcorrupt+igndts -readrate 1.0 -i /tmp/whatever.mkv -map 0:0 -map 0:a -muxdelay 0 -muxpreload 0 -movflags +faststart+frag_keyframe+separate_moof+omit_tfhd_offset+empty_moov+delay_moov -c:v copy -c:a copy -f mp4 pipe:1");
     }
 
     [Test]
