@@ -74,7 +74,8 @@ public class
                         ffmpegPath,
                         originalPath,
                         withExtension,
-                        request.MaxHeight.Value);
+                        request.MaxHeight.Value,
+                        cancellationToken);
 
                     CommandResult resize = await process.ExecuteAsync(cancellationToken);
 

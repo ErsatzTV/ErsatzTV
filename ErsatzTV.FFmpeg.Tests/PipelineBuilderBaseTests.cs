@@ -556,6 +556,7 @@ public class PipelineBuilderBaseTests
     }
 
     public class DefaultFFmpegCapabilities() : FFmpegCapabilities(
+        string.Empty,
         new System.Collections.Generic.HashSet<string>(),
         new System.Collections.Generic.HashSet<string>(),
         new System.Collections.Generic.HashSet<string>(),

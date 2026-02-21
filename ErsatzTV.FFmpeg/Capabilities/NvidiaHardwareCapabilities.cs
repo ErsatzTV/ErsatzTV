@@ -57,6 +57,16 @@ public class NvidiaHardwareCapabilities(CudaDevice cudaDevice, IFFmpegCapabiliti
             isHardware = false;
         }
 
+        // 10-bit h264 hardware decode is not supported until ffmpeg 8
+        if (isHardware && videoFormat is VideoFormat.H264 && bitDepth == 10)
+        {
+            if (!ffmpegCapabilities.Version.StartsWith("8.", StringComparison.OrdinalIgnoreCase) &&
+                !ffmpegCapabilities.Version.StartsWith("n8.", StringComparison.OrdinalIgnoreCase))
+            {
+                isHardware = false;
+            }
+        }
+
         if (isHardware)
         {
             return videoFormat switch

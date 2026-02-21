@@ -23,7 +23,8 @@ public class FFmpegCapabilitiesHealthCheck(IConfigElementRepository configElemen
 
         foreach (ConfigElement ffmpegPath in maybeFFmpegPath)
         {
-            var ffmpegCapabilities = await hardwareCapabilitiesFactory.GetFFmpegCapabilities(ffmpegPath.Value);
+            var ffmpegCapabilities =
+                await hardwareCapabilitiesFactory.GetFFmpegCapabilities(ffmpegPath.Value, cancellationToken);
 
             List<string> missingFilters = [];
 

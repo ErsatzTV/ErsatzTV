@@ -161,7 +161,8 @@ public class GetTroubleshootingInfoHandler : IRequestHandler<GetTroubleshootingI
                     videoToolboxCapabilities.AppendLine();
                 }
 
-                var ffmpegCapabilities = await _hardwareCapabilitiesFactory.GetFFmpegCapabilities(ffmpegPath.Value);
+                var ffmpegCapabilities =
+                    await _hardwareCapabilitiesFactory.GetFFmpegCapabilities(ffmpegPath.Value, cancellationToken);
                 aviSynthDemuxer = ffmpegCapabilities.HasDemuxFormat(FFmpegKnownFormat.AviSynth);
                 aviSynthInstalled = _hardwareCapabilitiesFactory.IsAviSynthInstalled();
             }

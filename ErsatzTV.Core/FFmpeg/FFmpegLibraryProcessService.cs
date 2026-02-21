@@ -604,7 +604,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             VaapiDeviceName(hwAccel, vaapiDevice),
             await customReportsFolder.IfNoneAsync(FileSystemLayout.FFmpegReportsFolder),
             FileSystemLayout.FontsCacheFolder,
-            ffmpegPath);
+            ffmpegPath,
+            cancellationToken);
 
         FFmpegPipeline pipeline = pipelineBuilder.Build(ffmpegState, desiredState);
 
@@ -687,7 +688,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         string vaapiDisplay,
         VaapiDriver vaapiDriver,
         string vaapiDevice,
-        Option<int> qsvExtraHardwareFrames)
+        Option<int> qsvExtraHardwareFrames,
+        CancellationToken cancellationToken)
     {
         FFmpegPlaybackSettings playbackSettings = FFmpegPlaybackSettingsCalculator.CalculateGeneratedImageSettings(
             channel.StreamingMode,
@@ -830,7 +832,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                 ? FileSystemLayout.TranscodeTroubleshootingFolder
                 : FileSystemLayout.FFmpegReportsFolder,
             FileSystemLayout.FontsCacheFolder,
-            ffmpegPath);
+            ffmpegPath,
+            cancellationToken);
 
         FFmpegPipeline pipeline = pipelineBuilder.Build(ffmpegState, desiredState);
 
@@ -843,7 +846,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         DateTimeOffset now,
         TimeSpan duration,
         bool hlsRealtime,
-        TimeSpan ptsOffset)
+        TimeSpan ptsOffset,
+        CancellationToken cancellationToken)
     {
         FFmpegPlaybackSettings playbackSettings = FFmpegPlaybackSettingsCalculator.CalculateGeneratedImageSettings(
             channel.StreamingMode,
@@ -960,7 +964,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                 ? FileSystemLayout.TranscodeTroubleshootingFolder
                 : FileSystemLayout.FFmpegReportsFolder,
             FileSystemLayout.FontsCacheFolder,
-            ffmpegPath);
+            ffmpegPath,
+            cancellationToken);
 
         FFmpegPipeline pipeline = pipelineBuilder.Build(ffmpegState, desiredState);
 
@@ -972,7 +977,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         bool saveReports,
         Channel channel,
         string scheme,
-        string host)
+        string host,
+        CancellationToken cancellationToken)
     {
         var resolution = new FrameSize(channel.FFmpegProfile.Resolution.Width, channel.FFmpegProfile.Resolution.Height);
 
@@ -993,7 +999,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             Option<string>.None,
             FileSystemLayout.FFmpegReportsFolder,
             FileSystemLayout.FontsCacheFolder,
-            ffmpegPath);
+            ffmpegPath,
+            cancellationToken);
 
         FFmpegPipeline pipeline = pipelineBuilder.Concat(
             concatInputFile,
@@ -1063,7 +1070,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             Option<string>.None,
             FileSystemLayout.FFmpegReportsFolder,
             FileSystemLayout.FontsCacheFolder,
-            ffmpegPath);
+            ffmpegPath,
+            cancellationToken);
 
         FFmpegPipeline pipeline = pipelineBuilder.WrapSegmenter(
             concatInputFile,
@@ -1072,7 +1080,12 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         return GetCommand(ffmpegPath, None, None, None, concatInputFile, None, pipeline);
     }
 
-    public async Task<Command> ResizeImage(string ffmpegPath, string inputFile, string outputFile, int height)
+    public async Task<Command> ResizeImage(
+        string ffmpegPath,
+        string inputFile,
+        string outputFile,
+        int height,
+        CancellationToken cancellationToken)
     {
         var videoInputFile = new VideoInputFile(
             inputFile,
@@ -1105,7 +1118,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             Option<string>.None,
             FileSystemLayout.FFmpegReportsFolder,
             FileSystemLayout.FontsCacheFolder,
-            ffmpegPath);
+            ffmpegPath,
+            cancellationToken);
 
         FFmpegPipeline pipeline = pipelineBuilder.Resize(outputFile, new FrameSize(-1, height));
 
@@ -1141,7 +1155,12 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             watermarkWidthPercent,
             cancellationToken);
 
-    public async Task<Command> SeekTextSubtitle(string ffmpegPath, string inputFile, string codec, TimeSpan seek)
+    public async Task<Command> SeekTextSubtitle(
+        string ffmpegPath,
+        string inputFile,
+        string codec,
+        TimeSpan seek,
+        CancellationToken cancellationToken)
     {
         var videoInputFile = new VideoInputFile(
             inputFile,
@@ -1174,7 +1193,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             Option<string>.None,
             FileSystemLayout.FFmpegReportsFolder,
             FileSystemLayout.FontsCacheFolder,
-            ffmpegPath);
+            ffmpegPath,
+            cancellationToken);
 
         FFmpegPipeline pipeline = pipelineBuilder.Seek(inputFile, codec, seek);
 

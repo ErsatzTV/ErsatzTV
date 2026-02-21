@@ -21,19 +21,21 @@ public class GetSeekTextSubtitleProcessHandler(
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, string> validation = await Validate(dbContext, cancellationToken);
         return await validation.Match(
-            ffmpegPath => GetProcess(request, ffmpegPath),
+            ffmpegPath => GetProcess(request, ffmpegPath, cancellationToken),
             error => Task.FromResult<Either<BaseError, SeekTextSubtitleProcess>>(error.Join()));
     }
 
     private async Task<Either<BaseError, SeekTextSubtitleProcess>> GetProcess(
         GetSeekTextSubtitleProcess request,
-        string ffmpegPath)
+        string ffmpegPath,
+        CancellationToken cancellationToken)
     {
         Command process = await ffmpegProcessService.SeekTextSubtitle(
             ffmpegPath,
             request.PathAndCodec.Path,
             request.PathAndCodec.Codec,
-            request.Seek);
+            request.Seek,
+            cancellationToken);
 
         return new SeekTextSubtitleProcess(process);
     }

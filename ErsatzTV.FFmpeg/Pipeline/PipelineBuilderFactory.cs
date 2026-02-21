@@ -29,9 +29,11 @@ public class PipelineBuilderFactory : IPipelineBuilderFactory
         Option<string> vaapiDevice,
         string reportsFolder,
         string fontsFolder,
-        string ffmpegPath)
+        string ffmpegPath,
+        CancellationToken cancellationToken)
     {
-        IFFmpegCapabilities ffmpegCapabilities = await _hardwareCapabilitiesFactory.GetFFmpegCapabilities(ffmpegPath);
+        IFFmpegCapabilities ffmpegCapabilities =
+            await _hardwareCapabilitiesFactory.GetFFmpegCapabilities(ffmpegPath, cancellationToken);
 
         IHardwareCapabilities capabilities = await _hardwareCapabilitiesFactory.GetHardwareCapabilities(
             ffmpegCapabilities,
