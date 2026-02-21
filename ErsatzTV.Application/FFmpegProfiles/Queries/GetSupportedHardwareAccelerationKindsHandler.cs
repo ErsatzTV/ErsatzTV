@@ -31,15 +31,18 @@ public class
         Validation<BaseError, string> validation = await Validate(dbContext, cancellationToken);
 
         return await validation.Match(
-            GetHardwareAccelerationKinds,
+            ffmpegPath => GetHardwareAccelerationKinds(ffmpegPath, cancellationToken),
             _ => Task.FromResult(new List<HardwareAccelerationKind> { HardwareAccelerationKind.None }));
     }
 
-    private async Task<List<HardwareAccelerationKind>> GetHardwareAccelerationKinds(string ffmpegPath)
+    private async Task<List<HardwareAccelerationKind>> GetHardwareAccelerationKinds(
+        string ffmpegPath,
+        CancellationToken cancellationToken)
     {
         var result = new List<HardwareAccelerationKind> { HardwareAccelerationKind.None };
 
-        IFFmpegCapabilities ffmpegCapabilities = await _hardwareCapabilitiesFactory.GetFFmpegCapabilities(ffmpegPath);
+        IFFmpegCapabilities ffmpegCapabilities =
+            await _hardwareCapabilitiesFactory.GetFFmpegCapabilities(ffmpegPath, cancellationToken);
 
         if (ffmpegCapabilities.HasHardwareAcceleration(HardwareAccelerationMode.Nvenc))
         {

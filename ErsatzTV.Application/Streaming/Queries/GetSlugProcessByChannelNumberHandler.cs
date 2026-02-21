@@ -34,7 +34,8 @@ public class GetSlugProcessByChannelNumberHandler(
             request.Now,
             duration,
             request.HlsRealtime,
-            request.PtsOffset);
+            request.PtsOffset,
+            cancellationToken);
 
         var result = new PlayoutItemProcessModel(
             playoutItemResult,

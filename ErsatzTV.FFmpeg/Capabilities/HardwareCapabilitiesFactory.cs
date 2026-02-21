@@ -25,6 +25,7 @@ public partial class HardwareCapabilitiesFactory(
     : IHardwareCapabilitiesFactory
 {
     private const string CudaDeviceKey = "ffmpeg.hardware.cuda.device";
+    private const string FFmpegVersionKey = "ffmpeg.version";
 
     private static readonly CompositeFormat VaapiCacheKeyFormat =
         CompositeFormat.Parse("ffmpeg.hardware.vaapi.{0}.{1}.{2}");
@@ -46,6 +47,7 @@ public partial class HardwareCapabilitiesFactory(
 
     public void ClearCache()
     {
+        memoryCache.Remove(FFmpegVersionKey);
         memoryCache.Remove(string.Format(CultureInfo.InvariantCulture, FFmpegCapabilitiesCacheKeyFormat, "hwaccels"));
         memoryCache.Remove(string.Format(CultureInfo.InvariantCulture, FFmpegCapabilitiesCacheKeyFormat, "decoders"));
         memoryCache.Remove(string.Format(CultureInfo.InvariantCulture, FFmpegCapabilitiesCacheKeyFormat, "filters"));
@@ -54,33 +56,39 @@ public partial class HardwareCapabilitiesFactory(
         memoryCache.Remove(string.Format(CultureInfo.InvariantCulture, FFmpegCapabilitiesCacheKeyFormat, "formats"));
     }
 
-    public async Task<IFFmpegCapabilities> GetFFmpegCapabilities(string ffmpegPath)
+    public async Task<IFFmpegCapabilities> GetFFmpegCapabilities(string ffmpegPath, CancellationToken cancellationToken)
     {
         // TODO: validate videotoolbox somehow
         // TODO: validate amf somehow
 
+        string ffmpegVersion = await GetFFmpegVersion(ffmpegPath, cancellationToken);
+
         IReadOnlySet<string> ffmpegHardwareAccelerations =
-            await GetFFmpegCapabilities(ffmpegPath, "hwaccels", ParseFFmpegAccelLine)
+            await GetFFmpegCapabilities(ffmpegPath, "hwaccels", ParseFFmpegAccelLine, cancellationToken)
                 .Map(set => set.Intersect(FFmpegKnownHardwareAcceleration.AllAccels).ToImmutableHashSet());
 
-        IReadOnlySet<string> ffmpegDecoders = await GetFFmpegCapabilities(ffmpegPath, "decoders", ParseFFmpegLine)
-            .Map(set => set.Intersect(FFmpegKnownDecoder.AllDecoders).ToImmutableHashSet());
+        IReadOnlySet<string> ffmpegDecoders =
+            await GetFFmpegCapabilities(ffmpegPath, "decoders", ParseFFmpegLine, cancellationToken)
+                .Map(set => set.Intersect(FFmpegKnownDecoder.AllDecoders).ToImmutableHashSet());
 
         IEnumerable<string> allFilterNames =
             FFmpegKnownFilter.AllFilters.Union(FFmpegKnownFilter.RequiredFilters.Select(f => f.Name));
-        IReadOnlySet<string> ffmpegFilters = await GetFFmpegCapabilities(ffmpegPath, "filters", ParseFFmpegLine)
-            .Map(set => set.Intersect(allFilterNames).ToImmutableHashSet());
+        IReadOnlySet<string> ffmpegFilters =
+            await GetFFmpegCapabilities(ffmpegPath, "filters", ParseFFmpegLine, cancellationToken)
+                .Map(set => set.Intersect(allFilterNames).ToImmutableHashSet());
 
-        IReadOnlySet<string> ffmpegEncoders = await GetFFmpegCapabilities(ffmpegPath, "encoders", ParseFFmpegLine)
-            .Map(set => set.Intersect(FFmpegKnownEncoder.AllEncoders).ToImmutableHashSet());
+        IReadOnlySet<string> ffmpegEncoders =
+            await GetFFmpegCapabilities(ffmpegPath, "encoders", ParseFFmpegLine, cancellationToken)
+                .Map(set => set.Intersect(FFmpegKnownEncoder.AllEncoders).ToImmutableHashSet());
 
-        IReadOnlySet<string> ffmpegOptions = await GetFFmpegOptions(ffmpegPath)
+        IReadOnlySet<string> ffmpegOptions = await GetFFmpegOptions(ffmpegPath, cancellationToken)
             .Map(set => set.Intersect(FFmpegKnownOption.AllOptions).ToImmutableHashSet());
 
-        IReadOnlySet<string> ffmpegDemuxFormats = await GetFFmpegFormats(ffmpegPath, "D")
+        IReadOnlySet<string> ffmpegDemuxFormats = await GetFFmpegFormats(ffmpegPath, "D", cancellationToken)
             .Map(set => set.Intersect(FFmpegKnownFormat.AllFormats).ToImmutableHashSet());
 
         return new FFmpegCapabilities(
+            ffmpegVersion,
             ffmpegHardwareAccelerations,
             ffmpegDecoders,
             ffmpegFilters,
@@ -339,10 +347,40 @@ public partial class HardwareCapabilitiesFactory(
         return memoryCache.TryGetValue(cacheKey, out bool installed) && installed;
     }
 
+    public async Task<string> GetFFmpegVersion(string ffmpegPath, CancellationToken cancellationToken)
+    {
+        if (memoryCache.TryGetValue(FFmpegVersionKey, out string? ffmpegVersion) &&
+            ffmpegVersion is not null)
+        {
+            return ffmpegVersion;
+        }
+
+        string[] arguments = ["-version"];
+
+        BufferedCommandResult result = await Cli.Wrap(ffmpegPath)
+            .WithArguments(arguments)
+            .WithValidation(CommandResultValidation.None)
+            .ExecuteBufferedAsync(Encoding.UTF8, cancellationToken);
+
+        string output = string.IsNullOrWhiteSpace(result.StandardOutput)
+            ? result.StandardError
+            : result.StandardOutput;
+
+        string versionResult = await output.Split("\n").Map(s => s.Trim())
+            .Bind(l => ParseFFmpegVersionLine(l))
+            .HeadOrNone()
+            .IfNoneAsync(string.Empty);
+
+        memoryCache.Set(FFmpegVersionKey, versionResult);
+
+        return versionResult;
+    }
+
     private async Task<IReadOnlySet<string>> GetFFmpegCapabilities(
         string ffmpegPath,
         string capabilities,
-        Func<string, Option<string>> parseLine)
+        Func<string, Option<string>> parseLine,
+        CancellationToken cancellationToken)
     {
         var cacheKey = string.Format(CultureInfo.InvariantCulture, FFmpegCapabilitiesCacheKeyFormat, capabilities);
         if (memoryCache.TryGetValue(cacheKey, out IReadOnlySet<string>? cachedCapabilities) &&
@@ -356,7 +394,7 @@ public partial class HardwareCapabilitiesFactory(
         BufferedCommandResult result = await Cli.Wrap(ffmpegPath)
             .WithArguments(arguments)
             .WithValidation(CommandResultValidation.None)
-            .ExecuteBufferedAsync(Encoding.UTF8);
+            .ExecuteBufferedAsync(Encoding.UTF8, cancellationToken);
 
         string output = string.IsNullOrWhiteSpace(result.StandardOutput)
             ? result.StandardError
@@ -371,7 +409,7 @@ public partial class HardwareCapabilitiesFactory(
         return capabilitiesResult;
     }
 
-    private async Task<IReadOnlySet<string>> GetFFmpegOptions(string ffmpegPath)
+    private async Task<IReadOnlySet<string>> GetFFmpegOptions(string ffmpegPath, CancellationToken cancellationToken)
     {
         var cacheKey = string.Format(CultureInfo.InvariantCulture, FFmpegCapabilitiesCacheKeyFormat, "options");
         if (memoryCache.TryGetValue(cacheKey, out IReadOnlySet<string>? cachedCapabilities) &&
@@ -385,7 +423,7 @@ public partial class HardwareCapabilitiesFactory(
         BufferedCommandResult result = await Cli.Wrap(ffmpegPath)
             .WithArguments(arguments)
             .WithValidation(CommandResultValidation.None)
-            .ExecuteBufferedAsync(Encoding.UTF8);
+            .ExecuteBufferedAsync(Encoding.UTF8, cancellationToken);
 
         string output = string.IsNullOrWhiteSpace(result.StandardOutput)
             ? result.StandardError
@@ -400,7 +438,10 @@ public partial class HardwareCapabilitiesFactory(
         return capabilitiesResult;
     }
 
-    private async Task<IReadOnlySet<string>> GetFFmpegFormats(string ffmpegPath, string muxDemux)
+    private async Task<IReadOnlySet<string>> GetFFmpegFormats(
+        string ffmpegPath,
+        string muxDemux,
+        CancellationToken cancellationToken)
     {
         var cacheKey = string.Format(CultureInfo.InvariantCulture, FFmpegCapabilitiesCacheKeyFormat, "formats");
         if (memoryCache.TryGetValue(cacheKey, out IReadOnlySet<string>? cachedCapabilities) &&
@@ -414,7 +455,7 @@ public partial class HardwareCapabilitiesFactory(
         BufferedCommandResult result = await Cli.Wrap(ffmpegPath)
             .WithArguments(arguments)
             .WithValidation(CommandResultValidation.None)
-            .ExecuteBufferedAsync(Encoding.UTF8);
+            .ExecuteBufferedAsync(Encoding.UTF8, cancellationToken);
 
         string output = string.IsNullOrWhiteSpace(result.StandardOutput)
             ? result.StandardError
@@ -429,6 +470,12 @@ public partial class HardwareCapabilitiesFactory(
         memoryCache.Set(cacheKey, capabilitiesResult);
 
         return capabilitiesResult;
+    }
+
+    private static Option<string> ParseFFmpegVersionLine(string input)
+    {
+        Match match = VersionRegex().Match(input);
+        return match.Success ? match.Groups[1].Value : Option<string>.None;
     }
 
     private static Option<string> ParseFFmpegAccelLine(string input)
@@ -660,6 +707,9 @@ public partial class HardwareCapabilitiesFactory(
 
         return new NoHardwareCapabilities();
     }
+
+    [GeneratedRegex(@"version\s+([^\s]+)")]
+    private static partial Regex VersionRegex();
 
     [GeneratedRegex(@"^([\w]+)$")]
     private static partial Regex AccelRegex();

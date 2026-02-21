@@ -4,6 +4,7 @@ using ErsatzTV.FFmpeg.Format;
 namespace ErsatzTV.FFmpeg.Capabilities;
 
 public class FFmpegCapabilities(
+    string ffmpegVersion,
     IReadOnlySet<string> ffmpegHardwareAccelerations,
     IReadOnlySet<string> ffmpegDecoders,
     IReadOnlySet<string> ffmpegFilters,
@@ -12,6 +13,8 @@ public class FFmpegCapabilities(
     IReadOnlySet<string> ffmpegDemuxFormats)
     : IFFmpegCapabilities
 {
+    public string Version => ffmpegVersion;
+
     public bool HasHardwareAcceleration(HardwareAccelerationMode hardwareAccelerationMode)
     {
         // AMF isn't a "hwaccel" in ffmpeg, so check for presence of encoders

@@ -4,6 +4,7 @@ namespace ErsatzTV.FFmpeg.Capabilities;
 
 public interface IFFmpegCapabilities
 {
+    string Version { get; }
     bool HasHardwareAcceleration(HardwareAccelerationMode hardwareAccelerationMode);
     bool HasDecoder(FFmpegKnownDecoder decoder);
     bool HasEncoder(FFmpegKnownEncoder encoder);

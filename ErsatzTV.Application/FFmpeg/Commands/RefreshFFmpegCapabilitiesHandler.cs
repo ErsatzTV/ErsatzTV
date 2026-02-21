@@ -26,7 +26,7 @@ public class RefreshFFmpegCapabilitiesHandler(
 
         foreach (string ffmpegPath in maybeFFmpegPath)
         {
-            _ = await hardwareCapabilitiesFactory.GetFFmpegCapabilities(ffmpegPath);
+            _ = await hardwareCapabilitiesFactory.GetFFmpegCapabilities(ffmpegPath, cancellationToken);
 
             Option<string> maybeFFprobePath = await dbContext.ConfigElements
                 .GetValue<string>(ConfigElementKey.FFprobePath, cancellationToken)

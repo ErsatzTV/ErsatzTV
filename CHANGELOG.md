@@ -33,6 +33,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix Trakt list sync
 - Fix some cases of QSV audio/video desync when *not* seeking by using software decode
   - This only applies to content that *might* be problematic (using a heuristic)
+- NVIDIA: force software decode of 10-bit h264 content since hardware decode is unsupported by ffmpeg until version 8
 
 ## [26.2.0] - 2026-02-02
 ### Added

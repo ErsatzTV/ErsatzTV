@@ -56,7 +56,8 @@ public interface IFFmpegProcessService
         string vaapiDisplay,
         VaapiDriver vaapiDriver,
         string vaapiDevice,
-        Option<int> qsvExtraHardwareFrames);
+        Option<int> qsvExtraHardwareFrames,
+        CancellationToken cancellationToken);
 
     Task<Command> Slug(
         string ffmpegPath,
@@ -64,9 +65,16 @@ public interface IFFmpegProcessService
         DateTimeOffset now,
         TimeSpan duration,
         bool hlsRealtime,
-        TimeSpan ptsOffset);
+        TimeSpan ptsOffset,
+        CancellationToken cancellationToken);
 
-    Task<Command> ConcatChannel(string ffmpegPath, bool saveReports, Channel channel, string scheme, string host);
+    Task<Command> ConcatChannel(
+        string ffmpegPath,
+        bool saveReports,
+        Channel channel,
+        string scheme,
+        string host,
+        CancellationToken cancellationToken);
 
     Task<Command> WrapSegmenter(
         string ffmpegPath,
@@ -77,7 +85,12 @@ public interface IFFmpegProcessService
         string accessToken,
         CancellationToken cancellationToken);
 
-    Task<Command> ResizeImage(string ffmpegPath, string inputFile, string outputFile, int height);
+    Task<Command> ResizeImage(
+        string ffmpegPath,
+        string inputFile,
+        string outputFile,
+        int height,
+        CancellationToken cancellationToken);
 
     Task<Either<BaseError, string>> GenerateSongImage(
         string ffmpegPath,
@@ -94,5 +107,10 @@ public interface IFFmpegProcessService
         int watermarkWidthPercent,
         CancellationToken cancellationToken);
 
-    Task<Command> SeekTextSubtitle(string ffmpegPath, string inputFile, string codec, TimeSpan seek);
+    Task<Command> SeekTextSubtitle(
+        string ffmpegPath,
+        string inputFile,
+        string codec,
+        TimeSpan seek,
+        CancellationToken cancellationToken);
 }

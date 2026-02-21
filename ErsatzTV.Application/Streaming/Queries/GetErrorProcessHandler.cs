@@ -32,7 +32,8 @@ public class GetErrorProcessHandler(
             channel.FFmpegProfile.VaapiDisplay,
             channel.FFmpegProfile.VaapiDriver,
             channel.FFmpegProfile.VaapiDevice,
-            Optional(channel.FFmpegProfile.QsvExtraHardwareFrames));
+            Optional(channel.FFmpegProfile.QsvExtraHardwareFrames),
+            cancellationToken);
 
         return new PlayoutItemProcessModel(
             process,

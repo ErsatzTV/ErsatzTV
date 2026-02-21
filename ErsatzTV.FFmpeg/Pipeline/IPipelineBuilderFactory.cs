@@ -15,5 +15,6 @@ public interface IPipelineBuilderFactory
         Option<string> vaapiDevice,
         string reportsFolder,
         string fontsFolder,
-        string ffmpegPath);
+        string ffmpegPath,
+        CancellationToken cancellationToken);
 }

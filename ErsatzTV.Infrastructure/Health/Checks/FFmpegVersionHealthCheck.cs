@@ -1,19 +1,19 @@
-﻿using System.Text.RegularExpressions;
-using ErsatzTV.Core.Domain;
+﻿using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Health;
 using ErsatzTV.Core.Health.Checks;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.FFmpeg.Capabilities;
 
 namespace ErsatzTV.Infrastructure.Health.Checks;
 
-public class FFmpegVersionHealthCheck(IConfigElementRepository configElementRepository)
+public class FFmpegVersionHealthCheck(
+    IConfigElementRepository configElementRepository,
+    IHardwareCapabilitiesFactory hardwareCapabilitiesFactory)
     : BaseHealthCheck, IFFmpegVersionHealthCheck
 {
     private const string BundledVersion = "7.1.1";
     private const string BundledVersionVaapi = "7.1.1";
     private const string WindowsVersionPrefix = "n7.1.1";
-
-    private static readonly string[] FFmpegVersionArguments = { "-version" };
 
     public override string Title => "FFmpeg Version";
 
@@ -37,8 +37,9 @@ public class FFmpegVersionHealthCheck(IConfigElementRepository configElementRepo
 
         foreach (ConfigElement ffmpegPath in maybeFFmpegPath)
         {
-            Option<string> maybeVersion = await GetVersion(ffmpegPath.Value, cancellationToken);
-            if (maybeVersion.IsNone)
+            Option<string> maybeVersion =
+                await hardwareCapabilitiesFactory.GetFFmpegVersion(ffmpegPath.Value, cancellationToken);
+            if (maybeVersion.IsNone || maybeVersion.Exists(string.IsNullOrWhiteSpace))
             {
                 return WarningResult("Unable to determine ffmpeg version", "Unable to determine ffmpeg version", link);
             }
@@ -54,8 +55,9 @@ public class FFmpegVersionHealthCheck(IConfigElementRepository configElementRepo
 
         foreach (ConfigElement ffprobePath in maybeFFprobePath)
         {
-            Option<string> maybeVersion = await GetVersion(ffprobePath.Value, cancellationToken);
-            if (maybeVersion.IsNone)
+            Option<string> maybeVersion =
+                await hardwareCapabilitiesFactory.GetFFmpegVersion(ffprobePath.Value, cancellationToken);
+            if (maybeVersion.IsNone || maybeVersion.Exists(string.IsNullOrWhiteSpace))
             {
                 return WarningResult(
                     "Unable to determine ffprobe version",
@@ -97,23 +99,6 @@ public class FFmpegVersionHealthCheck(IConfigElementRepository configElementRepo
                 $"{app} version {version} is unexpected and may have problems; please install 7.1.1!",
                 $"{app} version is unexpected",
                 link);
-        }
-
-        return None;
-    }
-
-    private static async Task<Option<string>> GetVersion(string path, CancellationToken cancellationToken)
-    {
-        Option<string> maybeLine = await GetProcessOutput(path, FFmpegVersionArguments, cancellationToken)
-            .Map(s => s.Split("\n").HeadOrNone().Map(h => h.Trim()));
-        foreach (string line in maybeLine)
-        {
-            const string PATTERN = @"version\s+([^\s]+)";
-            Match match = Regex.Match(line, PATTERN);
-            if (match.Success)
-            {
-                return match.Groups[1].Value;
-            }
         }
 
         return None;
