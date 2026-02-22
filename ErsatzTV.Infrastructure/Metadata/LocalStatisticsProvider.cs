@@ -359,9 +359,11 @@ public partial class LocalStatisticsProvider : ILocalStatisticsProvider
         string filePath,
         CancellationToken cancellationToken)
     {
+        // only scans first 30 seconds
         string[] arguments =
         [
             "-hide_banner",
+            "-t", "30",
             "-i", filePath,
             "-c", "copy",
             "-bsf:v", "trace_headers",
@@ -370,28 +372,42 @@ public partial class LocalStatisticsProvider : ILocalStatisticsProvider
 
         var uniqueProfiles = new System.Collections.Generic.HashSet<string>();
 
-        CommandResult traceHeaders = await Cli.Wrap(ffmpegPath)
-            .WithArguments(arguments)
-            .WithValidation(CommandResultValidation.None)
-            .WithStandardErrorPipe(
-                PipeTarget.ToDelegate(line =>
-                {
-                    int idx = line.IndexOf("profile_idc", StringComparison.Ordinal);
-                    if (idx >= 0)
-                    {
-                        uniqueProfiles.Add(line[idx..]);
-                    }
-                }))
-            .ExecuteAsync(cancellationToken);
+        // cancel as soon as we find a second distinct profile_idc
+        using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
-        if (traceHeaders.ExitCode != 0)
+        try
         {
-            _logger.LogInformation(
-                "FFmpeg trace headers with arguments {Arguments} exited with code {ExitCode}",
-                arguments,
-                traceHeaders.ExitCode);
+            CommandResult traceHeaders = await Cli.Wrap(ffmpegPath)
+                .WithArguments(arguments)
+                .WithValidation(CommandResultValidation.None)
+                .WithStandardErrorPipe(
+                    PipeTarget.ToDelegate(line =>
+                    {
+                        int idx = line.IndexOf("profile_idc", StringComparison.Ordinal);
+                        if (idx >= 0)
+                        {
+                            uniqueProfiles.Add(line[idx..]);
+                            if (uniqueProfiles.Count > 1)
+                            {
+                                linkedCts.Cancel();
+                            }
+                        }
+                    }))
+                .ExecuteAsync(linkedCts.Token);
 
-            return Option<int>.None;
+            if (traceHeaders.ExitCode != 0)
+            {
+                _logger.LogInformation(
+                    "FFmpeg trace headers with arguments {Arguments} exited with code {ExitCode}",
+                    arguments,
+                    traceHeaders.ExitCode);
+
+                return Option<int>.None;
+            }
+        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            // nothing to do here - canceled because a second profile was found
         }
 
         return uniqueProfiles.Count;
