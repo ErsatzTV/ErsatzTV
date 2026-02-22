@@ -313,9 +313,6 @@ public class HlsSessionWorker : IHlsSessionWorker
         var sw = Stopwatch.StartNew();
         try
         {
-            DateTimeOffset start = DateTimeOffset.Now;
-            DateTimeOffset finish = start.AddSeconds(8);
-
             string playlistFileName = Path.Combine(_workingDirectory, "live.m3u8");
 
             _logger.LogDebug("Waiting for playlist to exist");
@@ -325,6 +322,10 @@ public class HlsSessionWorker : IHlsSessionWorker
             }
 
             _logger.LogDebug("Playlist exists");
+
+            // start the segment-wait deadline only after the playlist file appears,
+            // so slow pipeline setup (e.g. h264 profile probing) doesn't consume the budget
+            DateTimeOffset finish = DateTimeOffset.Now.AddSeconds(8);
 
             var segmentCount = 0;
             int lastSegmentCount = -1;
