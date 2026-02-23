@@ -549,7 +549,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                 frameRate,
                 channelStartTime,
                 start,
-                await playbackSettings.StreamSeek.IfNoneAsync(TimeSpan.Zero),
+                now > start ? now - start : TimeSpan.Zero,
                 finish - now,
                 originalContentDuration);
 

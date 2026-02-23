@@ -34,6 +34,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix some cases of QSV audio/video desync when *not* seeking by using software decode
   - This only applies to content that *might* be problematic (using a heuristic)
 - NVIDIA: force software decode of 10-bit h264 content since hardware decode is unsupported by ffmpeg until version 8
+- Graphics engine: fix stream seek value used throughout graphics engine
+  - This should fix loading EPG data when used with chapters/mid-roll
+  - This should also fix graphics element visibility when using start_seconds on content with chapters/mid-roll
+  - This bug was caused by stream seek including the playout item in-point (the chapter start time)
+    - Stream seek should only be non-zero when first joining a channel (i.e. in the middle of a playout item or chapter)
 
 ## [26.2.0] - 2026-02-02
 ### Added
