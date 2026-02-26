@@ -1,6 +1,5 @@
 ﻿using System.Collections.Immutable;
 using System.IO.Abstractions;
-using Bugsnag;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Errors;
@@ -19,7 +18,6 @@ namespace ErsatzTV.Scanner.Core.Metadata;
 
 public class ImageFolderScanner : LocalFolderScanner, IImageFolderScanner
 {
-    private readonly IClient _client;
     private readonly IImageRepository _imageRepository;
     private readonly ILibraryRepository _libraryRepository;
     private readonly IScannerProxy _scannerProxy;
@@ -42,7 +40,6 @@ public class ImageFolderScanner : LocalFolderScanner, IImageFolderScanner
         IMediaItemRepository mediaItemRepository,
         IFFmpegPngService ffmpegPngService,
         ITempFilePool tempFilePool,
-        IClient client,
         ILogger<ImageFolderScanner> logger) : base(
         fileSystem,
         localStatisticsProvider,
@@ -51,7 +48,6 @@ public class ImageFolderScanner : LocalFolderScanner, IImageFolderScanner
         imageCache,
         ffmpegPngService,
         tempFilePool,
-        client,
         logger)
     {
         _scannerProxy = scannerProxy;
@@ -61,7 +57,6 @@ public class ImageFolderScanner : LocalFolderScanner, IImageFolderScanner
         _imageRepository = imageRepository;
         _libraryRepository = libraryRepository;
         _mediaItemRepository = mediaItemRepository;
-        _client = client;
         _logger = logger;
     }
 
@@ -310,7 +305,6 @@ public class ImageFolderScanner : LocalFolderScanner, IImageFolderScanner
         }
         catch (Exception ex)
         {
-            _client.Notify(ex);
             return BaseError.New(ex.ToString());
         }
     }

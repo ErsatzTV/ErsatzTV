@@ -1,6 +1,5 @@
 ﻿using System.Collections.Immutable;
 using System.IO.Abstractions;
-using Bugsnag;
 using CliWrap;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
@@ -55,7 +54,6 @@ public abstract class LocalFolderScanner
         "yml"
     }.ToImmutableHashSet(StringComparer.OrdinalIgnoreCase);
 
-    private readonly IClient _client;
     private readonly IFFmpegPngService _ffmpegPngService;
 
     private readonly IImageCache _imageCache;
@@ -75,7 +73,6 @@ public abstract class LocalFolderScanner
         IImageCache imageCache,
         IFFmpegPngService ffmpegPngService,
         ITempFilePool tempFilePool,
-        IClient client,
         ILogger logger)
     {
         _fileSystem = fileSystem;
@@ -85,7 +82,6 @@ public abstract class LocalFolderScanner
         _imageCache = imageCache;
         _ffmpegPngService = ffmpegPngService;
         _tempFilePool = tempFilePool;
-        _client = client;
         _logger = logger;
     }
 
@@ -129,7 +125,6 @@ public abstract class LocalFolderScanner
         }
         catch (Exception ex)
         {
-            _client.Notify(ex);
             return BaseError.New(ex.Message);
         }
     }
@@ -278,7 +273,6 @@ public abstract class LocalFolderScanner
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Error refreshing artwork");
-                _client.Notify(ex);
             }
         }
 
@@ -304,7 +298,6 @@ public abstract class LocalFolderScanner
         }
         catch (Exception ex)
         {
-            _client.Notify(ex);
             return BaseError.New(ex.ToString());
         }
     }

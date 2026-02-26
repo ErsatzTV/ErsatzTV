@@ -1,5 +1,4 @@
-﻿using Bugsnag;
-using ErsatzTV.Application.MediaCards;
+﻿using ErsatzTV.Application.MediaCards;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Search;
 using ErsatzTV.Infrastructure.Data;
@@ -8,7 +7,7 @@ using static ErsatzTV.Application.MediaCards.Mapper;
 
 namespace ErsatzTV.Application.Search;
 
-public class QuerySearchIndexSongsHandler(IClient client, ISearchIndex searchIndex, IDbContextFactory<TvContext> dbContextFactory)
+public class QuerySearchIndexSongsHandler(ISearchIndex searchIndex, IDbContextFactory<TvContext> dbContextFactory)
     : IRequestHandler<QuerySearchIndexSongs, SongCardResultsViewModel>
 {
     public async Task<SongCardResultsViewModel> Handle(
@@ -16,7 +15,6 @@ public class QuerySearchIndexSongsHandler(IClient client, ISearchIndex searchInd
         CancellationToken cancellationToken)
     {
         SearchResult searchResult = await searchIndex.Search(
-            client,
             request.Query,
             string.Empty,
             (request.PageNumber - 1) * request.PageSize,

@@ -5,7 +5,6 @@ using System.IO.Abstractions;
 using System.IO.Pipelines;
 using System.Text;
 using System.Timers;
-using Bugsnag;
 using CliWrap;
 using CliWrap.Buffered;
 using ErsatzTV.Application.Channels;
@@ -28,7 +27,6 @@ namespace ErsatzTV.Application.Streaming;
 public class HlsSessionWorker : IHlsSessionWorker
 {
     private static int _workAheadCount;
-    private readonly IClient _client;
     private readonly OutputFormatKind _outputFormatKind;
     private readonly IHlsInitSegmentCache _hlsInitSegmentCache;
     private readonly Dictionary<long, int> _discontinuityMap = [];
@@ -60,7 +58,6 @@ public class HlsSessionWorker : IHlsSessionWorker
     public HlsSessionWorker(
         IServiceScopeFactory serviceScopeFactory,
         IGraphicsEngine graphicsEngine,
-        IClient client,
         OutputFormatKind outputFormatKind,
         IHlsPlaylistFilter hlsPlaylistFilter,
         IHlsInitSegmentCache hlsInitSegmentCache,
@@ -73,7 +70,6 @@ public class HlsSessionWorker : IHlsSessionWorker
         _serviceScope = serviceScopeFactory.CreateScope();
         _mediator = _serviceScope.ServiceProvider.GetRequiredService<IMediator>();
         _graphicsEngine = graphicsEngine;
-        _client = client;
         _outputFormatKind = outputFormatKind;
         _hlsInitSegmentCache = hlsInitSegmentCache;
         _hlsPlaylistFilter = hlsPlaylistFilter;
@@ -659,15 +655,6 @@ public class HlsSessionWorker : IHlsSessionWorker
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error transcoding channel {Channel} - {Message}", _channelNumber, ex.Message);
-
-            try
-            {
-                _client.Notify(ex);
-            }
-            catch (Exception)
-            {
-                // do nothing
-            }
 
             return false;
         }

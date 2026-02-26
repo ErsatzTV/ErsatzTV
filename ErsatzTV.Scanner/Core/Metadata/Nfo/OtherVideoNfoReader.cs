@@ -1,5 +1,4 @@
 ﻿using System.Xml;
-using Bugsnag;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Errors;
 using ErsatzTV.Scanner.Core.Interfaces.Metadata.Nfo;
@@ -10,16 +9,13 @@ namespace ErsatzTV.Scanner.Core.Metadata.Nfo;
 
 public class OtherVideoNfoReader : NfoReader<OtherVideoNfo>, IOtherVideoNfoReader
 {
-    private readonly IClient _client;
     private readonly ILogger<OtherVideoNfoReader> _logger;
 
     public OtherVideoNfoReader(
         RecyclableMemoryStreamManager recyclableMemoryStreamManager,
-        IClient client,
         ILogger<OtherVideoNfoReader> logger)
         : base(recyclableMemoryStreamManager, logger)
     {
-        _client = client;
         _logger = logger;
     }
 
@@ -159,7 +155,6 @@ public class OtherVideoNfoReader : NfoReader<OtherVideoNfo>, IOtherVideoNfoReade
         }
         catch (Exception ex)
         {
-            _client.Notify(ex);
             return new FailedToReadNfo(ex.ToString());
         }
     }

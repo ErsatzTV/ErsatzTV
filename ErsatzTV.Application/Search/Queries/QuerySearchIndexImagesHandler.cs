@@ -1,5 +1,4 @@
-﻿using Bugsnag;
-using ErsatzTV.Application.MediaCards;
+﻿using ErsatzTV.Application.MediaCards;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Search;
 using ErsatzTV.Infrastructure.Data;
@@ -9,7 +8,6 @@ using static ErsatzTV.Application.MediaCards.Mapper;
 namespace ErsatzTV.Application.Search;
 
 public class QuerySearchIndexImagesHandler(
-    IClient client,
     ISearchIndex searchIndex,
     IDbContextFactory<TvContext> dbContextFactory)
     : IRequestHandler<QuerySearchIndexImages, ImageCardResultsViewModel>
@@ -19,7 +17,6 @@ public class QuerySearchIndexImagesHandler(
         CancellationToken cancellationToken)
     {
         SearchResult searchResult = await searchIndex.Search(
-            client,
             request.Query,
             string.Empty,
             (request.PageNumber - 1) * request.PageSize,

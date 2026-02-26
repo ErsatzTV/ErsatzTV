@@ -1,5 +1,4 @@
-﻿using Bugsnag;
-using ErsatzTV.Core.Domain;
+﻿using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.FFmpeg.Capabilities;
@@ -24,7 +23,6 @@ public class LocalStatisticsProviderTests
             Substitute.For<IMetadataRepository>(),
             new MockFileSystem(),
             Substitute.For<ILocalFileSystem>(),
-            Substitute.For<IClient>(),
             Substitute.For<IHardwareCapabilitiesFactory>(),
             Substitute.For<ILogger<LocalStatisticsProvider>>());
 

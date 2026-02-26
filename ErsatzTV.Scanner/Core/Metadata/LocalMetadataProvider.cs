@@ -1,5 +1,4 @@
 ﻿using System.IO.Abstractions;
-using Bugsnag;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Extensions;
@@ -19,7 +18,6 @@ public class LocalMetadataProvider : ILocalMetadataProvider
 {
     private readonly IArtistNfoReader _artistNfoReader;
     private readonly IArtistRepository _artistRepository;
-    private readonly IClient _client;
     private readonly IEpisodeNfoReader _episodeNfoReader;
     private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
     private readonly IFileSystem _fileSystem;
@@ -57,7 +55,6 @@ public class LocalMetadataProvider : ILocalMetadataProvider
         IShowNfoReader showNfoReader,
         IOtherVideoNfoReader otherVideoNfoReader,
         ILocalStatisticsProvider localStatisticsProvider,
-        IClient client,
         ILogger<LocalMetadataProvider> logger)
     {
         _metadataRepository = metadataRepository;
@@ -78,7 +75,6 @@ public class LocalMetadataProvider : ILocalMetadataProvider
         _showNfoReader = showNfoReader;
         _otherVideoNfoReader = otherVideoNfoReader;
         _localStatisticsProvider = localStatisticsProvider;
-        _client = client;
         _logger = logger;
     }
 
@@ -345,7 +341,6 @@ public class LocalMetadataProvider : ILocalMetadataProvider
         catch (Exception ex)
         {
             _logger.LogInformation(ex, "Failed to read music video nfo metadata from {Path}", nfoFileName);
-            _client.Notify(ex);
             return None;
         }
     }
@@ -430,7 +425,6 @@ public class LocalMetadataProvider : ILocalMetadataProvider
         catch (Exception ex)
         {
             _logger.LogInformation(ex, "Failed to read embedded song metadata from {Path}", path);
-            _client.Notify(ex);
             return None;
         }
     }
@@ -498,7 +492,6 @@ public class LocalMetadataProvider : ILocalMetadataProvider
         catch (Exception ex)
         {
             _logger.LogInformation(ex, "Failed to read embedded song metadata from {Path}", path);
-            _client.Notify(ex);
             return None;
         }
     }
@@ -554,7 +547,6 @@ public class LocalMetadataProvider : ILocalMetadataProvider
         catch (Exception ex)
         {
             _logger.LogInformation(ex, "Failed to read embedded remote stream metadata from {Path}", path);
-            _client.Notify(ex);
             return None;
         }
     }
@@ -1327,7 +1319,6 @@ public class LocalMetadataProvider : ILocalMetadataProvider
         catch (Exception ex)
         {
             _logger.LogInformation(ex, "Failed to read TV show nfo metadata from {Path}", nfoFileName);
-            _client.Notify(ex);
             return None;
         }
     }
@@ -1367,7 +1358,6 @@ public class LocalMetadataProvider : ILocalMetadataProvider
         catch (Exception ex)
         {
             _logger.LogInformation(ex, "Failed to read artist nfo metadata from {Path}", nfoFileName);
-            _client.Notify(ex);
             return None;
         }
     }
@@ -1422,7 +1412,6 @@ public class LocalMetadataProvider : ILocalMetadataProvider
         catch (Exception ex)
         {
             _logger.LogInformation(ex, "Failed to read TV episode nfo metadata from {Path}", nfoFileName);
-            _client.Notify(ex);
             return _fallbackMetadataProvider.GetFallbackMetadata(episode);
         }
     }
@@ -1509,7 +1498,6 @@ public class LocalMetadataProvider : ILocalMetadataProvider
         catch (Exception ex)
         {
             _logger.LogInformation(ex, "Failed to read Movie nfo metadata from {Path}", nfoFileName);
-            _client.Notify(ex);
             return _fallbackMetadataProvider.GetFallbackMetadata(movie);
         }
     }
@@ -1583,7 +1571,6 @@ public class LocalMetadataProvider : ILocalMetadataProvider
         catch (Exception ex)
         {
             _logger.LogInformation(ex, "Failed to read OtherVideo nfo metadata from {Path}", nfoFileName);
-            _client.Notify(ex);
         }
 
         return None;

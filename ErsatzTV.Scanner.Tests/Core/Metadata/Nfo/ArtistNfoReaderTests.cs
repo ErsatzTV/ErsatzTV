@@ -1,10 +1,8 @@
 ﻿using System.Text;
-using Bugsnag;
 using ErsatzTV.Core;
 using ErsatzTV.Scanner.Core.Metadata.Nfo;
 using Microsoft.Extensions.Logging;
 using Microsoft.IO;
-using NSubstitute;
 using NUnit.Framework;
 using Serilog;
 using Shouldly;
@@ -17,7 +15,6 @@ public class ArtistNfoReaderTests
     [SetUp]
     public void SetUp() => _artistNfoReader = new ArtistNfoReader(
         new RecyclableMemoryStreamManager(),
-        Substitute.For<IClient>(),
         _logger);
 
     private readonly ILogger<ArtistNfoReader> _logger;

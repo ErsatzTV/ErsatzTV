@@ -4,7 +4,6 @@ using System.Globalization;
 using System.IO.Abstractions;
 using System.Text;
 using System.Text.RegularExpressions;
-using Bugsnag;
 using CliWrap;
 using CliWrap.Buffered;
 using ErsatzTV.Core;
@@ -21,7 +20,6 @@ namespace ErsatzTV.Infrastructure.Metadata;
 
 public partial class LocalStatisticsProvider : ILocalStatisticsProvider
 {
-    private readonly IClient _client;
     private readonly IHardwareCapabilitiesFactory _hardwareCapabilitiesFactory;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILogger<LocalStatisticsProvider> _logger;
@@ -32,14 +30,12 @@ public partial class LocalStatisticsProvider : ILocalStatisticsProvider
         IMetadataRepository metadataRepository,
         IFileSystem fileSystem,
         ILocalFileSystem localFileSystem,
-        IClient client,
         IHardwareCapabilitiesFactory hardwareCapabilitiesFactory,
         ILogger<LocalStatisticsProvider> logger)
     {
         _metadataRepository = metadataRepository;
         _fileSystem = fileSystem;
         _localFileSystem = localFileSystem;
-        _client = client;
         _hardwareCapabilitiesFactory = hardwareCapabilitiesFactory;
         _logger = logger;
     }
@@ -71,7 +67,6 @@ public partial class LocalStatisticsProvider : ILocalStatisticsProvider
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Failed to refresh statistics for media item {Id}", mediaItem.Id);
-            _client.Notify(ex);
             return BaseError.New(ex.Message);
         }
     }
@@ -130,7 +125,6 @@ public partial class LocalStatisticsProvider : ILocalStatisticsProvider
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Failed to get format tags for media item {Id}", mediaItem.Id);
-            _client.Notify(ex);
             return BaseError.New(ex.Message);
         }
     }
@@ -225,7 +219,6 @@ public partial class LocalStatisticsProvider : ILocalStatisticsProvider
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Failed to refresh statistics for media item {Id}", mediaItem.Id);
-            _client.Notify(ex);
             return BaseError.New(ex.Message);
         }
     }
@@ -466,9 +459,8 @@ public partial class LocalStatisticsProvider : ILocalStatisticsProvider
                 _logger.LogError("Duration analysis failed for media item at {Path}", path);
             }
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            _client.Notify(ex);
             _logger.LogError("Duration analysis failed for media item at {Path}", path);
         }
     }

@@ -1,6 +1,5 @@
 ﻿using System.Collections.Immutable;
 using System.IO.Abstractions;
-using Bugsnag;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Errors;
@@ -19,7 +18,6 @@ namespace ErsatzTV.Scanner.Core.Metadata;
 
 public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScanner
 {
-    private readonly IClient _client;
     private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
     private readonly ILibraryRepository _libraryRepository;
     private readonly ILocalChaptersProvider _localChaptersProvider;
@@ -48,7 +46,6 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
         IMediaItemRepository mediaItemRepository,
         IFFmpegPngService ffmpegPngService,
         ITempFilePool tempFilePool,
-        IClient client,
         IFallbackMetadataProvider fallbackMetadataProvider,
         ILogger<TelevisionFolderScanner> logger) : base(
         fileSystem,
@@ -58,7 +55,6 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
         imageCache,
         ffmpegPngService,
         tempFilePool,
-        client,
         logger)
     {
         _scannerProxy = scannerProxy;
@@ -71,7 +67,6 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
         _metadataRepository = metadataRepository;
         _libraryRepository = libraryRepository;
         _mediaItemRepository = mediaItemRepository;
-        _client = client;
         _fallbackMetadataProvider = fallbackMetadataProvider;
         _logger = logger;
     }
@@ -407,7 +402,6 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
         }
         catch (Exception ex)
         {
-            _client.Notify(ex);
             return BaseError.New(ex.ToString());
         }
     }
@@ -483,7 +477,6 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
         }
         catch (Exception ex)
         {
-            _client.Notify(ex);
             return BaseError.New(ex.ToString());
         }
     }
@@ -515,7 +508,6 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
         }
         catch (Exception ex)
         {
-            _client.Notify(ex);
             return BaseError.New(ex.ToString());
         }
     }
@@ -545,7 +537,6 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
         }
         catch (Exception ex)
         {
-            _client.Notify(ex);
             return BaseError.New(ex.ToString());
         }
     }
@@ -578,7 +569,6 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
         }
         catch (Exception ex)
         {
-            _client.Notify(ex);
             return BaseError.New(ex.ToString());
         }
     }
@@ -592,7 +582,6 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
         }
         catch (Exception ex)
         {
-            _client.Notify(ex);
             return BaseError.New(ex.ToString());
         }
     }
@@ -606,7 +595,6 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
         }
         catch (Exception ex)
         {
-            _client.Notify(ex);
             return BaseError.New(ex.ToString());
         }
     }

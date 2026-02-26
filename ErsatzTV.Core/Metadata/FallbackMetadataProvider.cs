@@ -1,12 +1,11 @@
 ﻿using System.Globalization;
 using System.Text.RegularExpressions;
-using Bugsnag;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
 
 namespace ErsatzTV.Core.Metadata;
 
-public partial class FallbackMetadataProvider(IClient client) : IFallbackMetadataProvider
+public partial class FallbackMetadataProvider : IFallbackMetadataProvider
 {
     private static readonly Regex SeasonPattern = SeasonNumber();
 
@@ -203,7 +202,7 @@ public partial class FallbackMetadataProvider(IClient client) : IFallbackMetadat
     [GeneratedRegex(@"s(?:eason)?\s?(\d+)(?![e\d])", RegexOptions.IgnoreCase)]
     private static partial Regex SeasonNumber();
 
-    private List<EpisodeMetadata> GetEpisodeMetadata(string fileName, EpisodeMetadata baseMetadata)
+    private static List<EpisodeMetadata> GetEpisodeMetadata(string fileName, EpisodeMetadata baseMetadata)
     {
         var result = new List<EpisodeMetadata> { baseMetadata };
 
@@ -260,15 +259,15 @@ public partial class FallbackMetadataProvider(IClient client) : IFallbackMetadat
                 }
             }
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            client.Notify(ex);
+            // do nothing
         }
 
         return result;
     }
 
-    private MovieMetadata GetMovieMetadata(string fileName, MovieMetadata metadata)
+    private static MovieMetadata GetMovieMetadata(string fileName, MovieMetadata metadata)
     {
         try
         {
@@ -283,15 +282,15 @@ public partial class FallbackMetadataProvider(IClient client) : IFallbackMetadat
                 metadata.DateUpdated = DateTime.UtcNow;
             }
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            client.Notify(ex);
+            // do nothing
         }
 
         return metadata;
     }
 
-    private Option<MusicVideoMetadata> GetMusicVideoMetadata(string fileName, MusicVideoMetadata metadata)
+    private static Option<MusicVideoMetadata> GetMusicVideoMetadata(string fileName, MusicVideoMetadata metadata)
     {
         try
         {
@@ -310,14 +309,13 @@ public partial class FallbackMetadataProvider(IClient client) : IFallbackMetadat
 
             return metadata;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            client.Notify(ex);
             return None;
         }
     }
 
-    private Option<OtherVideoMetadata> GetOtherVideoMetadata(string path, OtherVideoMetadata metadata)
+    private static Option<OtherVideoMetadata> GetOtherVideoMetadata(string path, OtherVideoMetadata metadata)
     {
         try
         {
@@ -348,14 +346,13 @@ public partial class FallbackMetadataProvider(IClient client) : IFallbackMetadat
 
             return metadata;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            client.Notify(ex);
             return None;
         }
     }
 
-    private Option<ImageMetadata> GetImageMetadata(string path, ImageMetadata metadata)
+    private static Option<ImageMetadata> GetImageMetadata(string path, ImageMetadata metadata)
     {
         try
         {
@@ -386,14 +383,13 @@ public partial class FallbackMetadataProvider(IClient client) : IFallbackMetadat
 
             return metadata;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            client.Notify(ex);
             return None;
         }
     }
 
-    private Option<RemoteStreamMetadata> GetRemoteStreamMetadata(string path, RemoteStreamMetadata metadata)
+    private static Option<RemoteStreamMetadata> GetRemoteStreamMetadata(string path, RemoteStreamMetadata metadata)
     {
         try
         {
@@ -424,14 +420,13 @@ public partial class FallbackMetadataProvider(IClient client) : IFallbackMetadat
 
             return metadata;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            client.Notify(ex);
             return None;
         }
     }
 
-    private Option<SongMetadata> GetSongMetadata(string path, SongMetadata metadata)
+    private static Option<SongMetadata> GetSongMetadata(string path, SongMetadata metadata)
     {
         try
         {
@@ -462,14 +457,13 @@ public partial class FallbackMetadataProvider(IClient client) : IFallbackMetadat
 
             return metadata;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            client.Notify(ex);
             return None;
         }
     }
 
-    private ShowMetadata GetTelevisionShowMetadata(string fileName, ShowMetadata metadata)
+    private static ShowMetadata GetTelevisionShowMetadata(string fileName, ShowMetadata metadata)
     {
         try
         {
@@ -484,9 +478,9 @@ public partial class FallbackMetadataProvider(IClient client) : IFallbackMetadat
                 metadata.DateUpdated = DateTime.UtcNow;
             }
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            client.Notify(ex);
+            // do nothing
         }
 
         return metadata;

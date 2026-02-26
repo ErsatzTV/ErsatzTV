@@ -1,5 +1,4 @@
 ﻿using System.Threading.Channels;
-using Bugsnag;
 using EFCore.BulkExtensions;
 using ErsatzTV.Application.Channels;
 using ErsatzTV.Application.Subtitles;
@@ -22,7 +21,6 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
 {
     private readonly IBlockPlayoutBuilder _blockPlayoutBuilder;
     private readonly IBlockPlayoutFillerBuilder _blockPlayoutFillerBuilder;
-    private readonly IClient _client;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly IEntityLocker _entityLocker;
     private readonly IExternalJsonPlayoutBuilder _externalJsonPlayoutBuilder;
@@ -35,7 +33,6 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
     private readonly IScriptedPlayoutBuilder _scriptedPlayoutBuilder;
 
     public BuildPlayoutHandler(
-        IClient client,
         IDbContextFactory<TvContext> dbContextFactory,
         IPlayoutBuilder playoutBuilder,
         IBlockPlayoutBuilder blockPlayoutBuilder,
@@ -49,7 +46,6 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
         ChannelWriter<IBackgroundServiceRequest> workerChannel,
         ILogger<BuildPlayoutHandler> logger)
     {
-        _client = client;
         _dbContextFactory = dbContextFactory;
         _playoutBuilder = playoutBuilder;
         _blockPlayoutBuilder = blockPlayoutBuilder;
@@ -348,7 +344,6 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
             newBuildStatus.Success = false;
             newBuildStatus.Message = $"Timeout building playout for channel {channelName}";
 
-            _client.Notify(ex);
             return BaseError.New(
                 $"Timeout building playout for channel {channelName}; this may be a bug!");
         }
@@ -359,7 +354,6 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
             newBuildStatus.Success = false;
             newBuildStatus.Message = $"Unexpected error building playout for channel {channelName}: {ex}";
 
-            _client.Notify(ex);
             return BaseError.New(
                 $"Unexpected error building playout for channel {channelName}: {ex.Message}");
         }

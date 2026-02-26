@@ -1,5 +1,4 @@
-﻿using Bugsnag;
-using ErsatzTV.Application.MediaCards;
+﻿using ErsatzTV.Application.MediaCards;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Emby;
@@ -17,7 +16,6 @@ namespace ErsatzTV.Application.Search;
 
 public class
     QuerySearchIndexEpisodesHandler(
-        IClient client,
         ISearchIndex searchIndex,
         IPlexPathReplacementService plexPathReplacementService,
         IJellyfinPathReplacementService jellyfinPathReplacementService,
@@ -31,7 +29,6 @@ public class
         CancellationToken cancellationToken)
     {
         SearchResult searchResult = await searchIndex.Search(
-            client,
             request.Query,
             string.Empty,
             (request.PageNumber - 1) * request.PageSize,

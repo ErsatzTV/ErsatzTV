@@ -1,6 +1,5 @@
 ﻿using System.IO.Abstractions;
 using System.Text;
-using Bugsnag;
 using CliWrap;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
@@ -13,7 +12,6 @@ using Newtonsoft.Json;
 namespace ErsatzTV.Application.Streaming;
 
 public class GetLastPtsTimeHandler(
-    IClient client,
     IFileSystem fileSystem,
     ITempFilePool tempFilePool,
     IConfigElementRepository configElementRepository,
@@ -181,9 +179,9 @@ public class GetLastPtsTimeHandler(
 
             logger.LogWarning("Transcode folder is in bad state; troubleshooting info saved to {File}", file);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            client.Notify(ex);
+            // do nothing
         }
     }
 

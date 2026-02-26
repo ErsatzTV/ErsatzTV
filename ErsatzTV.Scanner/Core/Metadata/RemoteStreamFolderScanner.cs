@@ -1,6 +1,5 @@
 ﻿using System.Collections.Immutable;
 using System.IO.Abstractions;
-using Bugsnag;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Errors;
@@ -22,7 +21,6 @@ namespace ErsatzTV.Scanner.Core.Metadata;
 
 public class RemoteStreamFolderScanner : LocalFolderScanner, IRemoteStreamFolderScanner
 {
-    private readonly IClient _client;
     private readonly ILibraryRepository _libraryRepository;
     private readonly IScannerProxy _scannerProxy;
     private readonly IFileSystem _fileSystem;
@@ -46,7 +44,6 @@ public class RemoteStreamFolderScanner : LocalFolderScanner, IRemoteStreamFolder
         IMediaItemRepository mediaItemRepository,
         IFFmpegPngService ffmpegPngService,
         ITempFilePool tempFilePool,
-        IClient client,
         ILogger<RemoteStreamFolderScanner> logger) : base(
         fileSystem,
         localStatisticsProvider,
@@ -55,7 +52,6 @@ public class RemoteStreamFolderScanner : LocalFolderScanner, IRemoteStreamFolder
         imageCache,
         ffmpegPngService,
         tempFilePool,
-        client,
         logger)
     {
         _scannerProxy = scannerProxy;
@@ -66,7 +62,6 @@ public class RemoteStreamFolderScanner : LocalFolderScanner, IRemoteStreamFolder
         _remoteStreamRepository = remoteStreamRepository;
         _libraryRepository = libraryRepository;
         _mediaItemRepository = mediaItemRepository;
-        _client = client;
         _logger = logger;
     }
 
@@ -337,7 +332,6 @@ public class RemoteStreamFolderScanner : LocalFolderScanner, IRemoteStreamFolder
         }
         catch (Exception ex)
         {
-            _client.Notify(ex);
             return BaseError.New(ex.ToString());
         }
     }
@@ -375,7 +369,6 @@ public class RemoteStreamFolderScanner : LocalFolderScanner, IRemoteStreamFolder
         }
         catch (Exception ex)
         {
-            _client.Notify(ex);
             return BaseError.New(ex.ToString());
         }
     }
@@ -406,7 +399,6 @@ public class RemoteStreamFolderScanner : LocalFolderScanner, IRemoteStreamFolder
         }
         catch (Exception ex)
         {
-            _client.Notify(ex);
             return BaseError.New(ex.ToString());
         }
     }

@@ -1,10 +1,8 @@
 ﻿using System.Text;
-using Bugsnag;
 using ErsatzTV.Core;
 using ErsatzTV.Scanner.Core.Metadata.Nfo;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.IO;
-using NSubstitute;
 using NUnit.Framework;
 using Shouldly;
 
@@ -16,7 +14,6 @@ public class ShowNfoReaderTests
     [SetUp]
     public void SetUp() => _showNfoReader = new ShowNfoReader(
         new RecyclableMemoryStreamManager(),
-        Substitute.For<IClient>(),
         new NullLogger<ShowNfoReader>());
 
     private ShowNfoReader _showNfoReader;

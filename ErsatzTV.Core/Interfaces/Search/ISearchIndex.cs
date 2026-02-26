@@ -1,5 +1,4 @@
-﻿using Bugsnag;
-using ErsatzTV.Core.Domain;
+﻿using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Search;
@@ -38,7 +37,6 @@ public interface ISearchIndex : IDisposable
     Task<bool> RemoveItems(IEnumerable<int> ids);
 
     Task<SearchResult> Search(
-        IClient client,
         string query,
         string smartCollectionName,
         int skip,
@@ -46,7 +44,6 @@ public interface ISearchIndex : IDisposable
         CancellationToken cancellationToken);
 
     Task<SearchResult> Search(
-        IClient client,
         string query,
         string smartCollectionName,
         int skip,

@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using Bugsnag;
 using Dapper;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
@@ -14,16 +13,13 @@ namespace ErsatzTV.Infrastructure.Data.Repositories;
 
 public class MediaCollectionRepository : IMediaCollectionRepository
 {
-    private readonly IClient _client;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly ISearchIndex _searchIndex;
 
     public MediaCollectionRepository(
-        IClient client,
         ISearchIndex searchIndex,
         IDbContextFactory<TvContext> dbContextFactory)
     {
-        _client = client;
         _searchIndex = searchIndex;
         _dbContextFactory = dbContextFactory;
     }
@@ -463,7 +459,6 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
         // elasticsearch doesn't like when we ask for a limit of zero, so use 10,000
         SearchResult searchResults = await _searchIndex.Search(
-            _client,
             query,
             smartCollectionName,
             0,

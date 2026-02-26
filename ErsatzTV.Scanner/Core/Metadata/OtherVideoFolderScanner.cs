@@ -1,6 +1,5 @@
 ﻿using System.Collections.Immutable;
 using System.IO.Abstractions;
-using Bugsnag;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Errors;
@@ -19,7 +18,6 @@ namespace ErsatzTV.Scanner.Core.Metadata;
 
 public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScanner
 {
-    private readonly IClient _client;
     private readonly ILibraryRepository _libraryRepository;
     private readonly ILocalChaptersProvider _localChaptersProvider;
     private readonly IMetadataRepository _metadataRepository;
@@ -47,7 +45,6 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
         IMediaItemRepository mediaItemRepository,
         IFFmpegPngService ffmpegPngService,
         ITempFilePool tempFilePool,
-        IClient client,
         ILogger<OtherVideoFolderScanner> logger) : base(
         fileSystem,
         localStatisticsProvider,
@@ -56,7 +53,6 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
         imageCache,
         ffmpegPngService,
         tempFilePool,
-        client,
         logger)
     {
         _scannerProxy = scannerProxy;
@@ -69,7 +65,6 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
         _otherVideoRepository = otherVideoRepository;
         _libraryRepository = libraryRepository;
         _mediaItemRepository = mediaItemRepository;
-        _client = client;
         _logger = logger;
     }
 
@@ -316,7 +311,6 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
         }
         catch (Exception ex)
         {
-            _client.Notify(ex);
             return BaseError.New(ex.ToString());
         }
     }
@@ -332,7 +326,6 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
         }
         catch (Exception ex)
         {
-            _client.Notify(ex);
             return BaseError.New(ex.ToString());
         }
     }
@@ -348,7 +341,6 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
         }
         catch (Exception ex)
         {
-            _client.Notify(ex);
             return BaseError.New(ex.ToString());
         }
     }
@@ -379,7 +371,6 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
         }
         catch (Exception ex)
         {
-            _client.Notify(ex);
             return BaseError.New(ex.ToString());
         }
     }

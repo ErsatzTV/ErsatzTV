@@ -1,5 +1,4 @@
 ﻿using System.Threading.Channels;
-using Bugsnag;
 using ErsatzTV.Application;
 using ErsatzTV.Application.Streaming;
 using ErsatzTV.Application.Troubleshooting;
@@ -61,16 +60,6 @@ public class FFmpegWorkerService : BackgroundService
                 catch (Exception ex)
                 {
                     _logger.LogWarning(ex, "Failed to handle ffmpeg worker request");
-
-                    try
-                    {
-                        IClient client = scope.ServiceProvider.GetRequiredService<IClient>();
-                        client.Notify(ex);
-                    }
-                    catch (Exception)
-                    {
-                        // do nothing
-                    }
                 }
             }
         }

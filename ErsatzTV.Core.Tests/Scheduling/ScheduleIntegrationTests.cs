@@ -1,4 +1,3 @@
-using Bugsnag;
 using Dapper;
 using Destructurama;
 using ErsatzTV.Core.Domain;
@@ -93,8 +92,6 @@ public class ScheduleIntegrationTests
         services.AddSingleton<ISearchIndex, LuceneSearchIndex>();
         services.AddSingleton<ILanguageCodeCache, LanguageCodeCache>();
 
-        services.AddSingleton(_ => Substitute.For<IClient>());
-
         ServiceProvider provider = services.BuildServiceProvider();
 
         IDbContextFactory<TvContext> factory = provider.GetRequiredService<IDbContextFactory<TvContext>>();
@@ -110,7 +107,6 @@ public class ScheduleIntegrationTests
         await searchIndex.Initialize(
             new LocalFileSystem(
                 new MockFileSystem(),
-                provider.GetRequiredService<IClient>(),
                 provider.GetRequiredService<ILogger<LocalFileSystem>>()),
             provider.GetRequiredService<IConfigElementRepository>(),
             _cancellationToken);
@@ -123,7 +119,7 @@ public class ScheduleIntegrationTests
 
         var builder = new PlayoutBuilder(
             new ConfigElementRepository(factory),
-            new MediaCollectionRepository(Substitute.For<IClient>(), searchIndex, factory),
+            new MediaCollectionRepository(searchIndex, factory),
             new TelevisionRepository(factory, provider.GetRequiredService<ILogger<TelevisionRepository>>()),
             new ArtistRepository(factory),
             Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>(),
@@ -319,7 +315,7 @@ public class ScheduleIntegrationTests
 
         var builder = new PlayoutBuilder(
             new ConfigElementRepository(factory),
-            new MediaCollectionRepository(Substitute.For<IClient>(), Substitute.For<ISearchIndex>(), factory),
+            new MediaCollectionRepository(Substitute.For<ISearchIndex>(), factory),
             new TelevisionRepository(factory, provider.GetRequiredService<ILogger<TelevisionRepository>>()),
             new ArtistRepository(factory),
             Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>(),

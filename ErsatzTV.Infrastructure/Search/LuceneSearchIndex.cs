@@ -1,5 +1,4 @@
 ﻿using System.Globalization;
-using Bugsnag;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
@@ -212,13 +211,11 @@ public sealed class LuceneSearchIndex : ISearchIndex
 
     // default to title field only
     public Task<SearchResult> Search(
-        IClient client,
         string query,
         string smartCollectionName,
         int skip,
         int limit,
         CancellationToken cancellationToken) => Search(
-        client,
         query,
         smartCollectionName,
         skip,
@@ -227,7 +224,6 @@ public sealed class LuceneSearchIndex : ISearchIndex
         cancellationToken);
 
     public async Task<SearchResult> Search(
-        IClient client,
         string query,
         string smartCollectionName,
         int skip,
@@ -235,15 +231,6 @@ public sealed class LuceneSearchIndex : ISearchIndex
         List<string> defaultFields,
         CancellationToken cancellationToken)
     {
-        var metadata = new Dictionary<string, string>
-        {
-            { "searchQuery", query },
-            { "skip", skip.ToString(CultureInfo.InvariantCulture) },
-            { "limit", limit.ToString(CultureInfo.InvariantCulture) }
-        };
-
-        client?.Breadcrumbs?.Leave("SearchIndex.Search", BreadcrumbType.State, metadata);
-
         query ??= string.Empty;
 
         if (string.IsNullOrWhiteSpace(query.Replace("*", string.Empty).Replace("?", string.Empty)) ||

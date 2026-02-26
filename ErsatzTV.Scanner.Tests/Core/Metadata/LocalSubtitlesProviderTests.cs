@@ -1,5 +1,4 @@
 ﻿using System.Globalization;
-using Bugsnag;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Metadata;
@@ -61,7 +60,7 @@ public class LocalSubtitlesProviderTests
             Substitute.For<IMediaItemRepository>(),
             Substitute.For<IMetadataRepository>(),
             fileSystem,
-            new LocalFileSystem(fileSystem, Substitute.For<IClient>(), Substitute.For<ILogger<LocalFileSystem>>()),
+            new LocalFileSystem(fileSystem, Substitute.For<ILogger<LocalFileSystem>>()),
             Substitute.For<ILogger<LocalSubtitlesProvider>>());
 
         List<Subtitle> result = provider.LocateExternalSubtitles(
@@ -115,7 +114,7 @@ public class LocalSubtitlesProviderTests
             Substitute.For<IMediaItemRepository>(),
             Substitute.For<IMetadataRepository>(),
             fileSystem,
-            new LocalFileSystem(fileSystem, Substitute.For<IClient>(), Substitute.For<ILogger<LocalFileSystem>>()),
+            new LocalFileSystem(fileSystem, Substitute.For<ILogger<LocalFileSystem>>()),
             Substitute.For<ILogger<LocalSubtitlesProvider>>());
 
         List<Subtitle> result = provider.LocateExternalSubtitles(

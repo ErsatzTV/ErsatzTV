@@ -1,5 +1,4 @@
 using System.Threading.Channels;
-using Bugsnag;
 using ErsatzTV.Application;
 using ErsatzTV.Application.Search;
 using ErsatzTV.Core;
@@ -157,16 +156,6 @@ public class SearchIndexService : BackgroundService
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Failed to handle search index batch worker request");
-
-            try
-            {
-                IClient client = scope.ServiceProvider.GetRequiredService<IClient>();
-                client.Notify(ex);
-            }
-            catch (Exception)
-            {
-                // do nothing
-            }
         }
     }
 }

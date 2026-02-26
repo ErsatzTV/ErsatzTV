@@ -7,7 +7,6 @@ using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Channels;
 using BlazorSortable;
-using Bugsnag.AspNet.Core;
 using Dapper;
 using ErsatzTV.Application;
 using ErsatzTV.Application.Channels;
@@ -130,25 +129,6 @@ public class Startup
             options.ForwardLimit = 2;
             options.KnownIPNetworks.Clear();
             options.KnownProxies.Clear();
-        });
-
-        services.AddBugsnag(configuration =>
-        {
-            configuration.ApiKey = bugsnagConfig.ApiKey;
-            configuration.ProjectNamespaces = new[] { "ErsatzTV" };
-            configuration.AppVersion = Assembly.GetEntryAssembly()
-                ?.GetCustomAttribute<AssemblyInformationalVersionAttribute>()
-                ?.InformationalVersion ?? "unknown";
-            configuration.AutoNotify = true;
-
-            configuration.NotifyReleaseStages = new[] { "public", "develop" };
-
-#if DEBUG || DEBUG_NO_SYNC
-            configuration.ReleaseStage = "develop";
-#else
-            // effectively "disable" by tweaking app config
-            configuration.ReleaseStage = bugsnagConfig.Enable ? "public" : "private";
-#endif
         });
 
         services.AddDataProtection().PersistKeysToFileSystem(new DirectoryInfo(FileSystemLayout.DataProtectionFolder));
@@ -774,7 +754,6 @@ public class Startup
         services.AddScoped<IFileNotFoundHealthCheck, FileNotFoundHealthCheck>();
         services.AddScoped<IUnavailableHealthCheck, UnavailableHealthCheck>();
         services.AddScoped<IVaapiDriverHealthCheck, VaapiDriverHealthCheck>();
-        services.AddScoped<IErrorReportsHealthCheck, ErrorReportsHealthCheck>();
         services.AddScoped<IUnifiedDockerHealthCheck, UnifiedDockerHealthCheck>();
         services.AddScoped<IDowngradeHealthCheck, DowngradeHealthCheck>();
         services.AddScoped<IEmptyScheduleHealthCheck, EmptyScheduleHealthCheck>();

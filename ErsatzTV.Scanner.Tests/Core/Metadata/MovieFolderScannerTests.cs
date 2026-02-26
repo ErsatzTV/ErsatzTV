@@ -1,5 +1,4 @@
 ﻿using System.Runtime.InteropServices;
-using Bugsnag;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.FFmpeg;
@@ -1032,7 +1031,7 @@ public class MovieFolderScannerTests
             return new MovieFolderScanner(
                 _scannerProxy,
                 fileSystem,
-                new LocalFileSystem(fileSystem, Substitute.For<IClient>(), Substitute.For<ILogger<LocalFileSystem>>()),
+                new LocalFileSystem(fileSystem, Substitute.For<ILogger<LocalFileSystem>>()),
                 _movieRepository,
                 _localStatisticsProvider,
                 Substitute.For<ILocalSubtitlesProvider>(),
@@ -1044,7 +1043,6 @@ public class MovieFolderScannerTests
                 _mediaItemRepository,
                 Substitute.For<IFFmpegPngService>(),
                 Substitute.For<ITempFilePool>(),
-                Substitute.For<IClient>(),
                 Logger);
         }
 
@@ -1060,7 +1058,7 @@ public class MovieFolderScannerTests
             return new MovieFolderScanner(
                 _scannerProxy,
                 fileSystem,
-                new LocalFileSystem(fileSystem, Substitute.For<IClient>(), Substitute.For<ILogger<LocalFileSystem>>()),
+                new LocalFileSystem(fileSystem, Substitute.For<ILogger<LocalFileSystem>>()),
                 _movieRepository,
                 _localStatisticsProvider,
                 Substitute.For<ILocalSubtitlesProvider>(),
@@ -1072,7 +1070,6 @@ public class MovieFolderScannerTests
                 _mediaItemRepository,
                 Substitute.For<IFFmpegPngService>(),
                 Substitute.For<ITempFilePool>(),
-                Substitute.For<IClient>(),
                 Logger);
         }
     }

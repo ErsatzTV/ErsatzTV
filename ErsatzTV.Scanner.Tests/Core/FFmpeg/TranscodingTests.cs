@@ -2,7 +2,6 @@
 using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text;
-using Bugsnag;
 using CliWrap;
 using CliWrap.Buffered;
 using ErsatzTV.Core;
@@ -246,7 +245,6 @@ public class TranscodingTests
     {
         var localFileSystem = new LocalFileSystem(
             new RealFileSystem(),
-            Substitute.For<IClient>(),
             LoggerFactory.CreateLogger<LocalFileSystem>());
         var fileSystem = new MockFileSystem();
         var tempFilePool = new TempFilePool();
@@ -276,7 +274,6 @@ public class TranscodingTests
         var oldService = new FFmpegProcessService(
             new FakeStreamSelector(),
             tempFilePool,
-            Substitute.For<IClient>(),
             LoggerFactory.CreateLogger<FFmpegProcessService>());
 
         var service = new FFmpegLibraryProcessService(
@@ -368,7 +365,6 @@ public class TranscodingTests
             metadataRepository,
             fileSystem,
             localFileSystem,
-            Substitute.For<IClient>(),
             Substitute.For<IHardwareCapabilitiesFactory>(),
             LoggerFactory.CreateLogger<LocalStatisticsProvider>());
 
@@ -484,7 +480,6 @@ public class TranscodingTests
 
         var localFileSystem = new LocalFileSystem(
             new MockFileSystem(),
-            Substitute.For<IClient>(),
             LoggerFactory.CreateLogger<LocalFileSystem>());
         var fileSystem = new MockFileSystem();
 
@@ -533,7 +528,6 @@ public class TranscodingTests
             metadataRepository,
             fileSystem,
             localFileSystem,
-            Substitute.For<IClient>(),
             Substitute.For<IHardwareCapabilitiesFactory>(),
             LoggerFactory.CreateLogger<LocalStatisticsProvider>());
 
@@ -1007,7 +1001,6 @@ public class TranscodingTests
         var oldService = new FFmpegProcessService(
             new FakeStreamSelector(),
             Substitute.For<ITempFilePool>(),
-            Substitute.For<IClient>(),
             LoggerFactory.CreateLogger<FFmpegProcessService>());
 
         var service = new FFmpegLibraryProcessService(

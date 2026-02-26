@@ -1,5 +1,4 @@
 using System.Globalization;
-using Bugsnag;
 using Elastic.Clients.Elasticsearch.Aggregations;
 using Elastic.Clients.Elasticsearch.Core.Bulk;
 using Elastic.Clients.Elasticsearch.IndexManagement;
@@ -168,13 +167,11 @@ public class ElasticSearchIndex : ISearchIndex
     }
 
     public Task<SearchResult> Search(
-        IClient client,
         string query,
         string smartCollectionName,
         int skip,
         int limit,
         CancellationToken cancellationToken) => Search(
-        client,
         query,
         smartCollectionName,
         skip,
@@ -183,7 +180,6 @@ public class ElasticSearchIndex : ISearchIndex
         cancellationToken);
 
     public async Task<SearchResult> Search(
-        IClient client,
         string query,
         string smartCollectionName,
         int skip,

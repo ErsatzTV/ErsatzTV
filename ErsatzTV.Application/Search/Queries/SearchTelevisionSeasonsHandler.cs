@@ -1,6 +1,5 @@
 using System.Collections.Immutable;
 using System.Globalization;
-using Bugsnag;
 using ErsatzTV.Application.MediaItems;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Infrastructure.Data;
@@ -10,10 +9,9 @@ using Microsoft.EntityFrameworkCore;
 namespace ErsatzTV.Application.Search;
 
 public class SearchTelevisionSeasonsHandler(
-    IClient client,
     ISearchIndex searchIndex,
     IDbContextFactory<TvContext> dbContextFactory)
-    : SearchUsingSearchIndexHandler(client, searchIndex),
+    : SearchUsingSearchIndexHandler(searchIndex),
         IRequestHandler<SearchTelevisionSeasons, List<NamedMediaItemViewModel>>
 {
     public async Task<List<NamedMediaItemViewModel>> Handle(

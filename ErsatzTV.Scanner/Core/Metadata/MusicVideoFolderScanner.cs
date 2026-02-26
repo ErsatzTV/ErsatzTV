@@ -1,6 +1,5 @@
 ﻿using System.Collections.Immutable;
 using System.IO.Abstractions;
-using Bugsnag;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Errors;
@@ -20,7 +19,6 @@ namespace ErsatzTV.Scanner.Core.Metadata;
 public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScanner
 {
     private readonly IArtistRepository _artistRepository;
-    private readonly IClient _client;
     private readonly ILibraryRepository _libraryRepository;
     private readonly ILocalChaptersProvider _localChaptersProvider;
     private readonly IMetadataRepository _metadataRepository;
@@ -49,7 +47,6 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
         IMediaItemRepository mediaItemRepository,
         IFFmpegPngService ffmpegPngService,
         ITempFilePool tempFilePool,
-        IClient client,
         ILogger<MusicVideoFolderScanner> logger) : base(
         fileSystem,
         localStatisticsProvider,
@@ -58,7 +55,6 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
         imageCache,
         ffmpegPngService,
         tempFilePool,
-        client,
         logger)
     {
         _scannerProxy = scannerProxy;
@@ -72,7 +68,6 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
         _musicVideoRepository = musicVideoRepository;
         _libraryRepository = libraryRepository;
         _mediaItemRepository = mediaItemRepository;
-        _client = client;
         _logger = logger;
     }
 
@@ -267,7 +262,6 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
         }
         catch (Exception ex)
         {
-            _client.Notify(ex);
             return BaseError.New(ex.ToString());
         }
     }
@@ -299,7 +293,6 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
         }
         catch (Exception ex)
         {
-            _client.Notify(ex);
             return BaseError.New(ex.ToString());
         }
     }
@@ -467,7 +460,6 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
         }
         catch (Exception ex)
         {
-            _client.Notify(ex);
             return BaseError.New(ex.ToString());
         }
     }
@@ -525,7 +517,6 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
         }
         catch (Exception ex)
         {
-            _client.Notify(ex);
             return BaseError.New(ex.ToString());
         }
     }
@@ -541,7 +532,6 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
         }
         catch (Exception ex)
         {
-            _client.Notify(ex);
             return BaseError.New(ex.ToString());
         }
     }
@@ -557,7 +547,6 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
         }
         catch (Exception ex)
         {
-            _client.Notify(ex);
             return BaseError.New(ex.ToString());
         }
     }

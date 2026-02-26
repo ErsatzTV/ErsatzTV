@@ -1,10 +1,8 @@
 ﻿using System.Text;
-using Bugsnag;
 using ErsatzTV.Core;
 using ErsatzTV.Scanner.Core.Metadata.Nfo;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.IO;
-using NSubstitute;
 using NUnit.Framework;
 using Shouldly;
 
@@ -16,7 +14,6 @@ public class MovieNfoReaderTests
     [SetUp]
     public void SetUp() => _movieNfoReader = new MovieNfoReader(
         new RecyclableMemoryStreamManager(),
-        Substitute.For<IClient>(),
         new NullLogger<MovieNfoReader>());
 
     private MovieNfoReader _movieNfoReader;

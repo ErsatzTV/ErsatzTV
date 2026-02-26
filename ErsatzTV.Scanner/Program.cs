@@ -1,6 +1,4 @@
 using System.IO.Abstractions;
-using Bugsnag;
-using Bugsnag.Payload;
 using Dapper;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Emby;
@@ -51,7 +49,6 @@ using Serilog.Events;
 using Serilog.Formatting.Compact;
 using Testably.Abstractions;
 using Exception = System.Exception;
-using IConfiguration = Bugsnag.IConfiguration;
 
 namespace ErsatzTV.Scanner;
 
@@ -254,8 +251,6 @@ public class Program
                 services.AddSingleton<SearchQueryParser>();
                 services.AddSingleton<ISearchIndex, LuceneSearchIndex>();
                 services.AddSingleton<RecyclableMemoryStreamManager>();
-                // TODO: real bugsnag?
-                services.AddSingleton<IClient>(_ => new BugsnagNoopClient());
                 services.AddSingleton<IScannerProxy, ScannerProxy>();
                 services.AddSingleton<ILanguageCodeCache, LanguageCodeCache>();
 
@@ -270,44 +265,5 @@ public class Program
                 services.AddHostedService<Worker>();
             })
             .UseSerilog();
-    }
-
-    private class BugsnagNoopClient : IClient
-    {
-        public void Notify(Exception exception)
-        {
-        }
-
-        public void Notify(Exception exception, Middleware callback)
-        {
-        }
-
-        public void Notify(Exception exception, Severity severity)
-        {
-        }
-
-        public void Notify(Exception exception, Severity severity, Middleware callback)
-        {
-        }
-
-        public void Notify(Exception exception, HandledState handledState)
-        {
-        }
-
-        public void Notify(Exception exception, HandledState handledState, Middleware callback)
-        {
-        }
-
-        public void Notify(Report report, Middleware callback)
-        {
-        }
-
-        public void BeforeNotify(Middleware middleware)
-        {
-        }
-
-        public IBreadcrumbs Breadcrumbs => new Breadcrumbs(Configuration);
-        public ISessionTracker SessionTracking => new SessionTracker(Configuration);
-        public IConfiguration Configuration => new Configuration();
     }
 }

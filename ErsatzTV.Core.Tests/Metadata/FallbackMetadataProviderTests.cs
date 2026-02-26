@@ -1,7 +1,5 @@
-﻿using Bugsnag;
-using ErsatzTV.Core.Domain;
+﻿using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Metadata;
-using NSubstitute;
 using NUnit.Framework;
 using Shouldly;
 
@@ -11,7 +9,7 @@ namespace ErsatzTV.Core.Tests.Metadata;
 public class FallbackMetadataProviderTests
 {
     [SetUp]
-    public void SetUp() => _fallbackMetadataProvider = new FallbackMetadataProvider(Substitute.For<IClient>());
+    public void SetUp() => _fallbackMetadataProvider = new FallbackMetadataProvider();
 
     private FallbackMetadataProvider _fallbackMetadataProvider;
 

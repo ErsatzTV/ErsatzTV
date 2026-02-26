@@ -27,7 +27,6 @@ public class HealthCheckService : IHealthCheckService
         IFileNotFoundHealthCheck fileNotFoundHealthCheck,
         IUnavailableHealthCheck unavailableHealthCheck,
         IVaapiDriverHealthCheck vaapiDriverHealthCheck,
-        IErrorReportsHealthCheck errorReportsHealthCheck,
         IUnifiedDockerHealthCheck unifiedDockerHealthCheck,
         IDowngradeHealthCheck downgradeHealthCheck,
         IEmptyScheduleHealthCheck emptyScheduleHealthCheck,
@@ -53,8 +52,7 @@ public class HealthCheckService : IHealthCheckService
             fileNotFoundHealthCheck,
             unavailableHealthCheck,
             emptyScheduleHealthCheck,
-            vaapiDriverHealthCheck,
-            errorReportsHealthCheck
+            vaapiDriverHealthCheck
         ];
     }
 

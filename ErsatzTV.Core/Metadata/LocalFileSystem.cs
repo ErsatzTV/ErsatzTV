@@ -1,13 +1,12 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.IO.Abstractions;
 using System.Security.Cryptography;
-using Bugsnag;
 using ErsatzTV.Core.Interfaces.Metadata;
 using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Core.Metadata;
 
-public class LocalFileSystem(IFileSystem fileSystem, IClient client, ILogger<LocalFileSystem> logger) : ILocalFileSystem
+public class LocalFileSystem(IFileSystem fileSystem, ILogger<LocalFileSystem> logger) : ILocalFileSystem
 {
     public Unit EnsureFolderExists(string folder)
     {
@@ -50,10 +49,9 @@ public class LocalFileSystem(IFileSystem fileSystem, IClient client, ILogger<Loc
             {
                 logger.LogWarning("Unauthorized access exception listing subdirectories of folder {Folder}", folder);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // do nothing
-                client.Notify(ex);
             }
         }
 
@@ -73,10 +71,9 @@ public class LocalFileSystem(IFileSystem fileSystem, IClient client, ILogger<Loc
             {
                 logger.LogWarning("Unauthorized access exception listing files in folder {Folder}", folder);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // do nothing
-                client.Notify(ex);
             }
         }
 
@@ -96,10 +93,9 @@ public class LocalFileSystem(IFileSystem fileSystem, IClient client, ILogger<Loc
             {
                 logger.LogWarning("Unauthorized access exception listing files in folder {Folder}", folder);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // do nothing
-                client.Notify(ex);
             }
         }
 
@@ -123,10 +119,9 @@ public class LocalFileSystem(IFileSystem fileSystem, IClient client, ILogger<Loc
             {
                 logger.LogWarning("Unauthorized access exception listing files in folder {Folder}", folder);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // do nothing
-                client.Notify(ex);
             }
         }
 
@@ -151,7 +146,6 @@ public class LocalFileSystem(IFileSystem fileSystem, IClient client, ILogger<Loc
         }
         catch (Exception ex)
         {
-            client.Notify(ex);
             return BaseError.New(ex.ToString());
         }
     }

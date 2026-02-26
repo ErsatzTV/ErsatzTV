@@ -1,10 +1,9 @@
-﻿using Bugsnag;
-using ErsatzTV.Core.Interfaces.Search;
+﻿using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Infrastructure.Search;
 
 namespace ErsatzTV.Application.Search;
 
-public class QuerySearchIndexAllItemsHandler(IClient client, ISearchIndex searchIndex)
+public class QuerySearchIndexAllItemsHandler(ISearchIndex searchIndex)
     : IRequestHandler<QuerySearchIndexAllItems, SearchResultAllItemsViewModel>
 {
     public async Task<SearchResultAllItemsViewModel> Handle(
@@ -23,7 +22,7 @@ public class QuerySearchIndexAllItemsHandler(IClient client, ISearchIndex search
             await GetIds(LuceneSearchIndex.RemoteStreamType, request.Query, cancellationToken));
 
     private async Task<List<int>> GetIds(string type, string query, CancellationToken cancellationToken) =>
-        (await searchIndex.Search(client, $"type:{type} AND ({query})", string.Empty, 0, 0, cancellationToken)).Items
+        (await searchIndex.Search($"type:{type} AND ({query})", string.Empty, 0, 0, cancellationToken)).Items
         .Map(i => i.Id)
         .ToList();
 }

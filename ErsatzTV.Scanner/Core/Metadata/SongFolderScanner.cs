@@ -1,6 +1,5 @@
 ﻿using System.Collections.Immutable;
 using System.IO.Abstractions;
-using Bugsnag;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Errors;
@@ -19,7 +18,6 @@ namespace ErsatzTV.Scanner.Core.Metadata;
 
 public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
 {
-    private readonly IClient _client;
     private readonly ILibraryRepository _libraryRepository;
     private readonly IScannerProxy _scannerProxy;
     private readonly IFileSystem _fileSystem;
@@ -43,7 +41,6 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
         IMediaItemRepository mediaItemRepository,
         IFFmpegPngService ffmpegPngService,
         ITempFilePool tempFilePool,
-        IClient client,
         ILogger<SongFolderScanner> logger) : base(
         fileSystem,
         localStatisticsProvider,
@@ -52,7 +49,6 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
         imageCache,
         ffmpegPngService,
         tempFilePool,
-        client,
         logger)
     {
         _scannerProxy = scannerProxy;
@@ -63,7 +59,6 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
         _songRepository = songRepository;
         _libraryRepository = libraryRepository;
         _mediaItemRepository = mediaItemRepository;
-        _client = client;
         _logger = logger;
     }
 
@@ -278,7 +273,6 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
         }
         catch (Exception ex)
         {
-            _client.Notify(ex);
             return BaseError.New(ex.ToString());
         }
     }
@@ -332,7 +326,6 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
         }
         catch (Exception ex)
         {
-            _client.Notify(ex);
             return BaseError.New(ex.ToString());
         }
     }
