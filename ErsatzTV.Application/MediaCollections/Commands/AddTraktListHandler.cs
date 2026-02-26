@@ -110,10 +110,10 @@ public partial class AddTraktListHandler : TraktCommandBase, IRequestHandler<Add
         return maybeList.Map(_ => Unit.Default);
     }
 
-    [GeneratedRegex(@"https:\/\/trakt\.tv\/users\/([\w\-_]+)\/(?:lists\/)?([\w\-_]+)")]
+    [GeneratedRegex(@"https:\/\/(?:app\.)?trakt\.tv\/users\/([\w\-_]+)\/(?:lists\/)?([\w\-_]+)")]
     private static partial Regex UriTraktListRegex();
 
-    [GeneratedRegex(@"https:\/\/trakt\.tv\/lists\/([\w\-_]+)\/([\w\-_]+)")]
+    [GeneratedRegex(@"https:\/\/(?:app\.)?trakt\.tv\/lists\/([\w\-_]+)\/([\w\-_]+)")]
     private static partial Regex UriTraktListRegex2();
 
     [GeneratedRegex(@"([\w\-_]+)\/(?:lists\/)?([\w\-_]+)")]

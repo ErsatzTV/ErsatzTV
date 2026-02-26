@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 ### Changed
 - Remove BugSnag error reporting integration
+- Remove developer's personal Trakt API key
+  - Users who want to continue to use Trakt must create an API app and set the `Client ID` as the environment variable `TRAKT__CLIENTID`
+
+### Fixed
+- Support adding trakt lists using `app.trakt.tv` domain (instead of just `trakt.tv`)
 
 ## [26.3.0] - 2026-02-24
 ### Added
