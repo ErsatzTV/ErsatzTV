@@ -67,7 +67,7 @@
 
     private async Task HandleSubmitAsync()
     {
-        await _form.Validate();
+        await _form.ValidateAsync();
         if (_success)
         {
             Either<BaseError, UpdateSmartCollectionResult> result = await Mediator.Send(new UpdateSmartCollection(Id, _model.Name, _model.Query), _cts.Token);

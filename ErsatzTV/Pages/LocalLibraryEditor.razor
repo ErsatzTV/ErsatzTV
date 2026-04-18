@@ -229,7 +229,7 @@
 
     private async Task SaveChangesAsync()
     {
-        await _form.Validate();
+        await _form.ValidateAsync();
         if (_success)
         {
             Either<BaseError, LocalLibraryViewModel> result = IsEdit

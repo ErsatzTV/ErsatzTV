@@ -86,7 +86,7 @@
 
     private async Task HandleSubmitAsync()
     {
-        await _form.Validate();
+        await _form.ValidateAsync();
         if (_success)
         {
             var request = new UpdateTraktList(_model.Id, _model.AutoRefresh, _model.GeneratePlaylist);

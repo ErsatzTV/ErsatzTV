@@ -110,8 +110,8 @@ public class ProgramScheduleItemEditViewModel : INotifyPropertyChanged
     public FillerPresetViewModel PostRollFiller { get; set; }
     public FillerPresetViewModel TailFiller { get; set; }
     public FillerPresetViewModel FallbackFiller { get; set; }
-    public IEnumerable<WatermarkViewModel> Watermarks { get; set; }
-    public IEnumerable<GraphicsElementViewModel> GraphicsElements { get; set; }
+    public IReadOnlyCollection<WatermarkViewModel> Watermarks { get; set; }
+    public IReadOnlyCollection<GraphicsElementViewModel> GraphicsElements { get; set; }
     public string PreferredAudioLanguageCode { get; set; }
     public string PreferredAudioTitle { get; set; }
     public string PreferredSubtitleLanguageCode { get; set; }
