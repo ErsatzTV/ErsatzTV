@@ -46,6 +46,7 @@ ENV FONTCONFIG_PATH=/etc/fonts
 RUN fc-cache update
 WORKDIR /app
 COPY --from=build /app ./
+COPY next/ ./next/
 ENV ETV_CONFIG_FOLDER=/config
 ENV ETV_TRANSCODE_FOLDER=/transcode
 ENTRYPOINT ["./ErsatzTV"]

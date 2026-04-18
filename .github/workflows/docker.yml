@@ -48,6 +48,21 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Download next artifacts
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.gh_token }}
+        run: |
+          case "${{ matrix.name }}" in
+            amd64) TARGET="linux-x64" ;;
+            arm32v7) TARGET="linux-arm" ;;
+            arm64) TARGET="linux-arm64" ;;
+          esac
+          gh release download develop --repo ErsatzTV/next --pattern "ersatztv-next-*-${TARGET}.tar.gz" --dir next-download
+          mkdir -p next
+          tar xzvf next-download/*.tar.gz -C next --strip-components 1
+          rm -rf next-download
+
       - name: Set up QEMU
         if: ${{ matrix.name == 'arm32v7' }}
         uses: docker/setup-qemu-action@v3
