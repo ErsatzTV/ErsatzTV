@@ -128,22 +128,18 @@ jobs:
           rm -r ErsatzTV-Legacy.app
 
       - name: Delete old release assets
-        uses: mknejp/delete-release-assets@v1
         if: ${{ inputs.release_tag == 'develop' }}
-        with:
-          token: ${{ secrets.gh_token }}
-          tag: ${{ inputs.release_tag }}
-          fail-if-no-assets: false
-          assets: "*${{ matrix.target }}.dmg"
+        env:
+          GH_TOKEN: ${{ secrets.gh_token }}
+        run: |
+          gh release view ${{ inputs.release_tag }} --json assets --jq '.assets[].name' --repo ${{ github.repository }} \
+            | grep '${{ matrix.target }}.dmg' \
+            | xargs -r -I{} gh release delete-asset ${{ inputs.release_tag }} {} --yes --repo ${{ github.repository }}
 
       - name: Publish
-        uses: softprops/action-gh-release@v1
-        with:
-          prerelease: false
-          tag_name: ${{ inputs.release_tag }}
-          files: "${{ env.RELEASE_NAME }}.dmg"
         env:
-          GITHUB_TOKEN: ${{ secrets.gh_token }}
+          GH_TOKEN: ${{ secrets.gh_token }}
+        run: gh release upload ${{ inputs.release_tag }} "${{ env.RELEASE_NAME }}.dmg" --repo ${{ github.repository }}
 
   build_and_upload_linux:
     name: Build & Upload Linux
@@ -183,7 +179,7 @@ jobs:
       - name: Build
         shell: bash
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.gh_token }}
         run: |
           # Define some variables for things we need
           release_name="ErsatzTV-Legacy-${{ inputs.release_version }}-${{ matrix.target }}"
@@ -209,22 +205,18 @@ jobs:
           rm -r "$release_name"
 
       - name: Delete old release assets
-        uses: mknejp/delete-release-assets@v1
         if: ${{ inputs.release_tag == 'develop' }}
-        with:
-          token: ${{ secrets.gh_token }}
-          tag: ${{ inputs.release_tag }}
-          fail-if-no-assets: false
-          assets: "*${{ matrix.target }}.tar.gz"
+        env:
+          GH_TOKEN: ${{ secrets.gh_token }}
+        run: |
+          gh release view ${{ inputs.release_tag }} --json assets --jq '.assets[].name' --repo ${{ github.repository }} \
+            | grep '${{ matrix.target }}.tar.gz' \
+            | xargs -r -I{} gh release delete-asset ${{ inputs.release_tag }} {} --yes --repo ${{ github.repository }}
 
       - name: Publish
-        uses: softprops/action-gh-release@v1
-        with:
-          prerelease: false
-          tag_name: ${{ inputs.release_tag }}
-          files: "${{ env.RELEASE_NAME }}.tar.gz"
         env:
-          GITHUB_TOKEN: ${{ secrets.gh_token }}
+          GH_TOKEN: ${{ secrets.gh_token }}
+        run: gh release upload ${{ inputs.release_tag }} "${{ env.RELEASE_NAME }}.tar.gz" --repo ${{ github.repository }}
 
   build_dotnet_windows:
     name: Build dotnet for Windows
@@ -310,7 +302,7 @@ jobs:
       - name: Package artifacts
         shell: bash
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.gh_token }}
         run: |
           release_name="ErsatzTV-Legacy-${{ inputs.release_version }}-win-x64"
           echo "RELEASE_NAME=${release_name}" >> $GITHUB_ENV
@@ -337,19 +329,15 @@ jobs:
           (cd "${release_name}" && 7z a "../${release_name}.zip" .)
 
       - name: Delete old release assets
-        uses: mknejp/delete-release-assets@v1
         if: ${{ inputs.release_tag == 'develop' }}
-        with:
-          token: ${{ secrets.gh_token }}
-          tag: ${{ inputs.release_tag }}
-          fail-if-no-assets: false
-          assets: "*win-x64.zip"
+        env:
+          GH_TOKEN: ${{ secrets.gh_token }}
+        run: |
+          gh release view ${{ inputs.release_tag }} --json assets --jq '.assets[].name' --repo ${{ github.repository }} \
+            | grep 'win-x64.zip' \
+            | xargs -r -I{} gh release delete-asset ${{ inputs.release_tag }} {} --yes --repo ${{ github.repository }}
 
       - name: Publish
-        uses: softprops/action-gh-release@v1
-        with:
-          prerelease: false
-          tag_name: ${{ inputs.release_tag }}
-          files: "${{ env.RELEASE_NAME }}.zip"
         env:
-          GITHUB_TOKEN: ${{ secrets.gh_token }}
+          GH_TOKEN: ${{ secrets.gh_token }}
+        run: gh release upload ${{ inputs.release_tag }} "${{ env.RELEASE_NAME }}.zip" --repo ${{ github.repository }}

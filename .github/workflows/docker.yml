@@ -51,7 +51,7 @@ jobs:
       - name: Download next artifacts
         shell: bash
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.gh_token }}
         run: |
           case "${{ matrix.name }}" in
             amd64) TARGET="linux-x64" ;;
