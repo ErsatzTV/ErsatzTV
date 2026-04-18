@@ -182,6 +182,8 @@ jobs:
 
       - name: Build
         shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.gh_token }}
         run: |
           # Define some variables for things we need
           release_name="ErsatzTV-Legacy-${{ inputs.release_version }}-${{ matrix.target }}"
@@ -194,6 +196,13 @@ jobs:
           mkdir "$release_name"
           mv scanner/* "$release_name/"
           mv main/* "$release_name/"
+
+          # download next artifacts
+          gh release download develop --repo ErsatzTV/next --pattern "ersatztv-next-*-${{ matrix.target }}.tar.gz" --dir next-download
+          mkdir -p "$release_name/next"
+          tar xzvf next-download/*.tar.gz -C "$release_name/next" --strip-components 1
+          rm -rf next-download
+
           tar czvf "${release_name}.tar.gz" "$release_name"
 
           # Delete output directory
@@ -300,6 +309,8 @@ jobs:
 
       - name: Package artifacts
         shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.gh_token }}
         run: |
           release_name="ErsatzTV-Legacy-${{ inputs.release_version }}-win-x64"
           echo "RELEASE_NAME=${release_name}" >> $GITHUB_ENV
@@ -312,6 +323,14 @@ jobs:
           rm -rf "$release_name/Resources"
 
           mv rust-build/ErsatzTV-Windows.exe "$release_name/ErsatzTV-Windows.exe"
+
+          # download next artifacts
+          gh release download develop --repo ErsatzTV/next --pattern "ersatztv-next-*-windows-x64.zip" --dir next-download
+          mkdir -p "$release_name/next"
+          7z x next-download/*.zip -onext-extracted
+          mv next-extracted/ersatztv-next-*/ersatztv*.exe "$release_name/next/"
+          rm -rf next-download next-extracted
+
           7z e "ffmpeg/${{ steps.downloadffmpeg.outputs.filename }}" -o"$release_name" '*.exe' -r
           rm -f "$release_name/ffplay.exe"
 
