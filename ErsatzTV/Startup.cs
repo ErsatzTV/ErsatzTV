@@ -21,7 +21,6 @@ using ErsatzTV.Core.Images;
 using ErsatzTV.Core.Interfaces.Database;
 using ErsatzTV.Core.Interfaces.Emby;
 using ErsatzTV.Core.Interfaces.FFmpeg;
-using ErsatzTV.Core.Interfaces.GitHub;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Jellyfin;
 using ErsatzTV.Core.Interfaces.Locking;
@@ -56,7 +55,6 @@ using ErsatzTV.Infrastructure.Data.Repositories;
 using ErsatzTV.Infrastructure.Database;
 using ErsatzTV.Infrastructure.Emby;
 using ErsatzTV.Infrastructure.FFmpeg;
-using ErsatzTV.Infrastructure.GitHub;
 using ErsatzTV.Infrastructure.Health;
 using ErsatzTV.Infrastructure.Health.Checks;
 using ErsatzTV.Infrastructure.Images;
@@ -340,12 +338,7 @@ public class Startup
         string etvVersion = Assembly.GetEntryAssembly()?.GetCustomAttribute<AssemblyInformationalVersionAttribute>()
             ?.InformationalVersion ?? "unknown";
 
-        Log.Logger.Information("ErsatzTV version {Version}", etvVersion);
-
-        Log.Logger.Warning(
-            "Report bugs to {GitHub} or contact us at {Contact}",
-            "https://github.com/ErsatzTV/ErsatzTV",
-            "https://ersatztv.org/contact");
+        Log.Logger.Information("ErsatzTV Legacy version {Version}", etvVersion);
 
         CopyMacOsConfigFolderIfNeeded();
 
@@ -836,7 +829,6 @@ public class Startup
 
         services.AddScoped<ISongVideoGenerator, SongVideoGenerator>();
         services.AddScoped<IMusicVideoCreditsGenerator, MusicVideoCreditsGenerator>();
-        services.AddScoped<IGitHubApiClient, GitHubApiClient>();
         services.AddScoped<IHtmlSanitizer, HtmlSanitizer>(_ =>
         {
             var sanitizer = new HtmlSanitizer();

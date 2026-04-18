@@ -74,7 +74,7 @@ jobs:
       - name: Calculate Release Name
         shell: bash
         run: |
-          release_name="ErsatzTV-${{ inputs.release_version }}-${{ matrix.target }}"
+          release_name="ErsatzTV-Legacy-${{ inputs.release_version }}-${{ matrix.target }}"
           echo "RELEASE_NAME=${release_name}" >> $GITHUB_ENV
 
       - name: Build
@@ -101,7 +101,7 @@ jobs:
         run: |
           brew install create-dmg
           create-dmg \
-            --volname "ErsatzTV" \
+            --volname "ErsatzTV-Legacy" \
             --volicon "artwork/ErsatzTV.icns" \
             --window-pos 200 120 \
             --window-size 800 400 \
@@ -111,21 +111,21 @@ jobs:
             --app-drop-link 600 185 \
             --skip-jenkins \
             --no-internet-enable \
-            "ErsatzTV.dmg" \
-            "ErsatzTV.app/"
+            "ErsatzTV-Legacy.dmg" \
+            "ErsatzTV-Legacy.app/"
 
       - name: Notarize
         shell: bash
         run: |
-          xcrun notarytool submit ErsatzTV.dmg --apple-id "${{ secrets.ac_username }}" --password "${{ secrets.ac_password }}" --team-id 32MB98Q32R --wait
-          xcrun stapler staple ErsatzTV.dmg
+          xcrun notarytool submit ErsatzTV-Legacy.dmg --apple-id "${{ secrets.ac_username }}" --password "${{ secrets.ac_password }}" --team-id 32MB98Q32R --wait
+          xcrun stapler staple ErsatzTV-Legacy.dmg
 
       - name: Cleanup
         shell: bash
         run: |
-          mv ErsatzTV.dmg "${{ env.RELEASE_NAME }}.dmg"
+          mv ErsatzTV-Legacy.dmg "${{ env.RELEASE_NAME }}.dmg"
           rm -r publish
-          rm -r ErsatzTV.app
+          rm -r ErsatzTV-Legacy.app
 
       - name: Delete old release assets
         uses: mknejp/delete-release-assets@v1
@@ -184,7 +184,7 @@ jobs:
         shell: bash
         run: |
           # Define some variables for things we need
-          release_name="ErsatzTV-${{ inputs.release_version }}-${{ matrix.target }}"
+          release_name="ErsatzTV-Legacy-${{ inputs.release_version }}-${{ matrix.target }}"
           echo "RELEASE_NAME=${release_name}" >> $GITHUB_ENV
 
           # Build everything
@@ -301,7 +301,7 @@ jobs:
       - name: Package artifacts
         shell: bash
         run: |
-          release_name="ErsatzTV-${{ inputs.release_version }}-win-x64"
+          release_name="ErsatzTV-Legacy-${{ inputs.release_version }}-win-x64"
           echo "RELEASE_NAME=${release_name}" >> $GITHUB_ENV
           mkdir "$release_name"
 

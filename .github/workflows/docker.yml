@@ -80,8 +80,8 @@ jobs:
           build-args: |
             INFO_VERSION=${{ inputs.info_version }}-docker${{ matrix.suffix }}
           outputs: |
-            type=image,name=jasongdove/ersatztv,name-canonical=true,push-by-digest=true
-            type=image,name=ghcr.io/ersatztv/ersatztv,name-canonical=true,push-by-digest=true
+            type=image,name=ersatztv/legacy,name-canonical=true,push-by-digest=true
+            type=image,name=ghcr.io/ersatztv/legacy,name-canonical=true,push-by-digest=true
 
       - name: Save digest to artifact
         run: echo ${{ steps.build.outputs.digest }} > digest.txt
@@ -122,20 +122,20 @@ jobs:
           ARM32V7_HASH=$(cat digests/digest-arm32v7/digest.txt)
           ARM64_HASH=$(cat digests/digest-arm64/digest.txt)
 
-          DOCKER_HUB_DIGESTS="jasongdove/ersatztv@${AMD64_HASH} jasongdove/ersatztv@${ARM64_HASH} jasongdove/ersatztv@${ARM32V7_HASH}"
-          GHCR_DIGESTS="ghcr.io/ersatztv/ersatztv@${AMD64_HASH} ghcr.io/ersatztv/ersatztv@${ARM64_HASH} ghcr.io/ersatztv/ersatztv@${ARM32V7_HASH}"
+          DOCKER_HUB_DIGESTS="ersatztv/legacy@${AMD64_HASH} ersatztv/legacy@${ARM64_HASH} ersatztv/legacy@${ARM32V7_HASH}"
+          GHCR_DIGESTS="ghcr.io/ersatztv/legacy@${AMD64_HASH} ghcr.io/ersatztv/legacy@${ARM64_HASH} ghcr.io/ersatztv/legacy@${ARM32V7_HASH}"
 
           echo "docker_hub_digests=${DOCKER_HUB_DIGESTS}" >> $GITHUB_OUTPUT
           echo "ghcr_digests=${GHCR_DIGESTS}" >> $GITHUB_OUTPUT
 
       - name: Create and push manifests
         run: |
-          docker manifest create jasongdove/ersatztv:${{ inputs.base_version }} ${{ steps.digests.outputs.docker_hub_digests }}
-          docker manifest push jasongdove/ersatztv:${{ inputs.base_version }}
-          docker manifest create jasongdove/ersatztv:${{ inputs.tag_version }} ${{ steps.digests.outputs.docker_hub_digests }}
-          docker manifest push jasongdove/ersatztv:${{ inputs.tag_version }}
+          docker manifest create ersatztv/legacy:${{ inputs.base_version }} ${{ steps.digests.outputs.docker_hub_digests }}
+          docker manifest push ersatztv/legacy:${{ inputs.base_version }}
+          docker manifest create ersatztv/legacy:${{ inputs.tag_version }} ${{ steps.digests.outputs.docker_hub_digests }}
+          docker manifest push ersatztv/legacy:${{ inputs.tag_version }}
 
-          docker manifest create ghcr.io/ersatztv/ersatztv:${{ inputs.base_version }} ${{ steps.digests.outputs.ghcr_digests }}
-          docker manifest push ghcr.io/ersatztv/ersatztv:${{ inputs.base_version }}
-          docker manifest create ghcr.io/ersatztv/ersatztv:${{ inputs.tag_version }} ${{ steps.digests.outputs.ghcr_digests }}
-          docker manifest push ghcr.io/ersatztv/ersatztv:${{ inputs.tag_version }}
+          docker manifest create ghcr.io/ersatztv/legacy:${{ inputs.base_version }} ${{ steps.digests.outputs.ghcr_digests }}
+          docker manifest push ghcr.io/ersatztv/legacy:${{ inputs.base_version }}
+          docker manifest create ghcr.io/ersatztv/legacy:${{ inputs.tag_version }} ${{ steps.digests.outputs.ghcr_digests }}
+          docker manifest push ghcr.io/ersatztv/legacy:${{ inputs.tag_version }}

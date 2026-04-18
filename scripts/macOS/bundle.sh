@@ -3,7 +3,7 @@
 SCRIPT_FOLDER=$(dirname ${BASH_SOURCE[0]})
 REPO_ROOT=$(realpath "$SCRIPT_FOLDER/../..")
 
-APP_NAME="$REPO_ROOT/ErsatzTV.app"
+APP_NAME="$REPO_ROOT/ErsatzTV-Legacy.app"
 PUBLISH_OUTPUT_DIRECTORY="$REPO_ROOT/publish/."
 
 if [ -d "$APP_NAME" ]

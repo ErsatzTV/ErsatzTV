@@ -34,7 +34,7 @@ jobs:
       artifacts_version: ${{ env.ARTIFACTS_VERSION }}
       info_version: ${{ env.INFO_VERSION }}
   build_and_upload:
-    uses: ersatztv/ersatztv/.github/workflows/artifacts.yml@main
+    uses: ersatztv/legacy/.github/workflows/artifacts.yml@main
     needs: calculate_version
     with:
       release_tag: develop
@@ -51,7 +51,7 @@ jobs:
       azure_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
   build_images:
-    uses: ersatztv/ersatztv/.github/workflows/docker.yml@main
+    uses: ersatztv/legacy/.github/workflows/docker.yml@main
     needs: calculate_version
     with:
       base_version: develop
