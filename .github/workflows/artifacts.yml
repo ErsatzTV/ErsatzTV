@@ -195,9 +195,10 @@ jobs:
 
           # download next artifacts
           gh release download develop --repo ErsatzTV/next --pattern "ersatztv-next-*-${{ matrix.target }}.tar.gz" --dir next-download
-          mkdir -p "$release_name/next"
-          tar xzvf next-download/*.tar.gz -C "$release_name/next" --strip-components 1
-          rm -rf next-download
+          mkdir next-extracted
+          tar xzvf next-download/*.tar.gz -C next-extracted --strip-components 1
+          mv next-extracted/ersatztv-channel "$release_name/"
+          rm -rf next-download next-extracted
 
           tar czvf "${release_name}.tar.gz" "$release_name"
 
@@ -318,9 +319,8 @@ jobs:
 
           # download next artifacts
           gh release download develop --repo ErsatzTV/next --pattern "ersatztv-next-*-windows-x64.zip" --dir next-download
-          mkdir -p "$release_name/next"
           7z x next-download/*.zip -onext-extracted
-          mv next-extracted/ersatztv-next-*/ersatztv*.exe "$release_name/next/"
+          mv next-extracted/ersatztv-next-*/ersatztv-channel.exe "$release_name/"
           rm -rf next-download next-extracted
 
           7z e "ffmpeg/${{ steps.downloadffmpeg.outputs.filename }}" -o"$release_name" '*.exe' -r
@@ -341,3 +341,4 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release upload ${{ inputs.release_tag }} "${{ env.RELEASE_NAME }}.zip" --repo ${{ github.repository }}
+ease upload ${{ inputs.release_tag }} "${{ env.RELEASE_NAME }}.zip" --repo ${{ github.repository }}
