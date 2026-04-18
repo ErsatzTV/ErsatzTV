@@ -154,7 +154,7 @@
         <value>Troubleshooting</value>
     </data>
     <data name="LabelErsatzTVVersion" xml:space="preserve">
-        <value>ErsatzTV Version</value>
+        <value>ErsatzTV Legacy Version</value>
     </data>
     <data name="LabelSearchTargetChannel" xml:space="preserve">
         <value>Channel</value>

@@ -12,7 +12,7 @@
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>@if (Assembly.GetEntryAssembly().GetCustomAttribute<AssemblyConfigurationAttribute>()?.Configuration?.ToLower() != "release") { @(System.Environment.MachineName + " ") }ErsatzTV</title>
+    <title>@if (Assembly.GetEntryAssembly().GetCustomAttribute<AssemblyConfigurationAttribute>()?.Configuration?.ToLower() != "release") { @(System.Environment.MachineName + " ") }ErsatzTV Legacy</title>
     <base href="~/"/>
     <link href="_content/MudBlazor/MudBlazor.min.css?v=@(Assembly.GetAssembly(typeof(AbstractLocalizationInterceptor))?.GetName().Version?.ToString())" rel="stylesheet"/>
     <link href="css/site.css" asp-append-version="true" rel="stylesheet"/>
