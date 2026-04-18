@@ -130,7 +130,7 @@ jobs:
       - name: Delete old release assets
         if: ${{ inputs.release_tag == 'develop' }}
         env:
-          GH_TOKEN: ${{ secrets.gh_token }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           gh release view ${{ inputs.release_tag }} --json assets --jq '.assets[].name' --repo ${{ github.repository }} \
             | grep '${{ matrix.target }}.dmg' \
@@ -138,7 +138,7 @@ jobs:
 
       - name: Publish
         env:
-          GH_TOKEN: ${{ secrets.gh_token }}
+          GH_TOKEN: ${{ github.token }}
         run: gh release upload ${{ inputs.release_tag }} "${{ env.RELEASE_NAME }}.dmg" --repo ${{ github.repository }}
 
   build_and_upload_linux:
@@ -179,7 +179,7 @@ jobs:
       - name: Build
         shell: bash
         env:
-          GH_TOKEN: ${{ secrets.gh_token }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           # Define some variables for things we need
           release_name="ErsatzTV-Legacy-${{ inputs.release_version }}-${{ matrix.target }}"
@@ -207,7 +207,7 @@ jobs:
       - name: Delete old release assets
         if: ${{ inputs.release_tag == 'develop' }}
         env:
-          GH_TOKEN: ${{ secrets.gh_token }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           gh release view ${{ inputs.release_tag }} --json assets --jq '.assets[].name' --repo ${{ github.repository }} \
             | grep '${{ matrix.target }}.tar.gz' \
@@ -215,7 +215,7 @@ jobs:
 
       - name: Publish
         env:
-          GH_TOKEN: ${{ secrets.gh_token }}
+          GH_TOKEN: ${{ github.token }}
         run: gh release upload ${{ inputs.release_tag }} "${{ env.RELEASE_NAME }}.tar.gz" --repo ${{ github.repository }}
 
   build_dotnet_windows:
@@ -302,7 +302,7 @@ jobs:
       - name: Package artifacts
         shell: bash
         env:
-          GH_TOKEN: ${{ secrets.gh_token }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           release_name="ErsatzTV-Legacy-${{ inputs.release_version }}-win-x64"
           echo "RELEASE_NAME=${release_name}" >> $GITHUB_ENV
@@ -331,7 +331,7 @@ jobs:
       - name: Delete old release assets
         if: ${{ inputs.release_tag == 'develop' }}
         env:
-          GH_TOKEN: ${{ secrets.gh_token }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           gh release view ${{ inputs.release_tag }} --json assets --jq '.assets[].name' --repo ${{ github.repository }} \
             | grep 'win-x64.zip' \
@@ -339,5 +339,5 @@ jobs:
 
       - name: Publish
         env:
-          GH_TOKEN: ${{ secrets.gh_token }}
+          GH_TOKEN: ${{ github.token }}
         run: gh release upload ${{ inputs.release_tag }} "${{ env.RELEASE_NAME }}.zip" --repo ${{ github.repository }}
