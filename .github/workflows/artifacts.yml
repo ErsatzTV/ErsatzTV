@@ -183,7 +183,7 @@ jobs:
       - name: Build
         shell: bash
         env:
-          GH_TOKEN: ${{ secrets.gh_token }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           # Define some variables for things we need
           release_name="ErsatzTV-Legacy-${{ inputs.release_version }}-${{ matrix.target }}"
@@ -310,7 +310,7 @@ jobs:
       - name: Package artifacts
         shell: bash
         env:
-          GH_TOKEN: ${{ secrets.gh_token }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           release_name="ErsatzTV-Legacy-${{ inputs.release_version }}-win-x64"
           echo "RELEASE_NAME=${release_name}" >> $GITHUB_ENV
