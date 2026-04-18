@@ -74,7 +74,7 @@
 
     private async Task HandleSubmitAsync()
     {
-        await _form.Validate();
+        await _form.ValidateAsync();
         if (_success)
         {
             Seq<BaseError> errorMessage = IsEdit ? (await Mediator.Send(new UpdateCollection(Id, _model.Name), _cts.Token)).LeftToSeq() : (await Mediator.Send(new CreateCollection(_model.Name), _cts.Token)).LeftToSeq();

@@ -25,7 +25,7 @@ public class Discover
     public string FriendlyName => "ErsatzTV";
     public string LineupURL => $"{_scheme}://{_host}/lineup.json";
     public string Manufacturer => "ErsatzTV";
-    public string ManufacturerURL => "https://github.com/ErsatzTV/ErsatzTV";
+    public string ManufacturerURL => "https://github.com/ErsatzTV/legacy";
     public string ModelNumber => "HDTC-2US";
     public int TunerCount { get; }
 }

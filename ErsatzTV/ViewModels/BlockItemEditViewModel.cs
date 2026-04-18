@@ -71,9 +71,9 @@ public class BlockItemEditViewModel : INotifyPropertyChanged
 
     public bool DisableWatermarks { get; set; }
 
-    public IEnumerable<WatermarkViewModel> Watermarks { get; set; }
+    public IReadOnlyCollection<WatermarkViewModel> Watermarks { get; set; }
 
-    public IEnumerable<GraphicsElementViewModel> GraphicsElements { get; set; }
+    public IReadOnlyCollection<GraphicsElementViewModel> GraphicsElements { get; set; }
 
     public event PropertyChangedEventHandler PropertyChanged;
 

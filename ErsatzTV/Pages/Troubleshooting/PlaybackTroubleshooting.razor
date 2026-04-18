@@ -205,8 +205,8 @@
     private int _ffmpegProfileId;
     private bool _channelMode;
     private string _streamSelector;
-    private IEnumerable<string> _watermarkNames = new System.Collections.Generic.HashSet<string>();
-    private IEnumerable<string> _graphicsElementNames = new System.Collections.Generic.HashSet<string>();
+    private IReadOnlyCollection<string> _watermarkNames = new System.Collections.Generic.HashSet<string>();
+    private IReadOnlyCollection<string> _graphicsElementNames = new System.Collections.Generic.HashSet<string>();
     private bool _startFromBeginning;
     private int? _subtitleId;
     private int _seekSeconds;
@@ -292,7 +292,7 @@
 
     private async Task PreviewChannel()
     {
-        await _logsField.SetText(string.Empty);
+        await _logsField.SetTextAsync(string.Empty);
         _lastSpeed = null;
 
         var baseUri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri).ToString();
@@ -421,7 +421,7 @@
 
     private async Task HandleTroubleshootingCompleted(PlaybackTroubleshootingCompletedNotification result)
     {
-        await InvokeAsync(async () => { await _logsField.SetText(string.Empty); });
+        await InvokeAsync(async () => { await _logsField.SetTextAsync(string.Empty); });
         _lastSpeed = null;
 
         foreach (double speed in result.MaybeSpeed)
@@ -442,14 +442,14 @@
         if (FileSystem.File.Exists(logFileName))
         {
             string text = await File.ReadAllTextAsync(logFileName);
-            await InvokeAsync(async () => { await _logsField.SetText(text); });
+            await InvokeAsync(async () => { await _logsField.SetTextAsync(text); });
         }
         else
         {
             foreach (var exception in result.MaybeException)
             {
                 string text = exception.Message + Environment.NewLine + Environment.NewLine + exception;
-                await InvokeAsync(async () => { await _logsField.SetText(text); });
+                await InvokeAsync(async () => { await _logsField.SetTextAsync(text); });
             }
         }
     }

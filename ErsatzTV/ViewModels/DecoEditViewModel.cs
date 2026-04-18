@@ -13,11 +13,11 @@ public class DecoEditViewModel
     public string GroupName { get; set; }
     public string Name { get; set; }
     public DecoMode WatermarkMode { get; set; }
-    public IEnumerable<WatermarkViewModel> Watermarks { get; set; }
+    public IReadOnlyCollection<WatermarkViewModel> Watermarks { get; set; }
     public bool UseWatermarkDuringFiller { get; set; }
 
     public DecoMode GraphicsElementsMode { get; set; }
-    public IEnumerable<GraphicsElementViewModel> GraphicsElements { get; set; }
+    public IReadOnlyCollection<GraphicsElementViewModel> GraphicsElements { get; set; }
     public bool UseGraphicsElementsDuringFiller { get; set; }
 
     public DecoMode DefaultFillerMode { get; set; }

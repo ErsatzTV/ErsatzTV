@@ -69,7 +69,7 @@
 
     private async Task SaveHDHRSettings()
     {
-        await _form.Validate();
+        await _form.ValidateAsync();
         if (_hdhrSuccess)
         {
             Either<BaseError, Unit> result = await Mediator.Send(new UpdateHDHRTunerCount(_tunerCount), _cts.Token);
