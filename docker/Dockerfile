@@ -60,7 +60,7 @@ ENV FONTCONFIG_PATH=/etc/fonts
 RUN fc-cache update
 WORKDIR /app
 COPY --from=build /app ./
-COPY next/ ./next/
+COPY ersatztv-channel ./
 ENV PYTHONPATH=/app/pythonlibs
 ENV ETV_CONFIG_FOLDER=/config
 ENV ETV_TRANSCODE_FOLDER=/transcode
