@@ -67,6 +67,8 @@ public static class FileSystemLayout
 
     public static readonly string DefaultMpegTsScriptFolder;
 
+    public static readonly string NextPlayoutsFolder;
+
     public static readonly string MacOsOldAppDataFolder = Path.Combine(
         Environment.GetEnvironmentVariable("HOME") ?? string.Empty,
         ".local",
@@ -192,5 +194,7 @@ public static class FileSystemLayout
 
         MpegTsScriptsFolder = Path.Combine(ScriptsFolder, "mpegts");
         DefaultMpegTsScriptFolder = Path.Combine(MpegTsScriptsFolder, "default");
+
+        NextPlayoutsFolder = Path.Combine(AppDataFolder, "next", "playouts");
     }
 }

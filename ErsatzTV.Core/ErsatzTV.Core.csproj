@@ -45,6 +45,7 @@
 
     <ItemGroup>
       <Folder Include="Api\" />
+      <Folder Include="Next\" />
     </ItemGroup>
 
 </Project>

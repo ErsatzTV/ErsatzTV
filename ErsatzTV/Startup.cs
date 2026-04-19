@@ -362,7 +362,8 @@ public class Startup
             FileSystemLayout.MultiEpisodeShuffleTemplatesFolder,
             FileSystemLayout.AudioStreamSelectorScriptsFolder,
             FileSystemLayout.MpegTsScriptsFolder,
-            FileSystemLayout.DefaultMpegTsScriptFolder
+            FileSystemLayout.DefaultMpegTsScriptFolder,
+            FileSystemLayout.NextPlayoutsFolder,
         ];
 
         foreach (string directory in directoriesToCreate)

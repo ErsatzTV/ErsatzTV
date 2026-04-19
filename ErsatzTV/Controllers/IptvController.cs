@@ -231,13 +231,23 @@ public class IptvController : StreamingControllerBase
                     "Maybe starting ffmpeg session for channel {Channel}, mode {Mode}",
                     channelNumber,
                     mode);
-                var request = new StartFFmpegSession(
-                    channelNumber,
-                    mode,
-                    Request.Scheme,
-                    Request.Host.ToString(),
-                    Request.PathBase,
-                    AccessTokenQuery());
+                StreamingEngine streamingEngine =
+                    await maybeChannel.Map(c => c.StreamingEngine).IfNoneAsync(StreamingEngine.Legacy);
+                IRequest<Either<BaseError, string>> request = streamingEngine is StreamingEngine.Legacy
+                    ? new StartFFmpegSession(
+                        channelNumber,
+                        mode,
+                        Request.Scheme,
+                        Request.Host.ToString(),
+                        Request.PathBase,
+                        AccessTokenQuery())
+                    : new StartFFmpegNextSession(
+                        channelNumber,
+                        mode,
+                        Request.Scheme,
+                        Request.Host.ToString(),
+                        Request.PathBase,
+                        AccessTokenQuery());
                 Either<BaseError, string> result = await _mediator.Send(request);
                 return result.Match<IActionResult>(
                     multiVariantPlaylist =>
