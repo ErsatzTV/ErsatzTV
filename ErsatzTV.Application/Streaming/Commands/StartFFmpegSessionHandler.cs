@@ -1,4 +1,5 @@
-﻿using System.IO.Abstractions;
+﻿using System.Globalization;
+using System.IO.Abstractions;
 using System.Threading.Channels;
 using ErsatzTV.Application.Channels;
 using ErsatzTV.Application.Graphics;
@@ -19,7 +20,7 @@ using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Application.Streaming;
 
-public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Either<BaseError, Unit>>
+public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Either<BaseError, string>>
 {
     private readonly IFileSystem _fileSystem;
     private readonly IConfigElementRepository _configElementRepository;
@@ -65,15 +66,15 @@ public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Eit
         _workerChannel = workerChannel;
     }
 
-    public Task<Either<BaseError, Unit>> Handle(StartFFmpegSession request, CancellationToken cancellationToken) =>
+    public Task<Either<BaseError, string>> Handle(StartFFmpegSession request, CancellationToken cancellationToken) =>
         Validate(request)
             .MapT(_ => StartProcess(request, cancellationToken))
             // this weirdness is needed to maintain the error type (.ToEitherAsync() just gives BaseError)
 #pragma warning disable VSTHRD103
-            .Bind(v => v.ToEither().MapLeft(seq => seq.Head()).MapAsync<BaseError, Task<Unit>, Unit>(identity));
+            .Bind(v => v.ToEither().MapLeft(seq => seq.Head()).MapAsync<BaseError, Task<string>, string>(identity));
 #pragma warning restore VSTHRD103
 
-    private async Task<Unit> StartProcess(StartFFmpegSession request, CancellationToken cancellationToken)
+    private async Task<string> StartProcess(StartFFmpegSession request, CancellationToken cancellationToken)
     {
         Option<TimeSpan> idleTimeout = await _configElementRepository
             .GetValue<int>(ConfigElementKey.FFmpegSegmenterTimeout, cancellationToken)
@@ -116,7 +117,7 @@ public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Eit
 
         await worker.WaitForPlaylistSegments(initialSegmentCount, cancellationToken);
 
-        return Unit.Default;
+        return await GetMultiVariantPlaylist(request);
     }
 
     private HlsSessionWorker GetSessionWorker(StartFFmpegSession request, Option<FrameRate> targetFramerate) =>
@@ -139,12 +140,12 @@ public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Eit
         SessionMustBeInactive(request)
             .BindT(_ => FolderMustBeEmpty(request));
 
-    private Task<Validation<BaseError, Unit>> SessionMustBeInactive(StartFFmpegSession request)
+    private async Task<Validation<BaseError, Unit>> SessionMustBeInactive(StartFFmpegSession request)
     {
         var result = Optional(_ffmpegSegmenterService.TryAddWorker(request.ChannelNumber, null))
             .Where(success => success)
             .Map(_ => Unit.Default)
-            .ToValidation<BaseError>(new ChannelSessionAlreadyActive());
+            .ToValidation<BaseError>(new ChannelSessionAlreadyActive(await GetMultiVariantPlaylist(request)));
 
         if (result.IsFail && _ffmpegSegmenterService.TryGetWorker(
                 request.ChannelNumber,
@@ -153,7 +154,7 @@ public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Eit
             worker?.Touch(Option<string>.None);
         }
 
-        return result.AsTask();
+        return result;
     }
 
     private Task<Validation<BaseError, Unit>> FolderMustBeEmpty(StartFFmpegSession request)
@@ -165,5 +166,53 @@ public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Eit
         _localFileSystem.EmptyFolder(folder);
 
         return Task.FromResult<Validation<BaseError, Unit>>(Unit.Default);
+    }
+
+    private async Task<string> GetMultiVariantPlaylist(StartFFmpegSession request)
+    {
+        var variantPlaylist =
+            $"{request.Scheme}://{request.Host}{request.PathBase}/iptv/session/{request.ChannelNumber}/hls.m3u8{request.AccessTokenQuery}";
+
+        Option<ChannelStreamingSpecsViewModel> maybeStreamingSpecs =
+            await _mediator.Send(new GetChannelStreamingSpecs(request.ChannelNumber));
+        string resolution = string.Empty;
+        var bitrate = "10000000";
+        foreach (ChannelStreamingSpecsViewModel streamingSpecs in maybeStreamingSpecs)
+        {
+            string videoCodec = streamingSpecs.VideoFormat switch
+            {
+                FFmpegProfileVideoFormat.Av1 => "av01.0.01M.08",
+                FFmpegProfileVideoFormat.Hevc => "hvc1.1.6.L93.B0",
+                FFmpegProfileVideoFormat.H264 => "avc1.4D4028",
+                _ => string.Empty
+            };
+
+            string audioCodec = streamingSpecs.AudioFormat switch
+            {
+                FFmpegProfileAudioFormat.Ac3 => "ac-3",
+                FFmpegProfileAudioFormat.Aac or FFmpegProfileAudioFormat.AacLatm => "mp4a.40.2",
+                _ => string.Empty
+            };
+
+            List<string> codecStrings = [];
+            if (!string.IsNullOrWhiteSpace(videoCodec))
+            {
+                codecStrings.Add(videoCodec);
+            }
+
+            if (!string.IsNullOrWhiteSpace(audioCodec))
+            {
+                codecStrings.Add(audioCodec);
+            }
+
+            string codecs = codecStrings.Count > 0 ? $",CODECS=\"{string.Join(",", codecStrings)}\"" : string.Empty;
+            resolution = $",RESOLUTION={streamingSpecs.Width}x{streamingSpecs.Height}{codecs}";
+            bitrate = streamingSpecs.Bitrate.ToString(CultureInfo.InvariantCulture);
+        }
+
+        return $@"#EXTM3U
+#EXT-X-VERSION:3
+#EXT-X-STREAM-INF:BANDWIDTH={bitrate}{resolution}
+{variantPlaylist}";
     }
 }
