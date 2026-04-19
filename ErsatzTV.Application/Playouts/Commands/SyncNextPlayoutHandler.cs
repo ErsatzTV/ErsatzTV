@@ -7,6 +7,7 @@ using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Next;
 using ErsatzTV.Infrastructure.Data;
+using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -78,6 +79,22 @@ public partial class SyncNextPlayoutHandler(
     {
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
+        TimeSpan playoutOffset = TimeSpan.Zero;
+        string mirrorChannelNumber = null;
+        Option<Channel> maybeChannel = await dbContext.Channels
+            .AsNoTracking()
+            .Include(c => c.MirrorSourceChannel)
+            .Filter(c => c.PlayoutSource == ChannelPlayoutSource.Mirror && c.MirrorSourceChannelId != null)
+            .SelectOneAsync(
+                c => c.Number == channelNumber,
+                c => c.Number == channelNumber,
+                cancellationToken);
+        foreach (Channel channel in maybeChannel)
+        {
+            mirrorChannelNumber = channel.MirrorSourceChannel.Number;
+            playoutOffset = channel.PlayoutOffset ?? TimeSpan.Zero;
+        }
+
         List<int> localLibraryIds = await dbContext.LocalLibraries
             .AsNoTracking()
             .Map(l => l.Id)
@@ -85,7 +102,7 @@ public partial class SyncNextPlayoutHandler(
 
         List<PlayoutItem> playoutItems = await dbContext.PlayoutItems
             .AsNoTracking()
-            .Where(i => i.Playout.Channel.Number == channelNumber)
+            .Where(i => i.Playout.Channel.Number == (mirrorChannelNumber ?? channelNumber))
             .Where(i => localLibraryIds.Contains(i.MediaItem.LibraryPath.LibraryId))
             .Include(i => i.MediaItem)
             .ThenInclude(i => (i as Episode).MediaVersions)
@@ -123,6 +140,9 @@ public partial class SyncNextPlayoutHandler(
                 }
 
                 string path = playoutItem.MediaItem.GetHeadVersion().MediaFiles.Head().Path;
+
+                playoutItem.Start += playoutOffset;
+                playoutItem.Finish += playoutOffset;
 
                 var nextPlayoutItem = new ItemElement
                 {

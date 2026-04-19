@@ -142,9 +142,17 @@ public class StartFFmpegNextSessionHandler(
 
     private Task<Validation<BaseError, ValidationResult>> ChannelBinaryMustExist()
     {
-        string nextFolder = string.IsNullOrWhiteSpace(SystemEnvironment.NextFolder)
-            ? fileSystem.Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location)
-            : SystemEnvironment.NextFolder;
+        string nextFolder = SystemEnvironment.NextFolder;
+        if (string.IsNullOrWhiteSpace(nextFolder))
+        {
+            string processFileName = Environment.ProcessPath ?? string.Empty;
+            string processExecutable = Path.GetFileNameWithoutExtension(processFileName);
+            nextFolder = Path.GetDirectoryName(processFileName);
+            if ("dotnet".Equals(processExecutable, StringComparison.OrdinalIgnoreCase))
+            {
+                nextFolder = AppContext.BaseDirectory;
+            }
+        }
 
         string executable = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
             ? "ersatztv-channel.exe"
