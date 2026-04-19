@@ -21,6 +21,7 @@ public record UpdateChannel(
     ChannelPlayoutMode PlayoutMode,
     int? MirrorSourceChannelId,
     TimeSpan? PlayoutOffset,
+    StreamingEngine StreamingEngine,
     StreamingMode StreamingMode,
     int? WatermarkId,
     int? FallbackFillerId,

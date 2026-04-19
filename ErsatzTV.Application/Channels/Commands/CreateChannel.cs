@@ -20,6 +20,7 @@ public record CreateChannel(
     ChannelPlayoutMode PlayoutMode,
     int? MirrorSourceChannelId,
     TimeSpan? PlayoutOffset,
+    StreamingEngine StreamingEngine,
     StreamingMode StreamingMode,
     int? WatermarkId,
     int? FallbackFillerId,

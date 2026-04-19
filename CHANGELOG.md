@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Added
+- Add `Streaming Engine` setting to Channel
+  - `Legacy` - (default) uses existing streaming engine
+  - `Next` - will use ErsatzTV Next streaming engine, when it is compatible with ErsatzTV Legacy
 
 ## [26.4.0] - 2026-04-18
 ### Changed
