@@ -51,7 +51,7 @@
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="mb-6">
                 <MudMenu>
                     <ActivatorContent>
-                        <MudButton StartIcon="@Icons.Material.Filled.Add" Variant="Variant.Filled" Color="Color.Primary">Add To</MudButton>
+                        <MudButton StartIcon="@Icons.Material.Filled.Add" Variant="Variant.Filled" Color="Color.Primary" OnClick="@context.ToggleAsync">Add To</MudButton>
                     </ActivatorContent>
                     <ChildContent>
                         <MudMenuItem Label="Collection" Icon="@Icons.Material.Filled.Add" OnClick="@AddToCollection"/>
@@ -63,7 +63,7 @@
                 {
                     <MudMenu>
                         <ActivatorContent>
-                            <MudButton StartIcon="@Icons.Material.Filled.Search" Variant="Variant.Filled" Color="Color.Primary">Scan</MudButton>
+                            <MudButton StartIcon="@Icons.Material.Filled.Search" Variant="Variant.Filled" Color="Color.Primary" OnClick="@context.ToggleAsync">Scan</MudButton>
                         </ActivatorContent>
                         <ChildContent>
                             <MudMenuItem Label="Quick Scan" Icon="@Icons.Material.Filled.Search" OnClick="@(_ => ScanShow(false))"/>
