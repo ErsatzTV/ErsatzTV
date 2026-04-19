@@ -14,7 +14,7 @@ using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
-using ErsatzTV.Core.Next;
+using ErsatzTV.Core.Next.Config;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -351,7 +351,7 @@ public class StartFFmpegNextSessionHandler(
 
         return new ChannelConfig
         {
-            Playout = new Core.Next.Playout
+            Playout = new Core.Next.Config.Playout
             {
                 Folder = playoutFolder
             },

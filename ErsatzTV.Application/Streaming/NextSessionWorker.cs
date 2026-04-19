@@ -1,11 +1,10 @@
 using System.IO.Abstractions;
-using System.Text;
 using CliWrap;
 using ErsatzTV.Core;
 using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Metadata;
-using ErsatzTV.Core.Next;
+using ErsatzTV.Core.Next.Config;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 

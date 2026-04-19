@@ -2,11 +2,11 @@
 //
 // To parse this JSON data, add NuGet 'Newtonsoft.Json' then do:
 //
-//    using ErsatzTV.Core.Next;
+//    using ErsatzTV.Core.Next.Config;
 //
 //    var channelConfig = ChannelConfig.FromJson(jsonString);
 
-namespace ErsatzTV.Core.Next
+namespace ErsatzTV.Core.Next.Config
 {
     using System;
     using System.Collections.Generic;
@@ -139,12 +139,12 @@ namespace ErsatzTV.Core.Next
 
     public partial class ChannelConfig
     {
-        public static ChannelConfig FromJson(string json) => JsonConvert.DeserializeObject<ChannelConfig>(json, ErsatzTV.Core.Next.Converter.Settings);
+        public static ChannelConfig FromJson(string json) => JsonConvert.DeserializeObject<ChannelConfig>(json, ErsatzTV.Core.Next.Config.Converter.Settings);
     }
 
     public static class Serialize
     {
-        public static string ToJson(this ChannelConfig self) => JsonConvert.SerializeObject(self, ErsatzTV.Core.Next.Converter.Settings);
+        public static string ToJson(this ChannelConfig self) => JsonConvert.SerializeObject(self, ErsatzTV.Core.Next.Config.Converter.Settings);
     }
 
     internal static class Converter
