@@ -22,6 +22,7 @@ public class Channel
     public ChannelWatermark Watermark { get; set; }
     public int? FallbackFillerId { get; set; }
     public FillerPreset FallbackFiller { get; set; }
+    public StreamingEngine StreamingEngine { get; set; }
     public StreamingMode StreamingMode { get; set; }
     public List<Playout> Playouts { get; set; }
     public List<Artwork> Artwork { get; set; }

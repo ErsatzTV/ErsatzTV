@@ -60,6 +60,8 @@ public class SystemEnvironment
         JellyfinPageSize = jellyfinPageSize;
 
         JellyfinEnableStats = !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("ETV_JF_ENABLE_STATS"));
+
+        NextFolder = Environment.GetEnvironmentVariable("ETV_NEXT_FOLDER");
     }
 
     public static string BaseUrl { get; }
@@ -74,4 +76,5 @@ public class SystemEnvironment
     public static int? SlowApiMs { get; }
     public static int JellyfinPageSize { get; }
     public static bool JellyfinEnableStats { get; }
+    public static string NextFolder { get; }
 }

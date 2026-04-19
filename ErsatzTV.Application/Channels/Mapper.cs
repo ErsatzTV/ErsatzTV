@@ -24,6 +24,7 @@ internal static class Mapper
             channel.PlayoutMode,
             channel.MirrorSourceChannelId,
             channel.PlayoutOffset,
+            channel.StreamingEngine,
             channel.StreamingMode,
             channel.WatermarkId,
             channel.FallbackFillerId,

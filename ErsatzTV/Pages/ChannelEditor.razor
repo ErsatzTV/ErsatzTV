@@ -133,13 +133,29 @@ else
 </MudStack>
 <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
     <div class="d-flex">
+        <MudText>Streaming Engine</MudText>
+    </div>
+    <MudSelect @bind-Value="_model.StreamingEngine" For="@(() => _model.StreamingEngine)">
+        <MudSelectItem Value="@(StreamingEngine.Legacy)">Legacy</MudSelectItem>
+        <MudSelectItem Value="@(StreamingEngine.Next)">Next</MudSelectItem>
+    </MudSelect>
+</MudStack>
+<MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+    <div class="d-flex">
         <MudText>Streaming Mode</MudText>
     </div>
     <MudSelect @bind-Value="_model.StreamingMode" For="@(() => _model.StreamingMode)">
-        <MudSelectItem Value="@(StreamingMode.TransportStreamHybrid)">MPEG-TS</MudSelectItem>
-        <MudSelectItem Value="@(StreamingMode.TransportStream)">MPEG-TS (Legacy)</MudSelectItem>
-        <MudSelectItem Value="@(StreamingMode.HttpLiveStreamingDirect)">HLS Direct</MudSelectItem>
-        <MudSelectItem Value="@(StreamingMode.HttpLiveStreamingSegmenter)">HLS Segmenter</MudSelectItem>
+        @if (_model.StreamingEngine is StreamingEngine.Next)
+        {
+            <MudSelectItem Value="@(StreamingMode.HttpLiveStreamingSegmenter)">HLS Segmenter</MudSelectItem>
+        }
+        else
+        {
+            <MudSelectItem Value="@(StreamingMode.TransportStreamHybrid)">MPEG-TS</MudSelectItem>
+            <MudSelectItem Value="@(StreamingMode.TransportStream)">MPEG-TS (Legacy)</MudSelectItem>
+            <MudSelectItem Value="@(StreamingMode.HttpLiveStreamingDirect)">HLS Direct</MudSelectItem>
+            <MudSelectItem Value="@(StreamingMode.HttpLiveStreamingSegmenter)">HLS Segmenter</MudSelectItem>
+        }
     </MudSelect>
 </MudStack>
 <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
@@ -404,6 +420,7 @@ else
                         _model.PlayoutMode = channelViewModel.PlayoutMode;
                         _model.MirrorSourceChannelId = channelViewModel.MirrorSourceChannelId;
                         _model.PlayoutOffset = channelViewModel.PlayoutOffset;
+                        _model.StreamingEngine = channelViewModel.StreamingEngine;
                         _model.StreamingMode = channelViewModel.StreamingMode;
                         _model.StreamSelectorMode = channelViewModel.StreamSelectorMode;
                         _model.StreamSelector = channelViewModel.StreamSelector;
@@ -435,6 +452,7 @@ else
                 _model.Name = "New Channel";
                 _model.Group = "ErsatzTV";
                 _model.FFmpegProfileId = ffmpegSettings.DefaultFFmpegProfileId;
+                _model.StreamingEngine = StreamingEngine.Legacy;
                 _model.StreamingMode = StreamingMode.TransportStreamHybrid;
                 _model.IsEnabled = true;
                 _model.ShowInEpg = true;

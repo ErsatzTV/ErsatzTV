@@ -131,9 +131,15 @@ public class UpdateChannelHandler(
 
         c.MirrorSourceChannelId = update.MirrorSourceChannelId;
         c.PlayoutOffset = update.PlayoutOffset;
+        c.StreamingEngine = update.StreamingEngine;
         c.StreamingMode = update.StreamingMode;
         c.WatermarkId = update.WatermarkId;
         c.FallbackFillerId = update.FallbackFillerId;
+
+        if (c.StreamingEngine is StreamingEngine.Next)
+        {
+            c.StreamingMode = StreamingMode.HttpLiveStreamingSegmenter;
+        }
 
         await dbContext.SaveChangesAsync(cancellationToken);
 
