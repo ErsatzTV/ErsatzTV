@@ -20,7 +20,7 @@
             <div style="margin-left: auto" class="d-none d-md-flex">
                 <MudMenu>
                     <ActivatorContent>
-                        <MudButton StartIcon="@Icons.Material.Filled.Add" Variant="Variant.Filled" Color="Color.Primary">Add Playout</MudButton>
+                        <MudButton StartIcon="@Icons.Material.Filled.Add" Variant="Variant.Filled" Color="Color.Primary" OnClick="@context.ToggleAsync">Add Playout</MudButton>
                     </ActivatorContent>
                     <ChildContent>
                         <MudMenuItem Icon="@Icons.Material.Filled.Add" Label="Classic Schedule" Href="playouts/add"/>

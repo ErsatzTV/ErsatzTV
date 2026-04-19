@@ -9,6 +9,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - `Legacy` - (default) uses existing streaming engine
   - `Next` - will use ErsatzTV Next streaming engine, when it is compatible with ErsatzTV Legacy
 
+### Fixed
+- Fix `Add Playout` button not opening drop down menu (regression from v26.4.0)
+
 ## [26.4.0] - 2026-04-18
 ### Changed
 - Re-branded as `ErsatzTV Legacy`
