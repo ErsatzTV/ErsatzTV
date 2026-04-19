@@ -347,7 +347,7 @@ public class StartFFmpegNextSessionHandler(
             }
         };
 
-        string playoutFolder = fileSystem.Path.Combine(FileSystemLayout.NextPlayoutsFolder, channelNumber);
+        string playoutFolder = fileSystem.Path.Combine(FileSystemLayout.NextPlayoutsFolder, channelNumber, "current");
 
         return new ChannelConfig
         {
