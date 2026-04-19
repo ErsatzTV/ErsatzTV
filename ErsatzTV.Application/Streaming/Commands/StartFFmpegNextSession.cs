@@ -1,8 +1,8 @@
-﻿using ErsatzTV.Core;
+using ErsatzTV.Core;
 
 namespace ErsatzTV.Application.Streaming;
 
-public record StartFFmpegSession(
+public record StartFFmpegNextSession(
     string ChannelNumber,
     string Mode,
     string Scheme,

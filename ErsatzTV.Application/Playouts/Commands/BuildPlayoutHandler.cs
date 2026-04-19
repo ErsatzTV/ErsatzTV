@@ -325,6 +325,8 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
                         }
                     }
 
+                    await _workerChannel.WriteAsync(new SyncNextPlayout(channelNumber), cancellationToken);
+
                     await _workerChannel.WriteAsync(new ExtractEmbeddedSubtitles(playout.Id), cancellationToken);
 
                     newBuildStatus.Success = true;
