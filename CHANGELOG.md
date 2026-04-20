@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 - Fix `Add Playout` button not opening drop down menu (regression from v26.4.0)
+- Consistently apply playout offset when generating XMLTV
 
 ## [26.4.0] - 2026-04-18
 ### Changed
