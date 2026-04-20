@@ -1,6 +1,8 @@
 using System.Globalization;
 using System.IO.Abstractions;
 using System.Runtime.InteropServices;
+using System.Text;
+using CliWrap;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Extensions;
@@ -30,19 +32,11 @@ public partial class SyncNextPlayoutHandler(
 
     public async Task Handle(SyncNextPlayout request, CancellationToken cancellationToken)
     {
-        // TODO: NEXT: support junctions on Windows
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            return;
-        }
-
         // gen new folder name
         string versionFolderName = DateTimeOffset.Now.ToUnixTimeMilliseconds().ToString(CultureInfo.InvariantCulture);
 
-        string versionFolder = fileSystem.Path.Combine(
-            FileSystemLayout.NextPlayoutsFolder,
-            request.ChannelNumber,
-            versionFolderName);
+        string channelFolder = fileSystem.Path.Combine(FileSystemLayout.NextPlayoutsFolder, request.ChannelNumber);
+        string versionFolder = fileSystem.Path.Combine(channelFolder, versionFolderName);
 
         logger.LogDebug("versioned playout folder is {Folder}", versionFolder);
 
@@ -50,14 +44,23 @@ public partial class SyncNextPlayoutHandler(
 
         await WriteAllJsonTo(request.ChannelNumber, versionFolder, cancellationToken);
 
-        string currentFolder = fileSystem.Path.Combine(
-            FileSystemLayout.NextPlayoutsFolder,
-            request.ChannelNumber,
-            "current");
+        string currentFolder = fileSystem.Path.Combine(channelFolder, "current");
 
         // re-point symlink/junction to new folder
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
+            var stdErrBuffer = new StringBuilder();
+            CommandResult command = await Cli.Wrap("cmd.exe")
+                .WithArguments(["/c", "mklink", "/j", "current", versionFolderName])
+                .WithWorkingDirectory(channelFolder)
+                .WithStandardErrorPipe(PipeTarget.ToStringBuilder(stdErrBuffer))
+                .WithValidation(CommandResultValidation.None)
+                .ExecuteAsync(cancellationToken);
+
+            if (!command.IsSuccess)
+            {
+                logger.LogError("Failed to link current playout JSON folder: {Error}", stdErrBuffer);
+            }
         }
         else
         {
