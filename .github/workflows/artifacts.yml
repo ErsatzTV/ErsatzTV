@@ -344,6 +344,7 @@ jobs:
 
       - name: Delete old release assets
         if: ${{ inputs.release_tag == 'develop' }}
+        shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -352,6 +353,7 @@ jobs:
             | xargs -r -I{} gh release delete-asset ${{ inputs.release_tag }} {} --yes --repo ${{ github.repository }}
 
       - name: Publish
+        shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release upload ${{ inputs.release_tag }} "${{ env.RELEASE_NAME }}.zip" --repo ${{ github.repository }}
