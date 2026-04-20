@@ -49,6 +49,20 @@ public partial class SyncNextPlayoutHandler(
         // re-point symlink/junction to new folder
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
+            if (Directory.Exists(currentFolder))
+            {
+                var dirInfo = new DirectoryInfo(currentFolder);
+                if (dirInfo.Attributes.HasFlag(FileAttributes.ReparsePoint))
+                {
+                    dirInfo.Delete();
+                }
+                else
+                {
+                    logger.LogError("Expected junction at {Folder} but found a real directory", currentFolder);
+                    return;
+                }
+            }
+
             var stdErrBuffer = new StringBuilder();
             CommandResult command = await Cli.Wrap("cmd.exe")
                 .WithArguments(["/c", "mklink", "/j", "current", versionFolderName])
