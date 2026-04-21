@@ -6,18 +6,24 @@ using CliWrap;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Extensions;
+using ErsatzTV.Core.Interfaces.Emby;
+using ErsatzTV.Core.Interfaces.Jellyfin;
 using ErsatzTV.Core.Interfaces.Metadata;
-using ErsatzTV.Core.Next;
+using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using PlayoutItem = ErsatzTV.Core.Domain.PlayoutItem;
 
 namespace ErsatzTV.Application.Playouts;
 
 public partial class SyncNextPlayoutHandler(
     IFileSystem fileSystem,
     ILocalFileSystem localFileSystem,
+    IPlexPathReplacementService plexPathReplacementService,
+    IJellyfinPathReplacementService jellyfinPathReplacementService,
+    IEmbyPathReplacementService embyPathReplacementService,
     IDbContextFactory<TvContext> dbContextFactory,
     ILogger<SyncNextPlayoutHandler> logger)
     : IRequestHandler<SyncNextPlayout>
@@ -112,27 +118,37 @@ public partial class SyncNextPlayoutHandler(
             playoutOffset = channel.PlayoutOffset ?? TimeSpan.Zero;
         }
 
-        List<int> localLibraryIds = await dbContext.LocalLibraries
-            .AsNoTracking()
-            .Map(l => l.Id)
-            .ToListAsync(cancellationToken);
-
         List<PlayoutItem> playoutItems = await dbContext.PlayoutItems
             .AsNoTracking()
             .Where(i => i.Playout.Channel.Number == (mirrorChannelNumber ?? channelNumber))
-            .Where(i => localLibraryIds.Contains(i.MediaItem.LibraryPath.LibraryId))
+            .Include(i => i.MediaItem)
+            .ThenInclude(mi => mi.LibraryPath)
+            .ThenInclude(lp => lp.Library)
             .Include(i => i.MediaItem)
             .ThenInclude(i => (i as Episode).MediaVersions)
             .ThenInclude(mv => mv.MediaFiles)
             .Include(i => i.MediaItem)
+            .ThenInclude(i => (i as Episode).MediaVersions)
+            .ThenInclude(mv => mv.Streams)
+            .Include(i => i.MediaItem)
             .ThenInclude(i => (i as Movie).MediaVersions)
             .ThenInclude(mv => mv.MediaFiles)
+            .Include(i => i.MediaItem)
+            .ThenInclude(i => (i as Movie).MediaVersions)
+            .ThenInclude(mv => mv.Streams)
             .Include(i => i.MediaItem)
             .ThenInclude(i => (i as OtherVideo).MediaVersions)
             .ThenInclude(mv => mv.MediaFiles)
             .Include(i => i.MediaItem)
+            .ThenInclude(i => (i as OtherVideo).MediaVersions)
+            .ThenInclude(mv => mv.Streams)
+            .Include(i => i.MediaItem)
             .ThenInclude(i => (i as MusicVideo).MediaVersions)
             .ThenInclude(mv => mv.MediaFiles)
+            .Include(i => i.MediaItem)
+            .ThenInclude(i => (i as MusicVideo).MediaVersions)
+            .ThenInclude(mv => mv.Streams)
+            .AsSplitQuery()
             .ToListAsync(cancellationToken);
 
         logger.LogDebug("Located {Count} local playout items", playoutItems.Count);
@@ -156,31 +172,132 @@ public partial class SyncNextPlayoutHandler(
                     continue;
                 }
 
-                string path = playoutItem.MediaItem.GetHeadVersion().MediaFiles.Head().Path;
+                MediaVersion headVersion = playoutItem.MediaItem.GetHeadVersion();
 
                 playoutItem.Start += playoutOffset;
                 playoutItem.Finish += playoutOffset;
 
-                var nextPlayoutItem = new ItemElement
+                var nextPlayoutItem = new Core.Next.PlayoutItem
                 {
                     Id = playoutItem.Id.ToString(CultureInfo.InvariantCulture),
-                    Start = playoutItem.StartOffset.ToString("O"),
-                    Finish = playoutItem.FinishOffset.ToString("O"),
-                    Source = new ItemSource
-                    {
-                        SourceType = SourceType.Local,
-                        Path = path,
-                    }
+                    Start = playoutItem.StartOffset,
+                    Finish = playoutItem.FinishOffset
                 };
+
+                Option<Core.Next.Source> maybeSource = await SourceForItem(playoutItem, cancellationToken);
+                if (maybeSource.IsNone)
+                {
+                    continue;
+                }
+
+                foreach (Core.Next.Source source in maybeSource)
+                {
+                    nextPlayoutItem.Source = source;
+                }
+
+                // if no audio streams, use lavfi to insert silence
+                if (headVersion.Streams.All(s => s.MediaStreamKind is not MediaStreamKind.Audio))
+                {
+                    var videoSource = nextPlayoutItem.Source;
+
+                    nextPlayoutItem.Source = null;
+                    nextPlayoutItem.Tracks = new Core.Next.PlayoutItemTracks
+                    {
+                        Audio = new Core.Next.TrackSelection
+                        {
+                            Source =
+                                new Core.Next.Source
+                                {
+                                    SourceType = Core.Next.SourceType.Lavfi,
+                                    Params = "anullsrc=channel_layout=stereo:sample_rate=48000"
+                                }
+                        },
+                        Video = new Core.Next.TrackSelection
+                        {
+                            Source = new Core.Next.Source
+                            {
+                                SourceType = videoSource.SourceType,
+                                Path = videoSource.Path,
+                            }
+                        }
+                    };
+                }
 
                 playout.Items.Add(nextPlayoutItem);
             }
 
-            await fileSystem.File.WriteAllTextAsync(fileName, playout.ToJson(), cancellationToken);
+            await fileSystem.File.WriteAllTextAsync(fileName, Core.Next.Serialize.ToJson(playout), cancellationToken);
         }
     }
 
-    public void CleanOldVersions(
+    private async Task<Option<Core.Next.Source>> SourceForItem(
+        PlayoutItem playoutItem,
+        CancellationToken cancellationToken)
+    {
+        string path = await playoutItem.MediaItem.GetLocalPath(
+            plexPathReplacementService,
+            jellyfinPathReplacementService,
+            embyPathReplacementService,
+            cancellationToken);
+
+        // check filesystem first
+        if (fileSystem.File.Exists(path))
+        {
+            return new Core.Next.Source
+            {
+                SourceType = Core.Next.SourceType.Local,
+                Path = path,
+            };
+        }
+
+        MediaFile file = playoutItem.MediaItem.GetHeadVersion().MediaFiles.Head();
+        int mediaSourceId = playoutItem.MediaItem.LibraryPath.Library.MediaSourceId;
+        if (file is PlexMediaFile pmf)
+        {
+            return new Core.Next.Source
+            {
+                SourceType = Core.Next.SourceType.Http,
+                Uri = $"http://localhost:{Settings.StreamingPort}/media/plex/{mediaSourceId}/{pmf.Key}"
+            };
+        }
+
+        Option<string> jellyfinItemId = playoutItem.MediaItem switch
+        {
+            JellyfinEpisode e => e.ItemId,
+            JellyfinMovie m => m.ItemId,
+            _ => None
+        };
+
+        foreach (string itemId in jellyfinItemId)
+        {
+            return new Core.Next.Source
+            {
+                SourceType = Core.Next.SourceType.Http,
+                Uri = $"http://localhost:{Settings.StreamingPort}/media/jellyfin/{itemId}"
+            };
+        }
+
+        // attempt to remotely stream emby
+        Option<string> embyItemId = playoutItem.MediaItem switch
+        {
+            EmbyEpisode e => e.ItemId,
+            EmbyMovie m => m.ItemId,
+            _ => None
+        };
+
+        foreach (string itemId in embyItemId)
+        {
+            return new Core.Next.Source
+            {
+                SourceType = Core.Next.SourceType.Http,
+                Uri = $"http://localhost:{Settings.StreamingPort}/media/emby/{itemId}"
+            };
+        }
+
+        return Option<Core.Next.Source>.None;
+    }
+
+    private void CleanOldVersions(
         string playoutRoot,
         string currentLinkPath,
         int keepVersions = 2,
