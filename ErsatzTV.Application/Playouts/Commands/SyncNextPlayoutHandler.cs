@@ -125,14 +125,27 @@ public partial class SyncNextPlayoutHandler(
             .ThenInclude(i => (i as Episode).MediaVersions)
             .ThenInclude(mv => mv.MediaFiles)
             .Include(i => i.MediaItem)
+            .ThenInclude(i => (i as Episode).MediaVersions)
+            .ThenInclude(mv => mv.Streams)
+            .Include(i => i.MediaItem)
             .ThenInclude(i => (i as Movie).MediaVersions)
             .ThenInclude(mv => mv.MediaFiles)
+            .Include(i => i.MediaItem)
+            .ThenInclude(i => (i as Movie).MediaVersions)
+            .ThenInclude(mv => mv.Streams)
             .Include(i => i.MediaItem)
             .ThenInclude(i => (i as OtherVideo).MediaVersions)
             .ThenInclude(mv => mv.MediaFiles)
             .Include(i => i.MediaItem)
+            .ThenInclude(i => (i as OtherVideo).MediaVersions)
+            .ThenInclude(mv => mv.Streams)
+            .Include(i => i.MediaItem)
             .ThenInclude(i => (i as MusicVideo).MediaVersions)
             .ThenInclude(mv => mv.MediaFiles)
+            .Include(i => i.MediaItem)
+            .ThenInclude(i => (i as MusicVideo).MediaVersions)
+            .ThenInclude(mv => mv.Streams)
+            .AsSplitQuery()
             .ToListAsync(cancellationToken);
 
         logger.LogDebug("Located {Count} local playout items", playoutItems.Count);
@@ -156,7 +169,8 @@ public partial class SyncNextPlayoutHandler(
                     continue;
                 }
 
-                string path = playoutItem.MediaItem.GetHeadVersion().MediaFiles.Head().Path;
+                MediaVersion headVersion = playoutItem.MediaItem.GetHeadVersion();
+                string path = headVersion.MediaFiles.Head().Path;
 
                 playoutItem.Start += playoutOffset;
                 playoutItem.Finish += playoutOffset;
@@ -172,6 +186,33 @@ public partial class SyncNextPlayoutHandler(
                         Path = path,
                     }
                 };
+
+                // if no audio streams, use lavfi to insert silence
+                if (headVersion.Streams.All(s => s.MediaStreamKind is not MediaStreamKind.Audio))
+                {
+                    var videoSource = nextPlayoutItem.Source;
+
+                    nextPlayoutItem.Source = null;
+                    nextPlayoutItem.Tracks = new TracksClass
+                    {
+                        Audio = new AudioClass
+                        {
+                            Source = new AudioSource
+                            {
+                                SourceType = SourceType.Lavfi,
+                                Params = "anullsrc=channel_layout=stereo:sample_rate=48000"
+                            }
+                        },
+                        Video = new AudioClass
+                        {
+                            Source = new AudioSource
+                            {
+                                SourceType = videoSource.SourceType,
+                                Path = videoSource.Path,
+                            }
+                        }
+                    };
+                }
 
                 playout.Items.Add(nextPlayoutItem);
             }
