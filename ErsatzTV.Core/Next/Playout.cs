@@ -18,171 +18,189 @@ namespace ErsatzTV.Core.Next
     /// <summary>
     /// A playout schedule for a single time window.
     ///
-    /// Files should be named `{start}_{finish}.json` using compact ISO 8601
-    /// (no separators), e.g.
-    /// `20260413T000000.000000000-0500_20260414T002131.620000000-0500.json`,
-    /// so that the channel can locate the correct file for the current time.
+    /// Files should be named `{start}_{finish}.json` using compact ISO 8601 (no separators),
+    /// e.g. `20260413T000000.000000000-0500_20260414T002131.620000000-0500.json`, so that the
+    /// channel can locate the correct file for the current time.
     /// </summary>
     public partial class Playout
     {
+        /// <summary>
+        /// Ordered list of scheduled items for this window.
+        /// </summary>
         [JsonProperty("items")]
-        public List<ItemElement> Items { get; set; }
+        public List<PlayoutItem> Items { get; set; }
 
         /// <summary>
-        /// URI identifying the schema version, e.g. "https://ersatztv.org/playout/version/0.0.1"
+        /// URI identifying the schema version, e.g. "https://ersatztv.org/playout/version/0.0.1".
         /// </summary>
         [JsonProperty("version")]
         public string Version { get; set; }
     }
 
-    public partial class ItemElement
+    /// <summary>
+    /// A single scheduled item in the playout.
+    ///
+    /// An item must supply media for its tracks. You can do this two ways, and they can be
+    /// combined:
+    ///
+    /// 1. Set `source` to use one shared source for every track. Track details (which stream,
+    /// etc.) are chosen naively, or may be refined via `tracks`.
+    /// 2. Set `tracks` to specify each track (video, audio) individually. A track may provide
+    /// its own `source`; if it doesn't, the item's top-level `source` is used.
+    ///
+    /// At least one of `source` or `tracks` must be present, and every track that is selected
+    /// must have an effective source (either its own or the item's).
+    /// </summary>
+    public partial class PlayoutItem
     {
         /// <summary>
-        /// RFC3339 formatted date/time, e.g. 2026-04-13T00:24:21.527-05:00
+        /// RFC3339 formatted finish time, e.g. 2026-04-13T00:54:21.527-05:00.
         /// </summary>
         [JsonProperty("finish")]
-        public string Finish { get; set; }
+        public DateTimeOffset Finish { get; set; }
 
+        /// <summary>
+        /// Stable identifier for this item, unique within the playout.
+        /// </summary>
         [JsonProperty("id")]
         public string Id { get; set; }
 
+        /// <summary>
+        /// The default source shared by any track that doesn't specify its own. Required unless
+        /// every selected track in `tracks` provides its own `source`.
+        /// </summary>
         [JsonProperty("source")]
-        public ItemSource Source { get; set; }
+        public Source Source { get; set; }
 
         /// <summary>
-        /// RFC3339 formatted date/time, e.g. 2026-04-13T00:24:21.527-05:00
+        /// RFC3339 formatted start time, e.g. 2026-04-13T00:24:21.527-05:00.
         /// </summary>
         [JsonProperty("start")]
-        public string Start { get; set; }
+        public DateTimeOffset Start { get; set; }
 
+        /// <summary>
+        /// Per-track selection. Omit to let the server pick the first video and first audio track of
+        /// the item's `source`.
+        /// </summary>
         [JsonProperty("tracks")]
-        public TracksClass Tracks { get; set; }
+        public PlayoutItemTracks Tracks { get; set; }
     }
 
-    public partial class ItemSource
+    /// <summary>
+    /// A file on the local filesystem reachable by the server.
+    ///
+    /// A synthetic source produced by an ffmpeg lavfi filter graph.
+    ///
+    /// A remote source fetched over HTTP(S).
+    /// </summary>
+    public partial class Source
     {
+        /// <summary>
+        /// Optional start offset into the source, in milliseconds.
+        /// </summary>
         [JsonProperty("in_point_ms")]
         public long? InPointMs { get; set; }
 
+        /// <summary>
+        /// Optional end offset into the source, in milliseconds.
+        /// </summary>
         [JsonProperty("out_point_ms")]
         public long? OutPointMs { get; set; }
 
+        /// <summary>
+        /// Absolute path to the media file.
+        /// </summary>
         [JsonProperty("path", NullValueHandling = NullValueHandling.Ignore)]
         public string Path { get; set; }
 
         [JsonProperty("source_type")]
         public SourceType SourceType { get; set; }
 
+        /// <summary>
+        /// The lavfi filter graph parameters, passed verbatim to ffmpeg's `-f lavfi -i`.
+        /// </summary>
         [JsonProperty("params", NullValueHandling = NullValueHandling.Ignore)]
         public string Params { get; set; }
 
         /// <summary>
-        /// Custom HTTP headers, e.g. ["Authorization: Bearer {{TOKEN}}"]
+        /// Custom HTTP headers, e.g. ["Authorization: Bearer {{TOKEN}}"].
         /// </summary>
         [JsonProperty("headers")]
         public List<string> Headers { get; set; }
 
         /// <summary>
-        /// Enable reconnect on failure (default: true)
+        /// Enable reconnect on failure. Default: true.
         /// </summary>
         [JsonProperty("reconnect")]
         public bool? Reconnect { get; set; }
 
         /// <summary>
-        /// Max reconnect delay in seconds
+        /// Maximum reconnect delay in seconds. Maps to ffmpeg's `reconnect_delay_max`.
         /// </summary>
         [JsonProperty("reconnect_delay_max")]
         public long? ReconnectDelayMax { get; set; }
 
         /// <summary>
-        /// Socket timeout in microseconds
+        /// Socket timeout in microseconds.
         /// </summary>
         [JsonProperty("timeout_us")]
         public long? TimeoutUs { get; set; }
 
         /// <summary>
-        /// URI template, e.g. "https://example.com/file.mkv?token={{MY_SECRET}}"
+        /// URI template, e.g. "https://example.com/file.mkv?token={{MY_SECRET}}".
         /// </summary>
         [JsonProperty("uri", NullValueHandling = NullValueHandling.Ignore)]
         public string Uri { get; set; }
 
         /// <summary>
-        /// Custom user-agent string
+        /// Custom User-Agent string.
         /// </summary>
         [JsonProperty("user_agent")]
         public string UserAgent { get; set; }
     }
 
-    public partial class TracksClass
+    /// <summary>
+    /// Per-track overrides for a playout item. Omit a field to use the server default for that
+    /// track kind (first stream of that kind in the item's `source`, if any).
+    /// </summary>
+    public partial class PlayoutItemTracks
     {
+        /// <summary>
+        /// Audio track selection.
+        /// </summary>
         [JsonProperty("audio")]
-        public AudioClass Audio { get; set; }
+        public TrackSelection Audio { get; set; }
 
+        /// <summary>
+        /// Video track selection.
+        /// </summary>
         [JsonProperty("video")]
-        public AudioClass Video { get; set; }
+        public TrackSelection Video { get; set; }
     }
 
-    public partial class AudioClass
+    /// <summary>
+    /// Selects a single track (video or audio).
+    ///
+    /// - `source` absent: inherit the parent `PlayoutItem.source`.
+    /// - `source` present: use this source for this track, overriding the parent.
+    /// - `stream_index` absent: server picks the first stream of the track's kind in the
+    /// effective source.
+    /// - `stream_index` present: use this specific stream within the effective source.
+    /// </summary>
+    public partial class TrackSelection
     {
-        [JsonProperty("source", NullValueHandling = NullValueHandling.Ignore)]
-        public AudioSource Source { get; set; }
+        /// <summary>
+        /// Source to pull this track from. If omitted, inherits from the parent `PlayoutItem.source`.
+        /// </summary>
+        [JsonProperty("source")]
+        public Source Source { get; set; }
 
-        [JsonProperty("stream_index", NullValueHandling = NullValueHandling.Ignore)]
+        /// <summary>
+        /// Zero-based stream index within the effective source. If omitted, the server picks the
+        /// first stream of this track's kind.
+        /// </summary>
+        [JsonProperty("stream_index")]
         public long? StreamIndex { get; set; }
-    }
-
-    public partial class AudioSource
-    {
-        [JsonProperty("in_point_ms")]
-        public long? InPointMs { get; set; }
-
-        [JsonProperty("out_point_ms")]
-        public long? OutPointMs { get; set; }
-
-        [JsonProperty("path", NullValueHandling = NullValueHandling.Ignore)]
-        public string Path { get; set; }
-
-        [JsonProperty("source_type")]
-        public SourceType SourceType { get; set; }
-
-        [JsonProperty("params", NullValueHandling = NullValueHandling.Ignore)]
-        public string Params { get; set; }
-
-        /// <summary>
-        /// Custom HTTP headers, e.g. ["Authorization: Bearer {{TOKEN}}"]
-        /// </summary>
-        [JsonProperty("headers")]
-        public List<string> Headers { get; set; }
-
-        /// <summary>
-        /// Enable reconnect on failure (default: true)
-        /// </summary>
-        [JsonProperty("reconnect")]
-        public bool? Reconnect { get; set; }
-
-        /// <summary>
-        /// Max reconnect delay in seconds
-        /// </summary>
-        [JsonProperty("reconnect_delay_max")]
-        public long? ReconnectDelayMax { get; set; }
-
-        /// <summary>
-        /// Socket timeout in microseconds
-        /// </summary>
-        [JsonProperty("timeout_us")]
-        public long? TimeoutUs { get; set; }
-
-        /// <summary>
-        /// URI template, e.g. "https://example.com/file.mkv?token={{MY_SECRET}}"
-        /// </summary>
-        [JsonProperty("uri", NullValueHandling = NullValueHandling.Ignore)]
-        public string Uri { get; set; }
-
-        /// <summary>
-        /// Custom user-agent string
-        /// </summary>
-        [JsonProperty("user_agent")]
-        public string UserAgent { get; set; }
     }
 
     public enum SourceType { Http, Lavfi, Local };
