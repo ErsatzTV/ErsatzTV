@@ -47,21 +47,30 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
         Channel channel,
         string preferredAudioLanguage,
         string preferredAudioTitle,
+        bool shouldLogMessages,
         CancellationToken cancellationToken)
     {
         if (streamingMode == StreamingMode.HttpLiveStreamingDirect &&
             string.IsNullOrWhiteSpace(preferredAudioLanguage) && string.IsNullOrWhiteSpace(preferredAudioTitle))
         {
-            _logger.LogDebug(
-                "Channel {Number} is HLS Direct with no preferred audio language or title; using all audio streams",
-                channel.Number);
+            if (shouldLogMessages)
+            {
+                _logger.LogDebug(
+                    "Channel {Number} is HLS Direct with no preferred audio language or title; using all audio streams",
+                    channel.Number);
+            }
+
             return None;
         }
 
         string language = (preferredAudioLanguage ?? string.Empty).ToLowerInvariant();
         if (string.IsNullOrWhiteSpace(language))
         {
-            _logger.LogDebug("Channel {Number} has no preferred audio language code", channel.Number);
+            if (shouldLogMessages)
+            {
+                _logger.LogDebug("Channel {Number} has no preferred audio language code", channel.Number);
+            }
+
             Option<string> maybeDefaultLanguage = await _configElementRepository.GetValue<string>(
                 ConfigElementKey.FFmpegPreferredLanguageCode,
                 cancellationToken);
@@ -69,7 +78,11 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
                 lang => language = lang.ToLowerInvariant(),
                 () =>
                 {
-                    _logger.LogDebug("FFmpeg has no preferred audio language code; falling back to {Code}", "eng");
+                    if (shouldLogMessages)
+                    {
+                        _logger.LogDebug("FFmpeg has no preferred audio language code; falling back to {Code}", "eng");
+                    }
+
                     language = "eng";
                 });
         }
@@ -78,7 +91,10 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
             GetTwoAndThreeLetterLanguageCodes(_languageCodeService.GetAllLanguageCodes([language]));
         if (allLanguageCodes.Count > 1)
         {
-            _logger.LogDebug("Preferred audio language has multiple codes {Codes}", allLanguageCodes);
+            if (shouldLogMessages)
+            {
+                _logger.LogDebug("Preferred audio language has multiple codes {Codes}", allLanguageCodes);
+            }
         }
 
         try
@@ -93,7 +109,11 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
                         version.MediaItem.Id,
                         version.MediaVersion);
                     sw.Stop();
-                    _logger.LogDebug("SelectAudioStream duration: {Duration}", sw.Elapsed);
+                    if (shouldLogMessages)
+                    {
+                        _logger.LogDebug("SelectAudioStream duration: {Duration}", sw.Elapsed);
+                    }
+
                     if (result.IsSome)
                     {
                         return result;
@@ -108,7 +128,11 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
                         version.MediaItem.Id,
                         version.MediaVersion);
                     sw2.Stop();
-                    _logger.LogDebug("SelectAudioStream duration: {Duration}", sw2.Elapsed);
+                    if (shouldLogMessages)
+                    {
+                        _logger.LogDebug("SelectAudioStream duration: {Duration}", sw2.Elapsed);
+                    }
+
                     if (result2.IsSome)
                     {
                         return result2;
