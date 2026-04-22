@@ -6,7 +6,9 @@ using CliWrap;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Extensions;
+using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.Emby;
+using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Jellyfin;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Plex;
@@ -14,7 +16,6 @@ using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using PlayoutItem = ErsatzTV.Core.Domain.PlayoutItem;
 
 namespace ErsatzTV.Application.Playouts;
 
@@ -24,6 +25,8 @@ public partial class SyncNextPlayoutHandler(
     IPlexPathReplacementService plexPathReplacementService,
     IJellyfinPathReplacementService jellyfinPathReplacementService,
     IEmbyPathReplacementService embyPathReplacementService,
+    ICustomStreamSelector customStreamSelector,
+    IFFmpegStreamSelector ffmpegStreamSelector,
     IDbContextFactory<TvContext> dbContextFactory,
     ILogger<SyncNextPlayoutHandler> logger)
     : IRequestHandler<SyncNextPlayout>
@@ -223,10 +226,82 @@ public partial class SyncNextPlayoutHandler(
                     };
                 }
 
+                maybeChannel = await dbContext.Channels
+                    .AsNoTracking()
+                    .SingleOrDefaultAsync(c => c.Number == channelNumber, cancellationToken);
+                foreach (Channel channel in maybeChannel)
+                {
+                    var audioVersion = new MediaItemAudioVersion(playoutItem.MediaItem, headVersion);
+                    await SelectTracks(
+                        channel,
+                        audioVersion,
+                        nextPlayoutItem,
+                        playoutItem.PreferredAudioLanguageCode ?? channel.PreferredAudioLanguageCode,
+                        playoutItem.PreferredAudioTitle ?? channel.PreferredAudioTitle,
+                        cancellationToken);
+                }
+
                 playout.Items.Add(nextPlayoutItem);
             }
 
             await fileSystem.File.WriteAllTextAsync(fileName, Core.Next.Serialize.ToJson(playout), cancellationToken);
+        }
+    }
+
+    private async Task SelectTracks(
+        Channel channel,
+        MediaItemAudioVersion audioVersion,
+        Core.Next.PlayoutItem nextPlayoutItem,
+        string preferredAudioLanguage,
+        string preferredAudioTitle,
+        CancellationToken cancellationToken)
+    {
+        // TODO: NEXT: support subtitles
+        List<Subtitle> allSubtitles = [];
+
+        Option<MediaStream> maybeAudioStream = Option<MediaStream>.None;
+        //Option<Subtitle> maybeSubtitle = Option<Subtitle>.None;
+
+        if (channel.StreamSelectorMode is ChannelStreamSelectorMode.Custom)
+        {
+            StreamSelectorResult result = await customStreamSelector.SelectStreams(
+                channel,
+                nextPlayoutItem.Start,
+                audioVersion,
+                allSubtitles);
+            maybeAudioStream = result.AudioStream;
+            //maybeSubtitle = result.Subtitle;
+        }
+
+        if (channel.StreamSelectorMode is ChannelStreamSelectorMode.Default || maybeAudioStream.IsNone)
+        {
+            maybeAudioStream =
+                await ffmpegStreamSelector.SelectAudioStream(
+                    audioVersion,
+                    channel.StreamingMode,
+                    channel,
+                    preferredAudioLanguage,
+                    preferredAudioTitle,
+                    shouldLogMessages: false,
+                    cancellationToken);
+
+            // maybeSubtitle =
+            //     await ffmpegStreamSelector.SelectSubtitleStream(
+            //         allSubtitles.ToImmutableList(),
+            //         channel,
+            //         preferredSubtitleLanguage,
+            //         subtitleMode,
+            //         cancellationToken);
+        }
+
+        foreach (MediaStream audioStream in maybeAudioStream)
+        {
+            if (nextPlayoutItem.Tracks?.Audio?.StreamIndex is null)
+            {
+                nextPlayoutItem.Tracks ??= new Core.Next.PlayoutItemTracks();
+                nextPlayoutItem.Tracks.Audio ??= new Core.Next.TrackSelection();
+                nextPlayoutItem.Tracks.Audio.StreamIndex = audioStream.Index;
+            }
         }
     }
 

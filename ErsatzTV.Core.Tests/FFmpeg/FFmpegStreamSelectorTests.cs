@@ -72,6 +72,7 @@ public class FFmpegStreamSelectorTests
                 channel,
                 "jpn",
                 "Whatever",
+                shouldLogMessages: false,
                 cancellationToken);
             selectedStream.IsSome.ShouldBeTrue();
             foreach (MediaStream stream in selectedStream)
@@ -134,6 +135,7 @@ public class FFmpegStreamSelectorTests
                 channel,
                 null,
                 channel.PreferredAudioTitle,
+                shouldLogMessages: false,
                 cancellationToken);
             selectedStream.IsSome.ShouldBeTrue();
             foreach (MediaStream stream in selectedStream)
