@@ -388,7 +388,7 @@ public class PlayoutModeSchedulerDurationTests : SchedulerTestBase
         enumerator1.State.Index.ShouldBe(1);
         enumerator2.State.Index.ShouldBe(1);
 
-        playoutItems.Count.ShouldBe(4);
+        playoutItems.Count.ShouldBe(18);
 
         playoutItems[0].MediaItemId.ShouldBe(1);
         playoutItems[0].StartOffset.ShouldBe(startState.CurrentTime);
@@ -413,6 +413,12 @@ public class PlayoutModeSchedulerDurationTests : SchedulerTestBase
         playoutItems[3].GuideGroup.ShouldBe(3);
         playoutItems[3].FillerKind.ShouldBe(FillerKind.Fallback);
         playoutItems[3].GuideFinish.HasValue.ShouldBeFalse();
+
+        playoutItems[17].MediaItemId.ShouldBe(3);
+        playoutItems[17].StartOffset.ShouldBe(startState.CurrentTime.Add(new TimeSpan(2, 59, 0)));
+        playoutItems[17].GuideGroup.ShouldBe(3);
+        playoutItems[17].FillerKind.ShouldBe(FillerKind.Fallback);
+        playoutItems[17].GuideFinish.HasValue.ShouldBeFalse();
     }
 
     [Test]
@@ -694,7 +700,7 @@ public class PlayoutModeSchedulerDurationTests : SchedulerTestBase
         enumerator2.State.Index.ShouldBe(1);
         enumerator3.State.Index.ShouldBe(1);
 
-        playoutItems.Count.ShouldBe(7);
+        playoutItems.Count.ShouldBe(9);
 
         playoutItems[0].MediaItemId.ShouldBe(1);
         playoutItems[0].StartOffset.ShouldBe(startState.CurrentTime);
@@ -737,6 +743,12 @@ public class PlayoutModeSchedulerDurationTests : SchedulerTestBase
         playoutItems[6].GuideGroup.ShouldBe(3);
         playoutItems[6].FillerKind.ShouldBe(FillerKind.Fallback);
         playoutItems[6].GuideFinish.HasValue.ShouldBeFalse();
+
+        playoutItems[8].MediaItemId.ShouldBe(5);
+        playoutItems[8].StartOffset.ShouldBe(startState.CurrentTime.Add(new TimeSpan(2, 59, 0)));
+        playoutItems[8].GuideGroup.ShouldBe(3);
+        playoutItems[8].FillerKind.ShouldBe(FillerKind.Fallback);
+        playoutItems[8].GuideFinish.HasValue.ShouldBeFalse();
     }
 
     [Test]

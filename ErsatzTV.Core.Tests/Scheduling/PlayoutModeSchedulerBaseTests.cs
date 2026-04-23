@@ -731,6 +731,163 @@ public class PlayoutModeSchedulerBaseTests : SchedulerTestBase
             playoutItems[4].MediaItemId.ShouldBe(6);
             playoutItems[4].StartOffset.ShouldBe(startState.CurrentTime + TimeSpan.FromMinutes(55));
         }
+
+        [Test]
+        public void Should_Schedule_Multiple_Fallback_Items_For_Pad_Gap()
+        {
+            // content 45 min, post roll pad to 60 with an empty collection, remaining 15 min filled by 2 min fallback items
+            // fallback has 2 min items, so 8 items will be scheduled.
+            
+            Collection collectionOne = TwoItemCollection(1, 2, TimeSpan.FromMinutes(45));
+            Collection collectionTwo = new Collection { Id = 2, MediaItems = new List<MediaItem>() };
+            Collection collectionThree = TwoItemCollection(5, 6, TimeSpan.FromMinutes(2));
+
+            var scheduleItem = new ProgramScheduleItemOne
+            {
+                Id = 1,
+                Index = 1,
+                Collection = collectionOne,
+                CollectionId = collectionOne.Id,
+                StartTime = null,
+                PlaybackOrder = PlaybackOrder.Chronological,
+                TailFiller = null,
+                FallbackFiller = new FillerPreset
+                {
+                    FillerKind = FillerKind.Fallback,
+                    CollectionId = 3,
+                    Collection = collectionThree
+                },
+                PostRollFiller = new FillerPreset
+                {
+                    FillerKind = FillerKind.PostRoll,
+                    FillerMode = FillerMode.Pad,
+                    PadToNearestMinute = 60,
+                    CollectionId = 2,
+                    Collection = collectionTwo
+                }
+            };
+
+            var scheduleItemsEnumerator = new OrderedScheduleItemsEnumerator(
+                new List<ProgramScheduleItem> { scheduleItem },
+                new CollectionEnumeratorState());
+
+            var enumerator = new ChronologicalMediaCollectionEnumerator(
+                collectionOne.MediaItems,
+                new CollectionEnumeratorState());
+
+            var postRollFillerEnumerator = new ChronologicalMediaCollectionEnumerator(
+                collectionTwo.MediaItems,
+                new CollectionEnumeratorState());
+
+            var fallbackFillerEnumerator = new ChronologicalMediaCollectionEnumerator(
+                collectionThree.MediaItems,
+                new CollectionEnumeratorState());
+
+            PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
+
+            Dictionary<CollectionKey, IMediaCollectionEnumerator> enumerators = CollectionEnumerators(
+                scheduleItem,
+                enumerator);
+
+            enumerators.Add(CollectionKey.ForFillerPreset(scheduleItem.PostRollFiller), postRollFillerEnumerator);
+            enumerators.Add(CollectionKey.ForFillerPreset(scheduleItem.FallbackFiller), fallbackFillerEnumerator);
+
+            List<PlayoutItem> playoutItems = _scheduler
+                .AddFiller(
+                    startState,
+                    enumerators,
+                    scheduleItem,
+                    new PlayoutItem
+                    {
+                        MediaItemId = 1,
+                        Start = startState.CurrentTime.UtcDateTime,
+                        Finish = startState.CurrentTime.AddMinutes(45).UtcDateTime
+                    },
+                    new List<MediaChapter>(),
+                    new PlayoutBuildWarnings(),
+                    _cancellationToken);
+
+            playoutItems.Count.ShouldBe(9); // 1 primary + 8 fallback
+
+            // primary
+            playoutItems[0].MediaItemId.ShouldBe(1);
+            playoutItems[0].StartOffset.ShouldBe(startState.CurrentTime);
+
+            // fallback 1
+            playoutItems[1].MediaItemId.ShouldBe(5);
+            playoutItems[1].StartOffset.ShouldBe(startState.CurrentTime + TimeSpan.FromMinutes(45));
+
+            // fallback 8 (cut short)
+            playoutItems[8].MediaItemId.ShouldBe(6);
+            playoutItems[8].StartOffset.ShouldBe(startState.CurrentTime + TimeSpan.FromMinutes(59));
+            (playoutItems[8].Finish - playoutItems[8].Start).ShouldBe(TimeSpan.FromMinutes(1));
+            playoutItems[8].OutPoint.ShouldBe(TimeSpan.FromMinutes(1));
+        }
+    }
+
+    [TestFixture]
+    public class AddFallback : PlayoutModeSchedulerBaseTests
+    {
+        [Test]
+        public void Should_Schedule_Multiple_Fallback_Items_For_Large_Gap()
+        {
+            Collection collectionOne = TwoItemCollection(1, 2, TimeSpan.FromMinutes(2));
+
+            var scheduleItem = new ProgramScheduleItemOne
+            {
+                Id = 1,
+                Index = 1,
+                FallbackFiller = new FillerPreset
+                {
+                    FillerKind = FillerKind.Fallback,
+                    CollectionId = 1,
+                    Collection = collectionOne
+                }
+            };
+
+            var scheduleItemsEnumerator = new OrderedScheduleItemsEnumerator(
+                new List<ProgramScheduleItem> { scheduleItem },
+                new CollectionEnumeratorState());
+
+            var enumerator = new ChronologicalMediaCollectionEnumerator(
+                collectionOne.MediaItems,
+                new CollectionEnumeratorState());
+
+            PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
+
+            Dictionary<CollectionKey, IMediaCollectionEnumerator> enumerators = CollectionEnumerators(
+                scheduleItem,
+                enumerator);
+
+            enumerators.Add(CollectionKey.ForFillerPreset(scheduleItem.FallbackFiller), enumerator);
+
+            DateTimeOffset nextItemStart = startState.CurrentTime.AddMinutes(5);
+
+            Tuple<PlayoutBuilderState, List<PlayoutItem>> result = ((TestScheduler)_scheduler).TestAddFallbackFiller(
+                startState,
+                enumerators,
+                scheduleItem,
+                new List<PlayoutItem>(),
+                nextItemStart,
+                _cancellationToken);
+
+            List<PlayoutItem> playoutItems = result.Item2;
+
+            playoutItems.Count.ShouldBe(3);
+
+            playoutItems[0].MediaItemId.ShouldBe(1);
+            playoutItems[0].StartOffset.ShouldBe(startState.CurrentTime);
+            (playoutItems[0].Finish - playoutItems[0].Start).ShouldBe(TimeSpan.FromMinutes(2));
+
+            playoutItems[1].MediaItemId.ShouldBe(2);
+            playoutItems[1].StartOffset.ShouldBe(startState.CurrentTime.AddMinutes(2));
+            (playoutItems[1].Finish - playoutItems[1].Start).ShouldBe(TimeSpan.FromMinutes(2));
+
+            playoutItems[2].MediaItemId.ShouldBe(1);
+            playoutItems[2].StartOffset.ShouldBe(startState.CurrentTime.AddMinutes(4));
+            (playoutItems[2].Finish - playoutItems[2].Start).ShouldBe(TimeSpan.FromMinutes(1));
+            playoutItems[2].OutPoint.ShouldBe(TimeSpan.FromMinutes(1));
+        }
     }
 
     [TestFixture]
@@ -799,6 +956,21 @@ public class PlayoutModeSchedulerBaseTests : SchedulerTestBase
             Random random,
             CancellationToken cancellationToken) =>
             throw new NotSupportedException();
+
+        public Tuple<PlayoutBuilderState, List<PlayoutItem>> TestAddFallbackFiller(
+            PlayoutBuilderState playoutBuilderState,
+            Dictionary<CollectionKey, IMediaCollectionEnumerator> collectionEnumerators,
+            ProgramScheduleItem scheduleItem,
+            List<PlayoutItem> playoutItems,
+            DateTimeOffset nextItemStart,
+            CancellationToken cancellationToken) =>
+            AddFallbackFiller(
+                playoutBuilderState,
+                collectionEnumerators,
+                scheduleItem,
+                playoutItems,
+                nextItemStart,
+                cancellationToken);
 
         protected override string SchedulingContextName => "Test";
     }
