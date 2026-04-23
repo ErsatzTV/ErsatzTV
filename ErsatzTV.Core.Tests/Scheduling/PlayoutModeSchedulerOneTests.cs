@@ -306,9 +306,9 @@ public class PlayoutModeSchedulerOneTests : SchedulerTestBase
         playoutBuilderState.ScheduleItemsEnumerator.State.Index.ShouldBe(0);
 
         enumerator1.State.Index.ShouldBe(1);
-        enumerator2.State.Index.ShouldBe(1);
+        enumerator2.State.Index.ShouldBe(0);
 
-        playoutItems.Count.ShouldBe(2);
+        playoutItems.Count.ShouldBe(25);
 
         playoutItems[0].MediaItemId.ShouldBe(1);
         playoutItems[0].StartOffset.ShouldBe(startState.CurrentTime);
@@ -319,6 +319,11 @@ public class PlayoutModeSchedulerOneTests : SchedulerTestBase
         playoutItems[1].StartOffset.ShouldBe(startState.CurrentTime.AddHours(1));
         playoutItems[1].GuideGroup.ShouldBe(1);
         playoutItems[1].FillerKind.ShouldBe(FillerKind.Fallback);
+
+        playoutItems[24].MediaItemId.ShouldBe(4);
+        playoutItems[24].StartOffset.ShouldBe(startState.CurrentTime.AddHours(3).Subtract(TimeSpan.FromMinutes(5)));
+        playoutItems[24].GuideGroup.ShouldBe(1);
+        playoutItems[24].FillerKind.ShouldBe(FillerKind.Fallback);
     }
 
     [Test]
@@ -481,7 +486,7 @@ public class PlayoutModeSchedulerOneTests : SchedulerTestBase
         enumerator2.State.Index.ShouldBe(1);
         enumerator3.State.Index.ShouldBe(1);
 
-        playoutItems.Count.ShouldBe(5);
+        playoutItems.Count.ShouldBe(7);
 
         playoutItems[0].MediaItemId.ShouldBe(1);
         playoutItems[0].StartOffset.ShouldBe(startState.CurrentTime);
@@ -507,6 +512,16 @@ public class PlayoutModeSchedulerOneTests : SchedulerTestBase
         playoutItems[4].StartOffset.ShouldBe(startState.CurrentTime.Add(new TimeSpan(2, 57, 0)));
         playoutItems[4].GuideGroup.ShouldBe(1);
         playoutItems[4].FillerKind.ShouldBe(FillerKind.Fallback);
+
+        playoutItems[5].MediaItemId.ShouldBe(6);
+        playoutItems[5].StartOffset.ShouldBe(startState.CurrentTime.Add(new TimeSpan(2, 58, 0)));
+        playoutItems[5].GuideGroup.ShouldBe(1);
+        playoutItems[5].FillerKind.ShouldBe(FillerKind.Fallback);
+
+        playoutItems[6].MediaItemId.ShouldBe(5);
+        playoutItems[6].StartOffset.ShouldBe(startState.CurrentTime.Add(new TimeSpan(2, 59, 0)));
+        playoutItems[6].GuideGroup.ShouldBe(1);
+        playoutItems[6].FillerKind.ShouldBe(FillerKind.Fallback);
     }
 
     [Test]
