@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using System.Globalization;
 using System.IO.Abstractions;
 using System.Runtime.InteropServices;
@@ -134,17 +135,26 @@ public partial class SyncNextPlayoutHandler(
             .ThenInclude(i => (i as Episode).MediaVersions)
             .ThenInclude(mv => mv.Streams)
             .Include(i => i.MediaItem)
+            .ThenInclude(i => (i as Episode).EpisodeMetadata)
+            .ThenInclude(em => em.Subtitles)
+            .Include(i => i.MediaItem)
             .ThenInclude(i => (i as Movie).MediaVersions)
             .ThenInclude(mv => mv.MediaFiles)
             .Include(i => i.MediaItem)
             .ThenInclude(i => (i as Movie).MediaVersions)
             .ThenInclude(mv => mv.Streams)
             .Include(i => i.MediaItem)
+            .ThenInclude(i => (i as Movie).MovieMetadata)
+            .ThenInclude(mm => mm.Subtitles)
+            .Include(i => i.MediaItem)
             .ThenInclude(i => (i as OtherVideo).MediaVersions)
             .ThenInclude(mv => mv.MediaFiles)
             .Include(i => i.MediaItem)
             .ThenInclude(i => (i as OtherVideo).MediaVersions)
             .ThenInclude(mv => mv.Streams)
+            .Include(i => i.MediaItem)
+            .ThenInclude(i => (i as OtherVideo).OtherVideoMetadata)
+            .ThenInclude(ovm => ovm.Subtitles)
             .Include(i => i.MediaItem)
             .ThenInclude(i => (i as MusicVideo).MediaVersions)
             .ThenInclude(mv => mv.MediaFiles)
@@ -238,6 +248,8 @@ public partial class SyncNextPlayoutHandler(
                         nextPlayoutItem,
                         playoutItem.PreferredAudioLanguageCode ?? channel.PreferredAudioLanguageCode,
                         playoutItem.PreferredAudioTitle ?? channel.PreferredAudioTitle,
+                        playoutItem.PreferredSubtitleLanguageCode ?? channel.PreferredSubtitleLanguageCode,
+                        playoutItem.SubtitleMode ?? channel.SubtitleMode,
                         cancellationToken);
                 }
 
@@ -254,13 +266,14 @@ public partial class SyncNextPlayoutHandler(
         Core.Next.PlayoutItem nextPlayoutItem,
         string preferredAudioLanguage,
         string preferredAudioTitle,
+        string preferredSubtitleLanguage,
+        ChannelSubtitleMode subtitleMode,
         CancellationToken cancellationToken)
     {
-        // TODO: NEXT: support subtitles
-        List<Subtitle> allSubtitles = [];
+        List<Subtitle> allSubtitles = await GetSubtitles(audioVersion.MediaItem);
 
         Option<MediaStream> maybeAudioStream = Option<MediaStream>.None;
-        //Option<Subtitle> maybeSubtitle = Option<Subtitle>.None;
+        Option<Subtitle> maybeSubtitle = Option<Subtitle>.None;
 
         if (channel.StreamSelectorMode is ChannelStreamSelectorMode.Custom)
         {
@@ -270,7 +283,7 @@ public partial class SyncNextPlayoutHandler(
                 audioVersion,
                 allSubtitles);
             maybeAudioStream = result.AudioStream;
-            //maybeSubtitle = result.Subtitle;
+            maybeSubtitle = result.Subtitle;
         }
 
         if (channel.StreamSelectorMode is ChannelStreamSelectorMode.Default || maybeAudioStream.IsNone)
@@ -285,13 +298,14 @@ public partial class SyncNextPlayoutHandler(
                     shouldLogMessages: false,
                     cancellationToken);
 
-            // maybeSubtitle =
-            //     await ffmpegStreamSelector.SelectSubtitleStream(
-            //         allSubtitles.ToImmutableList(),
-            //         channel,
-            //         preferredSubtitleLanguage,
-            //         subtitleMode,
-            //         cancellationToken);
+            maybeSubtitle =
+                await ffmpegStreamSelector.SelectSubtitleStream(
+                    allSubtitles.ToImmutableList(),
+                    channel,
+                    preferredSubtitleLanguage,
+                    subtitleMode,
+                    shouldLogMessages: false,
+                    cancellationToken);
         }
 
         foreach (MediaStream audioStream in maybeAudioStream)
@@ -301,6 +315,16 @@ public partial class SyncNextPlayoutHandler(
                 nextPlayoutItem.Tracks ??= new Core.Next.PlayoutItemTracks();
                 nextPlayoutItem.Tracks.Audio ??= new Core.Next.TrackSelection();
                 nextPlayoutItem.Tracks.Audio.StreamIndex = audioStream.Index;
+            }
+        }
+
+        foreach (Subtitle subtitle in maybeSubtitle)
+        {
+            if (nextPlayoutItem.Tracks?.Subtitle?.StreamIndex is null)
+            {
+                nextPlayoutItem.Tracks ??= new Core.Next.PlayoutItemTracks();
+                nextPlayoutItem.Tracks.Subtitle ??= new Core.Next.TrackSelection();
+                nextPlayoutItem.Tracks.Subtitle.StreamIndex = subtitle.StreamIndex;
             }
         }
     }
@@ -430,5 +454,39 @@ public partial class SyncNextPlayoutHandler(
                 logger.LogDebug("Skipping busy folder: {Folder}", dir.Name);
             }
         }
+    }
+
+    private static async Task<List<Subtitle>> GetSubtitles(MediaItem mediaItem)
+    {
+        List<Subtitle> allSubtitles = mediaItem switch
+        {
+            Episode episode => await Optional(episode.EpisodeMetadata).Flatten().HeadOrNone()
+                .Map(mm => mm.Subtitles ?? [])
+                .IfNoneAsync([]),
+            Movie movie => await Optional(movie.MovieMetadata).Flatten().HeadOrNone()
+                .Map(mm => mm.Subtitles ?? [])
+                .IfNoneAsync([]),
+            //MusicVideo musicVideo => await GetMusicVideoSubtitles(musicVideo, channel, settings),
+            OtherVideo otherVideo => await Optional(otherVideo.OtherVideoMetadata).Flatten().HeadOrNone()
+                .Map(mm => mm.Subtitles ?? [])
+                .IfNoneAsync([]),
+            _ => []
+        };
+
+        bool isMediaServer = mediaItem is PlexMovie or PlexEpisode or
+            JellyfinMovie or JellyfinEpisode or EmbyMovie or EmbyEpisode;
+
+        if (isMediaServer)
+        {
+            return [];
+
+            // closed captions are currently unsupported
+            //allSubtitles.RemoveAll(s => s.Codec == "eia_608");
+        }
+
+        // TODO: support text subtitles; external image subtitles
+        allSubtitles.RemoveAll(s => !s.IsImage || s.SubtitleKind is not SubtitleKind.Embedded);
+
+        return allSubtitles;
     }
 }
