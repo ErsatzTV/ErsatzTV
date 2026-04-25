@@ -172,6 +172,12 @@ namespace ErsatzTV.Core.Next
         public TrackSelection Audio { get; set; }
 
         /// <summary>
+        /// Subtitle track selection.
+        /// </summary>
+        [JsonProperty("subtitle")]
+        public TrackSelection Subtitle { get; set; }
+
+        /// <summary>
         /// Video track selection.
         /// </summary>
         [JsonProperty("video")]

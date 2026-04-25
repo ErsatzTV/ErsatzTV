@@ -185,6 +185,7 @@ public class FFmpegStreamSelectorTests
                 channel,
                 "heb",
                 ChannelSubtitleMode.Any,
+                shouldLogMessages: true,
                 cancellationToken);
             selectedStream.IsSome.ShouldBeTrue();
             foreach (Subtitle stream in selectedStream)
