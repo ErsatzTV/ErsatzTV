@@ -86,6 +86,7 @@ public class CreateChannelHandler(
                 MirrorSourceChannelId = request.MirrorSourceChannelId,
                 PlayoutOffset = request.PlayoutOffset,
                 StreamingEngine = request.StreamingEngine,
+                NextEngineTextSubtitleMode = request.NextEngineTextSubtitleMode,
                 StreamingMode = request.StreamingMode,
                 Artwork = artwork,
                 StreamSelectorMode = request.StreamSelectorMode,

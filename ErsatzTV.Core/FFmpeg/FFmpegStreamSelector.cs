@@ -107,7 +107,8 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
                         channel,
                         allLanguageCodes,
                         version.MediaItem.Id,
-                        version.MediaVersion);
+                        version.MediaVersion,
+                        shouldLogMessages);
                     sw.Stop();
                     if (shouldLogMessages)
                     {
@@ -126,7 +127,8 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
                         channel,
                         allLanguageCodes,
                         version.MediaItem.Id,
-                        version.MediaVersion);
+                        version.MediaVersion,
+                        shouldLogMessages);
                     sw2.Stop();
                     if (shouldLogMessages)
                     {
@@ -144,10 +146,13 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to execute audio stream selector script; falling back to built-in logic");
+            if (shouldLogMessages)
+            {
+                _logger.LogError(ex, "Failed to execute audio stream selector script; falling back to built-in logic");
+            }
         }
 
-        return DefaultSelectAudioStream(version.MediaVersion, allLanguageCodes, preferredAudioTitle);
+        return DefaultSelectAudioStream(version.MediaVersion, allLanguageCodes, preferredAudioTitle, shouldLogMessages);
     }
 
     public async Task<Option<Subtitle>> SelectSubtitleStream(
@@ -176,47 +181,52 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
 
         var candidateSubtitles = subtitles.ToList();
 
-        bool useEmbeddedSubtitles = await _configElementRepository
-            .GetValue<bool>(ConfigElementKey.FFmpegUseEmbeddedSubtitles, cancellationToken)
-            .IfNoneAsync(true);
-
-        if (!useEmbeddedSubtitles)
+        // next engine doesn't need to specifically enable or pre-extract embedded subtitles
+        if (channel.StreamingEngine != StreamingEngine.Next)
         {
-            if (shouldLogMessages)
+            bool useEmbeddedSubtitles = await _configElementRepository
+                .GetValue<bool>(ConfigElementKey.FFmpegUseEmbeddedSubtitles, cancellationToken)
+                .IfNoneAsync(true);
+
+            if (!useEmbeddedSubtitles)
             {
-                _logger.LogDebug("Ignoring embedded subtitles for channel {Number}", channel.Number);
+                if (shouldLogMessages)
+                {
+                    _logger.LogDebug("Ignoring embedded subtitles for channel {Number}", channel.Number);
+                }
+
+                candidateSubtitles =
+                    candidateSubtitles.Filter(s => s.SubtitleKind is not SubtitleKind.Embedded).ToList();
             }
 
-            candidateSubtitles = candidateSubtitles.Filter(s => s.SubtitleKind is not SubtitleKind.Embedded).ToList();
-        }
-
-        if (channel.StreamingMode is not StreamingMode.HttpLiveStreamingDirect)
-        {
-            foreach (Subtitle subtitle in candidateSubtitles
-                       .Filter(s => s.SubtitleKind is SubtitleKind.Embedded && !s.IsImage)
-                       .ToList())
+            if (channel.StreamingMode is not StreamingMode.HttpLiveStreamingDirect)
             {
-                if (!subtitle.IsExtracted)
+                foreach (Subtitle subtitle in candidateSubtitles
+                             .Filter(s => s.SubtitleKind is SubtitleKind.Embedded && !s.IsImage)
+                             .ToList())
                 {
-                    if (shouldLogMessages)
+                    if (!subtitle.IsExtracted)
                     {
-                        _logger.LogDebug(
-                            "Ignoring embedded subtitle with index {Index} that has not been extracted",
-                            subtitle.StreamIndex);
-                    }
+                        if (shouldLogMessages)
+                        {
+                            _logger.LogDebug(
+                                "Ignoring embedded subtitle with index {Index} that has not been extracted",
+                                subtitle.StreamIndex);
+                        }
 
-                    candidateSubtitles.Remove(subtitle);
-                }
-                else if (string.IsNullOrWhiteSpace(subtitle.Path))
-                {
-                    if (shouldLogMessages)
+                        candidateSubtitles.Remove(subtitle);
+                    }
+                    else if (string.IsNullOrWhiteSpace(subtitle.Path))
                     {
-                        _logger.LogDebug(
-                            "BUG: ignoring embedded subtitle with index {Index} that is missing a path",
-                            subtitle.StreamIndex);
-                    }
+                        if (shouldLogMessages)
+                        {
+                            _logger.LogDebug(
+                                "BUG: ignoring embedded subtitle with index {Index} that is missing a path",
+                                subtitle.StreamIndex);
+                        }
 
-                    candidateSubtitles.Remove(subtitle);
+                        candidateSubtitles.Remove(subtitle);
+                    }
                 }
             }
         }
@@ -294,7 +304,8 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
     private Option<MediaStream> DefaultSelectAudioStream(
         MediaVersion version,
         IReadOnlyCollection<string> preferredLanguageCodes,
-        string preferredAudioTitle)
+        string preferredAudioTitle,
+        bool shouldLogMessages)
     {
         var audioStreams = version.Streams.Filter(s => s.MediaStreamKind == MediaStreamKind.Audio).ToList();
 
@@ -304,26 +315,32 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
 
         if (correctLanguage.Count != 0)
         {
-            _logger.LogDebug(
-                "Found {Count} audio streams with preferred audio language code(s) {Code}",
-                correctLanguage.Count,
-                preferredLanguageCodes);
+            if (shouldLogMessages)
+            {
+                _logger.LogDebug(
+                    "Found {Count} audio streams with preferred audio language code(s) {Code}",
+                    correctLanguage.Count,
+                    preferredLanguageCodes);
+            }
 
-            return PrioritizeAudioTitle(correctLanguage, preferredAudioTitle ?? string.Empty);
+            return PrioritizeAudioTitle(correctLanguage, preferredAudioTitle ?? string.Empty, shouldLogMessages);
         }
 
-        _logger.LogDebug(
-            "Unable to find audio stream with preferred audio language code(s) {Code}",
-            preferredLanguageCodes);
+        if (shouldLogMessages)
+        {
+            _logger.LogDebug(
+                "Unable to find audio stream with preferred audio language code(s) {Code}",
+                preferredLanguageCodes);
+        }
 
-        return PrioritizeAudioTitle(audioStreams, preferredAudioTitle ?? string.Empty);
+        return PrioritizeAudioTitle(audioStreams, preferredAudioTitle ?? string.Empty, shouldLogMessages);
     }
 
-    private Option<MediaStream> PrioritizeAudioTitle(IReadOnlyCollection<MediaStream> streams, string title)
+    private Option<MediaStream> PrioritizeAudioTitle(IReadOnlyCollection<MediaStream> streams, string title, bool shouldLogMessages)
     {
         if (string.IsNullOrWhiteSpace(title))
         {
-            return PrioritizeDefault(streams);
+            return PrioritizeDefault(streams, shouldLogMessages);
         }
 
         // prioritize matching titles
@@ -332,30 +349,43 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
             .ToList();
         if (matchingTitle.Count != 0)
         {
-            _logger.LogDebug(
-                "Found {Count} audio streams with preferred title {Title}",
-                matchingTitle.Count,
-                title);
+            if (shouldLogMessages)
+            {
+                _logger.LogDebug(
+                    "Found {Count} audio streams with preferred title {Title}",
+                    matchingTitle.Count,
+                    title);
+            }
 
-            return PrioritizeDefault(matchingTitle);
+            return PrioritizeDefault(matchingTitle, shouldLogMessages);
         }
 
-        _logger.LogDebug("Unable to find audio stream with preferred title {Title}", title);
+        if (shouldLogMessages)
+        {
+            _logger.LogDebug("Unable to find audio stream with preferred title {Title}", title);
+        }
 
-        return PrioritizeDefault(streams);
+        return PrioritizeDefault(streams, shouldLogMessages);
     }
 
-    private Option<MediaStream> PrioritizeDefault(IReadOnlyCollection<MediaStream> streams)
+    private Option<MediaStream> PrioritizeDefault(IReadOnlyCollection<MediaStream> streams, bool shouldLogMessages)
     {
         var sorted = streams.OrderByDescending(s => s.Channels).ToList();
         Option<MediaStream> maybeDefault = Optional(sorted.Find(s => s.Default));
         foreach (MediaStream stream in maybeDefault)
         {
-            _logger.LogDebug("Found audio stream flagged as default");
+            if (shouldLogMessages)
+            {
+                _logger.LogDebug("Found audio stream flagged as default");
+            }
+
             return stream;
         }
 
-        _logger.LogDebug("Unable to find default audio stream; selecting stream with most channels");
+        if (shouldLogMessages)
+        {
+            _logger.LogDebug("Unable to find default audio stream; selecting stream with most channels");
+        }
 
         return streams.HeadOrNone();
     }
@@ -364,20 +394,33 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
         Channel channel,
         List<string> preferredLanguageCodes,
         int episodeId,
-        MediaVersion version)
+        MediaVersion version,
+        bool shouldLogMessages)
     {
         string jsScriptPath = Path.ChangeExtension(
             Path.Combine(FileSystemLayout.AudioStreamSelectorScriptsFolder, "episode"),
             "js");
 
-        _logger.LogDebug("Checking for JS Script at {Path}", jsScriptPath);
+        if (shouldLogMessages)
+        {
+            _logger.LogDebug("Checking for JS Script at {Path}", jsScriptPath);
+        }
+
         if (!_fileSystem.File.Exists(jsScriptPath))
         {
-            _logger.LogDebug("Unable to locate episode audio stream selector script; falling back to built-in logic");
+            if (shouldLogMessages)
+            {
+                _logger.LogDebug(
+                    "Unable to locate episode audio stream selector script; falling back to built-in logic");
+            }
+
             return Option<MediaStream>.None;
         }
 
-        _logger.LogDebug("Found JS Script at {Path}", jsScriptPath);
+        if (shouldLogMessages)
+        {
+            _logger.LogDebug("Found JS Script at {Path}", jsScriptPath);
+        }
 
         await _scriptEngine.LoadAsync(jsScriptPath);
 
@@ -397,28 +440,40 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
             preferredLanguageCodes.ToArray(),
             audioStreams);
 
-        return ProcessScriptResult(version, result);
+        return ProcessScriptResult(version, result, shouldLogMessages);
     }
 
     private async Task<Option<MediaStream>> SelectMovieAudioStream(
         Channel channel,
         List<string> preferredLanguageCodes,
         int movieId,
-        MediaVersion version)
+        MediaVersion version,
+        bool shouldLogMessages)
     {
         string jsScriptPath = Path.ChangeExtension(
             Path.Combine(FileSystemLayout.AudioStreamSelectorScriptsFolder, "movie"),
             "js");
 
-        _logger.LogDebug("Checking for JS Script at {Path}", jsScriptPath);
+        if (shouldLogMessages)
+        {
+            _logger.LogDebug("Checking for JS Script at {Path}", jsScriptPath);
+        }
+
         if (!_fileSystem.File.Exists(jsScriptPath))
         {
-            _logger.LogDebug(
-                "Unable to locate movie audio stream selector script; falling back to built-in logic");
+            if (shouldLogMessages)
+            {
+                _logger.LogDebug(
+                    "Unable to locate movie audio stream selector script; falling back to built-in logic");
+            }
+
             return Option<MediaStream>.None;
         }
 
-        _logger.LogDebug("Found JS Script at {Path}", jsScriptPath);
+        if (shouldLogMessages)
+        {
+            _logger.LogDebug("Found JS Script at {Path}", jsScriptPath);
+        }
 
         await _scriptEngine.LoadAsync(jsScriptPath);
 
@@ -435,10 +490,10 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
             preferredLanguageCodes.ToArray(),
             audioStreams);
 
-        return ProcessScriptResult(version, result);
+        return ProcessScriptResult(version, result, shouldLogMessages);
     }
 
-    private Option<MediaStream> ProcessScriptResult(MediaVersion version, object result)
+    private Option<MediaStream> ProcessScriptResult(MediaVersion version, object result, bool shouldLogMessages)
     {
         if (result is double d)
         {
@@ -446,22 +501,32 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
             Option<MediaStream> maybeStream = version.Streams.Find(s => s.Index == streamIndex);
             foreach (MediaStream stream in maybeStream)
             {
-                _logger.LogDebug(
-                    "JS Script returned audio stream index {Index} with language {Language} and {Channels} audio channel(s)",
-                    streamIndex,
-                    stream.Language,
-                    stream.Channels);
+                if (shouldLogMessages)
+                {
+                    _logger.LogDebug(
+                        "JS Script returned audio stream index {Index} with language {Language} and {Channels} audio channel(s)",
+                        streamIndex,
+                        stream.Language,
+                        stream.Channels);
+                }
+
                 return stream;
             }
 
-            _logger.LogWarning(
-                "JS Script returned audio stream index {Index} which does not exist",
-                streamIndex);
+            if (shouldLogMessages)
+            {
+                _logger.LogWarning(
+                    "JS Script returned audio stream index {Index} which does not exist",
+                    streamIndex);
+            }
         }
         else
         {
-            _logger.LogInformation(
-                "JS Script did not return an audio stream index; falling back to built-in logic");
+            if (shouldLogMessages)
+            {
+                _logger.LogInformation(
+                    "JS Script did not return an audio stream index; falling back to built-in logic");
+            }
         }
 
         return Option<MediaStream>.None;

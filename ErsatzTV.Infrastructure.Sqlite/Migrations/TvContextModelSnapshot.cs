@@ -318,6 +318,9 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                         .HasColumnType("varchar(50)")
                         .UseCollation("NOCASE");
 
+                    b.Property<int>("NextEngineTextSubtitleMode")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Number")
                         .HasColumnType("TEXT");
 

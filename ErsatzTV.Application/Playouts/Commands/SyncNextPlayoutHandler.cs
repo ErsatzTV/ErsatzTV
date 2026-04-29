@@ -17,6 +17,7 @@ using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using PlayoutItem = ErsatzTV.Core.Domain.PlayoutItem;
 
 namespace ErsatzTV.Application.Playouts;
 
@@ -320,11 +321,27 @@ public partial class SyncNextPlayoutHandler(
 
         foreach (Subtitle subtitle in maybeSubtitle)
         {
-            if (nextPlayoutItem.Tracks?.Subtitle?.StreamIndex is null)
+            if (subtitle.SubtitleKind is SubtitleKind.Embedded)
             {
-                nextPlayoutItem.Tracks ??= new Core.Next.PlayoutItemTracks();
-                nextPlayoutItem.Tracks.Subtitle ??= new Core.Next.TrackSelection();
-                nextPlayoutItem.Tracks.Subtitle.StreamIndex = subtitle.StreamIndex;
+                if (nextPlayoutItem.Tracks?.Subtitle?.StreamIndex is null)
+                {
+                    nextPlayoutItem.Tracks ??= new Core.Next.PlayoutItemTracks();
+                    nextPlayoutItem.Tracks.Subtitle ??= new Core.Next.TrackSelection();
+                    nextPlayoutItem.Tracks.Subtitle.StreamIndex = subtitle.StreamIndex;
+                }
+            }
+            else if (!subtitle.Path.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+            {
+                if (nextPlayoutItem.Tracks?.Subtitle?.Source is null)
+                {
+                    nextPlayoutItem.Tracks ??= new Core.Next.PlayoutItemTracks();
+                    nextPlayoutItem.Tracks.Subtitle ??= new Core.Next.TrackSelection();
+                    nextPlayoutItem.Tracks.Subtitle.Source = new Core.Next.Source
+                    {
+                        SourceType = Core.Next.SourceType.Local,
+                        Path = subtitle.Path,
+                    };
+                }
             }
         }
     }
@@ -484,8 +501,8 @@ public partial class SyncNextPlayoutHandler(
             //allSubtitles.RemoveAll(s => s.Codec == "eia_608");
         }
 
-        // TODO: support text subtitles; external image subtitles
-        allSubtitles.RemoveAll(s => !s.IsImage || s.SubtitleKind is not SubtitleKind.Embedded);
+        // TODO: external image subtitles
+        allSubtitles.RemoveAll(s => s.IsImage && s.SubtitleKind is not SubtitleKind.Embedded);
 
         return allSubtitles;
     }

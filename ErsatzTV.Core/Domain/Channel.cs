@@ -23,6 +23,7 @@ public class Channel
     public int? FallbackFillerId { get; set; }
     public FillerPreset FallbackFiller { get; set; }
     public StreamingEngine StreamingEngine { get; set; }
+    public NextEngineTextSubtitleMode NextEngineTextSubtitleMode { get; set; }
     public StreamingMode StreamingMode { get; set; }
     public List<Playout> Playouts { get; set; }
     public List<Artwork> Artwork { get; set; }
