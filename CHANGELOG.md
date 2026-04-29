@@ -7,11 +7,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 - Add `Streaming Engine` setting to Channel
   - `Legacy` - (default) uses existing streaming engine
-  - `Next` - will use ErsatzTV Next streaming engine, when it is compatible with ErsatzTV Legacy
+  - `Next` - uses ErsatzTV Next streaming engine
 
 ### Fixed
 - Fix `Add Playout` button not opening drop down menu (regression from v26.4.0)
 - Consistently apply playout offset when generating XMLTV
+- Schedule all required fallback filler in classic schedules
+- Don't extract embedded subtitles that have already been extracted
 
 ## [26.4.0] - 2026-04-18
 ### Changed
