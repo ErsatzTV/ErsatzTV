@@ -37,12 +37,18 @@ namespace ErsatzTV.Core.Next.Config
 
         [JsonProperty("ffprobe_path")]
         public string FfprobePath { get; set; }
+
+        [JsonProperty("preferred_filters", NullValueHandling = NullValueHandling.Ignore)]
+        public List<string> PreferredFilters { get; set; }
     }
 
     public partial class Normalization
     {
         [JsonProperty("audio")]
         public Audio Audio { get; set; }
+
+        [JsonProperty("subtitle", NullValueHandling = NullValueHandling.Ignore)]
+        public Subtitle Subtitle { get; set; }
 
         [JsonProperty("video")]
         public Video Video { get; set; }
@@ -84,6 +90,12 @@ namespace ErsatzTV.Core.Next.Config
         public double? TruePeak { get; set; }
     }
 
+    public partial class Subtitle
+    {
+        [JsonProperty("mode", NullValueHandling = NullValueHandling.Ignore)]
+        public Mode? Mode { get; set; }
+    }
+
     public partial class Video
     {
         [JsonProperty("accel")]
@@ -97,6 +109,9 @@ namespace ErsatzTV.Core.Next.Config
 
         [JsonProperty("buffer_kbps")]
         public long? BufferKbps { get; set; }
+
+        [JsonProperty("deinterlace", NullValueHandling = NullValueHandling.Ignore)]
+        public bool? Deinterlace { get; set; }
 
         [JsonProperty("format")]
         public VideoFormat? Format { get; set; }
@@ -131,6 +146,8 @@ namespace ErsatzTV.Core.Next.Config
 
     public enum AudioFormat { Aac, Ac3 };
 
+    public enum Mode { Burn, Convert };
+
     public enum AccelEnum { Cuda, Qsv, Vaapi, Videotoolbox, Vulkan };
 
     public enum VideoFormat { H264, Hevc };
@@ -156,6 +173,7 @@ namespace ErsatzTV.Core.Next.Config
             Converters =
             {
                 AudioFormatConverter.Singleton,
+                ModeConverter.Singleton,
                 AccelEnumConverter.Singleton,
                 VideoFormatConverter.Singleton,
                 VaapiDriverEnumConverter.Singleton,
@@ -203,6 +221,47 @@ namespace ErsatzTV.Core.Next.Config
         }
 
         public static readonly AudioFormatConverter Singleton = new AudioFormatConverter();
+    }
+
+    internal class ModeConverter : JsonConverter
+    {
+        public override bool CanConvert(Type t) => t == typeof(Mode) || t == typeof(Mode?);
+
+        public override object ReadJson(JsonReader reader, Type t, object existingValue, JsonSerializer serializer)
+        {
+            if (reader.TokenType == JsonToken.Null) return null;
+            var value = serializer.Deserialize<string>(reader);
+            switch (value)
+            {
+                case "burn":
+                    return Mode.Burn;
+                case "convert":
+                    return Mode.Convert;
+            }
+            throw new Exception("Cannot unmarshal type Mode");
+        }
+
+        public override void WriteJson(JsonWriter writer, object untypedValue, JsonSerializer serializer)
+        {
+            if (untypedValue == null)
+            {
+                serializer.Serialize(writer, null);
+                return;
+            }
+            var value = (Mode)untypedValue;
+            switch (value)
+            {
+                case Mode.Burn:
+                    serializer.Serialize(writer, "burn");
+                    return;
+                case Mode.Convert:
+                    serializer.Serialize(writer, "convert");
+                    return;
+            }
+            throw new Exception("Cannot marshal type Mode");
+        }
+
+        public static readonly ModeConverter Singleton = new ModeConverter();
     }
 
     internal class AccelEnumConverter : JsonConverter

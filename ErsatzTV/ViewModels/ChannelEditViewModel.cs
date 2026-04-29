@@ -44,6 +44,7 @@ public class ChannelEditViewModel
         }
     }
 
+    public NextEngineTextSubtitleMode NextEngineTextSubtitleMode { get; set; }
     public StreamingMode StreamingMode { get; set; }
     public int? WatermarkId { get; set; }
     public int? FallbackFillerId { get; set; }
@@ -86,6 +87,7 @@ public class ChannelEditViewModel
             MirrorSourceChannelId,
             PlayoutOffset,
             StreamingEngine,
+            NextEngineTextSubtitleMode,
             StreamingMode,
             WatermarkId,
             FallbackFillerId,
@@ -119,6 +121,7 @@ public class ChannelEditViewModel
             MirrorSourceChannelId,
             PlayoutOffset,
             StreamingEngine,
+            NextEngineTextSubtitleMode,
             StreamingMode,
             WatermarkId,
             FallbackFillerId,

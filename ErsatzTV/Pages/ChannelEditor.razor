@@ -140,6 +140,18 @@ else
         <MudSelectItem Value="@(StreamingEngine.Next)">Next</MudSelectItem>
     </MudSelect>
 </MudStack>
+@if (_model.StreamingEngine is StreamingEngine.Next)
+{
+    <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+        <div class="d-flex">
+            <MudText>Next Engine Text Subtitle Mode</MudText>
+        </div>
+        <MudSelect @bind-Value="_model.NextEngineTextSubtitleMode" For="@(() => _model.NextEngineTextSubtitleMode)">
+            <MudSelectItem Value="@(NextEngineTextSubtitleMode.Burn)">Burn</MudSelectItem>
+            <MudSelectItem Value="@(NextEngineTextSubtitleMode.Convert)">Convert If Possible</MudSelectItem>
+        </MudSelect>
+    </MudStack>
+}
 <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
     <div class="d-flex">
         <MudText>Streaming Mode</MudText>
@@ -421,6 +433,7 @@ else
                         _model.MirrorSourceChannelId = channelViewModel.MirrorSourceChannelId;
                         _model.PlayoutOffset = channelViewModel.PlayoutOffset;
                         _model.StreamingEngine = channelViewModel.StreamingEngine;
+                        _model.NextEngineTextSubtitleMode = channelViewModel.NextEngineTextSubtitleMode;
                         _model.StreamingMode = channelViewModel.StreamingMode;
                         _model.StreamSelectorMode = channelViewModel.StreamSelectorMode;
                         _model.StreamSelector = channelViewModel.StreamSelector;
@@ -453,6 +466,7 @@ else
                 _model.Group = "ErsatzTV";
                 _model.FFmpegProfileId = ffmpegSettings.DefaultFFmpegProfileId;
                 _model.StreamingEngine = StreamingEngine.Legacy;
+                _model.NextEngineTextSubtitleMode = NextEngineTextSubtitleMode.Burn;
                 _model.StreamingMode = StreamingMode.TransportStreamHybrid;
                 _model.IsEnabled = true;
                 _model.ShowInEpg = true;

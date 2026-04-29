@@ -1,6 +1,5 @@
 using System.Globalization;
 using System.IO.Abstractions;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading.Channels;
 using ErsatzTV.Application.Channels;
@@ -18,6 +17,7 @@ using ErsatzTV.Core.Next.Config;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Subtitle = ErsatzTV.Core.Next.Config.Subtitle;
 
 namespace ErsatzTV.Application.Streaming;
 
@@ -67,7 +67,7 @@ public class StartFFmpegNextSessionHandler(
         await mediator.Send(new RefreshGraphicsElements(), cancellationToken);
 
         ChannelConfig config = await MapConfig(
-            request.ChannelNumber,
+            validationResult.Channel,
             validationResult.FfmpegProfile,
             cancellationToken);
 
@@ -230,6 +230,9 @@ public class StartFFmpegNextSessionHandler(
         var variantPlaylist =
             $"{request.Scheme}://{request.Host}{request.PathBase}/iptv/session/{request.ChannelNumber}/live.m3u8{request.AccessTokenQuery}";
 
+        var subtitlePlaylist =
+            $"{request.Scheme}://{request.Host}{request.PathBase}/iptv/session/{request.ChannelNumber}/live_sub.m3u8{request.AccessTokenQuery}";
+
         Option<ChannelStreamingSpecsViewModel> maybeStreamingSpecs =
             await mediator.Send(new GetChannelStreamingSpecs(request.ChannelNumber));
         string resolution = string.Empty;
@@ -268,13 +271,14 @@ public class StartFFmpegNextSessionHandler(
         }
 
         return $@"#EXTM3U
-#EXT-X-VERSION:3
+#EXT-X-VERSION:6
+#EXT-X-MEDIA:TYPE=SUBTITLES,GROUP-ID=""subs"",NAME=""English"",DEFAULT=YES,AUTOSELECT=YES,FORCED=NO,LANGUAGE=""en"",URI=""{subtitlePlaylist}""
 #EXT-X-STREAM-INF:BANDWIDTH={bitrate}{resolution}
 {variantPlaylist}";
     }
 
     private async Task<ChannelConfig> MapConfig(
-        string channelNumber,
+        ChannelViewModel channel,
         FFmpegProfileViewModel ffmpegProfile,
         CancellationToken cancellationToken)
     {
@@ -355,7 +359,16 @@ public class StartFFmpegNextSessionHandler(
             }
         };
 
-        string playoutFolder = fileSystem.Path.Combine(FileSystemLayout.NextPlayoutsFolder, channelNumber, "current");
+        var subtitleNormalization = new Subtitle
+        {
+            Mode = channel.NextEngineTextSubtitleMode switch
+            {
+                NextEngineTextSubtitleMode.Convert => Mode.Convert,
+                _ => Mode.Burn
+            }
+        };
+
+        string playoutFolder = fileSystem.Path.Combine(FileSystemLayout.NextPlayoutsFolder, channel.Number, "current");
 
         return new ChannelConfig
         {
@@ -367,7 +380,8 @@ public class StartFFmpegNextSessionHandler(
             Normalization = new Normalization
             {
                 Audio = audioNormalization,
-                Video = videoNormalization
+                Video = videoNormalization,
+                Subtitle = subtitleNormalization
             }
         };
     }

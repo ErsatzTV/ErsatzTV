@@ -21,6 +21,7 @@ public record CreateChannel(
     int? MirrorSourceChannelId,
     TimeSpan? PlayoutOffset,
     StreamingEngine StreamingEngine,
+    NextEngineTextSubtitleMode NextEngineTextSubtitleMode,
     StreamingMode StreamingMode,
     int? WatermarkId,
     int? FallbackFillerId,

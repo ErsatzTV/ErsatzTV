@@ -133,6 +133,7 @@ public class UpdateChannelHandler(
         c.MirrorSourceChannelId = update.MirrorSourceChannelId;
         c.PlayoutOffset = update.PlayoutOffset;
         c.StreamingEngine = update.StreamingEngine;
+        c.NextEngineTextSubtitleMode = update.NextEngineTextSubtitleMode;
         c.StreamingMode = update.StreamingMode;
         c.WatermarkId = update.WatermarkId;
         c.FallbackFillerId = update.FallbackFillerId;
