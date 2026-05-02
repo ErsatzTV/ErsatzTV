@@ -375,13 +375,13 @@ public class TranscodingTests
         WatermarkSelector watermarkSelector = new WatermarkSelector(
             new MockFileSystem(),
             mockImageCache,
-            new DecoSelector(LoggerFactory.CreateLogger<DecoSelector>()),
+            new DecoSelector(),
             LoggerFactory.CreateLogger<WatermarkSelector>());
 
         List<WatermarkOptions> watermarks = [];
         foreach (var wm in GetWatermark(watermark))
         {
-            watermarks.AddRange(watermarkSelector.GetWatermarkOptions(channel, wm, Option<ChannelWatermark>.None));
+            watermarks.AddRange(watermarkSelector.GetWatermarkOptions(channel, wm, Option<ChannelWatermark>.None, shouldLogMessages: true));
         }
 
         PlayoutItemResult playoutItemResult = await service.ForPlayoutItem(
@@ -707,13 +707,13 @@ public class TranscodingTests
         WatermarkSelector watermarkSelector = new WatermarkSelector(
             new RealFileSystem(),
             mockImageCache,
-            new DecoSelector(LoggerFactory.CreateLogger<DecoSelector>()),
+            new DecoSelector(),
             LoggerFactory.CreateLogger<WatermarkSelector>());
 
         List<WatermarkOptions> watermarks = [];
         foreach (var wm in channelWatermark)
         {
-            watermarks.AddRange(watermarkSelector.GetWatermarkOptions(channel, wm, Option<ChannelWatermark>.None));
+            watermarks.AddRange(watermarkSelector.GetWatermarkOptions(channel, wm, Option<ChannelWatermark>.None, shouldLogMessages: true));
         }
 
         var mediaItem = new OtherVideo { MediaVersions = [v] };

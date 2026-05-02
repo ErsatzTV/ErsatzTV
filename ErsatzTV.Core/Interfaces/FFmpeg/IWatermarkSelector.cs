@@ -9,10 +9,12 @@ public interface IWatermarkSelector
         Option<ChannelWatermark> globalWatermark,
         Channel channel,
         PlayoutItem playoutItem,
-        DateTimeOffset now);
+        DateTimeOffset now,
+        bool shouldLogMessages);
 
     Option<WatermarkOptions> GetWatermarkOptions(
         Channel channel,
         Option<ChannelWatermark> playoutItemWatermark,
-        Option<ChannelWatermark> globalWatermark);
+        Option<ChannelWatermark> globalWatermark,
+        bool shouldLogMessages);
 }

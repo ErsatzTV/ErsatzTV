@@ -78,7 +78,7 @@ public class WatermarkSelectorTests
         WatermarkSelector = new WatermarkSelector(
             mockFileSystem,
             fakeImageCache,
-            new DecoSelector(loggerFactory.CreateLogger<DecoSelector>()),
+            new DecoSelector(),
             loggerFactory.CreateLogger<WatermarkSelector>());
 
         WatermarkNone = Option<ChannelWatermark>.None;
@@ -568,7 +568,8 @@ public class WatermarkSelectorTests
             td.globalWatermark,
             td.channel,
             td.playoutItem,
-            Now);
+            Now,
+            shouldLogMessages: true);
 
         watermarks.Count.ShouldBe(td.expectedWatermarks.Count);
         for (var i = 0; i < td.expectedWatermarks.Count; i++)

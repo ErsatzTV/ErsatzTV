@@ -2,7 +2,6 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Scheduling;
 using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Scheduling;
-using Microsoft.Extensions.Logging;
 using NUnit.Framework;
 using Serilog;
 using Shouldly;
@@ -21,9 +20,7 @@ public class DecoSelectorTests
             .WriteTo.Console()
             .CreateLogger();
 
-        var loggerFactory = new LoggerFactory().AddSerilog(Log.Logger);
-
-        DecoSelector = new DecoSelector(loggerFactory.CreateLogger<DecoSelector>());
+        DecoSelector = new DecoSelector();
     }
 
     [Test]

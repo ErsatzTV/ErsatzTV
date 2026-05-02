@@ -210,7 +210,7 @@ public class PrepareTroubleshootingPlaybackHandler(
             foreach (var watermark in channelWatermarks)
             {
                 watermarks.AddRange(
-                    watermarkSelector.GetWatermarkOptions(channel, watermark, Option<ChannelWatermark>.None));
+                    watermarkSelector.GetWatermarkOptions(channel, watermark, Option<ChannelWatermark>.None, shouldLogMessages: true));
             }
         }
 

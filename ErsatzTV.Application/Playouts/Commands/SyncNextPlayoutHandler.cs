@@ -13,11 +13,13 @@ using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Jellyfin;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Plex;
+using ErsatzTV.FFmpeg.State;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PlayoutItem = ErsatzTV.Core.Domain.PlayoutItem;
+using WatermarkLocation = ErsatzTV.FFmpeg.State.WatermarkLocation;
 
 namespace ErsatzTV.Application.Playouts;
 
@@ -29,6 +31,7 @@ public partial class SyncNextPlayoutHandler(
     IEmbyPathReplacementService embyPathReplacementService,
     ICustomStreamSelector customStreamSelector,
     IFFmpegStreamSelector ffmpegStreamSelector,
+    IWatermarkSelector watermarkSelector,
     IDbContextFactory<TvContext> dbContextFactory,
     ILogger<SyncNextPlayoutHandler> logger)
     : IRequestHandler<SyncNextPlayout>
@@ -126,6 +129,28 @@ public partial class SyncNextPlayoutHandler(
         List<PlayoutItem> playoutItems = await dbContext.PlayoutItems
             .AsNoTracking()
             .Where(i => i.Playout.Channel.Number == (mirrorChannelNumber ?? channelNumber))
+
+            // get playout deco
+            .Include(i => i.Playout)
+            .ThenInclude(p => p.Deco)
+            .ThenInclude(d => d.DecoWatermarks)
+            .ThenInclude(d => d.Watermark)
+            .Include(i => i.Playout)
+            .ThenInclude(p => p.Deco)
+            .ThenInclude(d => d.DecoGraphicsElements)
+            .ThenInclude(d => d.GraphicsElement)
+
+            .Include(i => i.Watermarks)
+
+            // get playout templates (and deco templates/decos)
+            .Include(i => i.Playout)
+            .ThenInclude(p => p.Templates)
+            .ThenInclude(t => t.DecoTemplate)
+            .ThenInclude(t => t.Items)
+            .ThenInclude(i => i.Deco)
+            .ThenInclude(d => d.DecoWatermarks)
+            .ThenInclude(d => d.Watermark)
+
             .Include(i => i.MediaItem)
             .ThenInclude(mi => mi.LibraryPath)
             .ThenInclude(lp => lp.Library)
@@ -166,6 +191,11 @@ public partial class SyncNextPlayoutHandler(
             .ToListAsync(cancellationToken);
 
         logger.LogDebug("Located {Count} local playout items", playoutItems.Count);
+
+        Option<ChannelWatermark> maybeGlobalWatermark = await dbContext.ConfigElements
+            .GetValue<int>(ConfigElementKey.FFmpegGlobalWatermarkId, cancellationToken)
+            .BindT(watermarkId => dbContext.ChannelWatermarks
+                .SelectOneAsync(w => w.Id, w => w.Id == watermarkId, cancellationToken));
 
         foreach (IGrouping<DateTime, PlayoutItem> group in playoutItems.GroupBy(pi => pi.StartOffset.Date)
                      .Where(g => g.Any()))
@@ -239,6 +269,7 @@ public partial class SyncNextPlayoutHandler(
 
                 maybeChannel = await dbContext.Channels
                     .AsNoTracking()
+                    .Include(c => c.Watermark)
                     .SingleOrDefaultAsync(c => c.Number == channelNumber, cancellationToken);
                 foreach (Channel channel in maybeChannel)
                 {
@@ -252,6 +283,11 @@ public partial class SyncNextPlayoutHandler(
                         playoutItem.PreferredSubtitleLanguageCode ?? channel.PreferredSubtitleLanguageCode,
                         playoutItem.SubtitleMode ?? channel.SubtitleMode,
                         cancellationToken);
+                    await SelectWatermark(
+                        maybeGlobalWatermark,
+                        channel,
+                        playoutItem,
+                        nextPlayoutItem);
                 }
 
                 playout.Items.Add(nextPlayoutItem);
@@ -341,6 +377,74 @@ public partial class SyncNextPlayoutHandler(
                         SourceType = Core.Next.SourceType.Local,
                         Path = subtitle.Path,
                     };
+                }
+            }
+        }
+    }
+
+    private async Task SelectWatermark(
+        Option<ChannelWatermark> maybeGlobalWatermark,
+        Channel channel,
+        PlayoutItem playoutItem,
+        Core.Next.PlayoutItem nextPlayoutItem)
+    {
+        List<WatermarkOptions> watermarks = watermarkSelector.SelectWatermarks(
+            maybeGlobalWatermark,
+            channel,
+            playoutItem,
+            playoutItem.StartOffset,
+            shouldLogMessages: false);
+
+        // single, permanent watermarks are supported
+        if (watermarks.Count == 1 && watermarks.All(wm => wm.Watermark.Mode is ChannelWatermarkMode.Permanent))
+        {
+            foreach (WatermarkOptions watermarkOptions in watermarks)
+            {
+                if (nextPlayoutItem.Watermark is null)
+                {
+                    Core.Next.WatermarkLocation location = watermarkOptions.Watermark.Location switch
+                    {
+                        WatermarkLocation.TopMiddle => Core.Next.WatermarkLocation.TopCenter,
+                        WatermarkLocation.TopRight => Core.Next.WatermarkLocation.TopRight,
+                        WatermarkLocation.LeftMiddle => Core.Next.WatermarkLocation.CenterLeft,
+                        WatermarkLocation.MiddleCenter => Core.Next.WatermarkLocation.Center,
+                        WatermarkLocation.RightMiddle => Core.Next.WatermarkLocation.CenterRight,
+                        WatermarkLocation.BottomLeft => Core.Next.WatermarkLocation.BottomLeft,
+                        WatermarkLocation.BottomMiddle => Core.Next.WatermarkLocation.BottomCenter,
+                        WatermarkLocation.BottomRight => Core.Next.WatermarkLocation.BottomRight,
+                        _ => Core.Next.WatermarkLocation.TopLeft,
+                    };
+
+                    nextPlayoutItem.Watermark = new Core.Next.Watermark
+                    {
+                        Location = location,
+                        HorizontalMarginPercent = watermarkOptions.Watermark.HorizontalMarginPercent,
+                        VerticalMarginPercent = watermarkOptions.Watermark.VerticalMarginPercent,
+                        OpacityPercent = watermarkOptions.Watermark.Opacity,
+                        StreamIndex = await watermarkOptions.ImageStreamIndex.IfNoneAsync(0),
+                    };
+
+                    if (watermarkOptions.Watermark.Size is WatermarkSize.Scaled)
+                    {
+                        nextPlayoutItem.Watermark.WidthPercent = watermarkOptions.Watermark.WidthPercent;
+                    }
+
+                    if (watermarkOptions.ImagePath.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+                    {
+                        nextPlayoutItem.Watermark.Source = new Core.Next.PlayoutItemSource
+                        {
+                            SourceType = Core.Next.SourceType.Http,
+                            Uri = watermarkOptions.ImagePath,
+                        };
+                    }
+                    else
+                    {
+                        nextPlayoutItem.Watermark.Source = new Core.Next.PlayoutItemSource
+                        {
+                            SourceType = Core.Next.SourceType.Local,
+                            Path = watermarkOptions.ImagePath,
+                        };
+                    }
                 }
             }
         }

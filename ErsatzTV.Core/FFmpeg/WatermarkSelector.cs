@@ -6,6 +6,7 @@ using ErsatzTV.Core.Images;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace ErsatzTV.Core.FFmpeg;
 
@@ -20,9 +21,12 @@ public class WatermarkSelector(
         Option<ChannelWatermark> globalWatermark,
         Channel channel,
         PlayoutItem playoutItem,
-        DateTimeOffset now)
+        DateTimeOffset now,
+        bool shouldLogMessages)
     {
-        logger.LogDebug("Checking for watermark at {Now}", now);
+        ILogger<WatermarkSelector> log = shouldLogMessages ? logger : NullLogger<WatermarkSelector>.Instance;
+
+        log.LogDebug("Checking for watermark at {Now}", now);
 
         var result = new List<WatermarkOptions>();
 
@@ -33,7 +37,7 @@ public class WatermarkSelector(
 
         if (playoutItem.DisableWatermarks)
         {
-            logger.LogDebug("Watermark is disabled by playout item");
+            log.LogDebug("Watermark is disabled by playout item");
             return result;
         }
 
@@ -49,36 +53,36 @@ public class WatermarkSelector(
                 case DecoMode.Merge:
                     if (playoutItem.FillerKind is FillerKind.None || templateDeco.UseWatermarkDuringFiller)
                     {
-                        logger.LogDebug("Watermark will come from template deco (merge)");
+                        log.LogDebug("Watermark will come from template deco (merge)");
                         result.AddRange(
-                            OptionsForWatermarks(channel, templateDeco.DecoWatermarks.Map(dwm => dwm.Watermark)));
+                            OptionsForWatermarks(channel, templateDeco.DecoWatermarks.Map(dwm => dwm.Watermark), log));
                         break;
                     }
 
-                    logger.LogDebug("Watermark is disabled by template deco during filler");
+                    log.LogDebug("Watermark is disabled by template deco during filler");
                     result.Clear();
                     done = true;
                     break;
                 case DecoMode.Override:
                     if (playoutItem.FillerKind is FillerKind.None || templateDeco.UseWatermarkDuringFiller)
                     {
-                        logger.LogDebug("Watermark will come from template deco (replace)");
+                        log.LogDebug("Watermark will come from template deco (replace)");
                         result.AddRange(
-                            OptionsForWatermarks(channel, templateDeco.DecoWatermarks.Map(dwm => dwm.Watermark)));
+                            OptionsForWatermarks(channel, templateDeco.DecoWatermarks.Map(dwm => dwm.Watermark), log));
                         done = true;
                         break;
                     }
 
-                    logger.LogDebug("Watermark is disabled by template deco during filler");
+                    log.LogDebug("Watermark is disabled by template deco during filler");
                     result.Clear();
                     done = true;
                     break;
                 case DecoMode.Disable:
-                    logger.LogDebug("Watermark is disabled by template deco");
+                    log.LogDebug("Watermark is disabled by template deco");
                     done = true;
                     break;
                 case DecoMode.Inherit:
-                    logger.LogDebug("Watermark will inherit from playout deco");
+                    log.LogDebug("Watermark will inherit from playout deco");
                     break;
             }
 
@@ -98,36 +102,36 @@ public class WatermarkSelector(
                 case DecoMode.Merge:
                     if (playoutItem.FillerKind is FillerKind.None || playoutDeco.UseWatermarkDuringFiller)
                     {
-                        logger.LogDebug("Watermark will come from playout deco (merge)");
+                        log.LogDebug("Watermark will come from playout deco (merge)");
                         result.AddRange(
-                            OptionsForWatermarks(channel, playoutDeco.DecoWatermarks.Map(dwm => dwm.Watermark)));
+                            OptionsForWatermarks(channel, playoutDeco.DecoWatermarks.Map(dwm => dwm.Watermark), log));
                         break;
                     }
 
-                    logger.LogDebug("Watermark is disabled by playout deco during filler");
+                    log.LogDebug("Watermark is disabled by playout deco during filler");
                     result.Clear();
                     done = true;
                     break;
                 case DecoMode.Override:
                     if (playoutItem.FillerKind is FillerKind.None || playoutDeco.UseWatermarkDuringFiller)
                     {
-                        logger.LogDebug("Watermark will come from playout deco (replace)");
+                        log.LogDebug("Watermark will come from playout deco (replace)");
                         result.AddRange(
-                            OptionsForWatermarks(channel, playoutDeco.DecoWatermarks.Map(dwm => dwm.Watermark)));
+                            OptionsForWatermarks(channel, playoutDeco.DecoWatermarks.Map(dwm => dwm.Watermark), log));
                         done = true;
                         break;
                     }
 
-                    logger.LogDebug("Watermark is disabled by playout deco during filler");
+                    log.LogDebug("Watermark is disabled by playout deco during filler");
                     result.Clear();
                     done = true;
                     break;
                 case DecoMode.Disable:
-                    logger.LogDebug("Watermark is disabled by playout deco");
+                    log.LogDebug("Watermark is disabled by playout deco");
                     done = true;
                     break;
                 case DecoMode.Inherit:
-                    logger.LogDebug("Watermark will inherit from channel and/or global setting");
+                    log.LogDebug("Watermark will inherit from channel and/or global setting");
                     break;
             }
 
@@ -144,7 +148,8 @@ public class WatermarkSelector(
                 Option<WatermarkOptions> options = GetWatermarkOptions(
                     channel,
                     watermark,
-                    Option<ChannelWatermark>.None);
+                    Option<ChannelWatermark>.None,
+                    shouldLogMessages);
                 result.AddRange(options);
             }
 
@@ -152,7 +157,11 @@ public class WatermarkSelector(
         }
 
 
-        var finalOptions = GetWatermarkOptions(channel, Option<ChannelWatermark>.None, globalWatermark);
+        Option<WatermarkOptions> finalOptions = GetWatermarkOptions(
+            channel,
+            Option<ChannelWatermark>.None,
+            globalWatermark,
+            shouldLogMessages);
         result.AddRange(finalOptions);
 
         return result;
@@ -161,8 +170,11 @@ public class WatermarkSelector(
     public Option<WatermarkOptions> GetWatermarkOptions(
         Channel channel,
         Option<ChannelWatermark> playoutItemWatermark,
-        Option<ChannelWatermark> globalWatermark)
+        Option<ChannelWatermark> globalWatermark,
+        bool shouldLogMessages)
     {
+        ILogger<WatermarkSelector> log = shouldLogMessages ? logger : NullLogger<WatermarkSelector>.Instance;
+
         if (channel.StreamingMode == StreamingMode.HttpLiveStreamingDirect)
         {
             return Option<WatermarkOptions>.None;
@@ -183,7 +195,7 @@ public class WatermarkSelector(
                         return new WatermarkOptions(watermark, resourcePath, Option<int>.None);
                     }
 
-                    logger.LogWarning(
+                    log.LogWarning(
                         "Watermark resource no longer exists at {Path} and will be ignored",
                         resourcePath);
                     return None;
@@ -191,13 +203,13 @@ public class WatermarkSelector(
                     // bad form validation makes this possible
                     if (string.IsNullOrWhiteSpace(watermark.Image))
                     {
-                        logger.LogWarning(
+                        log.LogWarning(
                             "Watermark {Name} has custom image configured with no image; ignoring",
                             watermark.Name);
                         break;
                     }
 
-                    logger.LogDebug("Watermark will come from playout item (custom)");
+                    log.LogDebug("Watermark will come from playout item (custom)");
 
                     string customPath = imageCache.GetPathForImage(
                         watermark.Image,
@@ -209,12 +221,12 @@ public class WatermarkSelector(
                         return new WatermarkOptions(watermark, customPath, None);
                     }
 
-                    logger.LogWarning(
+                    log.LogWarning(
                         "Custom watermark no longer exists at {Path} and will be ignored",
                         customPath);
                     return None;
                 case ChannelWatermarkImageSource.ChannelLogo:
-                    logger.LogDebug("Watermark will come from playout item (channel logo)");
+                    log.LogDebug("Watermark will come from playout item (channel logo)");
 
                     string channelPath = ChannelLogoGenerator.GenerateChannelLogoUrl(channel);
                     Option<Artwork> maybeLogoArtwork =
@@ -231,7 +243,7 @@ public class WatermarkSelector(
                         return new WatermarkOptions(watermark, channelPath, None);
                     }
 
-                    logger.LogWarning(
+                    log.LogWarning(
                         "Channel logo no longer exists at {Path} and will be ignored",
                         channelPath);
                     return None;
@@ -246,7 +258,7 @@ public class WatermarkSelector(
             switch (channel.Watermark.ImageSource)
             {
                 case ChannelWatermarkImageSource.Custom:
-                    logger.LogDebug("Watermark will come from channel (custom)");
+                    log.LogDebug("Watermark will come from channel (custom)");
 
                     string customPath = imageCache.GetPathForImage(
                         channel.Watermark.Image,
@@ -258,12 +270,12 @@ public class WatermarkSelector(
                         return new WatermarkOptions(channel.Watermark, customPath, None);
                     }
 
-                    logger.LogWarning(
+                    log.LogWarning(
                         "Custom watermark no longer exists at {Path} and will be ignored",
                         customPath);
                     return None;
                 case ChannelWatermarkImageSource.ChannelLogo:
-                    logger.LogDebug("Watermark will come from channel (channel logo)");
+                    log.LogDebug("Watermark will come from channel (channel logo)");
 
                     string channelPath = ChannelLogoGenerator.GenerateChannelLogoUrl(channel);
                     Option<Artwork> maybeLogoArtwork =
@@ -280,7 +292,7 @@ public class WatermarkSelector(
                         return new WatermarkOptions(channel.Watermark, channelPath, None);
                     }
 
-                    logger.LogWarning(
+                    log.LogWarning(
                         "Channel logo no longer exists at {Path} and will be ignored",
                         channelPath);
                     return None;
@@ -295,7 +307,7 @@ public class WatermarkSelector(
             switch (watermark.ImageSource)
             {
                 case ChannelWatermarkImageSource.Custom:
-                    logger.LogDebug("Watermark will come from global (custom)");
+                    log.LogDebug("Watermark will come from global (custom)");
 
                     string customPath = imageCache.GetPathForImage(
                         watermark.Image,
@@ -307,12 +319,12 @@ public class WatermarkSelector(
                         return new WatermarkOptions(watermark, customPath, None);
                     }
 
-                    logger.LogWarning(
+                    log.LogWarning(
                         "Custom watermark no longer exists at {Path} and will be ignored",
                         customPath);
                     return None;
                 case ChannelWatermarkImageSource.ChannelLogo:
-                    logger.LogDebug("Watermark will come from global (channel logo)");
+                    log.LogDebug("Watermark will come from global (channel logo)");
 
                     string channelPath = ChannelLogoGenerator.GenerateChannelLogoUrl(channel);
                     Option<Artwork> maybeLogoArtwork =
@@ -329,7 +341,7 @@ public class WatermarkSelector(
                         return new WatermarkOptions(watermark, channelPath, None);
                     }
 
-                    logger.LogWarning(
+                    log.LogWarning(
                         "Channel logo no longer exists at {Path} and will be ignored",
                         channelPath);
                     return None;
@@ -341,19 +353,25 @@ public class WatermarkSelector(
         return Option<WatermarkOptions>.None;
     }
 
-    private List<WatermarkOptions> OptionsForWatermarks(Channel channel, IEnumerable<ChannelWatermark> watermarks)
+    private List<WatermarkOptions> OptionsForWatermarks(
+        Channel channel,
+        IEnumerable<ChannelWatermark> watermarks,
+        ILogger<WatermarkSelector> log)
     {
         var result = new List<WatermarkOptions>();
 
         foreach (var watermark in watermarks)
         {
-            result.AddRange(GetWatermarkOptions(channel, watermark));
+            result.AddRange(GetWatermarkOptions(channel, watermark, log));
         }
 
         return result;
     }
 
-    private Option<WatermarkOptions> GetWatermarkOptions(Channel channel, ChannelWatermark watermark)
+    private Option<WatermarkOptions> GetWatermarkOptions(
+        Channel channel,
+        ChannelWatermark watermark,
+        ILogger<WatermarkSelector> log)
     {
         switch (watermark.ImageSource)
         {
@@ -367,7 +385,7 @@ public class WatermarkSelector(
                 // bad form validation makes this possible
                 if (string.IsNullOrWhiteSpace(watermark.Image))
                 {
-                    logger.LogWarning(
+                    log.LogWarning(
                         "Watermark {Name} has custom image configured with no image; ignoring",
                         watermark.Name);
                     break;

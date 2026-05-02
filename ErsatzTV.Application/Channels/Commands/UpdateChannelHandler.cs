@@ -46,6 +46,10 @@ public class UpdateChannelHandler(
         }
 
         bool hasEpgChange = c.PlayoutSource != update.PlayoutSource || c.ShowInEpg != update.ShowInEpg;
+        bool hasPlayoutChange = hasEpgChange || c.WatermarkId != update.WatermarkId ||
+                                c.PreferredAudioLanguageCode != update.PreferredAudioLanguageCode ||
+                                c.PreferredAudioTitle != update.PreferredAudioTitle ||
+                                c.PreferredSubtitleLanguageCode != update.PreferredSubtitleLanguageCode;
 
         c.Name = update.Name;
         c.Number = update.Number;
@@ -162,6 +166,9 @@ public class UpdateChannelHandler(
         if (hasEpgChange)
         {
             await workerChannel.WriteAsync(new RefreshChannelData(c.Number), cancellationToken);
+        }
+        if (hasPlayoutChange)
+        {
             await workerChannel.WriteAsync(new SyncNextPlayout(c.Number), cancellationToken);
         }
 

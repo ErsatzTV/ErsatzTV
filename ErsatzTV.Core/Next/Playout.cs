@@ -84,6 +84,13 @@ namespace ErsatzTV.Core.Next
         /// </summary>
         [JsonProperty("tracks")]
         public PlayoutItemTracks Tracks { get; set; }
+
+        /// <summary>
+        /// Watermark (image/video overlay) to composite on top of the primary content for the
+        /// duration of this item. Omit for no watermark.
+        /// </summary>
+        [JsonProperty("watermark")]
+        public Watermark Watermark { get; set; }
     }
 
     /// <summary>
@@ -209,7 +216,151 @@ namespace ErsatzTV.Core.Next
         public long? StreamIndex { get; set; }
     }
 
+    /// <summary>
+    /// An image or video overlay composited on top of the primary content. Sized and positioned
+    /// relative to the primary content's frame.
+    /// </summary>
+    public partial class Watermark
+    {
+        /// <summary>
+        /// Horizontal offset from the anchor `location`, as a percent of primary content width
+        /// (0–100). Omit for 0.
+        /// </summary>
+        [JsonProperty("horizontal_margin_percent")]
+        [JsonConverter(typeof(MinMaxValueCheckConverter))]
+        public double? HorizontalMarginPercent { get; set; }
+
+        /// <summary>
+        /// Anchor position within the primary content frame.
+        /// </summary>
+        [JsonProperty("location")]
+        public WatermarkLocation Location { get; set; }
+
+        /// <summary>
+        /// Opacity as a percent (0–100). Omit for fully opaque (100).
+        /// </summary>
+        [JsonProperty("opacity_percent")]
+        [JsonConverter(typeof(MinMaxValueCheckConverter))]
+        public double? OpacityPercent { get; set; }
+
+        /// <summary>
+        /// The source providing the watermark media (typically an image, but any `PlayoutItemSource`
+        /// is accepted).
+        /// </summary>
+        [JsonProperty("source")]
+        public PlayoutItemSource Source { get; set; }
+
+        /// <summary>
+        /// Zero-based stream index within the source. If omitted, the server picks the first video
+        /// stream.
+        /// </summary>
+        [JsonProperty("stream_index")]
+        public long? StreamIndex { get; set; }
+
+        /// <summary>
+        /// Vertical offset from the anchor `location`, as a percent of primary content height
+        /// (0–100). Omit for 0.
+        /// </summary>
+        [JsonProperty("vertical_margin_percent")]
+        [JsonConverter(typeof(MinMaxValueCheckConverter))]
+        public double? VerticalMarginPercent { get; set; }
+
+        /// <summary>
+        /// Scale the watermark to this percent of the primary content width (0–100). Omit to use the
+        /// watermark's actual size.
+        /// </summary>
+        [JsonProperty("width_percent")]
+        [JsonConverter(typeof(MinMaxValueCheckConverter))]
+        public double? WidthPercent { get; set; }
+    }
+
+    /// <summary>
+    /// A media source. Exactly one variant, distinguished by `source_type`.
+    ///
+    /// The source providing the watermark media (typically an image, but any `PlayoutItemSource`
+    /// is accepted).
+    ///
+    /// A file on the local filesystem reachable by the server.
+    ///
+    /// A synthetic source produced by an ffmpeg lavfi filter graph.
+    ///
+    /// A remote source fetched over HTTP(S).
+    /// </summary>
+    public partial class PlayoutItemSource
+    {
+        /// <summary>
+        /// Optional start offset into the source, in milliseconds.
+        /// </summary>
+        [JsonProperty("in_point_ms")]
+        public long? InPointMs { get; set; }
+
+        /// <summary>
+        /// Optional end offset into the source, in milliseconds.
+        /// </summary>
+        [JsonProperty("out_point_ms")]
+        public long? OutPointMs { get; set; }
+
+        /// <summary>
+        /// Absolute path to the media file.
+        /// </summary>
+        [JsonProperty("path", NullValueHandling = NullValueHandling.Ignore)]
+        public string Path { get; set; }
+
+        [JsonProperty("source_type")]
+        public SourceType SourceType { get; set; }
+
+        /// <summary>
+        /// The lavfi filter graph parameters, passed verbatim to ffmpeg's `-f lavfi -i`.
+        /// </summary>
+        [JsonProperty("params", NullValueHandling = NullValueHandling.Ignore)]
+        public string Params { get; set; }
+
+        /// <summary>
+        /// Custom HTTP headers, e.g. ["Authorization: Bearer {{TOKEN}}"].
+        /// </summary>
+        [JsonProperty("headers")]
+        public List<string> Headers { get; set; }
+
+        /// <summary>
+        /// Enable reconnect on failure. Default: true.
+        /// </summary>
+        [JsonProperty("reconnect")]
+        public bool? Reconnect { get; set; }
+
+        /// <summary>
+        /// Maximum reconnect delay in seconds. Maps to ffmpeg's `reconnect_delay_max`.
+        /// </summary>
+        [JsonProperty("reconnect_delay_max")]
+        public long? ReconnectDelayMax { get; set; }
+
+        /// <summary>
+        /// Socket timeout in microseconds.
+        /// </summary>
+        [JsonProperty("timeout_us")]
+        public long? TimeoutUs { get; set; }
+
+        /// <summary>
+        /// URI template, e.g. "https://example.com/file.mkv?token={{MY_SECRET}}".
+        /// </summary>
+        [JsonProperty("uri", NullValueHandling = NullValueHandling.Ignore)]
+        public string Uri { get; set; }
+
+        /// <summary>
+        /// Custom User-Agent string.
+        /// </summary>
+        [JsonProperty("user_agent")]
+        public string UserAgent { get; set; }
+    }
+
     public enum SourceType { Http, Lavfi, Local };
+
+    /// <summary>
+    /// Anchor position within the primary content frame.
+    ///
+    /// Nine-position anchor within the primary content frame. Read like a 3×3 grid: rows
+    /// top/center/bottom, columns left/center/right; the dead center is `center`.
+    /// </summary>
+    public enum WatermarkLocation { BottomCenter, BottomLeft, BottomRight, Center, CenterLeft, CenterRight, TopCenter, TopLeft, TopRight };
 
     public partial class Playout
     {
@@ -231,6 +382,7 @@ namespace ErsatzTV.Core.Next
             Converters =
             {
                 SourceTypeConverter.Singleton,
+                WatermarkLocationConverter.Singleton,
                 new IsoDateTimeConverter { DateTimeStyles = DateTimeStyles.AssumeUniversal }
             },
         };
@@ -280,5 +432,115 @@ namespace ErsatzTV.Core.Next
         }
 
         public static readonly SourceTypeConverter Singleton = new SourceTypeConverter();
+    }
+
+    internal class MinMaxValueCheckConverter : JsonConverter
+    {
+        public override bool CanConvert(Type t) => t == typeof(double) || t == typeof(double?);
+
+        public override object ReadJson(JsonReader reader, Type t, object existingValue, JsonSerializer serializer)
+        {
+            if (reader.TokenType == JsonToken.Null) return null;
+            var value = serializer.Deserialize<double>(reader);
+            if (value >= 0 && value <= 100)
+            {
+                return value;
+            }
+            throw new Exception("Cannot unmarshal type double");
+        }
+
+        public override void WriteJson(JsonWriter writer, object untypedValue, JsonSerializer serializer)
+        {
+            if (untypedValue == null)
+            {
+                serializer.Serialize(writer, null);
+                return;
+            }
+            var value = (double)untypedValue;
+            if (value >= 0 && value <= 100)
+            {
+                serializer.Serialize(writer, value);
+                return;
+            }
+            throw new Exception("Cannot marshal type double");
+        }
+
+        public static readonly MinMaxValueCheckConverter Singleton = new MinMaxValueCheckConverter();
+    }
+
+    internal class WatermarkLocationConverter : JsonConverter
+    {
+        public override bool CanConvert(Type t) => t == typeof(WatermarkLocation) || t == typeof(WatermarkLocation?);
+
+        public override object ReadJson(JsonReader reader, Type t, object existingValue, JsonSerializer serializer)
+        {
+            if (reader.TokenType == JsonToken.Null) return null;
+            var value = serializer.Deserialize<string>(reader);
+            switch (value)
+            {
+                case "bottom_center":
+                    return WatermarkLocation.BottomCenter;
+                case "bottom_left":
+                    return WatermarkLocation.BottomLeft;
+                case "bottom_right":
+                    return WatermarkLocation.BottomRight;
+                case "center":
+                    return WatermarkLocation.Center;
+                case "center_left":
+                    return WatermarkLocation.CenterLeft;
+                case "center_right":
+                    return WatermarkLocation.CenterRight;
+                case "top_center":
+                    return WatermarkLocation.TopCenter;
+                case "top_left":
+                    return WatermarkLocation.TopLeft;
+                case "top_right":
+                    return WatermarkLocation.TopRight;
+            }
+            throw new Exception("Cannot unmarshal type WatermarkLocation");
+        }
+
+        public override void WriteJson(JsonWriter writer, object untypedValue, JsonSerializer serializer)
+        {
+            if (untypedValue == null)
+            {
+                serializer.Serialize(writer, null);
+                return;
+            }
+            var value = (WatermarkLocation)untypedValue;
+            switch (value)
+            {
+                case WatermarkLocation.BottomCenter:
+                    serializer.Serialize(writer, "bottom_center");
+                    return;
+                case WatermarkLocation.BottomLeft:
+                    serializer.Serialize(writer, "bottom_left");
+                    return;
+                case WatermarkLocation.BottomRight:
+                    serializer.Serialize(writer, "bottom_right");
+                    return;
+                case WatermarkLocation.Center:
+                    serializer.Serialize(writer, "center");
+                    return;
+                case WatermarkLocation.CenterLeft:
+                    serializer.Serialize(writer, "center_left");
+                    return;
+                case WatermarkLocation.CenterRight:
+                    serializer.Serialize(writer, "center_right");
+                    return;
+                case WatermarkLocation.TopCenter:
+                    serializer.Serialize(writer, "top_center");
+                    return;
+                case WatermarkLocation.TopLeft:
+                    serializer.Serialize(writer, "top_left");
+                    return;
+                case WatermarkLocation.TopRight:
+                    serializer.Serialize(writer, "top_right");
+                    return;
+            }
+            throw new Exception("Cannot marshal type WatermarkLocation");
+        }
+
+        public static readonly WatermarkLocationConverter Singleton = new WatermarkLocationConverter();
     }
 }

@@ -369,7 +369,8 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 maybeGlobalWatermark,
                 channel,
                 playoutItemWithPath.PlayoutItem,
-                now);
+                now,
+                shouldLogMessages: true);
 
             if (playoutItemWithPath.PlayoutItem.MediaItem is Song song)
             {
