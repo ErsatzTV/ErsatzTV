@@ -258,6 +258,12 @@ namespace ErsatzTV.Core.Next
         public long? StreamIndex { get; set; }
 
         /// <summary>
+        /// Visibility schedule for the watermark. Omit for an always-on watermark.
+        /// </summary>
+        [JsonProperty("timing")]
+        public Timing Timing { get; set; }
+
+        /// <summary>
         /// Vertical offset from the anchor `location`, as a percent of primary content height
         /// (0–100). Omit for 0.
         /// </summary>
@@ -352,6 +358,61 @@ namespace ErsatzTV.Core.Next
         public string UserAgent { get; set; }
     }
 
+    /// <summary>
+    /// Controls when the watermark is shown. Exactly one variant, distinguished by
+    /// `timing_type`.
+    ///
+    /// Cyclical visibility: the watermark fades in, holds, and fades out once every
+    /// `frequency_ms`. Cycle length is start-to-start, so `2 * fade_ms + hold_ms` must be ≤
+    /// `frequency_ms`, and `fade_ms` must be ≤ `hold_ms`.
+    /// </summary>
+    public partial class Timing
+    {
+        /// <summary>
+        /// Reference clock used to position cycles.
+        /// </summary>
+        [JsonProperty("clock")]
+        public PeriodicClock Clock { get; set; }
+
+        /// <summary>
+        /// Cap on the time, measured from the start of the playout item in milliseconds, during
+        /// which new appearances are allowed to begin. An appearance already in progress at the cap
+        /// is allowed to fade out cleanly. Omit for no cap.
+        /// </summary>
+        [JsonProperty("disable_after_ms")]
+        public long? DisableAfterMs { get; set; }
+
+        /// <summary>
+        /// Fade-in and fade-out duration in milliseconds (symmetric). Must be ≤ `hold_ms`. Omit for
+        /// 1000; set to 0 for hard cuts.
+        /// </summary>
+        [JsonProperty("fade_ms")]
+        public long? FadeMs { get; set; }
+
+        /// <summary>
+        /// Period of the cycle, start-to-start, in milliseconds.
+        /// </summary>
+        [JsonProperty("frequency_ms")]
+        public long FrequencyMs { get; set; }
+
+        /// <summary>
+        /// Time held fully visible between fade-in and fade-out, in milliseconds.
+        /// </summary>
+        [JsonProperty("hold_ms")]
+        public long HoldMs { get; set; }
+
+        /// <summary>
+        /// Shift the cycle by this many milliseconds. With `clock: wall` and `frequency_ms: 300000`,
+        /// an offset of 0 puts an appearance start at every wall-clock 5-minute boundary; 120000
+        /// shifts to :02, :07, :12, etc. Omit for 0.
+        /// </summary>
+        [JsonProperty("phase_offset_ms")]
+        public long? PhaseOffsetMs { get; set; }
+
+        [JsonProperty("timing_type")]
+        public TimingType TimingType { get; set; }
+    }
+
     public enum SourceType { Http, Lavfi, Local };
 
     /// <summary>
@@ -361,6 +422,17 @@ namespace ErsatzTV.Core.Next
     /// top/center/bottom, columns left/center/right; the dead center is `center`.
     /// </summary>
     public enum WatermarkLocation { BottomCenter, BottomLeft, BottomRight, Center, CenterLeft, CenterRight, TopCenter, TopLeft, TopRight };
+
+    /// <summary>
+    /// Reference clock used to position cycles.
+    ///
+    /// Reference clock for periodic timing. `wall` aligns cycles to wall-clock time (so a viewer
+    /// tuning in at any moment sees the same phase). `content` measures from the start of the
+    /// containing playout item.
+    /// </summary>
+    public enum PeriodicClock { Content, Wall };
+
+    public enum TimingType { Periodic };
 
     public partial class Playout
     {
@@ -383,6 +455,8 @@ namespace ErsatzTV.Core.Next
             {
                 SourceTypeConverter.Singleton,
                 WatermarkLocationConverter.Singleton,
+                PeriodicClockConverter.Singleton,
+                TimingTypeConverter.Singleton,
                 new IsoDateTimeConverter { DateTimeStyles = DateTimeStyles.AssumeUniversal }
             },
         };
@@ -542,5 +616,80 @@ namespace ErsatzTV.Core.Next
         }
 
         public static readonly WatermarkLocationConverter Singleton = new WatermarkLocationConverter();
+    }
+
+    internal class PeriodicClockConverter : JsonConverter
+    {
+        public override bool CanConvert(Type t) => t == typeof(PeriodicClock) || t == typeof(PeriodicClock?);
+
+        public override object ReadJson(JsonReader reader, Type t, object existingValue, JsonSerializer serializer)
+        {
+            if (reader.TokenType == JsonToken.Null) return null;
+            var value = serializer.Deserialize<string>(reader);
+            switch (value)
+            {
+                case "content":
+                    return PeriodicClock.Content;
+                case "wall":
+                    return PeriodicClock.Wall;
+            }
+            throw new Exception("Cannot unmarshal type PeriodicClock");
+        }
+
+        public override void WriteJson(JsonWriter writer, object untypedValue, JsonSerializer serializer)
+        {
+            if (untypedValue == null)
+            {
+                serializer.Serialize(writer, null);
+                return;
+            }
+            var value = (PeriodicClock)untypedValue;
+            switch (value)
+            {
+                case PeriodicClock.Content:
+                    serializer.Serialize(writer, "content");
+                    return;
+                case PeriodicClock.Wall:
+                    serializer.Serialize(writer, "wall");
+                    return;
+            }
+            throw new Exception("Cannot marshal type PeriodicClock");
+        }
+
+        public static readonly PeriodicClockConverter Singleton = new PeriodicClockConverter();
+    }
+
+    internal class TimingTypeConverter : JsonConverter
+    {
+        public override bool CanConvert(Type t) => t == typeof(TimingType) || t == typeof(TimingType?);
+
+        public override object ReadJson(JsonReader reader, Type t, object existingValue, JsonSerializer serializer)
+        {
+            if (reader.TokenType == JsonToken.Null) return null;
+            var value = serializer.Deserialize<string>(reader);
+            if (value == "periodic")
+            {
+                return TimingType.Periodic;
+            }
+            throw new Exception("Cannot unmarshal type TimingType");
+        }
+
+        public override void WriteJson(JsonWriter writer, object untypedValue, JsonSerializer serializer)
+        {
+            if (untypedValue == null)
+            {
+                serializer.Serialize(writer, null);
+                return;
+            }
+            var value = (TimingType)untypedValue;
+            if (value == TimingType.Periodic)
+            {
+                serializer.Serialize(writer, "periodic");
+                return;
+            }
+            throw new Exception("Cannot marshal type TimingType");
+        }
+
+        public static readonly TimingTypeConverter Singleton = new TimingTypeConverter();
     }
 }

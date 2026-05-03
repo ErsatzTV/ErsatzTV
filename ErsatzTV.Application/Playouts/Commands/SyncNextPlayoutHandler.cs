@@ -395,8 +395,9 @@ public partial class SyncNextPlayoutHandler(
             playoutItem.StartOffset,
             shouldLogMessages: false);
 
-        // single, permanent watermarks are supported
-        if (watermarks.Count == 1 && watermarks.All(wm => wm.Watermark.Mode is ChannelWatermarkMode.Permanent))
+        // single, permanent or intermittent watermarks are supported
+        if (watermarks.Count == 1 && watermarks.All(wm =>
+                wm.Watermark.Mode is ChannelWatermarkMode.Permanent or ChannelWatermarkMode.Intermittent))
         {
             foreach (WatermarkOptions watermarkOptions in watermarks)
             {
@@ -443,6 +444,17 @@ public partial class SyncNextPlayoutHandler(
                         {
                             SourceType = Core.Next.SourceType.Local,
                             Path = watermarkOptions.ImagePath,
+                        };
+                    }
+
+                    if (watermarkOptions.Watermark.Mode is ChannelWatermarkMode.Intermittent)
+                    {
+                        nextPlayoutItem.Watermark.Timing = new Core.Next.Timing
+                        {
+                            TimingType = Core.Next.TimingType.Periodic,
+                            Clock = Core.Next.PeriodicClock.Wall,
+                            FrequencyMs = watermarkOptions.Watermark.FrequencyMinutes * 60 * 1000,
+                            HoldMs = watermarkOptions.Watermark.DurationSeconds * 1000,
                         };
                     }
                 }
