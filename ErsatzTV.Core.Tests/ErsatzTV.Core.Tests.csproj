@@ -16,7 +16,7 @@
         <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.7" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.5.1" />
         <PackageReference Include="NSubstitute" Version="5.3.0" />
-        <PackageReference Include="NUnit" Version="4.5.1" />
+        <PackageReference Include="NUnit" Version="4.6.0" />
         <PackageReference Include="NUnit3TestAdapter" Version="6.2.0" />
         <PackageReference Include="Serilog" Version="4.3.1" />
         <PackageReference Include="Serilog.Extensions.Logging" Version="10.0.0" />
