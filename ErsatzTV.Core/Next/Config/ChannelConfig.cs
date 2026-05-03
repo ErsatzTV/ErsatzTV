@@ -119,6 +119,9 @@ namespace ErsatzTV.Core.Next.Config
         [JsonProperty("height")]
         public long? Height { get; set; }
 
+        [JsonProperty("scaling_mode", NullValueHandling = NullValueHandling.Ignore)]
+        public ScalingMode? ScalingMode { get; set; }
+
         [JsonProperty("tonemap_algorithm")]
         public string TonemapAlgorithm { get; set; }
 
@@ -152,6 +155,8 @@ namespace ErsatzTV.Core.Next.Config
 
     public enum VideoFormat { H264, Hevc };
 
+    public enum ScalingMode { Crop, ScaleAndPad, Stretch };
+
     public enum VaapiDriverEnum { I965, Ihd, Radeonsi };
 
     public partial class ChannelConfig
@@ -176,6 +181,7 @@ namespace ErsatzTV.Core.Next.Config
                 ModeConverter.Singleton,
                 AccelEnumConverter.Singleton,
                 VideoFormatConverter.Singleton,
+                ScalingModeConverter.Singleton,
                 VaapiDriverEnumConverter.Singleton,
                 new IsoDateTimeConverter { DateTimeStyles = DateTimeStyles.AssumeUniversal }
             },
@@ -359,6 +365,52 @@ namespace ErsatzTV.Core.Next.Config
         }
 
         public static readonly VideoFormatConverter Singleton = new VideoFormatConverter();
+    }
+
+    internal class ScalingModeConverter : JsonConverter
+    {
+        public override bool CanConvert(Type t) => t == typeof(ScalingMode) || t == typeof(ScalingMode?);
+
+        public override object ReadJson(JsonReader reader, Type t, object existingValue, JsonSerializer serializer)
+        {
+            if (reader.TokenType == JsonToken.Null) return null;
+            var value = serializer.Deserialize<string>(reader);
+            switch (value)
+            {
+                case "crop":
+                    return ScalingMode.Crop;
+                case "scale_and_pad":
+                    return ScalingMode.ScaleAndPad;
+                case "stretch":
+                    return ScalingMode.Stretch;
+            }
+            throw new Exception("Cannot unmarshal type ScalingMode");
+        }
+
+        public override void WriteJson(JsonWriter writer, object untypedValue, JsonSerializer serializer)
+        {
+            if (untypedValue == null)
+            {
+                serializer.Serialize(writer, null);
+                return;
+            }
+            var value = (ScalingMode)untypedValue;
+            switch (value)
+            {
+                case ScalingMode.Crop:
+                    serializer.Serialize(writer, "crop");
+                    return;
+                case ScalingMode.ScaleAndPad:
+                    serializer.Serialize(writer, "scale_and_pad");
+                    return;
+                case ScalingMode.Stretch:
+                    serializer.Serialize(writer, "stretch");
+                    return;
+            }
+            throw new Exception("Cannot marshal type ScalingMode");
+        }
+
+        public static readonly ScalingModeConverter Singleton = new ScalingModeConverter();
     }
 
     internal class VaapiDriverEnumConverter : JsonConverter

@@ -348,6 +348,12 @@ public class StartFFmpegNextSessionHandler(
             Width = ffmpegProfile.Resolution.Width,
             BitrateKbps = ffmpegProfile.VideoBitrate,
             BufferKbps = ffmpegProfile.VideoBufferSize,
+            ScalingMode = ffmpegProfile.ScalingBehavior switch
+            {
+                ScalingBehavior.Stretch => ScalingMode.Stretch,
+                ScalingBehavior.Crop => ScalingMode.Crop,
+                _ => ScalingMode.ScaleAndPad
+            },
             // TODO: NEXT: more tonemap algorithms
             TonemapAlgorithm = "linear",
             VaapiDevice = ffmpegProfile.VaapiDevice,
