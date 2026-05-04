@@ -423,6 +423,7 @@ public partial class SyncNextPlayoutHandler(
                         VerticalMarginPercent = watermarkOptions.Watermark.VerticalMarginPercent,
                         OpacityPercent = watermarkOptions.Watermark.Opacity,
                         StreamIndex = await watermarkOptions.ImageStreamIndex.IfNoneAsync(0),
+                        WithinSourceContent = watermarkOptions.Watermark.PlaceWithinSourceContent,
                     };
 
                     if (watermarkOptions.Watermark.Size is WatermarkSize.Scaled)
@@ -470,7 +471,8 @@ public partial class SyncNextPlayoutHandler(
             plexPathReplacementService,
             jellyfinPathReplacementService,
             embyPathReplacementService,
-            cancellationToken);
+            cancellationToken,
+            log: false);
 
         // check filesystem first
         if (fileSystem.File.Exists(path))
@@ -489,7 +491,9 @@ public partial class SyncNextPlayoutHandler(
             return new Core.Next.Source
             {
                 SourceType = Core.Next.SourceType.Http,
-                Uri = $"http://localhost:{Settings.StreamingPort}/media/plex/{mediaSourceId}/{pmf.Key}"
+                Uri = $"http://localhost:{Settings.StreamingPort}/media/plex/{mediaSourceId}/{pmf.Key}",
+                KeepAlive = false,
+                Reconnect = true
             };
         }
 
@@ -505,7 +509,9 @@ public partial class SyncNextPlayoutHandler(
             return new Core.Next.Source
             {
                 SourceType = Core.Next.SourceType.Http,
-                Uri = $"http://localhost:{Settings.StreamingPort}/media/jellyfin/{itemId}"
+                Uri = $"http://localhost:{Settings.StreamingPort}/media/jellyfin/{itemId}",
+                KeepAlive = false,
+                Reconnect = true
             };
         }
 
@@ -522,7 +528,9 @@ public partial class SyncNextPlayoutHandler(
             return new Core.Next.Source
             {
                 SourceType = Core.Next.SourceType.Http,
-                Uri = $"http://localhost:{Settings.StreamingPort}/media/emby/{itemId}"
+                Uri = $"http://localhost:{Settings.StreamingPort}/media/emby/{itemId}",
+                KeepAlive = false,
+                Reconnect = true
             };
         }
 
@@ -611,10 +619,8 @@ public partial class SyncNextPlayoutHandler(
 
         if (isMediaServer)
         {
-            return [];
-
             // closed captions are currently unsupported
-            //allSubtitles.RemoveAll(s => s.Codec == "eia_608");
+            allSubtitles.RemoveAll(s => s.Codec == "eia_608");
         }
 
         // TODO: external image subtitles

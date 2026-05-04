@@ -136,6 +136,12 @@ namespace ErsatzTV.Core.Next
         public List<string> Headers { get; set; }
 
         /// <summary>
+        /// Enable persistent connections in ffmpeg. Default: false.
+        /// </summary>
+        [JsonProperty("keep_alive")]
+        public bool? KeepAlive { get; set; }
+
+        /// <summary>
         /// Enable reconnect on failure. Default: true.
         /// </summary>
         [JsonProperty("reconnect")]
@@ -278,6 +284,16 @@ namespace ErsatzTV.Core.Next
         [JsonProperty("width_percent")]
         [JsonConverter(typeof(MinMaxValueCheckConverter))]
         public double? WidthPercent { get; set; }
+
+        /// <summary>
+        /// When true, position margins are measured from the edges of the source content rather than
+        /// the padded output frame, so letterbox/pillarbox bars push the watermark inward and keep
+        /// it inside the visible content. When false, margins are relative to the full padded frame,
+        /// so a 0% margin can land inside the bars. Has no effect when the primary content fills the
+        /// output (crop/stretch). Omit for false.
+        /// </summary>
+        [JsonProperty("within_source_content")]
+        public bool? WithinSourceContent { get; set; }
     }
 
     /// <summary>
@@ -326,6 +342,12 @@ namespace ErsatzTV.Core.Next
         /// </summary>
         [JsonProperty("headers")]
         public List<string> Headers { get; set; }
+
+        /// <summary>
+        /// Enable persistent connections in ffmpeg. Default: false.
+        /// </summary>
+        [JsonProperty("keep_alive")]
+        public bool? KeepAlive { get; set; }
 
         /// <summary>
         /// Enable reconnect on failure. Default: true.
