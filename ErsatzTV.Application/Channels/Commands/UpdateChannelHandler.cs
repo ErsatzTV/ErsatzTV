@@ -142,7 +142,9 @@ public class UpdateChannelHandler(
         c.WatermarkId = update.WatermarkId;
         c.FallbackFillerId = update.FallbackFillerId;
 
-        if (c.StreamingEngine is StreamingEngine.Next)
+        if (c.StreamingEngine is StreamingEngine.Next &&
+            c.StreamingMode is not StreamingMode.HttpLiveStreamingSegmenter &&
+            c.StreamingMode is not StreamingMode.TransportStreamHybrid)
         {
             c.StreamingMode = StreamingMode.HttpLiveStreamingSegmenter;
         }

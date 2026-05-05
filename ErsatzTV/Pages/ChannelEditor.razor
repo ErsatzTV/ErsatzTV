@@ -159,6 +159,7 @@ else
     <MudSelect @bind-Value="_model.StreamingMode" For="@(() => _model.StreamingMode)">
         @if (_model.StreamingEngine is StreamingEngine.Next)
         {
+            <MudSelectItem Value="@(StreamingMode.TransportStreamHybrid)">MPEG-TS</MudSelectItem>
             <MudSelectItem Value="@(StreamingMode.HttpLiveStreamingSegmenter)">HLS Segmenter</MudSelectItem>
         }
         else

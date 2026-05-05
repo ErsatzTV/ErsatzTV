@@ -91,15 +91,6 @@ public class IptvController : StreamingControllerBase
             return NotFound();
         }
 
-        foreach (ChannelViewModel channel in maybeChannel)
-        {
-            // NEXT: MPEG-TS streams are not (yet?) supported
-            if (!channel.IsEnabled || channel.StreamingEngine is StreamingEngine.Next)
-            {
-                return NotFound();
-            }
-        }
-
         // if mode is "unspecified" - find the configured mode and set it or redirect
         if (string.IsNullOrWhiteSpace(mode) || mode == "mixed")
         {

@@ -114,7 +114,9 @@ public class CreateChannelHandler(
                 channel.PlayoutOffset = null;
             }
 
-            if (channel.StreamingEngine is StreamingEngine.Next)
+            if (channel.StreamingEngine is StreamingEngine.Next &&
+                channel.StreamingMode is not StreamingMode.HttpLiveStreamingSegmenter &&
+                channel.StreamingMode is not StreamingMode.TransportStreamHybrid)
             {
                 channel.StreamingMode = StreamingMode.HttpLiveStreamingSegmenter;
             }
