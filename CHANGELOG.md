@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Add `Streaming Engine` setting to Channel
   - `Legacy` - (default) uses existing streaming engine
   - `Next` - uses ErsatzTV Next streaming engine
+- Add `Next Engine Text Subtitle Mode` setting to Channel
+  - `Burn` - (default) will burn all subtitles, including text subtitles
+  - `Convert If Possible` - will attempt to convert text subtitles to WebVTT
+    - WebVTT subtitles can be dynamically enabled and disabled during playback in supported HLS clients
 
 ### Fixed
 - Fix `Add Playout` button not opening drop down menu (regression from v26.4.0)
