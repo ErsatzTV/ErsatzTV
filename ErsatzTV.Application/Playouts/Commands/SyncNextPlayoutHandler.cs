@@ -270,6 +270,7 @@ public partial class SyncNextPlayoutHandler(
                 maybeChannel = await dbContext.Channels
                     .AsNoTracking()
                     .Include(c => c.Watermark)
+                    .Include(c => c.Artwork)
                     .SingleOrDefaultAsync(c => c.Number == channelNumber, cancellationToken);
                 foreach (Channel channel in maybeChannel)
                 {
