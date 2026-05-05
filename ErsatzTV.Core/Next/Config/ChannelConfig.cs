@@ -151,7 +151,7 @@ namespace ErsatzTV.Core.Next.Config
 
     public enum Mode { Burn, Convert };
 
-    public enum AccelEnum { Cuda, Qsv, Vaapi, Videotoolbox, Vulkan };
+    public enum AccelEnum { Amf, Cuda, Qsv, Rkmpp, Vaapi, Videotoolbox, Vulkan };
 
     public enum VideoFormat { H264, Hevc };
 
@@ -280,10 +280,14 @@ namespace ErsatzTV.Core.Next.Config
             var value = serializer.Deserialize<string>(reader);
             switch (value)
             {
+                case "amf":
+                    return AccelEnum.Amf;
                 case "cuda":
                     return AccelEnum.Cuda;
                 case "qsv":
                     return AccelEnum.Qsv;
+                case "rkmpp":
+                    return AccelEnum.Rkmpp;
                 case "vaapi":
                     return AccelEnum.Vaapi;
                 case "videotoolbox":
@@ -304,11 +308,17 @@ namespace ErsatzTV.Core.Next.Config
             var value = (AccelEnum)untypedValue;
             switch (value)
             {
+                case AccelEnum.Amf:
+                    serializer.Serialize(writer, "amf");
+                    return;
                 case AccelEnum.Cuda:
                     serializer.Serialize(writer, "cuda");
                     return;
                 case AccelEnum.Qsv:
                     serializer.Serialize(writer, "qsv");
+                    return;
+                case AccelEnum.Rkmpp:
+                    serializer.Serialize(writer, "rkmpp");
                     return;
                 case AccelEnum.Vaapi:
                     serializer.Serialize(writer, "vaapi");

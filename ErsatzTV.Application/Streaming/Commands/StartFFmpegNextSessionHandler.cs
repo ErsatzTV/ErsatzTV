@@ -338,8 +338,10 @@ public class StartFFmpegNextSessionHandler(
             },
             Accel = ffmpegProfile.HardwareAcceleration switch
             {
+                HardwareAccelerationKind.Amf => AccelEnum.Amf,
                 HardwareAccelerationKind.Nvenc => AccelEnum.Cuda,
                 HardwareAccelerationKind.Qsv => AccelEnum.Qsv,
+                HardwareAccelerationKind.Rkmpp => AccelEnum.Rkmpp,
                 HardwareAccelerationKind.Vaapi => AccelEnum.Vaapi,
                 HardwareAccelerationKind.VideoToolbox => AccelEnum.Videotoolbox,
                 _ => null
