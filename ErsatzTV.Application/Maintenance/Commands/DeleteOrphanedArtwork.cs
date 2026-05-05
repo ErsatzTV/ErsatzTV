@@ -2,4 +2,4 @@
 
 namespace ErsatzTV.Application.Maintenance;
 
-public record DeleteOrphanedArtwork : IRequest<Either<BaseError, Unit>>, IBackgroundServiceRequest;
+public record DeleteOrphanedArtwork(int? MaxToDelete) : IRequest<Either<BaseError, Unit>>, IBackgroundServiceRequest;

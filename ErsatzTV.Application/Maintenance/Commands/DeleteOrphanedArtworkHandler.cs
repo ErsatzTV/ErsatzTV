@@ -23,8 +23,10 @@ public class DeleteOrphanedArtworkHandler(
     {
         try
         {
-            await CleanUpDatabase();
-            await CleanUpFileSystem(cancellationToken);
+            await CleanUpDatabase(request, cancellationToken);
+
+            // temporarily disabled since this is now scheduled
+            //await CleanUpFileSystem(cancellationToken);
 
             return Unit.Default;
         }
@@ -34,13 +36,31 @@ public class DeleteOrphanedArtworkHandler(
         }
     }
 
-    private async Task CleanUpDatabase()
+    private async Task CleanUpDatabase(DeleteOrphanedArtwork request, CancellationToken cancellationToken)
     {
-        List<int> ids = await artworkRepository.GetOrphanedArtworkIds();
-        if (ids.Count > 0)
+        // delete actors that no longer reference any metadata; otherwise the artwork
+        // they point to is shielded from the orphaned artwork cleanup below
+        int deletedActors = await artworkRepository.DeleteOrphanedActors(request.MaxToDelete, cancellationToken);
+        if (deletedActors > 0)
         {
-            await artworkRepository.Delete(ids);
+            logger.LogInformation("Deleted {Count} orphaned actors", deletedActors);
         }
+        else
+        {
+            logger.LogInformation("No orphaned actors to delete");
+        }
+
+        int deletedArtwork = await artworkRepository.DeleteOrphanedArtwork(request.MaxToDelete, cancellationToken);
+        if (deletedArtwork > 0)
+        {
+            logger.LogInformation("Deleted {Count} orphaned artwork", deletedArtwork);
+        }
+        else
+        {
+            logger.LogInformation("No orphaned artwork to delete");
+        }
+
+        logger.LogInformation("Done cleaning!");
     }
 
     private async Task CleanUpFileSystem(CancellationToken cancellationToken)

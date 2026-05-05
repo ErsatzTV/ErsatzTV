@@ -119,6 +119,7 @@ public class SchedulerService : BackgroundService
         try
         {
             await DeleteOrphanedSubtitles(cancellationToken);
+            await DeleteOrphanedArtwork(cancellationToken);
             await RefreshMpegTsScripts(cancellationToken);
             await RefreshChannelGuideChannelList(cancellationToken);
             await BuildPlayouts(cancellationToken);
@@ -364,6 +365,9 @@ public class SchedulerService : BackgroundService
 
     private ValueTask DeleteOrphanedSubtitles(CancellationToken cancellationToken) =>
         _workerChannel.WriteAsync(new DeleteOrphanedSubtitles(), cancellationToken);
+
+    private ValueTask DeleteOrphanedArtwork(CancellationToken cancellationToken) =>
+        _workerChannel.WriteAsync(new DeleteOrphanedArtwork(100_000), cancellationToken);
 
     private ValueTask ReleaseMemory(CancellationToken cancellationToken) =>
         _workerChannel.WriteAsync(new ReleaseMemory(false), cancellationToken);
