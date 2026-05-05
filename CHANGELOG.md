@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [26.5.0] - 2026-05-08
 ### Added
 - Add `Streaming Engine` setting to Channel
   - `Legacy` - (default) uses existing streaming engine
@@ -3217,7 +3219,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/ErsatzTV/legacy/compare/v26.4.0...HEAD
+[Unreleased]: https://github.com/ErsatzTV/legacy/compare/v26.5.0...HEAD
+[26.5.0]: https://github.com/ErsatzTV/legacy/compare/v26.4.0...v26.5.0
 [26.4.0]: https://github.com/ErsatzTV/legacy/compare/v26.3.0...v26.4.0
 [26.3.0]: https://github.com/ErsatzTV/legacy/compare/v26.2.0...v26.3.0
 [26.2.0]: https://github.com/ErsatzTV/legacy/compare/v26.1.1...v26.2.0
