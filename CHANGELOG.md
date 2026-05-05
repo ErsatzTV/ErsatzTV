@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Fixed
+- Fix cause of unnecessarily large database when using Emby or Jellyfin libraries
+  - This was caused by orphaned actor and actor artwork records, which will be cleaned up hourly
+  - When you see logs like `No orphaned actors to delete` and `No orphaned artwork to delete`, you can then reclaim disk space by:
+    - Stopping ErsatzTV Legacy
+    - Running `sqlite3 ersatztv.sqlite3 'PRAGMA wal_checkpoint(TRUNCATE); VACUUM;'` in your config folder
+- Fix Next Engine playout sync when channel is configured to use channel logo as watermark
 
 ## [26.5.0] - 2026-05-08
 ### Added

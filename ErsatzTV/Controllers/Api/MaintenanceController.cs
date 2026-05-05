@@ -42,9 +42,9 @@ public class MaintenanceController(IMediator mediator, ChannelWriter<IBackground
     [HttpPost("/api/maintenance/clean_artwork")]
     [Tags("Maintenance")]
     [EndpointSummary("Clean artwork cache")]
-    public async Task<IActionResult> CleanArtwork(CancellationToken cancellationToken)
+    public async Task<IActionResult> CleanArtwork(CancellationToken cancellationToken, [FromQuery] int limit = 100_000)
     {
-        await workerChannel.WriteAsync(new DeleteOrphanedArtwork(), cancellationToken);
+        await workerChannel.WriteAsync(new DeleteOrphanedArtwork(limit), cancellationToken);
         return new OkResult();
     }
 }

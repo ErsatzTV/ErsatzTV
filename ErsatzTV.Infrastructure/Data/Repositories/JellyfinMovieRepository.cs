@@ -278,6 +278,7 @@ public class JellyfinMovieRepository : IJellyfinMovieRepository
                      .ToList())
         {
             metadata.Actors.Remove(actor);
+            dbContext.Actors.Remove(actor);
         }
 
         foreach (Actor actor in incomingMetadata.Actors

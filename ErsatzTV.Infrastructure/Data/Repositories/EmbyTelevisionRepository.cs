@@ -590,6 +590,7 @@ public class EmbyTelevisionRepository(
                      .ToList())
         {
             metadata.Actors.Remove(actor);
+            dbContext.Actors.Remove(actor);
         }
 
         foreach (Actor actor in incomingMetadata.Actors

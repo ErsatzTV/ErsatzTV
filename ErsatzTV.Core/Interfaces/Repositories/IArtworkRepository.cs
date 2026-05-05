@@ -2,6 +2,6 @@
 
 public interface IArtworkRepository
 {
-    Task<List<int>> GetOrphanedArtworkIds();
-    Task<Unit> Delete(List<int> artworkIds);
+    Task<int> DeleteOrphanedActors(int? max, CancellationToken cancellationToken);
+    Task<int> DeleteOrphanedArtwork(int? max, CancellationToken cancellationToken);
 }
