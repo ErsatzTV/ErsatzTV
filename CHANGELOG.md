@@ -4,7 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [26.5.1] - 2026-05-08
 ### Fixed
+- Fix NVIDIA playback on Linux using legacy streaming engine
 - Fix cause of unnecessarily large database when using Emby or Jellyfin libraries
   - This was caused by orphaned actor and actor artwork records, which will be cleaned up hourly
   - When you see logs like `No orphaned actors to delete` and `No orphaned artwork to delete`, you can then reclaim disk space by:
@@ -3226,7 +3229,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/ErsatzTV/legacy/compare/v26.5.0...HEAD
+[Unreleased]: https://github.com/ErsatzTV/legacy/compare/v26.5.1...HEAD
+[26.5.1]: https://github.com/ErsatzTV/legacy/compare/v26.5.0...v26.5.1
 [26.5.0]: https://github.com/ErsatzTV/legacy/compare/v26.4.0...v26.5.0
 [26.4.0]: https://github.com/ErsatzTV/legacy/compare/v26.3.0...v26.4.0
 [26.3.0]: https://github.com/ErsatzTV/legacy/compare/v26.2.0...v26.3.0
