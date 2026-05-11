@@ -33,11 +33,10 @@ public class GetHlsPlaylistByChannelNumberHandler :
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         DateTimeOffset now = DateTimeOffset.Now;
         Validation<BaseError, Parameters> validation = await Validate(dbContext, request, now, cancellationToken);
-        return await validation.Apply(parameters => GetPlaylist(dbContext, request, parameters, now));
+        return await validation.Apply(parameters => GetPlaylist(request, parameters, now));
     }
 
     private async Task<string> GetPlaylist(
-        TvContext dbContext,
         GetHlsPlaylistByChannelNumber request,
         Parameters parameters,
         DateTimeOffset now)
@@ -69,6 +68,10 @@ public class GetHlsPlaylistByChannelNumberHandler :
             };
         }
 
+        string accessToken = string.IsNullOrWhiteSpace(request.AccessToken)
+            ? string.Empty
+            : $"&access_token={request.AccessToken}";
+
         long index = GetIndexForChannel(parameters.Channel, parameters.PlayoutItem);
         double timeRemaining = Math.Abs((parameters.PlayoutItem.FinishOffset - now).TotalSeconds);
         return $@"#EXTM3U
@@ -77,7 +80,7 @@ public class GetHlsPlaylistByChannelNumberHandler :
 #EXT-X-MEDIA-SEQUENCE:{index}
 #EXT-X-DISCONTINUITY
 #EXTINF:{timeRemaining:F2},
-{request.Scheme}://{request.Host}/{endpoint}/{request.ChannelNumber}{extension}?index={index}{mode}
+{request.Scheme}://{request.Host}/{endpoint}/{request.ChannelNumber}{extension}?index={index}{mode}{accessToken}
 ";
     }
 
