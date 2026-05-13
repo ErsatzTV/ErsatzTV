@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Added
+- Add channel config overlay system for Next engine
+  - The channel config schema can be found at https://github.com/ErsatzTV/next/blob/main/schema/channel_config.json
+  - Config overlays should be created in the config subfolder `next/channel-config-overlays`
+    - A config file named `default.json` will apply to all channels using the Next engine
+    - A config file named `{channel_number}.json` (e.g. `1.json`) will apply to the channel with that number
+  - Channel overlays will override values from the default overlay which will override values from the FFmpeg Profile
+
 ### Fixed
 - Fix HLS Direct playback when JWT auth is also used
 

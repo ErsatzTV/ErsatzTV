@@ -67,6 +67,7 @@ public static class FileSystemLayout
 
     public static readonly string DefaultMpegTsScriptFolder;
 
+    public static readonly string NextChannelConfigOverlaysFolder;
     public static readonly string NextPlayoutsFolder;
 
     public static readonly string MacOsOldAppDataFolder = Path.Combine(
@@ -195,6 +196,7 @@ public static class FileSystemLayout
         MpegTsScriptsFolder = Path.Combine(ScriptsFolder, "mpegts");
         DefaultMpegTsScriptFolder = Path.Combine(MpegTsScriptsFolder, "default");
 
+        NextChannelConfigOverlaysFolder = Path.Combine(AppDataFolder, "next", "channel-config-overlays");
         NextPlayoutsFolder = Path.Combine(AppDataFolder, "next", "playouts");
     }
 }

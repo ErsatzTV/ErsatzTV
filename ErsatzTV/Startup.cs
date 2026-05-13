@@ -363,6 +363,7 @@ public class Startup
             FileSystemLayout.AudioStreamSelectorScriptsFolder,
             FileSystemLayout.MpegTsScriptsFolder,
             FileSystemLayout.DefaultMpegTsScriptFolder,
+            FileSystemLayout.NextChannelConfigOverlaysFolder,
             FileSystemLayout.NextPlayoutsFolder,
         ];
 

@@ -113,6 +113,9 @@ namespace ErsatzTV.Core.Next.Config
         [JsonProperty("deinterlace", NullValueHandling = NullValueHandling.Ignore)]
         public bool? Deinterlace { get; set; }
 
+        [JsonProperty("filters", NullValueHandling = NullValueHandling.Ignore)]
+        public Filters Filters { get; set; }
+
         [JsonProperty("format")]
         public VideoFormat? Format { get; set; }
 
@@ -122,9 +125,6 @@ namespace ErsatzTV.Core.Next.Config
         [JsonProperty("scaling_mode", NullValueHandling = NullValueHandling.Ignore)]
         public ScalingMode? ScalingMode { get; set; }
 
-        [JsonProperty("tonemap_algorithm")]
-        public string TonemapAlgorithm { get; set; }
-
         [JsonProperty("vaapi_device")]
         public string VaapiDevice { get; set; }
 
@@ -133,6 +133,99 @@ namespace ErsatzTV.Core.Next.Config
 
         [JsonProperty("width")]
         public long? Width { get; set; }
+    }
+
+    public partial class Filters
+    {
+        [JsonProperty("bwdif")]
+        public BwdifClass Bwdif { get; set; }
+
+        [JsonProperty("bwdif_cuda")]
+        public BwdifCudaClass BwdifCuda { get; set; }
+
+        [JsonProperty("deinterlace_qsv")]
+        public DeinterlaceQsvClass DeinterlaceQsv { get; set; }
+
+        [JsonProperty("deinterlace_vaapi")]
+        public DeinterlaceVaapiClass DeinterlaceVaapi { get; set; }
+
+        [JsonProperty("libplacebo")]
+        public LibplaceboClass Libplacebo { get; set; }
+
+        [JsonProperty("tonemap")]
+        public TonemapClass Tonemap { get; set; }
+
+        [JsonProperty("tonemap_opencl")]
+        public TonemapOpenclClass TonemapOpencl { get; set; }
+
+        [JsonProperty("w3fdif")]
+        public W3FdifClass W3Fdif { get; set; }
+
+        [JsonProperty("yadif")]
+        public YadifClass Yadif { get; set; }
+
+        [JsonProperty("yadif_cuda")]
+        public YadifCudaClass YadifCuda { get; set; }
+    }
+
+    public partial class BwdifClass
+    {
+        [JsonProperty("mode")]
+        public string Mode { get; set; }
+    }
+
+    public partial class BwdifCudaClass
+    {
+        [JsonProperty("mode")]
+        public string Mode { get; set; }
+    }
+
+    public partial class DeinterlaceQsvClass
+    {
+        [JsonProperty("mode")]
+        public string Mode { get; set; }
+    }
+
+    public partial class DeinterlaceVaapiClass
+    {
+        [JsonProperty("mode")]
+        public string Mode { get; set; }
+    }
+
+    public partial class LibplaceboClass
+    {
+        [JsonProperty("tonemapping")]
+        public string Tonemapping { get; set; }
+    }
+
+    public partial class TonemapClass
+    {
+        [JsonProperty("tonemap")]
+        public string Tonemap { get; set; }
+    }
+
+    public partial class TonemapOpenclClass
+    {
+        [JsonProperty("tonemap")]
+        public string Tonemap { get; set; }
+    }
+
+    public partial class W3FdifClass
+    {
+        [JsonProperty("mode")]
+        public string Mode { get; set; }
+    }
+
+    public partial class YadifClass
+    {
+        [JsonProperty("mode")]
+        public string Mode { get; set; }
+    }
+
+    public partial class YadifCudaClass
+    {
+        [JsonProperty("mode")]
+        public string Mode { get; set; }
     }
 
     public partial class Playout
@@ -173,6 +266,7 @@ namespace ErsatzTV.Core.Next.Config
     {
         public static readonly JsonSerializerSettings Settings = new JsonSerializerSettings
         {
+            NullValueHandling = NullValueHandling.Ignore,
             MetadataPropertyHandling = MetadataPropertyHandling.Ignore,
             DateParseHandling = DateParseHandling.None,
             Converters =

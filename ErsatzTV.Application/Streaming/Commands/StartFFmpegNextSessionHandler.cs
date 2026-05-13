@@ -324,6 +324,16 @@ public class StartFFmpegNextSessionHandler(
             };
         }
 
+        string tonemapAlgorithm = ffmpegProfile.TonemapAlgorithm switch
+        {
+            FFmpegProfileTonemapAlgorithm.Clip => "clip",
+            FFmpegProfileTonemapAlgorithm.Gamma => "gamma",
+            FFmpegProfileTonemapAlgorithm.Reinhard => "reinhard",
+            FFmpegProfileTonemapAlgorithm.Mobius => "mobius",
+            FFmpegProfileTonemapAlgorithm.Hable => "hable",
+            _ => "linear"
+        };
+
         var videoNormalization = new Video
         {
             Format = ffmpegProfile.VideoFormat switch
@@ -356,8 +366,22 @@ public class StartFFmpegNextSessionHandler(
                 ScalingBehavior.Crop => ScalingMode.Crop,
                 _ => ScalingMode.ScaleAndPad
             },
-            // TODO: NEXT: more tonemap algorithms
-            TonemapAlgorithm = "linear",
+            Deinterlace = ffmpegProfile.DeinterlaceVideo,
+            Filters = new Filters
+            {
+                Tonemap = new TonemapClass
+                {
+                    Tonemap = tonemapAlgorithm
+                },
+                TonemapOpencl = new TonemapOpenclClass
+                {
+                    Tonemap = tonemapAlgorithm
+                },
+                Libplacebo = new LibplaceboClass
+                {
+                    Tonemapping = tonemapAlgorithm
+                }
+            },
             VaapiDevice = ffmpegProfile.VaapiDevice,
             VaapiDriver = ffmpegProfile.VaapiDriver switch
             {
