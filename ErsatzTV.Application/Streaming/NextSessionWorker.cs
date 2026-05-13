@@ -99,9 +99,26 @@ public class NextSessionWorker(
             _workingDirectory = fileSystem.Path.Combine(FileSystemLayout.TranscodeFolder, _channelNumber);
             _heartbeatFileName = fileSystem.Path.Combine(_workingDirectory, ".heartbeat");
 
+            List<string> arguments = ["run", "--output-folder", _workingDirectory, "--number", channelNumber, "-"];
+
+            string defaultOverlayFile = fileSystem.Path.Combine(
+                FileSystemLayout.NextChannelConfigOverlaysFolder,
+                "default.json");
+            if (fileSystem.File.Exists(defaultOverlayFile))
+            {
+                arguments.Add(defaultOverlayFile);
+            }
+
+            string channelOverlayFile = fileSystem.Path.Combine(
+                FileSystemLayout.NextChannelConfigOverlaysFolder,
+                $"{channelNumber}.json");
+            if (fileSystem.File.Exists(channelOverlayFile))
+            {
+                arguments.Add(channelOverlayFile);
+            }
+
             CommandResult commandResult = await Cli.Wrap(channelBinary)
-                .WithArguments(
-                    ["run", "--output-folder", _workingDirectory, "--number", channelNumber, "-"])
+                .WithArguments(arguments)
                 .WithStandardInputPipe(PipeSource.FromString(channelConfig.ToJson()))
                 .WithStandardOutputPipe(PipeTarget.ToDelegate(l => logger.LogDebug("{Line}", l)))
                 .WithStandardErrorPipe(PipeTarget.ToDelegate(l => logger.LogDebug("{Line}", l)))
