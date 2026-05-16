@@ -18,6 +18,7 @@ public class SubtitleElement(
     TemplateFunctions templateFunctions,
     ITempFilePool tempFilePool,
     SubtitleGraphicsElement subtitleElement,
+    Option<string> ffmpegPath,
     Dictionary<string, object> variables,
     ILogger logger)
     : GraphicsElement, IDisposable
@@ -114,7 +115,7 @@ public class SubtitleElement(
                 "-"
             ];
 
-            Command command = Cli.Wrap("ffmpeg")
+            Command command = Cli.Wrap(await ffmpegPath.IfNoneAsync("ffmpeg"))
                 .WithArguments(arguments)
                 .WithWorkingDirectory(FileSystemLayout.TempFilePoolFolder)
                 .WithStandardOutputPipe(PipeTarget.ToStream(pipe.Writer.AsStream()));
