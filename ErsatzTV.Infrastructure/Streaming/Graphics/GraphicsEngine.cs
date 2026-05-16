@@ -27,6 +27,10 @@ public class GraphicsEngine(
             ConfigElementKey.FFprobePath,
             cancellationToken);
 
+        Option<string> ffmpegPath = await configElementRepository.GetValue<string>(
+            ConfigElementKey.FFmpegPath,
+            cancellationToken);
+
         var elements = new List<IGraphicsElement>();
         foreach (GraphicsElementContext element in context.Elements)
         {
@@ -54,6 +58,7 @@ public class GraphicsEngine(
                         new MotionElement(
                             motionElementDataContext.MotionElement,
                             ffprobePath,
+                            ffmpegPath,
                             localStatisticsProvider,
                             logger));
                     break;
@@ -74,6 +79,7 @@ public class GraphicsEngine(
                         templateFunctions,
                         tempFilePool,
                         subtitleElementContext.SubtitleElement,
+                        ffmpegPath,
                         variables,
                         logger);
 

@@ -15,6 +15,7 @@ namespace ErsatzTV.Infrastructure.Streaming.Graphics;
 public class MotionElement(
     MotionGraphicsElement motionElement,
     Option<string> ffprobePath,
+    Option<string> ffmpegPath,
     ILocalStatisticsProvider localStatisticsProvider,
     ILogger logger)
     : GraphicsElement, IDisposable
@@ -193,7 +194,7 @@ public class MotionElement(
 
             _state = MotionElementState.PlayingIn;
 
-            Command command = Cli.Wrap("ffmpeg")
+            Command command = Cli.Wrap(await ffmpegPath.IfNoneAsync("ffmpeg"))
                 .WithArguments(arguments)
                 .WithWorkingDirectory(FileSystemLayout.TempFilePoolFolder)
                 .WithStandardOutputPipe(PipeTarget.ToStream(pipe.Writer.AsStream()));

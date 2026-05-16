@@ -14,6 +14,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 - Fix HLS Direct playback when JWT auth is also used
+- Use configured ffmpeg path for motion and subtitle graphics elements
+  - Previously, these elements required ffmpeg to be on PATH
 
 ## [26.5.1] - 2026-05-08
 ### Fixed
