@@ -35,7 +35,7 @@
         <PackageReference Include="Serilog.Formatting.Compact" Version="3.0.0" />
         <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
         <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
-        <PackageReference Include="System.CommandLine" Version="2.0.7" />
+        <PackageReference Include="System.CommandLine" Version="2.0.8" />
     </ItemGroup>
 
     <ItemGroup>
