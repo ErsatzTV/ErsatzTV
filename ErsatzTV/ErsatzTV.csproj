@@ -39,7 +39,7 @@
         <PackageReference Include="HtmlSanitizer" Version="9.0.892" />
         <PackageReference Include="LanguageExt.Core" Version="4.4.9" />
         <PackageReference Include="MediatR.Courier.DependencyInjection" Version="5.0.0" />
-        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.7" />
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.8" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="10.0.7" />
         <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="10.0.7" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.7" />
