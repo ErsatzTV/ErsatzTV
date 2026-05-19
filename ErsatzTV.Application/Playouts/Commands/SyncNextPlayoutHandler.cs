@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using System.CommandLine.Parsing;
 using System.Globalization;
 using System.IO.Abstractions;
 using System.Runtime.InteropServices;
@@ -18,6 +19,7 @@ using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using CommandResult = CliWrap.CommandResult;
 using PlayoutItem = ErsatzTV.Core.Domain.PlayoutItem;
 using WatermarkLocation = ErsatzTV.FFmpeg.State.WatermarkLocation;
 
@@ -187,6 +189,15 @@ public partial class SyncNextPlayoutHandler(
             .Include(i => i.MediaItem)
             .ThenInclude(i => (i as MusicVideo).MediaVersions)
             .ThenInclude(mv => mv.Streams)
+            .Include(i => i.MediaItem)
+            .ThenInclude(i => (i as RemoteStream).MediaVersions)
+            .ThenInclude(mv => mv.MediaFiles)
+            .Include(i => i.MediaItem)
+            .ThenInclude(i => (i as RemoteStream).MediaVersions)
+            .ThenInclude(mv => mv.Streams)
+            .Include(i => i.MediaItem)
+            .ThenInclude(i => (i as RemoteStream).RemoteStreamMetadata)
+            .ThenInclude(em => em.Subtitles)
             .AsSplitQuery()
             .ToListAsync(cancellationToken);
 
@@ -211,7 +222,8 @@ public partial class SyncNextPlayoutHandler(
             foreach (PlayoutItem playoutItem in group)
             {
                 if (playoutItem.MediaItem is not Episode && playoutItem.MediaItem is not Movie &&
-                    playoutItem.MediaItem is not OtherVideo && playoutItem.MediaItem is not MusicVideo)
+                    playoutItem.MediaItem is not OtherVideo && playoutItem.MediaItem is not MusicVideo &&
+                    playoutItem.MediaItem is not RemoteStream)
                 {
                     continue;
                 }
@@ -468,6 +480,53 @@ public partial class SyncNextPlayoutHandler(
         PlayoutItem playoutItem,
         CancellationToken cancellationToken)
     {
+        if (playoutItem.MediaItem is RemoteStream remoteStream)
+        {
+            if (!string.IsNullOrWhiteSpace(remoteStream.Url))
+            {
+                if (remoteStream.Url.StartsWith("rtsp://", StringComparison.OrdinalIgnoreCase))
+                {
+                    return new Core.Next.Source
+                    {
+                        SourceType = Core.Next.SourceType.Rtsp,
+                        Uri = remoteStream.Url
+                    };
+                }
+
+                return new Core.Next.Source
+                {
+                    SourceType = Core.Next.SourceType.Http,
+                    Uri = remoteStream.Url,
+                    IsLive = remoteStream.IsLive,
+                    KeepAlive = true,
+                    Reconnect = true
+                };
+            }
+
+            if (!string.IsNullOrWhiteSpace(remoteStream.Script))
+            {
+                var split = CommandLineParser.SplitCommandLine(remoteStream.Script).ToList();
+                if (split.Count > 0)
+                {
+                    var source = new Core.Next.Source
+                    {
+                        SourceType = Core.Next.SourceType.Script,
+                        Command = split.Head(),
+                        IsLive = remoteStream.IsLive
+                    };
+
+                    if (split.Count > 1)
+                    {
+                        source.Args = split.Tail().ToList();
+                    }
+
+                    return source;
+                }
+            }
+
+            return Option<Core.Next.Source>.None;
+        }
+
         string path = await playoutItem.MediaItem.GetLocalPath(
             plexPathReplacementService,
             jellyfinPathReplacementService,

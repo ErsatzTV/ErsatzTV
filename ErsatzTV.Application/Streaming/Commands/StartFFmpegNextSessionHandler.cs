@@ -34,7 +34,6 @@ public class StartFFmpegNextSessionHandler(
     ILogger<NextSessionWorker> sessionWorkerLogger)
     : IRequestHandler<StartFFmpegNextSession, Either<BaseError, string>>
 {
-
     public Task<Either<BaseError, string>> Handle(
         StartFFmpegNextSession request,
         CancellationToken cancellationToken) =>
@@ -300,6 +299,19 @@ public class StartFFmpegNextSessionHandler(
         foreach (string path in ffprobePath)
         {
             ffmpeg.FfprobePath = path;
+        }
+
+        Option<bool> maybeSaveReports = await configElementRepository.GetValue<bool>(
+            ConfigElementKey.FFmpegSaveReports,
+            cancellationToken);
+
+        foreach (bool saveReports in maybeSaveReports)
+        {
+            if (saveReports)
+            {
+                ffmpeg.SaveReports = true;
+                ffmpeg.ReportsFolder = FileSystemLayout.FFmpegReportsFolder;
+            }
         }
 
         var audioNormalization = new Audio

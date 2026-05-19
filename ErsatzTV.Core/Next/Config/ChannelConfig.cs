@@ -40,6 +40,12 @@ namespace ErsatzTV.Core.Next.Config
 
         [JsonProperty("preferred_filters", NullValueHandling = NullValueHandling.Ignore)]
         public List<string> PreferredFilters { get; set; }
+
+        [JsonProperty("reports_folder")]
+        public string ReportsFolder { get; set; }
+
+        [JsonProperty("save_reports", NullValueHandling = NullValueHandling.Ignore)]
+        public bool? SaveReports { get; set; }
     }
 
     public partial class Normalization
