@@ -99,6 +99,12 @@ namespace ErsatzTV.Core.Next
     /// A synthetic source produced by an ffmpeg lavfi filter graph.
     ///
     /// A remote source fetched over HTTP(S).
+    ///
+    /// A live stream pulled from an RTSP server (e.g. an IP camera). Always treated as live: it
+    /// is never seeked and cannot work ahead.
+    ///
+    /// An external command whose stdout is an MPEG-TS stream, proxied to ffmpeg over loopback
+    /// HTTP.
     /// </summary>
     public partial class Source
     {
@@ -161,6 +167,8 @@ namespace ErsatzTV.Core.Next
 
         /// <summary>
         /// URI template, e.g. "https://example.com/file.mkv?token={{MY_SECRET}}".
+        ///
+        /// RTSP URI template, e.g. "rtsp://user:{{PASSWORD}}@camera.lan:554/stream".
         /// </summary>
         [JsonProperty("uri", NullValueHandling = NullValueHandling.Ignore)]
         public string Uri { get; set; }
@@ -170,6 +178,24 @@ namespace ErsatzTV.Core.Next
         /// </summary>
         [JsonProperty("user_agent")]
         public string UserAgent { get; set; }
+
+        /// <summary>
+        /// Optional arguments for the command. Supports {{TEMPLATE}} expansion. Defaults to [].
+        /// </summary>
+        [JsonProperty("args", NullValueHandling = NullValueHandling.Ignore)]
+        public List<string> Args { get; set; }
+
+        /// <summary>
+        /// Command that writes an MPEG-TS stream to its stdout. Supports {{TEMPLATE}} expansion.
+        /// </summary>
+        [JsonProperty("command", NullValueHandling = NullValueHandling.Ignore)]
+        public string Command { get; set; }
+
+        /// <summary>
+        /// Whether the content is live and therefore cannot work ahead. Default: false.
+        /// </summary>
+        [JsonProperty("is_live")]
+        public bool? IsLive { get; set; }
     }
 
     /// <summary>
@@ -307,6 +333,12 @@ namespace ErsatzTV.Core.Next
     /// A synthetic source produced by an ffmpeg lavfi filter graph.
     ///
     /// A remote source fetched over HTTP(S).
+    ///
+    /// A live stream pulled from an RTSP server (e.g. an IP camera). Always treated as live: it
+    /// is never seeked and cannot work ahead.
+    ///
+    /// An external command whose stdout is an MPEG-TS stream, proxied to ffmpeg over loopback
+    /// HTTP.
     /// </summary>
     public partial class PlayoutItemSource
     {
@@ -369,6 +401,8 @@ namespace ErsatzTV.Core.Next
 
         /// <summary>
         /// URI template, e.g. "https://example.com/file.mkv?token={{MY_SECRET}}".
+        ///
+        /// RTSP URI template, e.g. "rtsp://user:{{PASSWORD}}@camera.lan:554/stream".
         /// </summary>
         [JsonProperty("uri", NullValueHandling = NullValueHandling.Ignore)]
         public string Uri { get; set; }
@@ -378,6 +412,24 @@ namespace ErsatzTV.Core.Next
         /// </summary>
         [JsonProperty("user_agent")]
         public string UserAgent { get; set; }
+
+        /// <summary>
+        /// Optional arguments for the command. Supports {{TEMPLATE}} expansion. Defaults to [].
+        /// </summary>
+        [JsonProperty("args", NullValueHandling = NullValueHandling.Ignore)]
+        public List<string> Args { get; set; }
+
+        /// <summary>
+        /// Command that writes an MPEG-TS stream to its stdout. Supports {{TEMPLATE}} expansion.
+        /// </summary>
+        [JsonProperty("command", NullValueHandling = NullValueHandling.Ignore)]
+        public string Command { get; set; }
+
+        /// <summary>
+        /// Whether the content is live and therefore cannot work ahead. Default: false.
+        /// </summary>
+        [JsonProperty("is_live")]
+        public bool? IsLive { get; set; }
     }
 
     /// <summary>
@@ -435,7 +487,7 @@ namespace ErsatzTV.Core.Next
         public TimingType TimingType { get; set; }
     }
 
-    public enum SourceType { Http, Lavfi, Local };
+    public enum SourceType { Http, Lavfi, Local, Rtsp, Script };
 
     /// <summary>
     /// Anchor position within the primary content frame.
@@ -500,6 +552,10 @@ namespace ErsatzTV.Core.Next
                     return SourceType.Lavfi;
                 case "local":
                     return SourceType.Local;
+                case "rtsp":
+                    return SourceType.Rtsp;
+                case "script":
+                    return SourceType.Script;
             }
             throw new Exception("Cannot unmarshal type SourceType");
         }
@@ -522,6 +578,12 @@ namespace ErsatzTV.Core.Next
                     return;
                 case SourceType.Local:
                     serializer.Serialize(writer, "local");
+                    return;
+                case SourceType.Rtsp:
+                    serializer.Serialize(writer, "rtsp");
+                    return;
+                case SourceType.Script:
+                    serializer.Serialize(writer, "script");
                     return;
             }
             throw new Exception("Cannot marshal type SourceType");
